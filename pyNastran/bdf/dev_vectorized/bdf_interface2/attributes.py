@@ -102,6 +102,15 @@ from pyNastran.bdf.dev_vectorized.cards.materials.materials import Materials
 from pyNastran.bdf.dev_vectorized.cards.loads.loads import Loads
 from pyNastran.bdf.dev_vectorized.cards.loads.temp import TEMPs
 
+# constraints
+# spc
+from pyNastran.bdf.dev_vectorized.cards.constraints.spcadd import SPCADD, get_spcadd_constraint
+
+# mpc
+from pyNastran.bdf.dev_vectorized.cards.constraints.mpc import MPC, get_mpc_constraint
+#from pyNastran.bdf.dev_vectorized.cards.constraints.mpcax import MPCAX
+from pyNastran.bdf.dev_vectorized.cards.constraints.mpcadd import MPCADD
+
 #------------------------------------------
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.elements_shell import ElementsShell
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.properties_shell import PropertiesShell
@@ -321,6 +330,16 @@ class BDFAttributes(object):
         self.loads = Loads(self)
         # ----------------------------------------------------------------
         self.temps = TEMPs(self)
+
+        # ----------------------------------------------------------------
+        #self.spc1 = SPC1(self)
+        #self.spcadd = SPCADD(self)
+        self.spc = {} #class_obj_defaultdict(SPC, model)
+        self.spcd = {} #class_obj_defaultdict(SPCD, model)
+        self.spc1 = {} #class_obj_defaultdict(SPC1, model)
+        self.spcadd = {}
+        self.mpc = {}  # the new form, not added...
+        self.mpcadd = {}
 
         # ----------------------------------------------------------------
         #: stores PARAMs
@@ -759,6 +778,10 @@ class BDFAttributes(object):
             'PLOAD2' : self.pload2,
             'PLOAD4' : self.pload4,
             'PLOADX1' : self.ploadx1,
+
+            # constraints
+            #'SPC1' : self.spc1,
+            #'SPCADD' : self.spcadd,
         }
         return mapper
 

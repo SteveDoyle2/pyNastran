@@ -8,7 +8,7 @@ from collections import defaultdict
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     components)
 
 def get_spc1_constraint(card):
@@ -48,6 +48,7 @@ class SPC1(object):
     def __init__(self, model):
         self.model = model
         self.components = defaultdict(list)
+        self.n = 0
 
     def add(self, constraint_id, dofs, node_ids, comment):
         #if comment:
@@ -55,6 +56,21 @@ class SPC1(object):
         assert isinstance(constraint_id, int), constraint_id
         self.constraint_id = constraint_id
         self.components[dofs].append(node_ids)
+
+    def add_card(self, card, comment=''):
+        #if comment:
+            #self._comment = comment
+        constraint_id = integer(card, 1, 'conid')
+        dofs = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
+        node_ids = card.fields(3)
+
+        assert isinstance(constraint_id, int), constraint_id
+        self.constraint_id = constraint_id
+        self.components[dofs].append(node_ids)
+        self.n += 1
+
+    def allocate(self, card_count):
+        pass
 
     def build(self):
         for comp, nodes_lists in iteritems(self.components):

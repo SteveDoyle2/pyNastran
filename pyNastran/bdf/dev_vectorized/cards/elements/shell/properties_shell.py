@@ -170,3 +170,11 @@ class PropertiesShell(object):
         for prop in types:
             #print('*SHELL', prop.type)
             prop.write_card(bdf_file, size=size, property_id=property_id)
+
+    def __repr__(self):
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for prop in types:
+            msg += '  <%s object; n=%s>\n' % (prop.type, prop.n)
+        return msg
+

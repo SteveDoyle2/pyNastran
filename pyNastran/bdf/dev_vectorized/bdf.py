@@ -45,6 +45,9 @@ from pyNastran.bdf.dev_vectorized.bdf_interface2.cross_reference import CrossRef
 from pyNastran.bdf.dev_vectorized.bdf_interface2.add_card import AddCard
 from pyNastran.bdf.field_writer_16 import print_field_16
 
+from pyNastran.bdf.dev_vectorized.cards.constraints.spc1 import SPC1, get_spc1_constraint
+
+
 # old cards
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
@@ -279,6 +282,9 @@ class BDF(AddCard, CrossReference, WriteMesh):
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'PLOAD', 'PLOAD2', 'PLOAD4', 'PLOADX1',
+
+            # constraints
+            'SPC1', 'SPCADD',
 
             # aero cards
             'AERO',  ## aero
@@ -1621,7 +1627,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             #'MPCADD' : (MPCADD, self.add_constraint_MPC),
 
             #'SPC' : (SPC, self.add_constraint_SPC),
-            #'SPC1' : (SPC1, self.add_constraint_SPC),
+            #'SPC1' : (SPC1, self.add_constraint_SPC1),
             #'SPCAX' : (SPCAX, self.add_constraint_SPC),
             #'SPCADD' : (SPCADD, self.add_constraint_SPC),
             #'GMSPC' : (GMSPC, self.add_constraint_SPC),
@@ -3116,6 +3122,20 @@ class BDF(AddCard, CrossReference, WriteMesh):
         #self.mat1.allocate(card_count)
         #self.mat8.allocate(card_count)
 
+    def _parse_spc1(self, card_name, card):
+        for comment, card_lines in card:
+            card_obj = self._cardlines_to_card_obj(card_lines, card_name)
+            constraint_id, dofs, node_ids = get_spc1_constraint(card_obj)
+
+            if constraint_id in self.spc1:
+                spc1 = self.spc1[constraint_id]
+            else:
+                spc1 = SPC1(self)
+                self.spc1[constraint_id] = spc1
+            #spc1 = self.spc1.setdefault(constraint_id, SPC1(self))
+            spc1.add_card(card_obj, comment=comment)
+            spc1.add(constraint_id, dofs, node_ids, comment=comment)
+
     def _parse_ctetra(self, card_name, card):
         """adds ctetras"""
         self._parse_solid(
@@ -3148,6 +3168,13 @@ class BDF(AddCard, CrossReference, WriteMesh):
             ('CHEXA20', self.chexa20),
         )
 
+    def _cardlines_to_card_obj(self, card_lines, card_name):
+        """makes a BDFCard object"""
+        fields = to_fields(card_lines, card_name)
+        card = wipe_empty_fields(fields)
+        card_obj = BDFCard(card, has_none=False)
+        return card_obj
+
     def _parse_solid(self, card_name, cards, nsplit, pair1, pair2):
         """
         adds the cards to the object
@@ -3176,9 +3203,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
         ncards1 = 0
         ncards2 = 0
         for comment, card_lines in cards:
-            fields = to_fields(card_lines, card_name)
-            card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card, has_none=False)
+            card_obj = self._cardlines_to_card_obj(card_lines, card_name)
             if card_obj.nfields == nsplit:
                 ncards1 += 1
                 cards1.append((comment, card_obj))
@@ -3213,6 +3238,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
                 'CPENTA' : self._parse_cpenta,
                 'CPYRAM' : self._parse_cpyram,
                 'CHEXA' : self._parse_chexa,
+                'SPC1' : self._parse_spc1,
+                #'SPCADD' : self._parse_spcadd,
             }
             # self._is_cards_dict = True
             # this is the loop that hits...
@@ -3222,22 +3249,24 @@ class BDF(AddCard, CrossReference, WriteMesh):
                     ncards = len(card)
                     method = cards_to_get_lengths_of[card_name]
                     method(card_name, card)
-                    self.log.info('    parsed card_name = %s' % card_name)
+                    self.log.info('dynamic vectorized parse of n%s = %s' % (card_name, ncards))
                     continue
 
             card_name_to_obj_mapper = self.card_name_to_obj
             for card_name, card in sorted(iteritems(cards)):
-                if self.is_reject(card_name):
-                    self.log.info('    rejecting card_name = %s' % card_name)
+                ncards = len(card)
+                if self.is_reject(card_name):# and card_name not in :
+                    self.log.info('n%s = %s (rejecting)' % (card_name, ncards))
+                    #self.log.info('  rejecting card_name = %s' % card_name)
                     for cardi in card:
                         self.rejects.append([cardi[0]] + cardi[1])
                 elif card_name in cards_to_get_lengths_of:
                     continue
                 else:
                     ncards = len(card)
-                    self.log.debug('%s = %r' % (card_name, ncards))
+                    self.log.info('n%s = %r' % (card_name, ncards))
                     if card_name not in card_name_to_obj_mapper:
-                        self.log.debug('card_name=%r is not vectorized' % card_name)
+                        self.log.debug('  card_name=%r is not vectorized' % card_name)
                         for comment, card_lines in card:
                             self.add_card(card_lines, card_name, comment=comment,
                                           is_list=False, has_none=False)
@@ -3253,7 +3282,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
                     self._increase_card_count(card_name, ncards)
                     obj.allocate(self.card_count)
-                    self.log.info('allocating %r' % card_name)
+                    self.log.debug('  allocating %r' % card_name)
                     for comment, card_lines in card:
                         #print('card_lines', card_lines)
                         fields = to_fields(card_lines, card_name)
@@ -3261,7 +3290,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
                         card_obj = BDFCard(card, has_none=False)
                         obj.add(card_obj, comment=comment)
                     obj.build()
-                    self.log.debug('building %r; n=%s' % (obj.type, obj.n))
+                    self.log.debug('  building %r; n=%s' % (obj.type, obj.n))
                 #if self.is_reject(card_name):
                     #self.log.info('    rejecting card_name = %s' % card_name)
                     #for cardi in card:

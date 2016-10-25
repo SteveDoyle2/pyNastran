@@ -253,5 +253,12 @@ class ElementsShell(object):
         for elems in types:
             elems._verify(xref=xref)
 
+    #def __repr__(self):
+        #return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
+
     def __repr__(self):
-        return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for elem in types:
+            msg += '  <%s object; n=%s>\n' % (elem.type, elem.n)
+        return msg
