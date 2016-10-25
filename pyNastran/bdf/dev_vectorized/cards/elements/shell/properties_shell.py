@@ -18,6 +18,7 @@ class PropertiesShell(object):
         self.pcomp = model.pcomp
         self.pcompg = model.pcompg
         self.n = 0
+        self.property_id = []
 
     def allocate(self, card_count):
         ptypes = self._get_types(nlimit=False)
@@ -42,11 +43,21 @@ class PropertiesShell(object):
         npcompg = self.pcompg.n
 
         self.n = npshell + npcomp + npcompg
-        pid = hstack([self.pshell.property_id, self.pcomp.property_id, self.pcompg.property_id])
-        unique_pids = unique(pid)
+        self.property_id = pid = hstack([self.pshell.property_id, self.pcomp.property_id, self.pcompg.property_id])
+        unique_pids = unique(self.property_id)
         #print unique_pids
-        if len(unique_pids) != len(pid):
+        if len(unique_pids) != len(self.property_id):
             raise RuntimeError('There are duplicate PSHELL/PCOMP IDs...')
+
+    def get_property_by_property_id(self, property_id):
+        ipid = where(self.property_id == property_id)[0]
+        if ipid > self.pshell.n:
+            if ipid > self.pshell.n + self.pcomp.n:
+                aaa
+            else:
+                bbb
+        else:
+            return self.pshell.slice_by_property_id(property_id)
 
     def rebuild(self):
         raise NotImplementedError()

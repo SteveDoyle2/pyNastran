@@ -264,7 +264,17 @@ class CQUAD4(ShellElement):
         #print('thickness =', thickness)
 
         n1, n2, n3, n4 = self.node_ids[i, :]
-
+        pid = self.property_id[i]
+        prop = self.model.properties_shell.get_property_by_property_id(pid)
+        #prop.get_
+        print(prop)
+        mid1 = prop.material_id[0]
+        mat = self.model.materials.get_shell_material(mid1)
+        print(mat)
+        E = mat.E[0]
+        nu = mat.nu[0]
+        print('area=%s thickness=%s E=%e nu=%s' % (area, thickness, E, nu))
+        #sdd
         i1 = index0s[n1]
         i2 = index0s[n2]
         i3 = index0s[n3]
@@ -285,14 +295,14 @@ class CQUAD4(ShellElement):
 
         centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
 
-        normal = self.Normal()
+        #normal = self.Normal()
         is_theta = self.is_theta[i]
         if is_theta:
             print(self.model.coords)
             mcid_ref = self.model.coords.get_coord_index_by_coord_id(0)
             print('mcid_ref\n', mcid_ref)
             theta = self.theta[i]
-            raise NotImplementedError('theta=%r' % theta)
+            #raise NotImplementedError('theta=%r' % theta)
         else:
             mcid = self.mcid[i]
             #print(mcid)
@@ -304,14 +314,13 @@ class CQUAD4(ShellElement):
             imat = np.cross(jmat, normal)
             T = np.vstack([imat, jmat, normal])
             print(T)
-        xyz = np.vstack([
-            xyz1,
-            xyz2,
-            xyz3,
-            xyz4,
-        ]).dot(T)
-
-        dfg
+        if 0:
+            xyz = np.vstack([
+                xyz1,
+                xyz2,
+                xyz3,
+                xyz4,
+            ]).dot(T)
 
         dofs = array([
             i1, i1+1,
@@ -332,8 +341,8 @@ class CQUAD4(ShellElement):
         #n2 = 0.25 * (1 + u) * (1 - v)
         #n3 = 0.25 * (1 + u) * (1 + v)
         #n4 = 0.25 * (1 - u) * (1 + v)
-        wti = -0.57735
-        wtj = -0.57735
+        #wti = -0.57735
+        #wtj = -0.57735
 
         is_heat_transfer = False
         if is_heat_transfer:
@@ -397,9 +406,10 @@ class CQUAD4(ShellElement):
                     ])
                     #print('B =\n', B)
 
-                    E = 1.0
-                    nu = 0.25
+                    #E = 1.0
+                    #nu = 0.25
                     denom = 1 - nu**2
+                    #C = E/(1 - (poisson^2))*[1 poisson 0; poisson 1 0;0 0 ((1-poisson)/2)];
                     C = np.array([
                         [E/denom, nu*E/denom, 0.],
                         [nu*E/denom, E/denom, 0.],

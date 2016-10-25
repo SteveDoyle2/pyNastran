@@ -4,6 +4,7 @@ from pyNastran.bdf.dev_vectorized.bdf_interface2.attributes import BDFAttributes
 class AddCard(BDFAttributes):
     """defines methods to add card objects to the BDF"""
     def __init__(self):
+        BDFAttributes.__init__(self)
 
     def add_param(self, param, allow_overwrites=False):
         """adds a PARAM object"""
