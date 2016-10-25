@@ -529,7 +529,7 @@ class PCOMP(CompositeShellProperty):
                  nsm, sb, ft, TRef, ge, lam, z0, comment=''):
         CompositeShellProperty.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         #: Property ID
         self.pid = pid
@@ -802,7 +802,7 @@ class PCOMPG(CompositeShellProperty):
                  nsm, sb, ft, TRef, ge, lam, z0, comment=''):
         CompositeShellProperty.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         #: Property ID
         self.pid = pid
@@ -964,7 +964,7 @@ class PLPLANE(ShellProperty):
     def __init__(self, pid, mid, cid=0, stress_strain_output_location='GRID', comment=''):
         ShellProperty.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: Property ID
         self.pid = pid
         self.mid = mid
@@ -1036,7 +1036,7 @@ class PPLANE(ShellProperty):
         """NX specific card"""
         ShellProperty.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: Property ID
         self.pid = pid
         self.mid = mid
@@ -1112,7 +1112,7 @@ class PSHEAR(ShellProperty):
         """
         ShellProperty.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: Property ID
         self.pid = pid
         self.t = t
@@ -1245,7 +1245,7 @@ class PSHELL(ShellProperty):
                  z1=None, z2=None, mid4=None, comment=''):
         ShellProperty.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         #: Property ID
         self.pid = pid

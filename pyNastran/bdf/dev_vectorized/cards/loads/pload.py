@@ -65,7 +65,7 @@ class PLOAD(object):
 
     def build(self):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         #cards = self._cards
         #ncards = len(cards)
 

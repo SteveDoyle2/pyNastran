@@ -112,7 +112,7 @@ class ABCQSet(Set):
     def __init__(self, ids, components, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = ids
         self.components = components
@@ -192,7 +192,7 @@ class SuperABCQSet(Set):
     def __init__(self, seid, ids, components, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         self.seid = seid
         #:  Identifiers of grids points. (Integer > 0)
@@ -332,7 +332,7 @@ class ABQSet1(Set):
     def __init__(self, components, ids, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         #:  Component number. (Integer zero or blank for scalar points or any
         #:  unique combination of the Integers 1 through 6 for grid points with
@@ -422,7 +422,7 @@ class SuperABQSet1(Set):
     def __init__(self, seid, components, ids, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.seid = seid
 
         #:  Component number. (Integer zero or blank for scalar points or any
@@ -538,7 +538,7 @@ class CSET1(Set):
     def __init__(self, ids, components, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
         self.components = components
@@ -605,7 +605,7 @@ class SET1(Set):
     def __init__(self, sid, ids, is_skin=False, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #:  Unique identification number. (Integer > 0)
         self.sid = sid
 
@@ -728,7 +728,7 @@ class SET3(Set):
     def __init__(self, sid, desc, ids, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #:  Unique identification number. (Integer > 0)
         self.sid = sid
 
@@ -846,7 +846,7 @@ class SESET(SetSuper):
     def __init__(self, seid, ids, comment=''):
         SetSuper.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.seid = seid
         #:  Grid or scalar point identification number.
         #:  (0 < Integer < 1000000; G1 < G2)
@@ -951,7 +951,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     def __init__(self, ssid, psid, ids, comment=''):
         SetSuper.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: Identification number for secondary superelement. (Integer >= 0).
         self.ssid = ssid
 
@@ -994,7 +994,7 @@ class RADSET(Set):  # not integrated
     def __init__(self, seid, ids, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.seid = seid
         #: Grid or scalar point identification number.
         #: (0 < Integer < 1000000; G1 < G2)
@@ -1031,7 +1031,7 @@ class USET(Set):
     def __init__(self, name, components, ids, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.name = name
         #:  Identifiers of grids points. (Integer > 0)
         self.components = components
@@ -1083,7 +1083,7 @@ class USET1(ABQSet1):
     def __init__(self, name, components, ids, comment=''):
         Set.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.name = name
 
         #:  Component number. (Integer zero or blank for scalar points or any

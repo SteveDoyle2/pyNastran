@@ -54,7 +54,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         Load.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         #: load ID
         self.sid = sid
@@ -174,7 +174,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     def __init__(self, sid, excite_id, lid, tid, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.sid = sid
         self.excite_id = excite_id
         self.lid = lid
@@ -277,7 +277,7 @@ class LOADCYN(Load):
 
     def __init__(self, sid, scale, segment_id, scales, load_ids, segment_type=None, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.sid = sid
         self.scale = scale
         self.segment_id = segment_id
@@ -429,7 +429,7 @@ class SPCD(Load):
 
     def __init__(self, sid, gids, constraints, enforced, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.sid = sid
         self.gids = gids
         self.constraints = constraints
@@ -523,7 +523,7 @@ class SLOAD(Load):
 
     def __init__(self, sid, nids, mags, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: load ID
         self.sid = sid
         self.nids = nids
@@ -613,7 +613,7 @@ class RFORCE(Load):
     def __init__(self, sid, nid, cid, scale, r1, r2, r3, method, racc,
                  mb, idrf, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.sid = sid
         self.nid = nid
         self.cid = cid
@@ -725,7 +725,7 @@ class RFORCE1(Load):
     def __init__(self, sid, nid, scale, r1, r2, r3, racc,
                  mb, group_id, cid=0, method=2, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.sid = sid
         self.nid = nid
         self.cid = cid
@@ -827,7 +827,7 @@ class RANDPS(RandomLoad):
 
     def __init__(self, sid, j, k, x=0., y=0., tid=0, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: Random analysis set identification number. (Integer > 0)
         #: Defined by RANDOM in the Case Control Deck.
         self.sid = sid

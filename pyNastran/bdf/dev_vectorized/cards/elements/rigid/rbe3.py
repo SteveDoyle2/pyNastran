@@ -104,10 +104,10 @@ class RBE3(object):
         #self.model.log.debug('RBE2.add')
         i = self.i
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         eid = integer(card, 1, 'element_id')
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         self.element_id[i] = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
         self.refgrid[i] = integer(card, 3, 'refgrid')

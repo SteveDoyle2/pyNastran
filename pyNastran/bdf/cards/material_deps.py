@@ -54,7 +54,7 @@ class MATS1(MaterialDependence):
     def __init__(self, mid, tid, Type, h, hr, yf, limit1, limit2, comment=''):
         MaterialDependence.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: Identification number of a MAT1, MAT2, or MAT9 entry.
         self.mid = mid
 
@@ -219,7 +219,7 @@ class MATT1(MaterialDependence):
                  ge_table, st_table, sc_table, ss_table, comment=''):
         MaterialDependence.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.mid = mid
         self._E_table = E_table
         self._G_table = G_table
@@ -359,7 +359,7 @@ class MATT2(MaterialDependence):
                  ge_table, st_table, sc_table, ss_table, comment=''):
         MaterialDependence.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         self.mid = mid
         self._G11_table = G11_table
@@ -520,7 +520,7 @@ class MATT4(MaterialDependence):
     def __init__(self, mid, k_table, cp_table, H_table, mu_table, Hgen_table, comment=''):
         MaterialDependence.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.mid = mid
         self._k_table = k_table
         self._cp_table = cp_table
@@ -619,7 +619,7 @@ class MATT5(MaterialDependence):
                  cp_table, hgen_table, comment=''):
         MaterialDependence.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.mid = mid
         self._kxx_table = kxx_table
         self._kxy_table = kxy_table
@@ -747,7 +747,7 @@ class MATT8(MaterialDependence):
                  S_table, GE_table, F12_table, comment=''):
         MaterialDependence.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         self.mid = mid
         self._E1_table = E1_table

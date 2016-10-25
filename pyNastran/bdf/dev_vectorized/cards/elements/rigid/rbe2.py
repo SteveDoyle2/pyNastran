@@ -116,7 +116,7 @@ class RBE2(object):
         #self.model.log.debug('RBE2.add')
         i = self.i
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         eid = integer(card, 1, 'element_id')
         gn = integer(card, 2, 'gn')
         cm = components_or_blank(card, 3, 'cm')

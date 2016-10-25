@@ -25,7 +25,7 @@ class NastranMatrix(BaseCard):
     """
     def __init__(self, card=None, data=None, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         #self.ifo = ifo
         #self.tin = tin
         #self.tout = tout
@@ -139,7 +139,7 @@ class NastranMatrix(BaseCard):
             if hasattr(self, '_comment'):
                 self._comment += comment
             else:
-                self._comment = comment
+                 self.comment = comment
 
         name = string(card, 1, 'name')
         if name == 'UACCEL':
@@ -722,7 +722,7 @@ class DMIG_UACCEL(BaseCard):
     name = 'UACCEL'
     def __init__(self, tin, ncol, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.tin = tin
         self.ncol = ncol
         self.load_sequences = {}
@@ -812,7 +812,7 @@ class DMIG(NastranMatrix):
     def __init__(self, card=None, data=None, comment=''):
         NastranMatrix.__init__(self, card, data)
         if comment:
-            self._comment = comment
+             self.comment = comment
         if card:
             assert len(card) <= 9, 'len(DMIG card) = %i\ncard=%s' % (len(card), card)
         else:
@@ -836,7 +836,7 @@ class DMIJ(NastranMatrix):
     def __init__(self, card=None, data=None, comment=''):
         NastranMatrix.__init__(self, card, data)
         if comment:
-            self._comment = comment
+             self.comment = comment
         if card:
             assert len(card) <= 9, 'len(DMIJ card) = %i\ncard=%s' % (len(card), card)
         else:
@@ -859,7 +859,7 @@ class DMIJI(NastranMatrix):
     def __init__(self, card=None, data=None, comment=''):
         NastranMatrix.__init__(self, card, data)
         if comment:
-            self._comment = comment
+             self.comment = comment
         if card:
             assert len(card) <= 9, 'len(DMIJI card) = %i\ncard=%s' % (len(card), card)
         else:
@@ -880,7 +880,7 @@ class DMIK(NastranMatrix):
     def __init__(self, card=None, data=None, comment=''):
         NastranMatrix.__init__(self, card, data)
         if comment:
-            self._comment = comment
+             self.comment = comment
         if card:
             assert len(card) <= 9, 'len(DMIK card) = %i\ncard=%s' % (len(card), card)
         else:
@@ -903,7 +903,7 @@ class DMI(NastranMatrix):
         +--------+-------+-------+------+---------+----------+-----------+-----------+------+
         """
         if comment:
-            self._comment = comment
+             self.comment = comment
         if card:
             self.name = string(card, 1, 'name')
             #zero

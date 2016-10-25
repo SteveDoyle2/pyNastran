@@ -27,7 +27,7 @@ class PELAS(object):
     def add(self, card, nPELAS=0, comment=''):
         self.n = 1
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         nOffset = nPELAS * 5
         # 2 PELAS properties can be defined on 1 PELAS card
         # these are split into 2 separate cards

@@ -26,7 +26,7 @@ class NLPARM(object):
 
     def add(self, card=None, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
 
         self.nlparm_id = integer(card, 1, 'nlparm_id')
         self.ninc = integer_or_blank(card, 2, 'ninc', 10)

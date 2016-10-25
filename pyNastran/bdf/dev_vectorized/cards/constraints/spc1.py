@@ -52,14 +52,14 @@ class SPC1(object):
 
     def add(self, constraint_id, dofs, node_ids, comment):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         assert isinstance(constraint_id, int), constraint_id
         self.constraint_id = constraint_id
         self.components[dofs].append(node_ids)
 
     def add_card(self, card, comment=''):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         constraint_id = integer(card, 1, 'conid')
         dofs = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
         node_ids = card.fields(3)

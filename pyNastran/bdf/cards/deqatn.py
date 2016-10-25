@@ -59,7 +59,7 @@ class DEQATN(BaseCard):  # needs work...
 
     def __init__(self, name, equation_id, eqs, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.dtable = None
         self.func = None
         self.name = name

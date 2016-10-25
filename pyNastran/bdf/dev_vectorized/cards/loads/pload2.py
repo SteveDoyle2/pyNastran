@@ -69,7 +69,7 @@ class PLOAD2(object):
 
     def build(self):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         #cards = self._cards
         ncards = self.n
 

@@ -31,7 +31,7 @@ class CFAST(Element):
     def __init__(self, eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs, comment=''):
         Element.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.Type = Type
@@ -158,7 +158,7 @@ class CGAP(Element):
         """
         Element.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.ga = ga
@@ -350,7 +350,7 @@ class CRAC2D(CrackElement):
     def __init__(self, eid, pid, nids, comment=''):
         CrackElement.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.prepare_node_ids(nids, allow_empty_nodes=True)
@@ -426,7 +426,7 @@ class CRAC3D(CrackElement):
     def __init__(self, eid, pid, nids, comment=''):
         CrackElement.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.prepare_node_ids(nids, allow_empty_nodes=True)
@@ -497,7 +497,7 @@ class PLOTEL(BaseCard):
         """
         BaseCard.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.nodes = nodes
 

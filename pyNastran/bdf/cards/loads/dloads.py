@@ -44,7 +44,7 @@ class ACSRCE(BaseCard):
 
     def __init__(self, sid, excite_id, delay, dphase, power, rho, b, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.sid = sid
         self.excite_id = excite_id
         self.delay = delay
@@ -229,7 +229,7 @@ class RLOAD1(TabularLoad):
     def __init__(self, sid, excite_id, delay, dphase, tc, td, Type, comment=''):
         TabularLoad.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.sid = sid
         self.excite_id = excite_id
         self.delay = delay
@@ -435,7 +435,7 @@ class RLOAD2(TabularLoad):
     def __init__(self, sid, excite_id, delay, dphase, tb, tp, Type, comment=''):
         TabularLoad.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.sid = sid
         self.excite_id = excite_id
         self.delay = delay
@@ -640,7 +640,7 @@ class TLOAD1(TabularLoad):
     def __init__(self, sid, excite_id, delay, Type, tid, us0, vs0, comment=''):
         TabularLoad.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: load ID
         self.sid = sid
 
@@ -814,7 +814,7 @@ class TLOAD2(TabularLoad):
                  frequency, phase, c, b, us0, vs0, comment=''):
         TabularLoad.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: load ID
         #: SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
         self.sid = sid

@@ -36,7 +36,7 @@ class SPCADD(object):
 
     def add(self, spc_id, spc_ids, comment):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         assert isinstance(spc_id, int), spc_id
         self.spc_id = spc_id
         self.spc_ids += spc_ids

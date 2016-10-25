@@ -21,7 +21,7 @@ class MPCADD(object):
 
     def add(self, constraint_id, mpc_ids, comment):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         assert isinstance(constraint_id, int), constraint_id
         self.constraint_id = constraint_id
         self.mpc_ids += mpc_ids

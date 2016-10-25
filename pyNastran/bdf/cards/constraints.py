@@ -59,7 +59,7 @@ class SUPORT1(Constraint):
     def __init__(self, conid, IDs, Cs, comment=''):
         Constraint.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.conid = conid
         self.IDs = IDs
         self.Cs = Cs
@@ -102,7 +102,7 @@ class SUPORT1(Constraint):
         assert self.conid == suport1.conid, 'SUPORT1 conid=%s new_conid=%s; they must be the same' % (self.conid, suport1.conid)
         comment = self.comment + suport1.comment
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.IDs += suport1.IDs
         self.Cs += suport1.Cs
 
@@ -152,7 +152,7 @@ class SUPORT(Constraint):
     def __init__(self, IDs, Cs, comment=''):
         Constraint.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.IDs = IDs ## TODO:  IDs reference nodes???
         self.Cs = Cs
 
@@ -245,7 +245,7 @@ class MPC(Constraint):
     def __init__(self, conid, gids, constraints, enforced, comment=''):
         Constraint.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: Set identification number. (Integer > 0)
         self.conid = conid
         #: Identification number of grid or scalar point. (Integer > 0)
@@ -398,7 +398,7 @@ class SPC(Constraint):
     def __init__(self, conid, gids, constraints, enforced, comment=''):
         Constraint.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.conid = conid
         self.gids = gids
         self.constraints = constraints
@@ -491,7 +491,7 @@ class GMSPC(Constraint):
     def __init__(self, conid, component, entity, entity_id, comment=''):
         Constraint.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.conid = conid
         self.component = component
         self.entity = entity
@@ -544,7 +544,7 @@ class SPCAX(Constraint):
         # implemented
         Constraint.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         #: Identification number of a single-point constraint set.
         self.conid = conid
         #: Ring identification number. See RINGAX entry.
@@ -616,7 +616,7 @@ class SPC1(Constraint):
     def __init__(self, conid, constraints, nodes, comment=''):
         Constraint.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.conid = conid
         self.constraints = constraints
         self.nodes = expand_thru(nodes)
@@ -691,7 +691,7 @@ class SPCADD(ConstraintADD):
     def __init__(self, conid, sets, comment=''):
         ConstraintADD.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.conid = conid
         self.sets = expand_thru(sets)
         self.sets.sort()
@@ -772,7 +772,7 @@ class MPCADD(ConstraintADD):
     def __init__(self, conid, sets, comment=''):
         ConstraintADD.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.conid = conid
         self.sets = expand_thru(sets)
         self.sets.sort()

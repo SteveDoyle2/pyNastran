@@ -73,7 +73,7 @@ class CBUSH(BushElement):
     def __init__(self, eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=''):
         BushElement.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.ga = ga
@@ -247,7 +247,7 @@ class CBUSH1D(BushElement):
 
     def __init__(self, eid, pid, ga, gb, cid, comment=''):
         if comment:
-            self._comment = comment
+             self.comment = comment
         BushElement.__init__(self)
         self.eid = eid
         self.pid = pid
@@ -361,7 +361,7 @@ class CBUSH2D(BushElement):
     def __init__(self, eid, pid, ga, gb, cid, plane, sptid, comment=''):
         BushElement.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.ga = ga

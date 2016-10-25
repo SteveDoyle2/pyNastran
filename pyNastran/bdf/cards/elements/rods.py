@@ -90,7 +90,7 @@ class CROD(RodElement):
         """
         RodElement.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.prepare_node_ids(nids)
@@ -226,7 +226,7 @@ class CTUBE(RodElement):
         """
         RodElement.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.prepare_node_ids(nids)
@@ -343,7 +343,7 @@ class CONROD(RodElement):
         """
         RodElement.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.mid = mid
         self.A = A

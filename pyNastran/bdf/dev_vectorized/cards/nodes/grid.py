@@ -81,7 +81,7 @@ class GRDSET(object):
         self.seid = 0
 
     def add(self, card, comment=''):
-        self._comment = comment
+         self.comment = comment
         self.n = 1
         self.cp = integer_or_blank(card, 2, 'cp', 0)
         self.cd = integer_or_blank(card, 6, 'cd', 0)

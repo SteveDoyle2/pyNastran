@@ -78,7 +78,7 @@ class CBEAM(CBAR):
                  pa, pb, wa, wb, sa, sb, comment=''):
         LineElement.__init__(self)
         if comment:
-            self._comment = comment
+             self.comment = comment
         self.eid = eid
         self.pid = pid
         self.ga = ga
