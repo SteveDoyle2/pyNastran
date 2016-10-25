@@ -503,7 +503,7 @@ class WriteMesh(BDFAttributes):
         #self._write_constraints(outfile, size, is_double)
         #self._write_optimization(outfile, size, is_double)
         #self._write_tables(outfile, size, is_double)
-        #self._write_sets(outfile, size, is_double)
+        self._write_sets(outfile, size, is_double)
         #self._write_contact(outfile, size, is_double)
         self._write_contact(outfile, size, is_double)
         self._write_rejects(outfile, size, is_double)
@@ -755,8 +755,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.qsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
-            for (set_id, set_obj) in sorted(iteritems(self.setsSuper)):  # dict
-                msg.append(set_obj.write_card(size, is_double))
+            #for (set_id, set_obj) in sorted(iteritems(self.setsSuper)):  # dict
+                #msg.append(set_obj.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_tables(self, outfile, size=8, is_double=False):

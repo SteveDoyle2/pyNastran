@@ -371,7 +371,7 @@ class BDFAttributes(object):
 
         # ----------------------------------------------------------------
         #: SETy
-        self.sets = {}
+        self.sets = {} # SET1, SET3
         self.asets = []
         self.bsets = []
         self.csets = []

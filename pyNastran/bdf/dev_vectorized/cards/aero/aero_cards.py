@@ -3700,7 +3700,7 @@ class SPLINE1(Spline):
         melements = set_blank_if_default(self.melements, 10)
 
         list_fields = ['SPLINE1', self.eid, self.caero, self.box1, self.box2,
-                       self.Set(), dz, method, usage, nelements, melements]
+                       self.setg, dz, method, usage, nelements, melements]
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 

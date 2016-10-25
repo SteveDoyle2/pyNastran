@@ -24,7 +24,7 @@ from pyNastran.utils import object_attributes, print_bad_path
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
                                  parse_executive_control_deck, parse_patran_syntax)
 #from pyNastran.bdf.field_writer_8 import print_card_8
-#from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 from pyNastran.utils import _filename
@@ -41,15 +41,27 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.dev_vectorized.bdf_interface2.write_mesh import WriteMesh
+from pyNastran.bdf.dev_vectorized.bdf_interface2.get_card import GetMethods
 from pyNastran.bdf.dev_vectorized.bdf_interface2.cross_reference import CrossReference
 from pyNastran.bdf.dev_vectorized.bdf_interface2.add_card import AddCard
 from pyNastran.bdf.field_writer_16 import print_field_16
 
 from pyNastran.bdf.dev_vectorized.cards.constraints.spc1 import SPC1, get_spc1_constraint
+from pyNastran.bdf.dev_vectorized.cards.constraints.mpc import MPC, get_mpc_constraint
+#from pyNastran.bdf.dev_vectorized.cards.constraints.mpcax import MPCAX
+from pyNastran.bdf.dev_vectorized.cards.constraints.mpcadd import MPCADD
 
 
 # old cards
 from pyNastran.bdf.cards.params import PARAM
+from pyNastran.bdf.dev_vectorized.cards.bdf_sets import (
+    ASET, BSET, CSET, QSET, USET,
+    ASET1, BSET1, CSET1, QSET1, USET1,
+    SET1, SET3, RADSET,
+    SEBSET, SECSET, SEQSET, # SEUSET
+    SEBSET1, SECSET1, SEQSET1, # SEUSET1
+    SESET, SEQSEP)
+
 from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.dev_vectorized.cards.aero.aero_cards import (
@@ -119,8 +131,6 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
                    xref=xref, punch=punch, read_includes=True, encoding=encoding)
 
     #if 0:
-        ### TODO: remove all the extra methods
-
         #keys_to_suppress = []
         #method_names = model.object_methods(keys_to_skip=keys_to_suppress)
 
@@ -173,7 +183,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     return model
 
 
-class BDF(AddCard, CrossReference, WriteMesh):
+class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
@@ -198,6 +208,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
         AddCard.__init__(self)
         CrossReference.__init__(self)
         WriteMesh.__init__(self)
+        GetMethods.__init__(self)
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
         self.read_includes = True
@@ -285,6 +296,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
             # constraints
             'SPC1', 'SPCADD',
+            'MPC', 'MPCADD',
 
             # aero cards
             'AERO',  ## aero
@@ -314,6 +326,16 @@ class BDF(AddCard, CrossReference, WriteMesh):
             'DIVERG', ## divergs
 
             'PARAM', ## params
+
+            'SET1', 'SET3',  ## sets
+            'ASET', 'ASET1',  ## asets
+            'BSET', 'BSET1',  ## bsets
+            'CSET', 'CSET1',  ## csets
+            'QSET', 'QSET1',  ## qsets
+            'USET', 'USET1',  ## usets
+
+            ## suport/suport1/se_suport
+            'SUPORT', 'SUPORT1', 'SESUP',
 
             #: methods
             'EIGB', 'EIGR', 'EIGRL',
@@ -1460,7 +1482,9 @@ class BDF(AddCard, CrossReference, WriteMesh):
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
         class Crash(object):
+            """dummy class for crashing when an invalid card is called"""
             def __init__(self):
+                """dummy init"""
                 pass
             @classmethod
             def add_card(cls, card, comment=''):
@@ -1788,34 +1812,34 @@ class BDF(AddCard, CrossReference, WriteMesh):
             #'BSURF' : (BSURF, self.add_BSURF),
             #'BSURFS' : (BSURFS, self.add_BSURFS),
 
-            #'ASET' : (ASET, self.add_ASET),
-            #'ASET1' : (ASET1, self.add_ASET),
+            'ASET' : (ASET, self.add_aset),
+            'ASET1' : (ASET1, self.add_aset),
 
-            #'BSET' : (BSET, self.add_BSET),
-            #'BSET1' : (BSET1, self.add_BSET),
+            'BSET' : (BSET, self.add_bset),
+            'BSET1' : (BSET1, self.add_bset),
 
-            #'CSET' : (CSET, self.add_CSET),
-            #'CSET1' : (CSET1, self.add_CSET),
+            'CSET' : (CSET, self.add_cset),
+            'CSET1' : (CSET1, self.add_cset),
 
-            #'QSET' : (QSET, self.add_QSET),
-            #'QSET1' : (QSET1, self.add_QSET),
+            'QSET' : (QSET, self.add_qset),
+            'QSET1' : (QSET1, self.add_qset),
 
-            #'USET' : (USET, self.add_USET),
-            #'USET1' : (USET1, self.add_USET),
+            'USET' : (USET, self.add_uset),
+            'USET1' : (USET1, self.add_uset),
 
-            #'SET1' : (SET1, self.add_SET),
-            #'SET3' : (SET3, self.add_SET),
+            'SET1' : (SET1, self.add_set),
+            'SET3' : (SET3, self.add_set),
 
-            #'SESET' : (SESET, self.add_SESET),
+            'SESET' : (SESET, self.add_seset),
 
-            #'SEBSET' : (SEBSET, self.add_SEBSET),
-            #'SEBSET1' : (SEBSET1, self.add_SEBSET),
+            'SEBSET' : (SEBSET, self.add_sebset),
+            'SEBSET1' : (SEBSET1, self.add_sebset),
 
-            #'SECSET' : (SECSET, self.add_SECSET),
-            #'SECSET1' : (SECSET1, self.add_SECSET),
+            'SECSET' : (SECSET, self.add_secset),
+            'SECSET1' : (SECSET1, self.add_secset),
 
-            #'SEQSET' : (SEQSET, self.add_SEQSET),
-            #'SEQSET1' : (SEQSET1, self.add_SEQSET),
+            'SEQSET' : (SEQSET, self.add_seqset),
+            'SEQSET1' : (SEQSET1, self.add_seqset),
 
             ##'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
 
@@ -1958,19 +1982,19 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
     def _prepare_dmi(self, card, card_obj, comment=''):
         """adds a DMI"""
-        self._prepare_dmix(DMI, self.add_DMI, card_obj, comment=comment)
+        self._prepare_dmix(DMI, self.add_dmi, card_obj, comment=comment)
 
     def _prepare_dmij(self, card, card_obj, comment=''):
         """adds a DMIJ"""
-        self._prepare_dmix(DMIJ, self.add_DMIJ, card_obj, comment=comment)
+        self._prepare_dmix(DMIJ, self.add_dmij, card_obj, comment=comment)
 
     def _prepare_dmik(self, card, card_obj, comment=''):
         """adds a DMIK"""
-        self._prepare_dmix(DMIK, self.add_DMIK, card_obj, comment=comment)
+        self._prepare_dmix(DMIK, self.add_dmik, card_obj, comment=comment)
 
     def _prepare_dmiji(self, card, card_obj, comment=''):
         """adds a DMIJI"""
-        self._prepare_dmix(DMIJI, self.add_DMIJI, card_obj, comment=comment)
+        self._prepare_dmix(DMIJI, self.add_dmiji, card_obj, comment=comment)
 
     def _prepare_cmass4(self, card, card_obj, comment=''):
         """adds a CMASS4"""
@@ -2481,8 +2505,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
         for (lid, loads) in sorted(iteritems(self.dload_entries)):
             msg.append('bdf.dload_entries[%s]' % lid)
             groups_dict = {}
-            for load in loads:
-                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for loadi in loads:
+                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
@@ -3123,6 +3147,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
         #self.mat8.allocate(card_count)
 
     def _parse_spc1(self, card_name, card):
+        """adds SPC1s"""
         for comment, card_lines in card:
             card_obj = self._cardlines_to_card_obj(card_lines, card_name)
             constraint_id, dofs, node_ids = get_spc1_constraint(card_obj)
@@ -3135,6 +3160,50 @@ class BDF(AddCard, CrossReference, WriteMesh):
             #spc1 = self.spc1.setdefault(constraint_id, SPC1(self))
             spc1.add_card(card_obj, comment=comment)
             spc1.add(constraint_id, dofs, node_ids, comment=comment)
+
+    def _parse_mpc(self, card_name, card):
+        """adds MPCs"""
+        for comment, card_lines in card:
+            card_obj = self._cardlines_to_card_obj(card_lines, card_name)
+            constraint_id, constraint = get_mpc_constraint(card_obj)
+
+            if constraint_id in self.spc1:
+                mpc = self.mpc[constraint_id]
+            else:
+                mpc = MPC(self)
+                self.mpc[constraint_id] = mpc
+            #spc1 = self.spc1.setdefault(constraint_id, SPC1(self))
+            #mpc.add_card(card_obj, comment=comment)
+            mpc.add(constraint_id, constraint, comment=comment)
+
+    def _parse_spcadd(self, card_name, card):
+        """adds SPCADDs"""
+        for comment, card_lines in card:
+            card_obj = self._cardlines_to_card_obj(card_lines, card_name)
+            constraint_id, node_ids = get_spcadd_constraint(card_obj)
+
+            if constraint_id in self.spc1:
+                spcadd = self.spcadd[constraint_id]
+            else:
+                spcadd = MPCADD(self)
+                self.spcadd[constraint_id] = spcadd
+            mpcadd.add_card(card_obj, comment=comment)
+
+            spcadd.add(constraint_id, node_ids, comment=comment)
+
+    def _parse_mpcadd(self, card_name, card):
+        """adds MPCADDs"""
+        for comment, card_lines in card:
+            card_obj = self._cardlines_to_card_obj(card_lines, card_name)
+            constraint_id, node_ids = get_spcadd_constraint(card_obj)
+
+            if constraint_id in self.spc1:
+                mpcadd = self.mpcadd[constraint_id]
+            else:
+                mpcadd = MPCADD(self)
+                self.mpcadd[constraint_id] = mpcadd
+            #mpcadd.add_card(card_obj, comment=comment)
+            mpcadd.add(constraint_id, node_ids, comment=comment)
 
     def _parse_ctetra(self, card_name, card):
         """adds ctetras"""
@@ -3168,7 +3237,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
             ('CHEXA20', self.chexa20),
         )
 
-    def _cardlines_to_card_obj(self, card_lines, card_name):
+    @staticmethod
+    def _cardlines_to_card_obj(card_lines, card_name):
         """makes a BDFCard object"""
         fields = to_fields(card_lines, card_name)
         card = wipe_empty_fields(fields)
@@ -3240,6 +3310,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
                 'CHEXA' : self._parse_chexa,
                 'SPC1' : self._parse_spc1,
                 #'SPCADD' : self._parse_spcadd,
+                'MPC' : self._parse_mpc,
+                'MPCADD' : self._parse_mpcadd,
             }
             # self._is_cards_dict = True
             # this is the loop that hits...
@@ -3256,7 +3328,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             for card_name, card in sorted(iteritems(cards)):
                 ncards = len(card)
                 if self.is_reject(card_name):# and card_name not in :
-                    self.log.info('n%s = %s (rejecting)' % (card_name, ncards))
+                    self.log.warning('n%s = %s (rejecting)' % (card_name, ncards))
                     #self.log.info('  rejecting card_name = %s' % card_name)
                     for cardi in card:
                         self.rejects.append([cardi[0]] + cardi[1])
@@ -3595,8 +3667,3 @@ def _lines_to_decks(lines, i, punch):
     executive_control_lines = [_clean_comment(line) for line in executive_control_lines]
     case_control_lines = [_clean_comment(line) for line in case_control_lines]
     return executive_control_lines, case_control_lines, bulk_data_lines
-
-
-if __name__ == '__main__':  # pragma: no cover
-    from pyNastran.bdf.test.test_bdf import main
-    #main()
