@@ -47,7 +47,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
     components as fcomponents, components_or_blank as fcomponents_or_blank,
-    fields, string, string_or_blank, integer_string_or_blank)
+    fields, string, integer_string_or_blank)
 
 
 class Set(BaseCard):
@@ -551,11 +551,11 @@ class CSET1(Set):
             components = fcomponents(card, 1, 'components')
 
         ids = []
-        ii = 1
+        id_count = 1
         for ifield in range(2, len(card)):
-            idi = integer_or_string(card, ifield, 'ID%i' % ii)
+            idi = integer_or_string(card, ifield, 'ID%i' % id_count)
             ids.append(idi)
-            ii += 1
+            id_count += 1
         return CSET1(ids, components, comment=comment)
 
     def cross_reference(self, model):

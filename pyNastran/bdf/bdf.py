@@ -1752,7 +1752,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'EPOINT' : (EPOINTs, self.add_epoint),
             'POINT' : (POINT, self.add_point),
 
-            'PARAM' : (PARAM, self.add_PARAM),
+            'PARAM' : (PARAM, self.add_param),
 
             'CORD2R' : (CORD2R, self.add_coord),
             'CORD2C' : (CORD2C, self.add_coord),
@@ -1952,7 +1952,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'FREQ4' : (FREQ4, self.add_FREQ),
 
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
-            'DESVAR' : (DESVAR, self.add_DESVAR),
+            'DESVAR' : (DESVAR, self.add_desvar),
             # BCTSET
 
             'TEMP' : (TEMP, self.add_thermal_load),
@@ -1969,73 +1969,73 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PCONVM' : (PCONVM, self.add_convection_property),
 
             # aero
-            'AECOMP' : (AECOMP, self.add_AECOMP),
-            'AEFACT' : (AEFACT, self.add_AEFACT),
-            'AELINK' : (AELINK, self.add_AELINK),
-            'AELIST' : (AELIST, self.add_AELIST),
-            'AEPARM' : (AEPARM, self.add_AEPARM),
-            'AESTAT' : (AESTAT, self.add_AESTAT),
-            'AESURF' : (AESURF, self.add_AESURF),
-            'AESURFS' : (AESURFS, self.add_AESURFS),
+            'AECOMP' : (AECOMP, self.add_aecomp),
+            'AEFACT' : (AEFACT, self.add_aefact),
+            'AELINK' : (AELINK, self.add_aelink),
+            'AELIST' : (AELIST, self.add_aelist),
+            'AEPARM' : (AEPARM, self.add_aeparm),
+            'AESTAT' : (AESTAT, self.add_aestat),
+            'AESURF' : (AESURF, self.add_aesurf),
+            'AESURFS' : (AESURFS, self.add_aesurfs),
 
-            'CAERO1' : (CAERO1, self.add_CAERO),
-            'CAERO2' : (CAERO2, self.add_CAERO),
-            'CAERO3' : (CAERO3, self.add_CAERO),
-            'CAERO4' : (CAERO4, self.add_CAERO),
-            'CAERO5' : (CAERO5, self.add_CAERO),
+            'CAERO1' : (CAERO1, self.add_caero),
+            'CAERO2' : (CAERO2, self.add_caero),
+            'CAERO3' : (CAERO3, self.add_caero),
+            'CAERO4' : (CAERO4, self.add_caero),
+            'CAERO5' : (CAERO5, self.add_caero),
 
-            'PAERO1' : (PAERO1, self.add_PAERO),
-            'PAERO2' : (PAERO2, self.add_PAERO),
-            'PAERO3' : (PAERO3, self.add_PAERO),
-            'PAERO4' : (PAERO4, self.add_PAERO),
-            'PAERO5' : (PAERO5, self.add_PAERO),
+            'PAERO1' : (PAERO1, self.add_paero),
+            'PAERO2' : (PAERO2, self.add_paero),
+            'PAERO3' : (PAERO3, self.add_paero),
+            'PAERO4' : (PAERO4, self.add_paero),
+            'PAERO5' : (PAERO5, self.add_paero),
 
-            'SPLINE1' : (SPLINE1, self.add_SPLINE),
-            'SPLINE2' : (SPLINE2, self.add_SPLINE),
-            'SPLINE3' : (SPLINE3, self.add_SPLINE),
-            'SPLINE4' : (SPLINE4, self.add_SPLINE),
-            'SPLINE5' : (SPLINE5, self.add_SPLINE),
+            'SPLINE1' : (SPLINE1, self.add_spline),
+            'SPLINE2' : (SPLINE2, self.add_spline),
+            'SPLINE3' : (SPLINE3, self.add_spline),
+            'SPLINE4' : (SPLINE4, self.add_spline),
+            'SPLINE5' : (SPLINE5, self.add_spline),
 
             # SOL 144
-            'AEROS' : (AEROS, self.add_AEROS),
-            'TRIM' : (TRIM, self.add_TRIM),
-            'DIVERG' : (DIVERG, self.add_DIVERG),
+            'AEROS' : (AEROS, self.add_aeros),
+            'TRIM' : (TRIM, self.add_trim),
+            'DIVERG' : (DIVERG, self.add_diverg),
 
             # SOL 145
-            'AERO' : (AERO, self.add_AERO),
-            'FLUTTER' : (FLUTTER, self.add_FLUTTER),
-            'FLFACT' : (FLFACT, self.add_FLFACT),
-            'MKAERO1' : (MKAERO1, self.add_MKAERO),
-            'MKAERO2' : (MKAERO2, self.add_MKAERO),
+            'AERO' : (AERO, self.add_aero),
+            'FLUTTER' : (FLUTTER, self.add_flutter),
+            'FLFACT' : (FLFACT, self.add_flfact),
+            'MKAERO1' : (MKAERO1, self.add_mkaero),
+            'MKAERO2' : (MKAERO2, self.add_mkaero),
 
             'GUST' : (GUST, self.add_gust),
-            'CSSCHD' : (CSSCHD, self.add_CSSCHD),
-            'MONPNT1' : (MONPNT1, self.add_MONPNT),
+            'CSSCHD' : (CSSCHD, self.add_csschd),
+            'MONPNT1' : (MONPNT1, self.add_monpnt),
 
             #'NLPARM' : (NLPARM, self.add_NLPARM),
-            'NLPCI' : (NLPCI, self.add_NLPCI),
-            'TSTEP' : (TSTEP, self.add_TSTEP),
-            'TSTEPNL' : (TSTEPNL, self.add_TSTEPNL),
+            'NLPCI' : (NLPCI, self.add_nlpci),
+            'TSTEP' : (TSTEP, self.add_tstep),
+            'TSTEPNL' : (TSTEPNL, self.add_tstepnl),
 
             'TF' : (TF, self.add_TF),
             'DELAY' : (DELAY, self.add_DELAY),
 
-            'DCONADD' : (DCONADD, self.add_DCONSTR),
-            'DCONSTR' : (DCONSTR, self.add_DCONSTR),
-            'DDVAL' : (DDVAL, self.add_DDVAL),
-            'DLINK' : (DLINK, self.add_DLINK),
+            'DCONADD' : (DCONADD, self.add_dconstr),
+            'DCONSTR' : (DCONSTR, self.add_dconstr),
+            'DDVAL' : (DDVAL, self.add_ddval),
+            'DLINK' : (DLINK, self.add_dlink),
 
-            'DTABLE' : (DTABLE, self.add_DTABLE),
-            'DRESP1' : (DRESP1, self.add_DRESP),
-            'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
-            'DRESP3' : (DRESP3, self.add_DRESP),
-            'DVCREL1' : (DVCREL1, self.add_DVCREL), # dvcrels
-            'DVCREL2' : (DVCREL2, self.add_DVCREL),
-            'DVPREL1' : (DVPREL1, self.add_DVPREL), # dvprels
-            'DVPREL2' : (DVPREL2, self.add_DVPREL),
-            'DVMREL1' : (DVMREL1, self.add_DVMREL), # ddvmrels
-            'DVMREL2' : (DVMREL2, self.add_DVMREL),
-            'DVGRID' : (DVGRID, self.add_DVGRID), # dvgrids
+            'DTABLE' : (DTABLE, self.add_dtable),
+            'DRESP1' : (DRESP1, self.add_dresp),
+            'DRESP2' : (DRESP2, self.add_dresp), # deqatn
+            'DRESP3' : (DRESP3, self.add_dresp),
+            'DVCREL1' : (DVCREL1, self.add_dvcrel), # dvcrels
+            'DVCREL2' : (DVCREL2, self.add_dvcrel),
+            'DVPREL1' : (DVPREL1, self.add_dvprel), # dvprels
+            'DVPREL2' : (DVPREL2, self.add_dvprel),
+            'DVMREL1' : (DVMREL1, self.add_dvmrel), # ddvmrels
+            'DVMREL2' : (DVMREL2, self.add_dvmrel),
+            'DVGRID' : (DVGRID, self.add_dvgrid), # dvgrids
 
             'TABLED1' : (TABLED1, self.add_table),
             'TABLED2' : (TABLED2, self.add_table),
@@ -2065,41 +2065,41 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'BSURF' : (BSURF, self.add_BSURF),
             'BSURFS' : (BSURFS, self.add_BSURFS),
 
-            'ASET' : (ASET, self.add_ASET),
-            'ASET1' : (ASET1, self.add_ASET),
+            'ASET' : (ASET, self.add_aset),
+            'ASET1' : (ASET1, self.add_aset),
 
-            'BSET' : (BSET, self.add_BSET),
-            'BSET1' : (BSET1, self.add_BSET),
+            'BSET' : (BSET, self.add_bset),
+            'BSET1' : (BSET1, self.add_bset),
 
-            'CSET' : (CSET, self.add_CSET),
-            'CSET1' : (CSET1, self.add_CSET),
+            'CSET' : (CSET, self.add_cset),
+            'CSET1' : (CSET1, self.add_cset),
 
-            'QSET' : (QSET, self.add_QSET),
-            'QSET1' : (QSET1, self.add_QSET),
+            'QSET' : (QSET, self.add_qset),
+            'QSET1' : (QSET1, self.add_qset),
 
-            'USET' : (USET, self.add_USET),
-            'USET1' : (USET1, self.add_USET),
+            'USET' : (USET, self.add_uset),
+            'USET1' : (USET1, self.add_uset),
 
-            'SET1' : (SET1, self.add_SET),
-            'SET3' : (SET3, self.add_SET),
+            'SET1' : (SET1, self.add_set),
+            'SET3' : (SET3, self.add_set),
 
-            'SESET' : (SESET, self.add_SESET),
+            'SESET' : (SESET, self.add_seset),
 
-            'SEBSET' : (SEBSET, self.add_SEBSET),
-            'SEBSET1' : (SEBSET1, self.add_SEBSET),
+            'SEBSET' : (SEBSET, self.add_sebset),
+            'SEBSET1' : (SEBSET1, self.add_sebset),
 
-            'SECSET' : (SECSET, self.add_SECSET),
-            'SECSET1' : (SECSET1, self.add_SECSET),
+            'SECSET' : (SECSET, self.add_secset),
+            'SECSET1' : (SECSET1, self.add_secset),
 
-            'SEQSET' : (SEQSET, self.add_SEQSET),
-            'SEQSET1' : (SEQSET1, self.add_SEQSET),
+            'SEQSET' : (SEQSET, self.add_seqset),
+            'SEQSET1' : (SEQSET1, self.add_seqset),
 
             #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
 
             #'SEUSET' : (SEUSET, self.add_SEUSET),
             #'SEUSET1' : (SEUSET1, self.add_SEUSET),
 
-            'NLPARM' : (NLPARM, self.add_NLPARM),
+            'NLPARM' : (NLPARM, self.add_nlparm),
             # BCTSET
         }
         self._card_parser_prepare = {
