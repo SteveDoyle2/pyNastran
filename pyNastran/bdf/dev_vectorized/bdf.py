@@ -3297,6 +3297,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
                 #else:
                     #self.add_card(card_lines, card_name, comment=comment,
                                   #is_list=False, has_none=False)
+
+        self.coords.build()
         self.elements.build()
         self.properties.build()
         self.materials.build()

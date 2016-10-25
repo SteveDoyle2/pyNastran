@@ -9,7 +9,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import Shel
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank)
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank)
 
 
 class CQUAD4(ShellElement):
@@ -29,13 +29,17 @@ class CQUAD4(ShellElement):
             #: Node IDs
             self.node_ids = zeros((ncards, 4), 'int32')
             self.zoffset = zeros(ncards, 'int32')
+
+            self.theta = np.full(ncards, np.nan, 'float32')
+            self.mcid = np.full(ncards, np.nan, 'int32')
+            self.is_theta = zeros(ncards, 'bool')
+
             self.t_flag = zeros(ncards, 'int32')
             self.thickness = zeros((ncards, 4), float_fmt)
 
     def add(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
-
         self.property_id[i] = integer(card, 2, 'pid')
 
         self.node_ids[i, :] = [
@@ -45,7 +49,17 @@ class CQUAD4(ShellElement):
             integer(card, 6, 'n4')
         ]
 
-        #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
+        theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
+
+        if isinstance(theta_mcid, float):
+            self.is_theta[i] = 1
+            self.theta[i] = theta_mcid
+        else:
+            self.is_theta[i] = 0
+            self.mcid[i] = theta_mcid
+
+
+        #self.thetaMcid =
         #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
         #blank(card, 8, 'blank')
         #blank(card, 9, 'blank')
@@ -65,6 +79,10 @@ class CQUAD4(ShellElement):
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
+            self.is_theta = self.is_theta[i]
+            self.theta = self.theta[i]
+            self.mcid = self.mcid[i]
+
             self.thickness = self.thickness[i, :]
             self.t_flag = self.t_flag[i]
             assert self.node_ids.min() > 0
@@ -206,6 +224,8 @@ class CQUAD4(ShellElement):
         """
         Gets the positions of a list of nodes
 
+        Parameters
+        ----------
         :param nids_to_get:  the node IDs to get as an NDARRAY
         :param node_ids:     the node IDs that contains all the nids_to_get
                              as an NDARRAY
@@ -260,7 +280,38 @@ class CQUAD4(ShellElement):
             xyz3,
             xyz4,
         ])[:, :2]
-        #print(xy)
+
+        print(xy)
+
+        centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+
+        normal = self.Normal()
+        is_theta = self.is_theta[i]
+        if is_theta:
+            print(self.model.coords)
+            mcid_ref = self.model.coords.get_coord_index_by_coord_id(0)
+            print('mcid_ref\n', mcid_ref)
+            theta = self.theta[i]
+            raise NotImplementedError('theta=%r' % theta)
+        else:
+            mcid = self.mcid[i]
+            #print(mcid)
+            #print(self.model.coords)
+            mcid_ref = self.model.coords.get_coord_index_by_coord_id(mcid)
+            i = mcid_ref.i
+            jmat = np.cross(normal, i) # k x i
+            jmat /= np.linalg.norm(jmat)
+            imat = np.cross(jmat, normal)
+            T = np.vstack([imat, jmat, normal])
+            print(T)
+        xyz = np.vstack([
+            xyz1,
+            xyz2,
+            xyz3,
+            xyz4,
+        ]).dot(T)
+
+        dfg
 
         dofs = array([
             i1, i1+1,
