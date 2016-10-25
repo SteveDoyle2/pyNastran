@@ -234,7 +234,7 @@ class AbaqusIO(object):
                     elem = vtkTriangle()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[3])
+                    elem.GetPointIds().SetId(2, node_ids[2])
                     self.grid.InsertNextCell(5, elem.GetPointIds())
 
             if n_cpe4:

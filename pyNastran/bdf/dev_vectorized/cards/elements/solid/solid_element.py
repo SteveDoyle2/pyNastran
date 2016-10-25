@@ -59,7 +59,7 @@ class SolidElement(Element):
 
     def allocate(self, card_count):
         ncards = card_count[self.type]
-        self.model.log.debug('%s.allocate(%s)' % (self.type, ncards))
+        #self.model.log.debug('%s.allocate(%s)' % (self.type, ncards))
         if ncards:
             self.n = ncards
             #float_fmt = self.model.float_fmt
@@ -69,7 +69,7 @@ class SolidElement(Element):
             #self._comments.append(comment)
 
     def build(self):
-        self.model.log.debug('self.n = %i' % self.n)
+        #self.model.log.debug('self.n = %i' % self.n)
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

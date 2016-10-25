@@ -86,3 +86,10 @@ class PropertiesBeam(object):
         types = self._get_types(nlimit=False)
         for prop in types:
             prop.write_card(bdf_file, size=size, property_id=property_id)
+
+    def __repr__(self):
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for prop in types:
+            msg += '  <%s object; n=%s>\n' % (prop.type, prop.n)
+        return msg
