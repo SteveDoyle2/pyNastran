@@ -93,9 +93,9 @@ class BaseCard(object):
     @comment.setter
     def comment(self, new_comment):
         """sets a comment"""
-        comment = new_comment.rstrip()
-        self._comment = comment + '\n' if comment else ''
-        #self._comment = _format_comment(new_comment)  # totally breaks tests
+        #comment = new_comment.rstrip()
+        #self._comment = comment + '\n' if comment else ''
+        self._comment = _format_comment(new_comment)  # totally breaks tests
 
     def _test_update_fields(self):
         n = 1
@@ -575,7 +575,7 @@ def _format_comment(comment):
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
     else:
-        return ''.join([u'$ {}\n'.format(_) for _ in comment.split('\n')])
+        return ''.join([u'${}\n'.format(_) for _ in comment.split('\n')])
 
 def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     try:

@@ -1275,7 +1275,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     # cards[old_card_name].append([full_comment, card_lines])
 
                     # new list version
-                    cards.append([old_card_name, full_comment, card_lines])
+                    #if full_comment:
+                        #print('full_comment = ', full_comment)
+                    cards.append([old_card_name, _prep_comment(full_comment), card_lines])
 
                     card_count[old_card_name] += 1
                     card_lines = []
@@ -1300,16 +1302,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 card_lines.append(line)
                 if backup_comment:
                     if comment:
-                        full_comment += backup_comment + '$' + comment + '\n'
+                        full_comment += backup_comment + comment + '\n'
                     else:
                         full_comment += backup_comment
                     backup_comment = ''
                 elif comment:
-                    full_comment += '$' + comment + '\n'
+                    full_comment += comment + '\n'
                     backup_comment = ''
 
             elif comment:
-                backup_comment += '$' + comment + '\n'
+                backup_comment += comment + '\n'
                 #print('add backup=%r' % backup_comment)
             #elif comment:
                 #backup_comment += '$' + comment + '\n'
@@ -1323,7 +1325,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #cards[old_card_name].append([backup_comment + full_comment, card_lines])
 
             # new list version
-            cards.append([old_card_name, backup_comment + full_comment, card_lines])
+            #if backup_comment + full_comment:
+                #print('backup_comment + full_comment = ', backup_comment + full_comment)
+            cards.append([old_card_name, _prep_comment(backup_comment + full_comment), card_lines])
             card_count[old_card_name] += 1
         return cards, card_count
 
@@ -1377,16 +1381,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 card_lines.append(line)
                 if backup_comment:
                     if comment:
-                        full_comment += backup_comment + '$' + comment + '\n'
+                        full_comment += backup_comment + comment + '\n'
                     else:
                         full_comment += backup_comment
                     backup_comment = ''
                 elif comment:
-                    full_comment += '$' + comment + '\n'
+                    full_comment += comment + '\n'
                     backup_comment = ''
 
             elif comment:
-                backup_comment += '$' + comment + '\n'
+                backup_comment += comment + '\n'
                 #print('add backup=%r' % backup_comment)
             #elif comment:
                 #backup_comment += '$' + comment + '\n'
@@ -3602,6 +3606,15 @@ IGNORE_COMMENTS = (
     'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
     'PROPERTIES_MASS', 'MASSES')
 
+def _prep_comment(comment):
+    return comment.rstrip()
+    #print('comment = %r' % comment)
+    #comment = '  this\n  is\n  a comment\n'
+    #print(comment.rstrip('\n').split('\n'))
+    #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment for comment in comment.rstrip().split('\n')]
+
+    #print('sline = ', sline)
+    #asdh
 
 def _clean_comment(comment):
     """
