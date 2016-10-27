@@ -292,11 +292,12 @@ class CTETRA4(SolidElement):
 
         denom = 1 - nu**2
         #C = E/(1 - (poisson^2))*[1 poisson 0; poisson 1 0;0 0 ((1-poisson)/2)];
-        C = np.array([
-            [E/denom, nu*E/denom, 0.],
-            [nu*E/denom, E/denom, 0.],
-            [0., 0., E/(2.0*(1.0+nu))],
-        ], dtype='float64')
+
+        # sigma = C * epsilon
+        C = np.zeros((6, 6), dtype='float64')
+        outside = E / ((1 + nu) * (1 - 2 * nu))
+        C[0, 0] = C[1, 1] = C[2, 2] = (1 - nu) * outside
+        C[3, 3] = C[4, 4] = C[5, 5] = (0.5 - nu) * outside
         #print('C =\n', C)
         #print('thickness =', thickness)
         Ki = np.dot(B.T, C.dot(B))

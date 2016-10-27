@@ -5,7 +5,7 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.bdf import NSM, PMASS
+from pyNastran.bdf.cards.properties.mass import PMASS, NSM
 
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
 from pyNastran.bdf.cards.properties.beam import PBEAM
