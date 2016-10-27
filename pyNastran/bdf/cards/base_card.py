@@ -560,8 +560,8 @@ def _format_comment(comment):
     Examples:
 
     >>> _format_comment('a comment\ntaking two lines')
-    $ a comment
-    $ taking two lines
+    $a comment
+    $taking two lines
 
     >>> _format_comment('')
     <empty string>
@@ -570,12 +570,12 @@ def _format_comment(comment):
     <empty string>
 
     >>> _format_comment('$ a comment within a comment looks weird')
-    $ $ a comment within a comment looks weird
+    $$ a comment within a comment looks weird
     """
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
     else:
-        return ''.join([u'${}\n'.format(_) for _ in comment.split('\n')])
+        return ''.join([u'${}\n'.format(_) for _ in comment.rstrip().split('\n')])
 
 def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     try:
