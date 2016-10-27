@@ -350,7 +350,8 @@ class F06Writer(OP2_F06_Common):
             self.page_num += 1
 
     def write_f06(self, f06_outname, is_mag_phase=False, is_sort1=True,
-                  delete_objects=True, end_flag=False, quiet=False, repr_check=False):
+                  delete_objects=True, end_flag=False, quiet=False, repr_check=False,
+                  close=True):
         """
         Writes an F06 file based on the data we have stored in the object
 
@@ -373,6 +374,8 @@ class F06Writer(OP2_F06_Common):
             suppress print messages
         repr_check: bool; defualt=False
             calls the object repr as a validation test (prints nothing)
+        close : bool; default=True
+            close the f06 file
         """
         if not quiet:
             print("F06:")
@@ -409,7 +412,8 @@ class F06Writer(OP2_F06_Common):
                                       quiet=quiet, repr_check=repr_check)
         #self._write_f06_time_based(f06, page_stamp)
         f06.write(make_end(end_flag, self.end_options))
-        f06.close()
+        if close:
+            f06.close()
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
                                  is_mag_phase=False, is_sort1=True, quiet=False,
