@@ -31,6 +31,8 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils.log import get_logger2
 
 # Tables
+from pyNastran.op2.tables.opg_appliedLoads.opg_objects import RealAppliedLoadsVectorArray, AppliedLoadsVectorArray
+
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
@@ -55,6 +57,11 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import RealCShearForceArr
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (
     RealBeamStressArray, RealBeamStrainArray)
 from pyNastran.op2.tables.oef_forces.oef_force_objects import RealCBeamForceArray
+
+
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
+    RealLoadVectorArray,
+)
 
 def partition_dense_matrix(a, b, c=None):
     raise NotImplementedError('partition_dense_matrix a=%s b=%s c=%s' % (str(a), str(b), str(c)))
@@ -399,7 +406,8 @@ class Solver(OP2):
         self.log.info("--------------")
 
         try:
-            U = solve(K, F)
+            U = scipy.sparse.linalg.spsolve(K, F)
+            #U = solve(K, F) # numpy
         except:
             failed = []
             faileds = []
@@ -533,6 +541,13 @@ class Solver(OP2):
             #sys.exit('starting case')
             self.log.info('starting case')
             self.run_case(self.model, case)
+
+        self.f06_file.write('Kgg / %s =\n%s\n\n' % (self.knorm, list_print(self.Kgg / self.knorm)))
+        self.f06_file.write('Fg =\n%s\n\n' % list_print(self.Fg))
+
+        self.f06_file.write('Kaa / %s =\n%s\n\n' % (self.knorm, list_print(self.Kaa / self.knorm)))
+        self.f06_file.write('Fa =\n%s\n\n' % list_print(self.Fa))
+
         self.f06_file.close()
         if self.op2_file is not None:
             self.op2_file.close()
@@ -1075,7 +1090,7 @@ class Solver(OP2):
         print(self.conrod_force)
         print(self.conrod_stress)
         print(self.conrod_strain)
-        self.write_f06(self.f06_file, end_flag=True)
+        self.write_f06(self.f06_file, end_flag=True, close=False)
         self.write_op2(self.op2_file, packing=True)
         self.write_op2(self.op2_pack_file, packing=False)
         self.log.info('finished SOL 101')
@@ -1616,8 +1631,14 @@ class Solver(OP2):
         #self.log.info('building Mgg')
         #Mgg = self.get_Mgg(model, ndofs, force_calcs=True)
 
+        ngrids = model.grid.n
+        xyz_cid0 = np.zeros((ngrids, 3), dtype='float64')
+        xyz = model.grid.xyz  ## TODO: update for coords
+        for i in range(ngrids):
+            xyz_cid0[i, :] = xyz[i, :]
+
         self.log.info('building Fg')
-        Fg = self.assemble_forces(model, ndofs, case, self.nidComponentToID)
+        Fg = self.assemble_forces(model, ndofs, case, self.nidComponentToID, xyz_cid0)
 
         self.log.info('building Kgg')
         Kgg, Kgg_sparse = self.assemble_global_stiffness_matrix(model, ndofs, self.nidComponentToID)
@@ -1798,7 +1819,44 @@ class Solver(OP2):
         self.grid_point_weight.Q = Q
 
 
+
+    def _save_applied_load(self, Fg):
+        data_code = {'nonlinear_factor':None,
+                     'sort_bits':[0, 0, 0], 'analysis_code':0,
+                     'is_msc':True,'format_code':0, 'sort_code': 0,
+                     'data_names':['lsdvmn'], 'table_code':1,
+                     'num_wide': 8,'table_name': 'OPG',
+
+                     #'log': self.log, 'analysis_code': analysis_code,
+                     #'device_code': 1, 'table_code': 1, 'sort_code': 0,
+                     #'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
+                     #'nonlinear_factor': None, 'data_names':['lsdvmn']
+
+                     }
+        isubcase= self.subcase_id
+        dt = None
+        is_sort1 = True
+        applied_loads = RealLoadVectorArray(
+            data_code,
+            is_sort1,
+            isubcase,
+            dt)
+        ntimes = 1
+        nnodes = Fg.size // 6
+        nx = ntimes
+        ny = nnodes
+        float_fmt = 'float32'
+        applied_loads.build_data(ntimes, nnodes, nx, ny, float_fmt)
+        applied_loads.node_gridtype[:, 0] = self.model.grid.node_id
+        applied_loads.node_gridtype[:, 1] = 1 # G
+        self.load_vectors[self.subcase_id] = applied_loads
+        applied_loads.data[0, :, :] = Fg.reshape((nnodes, 6))
+
     def solve_sol_101(self, Kgg, Fg):
+        self.Kgg = Kgg
+        self.Fg = Fg
+
+        self._save_applied_load(Fg)
         for (i, j, a) in zip(self.iUm, self.jUm, self.Um):
             self.log.info("Kgg[%s, %s] = %s" % (i, j, a))
             Kgg[i, j] = a
@@ -1867,9 +1925,11 @@ class Solver(OP2):
             #Fa = Fa0  # + Cam*Fm
             #Kaa = Kaa0  # +Kaa1+Kaa2
 
+        self.Kaa = Kaa
+        self.Fa = Fa
         Ua = self._solve(Kaa, Fa, dofs2)
         #self.Um = Kma*Ua
-
+        self.Ua = Ua
         return Ua
 
     def element_dof_start(self, elem, nids):
@@ -2270,13 +2330,27 @@ class Solver(OP2):
         self.iUv = self.iUo + self.iUc + self.iUr
         return
 
-    def write_oload_resultant(self, Fg):
+    def write_oload_resultant(self, Fg, xyz_cid0):
         nrows = Fg.size // 6
-        Fg2 = Fg.reshape(nrows, 6)
-        Fxyz = Fg2.sum(axis=0)
-        self.oload_resultant = Resultant('OLOAD', Fxyz, self.subcase_id)
-        print(Fxyz)
+        Fxyz = Fg.reshape(nrows, 6)
+        Fxyz_sum  = Fxyz.sum(axis=0)
+        forces = Fxyz[:, :3]
+
+        #print('Fxyz =', Fxyz)
+        #print('Fxyz_sum =', Fxyz_sum)
+        #print('forces =', forces)
+        #print('Fg =\n', Fg)
+        #print('xyz_cid0 =\n', xyz_cid0)
+        #print(xyz_cid0.shape)
+        #print(forces.shape)
+        moments = np.cross(xyz_cid0, forces)
+        #print('moments =', moments)
         self.log.debug(Fg)
+        moments_sum = moments.sum(axis=0)
+        #print('moments_sum =', moments_sum)
+        total_load = Fxyz_sum
+        total_load[:3] += moments_sum
+        self.oload_resultant = Resultant('OLOAD', total_load, self.subcase_id)
         page_stamp = self.page_stamp
         page_num = self.page_num
         self.oload_resultant.write_f06(self.f06_file, page_stamp, page_num)
@@ -2284,7 +2358,7 @@ class Solver(OP2):
         #self.f06_file.flush()
 
 
-    def assemble_forces(self, model, ndofs, case, Dofs):
+    def assemble_forces(self, model, ndofs, case, Dofs, xyz_cid0):
         """very similar to write_code_aster loads"""
         self.log.info('assemble forces')
         Fg = zeros(ndofs, 'float64')
@@ -2316,7 +2390,7 @@ class Solver(OP2):
             else:
                 raise NotImplementedError(load.type)
         #print('Fg = %s' % Fg)
-        self.write_oload_resultant(Fg)
+        self.write_oload_resultant(Fg, xyz_cid0=xyz_cid0)
         return Fg
 
         #self.gravLoad = array([0., 0., 0.])
