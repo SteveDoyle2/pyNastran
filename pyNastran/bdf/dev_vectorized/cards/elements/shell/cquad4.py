@@ -10,6 +10,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import Shel
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank)
+from pyNastran.utils.dev import list_print
 
 
 class CQUAD4(ShellElement):
@@ -257,17 +258,23 @@ class CQUAD4(ShellElement):
         #return obj
 
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
+        """gets the stiffness matrix for CQUAD4/PSHELL"""
         area = self.get_area_by_element_index(i)
         #print('self.thickness =', self.thickness)
         #print('self.i =', i)
-        thickness = self.thickness.flatten()[i]
-        #print('thickness =', thickness)
 
         n1, n2, n3, n4 = self.node_ids[i, :]
         pid = self.property_id[i]
         prop = self.model.properties_shell.get_property_by_property_id(pid)
         #prop.get_
-        print(prop)
+        #print(prop)
+
+        # TODO: nodal thickness not supported
+        #thickness = self.thickness.flatten()[i]
+
+        thickness = prop.thickness#.flatten()[i]
+        #print('thickness =', thickness)
+
         mid1 = prop.material_id[0]
         mat = self.model.materials.get_shell_material(mid1)
         print(mat)
@@ -291,7 +298,7 @@ class CQUAD4(ShellElement):
             xyz4,
         ])[:, :2]
 
-        print(xy)
+        #print(xy)
 
         centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
 
@@ -300,7 +307,7 @@ class CQUAD4(ShellElement):
         if is_theta:
             print(self.model.coords)
             mcid_ref = self.model.coords.get_coord_index_by_coord_id(0)
-            print('mcid_ref\n', mcid_ref)
+            #print('mcid_ref\n', mcid_ref)
             theta = self.theta[i]
             #raise NotImplementedError('theta=%r' % theta)
         else:
@@ -418,11 +425,14 @@ class CQUAD4(ShellElement):
                     #print('C =\n', C)
                     #print('thickness =', thickness)
                     Ki = np.dot(B.T, C.dot(B)) * (thickness * darea)
-                    print('Ki(%s,%s) =%s\n' % (u, v, Ki))
+                    #print('Ki(%s,%s) =%s\n' % (u, v, Ki))
+                    #print('Ki(%s,%s) =\n%s\n' % (u, v, list_print(Ki, '%.4e')))
                     K += Ki
 
         #K *= (thickness * darea)
-        print('K =\n', K)
+
+        knorm = 1.0
+        self.model.log.info("K_norm / %s = \n" % knorm + list_print(K / knorm, float_fmt='%-4.4f'))
         return(K, dofs, n_ijv)
 
 

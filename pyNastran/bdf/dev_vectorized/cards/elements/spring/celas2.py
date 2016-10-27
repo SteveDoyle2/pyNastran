@@ -113,7 +113,7 @@ class CELAS2(SpringElement):
             (n1, 1 + delta1),
             (n2, 1 + delta2),
         ]
-        dofs = nIJV
+        dofs = n_ijv
         return (k, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs,
@@ -128,9 +128,7 @@ class CELAS2(SpringElement):
         du = u2 - u1 = 1.1 (tension)
         F = k * du = 3.3
         stress = s * du
-
         """
-
         n = self.n
         du_axial = zeros(n, 'float32')
         for i in range(self.n):
