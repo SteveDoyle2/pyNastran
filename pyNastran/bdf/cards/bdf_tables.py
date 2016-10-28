@@ -134,8 +134,8 @@ class TABLED1(Table):
         if comment:
              self.comment = comment
         self.tid = tid
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
         self.xaxis = xaxis
         self.yaxis = yaxis
         assert self.xaxis in ['LINEAR', 'LOG'], 'xaxis=%r' % (self.xaxis)
@@ -162,7 +162,7 @@ class TABLED1(Table):
                 continue
             xy.append([xi, yi])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
@@ -173,7 +173,7 @@ class TABLED1(Table):
         xaxis = cls._map_axis(data[1])
         yaxis = cls._map_axis(data[2])
         xy = data[3:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
@@ -245,8 +245,8 @@ class TABLED2(Table):
              self.comment = comment
         self.tid = tid
         self.x1 = x1
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -268,7 +268,7 @@ class TABLED2(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED2(tid, x1, x, y, comment=comment)
@@ -278,7 +278,7 @@ class TABLED2(Table):
         tid = data[0]
         x1 = data[1]
         xy = data[2:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
@@ -305,8 +305,8 @@ class TABLED3(Table):
         self.tid = tid
         self.x1 = x1
         self.x2 = x2
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
         assert self.x2 != 0.0
 
     @classmethod
@@ -330,7 +330,7 @@ class TABLED3(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED3(tid, x1, x2, x, y, comment=comment)
@@ -341,7 +341,7 @@ class TABLED3(Table):
         x1 = data[1]
         x2 = data[2]
         xy = data[3:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED3(tid, x1, x2, x, y, comment=comment)
@@ -447,8 +447,8 @@ class TABDMP1(Table):
              self.comment = comment
         self.tid = tid
         self.Type = Type
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
         assert self.Type in ['G', 'CRIT', 'Q'], 'Type=%r' % self.Type
 
     @classmethod
@@ -472,7 +472,7 @@ class TABDMP1(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
 
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABDMP1(tid, Type, x, y, comment=comment)
@@ -483,7 +483,7 @@ class TABDMP1(Table):
         x1 = data[1]
         Type = data[2]
         xy = data[5:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABDMP1(tid, Type, x, y, comment=comment)
@@ -507,8 +507,8 @@ class TABLEM1(Table):
         if comment:
              self.comment = comment
         self.tid = tid
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -529,7 +529,7 @@ class TABLEM1(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM1(tid, x, y, comment=comment)
@@ -538,7 +538,7 @@ class TABLEM1(Table):
     def add_op2_data(cls, data, comment=''):
         tid = data[0]
         xy = data[1:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
@@ -562,8 +562,8 @@ class TABLEM2(Table):
              self.comment = comment
         self.tid = tid
         self.x1 = x1
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -585,7 +585,7 @@ class TABLEM2(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM2(tid, x1, x, y, comment=comment)
@@ -595,7 +595,7 @@ class TABLEM2(Table):
         tid = data[0]
         x1 = data[1]
         xy = data[2:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
@@ -622,8 +622,8 @@ class TABLEM3(Table):
         self.tid = tid
         self.x1 = x1
         self.x2 = x2
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
         assert self.x2 != 0.0
 
     @classmethod
@@ -647,7 +647,7 @@ class TABLEM3(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM3(tid, x1, x2, x, y, comment=comment)
@@ -658,7 +658,7 @@ class TABLEM3(Table):
         x1 = data[1]
         x2 = data[2]
         xy = data[3:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
@@ -741,8 +741,8 @@ class TABLES1(Table):
              self.comment = comment
         self.tid = tid
         self.Type = Type
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
         assert self.Type in [1, 2], 'TABLES1 Type=%s' % self.Type
 
     @classmethod
@@ -765,7 +765,7 @@ class TABLES1(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLES1(tid, Type, x, y, comment=comment)
@@ -774,7 +774,7 @@ class TABLES1(Table):
     def add_op2_data(cls, data, comment=''):
         tid = data[0]
         xy = data[1:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
@@ -800,8 +800,8 @@ class TABLEST(Table):
         if comment:
              self.comment = comment
         self.tid = tid
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -822,7 +822,7 @@ class TABLEST(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEST(tid, x, y, comment=comment)
@@ -831,7 +831,7 @@ class TABLEST(Table):
     def add_op2_data(cls, data, comment=''):
         tid = data[0]
         xy = data[1:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
@@ -865,8 +865,8 @@ class TABRND1(RandomTable):
              self.comment = comment
 
         self.tid = tid
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')
         self.xaxis = xaxis
         self.yaxis = yaxis
         assert self.xaxis in ['LINEAR', 'LOG'], 'xaxis=%r' % (self.xaxis)
@@ -893,7 +893,7 @@ class TABRND1(RandomTable):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
@@ -904,7 +904,7 @@ class TABRND1(RandomTable):
         xaxis = cls._map_axis(data[1])
         yaxis = cls._map_axis(data[2])
         xy = data[3:]
-        xy = np.array(xy)
+        xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
         return TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)

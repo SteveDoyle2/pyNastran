@@ -30,7 +30,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
 
-from pyNastran.bdf.write_path import write_include
+#from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                                      integer_or_string, string)
 
@@ -62,7 +62,7 @@ from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT  # PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
-from pyNastran.bdf.cards.properties.mass import PMASS, NSM
+from pyNastran.bdf.cards.properties.mass import PMASS#, NSM
 from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
                                       AESURF, AESURFS, AERO, AEROS, CSSCHD,
                                       CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -75,7 +75,7 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
-                                                    CORD2R, CORD2C, CORD2S, CORD3G,
+                                                    CORD2R, CORD2C, CORD2S, #CORD3G,
                                                     GMCORD)
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 from pyNastran.bdf.cards.deqatn import DEQATN
@@ -104,18 +104,20 @@ from pyNastran.bdf.cards.optimization import (DCONADD, DCONSTR, DESVAR, DDVAL, D
                                               DVPREL1, DVPREL2,
                                               DVGRID)
 from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET, USET,
-                                          ASET1, BSET1, CSET1, QSET1, USET1,
-                                          SET1, SET3, RADSET,
-                                          SEBSET, SECSET, SEQSET, # SEUSET
-                                          SEBSET1, SECSET1, SEQSET1, # SEUSET1
-                                          SESET, SEQSEP)
+from pyNastran.bdf.cards.bdf_sets import (
+    ASET, BSET, CSET, QSET, USET,
+    ASET1, BSET1, CSET1, QSET1, USET1,
+    SET1, SET3, #RADSET,
+    SEBSET, SECSET, SEQSET, # SEUSET
+    SEBSET1, SECSET1, SEQSET1, # SEUSET1
+    SESET, #SEQSEP
+)
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, RADM, RADBC)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC,
+                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, #TIC,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -769,8 +771,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         #------------------------------------------------
         for key, loads in sorted(iteritems(self.loads)):
-            for load in loads:
-                load.validate()
+            for loadi in loads:
+                loadi.validate()
         for key, tic in sorted(iteritems(self.tics)):
             tic.validate()
         for key, dloads in sorted(iteritems(self.dloads)):
@@ -1275,7 +1277,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     # cards[old_card_name].append([full_comment, card_lines])
 
                     # new list version
-                    cards.append([old_card_name, full_comment, card_lines])
+                    #if full_comment:
+                        #print('full_comment = ', full_comment)
+                    cards.append([old_card_name, _prep_comment(full_comment), card_lines])
 
                     card_count[old_card_name] += 1
                     card_lines = []
@@ -1300,16 +1304,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 card_lines.append(line)
                 if backup_comment:
                     if comment:
-                        full_comment += backup_comment + '$' + comment + '\n'
+                        full_comment += backup_comment + comment + '\n'
                     else:
                         full_comment += backup_comment
                     backup_comment = ''
                 elif comment:
-                    full_comment += '$' + comment + '\n'
+                    full_comment += comment + '\n'
                     backup_comment = ''
 
             elif comment:
-                backup_comment += '$' + comment + '\n'
+                backup_comment += comment + '\n'
                 #print('add backup=%r' % backup_comment)
             #elif comment:
                 #backup_comment += '$' + comment + '\n'
@@ -1323,7 +1327,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #cards[old_card_name].append([backup_comment + full_comment, card_lines])
 
             # new list version
-            cards.append([old_card_name, backup_comment + full_comment, card_lines])
+            #if backup_comment + full_comment:
+                #print('backup_comment + full_comment = ', backup_comment + full_comment)
+            cards.append([old_card_name, _prep_comment(backup_comment + full_comment), card_lines])
             card_count[old_card_name] += 1
         return cards, card_count
 
@@ -1377,16 +1383,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 card_lines.append(line)
                 if backup_comment:
                     if comment:
-                        full_comment += backup_comment + '$' + comment + '\n'
+                        full_comment += backup_comment + comment + '\n'
                     else:
                         full_comment += backup_comment
                     backup_comment = ''
                 elif comment:
-                    full_comment += '$' + comment + '\n'
+                    full_comment += comment + '\n'
                     backup_comment = ''
 
             elif comment:
-                backup_comment += '$' + comment + '\n'
+                backup_comment += comment + '\n'
                 #print('add backup=%r' % backup_comment)
             #elif comment:
                 #backup_comment += '$' + comment + '\n'
@@ -2731,8 +2737,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for (lid, loads) in sorted(iteritems(self.loads)):
             msg.append('bdf.loads[%s]' % lid)
             groups_dict = {}
-            for load in loads:
-                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for loadi in loads:
+                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
@@ -2741,8 +2747,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for (lid, loads) in sorted(iteritems(self.dloads)):
             msg.append('bdf.dloads[%s]' % lid)
             groups_dict = {}
-            for load in loads:
-                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for loadi in loads:
+                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
@@ -2750,8 +2756,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for (lid, loads) in sorted(iteritems(self.dload_entries)):
             msg.append('bdf.dload_entries[%s]' % lid)
             groups_dict = {}
-            for load in loads:
-                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for loadi in loads:
+                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
@@ -2913,7 +2919,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
                 continue
-            coord = model.coords[cp]
+            coord = self.coords[cp]
             beta = coord.beta()
             is_beta = np.abs(np.diagonal(beta)).min() == 1.
             is_origin = np.abs(coord.origin).max() == 0.
@@ -3534,7 +3540,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for key, card in sorted(iteritems(self.elements)):
             try:
                 card._verify(xref)
-            except Exception as e:
+            except Exception:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
@@ -3602,6 +3608,15 @@ IGNORE_COMMENTS = (
     'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
     'PROPERTIES_MASS', 'MASSES')
 
+def _prep_comment(comment):
+    return comment.rstrip()
+    #print('comment = %r' % comment)
+    #comment = '  this\n  is\n  a comment\n'
+    #print(comment.rstrip('\n').split('\n'))
+    #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
+             #for comment in comment.rstrip().split('\n')]
+    #print('sline = ', sline)
+    #asdh
 
 def _clean_comment(comment):
     """
