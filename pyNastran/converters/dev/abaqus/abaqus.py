@@ -150,17 +150,14 @@ class Abaqus(object):
                     self.log.debug('end of material')
 
                 elif word.startswith('step'):
+                    print('step!!!!!!!')
                     iline, line0 = self.read_step(lines, iline, line0, istep)
                     istep += 1
                 elif word.startswith('initial conditions'):
-                    # TODO: skips header parsing
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                    data_lines = []
-                    while not line0.startswith('*'):
-                        data_lines.append(line0.split(','))
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
+                    data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
+                    for line in data_lines:
+                        print(line)
+                    print('line_end_of_IC =', line0)
                 elif word.startswith('surface interaction'):
                     key = 'surface interaction'
                     data = []
@@ -227,7 +224,7 @@ class Abaqus(object):
         for mat_name, mat in sorted(self.materials.items()):
             print(mat)
 
-    def _read_star_block(self, lines, iline, line0):
+    def _read_star_block(self, lines, iline, line0, debug=False):
         """
         because this uses file streaming, there are 30,000 places where a try except
         block is needed, so this should probably be used all over.
@@ -245,6 +242,25 @@ class Abaqus(object):
             line0 = lines[iline].strip().lower()
         except IndexError:
             pass
+        if debug:
+            for line in data_lines:
+                self.log.debug(line)
+        return data_lines, iline, line0
+
+    def _read_star_block2(self, lines, iline, line0, debug=False):
+        """
+        because this uses file streaming, there are 30,000 places where a try except
+        block is needed, so this should probably be used all over.
+        """
+        line0 = lines[iline].strip().lower()
+        data_lines = []
+        while not line0.startswith('*'):
+            data_lines.append(line0.strip(', ').split(','))
+            iline += 1
+            line0 = lines[iline].strip().lower()
+        if debug:
+            for line in data_lines:
+                self.log.debug(line)
         return data_lines, iline, line0
 
     def read_material(self, lines, iline, word):
@@ -298,7 +314,8 @@ class Abaqus(object):
                     assert len(sline) in [1, 2], sline
                 else:
                     raise NotImplementedError(sline)
-                iline += 1
+                data_lines, iline, line0 = self._read_star_block2(lines, iline, line0, debug=False)
+                #print(data_lines)
             elif word == 'density':
                 key = 'density'
                 sline = line0.split(',')
@@ -480,6 +497,14 @@ class Abaqus(object):
                 line0 = lines[iline].strip().lower()
                 assert 'instance' in params_map, params_map
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+            elif word.startswith('elset'):
+                # TODO: skips header parsing
+                params_map = get_param_map(word)
+                name = params_map['elset']
+                iline += 1
+                line0 = lines[iline].strip().lower()
+                assert 'instance' in params_map, params_map
+                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
             else:
                 raise NotImplementedError('\nword=%r\nline=%r' % (word, line0))
         return iline, line0
@@ -633,23 +658,31 @@ class Abaqus(object):
                     solid_sections, self.log)
         return iline, line0, part_name, part
 
-    def _read_star_block2(self, lines, iline, line0):
-        line0 = lines[iline].strip().lower()
-        data_lines = []
-        while not line0.startswith('*'):
-            data_lines.append(line0.strip(', ').split(','))
-            iline += 1
-            line0 = lines[iline].strip().lower()
-        return data_lines, iline, line0
-
     def read_step(self, lines, iline, line0, istep):
         """reads a step object"""
         self.log.debug('  start of step %i...' % istep)
-        # TODO: skips header parsing
-
-        iline += 2
+        # case 1
+        # ------
+        # *Step, name=Step-1, nlgeom=NO, inc=10000
+        # *Static
+        # 0.01, 1., 1e-05, 0.01
+        #
+        # case 2
+        # ------
+        #*STEP, NLGEOM=YES, AMPLITUDE=RAMP, INC=10000
+        # Increase from T=117.0C to T=122.0C over 300.0 seconds  (1C/min)
+        # *Static
+        # 0.01, 1., 1e-05, 0.01
+        iline += 1
         line0 = lines[iline].strip().lower()
+        step_name = ''
+        if not line0.startswith('*'):
+            step_name = lines[iline].strip()
+            iline += 1
+            line0 = lines[iline].strip().lower()
         word = line0.strip('*').lower()
+
+
         #allowed_words = ['static', 'boundary', 'dsload', 'restart', 'output', 'node',
                          #'element output']
         #print('  word =', word)
@@ -662,6 +695,7 @@ class Abaqus(object):
             #print('active_line =', line0)
             data_lines = []
             if word == 'static':
+                #print('static!!!!!!!')
                 sline = line0.split(',')
                 assert len(sline) == 4, sline
                 iline += 1
@@ -693,6 +727,9 @@ class Abaqus(object):
             elif word.startswith('visco'):
                 iline += 1
             elif word.startswith('temperature'):
+                iline -= 1
+                line0 = lines[iline].strip().lower()
+                data_lines, iline, line0 = self._read_star_block(lines, iline, line0, debug=True)
                 iline += 1
             elif word.startswith('controls'):
                 #self.log.debug('      controls')
@@ -735,7 +772,8 @@ class Abaqus(object):
                     iline += 1
                     line0 = lines[iline].strip().lower()
             else:
-                raise NotImplementedError('word = %r\nline=%r' % (word, line0))
+                msg = print_data(lines, iline, word, 'is this an unallowed word for *Step?\n')
+                raise NotImplementedError(msg)
             line0 = lines[iline].strip().lower()
             word = line0.strip('*').lower()
             #print('  lineB =', line0)
