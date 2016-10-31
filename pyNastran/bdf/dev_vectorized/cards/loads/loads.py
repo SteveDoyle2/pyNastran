@@ -32,7 +32,7 @@ class VectorizedCardDict(object):
         self._cards = []
         self._comments = []
 
-    #def add(self, card, comment=''):
+    #def add_card(self, card, comment=''):
         #prop = vPCOMP(card, comment=comment)
         #self.properties[prop.pid] = prop
         #self._cards.append(card)
@@ -82,7 +82,7 @@ class LOADs(VectorizedCardDict):
     def slice_by_load_id(self, load_id):
         return
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         load = LOAD(self.model)
         load.add_from_bdf(card, comment)
         #print('load.load_id =%s' % load.load_id)

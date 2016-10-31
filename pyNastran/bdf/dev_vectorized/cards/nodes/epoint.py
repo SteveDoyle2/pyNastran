@@ -12,7 +12,7 @@ class EPOINT(object):
         self._comments = []
         self.n = 0
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 

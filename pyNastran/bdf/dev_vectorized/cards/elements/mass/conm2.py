@@ -39,7 +39,7 @@ class CONM2(VectorizedCard):
             self.x = zeros((ncards, 3), float_fmt)
             self.I = zeros((ncards, 6), float_fmt)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         eid = integer(card, 1, 'element_id')
         if comment:
             self._comments[eid] = comment
@@ -162,5 +162,5 @@ class CONM2(VectorizedCard):
                         cardi = carda + cardb
                     bdf_file.write(cardi.rstrip() + '\n')
 
-    #def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
-        #return(K, dofs, nIJV)
+    #def get_stiffness_matrix(self, model, node_ids, index0s, fnorm=1.0):
+        #return(K, dofs, n_ijv)

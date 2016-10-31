@@ -45,7 +45,7 @@ class CELAS4(SpringElement):
             self.s = zeros(ncards, float_fmt)
 
 
-    def add(self, card, comment=None):
+    def add_card(self, card, comment=None):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
         self.K[i] = double(card, 2, 'k')

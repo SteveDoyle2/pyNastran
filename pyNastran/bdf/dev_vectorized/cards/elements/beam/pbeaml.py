@@ -65,7 +65,7 @@ class PBEAML(object):
         self.model = model
         self.n = 0
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         prop = vPBEAML(card, comment=comment)
         self.properties[prop.pid] = prop
 

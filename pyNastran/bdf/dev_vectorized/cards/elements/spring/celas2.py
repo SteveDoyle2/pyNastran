@@ -45,7 +45,7 @@ class CELAS2(SpringElement):
             #: stress coefficient
             self.s = zeros(ncards, dtype=float_fmt)
 
-    def add(self, card, comment=None):
+    def add_card(self, card, comment=None):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
         self.K[i] = double(card, 2, 'k')

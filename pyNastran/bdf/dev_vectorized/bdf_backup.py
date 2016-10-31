@@ -629,7 +629,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         class DummyCard(object):
             def __init__(self, model):
                 pass
-            def add(self, card, comment=''):
+            def add_card(self, card, comment=''):
                 pass
         # bush
         self.cbush = CBUSH(model)

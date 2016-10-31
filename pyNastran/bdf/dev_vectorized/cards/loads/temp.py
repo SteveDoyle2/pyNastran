@@ -100,7 +100,7 @@ class TEMPP1(object):
             self.tprime = zeros(n, dtype=float_fmt)
             self.temp = zeros((n, 2), dtype=float_fmt)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         assert self.n > 0, self.n
         i = self.i
         load_id = integer(card, 1, 'load_id')

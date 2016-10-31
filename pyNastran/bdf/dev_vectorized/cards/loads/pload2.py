@@ -52,7 +52,7 @@ class PLOAD2(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add(self, card, comment=None):
+    def add_card(self, card, comment=None):
         #self._comments.append(comment)
         self._load_id.append(integer(card, 1, 'load_id'))
         self._p.append(double(card, 2, 'p'))

@@ -25,7 +25,7 @@ class PAERO1(VectorizedCard):
             self.property_id = zeros(ncards, dtype='int32')
             self.b = zeros((ncards, 6), dtype='int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         if comment:
              self.comment = comment

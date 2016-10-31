@@ -30,7 +30,7 @@ class POINTAX(VectorizedCard):
         self._cards = []
         self._comments = []
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 

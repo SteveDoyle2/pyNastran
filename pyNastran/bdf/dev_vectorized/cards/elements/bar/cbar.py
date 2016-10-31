@@ -68,7 +68,7 @@ class CBAR(Element):
             self.wa = zeros((ncards, 3), float_fmt)
             self.wb = zeros((ncards, 3), float_fmt)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
 
         if 0 and self.model.cbaror.n > 0:
@@ -257,5 +257,5 @@ class CBAR(Element):
         obj.wb = self.wb[i]
         return obj
 
-    def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
-        return K, dofs, nIJV
+    def get_stiffness_matrix(self, model, node_ids, index0s, fnorm=1.0):
+        return K, dofs, n_ijv

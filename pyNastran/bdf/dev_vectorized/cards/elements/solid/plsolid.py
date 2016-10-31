@@ -32,7 +32,7 @@ class PLSOLID(Property):
         #: Location of stress and strain output
         self.stress_strain = zeros(ncards, dtype='|S4')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'pid')
         self.material_id[i] = integer(card, 2, 'mid')

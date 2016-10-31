@@ -16,7 +16,7 @@ class CTRIAX6(object):
         self.n = 0
         self._cards = []
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
 
     def build(self):

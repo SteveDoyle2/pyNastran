@@ -69,7 +69,7 @@ class CONROD(RodElement):
             self.c = zeros(ncards, float_fmt)
             self.nsm = zeros(ncards, float_fmt)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self.model.log.debug('  adding CONROD')
         i = self.i
         eid = integer(card, 1, 'element_id')
@@ -329,7 +329,7 @@ class CONROD(RodElement):
             i1, i1+1, i1+2,
             i2, i2+1, i2+2,
         ], 'int32')
-        nIJV = [
+        n_ijv = [
             # axial
             (n1, 1), (n1, 2), (n1, 3),
             (n2, 1), (n2, 2), (n2, 3),
@@ -337,7 +337,7 @@ class CONROD(RodElement):
             # torsion -> NA
         ]
         self.model.log.info('dofs = %s' % dofs)
-        return(M, dofs, nIJV)
+        return(M, dofs, n_ijv)
 
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         #print("----------------")

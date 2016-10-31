@@ -24,7 +24,7 @@ class CONM1(VectorizedCard):
             m = zeros((ncards, 6, 6), float_fmt)
             self.mass_matrix = m
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         eid = integer(card, 1, 'eid')
         if comment:
             self._comments[eid] = comment

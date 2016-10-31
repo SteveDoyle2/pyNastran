@@ -62,7 +62,7 @@ class SPLINE1(VectorizedCard):
             self.nelements = zeros(ncards, dtype='int32')
             self.melements = zeros(ncards, dtype='int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'element_id')
         self.caero[i] = integer(card, 2, 'caero')

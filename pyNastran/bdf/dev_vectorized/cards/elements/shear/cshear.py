@@ -26,7 +26,7 @@ class CSHEAR(Element):
             self.t_flag = zeros(ncards, 'int32')
             self.thickness = zeros((ncards, 4), self.model.float_fmt)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
 

@@ -504,7 +504,7 @@ class WriteMesh(BDFAttributes):
         #self._write_optimization(outfile, size, is_double)
         #self._write_tables(outfile, size, is_double)
         self._write_sets(outfile, size, is_double)
-        #self._write_contact(outfile, size, is_double)
+        self._write_superelements(outfile, size, is_double)
         self._write_contact(outfile, size, is_double)
         self._write_rejects(outfile, size, is_double)
         self._write_coords(outfile, size, is_double)
@@ -741,7 +741,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        is_sets = (self.sets or self.setsSuper or self.asets or self.bsets or
+        is_sets = (self.sets or self.asets or self.bsets or
                    self.csets or self.qsets)
         if is_sets:
             msg = ['$SETS\n']
@@ -757,6 +757,27 @@ class WriteMesh(BDFAttributes):
                 msg.append(set_obj.write_card(size, is_double))
             #for (set_id, set_obj) in sorted(iteritems(self.setsSuper)):  # dict
                 #msg.append(set_obj.write_card(size, is_double))
+            outfile.write(''.join(msg))
+
+    def _write_superelements(self, outfile, size=8, is_double=False):
+        """Writes the SETx cards sorted by ID"""
+        is_sets = (self.se_sets or self.se_bsets or self.se_csets or self.se_qsets
+                   or self.se_usets)
+        if is_sets:
+            msg = ['$SUPERELEMENTS\n']
+            for set_obj in self.se_bsets:  # list
+                msg.append(set_obj.write_card(size, is_double))
+            for set_obj in self.se_csets:  # list
+                msg.append(set_obj.write_card(size, is_double))
+            for set_obj in self.se_qsets:  # list
+                msg.append(set_obj.write_card(size, is_double))
+            for (set_id, set_obj) in sorted(iteritems(self.se_sets)):  # dict
+                msg.append(set_obj.write_card(size, is_double))
+            for name, usets in sorted(iteritems(self.se_usets)):  # dict
+                for set_obj in usets:  # list
+                    msg.append(set_obj.write_card(size, is_double))
+            for suport in self.se_suport:  # list
+                msg.append(suport.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_tables(self, outfile, size=8, is_double=False):

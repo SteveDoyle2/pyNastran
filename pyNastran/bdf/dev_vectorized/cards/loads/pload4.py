@@ -56,7 +56,7 @@ class PLOAD4(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add(self, card, comment=None):
+    def add_card(self, card, comment=None):
         self._cards.append(card)
         self._comments.append(comment)
 

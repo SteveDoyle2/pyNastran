@@ -89,8 +89,10 @@ class SolidElement(Element):
         ----------
         element_id : (N, ) int ndarray; (default=None -> all)
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id

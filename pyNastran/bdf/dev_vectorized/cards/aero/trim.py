@@ -12,7 +12,7 @@ class TRIM(object):
     def __init__(self, model):
         self.model = model
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         #: Trim set identification number. (Integer > 0)
         self.trim_id = integer(card, 1, 'trim_id')
 

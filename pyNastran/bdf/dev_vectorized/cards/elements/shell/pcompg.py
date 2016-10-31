@@ -13,7 +13,7 @@ class PCOMPG(Property):
     def __init__(self, model):
         self.n = 0
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         if comment:
             self._comments[pid] = comment
 

@@ -38,7 +38,7 @@ class CPENTA6(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
@@ -128,7 +128,8 @@ class CPENTA6(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         total : bool; default=False
             should the volume be summed
 
@@ -153,8 +154,10 @@ class CPENTA6(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -178,7 +181,8 @@ class CPENTA6(SolidElement):
         ----------
         element_id : (N, ) int ndarray; (default=None -> all)
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         :param total: should the volume be summed; centroid be averaged (default=False)
 
         ..see:: CPENTA6.get_volume_by_element_id() and CPENTA6.get_centroid_by_element_id
@@ -207,7 +211,9 @@ class CPENTA6(SolidElement):
         ----------
         element_id : (N, ) int ndarray; (default=None -> all)
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+            the positions of the GRIDs in CID=0
         total : bool; default=False
             should the centroid be averaged
         """

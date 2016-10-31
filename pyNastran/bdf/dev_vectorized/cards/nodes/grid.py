@@ -80,7 +80,7 @@ class GRDSET(object):
         #: Superelement ID
         self.seid = 0
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self.comment = comment
         self.n = 1
         self.cp = integer_or_blank(card, 2, 'cp', 0)
@@ -138,7 +138,7 @@ class GRID(VectorizedCard):
         #return f(*args, **kwargs)
 
     #@size_check
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         cp0 = self.model.grdset.cp
         cd0 = self.model.grdset.cd
         ps0 = self.model.grdset.ps

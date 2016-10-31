@@ -73,7 +73,7 @@ class CHEXA8(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         #self.model.log.debug('chexa8-add')
         i = self.i
         #comment = self._comments[i]
@@ -168,6 +168,60 @@ class CHEXA8(SolidElement):
             (n6, 1), (n6, 2), (n6, 3),
             (n7, 1), (n7, 2), (n7, 3),
         ]
+        uvw = np.array([
+            [-1, -1, 1,],
+            [1, -1, -1,],
+            [1, 1, -1],
+            [-1, 1, -1],
+
+            [-1, -1,1,],
+            [1, -1, 1,],
+            [1, 1, 1],
+            [-1, 1, 1],
+        ])
+
+
+        #n1 = 0.125 * (1 - u) * (1 - v) * (1 - w)
+        #n2 = 0.125 * (1 + u) * (1 - v) * (1 - w)
+        #n3 = 0.125 * (1 + u) * (1 + v) * (1 - w)
+        #n4 = 0.125 * (1 - u) * (1 + v) * (1 - w)
+
+        #n5 = 0.125 * (1 - u) * (1 - v) * (1 + w)
+        #n6 = 0.125 * (1 + u) * (1 - v) * (1 + w)
+        #n7 = 0.125 * (1 + u) * (1 + v) * (1 + w)
+        #n8 = 0.125 * (1 - u) * (1 + v) * (1 + w)
+
+        n1u = 0.125 * (1 - v) * (1 - w) * -1
+        n2u = 0.125 * (1 - v) * (1 - w) * 1
+        n3u = 0.125 * (1 + v) * (1 - w) * 1
+        n4u = 0.125 * (1 + v) * (1 - w) * -1
+
+        n5u = 0.125 * (1 - v) * (1 + w) * -1
+        n6u = 0.125 * (1 - v) * (1 + w) * 1
+        n7u = 0.125 * (1 + v) * (1 + w) * 1
+        n8u = 0.125 * (1 + v) * (1 + w) * -1
+
+
+        n1v = 0.125 * (1 - u) * (1 - v) * -1
+        n2v = 0.125 * (1 + u) * (1 - v) * -1
+        n3v = 0.125 * (1 + u) * (1 + v) * 1
+        n4v = 0.125 * (1 - u) * (1 + v) * 1
+
+        n5v = 0.125 * (1 - u) * (1 - v) * -1
+        n6v = 0.125 * (1 + u) * (1 - v) * -1
+        n7v = 0.125 * (1 + u) * (1 + v) * 1
+        n8v = 0.125 * (1 - u) * (1 + v) * 1
+
+
+        n1w = 0.125 * (1 - u) * (1 - v) * -1
+        n2w = 0.125 * (1 + u) * (1 - v) * -1
+        n3w = 0.125 * (1 + u) * (1 + v) * -1
+        n4w = 0.125 * (1 - u) * (1 + v) * -1
+
+        n5w = 0.125 * (1 - u) * (1 - v) * 1
+        n6w = 0.125 * (1 + u) * (1 - v) * 1
+        n7w = 0.125 * (1 + u) * (1 + v) * 1
+        n8w = 0.125 * (1 - u) * (1 + v) * 1
         return dofs, nijv
 
     def _verify(self, xref=True):
@@ -338,10 +392,10 @@ class CHEXA8(SolidElement):
 
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
-        nids = self.node_ids[:8]
-        indx = nids.index(nid_opposite)
-        nids.pop(indx)
-        return nids
+        #nids = self.node_ids[:8]
+        #indx = nids.index(nid_opposite)
+        #nids.pop(indx)
+        #return nids
 
     def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:

@@ -2082,6 +2082,8 @@ class Solver(OP2):
 
         # solids
         if model.ctetra4.n:
+            #K, dofs, nijv = model.ctetra4.get_stiffness_matrices(
+            #    model, xyz_cid0, index0s)
             for i in range(model.ctetra4.n):
                 K, dofs, nijv = model.ctetra4.get_stiffness_matrix(
                     i, model, self.positions, index0s)
@@ -2449,7 +2451,7 @@ class Solver(OP2):
                 #node_ids, index0s = self.element_dof_start(elem, nids)
                 #self.log.info("node_ids=%s index0s=%s" % (node_ids, index0s))
 
-                ## nIJV is the position of the values of K in the dof
+                ## n_ijv is the position of the values of K in the dof
                 #fnorm = 10.
                 #(Fgi, nGrav) = elem.Fg(model, self.gravLoad, fnorm)
                 #for (fg, dof) in zip(Fgi, nGrav):
