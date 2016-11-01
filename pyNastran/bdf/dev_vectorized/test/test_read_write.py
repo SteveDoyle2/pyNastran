@@ -4,15 +4,22 @@ import os
 import unittest
 
 import pyNastran
-from pyNastran.utils.log import SimpleLogger
-from pyNastran.bdf.dev_vectorized.solver.solver import Solver
+from pyNastran.bdf.test.test_bdf import run_bdf
+from pyNastran.bdf.dev_vectorized.bdf import read_bdf
+#from pyNastran.utils.log import SimpleLogger
+#from pyNastran.bdf.dev_vectorized.solver.solver import Solver
 
 pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'bdf', 'dev_vectorized', 'solver', 'test')
-log = SimpleLogger('warning', encoding='utf8')
+test_path = os.path.join(pkg_path, '..')
+#log = SimpleLogger('warning', encoding='utf8')
 
-class TestSolver(unittest.TestCase):
+class TestReadWriteVectorized(unittest.TestCase):
     """tests the pyNastran solver"""
+
+    def test_solid_bending(self):
+        bdf_filename = os.path.join(test_path, 'solid_bending', 'solid_bending.bdf')
+        bdf_filename2 = os.path.join(test_path, 'solid_bending', 'solid_bending2.bdf')
+        os.remove(bdf_filename2)
 
     def test_celas1(self):
         """runs a 1 element CELAS1 problem"""

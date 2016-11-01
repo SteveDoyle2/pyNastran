@@ -166,7 +166,7 @@ class MAT1(Material):
             else:
                 i = np.searchsorted(self.material_id, material_id)
 
-            print('imat1 = ', i)
+            #print('imat1 = ', i)
             #assert material_id is None, 'i=%i' % i
             #self.model.log.debug"n = %s" % self.n)
             #self.model.log.debug"mids MAT1 %s" % self.material_id)

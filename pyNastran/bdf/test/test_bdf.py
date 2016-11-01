@@ -24,7 +24,6 @@ from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
 from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
 from pyNastran.bdf.cards.dmig import NastranMatrix
-from pyNastran.bdf.bdf_replacer import BDFReplacer
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.test
@@ -35,6 +34,7 @@ class DisabledCardError(RuntimeError):
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
                             punch=False, cid=None, nastran=''):
+    """runs all the BDFs in a given folder"""
     print("folder = %s" % folder)
     filenames = os.listdir(folder)
     run_lots_of_files(filenames, debug=debug, xref=xref, check=check,
@@ -126,8 +126,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     diff_cards = []
     for filename in filenames:
         if (filename.endswith(('.bdf', '.dat', '.nas')) and
-            'pyNastran_crash' not in filename and
-            'skin_file' not in filename):
+                'pyNastran_crash' not in filename and
+                'skin_file' not in filename):
             filenames2.append(filename)
 
     failed_files = []
@@ -204,7 +204,7 @@ def memory_usage_psutil():
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
             encoding=None, sum_load=False, size=8, is_double=False,
-            reject=False, stop=False, nastran='', post=-1, dynamic_vars=None,
+            stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, nerrors=0, dev=False,
             crash_cards=None):
     """
@@ -243,9 +243,6 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         Is this a double precision model?
             True : size = 16
             False : six = {8, 16}
-    reject : bool, optional
-        True : all the cards are rejected
-        False : the model is read
     nastran : str, optional
         the path to nastran (default=''; no analysis)
     post : int, optional
@@ -278,15 +275,11 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
-    if reject:
-        fem1 = BDFReplacer(bdf_model + '.rej', debug=debug, log=None)
-    else:
-        fem1 = BDF(debug=debug, log=None)
+    fem1 = BDF(debug=debug, log=None)
+    out_model = bdf_model + '_out'
 
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
                            nxref_errors=nerrors, stop_on_xref_error=True)
-    #fem1.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
-    #                      nxref_errors=0, stop_on_xref_error=True)
     if dynamic_vars:
         fem1.set_dynamic_syntax(dynamic_vars)
 
@@ -297,11 +290,13 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     diff_cards = []
 
     try:
-        #nastran = 'nastran scr=yes bat=no old=no news=no '
-        nastran = ''
+        #nastran_cmd = 'nastran scr=yes bat=no old=no news=no '
+        nastran_cmd = ''
         #try:
-        out_model, fem1 = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size,
-                                   is_double, cid, encoding=encoding, crash_cards=crash_cards)
+
+        out_model, fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
+                                   size, is_double, cid,
+                                   encoding=encoding, crash_cards=crash_cards)
         if stop:
             if not quiet:
                 print('card_count:')
@@ -309,7 +304,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
                 for card_name, card_count in sorted(iteritems(fem1.card_count)):
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
-        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject,
+        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double,
                         encoding=encoding, debug=debug, log=None, quiet=quiet)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
@@ -318,7 +313,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #except:
             #return 1, 2, 3
 
-        run_nastran(bdf_model, nastran, post, size, is_double)
+        run_nastran(bdf_model, nastran_cmd, post, size, is_double)
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
@@ -434,7 +429,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         op2.read_op2(op2_model2)
         print(op2.get_op2_stats())
 
-def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
+def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
              encoding=None, crash_cards=None):
     """
     Reads/writes the BDF
@@ -445,6 +440,8 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
         The BDF object
     bdf_model : str
         The root path of the bdf filename
+    out_model : str
+        The path to the output bdf
     mesh_form : str {combined, separate}
         'combined' : interspersed=True
         'separate' : interspersed=False
@@ -512,21 +509,18 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
         print("failed reading %r" % bdf_model)
         raise
 
-    if fem1._auto_reject:
-        out_model = bdf_model + '.rej'
-    else:
-        out_model = bdf_model + '_out'
-        #if cid is not None and xref:
-            #fem1.resolve_grids(cid=cid)
+    out_model = bdf_model + '_out'
+    #if cid is not None and xref:
+        #fem1.resolve_grids(cid=cid)
 
-        if mesh_form == 'combined':
-            fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
-        elif mesh_form == 'separate':
-            fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
-        else:
-            msg = "mesh_form=%r; allowedForms=['combined','separate']" % mesh_form
-            raise NotImplementedError(msg)
-        #fem1.writeAsCTRIA3(out_model)
+    if mesh_form == 'combined':
+        fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
+    elif mesh_form == 'separate':
+        fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
+    else:
+        msg = "mesh_form=%r; allowedForms=['combined','separate']" % mesh_form
+        raise NotImplementedError(msg)
+    #fem1.writeAsCTRIA3(out_model)
 
     fem1._get_maps()
     if xref:
@@ -538,7 +532,7 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
 
 def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double,
-             reject, encoding=None, debug=False, log=None, quiet=False):
+             encoding=None, debug=False, log=None, quiet=False):
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -555,8 +549,6 @@ def run_fem2(bdf_model, out_model, xref, punch,
        sums static load
     size : int
     is_double : bool
-    reject : bool
-        True : rejects the cards
     debug : bool
         debugs
     quiet : bool
@@ -567,10 +559,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
     assert os.path.exists(bdf_model), bdf_model
     assert os.path.exists(out_model), out_model
 
-    if reject:
-        fem2 = BDFReplacer(bdf_model + '.rej', debug=debug, log=None)
-    else:
-        fem2 = BDF(debug=debug, log=None)
+    fem2 = BDF(debug=debug, log=None)
     if not quiet:
         fem2.log.info('starting fem2')
     sys.stdout.flush()
@@ -603,6 +592,10 @@ def run_fem2(bdf_model, out_model, xref, punch,
     return fem2
 
 def _assert_has_spc(subcase, fem):
+    """
+    SPCs may be defined on SPC/SPC1 cards or may be defined on
+    the GRID PS field
+    """
     has_ps = False
     for nid, node in iteritems(fem.nodes):
         if node.ps:
@@ -627,6 +620,26 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_ma
         check_case(sol_base, subcase, fem2, p0, isubcase, subcases)
 
 def check_case(sol, subcase, fem2, p0, isubcase, subcases):
+    """
+    Checks to see if the case has all the required case control fields
+    and that they are valid.
+
+    For example, a SOL 145 deck could requires:
+
+    SUBCASE 10
+       METHOD = 42
+
+       # one or both
+       SPC = 20 (optional)
+       GRID-PS (optional)
+
+       MPC = 30 (optional)
+       AEROS = 5
+
+       # one or both
+       SUPORT1 = 5 # implicit point to SUPORT1
+       # implicit call to SUPORT
+    """
     if sol == 24:
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
@@ -1043,7 +1056,10 @@ def test_get_cards_by_card_types(model):
                                               reset_type_to_slot_map=False)
     for card_type, cards in iteritems(card_dict):
         for card in cards:
-            assert card_type == card.type, 'this should never crash here...card_type=%s card.type=%s' % (card_type, card.type)
+            msg = 'this should never crash here...card_type=%s card.type=%s' % (
+                card_type, card.type)
+            if card_type != card.type:
+                raise RuntimeError(msg)
 
 
 def compare_card_count(fem1, fem2, print_stats=False, quiet=False):
@@ -1176,7 +1192,6 @@ def get_element_stats(fem1, fem2, quiet=False):
                 raise
                 #print("load statistics not available - load.type=%s "
                       #"load.sid=%s" % (load.type, load.sid))
-                raise
 
     fem1._verify_bdf()
 
@@ -1228,7 +1243,7 @@ def get_matrix_stats(fem1, fem2):
                       "dmij.type=%s matrix.name=%s" % (dmij.type, dmij.name))
         except:
             print("*stats - dmij.type=%s name=%s  matrix=\n%s"
-                  % (dmij.type, dmij.name, str(dmi)))
+                  % (dmij.type, dmij.name, str(dmij)))
             raise
 
     for (key, dmiji) in sorted(iteritems(fem1.dmijis)):
@@ -1240,7 +1255,7 @@ def get_matrix_stats(fem1, fem2):
                       "dmiji.type=%s matrix.name=%s" % (dmiji.type, dmiji.name))
         except:
             print("*stats - dmiji.type=%s name=%s  matrix=\n%s"
-                  % (dmiji.type, dmiji.name, str(dmi)))
+                  % (dmiji.type, dmiji.name, str(dmiji)))
             raise
 
     for (key, dmik) in sorted(iteritems(fem1.dmiks)):
@@ -1252,10 +1267,11 @@ def get_matrix_stats(fem1, fem2):
                       "dmik.type=%s matrix.name=%s" % (dmik.type, dmik.name))
         except:
             print("*stats - dmik.type=%s name=%s  matrix=\n%s"
-                  % (dmik.type, dmik.name, str(dmi)))
+                  % (dmik.type, dmik.name, str(dmik)))
             raise
 
 def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
+    """compares two fem objects"""
     diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats, quiet=quiet)
     if xref and check:
         get_element_stats(fem1, fem2, quiet=quiet)
@@ -1266,17 +1282,19 @@ def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
     return diff_cards
 
 
-def compare_params(fem1, fem2):
-    compute(fem1.params, fem2.params)
+#def compare_params(fem1, fem2):
+    #raise RuntimeError('is compare_parms used?')
+    #compute(fem1.params, fem2.params)
 
 
-def print_points(fem1, fem2):
-    for nid, node in sorted(iteritems(fem1.nodes)):
-        print("%s   xyz=%s  n1=%s  n2=%s" % (nid, node.xyz, node.get_position(True),
-                                             fem2.Node(nid).get_position()))
-        break
-    coord = fem1.Coord(5)
-    print(coord)
+#def print_points(fem1, fem2):
+    #raise RuntimeError('is print_points used?')
+    #for nid, node in sorted(iteritems(fem1.nodes)):
+        #print("%s   xyz=%s  n1=%s  n2=%s" % (nid, node.xyz, node.get_position(True),
+                                             #fem2.Node(nid).get_position()))
+        #break
+    #coord = fem1.Coord(5)
+    #print(coord)
     #print coord.Stats()
 
 
@@ -1287,11 +1305,11 @@ def main():
     encoding = sys.getdefaultencoding()
     from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L]      [-f] [--encoding ENCODE] BDF_FILENAME\n"
     msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-d] [-f] [--encoding ENCODE] BDF_FILENAME\n"
     msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-l] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p] [-r] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p]                [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s]           [-f] [--encoding ENCODE] BDF_FILENAME\n"
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -1313,7 +1331,6 @@ def main():
     msg += '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
     msg += '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
     msg += '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
-    msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
     msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
     msg += '  --encoding ENCODE  the encoding method (default=None -> %r)\n' % encoding
     msg += '  -q, --quiet        prints debug messages (default=False)\n'
@@ -1321,13 +1338,12 @@ def main():
     msg += "\n"
     msg += "Developer:\n"
     msg += '  --crash C,       Crash on specific cards (e.g. CGEN,EGRID)\n'
-    msg += '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed (pyNastran_dump.bdf)\n'
-    msg += '  -i, --dictsort   Writes the BDF with exactly as read with the INCLUDES processed (pyNastran_dict.bdf)\n'
+    msg += '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed\n'
+    msg += '                   (pyNastran_dump.bdf)\n'
+    msg += '  -i, --dictsort   Writes the BDF with exactly as read with the INCLUDES processed\n'
+    msg += '                   (pyNastran_dict.bdf)\n'
     msg += '  -f, --profile    Profiles the code (default=False)\n'
     msg += '  -s, --stop       Stop after first read/write (default=False)\n'
-    #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
-    #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
-    #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
     msg += "\n"
     msg += "Info:\n"
     msg += '  -h, --help     show this help message and exit\n'
@@ -1351,7 +1367,7 @@ def main():
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time
-    t0 = time.time()
+    time0 = time.time()
 
     is_double = False
     if data['--double']:
@@ -1383,7 +1399,6 @@ def main():
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
             punch=data['--punch'],
-            reject=data['--reject'],
             size=size,
             is_double=is_double,
             sum_load=data['--loads'],
@@ -1423,7 +1438,6 @@ def main():
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
             punch=data['--punch'],
-            reject=data['--reject'],
             size=size,
             is_double=is_double,
             sum_load=data['--loads'],
@@ -1435,7 +1449,7 @@ def main():
             encoding=data['--encoding'],
             crash_cards=crash_cards,
         )
-    print("total time:  %.2f sec" % (time.time() - t0))
+    print("total time:  %.2f sec" % (time.time() - time0))
 
 
 if __name__ == '__main__':  # pragma: no cover
