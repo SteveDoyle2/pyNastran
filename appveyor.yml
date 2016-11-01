@@ -31,6 +31,8 @@ environment:
 
     ############################################################
     # conda set
+    # TODO: add conda_libs...
+    # TODO: add all_tests.py command
     - PYTHON: "C:\\Miniconda"
       PYTHON_VERSION: "2.7.x" # currently 2.7.11
       PYTHON_ARCH: "32"
@@ -149,7 +151,8 @@ install:
   #- "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   #
   # for anaconda:
-  - set PATH=C:\Miniconda3;C:\Miniconda3\Scripts;%PATH%
+  #- set PATH=C:\Miniconda3;C:\Miniconda3\Scripts;%PATH%
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
