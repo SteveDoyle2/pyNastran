@@ -39,6 +39,8 @@ if qt_version == 4:
     import PyQt4
 elif qt_version == 5:
     import PyQt5
+else:
+    raise NotImplementedError(qt_version)
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
