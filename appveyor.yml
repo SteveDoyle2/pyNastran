@@ -36,26 +36,38 @@ environment:
     - PYTHON: "C:\\Miniconda"
       PYTHON_VERSION: "2.7.x" # currently 2.7.11
       PYTHON_ARCH: "32"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas vtk"
 
     - PYTHON: "C:\\Miniconda-x64"
       PYTHON_VERSION: "2.7.x" # currently 2.7.11
       PYTHON_ARCH: "64"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas vtk"
 
     - PYTHON: "C:\\Miniconda3"
       PYTHON_VERSION: "3.4.x" # currently 3.4.3
       PYTHON_ARCH: "32"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas"
 
     - PYTHON: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.4.x" # currently 3.4.3
       PYTHON_ARCH: "64"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas"
 
     - PYTHON: "C:\\Miniconda35"
       PYTHON_VERSION: "3.5.x" # currently 3.5.1
       PYTHON_ARCH: "32"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas vtk"
 
     - PYTHON: "C:\\Miniconda35-x64"
       PYTHON_VERSION: "3.5.x" # currently 3.5.1
       PYTHON_ARCH: "64"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas vtk"
 
     ############################################################
     # initial set
@@ -168,7 +180,7 @@ install:
   - "conda update conda --yes"
   - "conda install anaconda-client --yes"
   # removed: atlas
-  - "conda install numpy scipy pandas --yes"
+  - "conda install %PYNASTRAN_LIBS% --yes"
   #- "conda create -q -n test-environment python=$PYTHON_VERSION atlas numpy scipy pandas"
 
   # Install the build dependencies of the project. If some dependencies contain
@@ -183,11 +195,11 @@ build_script:
 
 test_script:
   # Run the project tests
-  #- if "%PYTHON_VERSION%"=="2.7.x" ("%CMD_IN_ENV% python pyNastran/all_tests_no_gui.py")
+  #- if "%PYTHON_VERSION%"=="2.7.x" ("%CMD_IN_ENV% python %pyNastran/all_tests_no_gui.py")
   #- if "%PYTHON_VERSION%"=="3.3.x" ("%CMD_IN_ENV% python pyNastran/all_tests_no_gui.py")
   #- if "%PYTHON_VERSION%"=="3.4.x" ("%CMD_IN_ENV% python pyNastran/all_tests_no_gui.py")
   #- if "%PYTHON_VERSION%"=="3.5.x" ("%CMD_IN_ENV% python pyNastran/all_tests_no_gui.py")
-  - "%CMD_IN_ENV% python pyNastran/all_tests_no_gui.py"
+  - "%CMD_IN_ENV% python PYNASTRAN_TEST_PATH"
 
 #after_test:
   # If tests are successful, create binary packages for the project.
