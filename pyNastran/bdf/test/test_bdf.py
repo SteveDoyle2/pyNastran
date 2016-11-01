@@ -243,6 +243,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         Is this a double precision model?
             True : size = 16
             False : six = {8, 16}
+    stop : bool; default=False
+        stop reading the first BDF
     nastran : str, optional
         the path to nastran (default=''; no analysis)
     post : int, optional
@@ -272,11 +274,32 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         print("bdf_model = %s" % bdf_model)
     if is_folder:
         bdf_model = os.path.join(test_path, folder, bdf_filename)
+    out_model = bdf_model + '_out'
 
+    fem1, fem2, diff_cards = run_and_compare_fems(
+        bdf_model, out_model, debug=debug, xref=xref, check=check,
+        punch=punch, cid=cid, mesh_form=mesh_form,
+        print_stats=print_stats, encoding=encoding,
+        sum_load=sum_load, size=size, is_double=is_double,
+        stop=stop, nastran=nastran, post=post,
+        dynamic_vars=dynamic_vars,
+        quiet=quiet, dumplines=dumplines, dictsort=dictsort,
+        nerrors=nerrors, dev=dev, crash_cards=crash_cards)
+    return fem1, fem2, diff_cards
+
+def run_and_compare_fems(
+        bdf_model, out_model, debug=False, xref=True, check=True,
+        punch=False, cid=None, mesh_form='combined',
+        print_stats=False, encoding=None,
+        sum_load=False, size=8, is_double=False,
+        stop=False, nastran='', post=-1, dynamic_vars=None,
+        quiet=False, dumplines=False, dictsort=False,
+        nerrors=0, dev=False, crash_cards=None,
+    ):
+    """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
     fem1 = BDF(debug=debug, log=None)
-    out_model = bdf_model + '_out'
 
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
                            nxref_errors=nerrors, stop_on_xref_error=True)
@@ -459,6 +482,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         cid flag
     encoding : str; default=None
         the file encoding
+    crash_cards : ???
+        ???
     """
     if crash_cards is None:
         crash_cards = []
@@ -513,7 +538,9 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     #if cid is not None and xref:
         #fem1.resolve_grids(cid=cid)
 
-    if mesh_form == 'combined':
+    if mesh_form is None:
+        pass
+    elif mesh_form == 'combined':
         fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
     elif mesh_form == 'separate':
         fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
