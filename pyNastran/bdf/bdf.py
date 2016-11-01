@@ -2886,6 +2886,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             nid_cp_cd[i, :] = [nid, cp, cd]
             xyz_cp[i, :] = node.xyz
             i += 1
+        if nspoints:
+            for nid in sorted(self.spoints.points):
+                nid_cp_cd[i] = nid
+                i += 1
+        if nepoints:
+            for nid in sorted(self.epoints.points):
+                nid_cp_cd[i] = nid
+                i += 1
 
         icp_transform = {}
         icd_transform = {}
