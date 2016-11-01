@@ -174,7 +174,7 @@ class DCONSTR(OptConstraint):
         +---------+------+-----+------------+------------+-------+--------+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.oid = oid
         # DRESP entry
         self.dresp_id = dresp_id
@@ -292,7 +292,7 @@ class DESVAR(OptConstraint):
     """
     def __init__(self, desvar_id, label, xinit, xlb, xub, delx=None, ddval=None, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.desvar_id = desvar_id
         #: user-defined name for printing purposes
         self.label = label
@@ -364,7 +364,7 @@ class DDVAL(OptConstraint):
 
     def __init__(self, oid, ddvals, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.oid = oid
         self.ddvals = ddvals
 
@@ -469,7 +469,7 @@ class DOPTPRM(OptConstraint):
         +---------+--------+------+--------+------+--------+------+--------+------+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.params = params
 
     @classmethod
@@ -519,7 +519,7 @@ class DLINK(OptConstraint):
         +-------+------+-------+--------+-------+------+----+------+----+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.oid = oid
         self.ddvid = ddvid
         self.c0 = c0
@@ -936,7 +936,7 @@ class DRESP1(OptConstraint):
         DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.dresp_id = dresp_id
         self.label = label
 
@@ -1209,7 +1209,7 @@ class DRESP2(OptConstraint):
         constraints or as an objective.
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.func = None
         self.dequation_str = None
         self.dresp_id = dresp_id
@@ -1494,7 +1494,7 @@ class DRESP3(OptConstraint):
     def __init__(self, dresp_id, label, group, Type, region, params,
                  comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.dresp_id = dresp_id
         self.label = label
         self.group = group
@@ -1681,7 +1681,7 @@ class DCONADD(OptConstraint):
 
     def __init__(self, oid, dconstrs, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.oid = oid
         self.dconstrs = dconstrs
 
@@ -1754,7 +1754,7 @@ class DSCREEN(OptConstraint):
 
     def __init__(self, rType, trs=-0.5, nstr=20, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Response type for which the screening criteria apply. (Character)
         self.rType = rType
@@ -1812,7 +1812,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
         +---------+--------+--------+--------+-------+-----+------+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.oid = oid
 
         # element type (e.g. CQUAD4)
@@ -1981,7 +1981,7 @@ class DVCREL2(OptConstraint):
         +----------+--------+--------+-------+------------+-------+-------+-------+-------+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Unique identification number
         self.oid = oid
 
@@ -2200,7 +2200,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         +---------+-------+-------+-------+--------+-------+-------+--------+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.oid = oid
         self.Type = Type
         self.mid = mid
@@ -2332,7 +2332,7 @@ class DVMREL2(OptConstraint):
         +---------+--------+--------+-------+---------+-------+-------+-------+-------+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Unique identification number
         self.oid = oid
 
@@ -2578,7 +2578,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         +---------+--------+--------+--------+-----+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.oid = oid
 
         # property type (e.g. PSHELL/PCOMP)
@@ -2779,7 +2779,7 @@ class DVPREL2(OptConstraint):
         +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Unique identification number
         self.oid = oid
 
@@ -3000,7 +3000,7 @@ class DVGRID(OptConstraint):
     """
     def __init__(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.dvid = dvid
         self.nid = nid
         self.cid = cid
