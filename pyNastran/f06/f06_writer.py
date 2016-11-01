@@ -125,7 +125,7 @@ def make_end(end_flag=False, options=None):
         SELG = 'T'
         SEMG = 'T'
         SEMR = 'F'
-        if options.has_key('SEMR'):
+        if 'SEMR' in options:
             SEMR = 'T' # modal
         SEKR = 'T'
         SELR = 'T'
@@ -133,7 +133,7 @@ def make_end(end_flag=False, options=None):
         DYNRED = 'F'
 
         SOLLIN = 'F'
-        if options.has_key('SEMR'):
+        if 'SEMR' in options:
             SOLLIN = 'T' # p-elements
         PVALID = 0
         SOLNL = 'F'
@@ -385,8 +385,11 @@ class F06Writer(OP2_F06_Common):
             else:
                 f06 = open(f06_outname, 'w')
             self._write_summary(f06)
-        else:
-            assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
+        elif hasattr(f06_outname, 'read') and hasattr(f06_outname, 'write'):
+            #f06 = f06_outname
+        #else:
+            #print('type(f06_outname) =', type(f06_outname))
+            #assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
             f06 = f06_outname
             f06_outname = f06.name
             print('f06_outname =', f06_outname)

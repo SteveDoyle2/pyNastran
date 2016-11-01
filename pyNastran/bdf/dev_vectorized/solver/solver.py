@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=
+# pylint#: disable=
+"""
+http://slideplayer.com/slide/3330177/
+"""
 from __future__ import print_function
 import os
 #import sys
 from datetime import date
 from struct import pack
+from codecs import open
 
 from six import iteritems
 from six.moves import range
@@ -182,7 +186,7 @@ class Solver(OP2):
         #F06Writer.__init_data__(self)
         OP2.__init__(self, debug=False, log=None, debug_file=None) # make_geom=False,
         debug = fargs['--debug']
-        print('debug =', debug)
+        #print('debug =', debug)
         #self.log = get_logger(log, 'debug' if debug else 'info')
         self.log = get_logger2(log, debug)
 
@@ -459,25 +463,19 @@ class Solver(OP2):
         self.op2_filename = bdf_base + '.op2'
         self.op2_pack_filename = bdf_base + '_pack.op2'
 
-        self.f06_file = open(self.f06_filename, 'wb')
         #self.op2_file = open(self.op2_name, 'wb')
         #self.op2_pack_file = open(self.op2_pack_name, 'w')
         self.op2_file = None
         self.op2_pack_file = None
 
-
-        self.f06_file.write(self.make_f06_header())
-        #self.f06_file.write(sorted_bulk_data_header())
-
         d = date.today()
         self.date = (d.month, d.day, d.year)
-
         self.title = 'pyNastran Job'
 
         #------------------------------------------
-        # start of analysis
+        # read the deck
         self.model = BDF(log=self.log, debug=False)
-        self.model.cards_to_read = get_cards()
+        self.model.cards_to_read = get_solver_cards()
         self.model.f06 = self.f06_file
 
         if 1:
@@ -493,6 +491,14 @@ class Solver(OP2):
             }
             self.model.set_dynamic_syntax(data)
         self.model.read_bdf(bdf_filename)
+        #------------------------------------------
+        self.f06_file = open(self.f06_filename, 'w') # , encoding=self.model._encoding
+
+        self.f06_file.write(self.make_f06_header())
+        #self.f06_file.write(sorted_bulk_data_header())
+
+        #------------------------------------------
+        # start of analysis
 
         print(self.model.case_control_deck)
         print('--------------------')
@@ -2559,7 +2565,7 @@ class Solver(OP2):
                     #op2.write(result.write_op2(Title, Subtitle))
 
 
-def get_cards():
+def get_solver_cards():
     cards_to_read = set([
         'PARAM',
         'GRID', 'GRDSET',
