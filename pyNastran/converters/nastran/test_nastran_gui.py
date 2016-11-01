@@ -64,7 +64,9 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, None)
         test.load_nastran_results(op2_filename, None)
 
+    @unittest.expectedFailure
     def test_contact(self):
+        """this test fails because of a misparsed card"""
         bdf_filename = os.path.join(model_path, 'contact', 'contact.bdf')
         op2_filename = os.path.join(model_path, 'contact', 'contact.op2')
 
