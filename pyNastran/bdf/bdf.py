@@ -1743,10 +1743,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
         class Crash(object):
+            """class for crashing on specific cards"""
             def __init__(self):
+                """dummy init"""
                 pass
             @classmethod
             def add_card(cls, card, comment=''):
+                """the method that forces the crash"""
                 raise NotImplementedError(card)
 
         self._card_parser = {
@@ -3371,9 +3374,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     % (bdf_filename, self.active_filenames)
                 raise RuntimeError(msg)
             elif os.path.isdir(_filename(bdf_filename)):
-                current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
+                current_fname = self.active_filename if len(self.active_filenames) > 0 else 'None'
                 raise IOError('Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
-                    bdf_filename_inc, current_filename))
+                    bdf_filename_inc, current_fname))
             elif not os.path.isfile(_filename(bdf_filename)):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
 
@@ -3401,6 +3404,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     msg += 'card_lines = %s' % card_lines
                     raise RuntimeError(msg)
                 if self.is_reject(card_name):
+                    if card_name.isdigit():
+                        # TODO: this should technically work (I think), but it's a problem
+                        #       for the code
+                        #
+                        # prevents:
+                        # spc1,100,456,10013832,10013833,10013830,10013831,10013836,10013837,
+                        # 10013834,10013835,10013838,10013839,10014508,10008937,10008936,10008935,
+                        msg = 'card_name=%r was misparsed...\ncard_lines=%s' % (
+                            card_name, card_lines)
+                        raise RuntimeError(msg)
                     if card_name not in self.card_count:
                         if ' ' in card_name:
                             msg = (
