@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=
+# pylint#: disable=
+"""
+http://slideplayer.com/slide/3330177/
+"""
 from __future__ import print_function
 import os
 #import sys
 from datetime import date
 from struct import pack
+from codecs import open
 
 from six import iteritems
 from six.moves import range
@@ -182,7 +186,7 @@ class Solver(OP2):
         #F06Writer.__init_data__(self)
         OP2.__init__(self, debug=False, log=None, debug_file=None) # make_geom=False,
         debug = fargs['--debug']
-        print('debug =', debug)
+        #print('debug =', debug)
         #self.log = get_logger(log, 'debug' if debug else 'info')
         self.log = get_logger2(log, debug)
 
@@ -459,25 +463,19 @@ class Solver(OP2):
         self.op2_filename = bdf_base + '.op2'
         self.op2_pack_filename = bdf_base + '_pack.op2'
 
-        self.f06_file = open(self.f06_filename, 'wb')
         #self.op2_file = open(self.op2_name, 'wb')
         #self.op2_pack_file = open(self.op2_pack_name, 'w')
         self.op2_file = None
         self.op2_pack_file = None
 
-
-        self.f06_file.write(self.make_f06_header())
-        #self.f06_file.write(sorted_bulk_data_header())
-
         d = date.today()
         self.date = (d.month, d.day, d.year)
-
         self.title = 'pyNastran Job'
 
         #------------------------------------------
-        # start of analysis
+        # read the deck
         self.model = BDF(log=self.log, debug=False)
-        self.model.cards_to_read = get_cards()
+        self.model.cards_to_read = get_solver_cards()
         self.model.f06 = self.f06_file
 
         if 1:
@@ -493,11 +491,19 @@ class Solver(OP2):
             }
             self.model.set_dynamic_syntax(data)
         self.model.read_bdf(bdf_filename)
+        #------------------------------------------
+        self.f06_file = open(self.f06_filename, 'w') # , encoding=self.model._encoding
 
-        print(self.model.case_control_deck)
-        print('--------------------')
+        self.f06_file.write(self.make_f06_header())
+        #self.f06_file.write(sorted_bulk_data_header())
+
+        #------------------------------------------
+        # start of analysis
+
+        self.log.info(self.model.case_control_deck)
+        self.log.info('--------------------')
         for subcase_id, subcase in sorted(self.model.subcases.items()):
-            print(subcase)
+            self.log.info(subcase)
             if 'TITLE' in subcase:
                 self.title = subcase.get_parameter('TITLE')[0]
                 break
@@ -1085,12 +1091,12 @@ class Solver(OP2):
 
             # SOLIDS
         #=========================
-        print(self.displacements[1].data)
-        #print(self.displacements[1])
-        print(self.conrod_force)
-        print(self.conrod_stress)
-        print(self.conrod_strain)
-        self.write_f06(self.f06_file, end_flag=True, close=False)
+        self.log.debug(self.displacements[1].data)
+        #self.log.debug(self.displacements[1])
+        self.log.debug(self.conrod_force)
+        self.log.debug(self.conrod_stress)
+        self.log.debug(self.conrod_strain)
+        self.write_f06(self.f06_file, end_flag=True, quiet=True, close=False)
         self.write_op2(self.op2_file, packing=True)
         self.write_op2(self.op2_pack_file, packing=False)
         self.log.info('finished SOL 101')
@@ -2082,6 +2088,8 @@ class Solver(OP2):
 
         # solids
         if model.ctetra4.n:
+            #K, dofs, nijv = model.ctetra4.get_stiffness_matrices(
+            #    model, xyz_cid0, index0s)
             for i in range(model.ctetra4.n):
                 K, dofs, nijv = model.ctetra4.get_stiffness_matrix(
                     i, model, self.positions, index0s)
@@ -2449,7 +2457,7 @@ class Solver(OP2):
                 #node_ids, index0s = self.element_dof_start(elem, nids)
                 #self.log.info("node_ids=%s index0s=%s" % (node_ids, index0s))
 
-                ## nIJV is the position of the values of K in the dof
+                ## n_ijv is the position of the values of K in the dof
                 #fnorm = 10.
                 #(Fgi, nGrav) = elem.Fg(model, self.gravLoad, fnorm)
                 #for (fg, dof) in zip(Fgi, nGrav):
@@ -2557,7 +2565,7 @@ class Solver(OP2):
                     #op2.write(result.write_op2(Title, Subtitle))
 
 
-def get_cards():
+def get_solver_cards():
     cards_to_read = set([
         'PARAM',
         'GRID', 'GRDSET',

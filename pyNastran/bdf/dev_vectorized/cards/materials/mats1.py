@@ -83,7 +83,7 @@ class MATS1(Material):
             self.limit1 = zeros(ncards, dtype=float_fmt)
             self.limit2 = zeros(ncards, dtype=float_fmt)
 
-    def add(self, card=None, comment=''):
+    def add_card(self, card=None, comment=''):
         if comment:
              self.comment = comment
         i = self.i

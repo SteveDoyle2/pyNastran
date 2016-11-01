@@ -40,7 +40,7 @@ class CTETRA4(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
 
         #comment = self._comments[i]
@@ -210,6 +210,29 @@ class CTETRA4(SolidElement):
         dofs, nijv = self.get_dofs_nijv(index0s, n0, n1, n2, n3)
         return M, dofs, nijv
 
+    def get_stiffness_matrices(self, model, positions, index0s):
+        out = []
+
+        # volume coordinates
+        # FEM: Volume I (Zienkiewicz) p.186
+        volume6 = volume * 6
+        L1 = (a1 + b1 * x + c1 * y + d1 * z) / volume6
+        L2 = (a2 + b2 * x + c2 * y + d2 * z) / volume6
+        L3 = (a3 + b3 * x + c3 * y + d3 * z) / volume6
+
+        # FEM: Volume I (Zienkiewicz) p.186
+        #x = L1*x1 + L2*x2 + L3*x3 + L4*x4
+        #y = L1*y1 + L2*y2 + L3*y3 + L4*y4
+        #z = L1*z1 + L2*z2 + L3*z3 + L4*z4
+        #1 = L1 + L2 + L3 + L4
+
+
+        for i in range(self.n):
+            K, dofs, nijv = self.get_stiffness_matrix(
+                i, model, self.positions, index0s)
+            out.append(K, dofs, nijv)
+        self.add_stiffness(K, dofs, nijv)
+
     def get_stiffness_matrix(self, i, model, positions, index0s):
         nnodes = 4
         ndof = 3 * nnodes
@@ -284,20 +307,42 @@ class CTETRA4(SolidElement):
         #nu = 0.25
 
         mid1 = prop.material_id[0]
-        mat = self.model.materials.get_shell_material(mid1)
+        mat = self.model.materials.get_solid_material(mid1)
         print(mat)
         E = mat.E[0]
         nu = mat.nu[0]
+        G = mat.G[0]
+
+        # [sigma] = [C] * [epsilon]
+        #denom = 1 - nu**2
+        #C = np.zeros((6, 6), dtype='float64')
+        #outside = E / ((1 + nu) * (1 - 2 * nu))
+        #C[0, 0] = C[1, 1] = C[2, 2] = (1 - nu) * outside
+        #C[3, 3] = C[4, 4] = C[5, 5] = (0.5 - nu) * outside
+
+        if 0:
+            ## [stress] = [E] [strain]
+            #emat = np.zeros((5, 5), dtype='float64')
+            #emat[0, 0] = emat[1, 1] = E / denom
+            #emat[1, 0] = emat[0, 1] = (E * nu) / denom
+            #emat[2, 2] = emat[3, 3] = emat[4, 4] = G
 
 
-        denom = 1 - nu**2
-        #C = E/(1 - (poisson^2))*[1 poisson 0; poisson 1 0;0 0 ((1-poisson)/2)];
+            ## [M] = [D] * [bending]
+            #dmat = np.zeros((5, 5), dtype='float64')
+            #D = E * h**3 / (12 * denom)
+            #dmat[0, 0] = dmat[1, 1] = D
+            #dmat[1, 0] = dmat[0, 1] = D * nu
+            #dmat[2, 2] = D * (1. - nu) / 2.
+            #dmat[3, 3] = emat[4, 4] = G * h
 
-        # sigma = C * epsilon
-        C = np.zeros((6, 6), dtype='float64')
-        outside = E / ((1 + nu) * (1 - 2 * nu))
-        C[0, 0] = C[1, 1] = C[2, 2] = (1 - nu) * outside
-        C[3, 3] = C[4, 4] = C[5, 5] = (0.5 - nu) * outside
+            # FEM: Volume I (Zienkiewicz) p.132
+            dmat2 = np.array(6, 6)
+            dmat2[0, 0] = dmat2[1, 1] = dmat2[2, 2] = 1 - nu
+            dmat2[0, 1] = dmat2[0, 2] = dmat2[1, 0] = dmat2[2, 0] = nu
+            dmat2[3, 3] = dmat2[4, 4] = dmat[5, 5] = (1 - 2 * nu) / 2.
+            dmat2 *= E / ((1 + nu) * (1 - 2 * nu))
+
         #print('C =\n', C)
         #print('thickness =', thickness)
         Ki = np.dot(B.T, C.dot(B))
@@ -382,7 +427,8 @@ class CTETRA4(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         total : bool; default=False
             should the volume be summed
         """
@@ -402,8 +448,10 @@ class CTETRA4(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -427,7 +475,8 @@ class CTETRA4(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         :param total: should the volume be summed; centroid be averaged (default=False)
 
         ..see:: CTETRA4.volume() and CTETRA4.centroid for more information.
@@ -458,7 +507,8 @@ class CTETRA4(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         total : bool; default=False
             should the centroid be averaged
         """

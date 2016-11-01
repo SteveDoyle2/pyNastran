@@ -100,7 +100,7 @@ class RBE3(object):
         self.gmi = {}
 
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         #self.model.log.debug('RBE2.add')
         i = self.i
         #if comment:

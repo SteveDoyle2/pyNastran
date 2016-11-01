@@ -23,7 +23,7 @@ class CPYRAM13(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self.model.log.debug('add...')
         i = self.i
 
@@ -84,7 +84,8 @@ class CPYRAM13(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         total : bool; default=False
             should the volume be summed
 
@@ -106,7 +107,8 @@ class CPYRAM13(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         total : bool; default=False
             should the volume be summed
 
@@ -136,7 +138,8 @@ class CPYRAM13(SolidElement):
         ----------
         element_id : (nelements, ) int ndarray; default=None -> all
             the elements to consider
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         total : bool; default=False
             should the centroid be summed
         """

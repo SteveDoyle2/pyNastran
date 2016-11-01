@@ -2830,7 +2830,7 @@ class NastranIO(object):
         if nids_set:
             nids = np.zeros(self.nNodes, dtype='int32')
             cds = np.zeros(self.nNodes, dtype='int32')
-            for (nid, nid2) in iteritems(self.nid_map):
+            for (nid, nid2) in iteritems(self.nid_map):  # map node ids to index
                 nids[nid2] = nid
                 node = model.Node(nid)
                 try:

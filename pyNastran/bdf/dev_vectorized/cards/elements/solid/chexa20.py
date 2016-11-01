@@ -22,7 +22,7 @@ class CHEXA20(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
@@ -275,10 +275,10 @@ class CHEXA20(SolidElement):
 
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
-        nids = self.node_ids[:4]
-        indx = nids.index(nid_opposite)
-        nids.pop(indx)
-        return nids
+        #nids = self.node_ids[:4]
+        #indx = nids.index(nid_opposite)
+        #nids.pop(indx)
+        #return nids
 
     def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:

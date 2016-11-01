@@ -65,7 +65,7 @@ class CBUSH(Element):
             self.ocid = full(ncards, nan, 'int32')
             self.si = full((ncards, 3), nan, float_fmt)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         eid = integer(card, 1, 'element_id')
         self.element_id[i] = eid

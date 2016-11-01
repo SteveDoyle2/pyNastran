@@ -65,7 +65,7 @@ class PBEAM(Property):
         if ncards:
             pass
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         prop = vPBEAM(card, comment=comment)
         self.properties[prop.pid] = prop
 

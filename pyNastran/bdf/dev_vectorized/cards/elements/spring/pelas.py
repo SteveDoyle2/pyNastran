@@ -24,7 +24,7 @@ class PELAS(object):
         self._ge = []
         self._s = []
 
-    def add(self, card, nPELAS=0, comment=''):
+    def add_card(self, card, nPELAS=0, comment=''):
         self.n = 1
         #if comment:
             # self.comment = comment

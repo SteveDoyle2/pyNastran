@@ -3286,7 +3286,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             self._increase_card_count(name1, ncards1)
             obj1.allocate(self.card_count)
             for comment, card_obj in cards1:
-                obj1.add(card_obj, comment)
+                obj1.add_card(card_obj, comment)
             obj1.build()
 
         if ncards2:
@@ -3294,7 +3294,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             self._increase_card_count(name2, ncards2)
             obj2.allocate(self.card_count)
             for comment, card_obj in cards2:
-                obj2.add(card_obj, comment)
+                obj2.add_card(card_obj, comment)
             obj2.build()
 
     def _parse_cards(self, cards, card_count):
@@ -3315,17 +3315,20 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             }
             # self._is_cards_dict = True
             # this is the loop that hits...
-            for card_name in iterkeys(cards):
+            card_names = sorted(list(cards.keys()))
+            for card_name in card_names:
                 if card_name in cards_to_get_lengths_of:
                     card = cards[card_name]
                     ncards = len(card)
                     method = cards_to_get_lengths_of[card_name]
                     method(card_name, card)
                     self.log.info('dynamic vectorized parse of n%s = %s' % (card_name, ncards))
+                    del cards[card_name]
                     continue
 
             card_name_to_obj_mapper = self.card_name_to_obj
-            for card_name, card in sorted(iteritems(cards)):
+            for card_name in card_names:
+                card = cards[card_name]
                 ncards = len(card)
                 if self.is_reject(card_name):# and card_name not in :
                     self.log.warning('n%s = %s (rejecting)' % (card_name, ncards))
@@ -3333,6 +3336,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     for cardi in card:
                         self.rejects.append([cardi[0]] + cardi[1])
                 elif card_name in cards_to_get_lengths_of:
+                    #raise RuntimeError('this shouldnt happen because we deleted the cards above')
                     continue
                 else:
                     ncards = len(card)
@@ -3342,6 +3346,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                         for comment, card_lines in card:
                             self.add_card(card_lines, card_name, comment=comment,
                                           is_list=False, has_none=False)
+                        del cards[card_name]
                         continue
 
                     obj = card_name_to_obj_mapper[card_name]
@@ -3350,6 +3355,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                         for comment, card_lines in card:
                             self.add_card(card_lines, card_name, comment=comment,
                                           is_list=False, has_none=False)
+                        del cards[card_name]
                         continue
 
                     self._increase_card_count(card_name, ncards)
@@ -3360,9 +3366,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                         fields = to_fields(card_lines, card_name)
                         card = wipe_empty_fields(fields)
                         card_obj = BDFCard(card, has_none=False)
-                        obj.add(card_obj, comment=comment)
+                        obj.add_card(card_obj, comment=comment)
                     obj.build()
                     self.log.debug('  building %r; n=%s' % (obj.type, obj.n))
+                    del cards[card_name]
                 #if self.is_reject(card_name):
                     #self.log.info('    rejecting card_name = %s' % card_name)
                     #for cardi in card:

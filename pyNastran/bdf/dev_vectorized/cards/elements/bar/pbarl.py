@@ -79,7 +79,7 @@ class PBARL(Property):
             #: dimension list
             self.dim = {}
 
-    def add(self, card, comment):
+    def add_card(self, card, comment):
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')

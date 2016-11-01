@@ -60,7 +60,7 @@ class GRAV(object):
         self.N = zeros((ncards, 3), float_fmt)
         self.mb = zeros(ncards, 'int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 

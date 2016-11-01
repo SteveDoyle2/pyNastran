@@ -40,7 +40,7 @@ class PCOMP(Property):
         #self._cards = []
         #self._comments = []
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         prop = PCOMPi(card, comment=comment)
         self.properties[prop.pid] = prop
         #self._cards.append(card)
