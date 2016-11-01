@@ -77,10 +77,10 @@ class MAT1(Material):
         self.Ss[i] = double_or_blank(card, 11, 'Ss', 0.0)
         self.mcsid[i] = integer_or_blank(card, 12, 'Mcsid', 0)
         #if mid == 5:
-        print(card)
-        print('i=%-2s; E=%s; G=%s; nu=%s\n' % (self.i, self.E[self.i], self.G[self.i], self.nu[self.i]))
+        #print(card)
+        #print('i=%-2s; E=%s; G=%s; nu=%s\n' % (self.i, self.E[self.i], self.G[self.i], self.nu[self.i]))
         #print(self.print_card(self.i) + '\n')
-        #aaa
+
         assert len(card) <= 13, 'len(MAT1 card) = %i\ncard=%s' % (len(card), card)
         assert self.material_id[i] > 0, self.material_id
         self.i += 1
@@ -89,8 +89,8 @@ class MAT1(Material):
     def build(self):
         if self.n:
             self.model.log.debug('MAT1.materialsA = %s' % self.material_id)
-            print('G =', self.G)
-            print('nu =', self.nu)
+            #print('G =', self.G)
+            #print('nu =', self.nu)
             i = self.material_id.argsort()
             if not np.array_equal(np.arange(i.size), i):
                 self.material_id = self.material_id[i]
@@ -106,8 +106,8 @@ class MAT1(Material):
                 self.mcsid = self.mcsid[i]
                 self.model.log.debug('MAT1.materialsB = %s' % self.material_id)
                 assert self.material_id.min() > 0, 'MAT1.materials = %s' % self.material_id
-                print('G =', self.G)
-                print('nu =', self.nu)
+                #print('G =', self.G)
+                #print('nu =', self.nu)
 
     def get_D_matrix(self):
         """

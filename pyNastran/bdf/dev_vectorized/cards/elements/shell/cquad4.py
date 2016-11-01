@@ -277,10 +277,13 @@ class CQUAD4(ShellElement):
 
         mid1 = prop.material_id[0]
         mat = self.model.materials.get_shell_material(mid1)
-        print(mat)
+        assert prop.material_id2[0] == -1, prop.material_id2
+        assert prop.material_id3[0] == -1, prop.material_id3
+        assert prop.material_id4[0] == -1, prop.material_id4
+        #print(mat)
         E = mat.E[0]
         nu = mat.nu[0]
-        print('area=%s thickness=%s E=%e nu=%s' % (area, thickness, E, nu))
+        #print('area=%s thickness=%s E=%e nu=%s' % (area, thickness, E, nu))
         #sdd
         i1 = index0s[n1]
         i2 = index0s[n2]
@@ -305,11 +308,14 @@ class CQUAD4(ShellElement):
         #normal = self.Normal()
         is_theta = self.is_theta[i]
         if is_theta:
-            print(self.model.coords)
-            mcid_ref = self.model.coords.get_coord_index_by_coord_id(0)
-            #print('mcid_ref\n', mcid_ref)
             theta = self.theta[i]
-            #raise NotImplementedError('theta=%r' % theta)
+
+            if theta != 0.0:
+                self.model.log.debug(self.model.coords)
+                mcid_ref = self.model.coords.get_coord_index_by_coord_id(0)
+                #print('mcid_ref\n', mcid_ref)
+                #assert self.theta == 0.0, self.theta
+                raise NotImplementedError('theta=%r' % theta)
         else:
             mcid = self.mcid[i]
             #print(mcid)
@@ -320,7 +326,7 @@ class CQUAD4(ShellElement):
             jmat /= np.linalg.norm(jmat)
             imat = np.cross(jmat, normal)
             T = np.vstack([imat, jmat, normal])
-            print(T)
+            self.model.log.debug(T)
         if 0:
             xyz = np.vstack([
                 xyz1,

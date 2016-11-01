@@ -392,7 +392,8 @@ class F06Writer(OP2_F06_Common):
             #assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
             f06 = f06_outname
             f06_outname = f06.name
-            print('f06_outname =', f06_outname)
+            if not quiet:
+                print('f06_outname =', f06_outname)
 
         page_stamp = self.make_stamp(self.title, self.date)
         if self.grid_point_weight.reference_point is not None:

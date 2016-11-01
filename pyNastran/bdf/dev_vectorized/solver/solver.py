@@ -500,10 +500,10 @@ class Solver(OP2):
         #------------------------------------------
         # start of analysis
 
-        print(self.model.case_control_deck)
-        print('--------------------')
+        self.log.info(self.model.case_control_deck)
+        self.log.info('--------------------')
         for subcase_id, subcase in sorted(self.model.subcases.items()):
-            print(subcase)
+            self.log.info(subcase)
             if 'TITLE' in subcase:
                 self.title = subcase.get_parameter('TITLE')[0]
                 break
@@ -1091,12 +1091,12 @@ class Solver(OP2):
 
             # SOLIDS
         #=========================
-        print(self.displacements[1].data)
-        #print(self.displacements[1])
-        print(self.conrod_force)
-        print(self.conrod_stress)
-        print(self.conrod_strain)
-        self.write_f06(self.f06_file, end_flag=True, close=False)
+        self.log.debug(self.displacements[1].data)
+        #self.log.debug(self.displacements[1])
+        self.log.debug(self.conrod_force)
+        self.log.debug(self.conrod_stress)
+        self.log.debug(self.conrod_strain)
+        self.write_f06(self.f06_file, end_flag=True, quiet=True, close=False)
         self.write_op2(self.op2_file, packing=True)
         self.write_op2(self.op2_pack_file, packing=False)
         self.log.info('finished SOL 101')
