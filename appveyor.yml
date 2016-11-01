@@ -33,7 +33,7 @@ environment:
     # conda set
     - PYTHON: "C:\\Miniconda"
       PYTHON_VERSION: "2.7.x" # currently 2.7.11
-      PYTHON_ARCH: "64"
+      PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Miniconda-x64"
       PYTHON_VERSION: "2.7.x" # currently 2.7.11
@@ -41,7 +41,7 @@ environment:
 
     - PYTHON: "C:\\Miniconda3"
       PYTHON_VERSION: "3.4.x" # currently 3.4.3
-      PYTHON_ARCH: "64"
+      PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.4.x" # currently 3.4.3
@@ -49,7 +49,7 @@ environment:
 
     - PYTHON: "C:\\Miniconda35"
       PYTHON_VERSION: "3.5.x" # currently 3.5.1
-      PYTHON_ARCH: "64"
+      PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Miniconda35-x64"
       PYTHON_VERSION: "3.5.x" # currently 3.5.1
