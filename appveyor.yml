@@ -163,7 +163,8 @@ install:
   #
   # for anaconda
   - "conda install anaconda-client --yes"
-  - "conda install atlas numpy scipy pandas"
+  # removed: atlas
+  - "conda install numpy scipy pandas"
   #- "conda create -q -n test-environment python=$PYTHON_VERSION atlas numpy scipy pandas"
 
   # Install the build dependencies of the project. If some dependencies contain
