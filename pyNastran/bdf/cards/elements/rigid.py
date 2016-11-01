@@ -46,7 +46,7 @@ class RROD(RigidElement):
         """
         RigidElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.ga = ga
         self.gb = gb
@@ -148,7 +148,7 @@ class RBAR(RigidElement):
         """
         RigidElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.ga = ga
         self.gb = gb
@@ -284,7 +284,7 @@ class RBAR1(RigidElement):
         """
         RigidElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.ga = ga
         self.gb = gb
@@ -372,7 +372,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     def __init__(self, eid, Gni, Cni, Gmi, Cmi, alpha, comment=''):
         RigidElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.Gni = Gni
         self.Cni = Cni
@@ -553,7 +553,7 @@ class RBE2(RigidElement):
         """
         RigidElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Element identification number
         self.eid = eid
 
@@ -778,7 +778,7 @@ class RBE3(RigidElement):
         """
         RigidElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.refgrid = refgrid
         self.refc = refc
@@ -1059,7 +1059,7 @@ class RSPLINE(RigidElement):
     def __init__(self, eid, nids, components, diameter_ratio=0.1, comment=''):
         RigidElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.nids = nids
         # Components to be constrained

@@ -39,7 +39,7 @@ class PARAM(BaseCard):
             optional string
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.key = key
         self.values = values
 

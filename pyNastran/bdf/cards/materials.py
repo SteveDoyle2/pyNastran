@@ -65,7 +65,7 @@ class CREEP(Material):
                  a, b, c, d, e, f, g, comment=''):
         Material.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.T0 = T0
         self.exp = exp
@@ -204,7 +204,7 @@ class MAT1(IsotropicMaterial):
         self.mats1 = None
         self.matt1 = None
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.e = E
         self.g = G
@@ -540,7 +540,7 @@ class MAT2(AnisotropicMaterial):
         AnisotropicMaterial.__init__(self)
         self.matt2 = None
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.G11 = G11
         self.G12 = G12
@@ -783,7 +783,7 @@ class MAT3(OrthotropicMaterial):
         self.mats3 = None
         self.matt3 = None
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.ex = ex
         self.eth = eth
@@ -928,7 +928,7 @@ class MAT4(ThermalMaterial):
         ThermalMaterial.__init__(self)
         self.matt4 = None
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.k = k
         self.cp = cp
@@ -1042,7 +1042,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         ThermalMaterial.__init__(self)
         self.matt5 = None
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         #: Thermal conductivity (assumed default=0.0)
         self.mid = mid
@@ -1180,7 +1180,7 @@ class MAT8(OrthotropicMaterial):
                  Xt, Xc, Yt, Yc, S, ge, F12, strn, comment=''):
         OrthotropicMaterial.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mats8 = None
         self.matt8 = None
 
@@ -1406,7 +1406,7 @@ class MAT9(AnisotropicMaterial):
         AnisotropicMaterial.__init__(self)
         self.matt9 = None
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Material ID
         self.mid = mid
         self.G11 = G11
@@ -1601,7 +1601,7 @@ class MAT10(Material):
     def __init__(self, mid, bulk, rho, c, ge, comment=''):
         Material.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.bulk = bulk
         self.rho = rho
@@ -1719,7 +1719,7 @@ class MAT11(Material):
                  a1, a2, a3, TRef, ge, comment=''):
         Material.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.e1 = e1
         self.e2 = e2
@@ -1854,7 +1854,7 @@ class MATHE(HyperelasticMaterial):
                  mus, alphas, betas, comment=''):
         HyperelasticMaterial.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.model = model
         self.bulk = bulk
@@ -2000,7 +2000,7 @@ class MATHP(HyperelasticMaterial):
                  tab1, tab2, tab3, tab4, tabd, comment=''):
         HyperelasticMaterial.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.mid = mid
         self.a10 = a10
         self.a01 = a01
@@ -2100,7 +2100,7 @@ class MATHP(HyperelasticMaterial):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         main = data[0]
         (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
          a20, a11, a02, d2,
@@ -2207,7 +2207,7 @@ class EQUIV(Material):
     def __init__(self, mid, field2, field3, field4, field5, field6, field7, comment=''):
         Material.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Identification number of a MAT1, MAT2, or MAT9 entry.
         self.mid = mid
         self.field2 = field2

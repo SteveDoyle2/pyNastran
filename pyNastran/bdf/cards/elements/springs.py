@@ -59,7 +59,7 @@ class CELAS1(SpringElement):
     def __init__(self, eid, pid, nids, c1, c2, comment=''):
         SpringElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         #: property ID
         self.pid = pid
@@ -184,7 +184,7 @@ class CELAS2(SpringElement):
     def __init__(self, eid, k, nids, c1, c2, ge, s, comment=''):
         SpringElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         #: stiffness of the scalar spring
         self.k = k
@@ -341,7 +341,7 @@ class CELAS3(SpringElement):
     def __init__(self, eid, pid, s1, s2, comment=''):
         SpringElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         #: property ID
         self.pid = pid
@@ -434,7 +434,7 @@ class CELAS4(SpringElement):
     def __init__(self, eid, k, s1, s2, comment=''):
         SpringElement.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         self.eid = eid
         #: stiffness of the scalar spring

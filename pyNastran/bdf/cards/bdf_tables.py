@@ -72,7 +72,7 @@ class DTABLE(BaseCard):
     type = 'DTABLE'
     def __init__(self, default_values, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.default_values = default_values
         print('default_values = %s' % default_values)
         #for key, value in iteritems(self.default_values):
@@ -132,7 +132,7 @@ class TABLED1(Table):
     def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
@@ -242,7 +242,7 @@ class TABLED2(Table):
     def __init__(self, tid, x1, x, y, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x1 = x1
         self.x = np.asarray(x, dtype='float64')
@@ -301,7 +301,7 @@ class TABLED3(Table):
     def __init__(self, tid, x1, x2, x, y, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x1 = x1
         self.x2 = x2
@@ -363,7 +363,7 @@ class TABLED4(Table):
     def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x1 = x1
         self.x2 = x2
@@ -444,7 +444,7 @@ class TABDMP1(Table):
     def __init__(self, tid, Type, x, y, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.Type = Type
         self.x = np.asarray(x, dtype='float64')
@@ -505,7 +505,7 @@ class TABLEM1(Table):
     def __init__(self, tid, x, y, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
@@ -559,7 +559,7 @@ class TABLEM2(Table):
     def __init__(self, tid, x1, x, y, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x1 = x1
         self.x = np.asarray(x, dtype='float64')
@@ -618,7 +618,7 @@ class TABLEM3(Table):
     def __init__(self, tid, x1, x2, x, y, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x1 = x1
         self.x2 = x2
@@ -681,7 +681,7 @@ class TABLEM4(Table):
     def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x1 = x1
         self.x2 = x2
@@ -738,7 +738,7 @@ class TABLES1(Table):
     def __init__(self, tid, Type, x, y, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.Type = Type
         self.x = np.asarray(x, dtype='float64')
@@ -798,7 +798,7 @@ class TABLEST(Table):
     def __init__(self, tid, x, y, comment=''):
         Table.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.tid = tid
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
@@ -862,7 +862,7 @@ class TABRND1(RandomTable):
     def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         RandomTable.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         self.tid = tid
         self.x = np.asarray(x, dtype='float64')
@@ -950,7 +950,7 @@ class TABRNDG(RandomTable):
     def __init__(self, tid, Type, LU, WG, comment=''):
         RandomTable.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Table identification number. (Integer >0)
         self.tid = tid
         #: PSD Type: 1. von Karman; 2. Dryden
@@ -991,7 +991,7 @@ class TIC(Table):
         """
         Table.__init__(self, card, data)
         if comment:
-             self.comment = comment
+            self.comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
             self.G = integer(card, 2, 'G')

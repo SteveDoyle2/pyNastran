@@ -47,7 +47,7 @@ class AERO(VectorizedCard):
     def add_card(self, card, comment=''):
         i = self.i
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.acsid[i] = integer_or_blank(card, 1, 'acsid', 0)
         self.velocity[i] = double_or_blank(card, 2, 'velocity')
         self.cRef[i] = double(card, 3, 'cRef')

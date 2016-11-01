@@ -51,7 +51,7 @@ class AEROS(VectorizedCard):
 
     def add_card(self, card, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         i = self.i
         self.acsid[i] = integer_or_blank(card, 1, 'acsid', 0)
         self.rcsid[i] = integer_or_blank(card, 2, 'rcsid', 0)

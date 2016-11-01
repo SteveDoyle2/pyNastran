@@ -85,7 +85,7 @@ class MATS1(Material):
 
     def add_card(self, card=None, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         i = self.i
         #: Identification number of a MAT1, MAT2, or MAT9 entry.
         self.material_id[i] = integer(card, 1, 'mid')

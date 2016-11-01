@@ -12,7 +12,7 @@ class NLPCI(object):
 
     def add_card(self, card=None, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.nlpci_id = integer(card, 1, 'nlparm_id')
         self.Type = string_or_blank(card, 2, 'Type', 'CRIS')
         self.minalr = double_or_blank(card, 3, 'minalr', 0.25)

@@ -41,7 +41,7 @@ class PBUSH(BushingProperty):
     def __init__(self, pid, k, b, ge, rcv, comment=''):
         BushingProperty.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Property ID
         self.pid = pid
@@ -195,7 +195,7 @@ class PBUSH1D(BushingProperty):
     def __init__(self, pid, k, c, m, sa, se, optional_vars, comment=''):
         BushingProperty.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Property ID
         self.pid = pid
@@ -514,7 +514,7 @@ class PBUSH2D(BushingProperty):
     def __init__(self, card=None, data=None, comment=''):
         BushingProperty.__init__(self, card, data)
         if comment:
-             self.comment = comment
+            self.comment = comment
         if card:
             raise NotImplementedError()
         else:
@@ -549,7 +549,7 @@ class PBUSHT(BushingProperty):
                  ge_tables, kn_tables, comment=''):
         BushingProperty.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.pid = pid
         self.k_tables = k_tables
         self.b_tables = b_tables

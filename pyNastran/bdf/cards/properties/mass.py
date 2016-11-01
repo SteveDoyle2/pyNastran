@@ -43,7 +43,7 @@ class NSM(PointProperty):
     def __init__(self, sid, Type, id, value, comment=''):
         PointProperty.__init__(self, card, data)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.sid = sid
         self.Type = Type
         self.id = id
@@ -94,7 +94,7 @@ class PMASS(PointProperty):
     def __init__(self, card=None, icard=0, data=None, comment=''):
         PointProperty.__init__(self, card, data)
         if comment:
-             self.comment = comment
+            self.comment = comment
         if card:
             icard *= 2
             #: Property ID

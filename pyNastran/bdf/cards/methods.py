@@ -43,7 +43,7 @@ class EIGB(Method):
     def __init__(self, sid, method, L1, L2, nep, ndp, ndn, norm, G, C, comment=''):
         Method.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
 
@@ -141,7 +141,7 @@ class EIGC(Method):
                  comment=''):
         Method.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
@@ -438,7 +438,7 @@ class EIGP(Method):
     def __init__(self, sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=''):
         Method.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
         #: Coordinates of point in complex plane. (Real)
@@ -500,7 +500,7 @@ class EIGR(Method):
     def __init__(self, sid, method, f1, f2, ne, nd, norm, G, C, comment=''):
         Method.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
@@ -604,7 +604,7 @@ class EIGRL(Method):
                  options, values, comment=''):
         Method.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid

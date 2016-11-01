@@ -65,7 +65,7 @@ class CDAMP1(LineDamper):
     def __init__(self, eid, pid, nids, c1, c2, comment=''):
         LineDamper.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.c1 = c1
@@ -197,7 +197,7 @@ class CDAMP2(LineDamper):
     def __init__(self, eid, b, nids, c1, c2, comment=''):
         LineDamper.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         #: Value of the scalar damper (Real)
         self.b = b
@@ -310,7 +310,7 @@ class CDAMP3(LineDamper):
 
     def __init__(self, eid, pid, nids, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         LineDamper.__init__(self)
         self.eid = eid
         self.pid = pid
@@ -406,7 +406,7 @@ class CDAMP4(LineDamper):
     def __init__(self, eid, b, nids, comment=''):
         LineDamper.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.b = b
         self.nids = nids
@@ -495,7 +495,7 @@ class CDAMP5(LineDamper):
     def __init__(self, eid, pid, nids, comment=''):
         LineDamper.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         self.eid = eid
         #: Property ID
@@ -593,7 +593,7 @@ class CVISC(LineDamper):
     def __init__(self, eid, pid, nids, comment=''):
         LineDamper.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.prepare_node_ids(nids)

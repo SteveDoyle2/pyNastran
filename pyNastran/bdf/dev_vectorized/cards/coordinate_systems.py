@@ -58,7 +58,7 @@ class Coord(BaseCard):
         :param data: a list analogous to the card
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: have all the transformation matricies been determined
         self.is_resolved = False
@@ -468,7 +468,7 @@ class CORD3G(Coord):  # not done
         :param card: a list version of the fields
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         Coord.__init__(self, card, data)
 
@@ -571,7 +571,7 @@ class CORD1R(Cord1x):
         """
         Cord1x.__init__(self, card, nCoord, data)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
     def raw_fields(self):
         list_fields = ['CORD1R', self.cid] + self.NodeIDs()
@@ -832,7 +832,7 @@ class CORD2C(Cord2x):
         """
         Cord2x.__init__(self, card, data)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)

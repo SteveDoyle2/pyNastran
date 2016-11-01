@@ -28,7 +28,7 @@ class PAERO1(VectorizedCard):
     def add_card(self, card, comment=''):
         i = self.i
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.property_id[i] = integer(card, 1, 'pid')
         for j in range(2, len(card)):
             self.b[i, j-2] = integer_or_blank(card, j, 'b%i' % j-2, 0)

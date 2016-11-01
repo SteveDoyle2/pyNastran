@@ -476,7 +476,7 @@ class PCOMPi(CompositeShellProperty):
         ShellProperty.__init__(self, card, data)
 
         if comment:
-             self.comment = comment
+            self.comment = comment
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')

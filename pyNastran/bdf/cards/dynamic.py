@@ -45,7 +45,7 @@ class DELAY(BaseCard):
         +-------+-----+-----------+-----+--------+------+-----+--------+-----+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Identification number of DPHASE entry. (Integer > 0)
         self.sid = sid
@@ -155,7 +155,7 @@ class DPHASE(BaseCard):
         +--------+-----+-----------+-----+------+------+-----+-----+-----+
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.sid = sid
         self.nodes = nodes
         self.components = components
@@ -262,7 +262,7 @@ class FREQ(BaseCard):
 
     def __init__(self, sid, freqs, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.sid = sid
         self.freqs = np.unique(freqs)
 
@@ -327,7 +327,7 @@ class FREQ1(FREQ):
 
     def __init__(self, sid, f1, df, ndf, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.sid = sid
         self.f1 = f1
         self.df = df
@@ -372,7 +372,7 @@ class FREQ2(FREQ):
 
     def __init__(self, sid, f1, f2, ndf=1, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.sid = sid
         self.f1 = f1
         self.f2 = f2
@@ -430,7 +430,7 @@ class FREQ4(FREQ):
 
     def __init__(self, sid, f1, f2, fspread, nfm, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.sid = sid
         self.f1 = f1
         self.f2 = f2
@@ -499,7 +499,7 @@ class NLPARM(BaseCard):
                  epsU=0.01, epsP=0.01, epsW=0.01, maxDiv=3, maxQn=None, maxLs=4,
                  fStress=0.2, lsTol=0.5, maxBisect=5, maxR=20., rTolB=20., comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.nlparm_id = nlparm_id
         self.ninc = ninc
         self.dt = dt
@@ -660,7 +660,7 @@ class NLPCI(BaseCard):
     def __init__(self, nlpci_id, Type, minalr, maxalr, scale, desiter, mxinc,
                  comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.nlpci_id = nlpci_id
         self.Type = Type
         self.minalr = minalr
@@ -714,7 +714,7 @@ class TF(BaseCard):
     type = 'TF'
     def __init__(self, sid, nid0, c, b0, b1, b2, nids, components, a, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.sid = sid
         self.nid0 = nid0
         self.c = c
@@ -798,7 +798,7 @@ class TSTEP(BaseCard):
 
     def __init__(self, sid, N, DT, NO, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.sid = sid
         self.N = N
         self.DT = DT
@@ -861,7 +861,7 @@ class TSTEPNL(BaseCard):
                  fstress, max_bisect, adjust, mstep, rb, max_r, utol, rtol_b,
                  min_iter, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         # line 1
         self.sid = sid

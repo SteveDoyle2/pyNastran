@@ -39,7 +39,7 @@ class PELAS(SpringProperty):
 
     def __init__(self, pid, k, ge, s, comment=''):
         if comment:
-             self.comment = comment
+            self.comment = comment
         SpringProperty.__init__(self)
         # 2 PELAS properties can be defined on 1 PELAS card
         # these are split into 2 separate cards
@@ -120,7 +120,7 @@ class PELAST(SpringProperty):
     def __init__(self, pid, tkid, tgeid, tknid, comment=''):
         SpringProperty.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Property identification number. (Integer > 0)
         self.pid = pid

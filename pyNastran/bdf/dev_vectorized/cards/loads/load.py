@@ -41,7 +41,7 @@ class LOAD(object):
         :param comment: a comment
         """
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: load ID
         self.load_id = integer(card, 1, 'sid')

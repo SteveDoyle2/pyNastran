@@ -26,7 +26,7 @@ class PROD(Property):
     def __init__(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
         Property.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.pid = pid
         self.mid = mid
         self.A = A
@@ -142,7 +142,7 @@ class PTUBE(Property):
     def __init__(self, pid, mid, OD1, t, nsm, OD2, comment=''):
         Property.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.pid = pid
         self.mid = mid
         self.OD1 = OD1

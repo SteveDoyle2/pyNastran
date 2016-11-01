@@ -34,7 +34,7 @@ class PFAST(Property):
                  kr1, kr2, kr3, mass, ge, comment=''):
         Property.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: diameter of the fastener
@@ -155,7 +155,7 @@ class PGAP(Property):
         """
         Property.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
 
         #: Property ID
         self.pid = pid
@@ -280,7 +280,7 @@ class PRAC2D(CrackProperty):
                  comment=''):
         CrackProperty.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: Material ID
@@ -364,7 +364,7 @@ class PRAC3D(CrackProperty):
     def __init__(self, pid, mid, gamma=0.5, phi=180., comment=''):
         CrackProperty.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: Material ID
@@ -433,7 +433,7 @@ class PCONEAX(Property):
     def __init__(self, pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi, comment=''):
         Property.__init__(self)
         if comment:
-             self.comment = comment
+            self.comment = comment
         self.pid = pid
         self.mid1 = mid1
         self.t1 = t1
