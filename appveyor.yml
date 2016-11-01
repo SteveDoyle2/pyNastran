@@ -162,6 +162,7 @@ install:
   #- "pip install --disable-pip-version-check --user --upgrade pip"
   #
   # for anaconda
+  - "conda update conda --yes"
   - "conda install anaconda-client --yes"
   # removed: atlas
   - "conda install numpy scipy pandas --yes"
