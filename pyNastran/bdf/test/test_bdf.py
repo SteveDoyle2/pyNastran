@@ -327,7 +327,7 @@ def run_and_compare_fems(
                 for card_name, card_count in sorted(iteritems(fem1.card_count)):
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
-        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double,
+        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
                         encoding=encoding, debug=debug, log=None, quiet=quiet)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
@@ -558,7 +558,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
 
 def run_fem2(bdf_model, out_model, xref, punch,
-             sum_load, size, is_double,
+             sum_load, size, is_double, mesh_form,
              encoding=None, debug=False, log=None, quiet=False):
     """
     Reads/writes the BDF to verify nothing has been lost
@@ -575,7 +575,12 @@ def run_fem2(bdf_model, out_model, xref, punch,
     sum_load : bool
        sums static load
     size : int
+        ???
     is_double : bool
+        ???
+    mesh_form : str {combined, separate}
+        'combined' : interspersed=True
+        'separate' : interspersed=False
     debug : bool
         debugs
     quiet : bool
@@ -613,9 +618,10 @@ def run_fem2(bdf_model, out_model, xref, punch,
         if not is_restart:
             validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map)
 
-    fem2.write_bdf(out_model_2, interspersed=False, size=size, is_double=is_double)
+    if mesh_form is not None:
+        fem2.write_bdf(out_model_2, interspersed=False, size=size, is_double=is_double)
+        os.remove(out_model_2)
     #fem2.write_as_ctria3(out_model_2)
-    os.remove(out_model_2)
     return fem2
 
 def _assert_has_spc(subcase, fem):
@@ -1129,7 +1135,7 @@ def compute_ints(cards1, cards2, fem1, quiet=True):
     list_keys1 = list(card_keys1)
     list_keys2 = list(card_keys2)
     if diff_keys1 or diff_keys2:
-        print(' diffKeys1=%s diffKeys2=%s' % (diff_keys1, diff_keys2))
+        print(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
 
     for key in sorted(all_keys):
         msg = ''
@@ -1180,7 +1186,7 @@ def compute(cards1, cards2, quiet=False):
     list_keys2 = list(card_keys2)
     msg = ''
     if diff_keys1 or diff_keys2:
-        msg = 'diffKeys1=%s diffKeys2=%s' % (diff_keys1, diff_keys2)
+        msg = 'diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2)
 
     for key in sorted(all_keys):
         msg = ''
