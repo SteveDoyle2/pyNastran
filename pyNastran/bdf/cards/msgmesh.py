@@ -85,7 +85,7 @@ class CGEN(object):
             ???
         """
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.Type = Type
         self.field_eid = field_eid
         self.pid = pid

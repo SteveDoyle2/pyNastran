@@ -24,10 +24,10 @@ class PELAS(object):
         self._ge = []
         self._s = []
 
-    def add(self, card, nPELAS=0, comment=''):
+    def add_card(self, card, nPELAS=0, comment=''):
         self.n = 1
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         nOffset = nPELAS * 5
         # 2 PELAS properties can be defined on 1 PELAS card
         # these are split into 2 separate cards
@@ -39,12 +39,14 @@ class PELAS(object):
             self._ge.append(double_or_blank(card, 3 + nOffset, 'ge', 0.))
             self._s.append(double_or_blank(card, 4 + nOffset, 's', 0.))
 
-    def allocate(self, ncards):
-        float_fmt = self.model.float
-        self.property_id = zeros(ncards, dtype='int32')
-        self.K = zeros(ncards, dtype=float_fmt)
-        self.ge = zeros(ncards, dtype=float_fmt)
-        self.s = zeros(ncards, dtype=float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            float_fmt = self.model.float_fmt
+            self.property_id = zeros(ncards, dtype='int32')
+            self.K = zeros(ncards, dtype=float_fmt)
+            self.ge = zeros(ncards, dtype=float_fmt)
+            self.s = zeros(ncards, dtype=float_fmt)
 
     def build(self):
         if self.n:
@@ -73,7 +75,7 @@ class PELAS(object):
         else:
             self.property_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         if self.n:
             if property_id is None:
                 i = arange(self.n)
@@ -83,9 +85,9 @@ class PELAS(object):
             for (pid, k, ge, s) in zip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
                 card = ['PELAS', pid, k, ge, s]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __getitem__(self, property_ids):
         """

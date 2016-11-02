@@ -36,7 +36,7 @@ class AERO(VectorizedCard):
         self.n = ncards
         self.model.log.debug('AERO.n=%s' % self.n)
         if self.n:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.acsid = zeros(ncards, dtype='int32')
             self.velocity = zeros(ncards, dtype=float_fmt)
             self.cRef = zeros(ncards, dtype=float_fmt)
@@ -44,10 +44,10 @@ class AERO(VectorizedCard):
             self.symXZ = zeros(ncards, dtype='int32')
             self.symXY = zeros(ncards, dtype='int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.acsid[i] = integer_or_blank(card, 1, 'acsid', 0)
         self.velocity[i] = double_or_blank(card, 2, 'velocity')
         self.cRef[i] = double(card, 3, 'cRef')
@@ -79,7 +79,7 @@ class AERO(VectorizedCard):
             self.symXZ = self.symXZ[i]
             self.symXY = self.symXY[i]
 
-    def write_card(self, f, size, is_double):
+    def write_card(self, bdf_file, size, is_double):
         #card = self.repr_fields()
         #symXZ = set_blank_if_default(self.symXZ, 0)
         #symXY = set_blank_if_default(self.symXY, 0)
@@ -88,4 +88,4 @@ class AERO(VectorizedCard):
                                                 self.rhoRef, self.symXZ, self.symXY):
 
                 list_fields = ['AERO', acsid, V, c, rho, xz, xy]
-                f.write(print_card_8(list_fields))
+                bdf_file.write(print_card_8(list_fields))

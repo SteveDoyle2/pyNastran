@@ -24,9 +24,9 @@ class NLPARM(object):
     def __init__(self):
         pass
 
-    def add(self, card=None, comment=''):
+    def add_card(self, card=None, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         self.nlparm_id = integer(card, 1, 'nlparm_id')
         self.ninc = integer_or_blank(card, 2, 'ninc', 10)
@@ -92,9 +92,9 @@ class NLPARM(object):
                        rTolB]
         return list_fields
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         card = self.raw_fields()
         if size == 8:
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
         else:
-            f.write(print_card_16(card))
+            bdf_file.write(print_card_16(card))

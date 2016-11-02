@@ -11,8 +11,8 @@ All coordinate cards are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, range
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
+from six.moves import zip, range
 
 from numpy import array, cross, dot, transpose, zeros, vstack
 from numpy.linalg import norm
@@ -20,8 +20,8 @@ from numpy.linalg import norm
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.dev import list_print
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -58,10 +58,10 @@ class Coord(BaseCard):
         :param data: a list analogous to the card
         """
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: have all the transformation matricies been determined
-        self.isResolved = False
+        self.is_resolved = False
         self.cid = None
         self.e1 = None
         self.e2 = None
@@ -103,7 +103,7 @@ class Coord(BaseCard):
         if self.cid == 0:
             return p
 
-        if not self.isResolved:
+        if not self.is_resolved:
             if isinstance(self.rid, int) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
@@ -148,6 +148,9 @@ class Coord(BaseCard):
 
         :param p:       the point to be transformed in the local frame.  Type=1x3 NUMPY.NDARRAY
         :param debug:   developer debug (default=False)
+
+        Returns
+        -------
         :returns p2:  the point in the global frame.  Type=1x3 NUMPY.NDARRAY
         :returns beta:  the rotation matrix.  Type=6x6 NUMPY.NDARRAY
 
@@ -167,10 +170,10 @@ class Coord(BaseCard):
         pCoord = dot(p - self.origin, transpose(beta))
         pLocal = self.xyz_to_coord(pCoord)
         if debug:
-            print("p        = %s" % p)
-            print("p-origin = %s" % (p - self.origin))
-            print("pCoord = %s" % pCoord)
-            print("pLocal = %s\n" % pLocal)
+            self.model.log.debug("p        = %s" % p)
+            self.model.log.debug("p-origin = %s" % (p - self.origin))
+            self.model.log.debug("pCoord = %s" % pCoord)
+            self.model.log.debug("pLocal = %s\n" % pLocal)
         return pLocal
 
     def transform_node_to_local(self, p, debug=False):
@@ -248,7 +251,7 @@ class Cord2x(Coord):
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
-        self.isResolved = False
+        self.is_resolved = False
         Coord.__init__(self, card, data, comment)
 
         if card:
@@ -290,7 +293,7 @@ class Cord2x(Coord):
         self.k = None
 
         if self.rid == 0:
-            self.isResolved = True
+            self.is_resolved = True
             self.setup()
 
     def _verify(self):
@@ -348,7 +351,7 @@ class Cord1x(Coord):
 
     def __init__(self, card, nCoord, data, comment):
         Coord.__init__(self, card, data, comment)
-        self.isResolved = False
+        self.is_resolved = False
         if nCoord is not None:
             assert nCoord in (0, 1), 'nCoord=%r' % (nCoord)
             nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
@@ -383,10 +386,12 @@ class Cord1x(Coord):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
 
-        :param model: a BDF model
-        :param rid:
-          The relative coordinate system (default=0 -> Global);
-          TYPE = INT.
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
+        rid : int; (default=0 -> global)
+           The relative coordinate system
         """
         rid1 = self.g1.cid
         rid2 = self.g2.cid
@@ -463,7 +468,7 @@ class CORD3G(Coord):  # not done
         :param card: a list version of the fields
         """
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         Coord.__init__(self, card, data)
 
@@ -566,7 +571,7 @@ class CORD1R(Cord1x):
         """
         Cord1x.__init__(self, card, nCoord, data)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
     def raw_fields(self):
         list_fields = ['CORD1R', self.cid] + self.NodeIDs()
@@ -574,6 +579,8 @@ class CORD1R(Cord1x):
 
     def coord_to_xyz(self, p):
         """
+        Returns
+        -------
         :returns xyz: the point in the local coordinate system
         """
         return p
@@ -637,6 +644,8 @@ class CORD1C(Cord1x):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
+        Returns
+        -------
         :returns xyz: the point in the local coordinate system
         """
         R = p[0]
@@ -647,6 +656,8 @@ class CORD1C(Cord1x):
 
     def xyz_to_coord(self, p):
         """
+        Returns
+        -------
         :returns xyz: the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
@@ -701,6 +712,8 @@ class CORD1S(Cord1x):
 
     def xyz_to_coord(self, p):
         r"""
+        Returns
+        -------
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
@@ -714,6 +727,8 @@ class CORD1S(Cord1x):
 
     def coord_to_xyz(self, p):
         r"""
+        Returns
+        -------
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
         R = p[0]
@@ -766,12 +781,16 @@ class CORD2R(Cord2x):
 
     def coord_to_xyz(self, p):
         """
+        Returns
+        -------
         :returns xyz: the point in the local coordinate system
         """
         return p
 
     def xyz_to_coord(self, p):
         """
+        Returns
+        -------
         :returns xyz: the delta xyz point in the local coordinate system
         """
         return p
@@ -813,7 +832,7 @@ class CORD2C(Cord2x):
         """
         Cord2x.__init__(self, card, data)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -834,6 +853,8 @@ class CORD2C(Cord2x):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
+        Returns
+        -------
         :returns xyz: the point in the local coordinate system
         """
         R = p[0]
@@ -844,6 +865,8 @@ class CORD2C(Cord2x):
 
     def xyz_to_coord(self, p):
         """
+        Returns
+        -------
         :returns xyz: the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
@@ -899,6 +922,8 @@ class CORD2S(Cord2x):
 
     def xyz_to_coord(self, p):
         r"""
+        Returns
+        -------
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
@@ -912,6 +937,8 @@ class CORD2S(Cord2x):
 
     def coord_to_xyz(self, p):
         r"""
+        Returns
+        -------
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
         R = p[0]

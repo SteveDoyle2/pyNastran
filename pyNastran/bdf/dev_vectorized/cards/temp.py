@@ -3,8 +3,8 @@ from numpy import zeros, where, unique, transpose, dot, array, arange
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 
 
 class TEMPD(object):
@@ -13,7 +13,10 @@ class TEMPD(object):
         """
         Defines the TEMPD object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +-------+------+----+------+----+------+----+------+----+
         |    1  |  2   | 3  |  4   | 5  |  6   | 7  |  8   | 9  |
@@ -30,8 +33,8 @@ class TEMPD(object):
         #: Default temperature
         self.temperature_default = []
 
-    def add(self, card, comment=''):
-        self._comment = comment
+    def add_card(self, card, comment=''):
+         self.comment = comment
         self.n += 1
 
         n = 1
@@ -46,15 +49,15 @@ class TEMPD(object):
         self.load_id = array(self.load_id)
         self.temperature_default = array(self.temperature_default)
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         if self.n:
             #n = 0
             for lid, t in zip(self.load_id, self.temperature_default):
                 card = ['TEMPD', lid, t]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
 
 class TEMP(object):
@@ -63,7 +66,10 @@ class TEMP(object):
         """
         Defines the TEMP object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +------+-----+----+----+----+----+----+----+------+
         |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
@@ -74,9 +80,8 @@ class TEMP(object):
         self.model = model
         self._comments = []
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self.load_id = integer(card, 1, 'load_id')
-
         self._comments.append(comment)
 
     def build(self):
@@ -85,18 +90,10 @@ class TEMP(object):
 
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.nid = zeros(ncards, 'int32')
-            self.xyz = zeros((ncards, 3), float_fmt)
-            self.cp = zeros(ncards, 'int32')
-            self.cd = zeros(ncards, 'int32')
-            self.seid = zeros(ncards, 'int32')
-            self.ps = zeros(ncards, 'int32')
+            self.temp = zeros(ncards, float_fmt)
 
-            cp0 = self.model.grdset.cp
-            cd0 = self.model.grdset.cd
-            ps0 = self.model.grdset.ps
-            seid0 = self.model.grdset.seid
             for i, card in enumerate(cards):
                 #: Node ID
                 self.nid[i] = integer(card, 1, 'nid')
@@ -142,7 +139,7 @@ class TEMP(object):
             msg.append('  %-8s: %i' % ('TEMP', self.n))
         return msg
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         if self.n:
             #t0 = self.model.tempd.cp
             seid0 = self.model.grdset.seid
@@ -156,9 +153,9 @@ class TEMP(object):
             for (nid, cp, xyz, cd, ps, seid) in zip(self.nid, Cp, self.xyz, Cd, Ps, Seid):
                 card = ['TEMP', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         msg = "<GRID>\n"

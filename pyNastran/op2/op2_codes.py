@@ -1041,10 +1041,11 @@ class Op2Codes(object):
         """
         #tcode = self.table_code // 1000
         tcode = self.sort_code
+        sort_code = tcode
         sort_method = 1
         is_real = True
         is_random = False
-        assert tcode in [0, 1, 2, 3, 4, 5, 6], 'tcode=%s\n%s' % (tcode, self.code_information())
+        assert sort_code in [0, 1, 2, 3, 4, 5, 6], 'sort_code=%s\n%s' % (sort_code, self.code_information())
         if tcode in [2, 3, 5, 6]:
             sort_method = 2
         if tcode in [1, 3]:

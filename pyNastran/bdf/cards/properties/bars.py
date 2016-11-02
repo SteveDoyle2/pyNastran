@@ -599,7 +599,7 @@ class PBAR(LineProperty):
         """
         LineProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: property ID -> use Pid()
         self.pid = pid
         #: material ID -> use Mid()
@@ -872,7 +872,7 @@ class PBARL(LineProperty):
     def __init__(self, pid, mid, group, Type, dim, nsm=0., comment=''):
         LineProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Property ID
         self.pid = pid
@@ -1322,7 +1322,7 @@ class PBRSECT(LineProperty):
     def __init__(self, pid, mid, form, options, comment=''):
         LineProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Property ID
         self.pid = pid
@@ -1486,7 +1486,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
     def add_card(self, card, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.pid = integer(card, 1, 'pid')
         self.mid = integer(card, 2, 'mid')
 
@@ -1509,7 +1509,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
     def add_op2_data(self, data, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         raise NotImplementedError(data)
 
     def Nsm(self):
@@ -1548,7 +1548,7 @@ class PBEND(LineProperty):
     def __init__(self, card=None, data=None, comment=''):
         LineProperty.__init__(self, card, data)
         if comment:
-            self._comment = comment
+            self.comment = comment
         if card:
             self.pid = integer(card, 1, 'pid')
             self.mid = integer(card, 2, 'mid')

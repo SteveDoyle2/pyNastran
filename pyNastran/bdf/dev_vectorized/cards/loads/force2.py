@@ -16,14 +16,17 @@ class FORCE2(VectorizedCard):
         """
         Defines the FORCE2 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         .. todo:: collapse loads
         """
         VectorizedCard.__init__(self, model)
 
     def allocate(self, ncards):
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         self.node_id = zeros(ncards, 'int32')
         self.coord_id = zeros(ncards, 'int32')
@@ -65,7 +68,7 @@ class FORCE2(VectorizedCard):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Property ID
             self.load_id = zeros(ncards, 'int32')
             self.node_id = zeros(ncards, 'int32')
@@ -93,13 +96,13 @@ class FORCE2(VectorizedCard):
             self._cards = []
             self._comments = []
 
-    def write_card(self, f, size=8, lids=None):
+    def write_card(self, bdf_file, size=8, lids=None):
         if self.n:
             for (lid, nid, cid, mag, xyz) in zip(
                  self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
 
                 card = ['FORCE2', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

@@ -337,7 +337,7 @@ def parse_executive_control_deck(executive_control_lines):
     """
     sol = None
     method = None
-    isol_line = None
+    sol_iline = None
     for (i, eline) in enumerate(executive_control_lines):
         uline = eline.strip().upper()  # uppercase line
         uline = uline.split('$')[0].expandtabs()
@@ -355,8 +355,8 @@ def parse_executive_control_deck(executive_control_lines):
             else:
                 raise ValueError('cannot overwrite solution existing='
                                  '|SOL %s| new =|%s|' % (sol, uline))
-            isol_line = i
-    return sol, method, isol_line
+            sol_iline = i
+    return sol, method, sol_iline
 
 
 def _parse_pynastran_header(line):

@@ -25,8 +25,10 @@ class PCOMP(Property):
         """
         Defines the PCOMP object.
 
-        :param model: the BDF object
-        :param cards: the list of PCOMP cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
         #self.model = model
@@ -38,7 +40,7 @@ class PCOMP(Property):
         #self._cards = []
         #self._comments = []
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         prop = PCOMPi(card, comment=comment)
         self.properties[prop.pid] = prop
         #self._cards.append(card)
@@ -422,7 +424,7 @@ class PCOMP(Property):
         n = len(self.properties)
         self.n = n
         if self.n:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
 
             #: Property ID
             self.property_id = array(sorted(self.properties.keys()), dtype='int32')

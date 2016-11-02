@@ -39,31 +39,36 @@ class CBEAM(Element):
         """
         Defines the CBEAM object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Element.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        self.node_ids = zeros((ncards, 2), 'int32')
-        self.is_g0 = zeros(ncards, 'bool')
-        self.g0 = full(ncards, nan, 'int32')
-        self.x = full((ncards, 3), nan, float_fmt)
-        self.is_offt = zeros(ncards, 'bool')
-        self.bit = full(ncards, nan, 'int32')
-        self.offt = full(ncards, nan, '|S3')
-        self.pin_flags = zeros((ncards, 2), 'int32')
-        self.wa = zeros((ncards, 3), float_fmt)
-        self.wb = zeros((ncards, 3), float_fmt)
-        self.sa = zeros(ncards, 'int32')
-        self.sb = zeros(ncards, 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float_fmt
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            self.node_ids = zeros((ncards, 2), 'int32')
+            self.is_g0 = zeros(ncards, 'bool')
+            self.g0 = full(ncards, nan, 'int32')
+            self.x = full((ncards, 3), nan, float_fmt)
+            self.is_offt = zeros(ncards, 'bool')
+            self.bit = full(ncards, nan, 'int32')
+            self.offt = full(ncards, nan, '|S3')
+            self.pin_flags = zeros((ncards, 2), 'int32')
+            self.wa = zeros((ncards, 3), float_fmt)
+            self.wb = zeros((ncards, 3), float_fmt)
+            self.sa = zeros(ncards, 'int32')
+            self.sb = zeros(ncards, 'int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         eid = integer(card, 1, 'element_id')
         self.element_id[i] = eid
@@ -186,7 +191,7 @@ class CBEAM(Element):
             return mass
 
     #=========================================================================
-    def write_card(self, f, size=8, element_ids=None):
+    def write_card(self, bdf_file, size=8, element_ids=None):
         if self.n:
             if element_ids is None:
                 i = arange(self.n)
@@ -220,7 +225,7 @@ class CBEAM(Element):
                 card = ['CBEAM', eid, pid, n[0], n[1], x1, x2, x3, offt_bit,
                         pa, pb, w1a, w2a, w3a, w1b, w2b, w3b,
                         sa, sb]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)
@@ -245,5 +250,5 @@ class CBEAM(Element):
         obj.sb = self.sb[i]
         return obj
 
-    def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
-        return K, dofs, nIJV
+    def get_stiffness_matrix(self, model, node_ids, index0s, fnorm=1.0):
+        return K, dofs, n_ijv

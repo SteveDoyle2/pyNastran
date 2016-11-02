@@ -1,6 +1,6 @@
 from six import iteritems
 from six.moves import StringIO
-from numpy import array, zeros, arange, unique, concatenate
+from numpy import array, zeros, unique
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
@@ -16,8 +16,10 @@ class PBUSH(object):
         """
         Defines the PCOMP object.
 
-        :param model: the BDF object
-        :param cards: the list of PBUSH cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.properties = {}
@@ -25,14 +27,16 @@ class PBUSH(object):
         #self._cards = []
         #self._comments = []
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         prop = vPBUSH(card, comment=comment)
         self.properties[prop.pid] = prop
         #self._cards.append(card)
         #self._comments.append(comment)
 
-    def allocate(self, ncards):
-        pass
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            pass
 
     def get_properties(self, property_id=None):
         props = []
@@ -68,13 +72,13 @@ class PBUSH(object):
             self._cards = []
             self._comments = []
 
-    def write_card(self, f, size=8, property_ids=None):
+    def write_card(self, bdf_file, size=8, property_ids=None):
         if size == 8:
             for pid, pcomp in sorted(iteritems(self.properties)):
-                f.write(pcomp.write_card(size, print_card_8))
+                bdf_file.write(pcomp.write_card(size, print_card_8))
         else:
             for pid, pcomp in sorted(iteritems(self.properties)):
-                f.write(pcomp.write_card(size, print_card_16))
+                bdf_file.write(pcomp.write_card(size, print_card_16))
 
     #def slice_by_index(self, i):
         #i = self._validate_slice(i)

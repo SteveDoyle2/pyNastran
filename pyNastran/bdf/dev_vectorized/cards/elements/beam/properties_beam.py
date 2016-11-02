@@ -1,17 +1,19 @@
-from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeam import PBEAM
-from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeaml import PBEAML
+from __future__ import print_function
 
 class PropertiesBeam(object):
     def __init__(self, model):
         """
-        Defines the PropertiesBar object.
+        Defines the PropertiesBeam object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
 
-        self.pbeam = PBEAM(self.model)
-        self.pbeaml = PBEAML(self.model)
+        self.pbeam = model.pbeam
+        self.pbeaml = model.pbeaml
         self.n = 0
 
     def allocate(self, card_count):
@@ -79,8 +81,15 @@ class PropertiesBeam(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_card(self, f, size=8, property_id=None):
-        f.write('$PROPERTIES_BEAM\n')
+    def write_card(self, bdf_file, size=8, property_id=None):
+        bdf_file.write('$PROPERTIES_BEAM\n')
         types = self._get_types(nlimit=False)
         for prop in types:
-            prop.write_card(f, size=size, property_id=property_id)
+            prop.write_card(bdf_file, size=size, property_id=property_id)
+
+    def __repr__(self):
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for prop in types:
+            msg += '  <%s object; n=%s>\n' % (prop.type, prop.n)
+        return msg

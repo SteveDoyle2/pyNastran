@@ -1,29 +1,27 @@
-from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas1 import CELAS1
-from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas2 import CELAS2
-
-from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas3 import CELAS3
-from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas4 import CELAS4
 
 class ElementsSpring(object):
     def __init__(self, model):
         """
-        Defines the ElementsShell object.
+        Defines the ElementsSpring object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
 
         self.n = 0
-        self.celas1 = CELAS1(self.model)
-        self.celas2 = CELAS2(self.model)
-        self.celas3 = CELAS3(self.model)
-        self.celas4 = CELAS4(self.model)
+        self.celas1 = model.celas1
+        self.celas2 = model.celas2
+        self.celas3 = model.celas3
+        self.celas4 = model.celas4
 
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)
         for etype in etypes:
             if etype.type in card_count:
-                print('etype.type =', etype.type, etype.n)
+                self.model.log.debug('etype.type = %r n=%s' % (etype.type, etype.n))
                 etype.allocate(card_count[etype.type])
             #else:
                 #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
@@ -56,11 +54,11 @@ class ElementsSpring(object):
         self.celas4.add(card, comment)
         raise NotImplementedError()
 
-    def write_card(self, f, size=8, eids=None):
-        f.write('$ELEMENTS\n')
+    def write_card(self, bdf_file, size=8, eids=None):
+        bdf_file.write('$ELEMENTS\n')
         types = self._get_types()
         for element in types:
-            element.write_card(f, size=size, eids=eids)
+            element.write_card(bdf_file, size=size, eids=eids)
 
     def _get_types(self, nlimit=True):
         types = [self.celas1,
@@ -91,5 +89,12 @@ class ElementsSpring(object):
         for elems in types:
             elems._verify(xref=xref)
 
+    #def __repr__(self):
+        #return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
+
     def __repr__(self):
-        return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for elem in types:
+            msg += '  <%s object; n=%s>\n' % (elem.type, elem.n)
+        return msg

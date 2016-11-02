@@ -40,7 +40,7 @@ class AEROS(VectorizedCard):
         self.n = ncards
         self.model.log.debug('AEROS.n=%s' % self.n)
         if self.n:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.acsid = zeros(ncards, dtype='int32')
             self.rcsid = zeros(ncards, dtype='int32')
             self.cRef = zeros(ncards, dtype=float_fmt)
@@ -49,9 +49,9 @@ class AEROS(VectorizedCard):
             self.symXZ = zeros(ncards, dtype='int32')
             self.symXY = zeros(ncards, dtype='int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         i = self.i
         self.acsid[i] = integer_or_blank(card, 1, 'acsid', 0)
         self.rcsid[i] = integer_or_blank(card, 2, 'rcsid', 0)
@@ -85,14 +85,14 @@ class AEROS(VectorizedCard):
             self.symXY = self.symXY[i]
 
 
-    def write_card(self, f, size, is_double):
+    def write_card(self, bdf_file, size, is_double):
         if self.n == 0:
             return
-        for acsid, rcsid, c, b, S, symXZ, symXY in zip(self.acsid,
-            self.rcsid, self.cRef, self.bRef, self.SRef, self.symXZ, self.symXY):
+        for acsid, rcsid, c, b, S, symXZ, symXY in zip(
+                self.acsid, self.rcsid, self.cRef, self.bRef, self.SRef, self.symXZ, self.symXY):
 
             #symXZ = set_blank_if_default(self.symXZ, 0)
             #symXY = set_blank_if_default(self.symXY, 0)
             list_fields = ['AEROS', acsid, rcsid, c,
-                  b, S, symXZ, symXY]
-            f.write(print_card_8(list_fields))
+                           b, S, symXZ, symXY]
+            bdf_file.write(print_card_8(list_fields))

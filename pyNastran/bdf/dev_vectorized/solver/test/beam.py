@@ -26,7 +26,7 @@ def build_global_stiffness(elements):
 
     for element in elements:
         nodes = element.nodes
-        K = element.get_stiffness()
+        K = element.get_stiffness_matrix()
 
         # put in global stiffness matrix
         for (i, inode) in enumerate(nodes):  # row

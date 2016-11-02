@@ -53,7 +53,7 @@ class BSURF(BaseCard):
     type = 'BSURF'
     def __init__(self, sid, eids, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
         #: Element identification numbers of shell elements. (Integer > 0)
@@ -130,7 +130,7 @@ class BSURFS(BaseCard):
     type = 'BSURFS'
     def __init__(self, id, eids, g1s, g2s, g3s, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Identification number of a contact region. See Remarks 2 and 3.
         #: (Integer > 0)
         self.id = id
@@ -197,7 +197,7 @@ class BCTSET(BaseCard):
     type = 'BCTSET'
     def __init__(self, csid, sids, tids, frictions, min_distances, max_distances, comment='', sol=101):
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: CSID Contact set identification number. (Integer > 0)
         self.csid = csid
         #: SIDi Source region (contactor) identification number for contact pair i.
@@ -269,7 +269,7 @@ class BCRPARA(BaseCard):
     type = 'BCRPARA'
     def __init__(self, crid, surf, offset, Type='FLEX', mgp=0, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: CRID Contact region ID. (Integer > 0)
         self.crid = crid
@@ -326,7 +326,7 @@ class BCTPARA(BaseCard):
     type = 'BCTPARA'
     def __init__(self, csid, params, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Contact set ID. Parameters defined in this command apply to
         #: contact set CSID defined by a BCTSET entry. (Integer > 0)
@@ -427,7 +427,7 @@ class BCTADD(BaseCard):
     type = 'BCTADD'
     def __init__(self, csid, S, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Contact set identification number. (Integer > 0)
         self.csid = csid
 

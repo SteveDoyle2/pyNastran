@@ -47,35 +47,39 @@ class PBARL(Property):
         """
         Defines the PCOMP object.
 
-        :param model: the BDF object
-        :param cards: the list of PBARL cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
         self._cards = []
 
-    def allocate(self, ncards):
-        self.n = ncards
-        print('ncards PBARL = %s' % ncards)
-        float_fmt = self.model.float
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            self.model.log.debug('ncards PBARL = %s' % ncards)
+            float_fmt = self.model.float_fmt
 
-        #: Property ID
-        self.property_id = zeros(ncards, dtype='int32')
+            #: Property ID
+            self.property_id = zeros(ncards, dtype='int32')
 
-        #: Material ID
-        self.material_id = zeros(ncards, dtype='int32')
+            #: Material ID
+            self.material_id = zeros(ncards, dtype='int32')
 
-        self.group = zeros(ncards, dtype='|S8')
+            self.group = zeros(ncards, dtype='|S8')
 
-        #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
-        self.Type = zeros(ncards, dtype='|S8')
+            #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
+            self.Type = zeros(ncards, dtype='|S8')
 
-        #: non-structural mass
-        self.nsm = zeros(ncards, dtype=float_fmt)
+            #: non-structural mass
+            self.nsm = zeros(ncards, dtype=float_fmt)
 
-        #: dimension list
-        self.dim = {}
+            #: dimension list
+            self.dim = {}
 
-    def add(self, card, comment):
+    def add_card(self, card, comment):
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
@@ -193,7 +197,7 @@ class PBARL(Property):
         #return obj
 
     #=========================================================================
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         #print('PBARL.n = %s' % self.n)
         if self.n:
             if property_id is None:
@@ -210,15 +214,17 @@ class PBARL(Property):
             #self.model.log.debug('*pbarl write pids=%s' % self.property_id)
             for (j, pid, mid, group, Type, nsm) in zip(count(), self.property_id[i], self.material_id[i],
                                                        self.group[i], self.Type[i], self.nsm[i]):
+                if pid in self._comments:
+                    bdf_file.write(self._comments[pid])
                 dim = self.dim[j]
                 sgroup = set_blank_if_default(group, 'MSCBMLO')
 
                 list_fields = ['PBARL', pid, mid, group, Type, None,
                                None, None, None] + dim + [nsm]
                 if size == 8:
-                    f.write(print_card_8(list_fields))
+                    bdf_file.write(print_card_8(list_fields))
                 else:
-                    f.write(print_card_16(list_fields))
+                    bdf_file.write(print_card_16(list_fields))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)

@@ -220,10 +220,15 @@ class TableArray(ScalarObject):  # displacement style table
             nx = nnodes
             ny = ntimes
             #print("ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
+        self.build_data(ntimes, nnodes, nx, ny, self._times_dtype)
 
-        self._times = zeros(ntimes, dtype=self._times_dtype)
-        #self.types = array(self.nelements, dtype='|S1')
+    def build_data(self, ntimes, nnodes, nx, ny, float_fmt):
+        """actually performs the build step"""
+        self.ntimes = ntimes
+        self._nnodes = nnodes
+        self.ntotal = nnodes
 
+        self._times = zeros(ntimes, dtype=float_fmt)
         self.node_gridtype = zeros((nnodes, 2), dtype='int32')
 
         #[t1, t2, t3, r1, r2, r3]

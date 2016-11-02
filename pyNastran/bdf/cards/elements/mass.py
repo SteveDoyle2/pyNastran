@@ -67,7 +67,7 @@ class CMASS1(PointMassElement):
     def __init__(self, eid, pid, g1, c1, g2, c2, comment=''):
         PointMassElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.g1 = g1
@@ -222,7 +222,7 @@ class CMASS2(PointMassElement):
     def __init__(self, eid, mass, g1, c1, g2, c2, comment=''):
         PointMassElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.mass = mass
         self.g1 = g1
@@ -387,7 +387,7 @@ class CMASS3(PointMassElement):
     def __init__(self, eid, pid, s1, s2, comment=''):
         PointMassElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.s1 = s1
@@ -477,7 +477,7 @@ class CMASS4(PointMassElement):
     def __init__(self, eid, mass, s1, s2=0, comment=''):
         PointMassElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.mass = mass
         self.s1 = s1
@@ -627,7 +627,7 @@ class CONM1(PointMassElement):
         """
         PointMassElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.mass_matrix = mass_matrix
         self.eid = eid
         self.nid = nid
@@ -834,7 +834,7 @@ class CONM2(PointMassElement):
         """
         PointMassElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element identification number. (0 < Integer < 100,000,000)
         self.eid = eid
 

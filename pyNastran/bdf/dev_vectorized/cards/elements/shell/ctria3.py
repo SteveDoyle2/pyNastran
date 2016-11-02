@@ -15,24 +15,26 @@ class CTRIA3(ShellElement):
     def __init__(self, model):
         ShellElement.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        #: Element ID
-        self.element_id = zeros(ncards, dtype='int32')
-        #: Property ID
-        self.property_id = zeros(ncards, dtype='int32')
-        #: Node IDs
-        self.node_ids = zeros((ncards, 3), dtype='int32')
-        self.zoffset = zeros(ncards, dtype='int32')
-        self.t_flag = zeros(ncards, dtype='int32')
-        self.thickness = zeros((ncards, 3), dtype=float_fmt)
-        #else:
-            #self.element_id = array([], dtype='int32')
-            #self.property_id = array([], dtype='int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float_fmt
+            #: Element ID
+            self.element_id = zeros(ncards, dtype='int32')
+            #: Property ID
+            self.property_id = zeros(ncards, dtype='int32')
+            #: Node IDs
+            self.node_ids = zeros((ncards, 3), dtype='int32')
+            self.zoffset = zeros(ncards, dtype='int32')
+            self.t_flag = zeros(ncards, dtype='int32')
+            self.thickness = zeros((ncards, 3), dtype=float_fmt)
+            #else:
+                #self.element_id = array([], dtype='int32')
+                #self.property_id = array([], dtype='int32')
 
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'element_id')
 
@@ -66,7 +68,7 @@ class CTRIA3(ShellElement):
             self.element_id = array([], 'int32')
             self.property_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -75,7 +77,7 @@ class CTRIA3(ShellElement):
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def _verify(self):
         self.get_mass_by_element_id()
@@ -89,8 +91,12 @@ class CTRIA3(ShellElement):
         #"""
         #Gets the mass of the CTRIA3s on a total or per element basis.
 
-        #:param element_ids: the elements to consider (default=None -> all)
-        #:param total: should the mass be summed (default=False)
+        #Parameters
+        #----------
+        #element_id : (nelements, ) int ndarray; default=None -> all
+            #the elements to consider
+        #total : bool; default=False
+            #should the mass be summed
 
         #:param node_ids: the GRIDs as an (N, )  NDARRAY (or None)
         #:param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -112,7 +118,10 @@ class CTRIA3(ShellElement):
         #"""
         #Gets the area of the CTRIA3s on a total or per element basis.
 
-        #:param element_id: the elements to consider (default=None -> all)
+        #Parameters
+        #----------
+        #element_id : (nelements, ) int ndarray; default=None -> all
+            #the elements to consider
         #:param total: should the area be summed (default=False)
 
         #:param node_ids:  the GRIDs as an (N, )  NDARRAY (or None)
@@ -132,7 +141,10 @@ class CTRIA3(ShellElement):
         #"""
         #Gets the normals of the CTRIA3s on per element basis.
 
-        #:param element_id: the elements to consider (default=None -> all)
+        #Parameters
+        #----------
+        #element_id : (nelements, ) int ndarray; default=None -> all
+            #the elements to consider
 
         #:param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         #:param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -177,14 +189,20 @@ class CTRIA3(ShellElement):
         Gets the mass, area, and normals of the CTRIA3s on a per
         element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
 
         :param node_ids: the GRIDs as an (N, )  NDARRAY (or None)
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
-        :param calculate_mass: should the mass be calculated (default=True)
-        :param calculate_area: should the area be calculated (default=True)
-        :param calculate_normal: should the normals be calculated (default=True)
+        calculate_mass : bool; default=True
+            should the mass be calculated
+        calculate_area : bool; default=True
+            should the area be calculated
+        calculate_normal : bool; default=True
+            should the normals be calculated
         """
         if element_id is None:
             element_ids = self.element_id
@@ -214,13 +232,17 @@ class CTRIA3(ShellElement):
         """
         Gets the positions of a list of nodes
 
+        Parameters
+        ----------
         :param nids_to_get:  the node IDs to get as an NDARRAY
         :param node_ids:     the node IDs that contains all the nids_to_get
                              as an NDARRAY
         :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
 
-        :returns grids2_cid_0 : the corresponding positins of the requested
-                                GRIDs
+        Returns
+        -------
+        grids2_cid_0 : (nnodes, 3) float ndarray
+            the corresponding positions of the requested GRIDs
         """
         grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
         return grids2_cid_0
@@ -232,7 +254,24 @@ class CTRIA3(ShellElement):
         #pid = self.property_id[i]
         #return self.model.property_shell.get_property_by_index[pid]
 
-    def get_stiffness(self, i, model, positions, index0s):
+    def get_stiffness_matrices(self, model, positions, index0s):
+        out = []
+
+        # area coordinates
+        d2 = area
+        L1 = a1 + b1 * x + c1 * y / d2
+        L2 = a2 + b2 * x + c2 * y / d2
+        L3 = a3 + b3 * x + c3 * y / d2
+
+
+        for i in range(self.n):
+            K, dofs, nijv = self.get_stiffness_matrix(
+                i, model, positions, index0s)
+            out.append(K, dofs, nijv)
+        #self.add_stiffness(K, dofs, nijv)
+        return out
+
+    def get_stiffness_matrix(self, i, model, positions, index0s):
         # Mindlin-Reissner (thick plate)
 
         # Kirchoff-Love (thin plate)
@@ -241,9 +280,9 @@ class CTRIA3(ShellElement):
         pid = self.property_id[i]
         #prop = self.get_property_by_index(i)
         n1, n2, n3 = self.node_ids[i, :]
-        p1 = positions[n1]
-        p2 = positions[n2]
-        p3 = positions[n3]
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
+        xyz3 = positions[n3]
 
         #mat = prop.get_material(pid)
         mat = model.properties_shell.get_material(pid)
@@ -255,7 +294,7 @@ class CTRIA3(ShellElement):
         # [k_bend] = [b.T] [D] [b] -> 5.16 - Przemieniecki
         # [b] - 5.139 Prz.
         # [D] - 2.28 - Prz.
-        p, q, r = p1, p2, p3
+        p, q, r = xtz1, xyz2, xyz3
         pq = q - p
         dpq = norm(pq)
         L = pq / dpq

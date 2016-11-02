@@ -1,42 +1,39 @@
-from six import iteritems
-from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique
+#from six import iteritems
+import numpy as np
+from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique, array
 
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import CTETRA4
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpyram5 import CPYRAM5
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import CPENTA6
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import CHEXA8
-
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra10 import CTETRA10
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpyram13 import CPYRAM13
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta15 import CPENTA15
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa20 import CHEXA20
 
 class ElementsSolid(object):
     def __init__(self, model):
         """
         Defines the ShellProperties object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.n = 0
 
-        self.ctetra4 = CTETRA4(self.model)
-        self.cpyram5 = CPYRAM5(self.model)
-        self.cpenta6 = CPENTA6(self.model)
-        self.chexa8 = CHEXA8(self.model)
+        self.ctetra4 = model.ctetra4
+        self.cpyram5 = model.cpyram5
+        self.cpenta6 = model.cpenta6
+        self.chexa8 = model.chexa8
 
-        self.ctetra10 = CTETRA10(self.model)
-        self.cpyram13 = CPYRAM13(self.model)
-        self.cpenta15 = CPENTA15(self.model)
-        self.chexa20 = CHEXA20(self.model)
+        self.ctetra10 = model.ctetra10
+        self.cpyram13 = model.cpyram13
+        self.cpenta15 = model.cpenta15
+        self.chexa20 = model.chexa20
+        self.element_id = array([], dtype='int32')
 
-    def allocate(self, card_count):
-        etypes = self._get_types(nlimit=False)
-        for etype in etypes:
-            if etype.type in card_count:
-                self.model.log.debug('    allocate %s' % etype.type)
-                etype.allocate(card_count[etype.type])
+
+    #def allocate(self, card_count):
+        #etypes = self._get_types(nlimit=False)
+        #for etype in etypes:
+            #if etype.type in card_count:
+                #self.model.log.debug('    allocate %s' % etype.type)
+                #etype.allocate(card_count[etype.type])
             #else:
                 #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
 
@@ -45,20 +42,14 @@ class ElementsSolid(object):
         types = self._get_types(nlimit=False)
         for elems in types:
             if elems.n:
-                self.model.log.debug('    building ES - %s' % elems.__class__.__name__)
-            elems.build()
+                self.model.log.debug('    building ElementSolid - %s' % elems.__class__.__name__)
+            #elems.build()
             self.n += elems.n
 
-        self.element_id = hstack([
-            self.ctetra4.element_id,
-            self.cpyram5.element_id,
-            self.cpenta6.element_id,
-            self.chexa8.element_id,
-            self.ctetra10.element_id,
-            self.cpyram13.element_id,
-            self.cpenta15.element_id,
-            self.chexa20.element_id,
-        ])
+        etypes = self._get_types(nlimit=True)
+        if etypes:
+            self.element_id = np.hstack([elem.element_id for elem in etypes
+                                         if elem.n > 0])
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
@@ -164,12 +155,12 @@ class ElementsSolid(object):
         return mass
 
     #=========================================================================
-    def write_card(self, f, size=8, element_id=None):
-        f.write('$ELEMENTS_SOLID\n')
+    def write_card(self, bdf_file, size=8, element_id=None):
+        bdf_file.write('$ELEMENTS_SOLID\n')
         types = self._get_types(nlimit=True)
         for elems in types:
             self.model.log.debug(elems.type)
-            elems.write_card(f, size=size, element_id=element_id)
+            elems.write_card(bdf_file, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
         types = [self.ctetra4, self.cpyram5, self.cpenta6, self.chexa8,
@@ -178,9 +169,18 @@ class ElementsSolid(object):
         if nlimit:
             types2 = []
             for etype in types:
-                if etype.n > 0:
+                if etype is None:
+                    continue
+                elif etype.n > 0:
                     #print("etype.Type =", etype.Type)
                     types2.append(etype)
+            types = types2
+        else:
+            types2 = []
+            for etype in types:
+                if etype is None:
+                    continue
+                types2.append(etype)
             types = types2
         #print("solid nlimit=%s" % nlimit)
         return types
@@ -199,5 +199,12 @@ class ElementsSolid(object):
         for elems in types:
             elems._verify(xref=xref)
 
+    #def __repr__(self):
+        #return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
+
     def __repr__(self):
-        return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for elem in types:
+            msg += '  <%s object; n=%s>\n' % (elem.type, elem.n)
+        return msg

@@ -36,7 +36,7 @@ class QVOL(ThermalLoad):
     def __init__(self, sid, qvol, control_point, elements, comment=''):
         ThermalLoad.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Load set identification number. (Integer > 0)
         self.sid = sid
         self.qvol = qvol
@@ -131,7 +131,7 @@ class QBDY1(ThermalLoad):
     def __init__(self, sid, qFlux, eids, comment=''):
         ThermalLoad.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Load set identification number. (Integer > 0)
         self.sid = sid
         #: Heat flux into element (FLOAT)
@@ -235,7 +235,7 @@ class QBDY2(ThermalLoad):  # not tested
     def __init__(self, sid, eid, qfluxs, comment=''):
         ThermalLoad.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Load set identification number. (Integer > 0)
         self.sid = sid
@@ -331,7 +331,7 @@ class QBDY3(ThermalLoad):
     def __init__(self, sid, Q0, cntrlnd, eids, comment=''):
         ThermalLoad.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Load set identification number. (Integer > 0)
         self.sid = sid
@@ -449,7 +449,7 @@ class QHBDY(ThermalLoad):
     def __init__(self, sid, flag, Q0, af, grids, comment=''):
         ThermalLoad.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Load set identification number. (Integer > 0)
         self.sid = sid
@@ -546,7 +546,7 @@ class TEMP(ThermalLoad):
     def __init__(self, sid, temperatures, comment=''):
         ThermalLoad.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Load set identification number. (Integer > 0)
         self.sid = sid
 
@@ -645,7 +645,7 @@ class TEMPD(BaseCard):
     def __init__(self, sid, temperature, comment=''):
         BaseCard.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.temperature = temperature
 

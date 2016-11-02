@@ -117,7 +117,9 @@ class SHABP(ShabpOut):
         return areas
 
     def read_shabp(self, infilename):
-        lines = open(infilename).readlines()
+        """reads an SHABP.INP / SHABP.mk5 file"""
+        with open(infilename) as shabp_file:
+            lines = shabp_file.readlines()
         if infilename.lower().endswith(".geo"):
             i = 0
         else:  # this supports standard .inp and .mk5 files

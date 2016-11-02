@@ -103,7 +103,7 @@ class CHBDYE(ThermalElement):
                  radMidFront=0, radMidBack=0, comment=''):
         ThermalElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Surface element ID number for a side of an
         #: element. (0 < Integer < 100,000,000)
         self.eid = eid
@@ -234,7 +234,7 @@ class CHBDYG(ThermalElement):
                  radMidFront=0, radMidBack=0, comment=''):
         ThermalElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Surface element ID
         self.eid = eid
 
@@ -389,7 +389,7 @@ class CHBDYP(ThermalElement):
                  e1=None, e2=None, e3=None, comment=''):
         ThermalElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Surface element ID
         self.eid = eid
 
@@ -596,7 +596,7 @@ class PCONV(ThermalProperty):
                  e1, e2, e3, comment=''):
         ThermalProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Convection property identification number. (Integer > 0)
         self.pconid = pconid
 
@@ -702,7 +702,7 @@ class PCONVM(ThermalProperty):
                  comment=''):
         ThermalProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Convection property identification number. (Integer > 0)
         self.pconid = pconid
         assert self.pconid > 0
@@ -785,7 +785,7 @@ class PHBDY(ThermalProperty):
     def __init__(self, pid, af, d1, d2, comment=''):
         ThermalProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Property identification number. (Unique Integer among all PHBDY
         #: entries). (Integer > 0)
@@ -857,7 +857,7 @@ class CONV(ThermalBC):
     def __init__(self, eid, pconid, film_node, cntrlnd, ta, comment=''):
         ThermalBC.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: CHBDYG, CHBDYE, or CHBDYP surface element identification number.
         #: (Integer > 0)
@@ -968,7 +968,7 @@ class CONVM(ThermalBC):
                  comment=''):
         ThermalBC.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pconvm = pconvm
         self.film_node = film_node
@@ -1055,7 +1055,7 @@ class RADM(ThermalBC):
     def __init__(self, radmid, absorb, emissivity, comment=''):
         ThermalBC.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Material identification number
         self.radmid = radmid
@@ -1106,7 +1106,7 @@ class RADBC(ThermalBC):
     def __init__(self, card=None, data=None, comment=''):
         ThermalBC.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         if card:
             #: NODAMB Ambient point for radiation exchange. (Integer > 0)

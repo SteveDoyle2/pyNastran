@@ -6,7 +6,7 @@ from six.moves import StringIO
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import integer
+from pyNastran.bdf.bdf_interface.assign_type import integer
 
 def get_spcadd_constraint(card):
     constraint_id = integer(card, 1, 'constraint_id')
@@ -36,7 +36,7 @@ class SPCADD(object):
 
     def add(self, spc_id, spc_ids, comment):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         assert isinstance(spc_id, int), spc_id
         self.spc_id = spc_id
         self.spc_ids += spc_ids
@@ -44,13 +44,13 @@ class SPCADD(object):
     def build(self):
         self.spc_ids.sort()
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         card = ['SPCADD', self.spc_id] + self.spc_ids
         #print "card = ", card
         if size == 8:
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
         else:
-            f.write(print_card_16(card))
+            bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

@@ -13,18 +13,20 @@ class PSHEAR(Property):
     def __init__(self, model):
         Property.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        self.property_id = zeros(ncards, 'int32')
-        #: Material ID
-        self.material_id = zeros(ncards, 'int32')
-        self.thickness = zeros(ncards, float_fmt)
-        self.nsm = zeros(ncards, float_fmt)
-        self.f1 = zeros(ncards, float_fmt)
-        self.f2 = zeros(ncards, float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float_fmt
+            self.property_id = zeros(ncards, 'int32')
+            #: Material ID
+            self.material_id = zeros(ncards, 'int32')
+            self.thickness = zeros(ncards, float_fmt)
+            self.nsm = zeros(ncards, float_fmt)
+            self.f1 = zeros(ncards, float_fmt)
+            self.f2 = zeros(ncards, float_fmt)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'pid')
         self.material_id[i] = integer(card, 2, 'mid')
@@ -63,7 +65,7 @@ class PSHEAR(Property):
             n = len(property_id)
             i = arange(n)
         else:
-            print('property_id =', property_id)
+            self.model.log.debug('property_id = %r' % property_id)
             n = len(property_id)
             i = searchsorted(self.property_id, property_id)
         mpa = zeros(n, dtype='float64')
@@ -71,7 +73,7 @@ class PSHEAR(Property):
         mpa = rho * self.thickness[i] + self.nsm[i]
         return mpa
 
-    def write_card(self, f, size=8, pids=None):
+    def write_card(self, bdf_file, size=8, pids=None):
         if self.n:
             if pids is None:
                 i = arange(self.n)
@@ -89,9 +91,9 @@ class PSHEAR(Property):
             for (pid, mid, t, nsm, f1, f2) in zip(self.property_id[i], self.material_id[i], self.thickness[i], self.nsm[i], self.f1[i], self.f2[i]):
                 card = ['PSHEAR', pid, mid, t, nsm, f1, f2]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __getitem__(self, property_ids):
         """

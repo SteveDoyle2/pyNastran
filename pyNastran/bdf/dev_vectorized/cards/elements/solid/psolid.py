@@ -17,24 +17,29 @@ class PSOLID(Property):
         """
         Defines the PSOLID object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        #float_fmt = self.model.float
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: Material ID
-        self.material_id = zeros(ncards, 'int32')
-        self.cordm = zeros(ncards, 'int32')
-        self.integ = zeros(ncards, dtype='|S8')
-        self.stress = zeros(ncards, dtype='|S8')
-        self.isop = zeros(ncards, dtype='|S8')
-        self.fctn = zeros(ncards, dtype='|S8')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            #float_fmt = self.model.float_fmt
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: Material ID
+            self.material_id = zeros(ncards, 'int32')
+            self.cordm = zeros(ncards, 'int32')
+            self.integ = zeros(ncards, dtype='|S8')
+            self.stress = zeros(ncards, dtype='|S8')
+            self.isop = zeros(ncards, dtype='|S8')
+            self.fctn = zeros(ncards, dtype='|S8')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'pid')
         self.material_id[i] = integer(card, 2, 'mid')
@@ -124,20 +129,20 @@ class PSOLID(Property):
         self.model.log.debug('rho = %s' % rho)
         return rho
 
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         if self.n:
             #print "PSOLID.property_id =", self.property_id
             for(pid, mid, cordm, integ, stress, isop, fctn) in zip(
                 self.property_id, self.material_id, self.cordm,
                 self.integ, self.stress, self.isop, self.fctn):
-                if eid in self._comments:
-                    f.write(self._comments[eid])
+                if pid in self._comments:
+                    bdf_file.write(self._comments[pid])
 
                 cordm = set_blank_if_default(cordm, 0)
                 fctn = set_blank_if_default(fctn, 'SMECH')
                 card = ['PSOLID', pid, mid, cordm, integ,
                         stress, isop, fctn]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def __getitem__(self, property_id):
         i = searchsorted(self.property_id, property_id)

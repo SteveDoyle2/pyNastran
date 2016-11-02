@@ -317,7 +317,7 @@ class GRAV(BaseCard):
 
     def __init__(self, sid, cid, scale, N, mb, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Set identification number
         self.sid = sid
@@ -476,7 +476,7 @@ class ACCEL(BaseCard):
 
     def __init__(self, sid, cid, N, direction, locs, vals, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Load set identification number (Integer>0)
         self.sid = sid
         #: Coordinate system identification number. (Integer>0: Default=0)
@@ -588,7 +588,7 @@ class ACCEL1(BaseCard):
 
     def __init__(self, sid, cid, scale, N, nodes, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Load set identification number (Integer>0)
         self.sid = sid
 
@@ -854,7 +854,7 @@ class FORCE(Force):
         """
         Force.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.node = node
         self.cid = cid
@@ -972,7 +972,7 @@ class FORCE1(Force):
     def __init__(self, sid, node, mag, g1, g2, comment=''):
         Force.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.node = node
         self.mag = mag
@@ -1092,7 +1092,7 @@ class FORCE2(Force):
         """
         Force.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.node = node
         self.mag = mag
@@ -1285,7 +1285,7 @@ class MOMENT(Moment):
         """
         Moment.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.node = node
         self.cid = cid
@@ -1410,7 +1410,7 @@ class MOMENT1(Moment):
         """
         Moment.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.xyz = None
         self.sid = sid
         self.node = node
@@ -1531,7 +1531,7 @@ class MOMENT2(Moment):
         """
         Moment.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.node = node
         self.mag = mag
@@ -1688,7 +1688,7 @@ class GMLOAD(Load):
                  load_magnitudes, comment=''):
         Load.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.cid = cid
         self.normal = normal
@@ -1797,7 +1797,7 @@ class PLOAD(Load):
 
     def __init__(self, sid, p, nodes, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.p = p
         self.nodes = nodes
@@ -1871,7 +1871,7 @@ class PLOAD1(Load):
 
     def __init__(self, sid, eid, Type, scale, x1, p1, x2, p2, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.eid = eid
         self.Type = Type
@@ -2134,7 +2134,7 @@ class PLOAD2(Load):
 
     def __init__(self, sid, pressure, eids, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.pressure = pressure
         self.eids = eids
@@ -2236,7 +2236,7 @@ class PLOAD4(Load):
 
     def __init__(self, sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
 
         # these can be greater than 1 if it's a shell (not a solid)
@@ -2522,7 +2522,7 @@ class PLOADX1(Load):
 
     def __init__(self, sid, eid, pa, pb, ga, gb, theta=0., comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.sid = sid
         self.eid = eid
         self.pa = pa

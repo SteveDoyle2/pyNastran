@@ -1,11 +1,19 @@
 # pylint: disable=W0612,C0103
+"""
+``test_bdf`` runs multiple checks on a BDF in order to make sure that:
+  - no data is lost on IO
+  - card field types are correct (e.g. node_ids are integers)
+  - various card methods (e.g. Area) work correctly
+
+As such, ``test_bdf`` is very useful for debugging models.
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 import os
 import sys
 import numpy
 import warnings
+from six import iteritems
 warnings.simplefilter('always')
 numpy.seterr(all='raise')
 import traceback
@@ -30,32 +38,92 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None):
+    """
+    Runs multiple BDFs
+
+    Parameters
+    ----------
+    folder : str
+        the folder where the bdf_filename is
+    filenames : List[str]
+        the bdf files to analyze
+    debug : bool, optional
+        run with debug logging (default=False)
+    xref : bool / str / List[bool/str], optional
+        True : cross reference the model
+        False  : don't cross reference the model
+        'safe' : do safe cross referencing
+    check : bool / List[bool], optional
+        validate cards for things like mass, area, etc. (default=True)
+    punch : bool / List[bool], optional
+        this is a PUNCH file (no executive/case control decks; default=False)
+    cid : int / None, optional
+        convert the model grids to an alternate coordinate system (default=None; no conversion)
+    size : int / List[int], optional
+        The field width of the model (8/16)
+    is_double : bool / List[bool], optional
+        Is this a double precision model?
+            True : size = 16
+            False : six = {8, 16}
+    nastran : str, optional
+        the path to nastran (default=''; no analysis)
+    post : int / List[int], optional
+        the PARAM,POST,value to run
+    sum_load : bool; default=True
+        should the loads be summed
+    dev : bool; default=True
+        True : crashes if an Exception occurs
+        False : doesn't crash; useful for running many tests
+    crash_cards : List[str, str, ...]
+        list of cards that are invalid and automatically crash the run
+    Usage
+    -----
+    All control lists must be the same length.
+    You can run xref=True and xref=False with:
+
+    .. python ::
+
+        run_lots_of_files(filenames, xref=[True, False]) # valid
+    """
     filenames = list(set(filenames))
     filenames.sort()
 
+    if size is None:
+        sizes = [8]
+    elif isinstance(size, integer_types):
+        sizes = [size]
+    else:
+        sizes = size
+
+    if is_double is None:
+        is_doubles = [8]
+    elif isinstance(is_double, bool):
+        is_doubles = [is_double]
+    else:
+        is_doubles = is_double
     #debug = True
     filenames2 = []
-    diffCards = []
+    diff_cards = []
     for filename in filenames:
         if(filename.endswith('.bdf') or filename.endswith('.dat') or
            filename.endswith('.nas') or filename.endswith('.nas')):
-           filenames2.append(filename)
+            filenames2.append(filename)
 
-    failedFiles = []
+    failed_files = []
     n = 1
     for filename in filenames2:
-        absFilename = os.path.abspath(os.path.join(folder, filename))
+        abs_filename = os.path.abspath(os.path.join(folder, filename))
         if folder != '':
-            print("filename = %s" % absFilename)
-        isPassed = False
+            print("filename = %s" % abs_filename)
+        is_passed = False
         try:
-            (fem1, fem2, diffCards2) = run_bdf(folder, filename, debug=debug,
+            (fem1, fem2, diff_cards) = run_bdf(folder, filename, debug=debug,
                                                xref=xref, check=check, punch=punch,
                                                cid=cid, isFolder=True, dynamic_vars={})
             del fem1
             del fem2
-            diffCards += diffCards
-            isPassed = True
+            diff_cards += diff_cards
+            is_passed = True
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
         except IOError:
@@ -73,21 +141,20 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             #raise
         print('-' * 80)
 
-        if isPassed:
-            sys.stderr.write('%i %s' % (n, absFilename))
+        if is_passed:
+            sys.stderr.write('%i %s' % (n, abs_filename))
             n += 1
         else:
-            sys.stderr.write('*' + absFilename)
-            failedFiles.append(absFilename)
+            sys.stderr.write('*' + abs_filename)
+            failed_files.append(abs_filename)
         sys.stderr.write('\n')
 
     print('*' * 80)
     try:
-        print("diffCards1 = %s" % list(set(diffCards)))
+        print("diff_cards1 = %s" % list(set(diff_cards)))
     except TypeError:
-        #print "type(diffCards) =",type(diffCards)
-        print("diffCards2 = %s" % diffCards)
-    return failedFiles
+        print("diff_cards2 = %s" % diff_cards)
+    return failed_files
 
 
 def memory_usage_psutil():
@@ -102,17 +169,78 @@ def memory_usage_psutil():
     return mem
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
-            cid=None, mesh_form='combined', isFolder=False, print_stats=False,
+            cid=None, mesh_form='combined', is_folder=False, print_stats=False,
             sum_load=False, size=8, precision='single',
+            quiet=False,
             reject=False, dynamic_vars=None):
+    """
+    Runs a single BDF
+
+    Parameters
+    ----------
+    folder : str
+        the folder where the bdf_filename is
+    bdf_filename : str
+        the bdf file to analyze
+    debug : bool, optional
+        run with debug logging (default=False)
+    xref : bool / str, optional
+        True : cross reference the model
+        False  : don't cross reference the model
+        'safe' : do safe cross referencing
+    check : bool, optional
+        validate cards for things like mass, area, etc.
+    punch : bool, optional
+        this is a PUNCH file (no executive/case control decks)
+    cid : int / None, optional
+        convert the model grids to an alternate coordinate system (default=None; no conversion)
+    mesh_form : str, optional, {'combined', 'separate'}
+        'combined' : interspersed=True
+        'separate' : interspersed=False
+    is_folder : bool, optional
+        attach the test path and the folder to the bdf_filename
+    print_stats : bool, optional
+        get a nicely formatted message of all the cards in the model
+    sum_load : bool, optional
+        Sum the static loads (doesn't work for frequency-based loads)
+    size : int, optional, {8, 16}
+        The field width of the model
+    is_double : bool, optional
+        Is this a double precision model?
+            True : size = 16
+            False : six = {8, 16}
+    reject : bool, optional
+        True : all the cards are rejected
+        False : the model is read
+    nastran : str, optional
+        the path to nastran (default=''; no analysis)
+    post : int, optional
+        the PARAM,POST,value to run
+    dynamic vars : dict[str]=int / float / str / None
+        support OpenMDAO syntax  %myvar; max variable length=7
+    quiet : bool; default=False
+        suppresses print messages
+    dumplines: bool; default=False
+        writes pyNastran_dump.bdf
+    dictsort : bool; default=False
+        writes pyNastran_dict.bdf
+    dev : bool; default=False
+        True : crashes if an Exception occurs
+        False : doesn't crash; useful for running many tests
+    """
+    if not quiet:
+        print('debug = %s' % debug)
     if dynamic_vars is None:
         dynamic_vars = {}
-    bdfModel = str(bdf_filename)
-    print("bdfModel = %r" % bdfModel)
-    if isFolder:
-        bdfModel = os.path.join(test_path, folder, bdf_filename)
 
-    assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
+    # TODO: why do we need this?
+    bdf_model = str(bdf_filename)
+    if not quiet:
+        print("bdf_model = %s" % bdf_model)
+    if is_folder:
+        bdf_model = os.path.join(test_path, folder, bdf_filename)
+
+    assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
     print("before read bdf, Memory usage: %s (Mb) " % memory_usage_psutil())
     #print('before read bdf, Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
@@ -123,11 +251,12 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
-    diffCards = []
+    diff_cards = []
     try:
-        outModel = run_fem1(fem1, bdfModel, mesh_form, xref, punch, sum_load, size, precision, cid)
-        fem2 = run_fem2(bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
-        diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        out_model = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid)
+        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, precision, reject,
+                        debug=debug, log=None)
+        diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
@@ -150,7 +279,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         raise
 
     print("-" * 80)
-    return (fem1, fem2, diffCards)
+    return (fem1, fem2, diff_cards)
 
 
 def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid):
@@ -195,10 +324,10 @@ def run_fem2(bdf_model, out_model, xref, punch,
 
     #fem2.sumForces()
     #fem2.sumMoments()
-    out_model_2 = bdf_model + '_out2'
-    fem2.write_bdf(out_model_2, interspersed=True)
+    out_model2 = bdf_model + '_out2'
+    fem2.write_bdf(out_model2, interspersed=True)
     #fem2.writeAsCTRIA3(out_model_2)
-    os.remove(out_model_2)
+    os.remove(out_model2)
     return fem2
 
 
@@ -224,25 +353,25 @@ def compare_card_count(fem1, fem2, print_stats=False):
 
 
 def compute_ints(cards1, cards2, fem1):
-    cardKeys1 = set(cards1.keys())
-    cardKeys2 = set(cards2.keys())
-    allKeys = cardKeys1.union(cardKeys2)
-    diffKeys1 = list(allKeys.difference(cardKeys1))
-    diffKeys2 = list(allKeys.difference(cardKeys2))
+    card_keys1 = set(cards1.keys())
+    card_keys2 = set(cards2.keys())
+    all_keys = card_keys1.union(card_keys2)
+    diff_keys1 = list(all_keys.difference(card_keys1))
+    diff_keys2 = list(all_keys.difference(card_keys2))
 
-    listKeys1 = list(cardKeys1)
-    listKeys2 = list(cardKeys2)
-    if diffKeys1 or diffKeys2:
-        print(' diffKeys1=%s diffKeys2=%s' % (diffKeys1, diffKeys2))
+    list_keys1 = list(card_keys1)
+    list_keys2 = list(card_keys2)
+    if diff_keys1 or diff_keys2:
+        print(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
 
-    for key in sorted(allKeys):
+    for key in sorted(all_keys):
         msg = ''
-        if key in listKeys1:
+        if key in list_keys1:
             value1 = cards1[key]
         else:
             value1 = 0
 
-        if key in listKeys2:
+        if key in list_keys2:
             value2 = cards2[key]
         else:
             value2 = 0
@@ -256,38 +385,38 @@ def compute_ints(cards1, cards2, fem1):
 
         factor1 = divide(value1, value2)
         factor2 = divide(value2, value1)
-        factorMsg = ''
+        factor_msg = ''
         if factor1 != factor2:
-            factorMsg = 'diff=%s factor1=%g factor2=%g' % (diff, factor1,
-                                                           factor2)
+            factor_msg = 'diff=%s factor1=%g factor2=%g' % (diff, factor1,
+                                                            factor2)
         msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (star, key, value1,
-                                                         value2) + factorMsg
+                                                         value2) + factor_msg
         msg = msg.rstrip()
         print(msg)
-    return listKeys1 + listKeys2
+    return list_keys1 + list_keys2
 
 
 def compute(cards1, cards2):
-    cardKeys1 = set(cards1.keys())
-    cardKeys2 = set(cards2.keys())
-    allKeys = cardKeys1.union(cardKeys2)
-    diffKeys1 = list(allKeys.difference(cardKeys1))
-    diffKeys2 = list(allKeys.difference(cardKeys2))
+    card_keys1 = set(cards1.keys())
+    card_keys2 = set(cards2.keys())
+    all_keys = card_keys1.union(card_keys2)
+    diff_keys1 = list(all_keys.difference(card_keys1))
+    diff_keys2 = list(all_keys.difference(card_keys2))
 
-    listKeys1 = list(cardKeys1)
-    listKeys2 = list(cardKeys2)
+    list_keys1 = list(card_keys1)
+    list_keys2 = list(card_keys2)
     msg = ''
-    if diffKeys1 or diffKeys2:
-        msg = 'diffKeys1=%s diffKeys2=%s' % (diffKeys1, diffKeys2)
+    if diff_keys1 or diff_keys2:
+        msg = 'diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2)
 
-    for key in sorted(allKeys):
+    for key in sorted(all_keys):
         msg = ''
-        if key in listKeys1:
+        if key in list_keys1:
             value1 = cards1[key]
         else:
             value2 = 0
 
-        if key in listKeys2:
+        if key in list_keys2:
             value2 = cards2[key]
         else:
             value2 = 0
@@ -308,10 +437,10 @@ def get_element_stats(fem1, fem2):
         for (key, loads) in sorted(iteritems(fem1.loads)):
             for load in loads:
                 try:
-                    allLoads = load.get_loads()
-                    if not isinstance(allLoads, list):
+                    all_loads = load.get_loads()
+                    if not isinstance(all_loads, list):
                         raise TypeError('allLoads should return a list...%s'
-                                        % (type(allLoads)))
+                                        % (type(all_loads)))
                 except:
                     print("load statistics not available - load.type=%s "
                           "load.sid=%s" % (load.type, load.sid))
@@ -360,7 +489,7 @@ def get_matrix_stats(fem1, fem2):
 
 
 def compare(fem1, fem2, xref=True, check=True, print_stats=True):
-    diffCards = compare_card_count(fem1, fem2, print_stats=print_stats)
+    diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats)
 
     #if xref and check:
     if check:

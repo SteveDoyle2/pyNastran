@@ -48,7 +48,7 @@ def make_f06_header():
         spaces + '/*                                                                      */\n',
         spaces + '/*              A Python reader/editor/writer for the various           */\n',
         spaces + '/*                        NASTRAN file formats.                         */\n',
-        spaces + '/*                       Copyright (C) 2011-2013                        */\n',
+        spaces + '/*                       Copyright (C) 2011-2016                        */\n',
         spaces + '/*               Steven Doyle, Al Danial, Marcin Garrozik               */\n',
         spaces + '/*                                                                      */\n',
         spaces + '/*    This program is free software; you can redistribute it and/or     */\n',
@@ -103,9 +103,11 @@ def sorted_bulk_data_header():
     return msg
 
 
-def make_end(end_flag=False):
+def make_end(end_flag=False, options=None):
     lines = []
     lines2 = []
+    if options is None:
+        options = {}
     if end_flag:
         lines = [
             '', '',
@@ -118,24 +120,28 @@ def make_end(end_flag=False):
         peid = 0
         proj = 1
         vers = 1
-        approach = '        '
+        approach = "'        '"
 
         SELG = 'T'
         SEMG = 'T'
-        SEMR = 'T'
+        SEMR = 'F'
+        if 'SEMR' in options:
+            SEMR = 'T' # modal
         SEKR = 'T'
         SELR = 'T'
         MODES = 'F'
         DYNRED = 'F'
 
-        SOLLIN = 'T'
+        SOLLIN = 'F'
+        if 'SEMR' in options:
+            SOLLIN = 'T' # p-elements
         PVALID = 0
         SOLNL = 'F'
         LOOPID = -1
         CYCLE = 0
         SENSITIVITY = 'F'
 
-        msg = '     %s     %s    %s    %s %8r    %s    %s    %s    %s    %s     %s      %s      %s      %s     %s     %s            %s           %s' % (
+        msg = '     %s     %s    %s    %s %8s    %s    %s    %s    %s    %s     %s      %s      %s      %s     %s     %s            %s           %s' % (
             seid, peid, proj, vers, approach, SEMG, SEMR, SEKR, SELG, SELR, MODES, DYNRED, SOLLIN, PVALID, SOLNL,
             LOOPID, CYCLE, SENSITIVITY)
         lines.append(msg)
@@ -179,6 +185,7 @@ class F06Writer(OP2_F06_Common):
         self.additional_matrices = {}
         self.matrices = {}
         self.subcase_key = defaultdict(list)
+        self.end_options = {}
 
         self._results = ResultSet(self.get_all_results())
 
@@ -343,7 +350,8 @@ class F06Writer(OP2_F06_Common):
             self.page_num += 1
 
     def write_f06(self, f06_outname, is_mag_phase=False, is_sort1=True,
-                  delete_objects=True, end_flag=False, quiet=False, repr_check=False):
+                  delete_objects=True, end_flag=False, quiet=False, repr_check=False,
+                  close=True):
         """
         Writes an F06 file based on the data we have stored in the object
 
@@ -366,6 +374,8 @@ class F06Writer(OP2_F06_Common):
             suppress print messages
         repr_check: bool; defualt=False
             calls the object repr as a validation test (prints nothing)
+        close : bool; default=True
+            close the f06 file
         """
         if not quiet:
             print("F06:")
@@ -375,11 +385,15 @@ class F06Writer(OP2_F06_Common):
             else:
                 f06 = open(f06_outname, 'w')
             self._write_summary(f06)
-        else:
-            assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
+        elif hasattr(f06_outname, 'read') and hasattr(f06_outname, 'write'):
+            #f06 = f06_outname
+        #else:
+            #print('type(f06_outname) =', type(f06_outname))
+            #assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
             f06 = f06_outname
             f06_outname = f06.name
-            print('f06_outname =', f06_outname)
+            if not quiet:
+                print('f06_outname =', f06_outname)
 
         page_stamp = self.make_stamp(self.title, self.date)
         if self.grid_point_weight.reference_point is not None:
@@ -401,8 +415,9 @@ class F06Writer(OP2_F06_Common):
                                       is_mag_phase=is_mag_phase, is_sort1=is_sort1,
                                       quiet=quiet, repr_check=repr_check)
         #self._write_f06_time_based(f06, page_stamp)
-        f06.write(make_end(end_flag))
-        f06.close()
+        f06.write(make_end(end_flag, self.end_options))
+        if close:
+            f06.close()
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
                                  is_mag_phase=False, is_sort1=True, quiet=False,
@@ -455,7 +470,9 @@ class F06Writer(OP2_F06_Common):
 
         # TODO: superelement version...need the nominal...
         res_keys_subcase = self.subcase_key
-
+        if len(res_keys_subcase) == 0:
+            self.log.warning('no cases to write...self.subcase_key=%r' % self.subcase_key)
+            return
         for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
             for res_key in res_keys:
                 if isinstance(res_key, tuple):
@@ -733,7 +750,6 @@ class F06Writer(OP2_F06_Common):
 
             self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         ]
-
         for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
             # print(res_keys)
             for res_key in res_keys:

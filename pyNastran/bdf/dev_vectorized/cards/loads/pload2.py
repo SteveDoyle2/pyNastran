@@ -14,7 +14,10 @@ class PLOAD2(object):
         """
         Defines the PLOAD2 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.n = 0
@@ -39,17 +42,17 @@ class PLOAD2(object):
 
     def __mul__(self, value):
         raise NotImplementedError()
-        f = PLOAD2(self.model)
-        f.load_id = self.load_id
-        f.element_id = self.element_id
-        f.p = self.p[i]
-        f.n = self.n
-        return f
+        #f = PLOAD2(self.model)
+        #f.load_id = self.load_id
+        #f.element_id = self.element_id
+        #f.p = self.p[i]
+        #f.n = self.n
+        #return f
 
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add(self, card, comment=None):
+    def add_card(self, card, comment=None):
         #self._comments.append(comment)
         self._load_id.append(integer(card, 1, 'load_id'))
         self._p.append(double(card, 2, 'p'))
@@ -66,11 +69,11 @@ class PLOAD2(object):
 
     def build(self):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         #cards = self._cards
         ncards = self.n
 
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         self.element_id = zeros(ncards, 'int32')
         self.p = zeros(ncards, float_fmt)
@@ -98,7 +101,7 @@ class PLOAD2(object):
             msg.append('  %-8s: %i' % ('PLOAD2', self.n))
         return msg
 
-    def write_card(self, f, size=8, load_ids=None):
+    def write_card(self, bdf_file, size=8, load_ids=None):
         if self.n:
             if load_ids is None:
                 i = arange(self.n)
@@ -108,7 +111,7 @@ class PLOAD2(object):
             for (load_id, element_id, p) in zip(self.load_id[i], self.element_id[i], self.p[i]):
                 card = ['PLOAD2', load_id, element_id, p]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 

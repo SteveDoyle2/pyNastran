@@ -1,7 +1,7 @@
 #from six import iteritems
 from six.moves import zip
 
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import zeros, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
@@ -50,7 +50,7 @@ class SPLINE1(VectorizedCard):
     def allocate(self, ncards):
         self.n = ncards
         if self.n:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.element_id = zeros(ncards, dtype='int32')
             self.caero = zeros(ncards, dtype='int32')
             self.box1 = zeros(ncards, dtype='int32')
@@ -62,7 +62,7 @@ class SPLINE1(VectorizedCard):
             self.nelements = zeros(ncards, dtype='int32')
             self.melements = zeros(ncards, dtype='int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'element_id')
         self.caero[i] = integer(card, 2, 'caero')
@@ -108,7 +108,7 @@ class SPLINE1(VectorizedCard):
             self.nelements = self.nelements[i]
             self.melements = self.melements[i]
 
-    def write_card(self, f, size=8, is_double=True, element_id=None):
+    def write_card(self, bdf_file, size=8, is_double=True, element_id=None):
         assert size in [8, 16], size
         assert is_double in [True, False], is_double
         if self.n:
@@ -131,4 +131,4 @@ class SPLINE1(VectorizedCard):
                 list_fields = ['SPLINE1', eid, caero, box1, box2,
                   setg, sdz, smethod, susage, snelements, smelements]
                 list_fields = wipe_empty_fields(list_fields)
-                f.write(print_card_8(list_fields))
+                bdf_file.write(print_card_8(list_fields))

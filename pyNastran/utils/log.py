@@ -1,10 +1,11 @@
-from __future__ import print_function
+# coding: utf-8
+from __future__ import print_function, unicode_literals
 import sys
 import platform
 import os
 from six import PY2, string_types
 
-if sys.stdout.isatty() and PY2:
+if sys.stdout.isatty():
     # You're running in a real terminal
     try:
         from colorama import init as colorinit, Fore, Style
@@ -67,15 +68,17 @@ class SimpleLogger(object):
         Parameters
         ----------
         typ : str
-            messeage type
+            messeage type - ['DEBUG', 'INFO', 'WARNING', 'ERROR']
         msg : str
             message to be displayed
 
         Message will have format 'typ: msg'
         """
-        name = '%-8s' % (typ + ':')  # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
+        # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
+        name = '%-8s' % (typ + ':')
         if not is_terminal or not typ:
-            out = name + msg
+            # if we're writing to a file
+            #out = name + msg
             if PY2:
                 sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
             else:
@@ -86,16 +89,23 @@ class SimpleLogger(object):
                 # print(msg, type(msg))
                 # raise
         else:
+            # write to the screen
+            #
+            # Python 3 requires str, not bytes
+            # Python 2 seems to be able to use either
             if typ == 'INFO':
-                '\033[ 1 m; 34 m'
-                sys.stdout.write((Fore.GREEN + name + msg).encode(self.encoding))  # bright blue
+                #'\033[ 1 m; 34 m'
+                # only works for Python 2
+                #out = (Fore.GREEN + name + msg).encode(self.encoding)
+                # seems to work with both
+                sys.stdout.write(Fore.GREEN + name + msg)  # bright blue
             elif typ == 'DEBUG':
-                sys.stdout.write((Fore.YELLOW + name + msg).encode(self.encoding))
+                sys.stdout.write(Fore.YELLOW + name + msg)
             elif typ == 'WARNING':
                 # no ORANGE?
-                sys.stdout.write((Fore.RED + name + msg).encode(self.encoding))
+                sys.stdout.write(Fore.RED + name + msg)
             else: # error / other
-                sys.stdout.write((Fore.RED + name + msg).encode(self.encoding))
+                sys.stdout.write(Fore.RED + name + msg)
         sys.stdout.flush()
 
     def __init__(self, level='debug', encoding='utf-8', log_func=None):

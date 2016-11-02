@@ -66,12 +66,15 @@ class CHEXA8(SolidElement):
         """
         Defines the CHEXA object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
-        print('chexa8-add')
+    def add_card(self, card, comment=''):
+        #self.model.log.debug('chexa8-add')
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
@@ -165,6 +168,60 @@ class CHEXA8(SolidElement):
             (n6, 1), (n6, 2), (n6, 3),
             (n7, 1), (n7, 2), (n7, 3),
         ]
+        uvw = np.array([
+            [-1, -1, 1,],
+            [1, -1, -1,],
+            [1, 1, -1],
+            [-1, 1, -1],
+
+            [-1, -1,1,],
+            [1, -1, 1,],
+            [1, 1, 1],
+            [-1, 1, 1],
+        ])
+
+
+        #n1 = 0.125 * (1 - u) * (1 - v) * (1 - w)
+        #n2 = 0.125 * (1 + u) * (1 - v) * (1 - w)
+        #n3 = 0.125 * (1 + u) * (1 + v) * (1 - w)
+        #n4 = 0.125 * (1 - u) * (1 + v) * (1 - w)
+
+        #n5 = 0.125 * (1 - u) * (1 - v) * (1 + w)
+        #n6 = 0.125 * (1 + u) * (1 - v) * (1 + w)
+        #n7 = 0.125 * (1 + u) * (1 + v) * (1 + w)
+        #n8 = 0.125 * (1 - u) * (1 + v) * (1 + w)
+
+        n1u = 0.125 * (1 - v) * (1 - w) * -1
+        n2u = 0.125 * (1 - v) * (1 - w) * 1
+        n3u = 0.125 * (1 + v) * (1 - w) * 1
+        n4u = 0.125 * (1 + v) * (1 - w) * -1
+
+        n5u = 0.125 * (1 - v) * (1 + w) * -1
+        n6u = 0.125 * (1 - v) * (1 + w) * 1
+        n7u = 0.125 * (1 + v) * (1 + w) * 1
+        n8u = 0.125 * (1 + v) * (1 + w) * -1
+
+
+        n1v = 0.125 * (1 - u) * (1 - v) * -1
+        n2v = 0.125 * (1 + u) * (1 - v) * -1
+        n3v = 0.125 * (1 + u) * (1 + v) * 1
+        n4v = 0.125 * (1 - u) * (1 + v) * 1
+
+        n5v = 0.125 * (1 - u) * (1 - v) * -1
+        n6v = 0.125 * (1 + u) * (1 - v) * -1
+        n7v = 0.125 * (1 + u) * (1 + v) * 1
+        n8v = 0.125 * (1 - u) * (1 + v) * 1
+
+
+        n1w = 0.125 * (1 - u) * (1 - v) * -1
+        n2w = 0.125 * (1 + u) * (1 - v) * -1
+        n3w = 0.125 * (1 + u) * (1 + v) * -1
+        n4w = 0.125 * (1 - u) * (1 + v) * -1
+
+        n5w = 0.125 * (1 - u) * (1 - v) * 1
+        n6w = 0.125 * (1 + u) * (1 - v) * 1
+        n7w = 0.125 * (1 + u) * (1 + v) * 1
+        n8w = 0.125 * (1 - u) * (1 + v) * 1
         return dofs, nijv
 
     def _verify(self, xref=True):
@@ -205,8 +262,12 @@ class CHEXA8(SolidElement):
 
     def _get_node_locations_by_index(self, i, xyz_cid0):
         """
-        :param i:        None or an array of node IDs
-        :param xyz_cid0: the node positions as a dictionary
+        Parameters
+        ----------
+        i : (nnodes, ) int ndarray; None -> all
+            node IDs
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
         """
         grid = self.model.grid
         get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
@@ -228,9 +289,14 @@ class CHEXA8(SolidElement):
         """
         Gets the volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the volume be summed
 
         .. note:: Volume for a CHEXA is the average area of two opposing faces
                   times the length between the centroids of those points
@@ -247,9 +313,14 @@ class CHEXA8(SolidElement):
         """
         Gets the mass for one or more CTETRA elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -274,9 +345,14 @@ class CHEXA8(SolidElement):
         """
         Gets the centroid and volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed; centroid be averaged (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the volume be summed; centroid be averaged
 
         ..see:: CHEXA8.get_volume_by_element_id() and CHEXA8.get_centroid_by_element_id() for more information.
         """
@@ -297,9 +373,14 @@ class CHEXA8(SolidElement):
         """
         Gets the centroid for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be averaged (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the centroid be averaged
         """
         n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
@@ -311,12 +392,12 @@ class CHEXA8(SolidElement):
 
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
-        nids = self.node_ids[:8]
-        indx = nids.index(nid_opposite)
-        nids.pop(indx)
-        return nids
+        #nids = self.node_ids[:8]
+        #indx = nids.index(nid_opposite)
+        #nids.pop(indx)
+        #return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -325,9 +406,9 @@ class CHEXA8(SolidElement):
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 if eid in self._comments:
-                    f.write(self._comments[eid])
+                    bdf_file.write(self._comments[eid])
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
 
 def volume8(n1, n2, n3, n4, n5, n6, n7, n8):

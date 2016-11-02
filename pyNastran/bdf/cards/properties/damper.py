@@ -40,7 +40,7 @@ class PDAMP(DamperProperty):
     def __init__(self, pid, b, comment=''):
         DamperProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         # 3 PDAMP properties can be defined on 1 PDAMP card
         #: Property ID
         self.pid = pid
@@ -98,7 +98,7 @@ class PDAMP5(DamperProperty):
         """
         DamperProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
             #: Property ID
         self.pid = pid
         #: Material ID
@@ -173,7 +173,7 @@ class PDAMPT(DamperProperty):
     def __init__(self, pid, tbid, comment=''):
         DamperProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: Identification number of a TABLEDi entry that defines the
@@ -243,7 +243,7 @@ class PVISC(DamperProperty):
     def __init__(self, pid, ce, cr, comment=''):
         DamperProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.pid = pid
         self.ce = ce
         self.cr = cr

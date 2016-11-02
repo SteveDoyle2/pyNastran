@@ -59,9 +59,11 @@ class BaseCard(object):
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def validate(self):
+        """card checking method that should be overwritten"""
         pass
 
     def object_attributes(self, mode='public', keys_to_skip=None):
+        """..see:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -70,6 +72,7 @@ class BaseCard(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
+        """..see:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
@@ -80,6 +83,7 @@ class BaseCard(object):
 
     @property
     def comment(self):
+        """accesses the comment"""
         # just for testing
         #self.deprecated('comment()', 'comment2()', '0.7')
         if hasattr(self, '_comment'):
@@ -88,8 +92,10 @@ class BaseCard(object):
 
     @comment.setter
     def comment(self, new_comment):
-        comment = new_comment.rstrip()
-        self._comment = comment + '\n' if comment else ''
+        """sets a comment"""
+        #comment = new_comment.rstrip()
+        #self._comment = comment + '\n' if comment else ''
+        self._comment = _format_comment(new_comment)  # totally breaks tests
 
     def _test_update_fields(self):
         n = 1
@@ -129,10 +135,12 @@ class BaseCard(object):
             self._update_field_helper(n, value)
 
     def _update_field_helper(self, n, value):
+        """dynamic method for non-standard attributes (e.g., node.update_field(3, 0.1) to update z)"""
         msg = '%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__
         raise IndexError(msg)
 
     def _get_field_helper(self, n):
+        """dynamic method for non-standard attributes (e.g., node.get_field(3, 0.1) to get z)"""
         msg = '%s has not overwritten _get_field_helper; out of range' % self.__class__.__name__
         raise IndexError(msg)
 
@@ -212,10 +220,12 @@ class BaseCard(object):
         return self.raw_fields()
 
     def print_card(self, size=8, is_double=False):
+        """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def print_repr_card(self, size=8, is_double=False):
+        """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
@@ -256,8 +266,10 @@ class BaseCard(object):
 
 
 class Property(BaseCard):
-    def __init__(self, card=None, data=None):
-        assert card is None or data is None
+    """Base Property Class"""
+    def __init__(self):
+        """dummy init"""
+        pass
 
     def Pid(self):
         """
@@ -308,6 +320,7 @@ class Property(BaseCard):
 class Material(BaseCard):
     """Base Material Class"""
     def __init__(self):
+        """dummy init"""
         BaseCard.__init__(self)
 
     def cross_reference(self, model):
@@ -331,6 +344,7 @@ class Element(BaseCard):
     pid = 0  # CONM2, rigid
 
     def __init__(self, card=None, data=None):
+        """dummy init"""
         BaseCard.__init__(self)
         assert card is None or data is None
         #: the list of node IDs for an element (default=None)
@@ -426,7 +440,7 @@ class Element(BaseCard):
                 raise RuntimeError(msg)
         self.nodes = nodes
 
-    @property  # I think this means you can just call it as an attribute...
+    @property
     def faces(self):
         """
         Gets the faces of the element
@@ -517,7 +531,7 @@ class Element(BaseCard):
         returns the face number that matches the list of nodes input
 
         Parameters
-        -----------
+        ----------
         nodes : List[node]
             a series of nodes
 
@@ -536,6 +550,32 @@ class Element(BaseCard):
                 face = i
         return face
 
+def _format_comment(comment):
+    r"""Format a card comment to precede the card using
+    nastran-compatible comment character $. The comment
+    string can have multiple lines specified as linebreaks.
+
+    Empty comments or just spaces are returned as an empty string.
+
+    Examples:
+
+    >>> _format_comment('a comment\ntaking two lines')
+    $a comment
+    $taking two lines
+
+    >>> _format_comment('')
+    <empty string>
+
+    >>> _format_comment('       ')
+    <empty string>
+
+    >>> _format_comment('$ a comment within a comment looks weird')
+    $$ a comment within a comment looks weird
+    """
+    if comment.strip() == '':  # deals with a bunch of spaces
+        return ''
+    else:
+        return ''.join([u'${}\n'.format(_) for _ in comment.rstrip().split('\n')])
 
 def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     try:

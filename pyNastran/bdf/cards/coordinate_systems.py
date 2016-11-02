@@ -1219,7 +1219,7 @@ class Cord2x(Coord):
         """
         Coord.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.cid = cid
         self.rid = rid
         if origin is None:
@@ -1548,7 +1548,7 @@ class Cord1x(Coord):
         """
         Coord.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: the coordinate ID
         self.cid = cid
@@ -1754,7 +1754,7 @@ class GMCORD(BaseCard):
 
     def __init__(self, cid, entity, gm_ids, comment=''):
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.cid = cid
         self.entity = entity
         self.gm_ids = gm_ids
@@ -1804,7 +1804,7 @@ class CORD3G(Coord):  # not done
         """
         Coord.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.cid = cid
         self.method_es = method_es
         self.method_int = method_int

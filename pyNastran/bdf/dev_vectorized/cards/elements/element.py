@@ -4,18 +4,34 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 class Element(VectorizedCard):
+    """
+    an Element is a subclass for the Elements that defines:
+      - for
+    """
     def __init__(self, model):
         VectorizedCard.__init__(self, model)
 
     def __iter__(self):
+        """
+        for ielem in range(model.elements):
+           ...
+        """
         for i in self.n:
             yield i
 
     def values(self):
+        """
+        for elem in model.elements.values():
+           ...
+        """
         for i in self.n:
             yield self.__getitem__([i])
 
     def items(self):
+        """
+        for ielem, elem in model.elements.items():
+           ...
+        """
         for i in self.n:
             yield i, self.__getitem__([i])
 
@@ -40,8 +56,8 @@ class Element(VectorizedCard):
         return self.element_id[i]
 
     def get_element_index_by_element_id(self, element_id=None, msg=''):
-        print('Type=%s' % self.type)
-        print('element_id = %s' % element_id)
+        self.model.log.debug('Type=%s' % self.type)
+        self.model.log.debug('element_id = %s' % element_id)
         if isinstance(element_id, integer_types):
             assert element_id > 0, element_id
         elif element_id is None:

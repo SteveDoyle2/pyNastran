@@ -14,7 +14,10 @@ class PLOAD4(object):
         """
         Defines the PLOAD4 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.n = 0
@@ -53,12 +56,12 @@ class PLOAD4(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add(self, card, comment=None):
+    def add_card(self, card, comment=None):
         self._cards.append(card)
         self._comments.append(comment)
 
     def allocate(self, ncards):
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         #self.element_id = zeros(ncards, 'int32')
         self.pressures = zeros((ncards, 4), 'int32')
@@ -79,7 +82,7 @@ class PLOAD4(object):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
 
             self.load_id = zeros(ncards, 'int32')
             #: Element ID
@@ -165,7 +168,7 @@ class PLOAD4(object):
         # PLOAD2
         #ncards = self.n
 
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         #self.load_id = zeros(ncards, 'int32')
         #self.element_id = zeros(ncards, 'int32')
         #self.p = zeros(ncards, float_fmt)
@@ -193,7 +196,7 @@ class PLOAD4(object):
             msg.append('  %-8s: %i' % ('PLOAD4', self.n))
         return msg
 
-    def write_card(self, f, size=8, load_ids=None):
+    def write_card(self, bdf_file, size=8, load_ids=None):
         if self.n:
             if load_ids is None:
                 i = arange(self.n)
@@ -202,5 +205,5 @@ class PLOAD4(object):
 
             for (load_id, element_id, p) in zip(self.load_id[i], self.element_id[i], self.pressures[i]):
                 card = ['PLOAD4', load_id, element_id, p]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 

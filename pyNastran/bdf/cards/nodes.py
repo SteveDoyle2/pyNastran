@@ -65,7 +65,7 @@ class RINGAX(BaseCard):
         """
         #Ring.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Node ID
         self.nid = nid
@@ -150,7 +150,7 @@ class XPoint(BaseCard):
     def __init__(self, nid, comment):
         #Node.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.nid = nid
         assert isinstance(nid, integer_types), nid
 
@@ -307,7 +307,7 @@ class XPoints(BaseCard):
     def __init__(self, ids, comment=''):
         #Node.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.points = ids
 
     @classmethod
@@ -481,7 +481,7 @@ class GRDSET(BaseCard):
         Creates the GRDSET card
         """
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Output Coordinate System
         self.cp = cp
@@ -664,7 +664,7 @@ class GRIDB(BaseCard):
         Creates the GRIDB card
         """
         if comment:
-            self._comment = comment
+            self.comment = comment
         #Node.__init__(self)
 
         #: node ID
@@ -871,7 +871,7 @@ class GRID(BaseCard):
         """
         #Node.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.nid = nid
         self.cp = cp
         if xyz is None:
@@ -1366,7 +1366,7 @@ class POINT(BaseCard):
         Creates the POINT card
         """
         if comment:
-            self._comment = comment
+            self.comment = comment
         #Node.__init__(self)
 
         #: Node ID

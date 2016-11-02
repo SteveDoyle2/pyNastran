@@ -1,6 +1,5 @@
 from __future__ import print_function
-from numpy import (array,
-                   where, where)
+import numpy as np
 
 from pyNastran.bdf.dev_vectorized.utils import unique2d
 #from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4
@@ -9,16 +8,20 @@ from pyNastran.bdf.dev_vectorized.utils import unique2d
 
 #from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import _cquad4_normal_A
 #from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
+from pyNastran.bdf.dev_vectorized.cards.elements.utils import build_groups #, asarray
 
 class Properties(object):
     def __init__(self, model):
         """
         Defines the Properties object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
-        self.np = 0
+        self.nproperties = 0
 
         #: stores PSHELL, PCOMP, PCOMPG
         self.properties_shell = model.properties_shell
@@ -29,6 +32,9 @@ class Properties(object):
 
         # spring
         self.pelas = model.pelas
+
+        # bush
+        self.pbush = model.pbush
 
         # rods
         #self.conrod = model.conrod
@@ -51,47 +57,57 @@ class Properties(object):
         #: stores PSOLID, PLSOLID
         self.properties_solid = model.properties_solid
 
+        # created by this class
+        self.property_ids = None
+        self.n = None
+        self.property_groups = None
+
     def build(self):
         ptypes = self._get_property_types(nlimit=False)
         self.n = 0
         for props in ptypes:
-            props.build()
-            self.np += props.n
+            assert props is not None, props
+            #props.build()
+            self.nproperties += props.n
 
         pids = check_duplicate('property_id', ptypes)
 
-        self.property_ids = array(list(pids), dtype='int32')
+        self.property_ids = np.array(list(pids), dtype='int32')
         self.property_ids.sort()
-        self.property_groups = self.build_groups(ptypes, 'property_id')
+        self.property_groups = build_groups(ptypes, 'property_id')
 
     def get_properties(self, property_ids=None):
         return self.model.elements.get_properties(property_ids)
 
-    #def _get_property_types(self, nlimit=True):
-        #"""
-        #:param nlimit: limit the outputs to objects with data
-        #"""
-        #types = [self.prod, self.pelas,
-                 #self.properties_bar.pbar, self.properties_bar.pbarl,
-                 #self.properties_beam.pbeam, self.properties_beam.pbeaml,
-                 #self.pshear,
+    def _get_property_types(self, nlimit=True):
+        """
+        Parameters
+        ----------
+        nlimit : bool; default=True
+            limit the outputs to objects with data
+        """
+        types = [
+            self.prod, self.pelas, self.pbush,
+            self.properties_bar.pbar, self.properties_bar.pbarl,
+            self.properties_beam.pbeam, self.properties_beam.pbeaml,
+            self.pshear,
 
-                 ##self.properties_shell,
-                 #self.properties_shell.pshell,
-                 #self.properties_shell.pcomp,
-                 #self.properties_shell.pcompg,
+            #self.properties_shell,
+            self.properties_shell.pshell,
+            self.properties_shell.pcomp,
+            self.properties_shell.pcompg,
 
-                 ##self.properties_solid,
-                 #self.properties_solid.psolid,
-                 ##self.properties_solid.plsolid,
-                 #]
-        #if nlimit:
-            #types2 = []
-            #for etype in types:
-                #if etype.n > 0:
-                    #types2.append(etype)
-            #types = types2
-        #return types
+            #self.properties_solid,
+            self.properties_solid.psolid,
+            #self.properties_solid.plsolid,
+        ]
+        if nlimit:
+            types2 = []
+            for etype in types:
+                if etype.n > 0:
+                    types2.append(etype)
+            types = types2
+        return types
 
     #def get_property_typemap(self):
         #TypeMap = {
@@ -141,7 +157,8 @@ def check_duplicate(name, objs):
         if hasattr(obj, name):
             vals = getattr(obj, name)
             if len(vals):
-                #self.model.log.debug("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
+                #self.model.log.debug("%s vals = %s for class %s" % (
+                    #name, vals, obj.__class__.__name__))
                 unique_vals.update(list(vals))
             #print unique_vals
         else:
@@ -149,7 +166,8 @@ def check_duplicate(name, objs):
             pass
     #print "unique %s = %s\n" %(name, unique_vals)
     if len(unique_vals) == 0:
-        raise RuntimeError("unique %s = %s" %(name, unique_vals))
+        print("unique %s = %s" %(name, unique_vals)) # fails for CONRODs
+        #raise RuntimeError
     #print('unique %s = %s' % (name, unique_vals))
     return unique_vals
 
@@ -166,10 +184,10 @@ def group_elements_by_property_type_and_element_type(elements, pid_data):
     """
     # find unique groups
     #print("pid_data = \n%s\n" % str(pid_data))
-    pid_eType = unique2d(pid_data[:, 1:])
+    pid_elementnum = unique2d(pid_data[:, 1:])
 
     data2 = {}
-    eTypeMap = {
+    etype_map = {
         1 : 'CROD', 5: 'CONROD',
         2 : 'CBEAM', 3 : 'CBAR',
         4 : 'CSHEAR',
@@ -181,16 +199,18 @@ def group_elements_by_property_type_and_element_type(elements, pid_data):
         64 : 'CHEXA8', 65 : 'CHEXA20',
     }
 
-    #self.model.log.debug("pid_eType = \n%s\n" % str(pid_eType))
-    for (pid, eType) in pid_eType:
+    #self.model.log.debug("pid_elementnum = \n%s\n" % str(pid_elementnum))
+    for (pid, element_num) in pid_elementnum:
         if pid not in elements.property_ids:
             print('Property pid=%s does not exist' % pid)
             #continue
-        i = where(pid_data[:, 1] == pid)[0]
-        #self.model.log.debug("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
-        j = where(pid_data[i, 2] == eType)[0]
+        i = np.where(pid_data[:, 1] == pid)[0]
+        #self.model.log.debug("pid=%i element_num=%s Step #1=> \n%s\n" % (
+            #pid, element_num, pid_data[i, :]))
+        j = np.where(pid_data[i, 2] == element_num)[0]
         eids = pid_data[i[j], 0]
-        #self.model.log.debug("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
-        eType = eTypeMap[eType]
-        data2[(pid, eType)] = eids
+        #self.model.log.debug("pid=%i element_num=%s eids=%s Step #2=> \n%s\n" % (
+            #pid, element_num, eids, pid_data[i[j], :]))
+        element_type = etype_map[element_num]
+        data2[(pid, element_type)] = eids
     return data2

@@ -1,7 +1,7 @@
 from six import iteritems, string_types
 from six.moves import zip, range
 from itertools import count
-from numpy import argsort, array, zeros, unique, searchsorted, asarray, int64, where
+from numpy import array, zeros, unique, searchsorted, asarray, int64, where
 
 from pyNastran.bdf.bdf_interface.assign_type import (double_or_blank,
     components, components_or_blank, integer_double_or_blank, blank, integer)
@@ -89,7 +89,7 @@ class RBE3(object):
 
     def allocate(self, ncards):
         self.n = ncards
-        float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
 
         #: Element identification number
         self.element_id = zeros(ncards, 'int32')
@@ -100,14 +100,14 @@ class RBE3(object):
         self.gmi = {}
 
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         #self.model.log.debug('RBE2.add')
         i = self.i
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         eid = integer(card, 1, 'element_id')
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         self.element_id[i] = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
         self.refgrid[i] = integer(card, 3, 'refgrid')
@@ -235,25 +235,25 @@ class RBE3(object):
         #list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         #return list_fields
 
-    def write_card(self, f, size=True, is_double=False):
+    def write_card(self, bdf_file, size=True, is_double=False):
         if self.n:
             if size == 8:
                 for j, eid, alpha in zip(count(), self.element_id, self.alpha):
                     salpha = set_blank_if_default(alpha, 0.)
                     list_fields = ['RBE2', eid] + [salpha]
-                    f.write(print_card_8(list_fields))
+                    bdf_file.write(print_card_8(list_fields))
             elif is_double:
                 for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
                     gmi = self.gmi[j]
                     salpha = set_blank_if_default(alpha, 0.)
                     list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                    f.write(print_card_16(list_fields))
+                    bdf_file.write(print_card_16(list_fields))
             else:
                 for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
                     gmi = self.gmi[j]
                     salpha = set_blank_if_default(alpha, 0.)
                     list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                    f.write(print_card_double(list_fields))
+                    bdf_file.write(print_card_double(list_fields))
 
 
         #card = self.repr_fields()

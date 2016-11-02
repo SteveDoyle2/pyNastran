@@ -47,7 +47,7 @@ class PBEAM(IntegratedLineProperty):
         """
         IntegratedLineProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: Material ID
@@ -872,7 +872,7 @@ class PBEAML(IntegratedLineProperty):
     def __init__(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
         IntegratedLineProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: Material ID
@@ -938,7 +938,7 @@ class PBEAML(IntegratedLineProperty):
 
     #def add_op2_data(self, data, comment=''):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         #raise NotImplementedError(data)
 
     def _verify(self, xref=False):
@@ -1107,7 +1107,7 @@ class PBMSECT(LineProperty):
     def __init__(self, pid, mid, form, options, comment=''):
         LineProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         #: Property ID
         self.pid = pid
@@ -1335,7 +1335,7 @@ class PBCOMP(LineProperty):
                  mids, comment=''):
         LineProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: Material ID

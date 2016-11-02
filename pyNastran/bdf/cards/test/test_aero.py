@@ -49,7 +49,7 @@ class TestAero(unittest.TestCase):
         data = ['AEFACT', '98', '.3', '0.7', '1.0']
         model.add_card(data, data[0], comment_good, is_list=True)
 
-        msg = 'this is a bad commentAEFACT        97      .3      .7      1.\n'
+        msg = '$this is a bad comment\nAEFACT        97      .3      .7      1.\n'
         aefact97 = model.aefacts[97]
         aefact98 = model.aefacts[98]
         self.assertTrue(all(aefact97.Di == [.3, .7, 1.0]))
@@ -58,7 +58,7 @@ class TestAero(unittest.TestCase):
         out = aefact97.write_card(8, None)
         self.assertEqual(msg, out)
 
-        msg = 'this is a good comment\nAEFACT        98      .3      .7      1.\n'
+        msg = '$this is a good comment\nAEFACT        98      .3      .7      1.\n'
         out = aefact98.write_card(8, None)
         self.assertEqual(msg, out)
 

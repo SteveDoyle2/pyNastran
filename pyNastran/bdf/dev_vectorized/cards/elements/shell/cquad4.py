@@ -1,12 +1,16 @@
+from __future__ import print_function
 from six.moves import zip, range
+
+import numpy as np
 from numpy import array, zeros, arange, searchsorted, unique, cross
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import ShellElement
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank)
+from pyNastran.utils.dev import list_print
 
 
 class CQUAD4(ShellElement):
@@ -14,23 +18,29 @@ class CQUAD4(ShellElement):
     def __init__(self, model):
         ShellElement.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: Node IDs
-        self.node_ids = zeros((ncards, 4), 'int32')
-        self.zoffset = zeros(ncards, 'int32')
-        self.t_flag = zeros(ncards, 'int32')
-        self.thickness = zeros((ncards, 4), float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float_fmt
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: Node IDs
+            self.node_ids = zeros((ncards, 4), 'int32')
+            self.zoffset = zeros(ncards, 'int32')
 
-    def add(self, card, comment=''):
+            self.theta = np.full(ncards, np.nan, 'float32')
+            self.mcid = np.full(ncards, np.nan, 'int32')
+            self.is_theta = zeros(ncards, 'bool')
+
+            self.t_flag = zeros(ncards, 'int32')
+            self.thickness = zeros((ncards, 4), float_fmt)
+
+    def add_card(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
-
         self.property_id[i] = integer(card, 2, 'pid')
 
         self.node_ids[i, :] = [
@@ -40,7 +50,17 @@ class CQUAD4(ShellElement):
             integer(card, 6, 'n4')
         ]
 
-        #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
+        theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
+
+        if isinstance(theta_mcid, float):
+            self.is_theta[i] = 1
+            self.theta[i] = theta_mcid
+        else:
+            self.is_theta[i] = 0
+            self.mcid[i] = theta_mcid
+
+
+        #self.thetaMcid =
         #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
         #blank(card, 8, 'blank')
         #blank(card, 9, 'blank')
@@ -60,6 +80,10 @@ class CQUAD4(ShellElement):
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
+            self.is_theta = self.is_theta[i]
+            self.theta = self.theta[i]
+            self.mcid = self.mcid[i]
+
             self.thickness = self.thickness[i, :]
             self.t_flag = self.t_flag[i]
             assert self.node_ids.min() > 0
@@ -98,13 +122,18 @@ class CQUAD4(ShellElement):
         Gets the mass, area, and normals of the CQUAD4s on a per
         element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
-
-        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        :param calculate_mass: should the mass be calculated (default=True)
-        :param calculate_area: should the area be calculated (default=True)
-        :param calculate_normal: should the normals be calculated (default=True)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        calculate_mass : bool; default=True
+            should the mass be calculated
+        calculate_area : bool; default=True
+            should the area be calculated
+        calculate_normal : bool; default=True
+            should the normals be calculated
 
         .. note:: If node_ids is None, the positions of all the GRID cards
                   must be calculated
@@ -120,7 +149,8 @@ class CQUAD4(ShellElement):
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
         if calculate_mass:
             calculate_area = True
-        normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=calculate_area, normalize=True)
+        normal, A = _cquad4_normal_A(n1, n2, n3, n4,
+                                     calculate_area=calculate_area, normalize=True)
 
         massi = None
         if calculate_mass:
@@ -165,7 +195,7 @@ class CQUAD4(ShellElement):
         return normal
 
     #=========================================================================
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             #print('    self.n = %s' % self.n)
             if element_id is None:
@@ -181,7 +211,7 @@ class CQUAD4(ShellElement):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 #print('    n = %s' % n)
                 card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def _verify(self, xref=True):
         self.get_mass_by_element_id()
@@ -195,13 +225,17 @@ class CQUAD4(ShellElement):
         """
         Gets the positions of a list of nodes
 
+        Parameters
+        ----------
         :param nids_to_get:  the node IDs to get as an NDARRAY
         :param node_ids:     the node IDs that contains all the nids_to_get
                              as an NDARRAY
         :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
 
-        :returns grids2_cid_0 : the corresponding positins of the requested
-                                GRIDs
+        Returns
+        -------
+        grids2_cid_0 : (nnodes, 3) float ndarray
+            the corresponding positions of the requested GRIDs
         """
         positions = self.model.grid.get_position_by_node_id(nids_to_get)
         #grids2_cid_0 = grids_cid0[searchsorted(node_ids, nids_to_get), :]
@@ -222,6 +256,192 @@ class CQUAD4(ShellElement):
         #obj.t_flag = self.t_flag[i]
         #obj.thickness = self.thickness[i, :]
         #return obj
+
+    def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
+        """gets the stiffness matrix for CQUAD4/PSHELL"""
+        area = self.get_area_by_element_index(i)
+        #print('self.thickness =', self.thickness)
+        #print('self.i =', i)
+
+        n1, n2, n3, n4 = self.node_ids[i, :]
+        pid = self.property_id[i]
+        prop = self.model.properties_shell.get_property_by_property_id(pid)
+        #prop.get_
+        #print(prop)
+
+        # TODO: nodal thickness not supported
+        #thickness = self.thickness.flatten()[i]
+
+        thickness = prop.thickness#.flatten()[i]
+        #print('thickness =', thickness)
+
+        mid1 = prop.material_id[0]
+        mat = self.model.materials.get_shell_material(mid1)
+        assert prop.material_id2[0] == -1, prop.material_id2
+        assert prop.material_id3[0] == -1, prop.material_id3
+        assert prop.material_id4[0] == -1, prop.material_id4
+        #print(mat)
+        E = mat.E[0]
+        nu = mat.nu[0]
+        #print('area=%s thickness=%s E=%e nu=%s' % (area, thickness, E, nu))
+        #sdd
+        i1 = index0s[n1]
+        i2 = index0s[n2]
+        i3 = index0s[n3]
+        i4 = index0s[n4]
+
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
+        xyz3 = positions[n3]
+        xyz4 = positions[n4]
+        xy = np.vstack([
+            xyz1,
+            xyz2,
+            xyz3,
+            xyz4,
+        ])[:, :2]
+
+        #print(xy)
+
+        centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+
+        #normal = self.Normal()
+        is_theta = self.is_theta[i]
+        if is_theta:
+            theta = self.theta[i]
+
+            if theta != 0.0:
+                self.model.log.debug(self.model.coords)
+                mcid_ref = self.model.coords.get_coord_index_by_coord_id(0)
+                #print('mcid_ref\n', mcid_ref)
+                #assert self.theta == 0.0, self.theta
+                raise NotImplementedError('theta=%r' % theta)
+        else:
+            mcid = self.mcid[i]
+            #print(mcid)
+            #print(self.model.coords)
+            mcid_ref = self.model.coords.get_coord_index_by_coord_id(mcid)
+            i = mcid_ref.i
+            jmat = np.cross(normal, i) # k x i
+            jmat /= np.linalg.norm(jmat)
+            imat = np.cross(jmat, normal)
+            T = np.vstack([imat, jmat, normal])
+            self.model.log.debug(T)
+        if 0:
+            xyz = np.vstack([
+                xyz1,
+                xyz2,
+                xyz3,
+                xyz4,
+            ]).dot(T)
+
+        dofs = array([
+            i1, i1+1,
+            i2, i2+1,
+            i3, i3+1,
+            i4, i4+1,
+        ], 'int32')
+
+        n_ijv = [
+            # axial
+            (n1, 1), (n1, 2),
+            (n2, 1), (n2, 2),
+            (n3, 1), (n3, 2),
+            (n4, 1), (n4, 2),
+        ]
+
+        #n1 = 0.25 * (1 - u) * (1 - v)
+        #n2 = 0.25 * (1 + u) * (1 - v)
+        #n3 = 0.25 * (1 + u) * (1 + v)
+        #n4 = 0.25 * (1 - u) * (1 + v)
+        #wti = -0.57735
+        #wtj = -0.57735
+
+        is_heat_transfer = False
+        if is_heat_transfer:
+            u = wti
+            v = wtj
+            Ji = array([
+                [v - 1.0, -v + 1.0, v + 1.0, -v - 1.0],
+                [u - 1.0, -u - 1.0, u + 1.0, -u + 1.0],
+            ]) / 4.
+            J = Ji.dot(xy)
+            Jinv = np.linalg.inv(J)
+            detJ = np.linalg.det(J)
+            darea = detJ
+            #print('Ji*4 =\n', Ji*4.)
+            #print('J =\n', J)
+            #print('Jinv =\n', Jinv)
+
+            #B2 = array([
+                #[-1.0 - wti, 1.0 - wti, 1.0 - wti, -1.0 + wti],
+                #[-1.0 - wtj, -1.0 + wtj, 1.0 - wtj, 1.0 + wtj],
+            #])
+            #print('B2 =\n', B2)
+            #B = B2.dot(xy)
+            B = Jinv.dot(Ji)
+            #print('B =\n', B)
+            k = 1. * darea
+            #print('dA =', darea)
+
+            K = k * B.T.dot(B)
+            #print('K =\n', K)
+        else:
+            K = np.zeros((8, 8), dtype='float64')
+            #u = wti
+            #v = wtj
+            wts = [-0.57735, 0.57735]
+            for u in wts:
+                for v in wts:
+                    Ji = array([
+                        [v - 1.0, -v + 1.0, v + 1.0, -v - 1.0],
+                        [u - 1.0, -u - 1.0, u + 1.0, -u + 1.0],
+                    ]) / 4.
+                    J = Ji.dot(xy)
+                    Jinv = np.linalg.inv(J)
+                    det_j = np.linalg.det(J)
+                    darea = det_j
+
+
+                    B1 = Jinv.dot(Ji)
+                    #print('B1 =\n', B1)
+                    N1x, N2x, N3x, N4x = B1[0, :]
+                    N1y, N2y, N3y, N4y = B1[1, :]
+                    #print('Nix =', B1[0, :])
+
+
+                    #N1x, N2x, N3x, N4x = v - 1.0, -v + 1.0, v + 1.0, -v - 1.0
+                    #N1y, N2y, N3y, N4y = u - 1.0, -u - 1.0, u + 1.0, -u + 1.0
+                    B = array([
+                        [N1x, 0., N2x, 0., N3x, 0., N4x, 0.],
+                        [0., N1y, 0., N2y, 0., N3y, 0., N4y],
+                        [N1y, N1x, N2y, N2x, N3y, N3x, N4y, N4x]
+                    ])
+                    #print('B =\n', B)
+
+                    #E = 1.0
+                    #nu = 0.25
+                    denom = 1 - nu**2
+                    #C = E/(1 - (poisson^2))*[1 poisson 0; poisson 1 0;0 0 ((1-poisson)/2)];
+                    C = np.array([
+                        [E/denom, nu*E/denom, 0.],
+                        [nu*E/denom, E/denom, 0.],
+                        [0., 0., E/(2.0*(1.0+nu))],
+                    ], dtype='float64')
+                    #print('C =\n', C)
+                    #print('thickness =', thickness)
+                    Ki = np.dot(B.T, C.dot(B)) * (thickness * darea)
+                    #print('Ki(%s,%s) =%s\n' % (u, v, Ki))
+                    #print('Ki(%s,%s) =\n%s\n' % (u, v, list_print(Ki, '%.4e')))
+                    K += Ki
+
+        #K *= (thickness * darea)
+
+        knorm = 1.0
+        self.model.log.info("K_norm / %s = \n" % knorm + list_print(K / knorm, float_fmt='%-4.4f'))
+        return(K, dofs, n_ijv)
+
+
 
 
 def _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True):

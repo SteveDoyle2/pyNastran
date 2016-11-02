@@ -15,7 +15,10 @@ class RFORCE(object):
         """
         Defines the RFORCE object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         .. todo:: collapse loads
         """
@@ -59,7 +62,7 @@ class RFORCE(object):
         return self.__mul__(value)
 
     def allocate(self, ncards):
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         self.node_id = zeros(ncards, 'int32')
         self.coord_id = zeros(ncards, 'int32')
@@ -70,7 +73,7 @@ class RFORCE(object):
         self.mb = zeros(ncards, 'int32')
         self.idrf = zeros(ncards, 'int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -82,7 +85,7 @@ class RFORCE(object):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Property ID
             self.load_id = zeros(ncards, 'int32')
             self.node_id = zeros(ncards, 'int32')
@@ -127,7 +130,7 @@ class RFORCE(object):
             msg.append('  %-8s: %i' % ('RFORCE', self.n))
         return msg
 
-    def write_card(self, f, size=8, lids=None):
+    def write_card(self, bdf_file, size=8, lids=None):
         if self.n:
             for (lid, nid, cid, scale_vel, r, method, scale_acc, mb, idrf) in zip(
                  self.load_id, self.node_id, self.coord_id, self.scale_vel,
@@ -140,6 +143,6 @@ class RFORCE(object):
                 card = ['RFORCE', lid, nid, cid, scale_vel,
                         r[0], r[1], r[2], method, scale_acc, mb, idrf]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

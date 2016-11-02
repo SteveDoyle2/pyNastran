@@ -6,15 +6,19 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double_or_blank)
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 
-class POINTAX(object):
+class POINTAX(VectorizedCard):
     type = 'POINTAX'
     def __init__(self, model):
         """
         Defines the POINTAX object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +---------+-----+-----+-----+
         |    1    |  2  |  3  |  4  |
@@ -22,11 +26,11 @@ class POINTAX(object):
         | POINTAX | NID | RID | PHI |
         +---------+-----+-----+-----+
         """
-        self.model = model
+        VectorizedCard.__init__(self, model)
         self._cards = []
         self._comments = []
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -36,7 +40,7 @@ class POINTAX(object):
 
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.node_id = zeros(ncards, 'int32')
             self.phi = zeros(ncards, float_fmt)
             self.ring_id = zeros(ncards, 'int32')
@@ -74,15 +78,15 @@ class POINTAX(object):
             msg.append('  %-8s: %i' % ('POINTAX', self.n))
         return msg
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         if self.n:
-            f.write('$POINTAX\n')
+            bdf_file.write('$POINTAX\n')
             for (nid, rid, phi) in zip(self.point_id, self.ring_id, self.phi):
                 card = ['POINTAX', rid, phi]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         msg = "<POINTAX>\n"

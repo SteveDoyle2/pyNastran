@@ -1,5 +1,6 @@
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
+import os
 from six import iteritems
 from six.moves import zip
 
@@ -18,7 +19,6 @@ from six.moves import zip
 #VTK_HEXAHEDRON = 12
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
-import os
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, array
 from numpy import nan as NaN
 from numpy.linalg import norm
@@ -139,22 +139,22 @@ class NastranIO(NastranIO_xref):
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #elem.SetNumberOfPoints(nNodes)
-        if 0:
-            i = 0
-            fraction = 1. / nNodes  # so you can color the nodes by ID
-            for (nid, node) in sorted(iteritems(model.nodes)):
-                point = node.get_position()
-                points.InsertPoint(i, *point)
-                #self.gridResult.InsertNextValue(i * fraction)
+        #if 0:
+            #i = 0
+            #fraction = 1. / nNodes  # so you can color the nodes by ID
+            #for (nid, node) in sorted(iteritems(model.nodes)):
+                #point = node.get_position()
+                #points.InsertPoint(i, *point)
+                ##self.gridResult.InsertNextValue(i * fraction)
 
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(),
-                #                              elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
+                ##elem = vtk.vtkVertex()
+                ##elem.GetPointIds().SetId(0, i)
+                ##self.aQuadGrid.InsertNextCell(elem.GetCellType(),
+                ##                              elem.GetPointIds())
+                ##vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
-                self.nid_map[nid] = i
-                i += 1
+                #self.nid_map[nid] = i
+                #i += 1
 
         # add the nodes
         node_ids = model.grid.node_id
@@ -180,17 +180,17 @@ class NastranIO(NastranIO_xref):
         points2 = vtk.vtkPoints()
 
         nsprings = 0
-        if 0:
-            elements_no_mass = [
-                'CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]
-            for (eid, element) in sorted(iteritems(model.elements)):
-                if (isinstance(element, (LineElement, SpringElement)) or
-                    element.type in elements_no_mass):
-                        nodeIDs = element.node_ids
-                        if None in nodeIDs:
-                            nsprings += 1
+        #if 0:
+            #elements_no_mass = [
+                #'CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]
+            #for (eid, element) in sorted(iteritems(model.elements)):
+                #if (isinstance(element, (LineElement, SpringElement)) or
+                    #element.type in elements_no_mass):
+                        #node_ids = element.node_ids
+                        #if None in node_ids:
+                            #nsprings += 1
 
         points2.SetNumberOfPoints(nCAerosPoints * 4 + nCONM2 + nsprings)
         for (eid, element) in sorted(iteritems(model.caeros)):
@@ -230,32 +230,32 @@ class NastranIO(NastranIO_xref):
                 self.log_info("skipping %s" % element.type)
 
         sphere_size = self._get_sphere_size(dim_max)
-        if 0:
-            for (eid, element) in sorted(iteritems(model.elements.mass)):
-                if isinstance(element, CONM2):
-                    #del self.eid_map[eid]
+        #if 0:
+            #for (eid, element) in sorted(iteritems(model.elements.mass)):
+                #if isinstance(element, CONM2):
+                    ##del self.eid_map[eid]
 
-                    #print("element", element)
-                    #print("element.nid", element.nid)
-                    #print('nodeIDs', model.nodes.keys())
-                    xyz = element.nid.get_position()
-                    c = element.Centroid()
-                    d = norm(xyz-c)
-                    elem = vtk.vtkVertex()
-                    #elem = vtk.vtkSphere()
+                    ##print("element", element)
+                    ##print("element.nid", element.nid)
+                    ##print('node_ids', model.nodes.keys())
+                    #xyz = element.nid.get_position()
+                    #c = element.Centroid()
+                    #d = norm(xyz-c)
+                    #elem = vtk.vtkVertex()
+                    ##elem = vtk.vtkSphere()
 
-                    if d == 0.:
-                        d = sphere_size
-                    #elem.SetRadius(d)
-                    #elem.SetCenter(points.GetPoint(self.nid_map[nid]))
-                    #print(str(element))
+                    #if d == 0.:
+                        #d = sphere_size
+                    ##elem.SetRadius(d)
+                    ##elem.SetCenter(points.GetPoint(self.nid_map[nid]))
+                    ##print(str(element))
 
-                    points2.InsertPoint(j, *c)
-                    elem.GetPointIds().SetId(0, j)
-                    self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                    j += 1
-                else:
-                    self.log_info("skipping %s" % element.type)
+                    #points2.InsertPoint(j, *c)
+                    #elem.GetPointIds().SetId(0, j)
+                    #self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    #j += 1
+                #else:
+                    #self.log_info("skipping %s" % element.type)
 
         self.mapElements(points, points2, self.nid_map, model, j, dim_max)
 
@@ -293,7 +293,7 @@ class NastranIO(NastranIO_xref):
         ]
         for rod in rods:
             if rod.n:
-                print('n%s = %s' % (rod.type, rod.n))
+                self.model.log.debug('n%s = %s' % (rod.type, rod.n))
                 i1, i2 = rod.get_node_indicies()
                 eids = rod.element_id
                 for eid, ii1, ii2 in zip(eids, i1, i2):
@@ -311,7 +311,7 @@ class NastranIO(NastranIO_xref):
         ]
         for tria3 in tria3s:
             if tria3.n:
-                print('n%s = %s' % (tria3.type, tria3.n))
+                self.model.log.debug('n%s = %s' % (tria3.type, tria3.n))
                 i1, i2, i3 = tria3.get_node_indicies()
                 eids = tria3.element_id
                 for eid, ii1, ii2, ii3 in zip(eids, i1, i2, i3):
@@ -814,13 +814,13 @@ class NastranIO(NastranIO_xref):
         #self._plot_pressures(model, cases)
         #self._plot_applied_loads(model, cases)
 
-        if 0:
-            # if not a flat plate???
+        #if 0:
+            #if not a flat plate???
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-                # subcase_id, resultType, vectorSize, location, dataFormat
-                cases[(0, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
-                cases[(0, 'Normal_y', 1, 'centroid', '%.1f')] = nys
-                cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
+                #subcase_id, resultType, vectorSize, location, dataFormat
+                #cases[(0, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
+                #cases[(0, 'Normal_y', 1, 'centroid', '%.1f')] = nys
+                #cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
         self.log.info(cases.keys())
 
         self.finish_nastran_io(cases)
@@ -856,7 +856,7 @@ class NastranIO(NastranIO_xref):
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
                 continue
-            load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
+            load_case_id = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')[0]
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -890,7 +890,8 @@ class NastranIO(NastranIO_xref):
                         for el in load.eids:
                             pressures[eids.index(el.eid)] += p
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(
+                            #load.g34.nid, load.g1.nid)
                         #r = centroid - p
 
             # if there is no applied pressure, don't make a plot
@@ -969,8 +970,10 @@ class NastranIO(NastranIO_xref):
                     'constraint_forces', 'spcForces', 'mpcForces',
 
                     #'gridPointForces',
-                    'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                    'stress', 'solidStress', 'plateStress', 'compositePlateStress',
+                    'barStress', 'rodStress',
+                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
+                    #'barStrain', 'rodStrain',
 
                     # untested
                     'loadVectors',
@@ -979,8 +982,10 @@ class NastranIO(NastranIO_xref):
                 ]
             else:
                 desired_results = [
-                    'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                    'stress', 'solidStress', 'plateStress', 'compositePlateStress',
+                    'barStress', 'rodStress',
+                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
+                    #'barStrain', 'rodStrain',
                 ]
             for result in desired_results:
                 if result in all_results:

@@ -1,32 +1,33 @@
 from numpy import searchsorted, hstack, full, nan, unique, where
 
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.psolid import PSOLID
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.plsolid import PLSOLID
 
 class PropertiesSolid(object):
     def __init__(self, model):
         """
         Defines the PropertiesSolid object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
 
-        self.psolid = PSOLID(self.model)
-        self.plsolid = PLSOLID(self.model)
+        self.psolid = model.psolid
+        self.plsolid = model.plsolid
         self.n = 0
 
-    def allocate(self, card_count):
-        ptypes = self._get_types(nlimit=False)
-        for ptype in ptypes:
-            if ptype.type in card_count:
-                ptype.allocate(card_count[ptype.type])
-                del card_count[ptype.type]
+    #def allocate(self, card_count):
+        #ptypes = self._get_types(nlimit=False)
+        #for ptype in ptypes:
+            #if ptype.type in card_count:
+                #ptype.allocate(card_count[ptype.type])
+                #del card_count[ptype.type]
             #else:
                 #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % ptype.type
 
     def build(self):
-        #print "building solid properties"
+        self.model.log.debug("building solid properties")
         types = self._get_types(nlimit=False)
         for prop in types:
             if prop.n:
@@ -111,8 +112,15 @@ class PropertiesSolid(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_card(self, f, size=8, property_id=None):
-        f.write('$PROPERTIES_SOLID\n')
+    def write_card(self, bdf_file, size=8, property_id=None):
+        bdf_file.write('$PROPERTIES_SOLID\n')
         types = self._get_types()
         for prop in types:
-            prop.write_card(f, size=size, property_id=property_id)
+            prop.write_card(bdf_file, size=size, property_id=property_id)
+
+    def __repr__(self):
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for prop in types:
+            msg += '  <%s object; n=%s>\n' % (prop.type, prop.n)
+        return msg

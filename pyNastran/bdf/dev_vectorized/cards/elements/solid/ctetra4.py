@@ -1,20 +1,28 @@
-from six.moves import zip, range
+from __future__ import print_function
 from itertools import count
+from six.moves import zip, range
 
+import numpy as np
 from numpy import zeros, arange, dot, cross, searchsorted, array, eye, ones
 
-from pyNastran.bdf.field_writer_8 import print_card_8
+#from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
-def volume4(n1, n2, n3, n4):
+def volume4(xyz1, xyz2, xyz3, xyz4):
     r"""
     Gets the volume, :math:`V`, of the tetrahedron.
 
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
-    V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
+    V = -dot((xyz1 - xyz4), cross(xyz2 - xyz4, xyz3 - xyz4)) / 6.
+    #V = 1/6. * np.det(
+        #np.hstack(
+            #[1., 1., 1., 1.],
+            #np.vstack(n1, n2, n3, n4).T,
+        #),
+    #)
     return V
 
 
@@ -25,11 +33,14 @@ class CTETRA4(SolidElement):
         """
         Defines the CTETRA object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
 
         #comment = self._comments[i]
@@ -199,23 +210,147 @@ class CTETRA4(SolidElement):
         dofs, nijv = self.get_dofs_nijv(index0s, n0, n1, n2, n3)
         return M, dofs, nijv
 
+    def get_stiffness_matrices(self, model, positions, index0s):
+        out = []
+
+        # volume coordinates
+        # FEM: Volume I (Zienkiewicz) p.186
+        volume6 = volume * 6
+        L1 = (a1 + b1 * x + c1 * y + d1 * z) / volume6
+        L2 = (a2 + b2 * x + c2 * y + d2 * z) / volume6
+        L3 = (a3 + b3 * x + c3 * y + d3 * z) / volume6
+
+        # FEM: Volume I (Zienkiewicz) p.186
+        #x = L1*x1 + L2*x2 + L3*x3 + L4*x4
+        #y = L1*y1 + L2*y2 + L3*y3 + L4*y4
+        #z = L1*z1 + L2*z2 + L3*z3 + L4*z4
+        #1 = L1 + L2 + L3 + L4
+
+
+        for i in range(self.n):
+            K, dofs, nijv = self.get_stiffness_matrix(
+                i, model, self.positions, index0s)
+            out.append(K, dofs, nijv)
+        self.add_stiffness(K, dofs, nijv)
+
     def get_stiffness_matrix(self, i, model, positions, index0s):
         nnodes = 4
         ndof = 3 * nnodes
         pid = self.property_id[i]
-        rho = self.model.elements.properties_solid.psolid.get_density_by_property_id(pid)[0]
+        prop = self.model.elements.properties_solid.psolid
+        rho = prop.get_density_by_property_id(pid)[0]
 
         n0, n1, n2, n3 = self.node_ids[i, :]
-        V = volume4(positions[self.node_ids[i, 0]],
-                    positions[self.node_ids[i, 1]],
-                    positions[self.node_ids[i, 2]],
-                    positions[self.node_ids[i, 3]])
+        xyz1 = positions[self.node_ids[i, 0]]
+        xyz2 = positions[self.node_ids[i, 1]]
+        xyz3 = positions[self.node_ids[i, 2]]
+        xyz4 = positions[self.node_ids[i, 3]]
+        vol = volume4(xyz1, xyz2, xyz3, xyz4)
 
-        stiffness = rho * V
+        stiffness = rho * vol
         ki = stiffness / 4.
         nnodes = 4
         K = eye(ndof, dtype='float32')  # not done...
-        K *= ki
+
+
+        u = 0.
+        v = 0.
+        #wts = [-0.57735, 0.57735]
+        #for u in wts:
+            #for v in wts:
+        Ji = array([
+            [v - 1.0, -v + 1.0, v + 1.0, -v - 1.0],
+            [u - 1.0, -u - 1.0, u + 1.0, -u + 1.0],
+        ]) / 4.
+        #J = Ji.dot(xy)
+        #Jinv = np.linalg.inv(J)
+        #det_j = np.linalg.det(J)
+        #darea = det_j
+
+
+        #B1 = Jinv.dot(Ji)
+        #print('B1 =\n', B1)
+        #N1x, N2x, N3x, N4x = B1[0, :]
+        #N1y, N2y, N3y, N4y = B1[1, :]
+        #print('Nix =', B1[0, :])
+
+
+        vol_matrix = np.hstack(
+            [1., 1., 1., 1.],
+            np.vstack([xyz1, xyz2, xyz3, xyz4]).T,
+        )
+        ivol_matrix = np.linalg.inv(vol_matrix)
+        a1, b1, c1 = ivol_matrix[0, 1:]
+        a2, b2, c2 = ivol_matrix[1, 1:]
+        a3, b3, c3 = ivol_matrix[2, 1:]
+        a4, b4, c4 = ivol_matrix[3, 1:]
+
+        #N1x, N2x, N3x, N4x = v - 1.0, -v + 1.0, v + 1.0, -v - 1.0
+        #N1y, N2y, N3y, N4y = u - 1.0, -u - 1.0, u + 1.0, -u + 1.0
+        B = array([
+            [a1, 0., 0., a2, 0., 0., a3, 0., 0., a4, 0., 0.],
+            [0., b1, 0., 0., b2, 0., 0., b3, 0., 0., b4, 0.],
+            [0., 0., c1, 0., 0., c2, 0., 0., c3, 0., 0., c4],
+            [b1, a1, 0., b2, a2, 0., b3, a3, 0., b4, a4, 0.],
+            [0., c1, b1, 0., c2, b2, 0., c3, b3, 0., c4, b4],
+            [c1, 0., a1, c2, 0., a2, c3, 0., a3, c4, 0., a4],
+        ]) / (6 * vol)
+
+        #N = array([
+            #[N1, 0., 0., N2, 0., 0., N3, 0., N4, 0., 0.],
+            #[0., N1, 0., 0., N2, 0., 0., N3, 0., N4, 0.],
+            #[0., 0., N1, 0., 0., N2, 0., 0., N3, 0., N4],
+        #])
+        #print('B =\n', B)
+
+        #E = 1.0
+        #nu = 0.25
+
+        mid1 = prop.material_id[0]
+        mat = self.model.materials.get_solid_material(mid1)
+        print(mat)
+        E = mat.E[0]
+        nu = mat.nu[0]
+        G = mat.G[0]
+
+        # [sigma] = [C] * [epsilon]
+        #denom = 1 - nu**2
+        #C = np.zeros((6, 6), dtype='float64')
+        #outside = E / ((1 + nu) * (1 - 2 * nu))
+        #C[0, 0] = C[1, 1] = C[2, 2] = (1 - nu) * outside
+        #C[3, 3] = C[4, 4] = C[5, 5] = (0.5 - nu) * outside
+
+        if 0:
+            ## [stress] = [E] [strain]
+            #emat = np.zeros((5, 5), dtype='float64')
+            #emat[0, 0] = emat[1, 1] = E / denom
+            #emat[1, 0] = emat[0, 1] = (E * nu) / denom
+            #emat[2, 2] = emat[3, 3] = emat[4, 4] = G
+
+
+            ## [M] = [D] * [bending]
+            #dmat = np.zeros((5, 5), dtype='float64')
+            #D = E * h**3 / (12 * denom)
+            #dmat[0, 0] = dmat[1, 1] = D
+            #dmat[1, 0] = dmat[0, 1] = D * nu
+            #dmat[2, 2] = D * (1. - nu) / 2.
+            #dmat[3, 3] = emat[4, 4] = G * h
+
+            # FEM: Volume I (Zienkiewicz) p.132
+            dmat2 = np.array(6, 6)
+            dmat2[0, 0] = dmat2[1, 1] = dmat2[2, 2] = 1 - nu
+            dmat2[0, 1] = dmat2[0, 2] = dmat2[1, 0] = dmat2[2, 0] = nu
+            dmat2[3, 3] = dmat2[4, 4] = dmat[5, 5] = (1 - 2 * nu) / 2.
+            dmat2 *= E / ((1 + nu) * (1 - 2 * nu))
+
+        #print('C =\n', C)
+        #print('thickness =', thickness)
+        Ki = np.dot(B.T, C.dot(B))
+        #print('Ki(%s,%s) =%s\n' % (u, v, Ki))
+        #print('Ki(%s,%s) =\n%s\n' % (u, v, list_print(Ki, '%.4e')))
+        K += Ki
+
+        #K *= ki
         dofs, nijv = self.get_dofs_nijv(index0s, n0, n1, n2, n3)
         return K, dofs, nijv
 
@@ -276,7 +411,7 @@ class CTETRA4(SolidElement):
         get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
         node_ids = self.node_ids
 
-        msg = ', which is required by %s' % self.type
+        #msg = ', which is required by %s' % self.type
         i1, i2, i3, i4 = self.get_node_indicies(i)
         n1 = xyz_cid0[i1, :]
         n2 = xyz_cid0[i2, :]
@@ -288,13 +423,18 @@ class CTETRA4(SolidElement):
         """
         Gets the volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the volume be summed
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
 
-        V = zeros(n1.shape[0], self.model.float)
+        V = zeros(n1.shape[0], self.model.float_fmt)
         for i, n1i, n2i, n3i, n4i in zip(count(), n1, n2, n3, n4):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
@@ -304,9 +444,14 @@ class CTETRA4(SolidElement):
         """
         Gets the mass for one or more CTETRA elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -326,15 +471,19 @@ class CTETRA4(SolidElement):
         """
         Gets the centroid and volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
         :param total: should the volume be summed; centroid be averaged (default=False)
 
         ..see:: CTETRA4.volume() and CTETRA4.centroid for more information.
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         n = len(element_id)
-        volume = zeros(n, self.model.float)
+        volume = zeros(n, self.model.float_fmt)
 
         i = 0
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
@@ -354,9 +503,14 @@ class CTETRA4(SolidElement):
         """
         Gets the centroid for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be averaged (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be averaged
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         centroid = (n1 + n2 + n3 + n4) / 4.0
@@ -371,16 +525,27 @@ class CTETRA4(SolidElement):
         #nids.pop(indx)
         #return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, element_id)
 
-            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
-                if eid in self._comments:
-                    f.write(self._comments[eid])
-                card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card_8(card))
+            if size == 16 or max(self.element_id[i].max(), self.property_id[i].max(),
+                                 self.node_ids[i, :].max()) > 1000000000:
+                msg = ('CTETRA  %16i%16i%16i%16i\n'
+                       '        %16i%16i\n')
+                for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
+                    if eid in self._comments:
+                        bdf_file.write(self._comments[eid])
+                    data = [eid, pid] + list(n)
+                    bdf_file.write(msg)
+            else:
+                msg = 'CTETRA  %8i%8i%8i%8i%8i%8i\n'
+                for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
+                    if eid in self._comments:
+                        bdf_file.write(self._comments[eid])
+                    data = [eid, pid] + list(n)
+                    bdf_file.write(msg % tuple(data))
 

@@ -1,6 +1,6 @@
 from __future__ import print_function
 from six.moves import range, zip
-from numpy import array, where, searchsorted, arange, zeros
+from numpy import searchsorted, arange, zeros
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.bdf.field_writer_8 import print_card_8
 #from pyNastran.bdf.field_writer_16 import print_card_16
@@ -21,14 +21,14 @@ class PAERO1(VectorizedCard):
     def allocate(self, ncards):
         self.n = ncards
         if self.n:
-            #float_fmt = self.model.float
+            #float_fmt = self.model.float_fmt
             self.property_id = zeros(ncards, dtype='int32')
             self.b = zeros((ncards, 6), dtype='int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.property_id[i] = integer(card, 1, 'pid')
         for j in range(2, len(card)):
             self.b[i, j-2] = integer_or_blank(card, j, 'b%i' % j-2, 0)
@@ -43,7 +43,7 @@ class PAERO1(VectorizedCard):
     #def get_bodies(self):
         #return self.Bi
 
-    def write_card(self, f, size, is_double, property_id=None):
+    def write_card(self, bdf_file, size, is_double, property_id=None):
         if self.n:
             assert size in [8, 16], size
             assert is_double in [True, False], is_double
@@ -53,10 +53,10 @@ class PAERO1(VectorizedCard):
             else:
                 #assert len(unique(property_id))==len(property_id), unique(property_id)
                 i = searchsorted(self.property_id, property_id)
-            print(self.property_id)
+            #print(self.property_id)
             for j, pid in enumerate(self.property_id[i]):
                 b = self.b[j, :]
                 b2 = [bi for bi in b if bi > 0]
                 list_fields = ['PAERO1', pid] + b2
-                f.write(print_card_8(list_fields))
+                bdf_file.write(print_card_8(list_fields))
         #return self.comment + print_card_8(card)

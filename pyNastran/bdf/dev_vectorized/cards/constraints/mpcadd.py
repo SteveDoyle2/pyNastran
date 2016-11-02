@@ -21,7 +21,7 @@ class MPCADD(object):
 
     def add(self, constraint_id, mpc_ids, comment):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         assert isinstance(constraint_id, int), constraint_id
         self.constraint_id = constraint_id
         self.mpc_ids += mpc_ids
@@ -29,12 +29,12 @@ class MPCADD(object):
     def build(self):
         self.mpc_ids.sort()
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         card = ['MPCADD', self.constraint_id] + self.mpc_ids
         if size == 8:
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
         else:
-            f.write(print_card_16(card))
+            bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

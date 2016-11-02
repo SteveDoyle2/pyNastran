@@ -6,12 +6,15 @@ class PropertiesBar(object):
         """
         Defines the PropertiesBar object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
 
-        self.pbar = PBAR(self.model)
-        self.pbarl = PBARL(self.model)
+        self.pbar = model.pbar
+        self.pbarl = model.pbarl
         self.n = 0
 
     def allocate(self, card_count):
@@ -82,9 +85,16 @@ class PropertiesBar(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_card(self, f, size=8, property_id=None):
-        f.write('$PROPERTIES_BAR\n')
+    def write_card(self, bdf_file, size=8, property_id=None):
+        bdf_file.write('$PROPERTIES_BAR\n')
         types = self._get_types(nlimit=False)
         for prop in types:
             #print('prop.type = %s' % prop.type)
-            prop.write_card(f, size=size, property_id=property_id)
+            prop.write_card(bdf_file, size=size, property_id=property_id)
+
+    def __repr__(self):
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for prop in types:
+            msg += '  <%s object; n=%s>\n' % (prop.type, prop.n)
+        return msg

@@ -21,12 +21,15 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 class WriteMesh(BDFAttributes):
     """
+    Defines methods for writing cards
+
     Major methods:
       - model.write_bdf(...)
       - model.echo_bdf(...)
       - model.auto_reject_bdf(...)
     """
     def __init__(self):
+        """creates methods for writing cards"""
         BDFAttributes.__init__(self)
         self._auto_reject = True
         self.cards_to_read = set([])
@@ -58,6 +61,15 @@ class WriteMesh(BDFAttributes):
         #self._auto_reject = True
         #return self.read_bdf(infile_name)
 
+    def get_encoding(self, encoding=None):
+        if encoding is not None:
+            pass
+        else:
+            encoding = self._encoding
+            if encoding is None:
+                encoding = sys.getdefaultencoding()
+        return encoding
+
     def _output_helper(self, out_filename, interspersed, size, is_double):
         """
         Performs type checking on the write_bdf inputs
@@ -76,12 +88,16 @@ class WriteMesh(BDFAttributes):
             if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, (file, StringIO)):
                 return out_filename
             elif not isinstance(out_filename, string_types):
-                raise TypeError('out_filename=%r must be a string; type=%s' % (out_filename, type(out_filename)))
+                msg = 'out_filename=%r must be a string; type=%s' % (
+                    out_filename, type(out_filename))
+                raise TypeError(msg)
         else:
-            if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, io.IOBase):
+            if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, io.IOBase):
                 return out_filename
             elif not isinstance(out_filename, string_types):
-                raise TypeError('out_filename=%r must be a string; type=%s' % (out_filename, type(out_filename)))
+                msg = 'out_filename=%r must be a string; type=%s' % (
+                    out_filename, type(out_filename))
+                raise TypeError(msg)
 
         if size == 8:
             assert is_double is False, 'is_double=%r' % is_double
@@ -157,15 +173,6 @@ class WriteMesh(BDFAttributes):
             #break
             #j += nelements
         bdf_file.write('ENDDATA\n')
-
-    def get_encoding(self, encoding=None):
-        if encoding is not None:
-            pass
-        else:
-            encoding = self._encoding
-            if encoding is None:
-                encoding = sys.getdefaultencoding()
-        return encoding
 
     def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
@@ -330,12 +337,12 @@ class WriteMesh(BDFAttributes):
         if self.executive_control_lines:
             msg = '$EXECUTIVE CONTROL DECK\n'
             if self.sol == 600:
-                new_sol = 'SOL 600,%s' % self.solMethod
+                new_sol = 'SOL 600,%s' % self.sol_method
             else:
                 new_sol = 'SOL %s' % self.sol
 
-            if self.iSolLine is not None:
-                self.executive_control_lines[self.iSolLine] = new_sol
+            if self.sol_iline is not None:
+                self.executive_control_lines[self.sol_iline] = new_sol
 
             for line in self.executive_control_lines:
                 msg += line + '\n'
@@ -521,7 +528,6 @@ class WriteMesh(BDFAttributes):
                 write_aero_in_flutter = True
         return write_aero_in_flutter, write_aero_in_gust
 
-
     def _write_flutter(self, outfile, size=8, is_double=False, write_aero_in_flutter=True):
         """Writes the flutter cards"""
         if (write_aero_in_flutter and self.aero) or self.flfacts or self.flutters or self.mkaeros:
@@ -625,8 +631,9 @@ class WriteMesh(BDFAttributes):
 
     def _write_contact(self, outfile, size=8, is_double=False):
         """Writes the contact cards sorted by ID"""
-        if(self.bcrparas or self.bctadds or self.bctparas or self.bctsets
-           or self.bsurf or self.bsurfs):
+        is_contact = (self.bcrparas or self.bctadds or self.bctparas
+                      or self.bctsets or self.bsurf or self.bsurfs)
+        if is_contact:
             msg = ['$CONTACT\n']
             for (unused_id, bcrpara) in sorted(iteritems(self.bcrparas)):
                 msg.append(bcrpara.write_card(size, is_double))
@@ -682,9 +689,10 @@ class WriteMesh(BDFAttributes):
 
     def _write_dynamic(self, outfile, size=8, is_double=False):
         """Writes the dynamic cards sorted by ID"""
-        if(self.dareas or self.dphases or self.nlparms or self.frequencies or self.methods or
-           self.cMethods or self.tsteps or self.tstepnls or self.transfer_functions or
-           self.delays):
+        is_dynamic = (self.dareas or self.dphases or self.nlparms or self.frequencies or
+                      self.methods or self.cMethods or self.tsteps or self.tstepnls or
+                      self.transfer_functions or self.delays)
+        if is_dynamic:
             msg = ['$DYNAMIC\n']
             for (unused_id, method) in sorted(iteritems(self.methods)):
                 msg.append(method.write_card(size, is_double))
@@ -774,10 +782,11 @@ class WriteMesh(BDFAttributes):
 
     def _write_materials(self, outfile, size=8, is_double=False):
         """Writes the materials in a sorted order"""
-        if(self.materials or self.hyperelastic_materials or self.creep_materials or
-           self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
-           self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
-           self.MATT8 or self.MATT9):
+        is_materials = (self.materials or self.hyperelastic_materials or self.creep_materials or
+                        self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
+                        self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
+                        self.MATT8 or self.MATT9)
+        if is_materials:
             msg = ['$MATERIALS\n']
             for (unused_mid, material) in sorted(iteritems(self.materials)):
                 msg.append(material.write_card(size, is_double))
@@ -944,11 +953,12 @@ class WriteMesh(BDFAttributes):
 
     def _write_optimization(self, outfile, size=8, is_double=False):
         """Writes the optimization cards sorted by ID"""
-        if(self.dconadds or self.dconstrs or self.desvars or self.ddvals or
-           self.dresps or self.ddvals or
-           self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
-           self.dlinks or self.dequations or self.dtable is not None or
-           self.dvgrids):
+        is_optimization = (self.dconadds or self.dconstrs or self.desvars or self.ddvals or
+                           self.dresps or
+                           self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
+                           self.dlinks or self.dequations or self.dtable is not None or
+                           self.dvgrids)
+        if is_optimization:
             msg = ['$OPTIMIZATION\n']
             for (unused_id, dconadd) in sorted(iteritems(self.dconadds)):
                 msg.append(dconadd.write_card(size, is_double))
@@ -1078,8 +1088,9 @@ class WriteMesh(BDFAttributes):
 
     def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        if(self.sets or self.asets or self.bsets or self.csets or self.qsets
-           or self.usets):
+        is_sets = (self.sets or self.asets or self.bsets or self.csets or self.qsets
+                   or self.usets)
+        if is_sets:
             msg = ['$SETS\n']
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
                 msg.append(set_obj.write_card(size, is_double))
@@ -1098,8 +1109,9 @@ class WriteMesh(BDFAttributes):
 
     def _write_superelements(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        if(self.se_sets or self.se_bsets or self.se_csets or self.se_qsets
-           or self.se_usets):
+        is_sets = (self.se_sets or self.se_bsets or self.se_csets or self.se_qsets
+                   or self.se_usets)
+        if is_sets:
             msg = ['$SUPERELEMENTS\n']
             for set_obj in self.se_bsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
@@ -1160,3 +1172,4 @@ class WriteMesh(BDFAttributes):
             for (unused_mid, material) in sorted(iteritems(self.thermal_materials)):
                 msg.append(material.write_card(size, is_double))
             outfile.write(''.join(msg))
+

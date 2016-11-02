@@ -112,7 +112,10 @@ class XRefMesh(object):
             self.mpc_object = MPCObject()
             self.mpc_object.add_reference(self.mpcadd)
             self.mpc_object.add(self.mpc)
+        self.build_loadcase()
 
+    def build_loadcase(self):
+        """builds the loadcase object"""
         self.loadcase = LoadCase()
         self.loadcase.add_reference(self.loads.load)
         self.loadcase.add_reference(self.loads.dload)

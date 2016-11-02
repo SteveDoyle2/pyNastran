@@ -59,11 +59,17 @@ class RealSpringArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.build_data(ntimes, nelements, dtype)
+
+    def build_data(self, ntimes, nelements, dtype):
+        """actually performs the build step"""
+        self.ntimes = ntimes
+        self.nelements = nelements
+        self._times = zeros(ntimes, dtype=dtype)
+        self.element = zeros(nelements, dtype='int32')
 
         #[stress]
-        self.data = zeros((self.ntimes, self.nelements, 1), dtype='float32')
+        self.data = zeros((ntimes, nelements, 1), dtype='float32')
 
     def build_dataframe(self):
         headers = self.get_headers()

@@ -12,7 +12,10 @@ class POINT(object):
         """
         Defines the POINT object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +-------+-----+----+----+----+----+
         |   1   |  2  | 3  | 4  | 5  | 6  |
@@ -25,7 +28,7 @@ class POINT(object):
         self._cards = []
         self._comments = []
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -35,7 +38,7 @@ class POINT(object):
 
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.node_id = zeros(ncards, 'int32')
             self.xyz = zeros((ncards, 3), float_fmt)
             self.coord_id = zeros(ncards, 'int32')
@@ -80,17 +83,17 @@ class POINT(object):
             msg.append('  %-8s: %i' % ('POINT', self.n))
         return msg
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         if self.n:
-            f.write('$POINT\n')
+            bdf_file.write('$POINT\n')
             cp0 = self.model.grdset.cp
             Cp = [cpi if cpi != cp0 else '' for cpi in self.cp]
             for (nid, cp, xyz) in zip(self.nid, Cp, self.xyz):
                 card = ['POINT', nid, cp, xyz[0], xyz[1], xyz[2]]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         msg = "<POINT>\n"

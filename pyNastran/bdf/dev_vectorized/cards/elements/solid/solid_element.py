@@ -57,17 +57,19 @@ class SolidElement(Element):
             xyz_cid0 = self.model.grid.get_position_by_node_index()
         return self._get_node_locations_by_index(i, xyz_cid0)
 
-    def allocate(self, ncards):
-        print('%s.allocate(%s)' % (self.type, ncards))
-        self.n = ncards
-        #float_fmt = self.model.float
-        self.element_id = zeros(ncards, 'int32')
-        self.property_id = zeros(ncards, 'int32')
-        self.node_ids = zeros((ncards, self.nnodes), 'int32')
-        #self._comments.append(comment)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        #self.model.log.debug('%s.allocate(%s)' % (self.type, ncards))
+        if ncards:
+            self.n = ncards
+            #float_fmt = self.model.float_fmt
+            self.element_id = zeros(ncards, 'int32')
+            self.property_id = zeros(ncards, 'int32')
+            self.node_ids = zeros((ncards, self.nnodes), 'int32')
+            #self._comments.append(comment)
 
     def build(self):
-        print('self.n =', self.n)
+        #self.model.log.debug('self.n = %i' % self.n)
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
@@ -83,9 +85,14 @@ class SolidElement(Element):
         """
         Gets the mass for one or more SolidElement elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -137,7 +144,7 @@ class SolidElement(Element):
         http://www.thescipub.com/abstract/?doi=jmssp.2005.8.11
         """
         if p is None:
-            p = zeros(3, self.model.float)
+            p = zeros(3, self.model.float_fmt)
 
         r = centroid - p  # 2D array - 1D array
         I = mass * r**2 # column vector * 2D array

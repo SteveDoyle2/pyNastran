@@ -1,5 +1,5 @@
 from six.moves import range, StringIO
-from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import (integer, double_or_blank, components_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (integer, double_or_blank, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -46,9 +46,18 @@ class MPC(object):
     Defines enforced displacement/temperature (static analysis)
     velocity/acceleration (dynamic analysis).::
 
-      MPC SID G1 C1 D1   G2 C2 D2
-      MPC 2   32 3  -2.6  5
-    """
+    +-----+-----+----+----+------+----+----+----+-----+
+    |  1  |  2  |  3 |  4 |  5   |  6 |  7 |  8 |  9  |
+    +=====+=====+====+====+======+====+====+====+=====+
+    | MPC | SID | G1 | C1 |  A1  | G2 | C2 | A2 |     |
+    +-----+-----+----+----+------+----+----+----+-----+
+    |     |  G3 | C3 | A3 | ...  |    |    |    |     |
+    +-----+-----+----+----+------+----+----+----+-----+
+
+    +-----+-----+----+----+------+----+----+----+-----+
+    | MPC | 2   | 32 | 3  | -2.6 |  5 |    |    |     |
+    +-----+-----+----+----+------+----+----+----+-----+
+     """
     type = 'MPC'
 
     def __init__(self, model):
@@ -69,19 +78,19 @@ class MPC(object):
             raise RuntimeError('self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (self.constraint_id. constraint_id))
 
     def build(self):
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         self.n = len(self.constraints)
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         if self.n:
             for constraint in self.constraints:
                 card = ['MPC', self.constraint_id]
                 for (G, C, A) in constraint:
                     card += [G, C, A]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

@@ -1,37 +1,34 @@
 from numpy import array, zeros, searchsorted, unique, argsort
 
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import CTRIA3
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria6 import CTRIA6
-#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad import CQUAD
-#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquadx import CQUADX
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import CQUAD4
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad8 import CQUAD8
-#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad9 import CQUAD9
-
-#from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctriax import CTRIAX
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctriax6 import CTRIAX6
-
 
 class ElementsShell(object):
     def __init__(self, model):
         """
         Defines the ElementsShell object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.n = 0
 
-        self.ctria3 = CTRIA3(self.model)
-        self.ctria6 = CTRIA6(self.model)
-        #self.cquad = CQUAD(self.model)
-        #self.cquadx = CQUADX(self.model)
-        self.cquad4 = CQUAD4(self.model)
-        self.cquad8 = CQUAD8(self.model)
-        #self.cquad9 = CQUAD9(self.model)
+        self.ctria3 = model.ctria3
+        self.ctria6 = model.ctria6
+        #self.cquad = model.cquad
+        #self.cquadx = model.cquadx
+        self.cquad = None
+        self.cquadx = None
+        self.cquad4 = model.cquad4
+        self.cquad8 = model.cquad8
+        #self.cquad9 = model.cquad9
+        self.cquad9 = None
 
-        #self.ctriax = CTRIAX(self.model)
-        self.ctriax6 = CTRIAX6(self.model)
+        #self.ctriax = model.ctriax
+        #self.ctriax6 = model.ctriax6
+        self.ctriax = None
+        self.ctriax6 = None
 
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)
@@ -195,28 +192,56 @@ class ElementsShell(object):
             mass = massi
         return mass
 
-    def write_card(self, f, size=8, element_id=None):
-        f.write('$ELEMENTS_SHELL\n')
+    def write_card(self, bdf_file, size=8, element_id=None):
+        """writes the cards
+
+        Parameters
+        ----------
+        bdf_file : file-obj
+            a file object
+        size : int; default=8
+            the field width
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the element_ids to write
+        """
+        bdf_file.write('$ELEMENTS_SHELL\n')
         types = self._get_types(nlimit=True)
         for element in types:
             if element.n:
                 self.model.log.debug(element.type)
-                element.write_card(f, size=size, element_id=element_id)
+                element.write_card(bdf_file, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
+        """
+        Gets the element objects
+
+        Parameters
+        ----------
+        nlimit : bool; default=True
+            limits the objects to only ones with data
+        """
         types = [self.ctria3, self.cquad4, self.ctria6, self.cquad8, self.ctriax6] #, cquad8
         if nlimit:
             types2 = []
             for etype in types:
+                if etype is None:
+                    continue
                 if etype.n > 0:
                     types2.append(etype)
+            types = types2
+        else:
+            types2 = []
+            for etype in types:
+                if etype is None:
+                    continue
+                types2.append(etype)
             types = types2
         self.model.log.info('types = %s' % types)
         return types
 
     def get_stats(self):
         msg = []
-        types = self._get_types()
+        types = self._get_types(nlimit=True)
         for element in types:
             nele = element.n
             if nele:
@@ -228,5 +253,12 @@ class ElementsShell(object):
         for elems in types:
             elems._verify(xref=xref)
 
+    #def __repr__(self):
+        #return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
+
     def __repr__(self):
-        return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
+        msg = '<%s object; n=%s>\n' % (self.__class__.__name__, self.n)
+        types = self._get_types()
+        for elem in types:
+            msg += '  <%s object; n=%s>\n' % (elem.type, elem.n)
+        return msg

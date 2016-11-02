@@ -44,7 +44,7 @@ class PLSOLID(SolidProperty):
     def __init__(self, pid, mid, stress_strain='GRID', ge=0., comment=''):
         SolidProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: Material ID
@@ -266,7 +266,7 @@ class PSOLID(SolidProperty):
                  fctn='SMECH', comment=''):
         SolidProperty.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Property ID
         self.pid = pid
         #: Material ID

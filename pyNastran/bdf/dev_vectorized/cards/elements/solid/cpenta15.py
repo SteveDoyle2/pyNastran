@@ -16,12 +16,14 @@ class CPENTA15(SolidElement):
         """
         Defines the CPENTA15 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
-        print('add...')
+    def add_card(self, card, comment=''):
         i = self.i
 
         #comment = self._comments[i]
@@ -52,7 +54,7 @@ class CPENTA15(SolidElement):
             integer_or_blank(card, 17, 'node_id_15', 0),
         ], dtype='int32')
         self.node_ids[i, :] = nids
-        assert len(card) <= 17, 'len(CPENTA15 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 18, 'len(CPENTA15 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def _verify(self, xref=True):
@@ -79,9 +81,14 @@ class CPENTA15(SolidElement):
         """
         Gets the volume for one or more CPENTA15 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the volume be summed
 
         .. note:: Volume for a CPENTA is the average area of two opposing faces
                   times the length between the centroids of those points
@@ -97,9 +104,14 @@ class CPENTA15(SolidElement):
         """
         Gets the centroid and volume for one or more CPENTA15 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the volume be summed
 
         ..see:: CPENTA15.get_volume_by_element_id() and CPENTA15.get_centroid_by_element_id() for more information.
         """
@@ -123,9 +135,14 @@ class CPENTA15(SolidElement):
         """
         Gets the centroid for one or more CPENTA15 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -138,12 +155,12 @@ class CPENTA15(SolidElement):
 
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
-        nids = self.node_ids[:4]
-        indx = nids.index(nid_opposite)
-        nids.pop(indx)
-        return nids
+        #nids = self.node_ids[:4]
+        #indx = nids.index(nid_opposite)
+        #nids.pop(indx)
+        #return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         self.model.log.debug('CPENTA15.write_card; n=%s' % self.n)
         if self.n:
             if element_id is None:
@@ -152,11 +169,11 @@ class CPENTA15(SolidElement):
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 if eid in self._comments:
-                    f.write(self._comments[eid])
+                    bdf_file.write(self._comments[eid])
                 n = [ni if ni != 0 else None for ni in n]
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14]]
-                f.write(print_card_8(card).rstrip() + '\n')
+                bdf_file.write(print_card_8(card).rstrip() + '\n')
 
     #def slice_by_index(self, i):
         #i = self._validate_slice(i)

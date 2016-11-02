@@ -5,6 +5,9 @@ class SpringElement(Element):
         """
         Defines the SpringElement object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Element.__init__(self, model)

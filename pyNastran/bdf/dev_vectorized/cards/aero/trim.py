@@ -1,6 +1,5 @@
 from six.moves import zip
 from itertools import count
-from numpy import array, pi, linspace
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -13,7 +12,7 @@ class TRIM(object):
     def __init__(self, model):
         self.model = model
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         #: Trim set identification number. (Integer > 0)
         self.trim_id = integer(card, 1, 'trim_id')
 
@@ -71,9 +70,9 @@ class TRIM(object):
                 card += [self.aeqr]
         return card
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         card = self._repr_fields()
         if size == 8:
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
         else:
-            f.write(print_card_16(card))
+            bdf_file.write(print_card_16(card))

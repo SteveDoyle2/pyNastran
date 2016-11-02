@@ -4,9 +4,9 @@ CaseControlDeck parsing and extraction class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, itervalues
 import sys
 import copy
+from six import iteritems, itervalues
 
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
@@ -235,9 +235,11 @@ class CaseControlDeck(object):
         subcase : Subcase()
             the new subcase
         """
-        #print("copying subcase from=%s to=%s overwrite=%s" % (i_from_subcase, i_to_subcase, overwrite_subcase))
+        #print("copying subcase from=%s to=%s overwrite=%s" % (
+            #i_from_subcase, i_to_subcase, overwrite_subcase))
         if not self.has_subcase(i_from_subcase):
-            msg = 'i_from_subcase=%r does not exist...subcases=%s' % (i_from_subcase, str(sorted(self.subcases.keys())))
+            msg = 'i_from_subcase=%r does not exist...subcases=%s' % (
+                i_from_subcase, str(sorted(self.subcases.keys())))
             raise RuntimeError(msg)
         if overwrite_subcase:
             subcase_from = self.subcases[i_from_subcase]
@@ -361,7 +363,7 @@ class CaseControlDeck(object):
             msg += '  param = %r' % param
             raise SyntaxError(msg)
         #self.read([param])
-        lines = _clean_lines(self, [param])
+        lines = _clean_lines([param])
         (j, key, value, options, param_type) = self._parse_entry(lines)
         return (j, key, value, options, param_type)
 
@@ -374,7 +376,7 @@ class CaseControlDeck(object):
                      follow that when it's written out
         """
         isubcase = 0
-        lines = _clean_lines(self, lines)
+        lines = _clean_lines(lines)
         self.output_lines = []
         i = 0
         is_output_lines = False
@@ -414,8 +416,8 @@ class CaseControlDeck(object):
                                                           param_type, isubcase)
                 self.output_lines.append(line)
                 continue
-            #print("key=%-12r icase=%i value=%r options=%r param_type=%r" %(key,
-            #    isubcase, value, options, param_type))
+            #print("key=%-12r icase=%i value=%r options=%r param_type=%r" %(
+            #    key, isubcase, value, options, param_type))
             isubcase = self._add_parameter_to_subcase(key, value, options,
                                                       param_type, isubcase)
 
@@ -517,7 +519,7 @@ class CaseControlDeck(object):
             options = []
             param_type = 'STRING-type'
         elif (line_upper.startswith('SET ') or line_upper.startswith('SETMC ')
-              ) and equals_count == 1:
+              and equals_count == 1):
             # would have been caught by STRESS-type
             sline = line_upper.split('=')
             assert len(sline) == 2, sline
@@ -542,7 +544,7 @@ class CaseControlDeck(object):
                 i += 1
                 #print("rawSETLine = %r" % (lines[i]))
                 while 1:
-                    if ',' == lines[i].strip()[-1]:
+                    if lines[i].strip()[-1] == ',':
                         fivalues += lines[i][:-1].split(',')
                     else:  # last case
                         fivalues += lines[i].split(',')
@@ -753,7 +755,7 @@ class CaseControlDeck(object):
 
         .. todo:: not done...
         """
-        analysis = model.rsolmap_toStr[model.sol]
+        analysis = model.rsolmap_to_str[model.sol]
         model.sol = 200
 
         subcase0 = self.subcases[0]
@@ -816,7 +818,7 @@ class CaseControlDeck(object):
         cases = {}
         for isubcase, subcase in sorted(iteritems(self.subcases)):
             if isubcase:
-                cases[isubcase] = subcase.getOp2Data(self.sol, subcase.solmap_toValue)
+                cases[isubcase] = subcase.getOp2Data(self.sol, subcase.solmap_to_value)
         return cases
 
     def __repr__(self):
@@ -943,9 +945,12 @@ def verify_card2(key, value, options, line):
                 except:
                     print('line=%r is invalid; value=%r' % (line, value))
                     raise
-                assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
+                if value2 <= 0:
+                    msg = 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
+                    raise ValueError(msg)
     elif key in ['ECHO']:
-        #assert value in ['NONE','BOTH','UNSORT','SORT', 'NOSORT', 'PUNCH', ''], 'line=%r is invalid; value=%r.' % (line, value)
+        #assert value in ['NONE','BOTH','UNSORT','SORT', 'NOSORT', 'PUNCH',
+                         #''], 'line=%r is invalid; value=%r.' % (line, value)
         pass
     elif key in ['CSCALE', 'SUBSEQ', 'SYMSEQ', 'DEFORMATION SCALE', '', '']:
         # floats
@@ -967,12 +972,14 @@ def verify_card2(key, value, options, line):
         raise NotImplementedError('key=%r line=%r' % (key, line))
 
 
-def _clean_lines(case_control, lines):
+def _clean_lines(lines):
     """
     Removes comment characters defined by a *$*.
 
-    :param case_control:  the CaseControlDeck object
-    :param lines: the lines to clean.
+    Parameters
+    ----------
+    lines : List[str, ...]
+        the lines to clean.
     """
     lines2 = []
     for line in lines:
@@ -1008,6 +1015,7 @@ def _clean_lines(case_control, lines):
     return [''.join(pack) for pack in lines3]
 
 def main():
+    """test case"""
     lines = [
         'SUBCASE 1',
         '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',

@@ -15,7 +15,10 @@ class PLOAD(object):
         """
         Defines the PLOAD object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.n = 0
@@ -48,7 +51,7 @@ class PLOAD(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add(self, card, comment=None):
+    def add_card(self, card, comment=None):
         self.load_id.append(integer(card, 1, 'sid'))
         self.pressure.append(double(card, 2, 'p'))
         node_ids.append([
@@ -62,11 +65,11 @@ class PLOAD(object):
 
     def build(self):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         #cards = self._cards
         #ncards = len(cards)
 
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.n = len(self.load_id)
         if self.n:
             self.load_id = zeros(self.load_id, 'int32')
@@ -79,7 +82,7 @@ class PLOAD(object):
             msg.append('  %-8s: %i' % ('PLOAD', self.n))
         return msg
 
-    def write_card(self, f, size=8, load_ids=None):
+    def write_card(self, bdf_file, size=8, load_ids=None):
         if self.n:
             if load_ids is None:
                 i = arange(self.n)
@@ -90,6 +93,6 @@ class PLOAD(object):
             for (load_id, p, n, n3i) in zip(self.load_id[i], self.pressure[i], self.node_ids[i, :2], n3):
                 card = ['PLOAD', load_id, p, n[0], n[1], n[2], n3i]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

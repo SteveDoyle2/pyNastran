@@ -14,7 +14,10 @@ class GRAV(object):
         """
         Defines the GRAV object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         .. todo:: collapse loads
         """
@@ -50,14 +53,14 @@ class GRAV(object):
         return self.__mul__(value)
 
     def allocate(self, ncards):
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         self.coord_id = zeros(ncards, 'int32')
         self.scale = zeros(ncards, float_fmt)
         self.N = zeros((ncards, 3), float_fmt)
         self.mb = zeros(ncards, 'int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -69,7 +72,7 @@ class GRAV(object):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Set identification number
             self.load_id = zeros(ncards, 'int32')
             #: Coordinate system identification number.
@@ -113,13 +116,13 @@ class GRAV(object):
             msg.append('  %-8s: %i' % ('GRAV', self.n))
         return msg
 
-    def write_card(self, f, size=8, lids=None):
+    def write_card(self, bdf_file, size=8, lids=None):
         if self.n:
             for (lid, cid, scale, N, mb) in zip(
                  self.load_id, self.coord_id, self.scale, self.N, self.mb):
 
                 card = ['GRAV', lid, cid, scale, N[0], N[1], N[2], mb]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

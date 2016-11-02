@@ -271,7 +271,7 @@ class CHEXA8(SolidElement):
     def __init__(self, eid, pid, nids, comment=''):
         SolidElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -467,7 +467,7 @@ class CHEXA20(SolidElement):
         SolidElement.__init__(self)
 
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -649,7 +649,7 @@ class CPENTA6(SolidElement):
         SolidElement.__init__(self)
 
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -981,7 +981,7 @@ class CPENTA15(SolidElement):
         SolidElement.__init__(self)
 
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -1142,7 +1142,7 @@ class CPYRAM5(SolidElement):
         SolidElement.__init__(self)
 
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -1280,7 +1280,7 @@ class CPYRAM13(SolidElement):
         SolidElement.__init__(self)
 
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -1424,7 +1424,7 @@ class CTETRA4(SolidElement):
     def __init__(self, eid, pid, nids, comment=''):
         SolidElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -1614,7 +1614,7 @@ class CTETRA10(SolidElement):
     def __init__(self, eid, pid, nids, comment=''):
         SolidElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID

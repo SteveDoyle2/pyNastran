@@ -17,30 +17,35 @@ class CELAS3(SpringElement):
         """
         Defines the CELAS3 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SpringElement.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float_fmt
 
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        # Node IDs
-        self.node_ids = zeros((ncards, 2), 'int32')
-        #: stiffness of the scalar spring
-        self.K = zeros(ncards, float_fmt)
-        #: component number
-        self.components = zeros((ncards, 2), 'int32')
-        #: damping coefficient
-        self.ge = zeros(ncards, float_fmt)
-        #: stress coefficient
-        self.s = zeros(ncards, float_fmt)
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            # Node IDs
+            self.node_ids = zeros((ncards, 2), 'int32')
+            #: stiffness of the scalar spring
+            self.K = zeros(ncards, float_fmt)
+            #: component number
+            self.components = zeros((ncards, 2), 'int32')
+            #: damping coefficient
+            self.ge = zeros(ncards, float_fmt)
+            #: stress coefficient
+            self.s = zeros(ncards, float_fmt)
 
-    def add(self, card, comment=None):
+    def add_card(self, card, comment=None):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
         self.K[i] = double(card, 2, 'k')
@@ -67,99 +72,58 @@ class CELAS3(SpringElement):
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CELAS3 IDs...')
             self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if eids is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, self.eid)
 
-            N0 = self.node_ids[i, 0]
-            N1 = self.node_ids[i, 1]
-            C0 = self.components[i, 0]
-            C1 = self.components[i, 1]
-            for (eid, k, n0, n1, c0, c1, ge, s) in zip(self.element_id[i],
-                    self.K[i], N0, N1, C0, C1, self.ge[i], self.s[i]):
-                card = ['CELAS3', eid, k, n0, c0, n1, c1, ge, s]
+            N1 = self.node_ids[i, 0]
+            N2 = self.node_ids[i, 1]
+            C1 = self.components[i, 0]
+            C2 = self.components[i, 1]
+            for (eid, k, n1, n2, c1, c2, ge, s) in zip(self.element_id[i],
+                    self.K[i], N1, N2, C1, C2, self.ge[i], self.s[i]):
+                card = ['CELAS3', eid, k, n1, c1, n2, c2, ge, s]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
-    def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS3
+    def get_stiffness_matrix(self, i, model, positions, index0s, fnorm=1.0):
+        """gets the stiffness matrix for CELAS3"""
         ki = self.K[i]
-
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
-        n0, n1 = self.node_ids[i, :]
+        n1, n2 = self.node_ids[i, :]
 
-        p0 = positions[n0]
-        p1 = positions[n1]
-
-        v1 = p0 - p1
-        L = norm(v1)
-        if L == 0.0:
-            msg = 'invalid CELAS3 length=0.0\n%s' % (self.__repr__())
-            raise ZeroDivisionError(msg)
-
-        try:
-            Lambda = _Lambda(v1, debug=True)
-        except ZeroDivisionError:
-            raise ZeroDivisionError("CELAS3 xyz[%i]=%s; xyz[%i]=%s" % (n0, p0, n1, p1))
-
-        #========================
-        K = dot(dot(transpose(Lambda), k), Lambda)
-
-        c0, c1 = self.components[i, :]
-        n0, n1 = self.node_ids[i, :]
-        delta0 = 0 if c0 in [1, 2, 3] else 3
-        delta1 = 0 if c1 in [1, 2, 3] else 3
-
-        nIJV = [
-            (n0, 1 + delta0), (n0, 2 + delta0), (n0, 3 + delta0),
-            (n1, 1 + delta1), (n1, 2 + delta1), (n1, 3 + delta1),
+        n_ijv = [
+            (n1, 1),
+            (n2, 1),
         ]
-        dofs = nIJV
-        return (K, dofs, nIJV)
+        dofs = n_ijv
+        return (k, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs,
-                            ni, e1, f1, o1):
+                            ni, o1, e1, f1):
         n = self.n
         du_axial = zeros(n, 'float64')
         for i in range(self.n):
-            n0, n1 = self.node_ids[i, :]
-            if n0 == n1:
-                raise RuntimeError('CELAS3 eid=%s n1=%s n2=%s' % (self.element_id[i], n0, n1))
-            p0 = positions[n0]
-            p1 = positions[n1]
-
-            v1 = p0 - p1
-            L = norm(v1)
-            try:
-                Lambda = _Lambda(v1, debug=True)
-            except ZeroDivisionError:
-                raise ZeroDivisionError("CELAS3 xyz[%i]=%s; xyz[%i]=%s" % (n0, p0, n1, p1))
-
-            n01 = dofs[(n0, 1)]
+            n1, n2 = self.node_ids[i, :]
             n11 = dofs[(n1, 1)]
-
-            n02 = dofs[(n0, 2)]
-            n12 = dofs[(n1, 2)]
-
-            n03 = dofs[(n0, 3)]
-            n13 = dofs[(n1, 3)]
+            n21 = dofs[(n2, 1)]
 
             q_axial = array([
-                q[n01], q[n02], q[n03],
-                q[n11], q[n12], q[n13]
+                q[n11],
+                q[n21],
             ])
-            u_axial = dot(Lambda, q_axial)
+            u_axial = q_axial
             du_axial[i] = u_axial[0] - u_axial[1]
 
         s = self.s
@@ -168,5 +132,4 @@ class CELAS3(SpringElement):
         e1[ni : ni+n] = du_axial * s
         f1[ni : ni+n] = ki * du_axial
         o1[ni : ni+n] = f1[ni: ni+n] * s
-
         #return (axial_strain, axial_stress, axial_force)

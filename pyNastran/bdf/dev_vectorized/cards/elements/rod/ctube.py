@@ -19,21 +19,26 @@ class CTUBE(RodElement):
         """
         Defines the CTUBE object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         RodElement.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.model.log.debug('  nCTUBE=%s' % ncards)
-        self.n = ncards
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: Node IDs
-        self.node_ids = zeros((ncards, 2), 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.model.log.debug('  nCTUBE=%s' % ncards)
+            self.n = ncards
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: Node IDs
+            self.node_ids = zeros((ncards, 2), 'int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self.model.log.debug('  adding CTUBE')
         i = self.i
         eid = integer(card, 1, 'element_id')
@@ -168,7 +173,7 @@ class CTUBE(RodElement):
         assert grid_cid0 is not None
         #if positions is None:
 
-        print("i = %s" % i)
+        self.model.log.debug("i = %s" % i)
         n = len(i)
         if n == 0:
             i = i[0]
@@ -178,7 +183,7 @@ class CTUBE(RodElement):
         n2i = self.model.grid.get_node_index_by_node_id(n2)
 
         #n1, n2 = self.node_ids[i, :]
-        print('grids\n%s' % grid_cid0)
+        self.model.log.debug('grids\n%s' % grid_cid0)
         p1 = grid_cid0[n1i, :]
         p2 = grid_cid0[n2i, :]
         v1 = p1 - p2
@@ -296,7 +301,7 @@ class CTUBE(RodElement):
             i1, i1+1, i1+2,
             i2, i2+1, i2+2,
         ], 'int32')
-        nIJV = [
+        n_ijv = [
             # axial
             (n1, 1), (n1, 2), (n1, 3),
             (n2, 1), (n2, 2), (n2, 3),
@@ -304,10 +309,10 @@ class CTUBE(RodElement):
             # torsion -> NA
         ]
         self.model.log.info('dofs = %s' % dofs)
-        return(M, dofs, nIJV)
+        return(M, dofs, n_ijv)
 
     #=========================================================================
-    def write_card(self, f, size=8, is_double=False, element_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
         if self.n:
             #print('eid %s' % element_id)
             if element_id is None:
@@ -321,9 +326,9 @@ class CTUBE(RodElement):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CTUBE', eid, pid, n[0], n[1]]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     #=========================================================================
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):
@@ -375,7 +380,7 @@ class CTUBE(RodElement):
         K2 = zeros((Ki*2, Kj*2), 'float64')
         if k_axial == 0.0 and k_torsion == 0.0:
             dofs = []
-            nIJV = []
+            n_ijv = []
             K2 = []
         elif k_torsion == 0.0: # axial; 2D or 3D
             K2 = K * k_axial
@@ -383,7 +388,7 @@ class CTUBE(RodElement):
                 i1, i1+1, i1+2,
                 i2, i2+1, i2+2,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # axial
                 (n1, 1), (n1, 2), (n1, 3),
                 (n2, 1), (n2, 2), (n2, 3),
@@ -394,7 +399,7 @@ class CTUBE(RodElement):
                 i1+3, i1+4, i1+5,
                 i2+3, i2+4, i2+5,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # torsion
                 (n1, 4), (n1, 5), (n2, 6),
                 (n2, 4), (n2, 5), (n1, 6),
@@ -414,7 +419,7 @@ class CTUBE(RodElement):
                 i1+3, i1+4, i1+5,
                 i2+3, i2+4, i2+5,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # axial
                 (n1, 1), (n1, 2), (n1, 3),
                 (n2, 1), (n2, 2), (n2, 3),
@@ -436,7 +441,7 @@ class CTUBE(RodElement):
         self.model.log.info('dofs = %s' % dofs)
         self.model.log.info('K =\n%s' % list_print(K / knorm))
 
-        return(K2, dofs, nIJV)
+        return(K2, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n

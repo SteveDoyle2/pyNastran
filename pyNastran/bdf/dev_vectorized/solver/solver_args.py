@@ -8,7 +8,7 @@ from docopt import docopt
 def run_arg_parse(mode=''):
     msg = "Usage:\n"
     msg += "  pyNastran%s BDFNAME [--old=<OLD>] [--out=<OUT>]\n" % mode
-    msg += '              [--k=<K_MATRIX>] [--m=<MASS_MATRIX>] [--f=<F_MATRIX>]\n'
+    msg += '              [--k=<K_MATRIX>] [--m=<MASS_MATRIX>] [--f=<F_MATRIX>] [-d]\n'
     msg += '  pyNastran%s -h | --help\n' % mode
     msg += '  pyNastran%s -v | --version\n' % mode
     msg += "\n"
@@ -16,8 +16,11 @@ def run_arg_parse(mode=''):
     msg += "  --k=<K_MATRIX>     Divide the debug Stiffness matrix by K_MATRIX, [default: 1.0] \n"
     msg += "  --m=<MASS_MATRIX>  Divide the debug Mass matrix by MASS_MATRIX, [default: 1.0] \n"
     msg += "  --f=<F_MATRIX>     Divide the Load matrix by F_MATRIX, [default: 1.0] \n"
-    msg += "  --old=<OLD>       Save the old data, [default: no] \n"
-    msg += "  --out=<OUT>       Creates out.f06, OUT.op2\n"
+    msg += "  --old=<OLD>        Save the old data, [default: no] \n"
+    msg += "  --out=<OUT>        Creates out.f06, OUT.op2\n"
+    msg += "  -d, --debug        Turns on debugging\n"
+    msg += '\n'
+    msg += 'Info:\n'
     msg += "  -h, --help        Show this help message and exit\n"
 
     msg += "  -q, --quiet       Prints debug messages (default: True)\n"

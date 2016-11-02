@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six.moves import StringIO
 from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
-                   arange, ndarray, asarray, int64)
+                   arange, ndarray, asarray)
 from pyNastran.utils import object_attributes, integer_types
 
 class VectorizedCard(object):
@@ -11,11 +11,12 @@ class VectorizedCard(object):
         self.n = 0
         self.i = 0
         self._comments = {}
-        if self.type in model._element_name_to_element_type_mapper:
-            self.op2_id = model._element_name_to_element_type_mapper[self.type]
-        else:
-            if self.type.startswith('C'):
-                print('there is no op2_id to apply for element=%r' % self.type)
+        if 0:
+            if self.type in model._element_name_to_element_type_mapper:
+                self.op2_id = model._element_name_to_element_type_mapper[self.type]
+            else:
+                if self.type.startswith('C'):
+                    print('there is no op2_id to apply for element=%r' % self.type)
 
     def __len__(self):
         return self.n
@@ -28,7 +29,8 @@ class VectorizedCard(object):
         for name in names:
             attr = getattr(self, name)
             if isinstance(attr, ndarray):
-                #self.model.log.info('resizing %r; shape=%s; size=%s' % (name, attr.shape, attr.size))
+                #self.model.log.info('resizing %r; shape=%s; size=%s' % (
+                    #name, attr.shape, attr.size))
                 # resize the array
                 shape2 = list(attr.shape)
                 shape2[0] = n
@@ -63,6 +65,12 @@ class VectorizedCard(object):
         self.write_card(f)
         return f.getvalue().rstrip()
 
+    def print_card(self, i=None, size=8):
+        #i = self._validate_slice(i)
+        string_io = StringIO()
+        self.write_card(string_io, i, size=size)
+        return string_io.getvalue().rstrip()
+
     def write_card(self, bdf_file, size=8, is_double=False):
         raise NotImplementedError(self.type)
 
@@ -96,23 +104,29 @@ class VectorizedCard(object):
         elif len(i.shape) == 1:
             pass
         else:
-            print('???', i, type(i))
+            self.model.log.warning('???', i, type(i))
         return i
 
     def _get_sorted_index(self, sorted_array, unsorted_array, field_name, msg, check=True):
         if field_name == 'coord_id':
             if sorted_array.min() < 0:
-                msg = '%s.min()=%s; did you allocate & build it?\n' % (field_name, sorted_array.min())
+                msg = '%s.min()=%s; did you allocate & build it?\n' % (
+                    field_name, sorted_array.min())
                 raise RuntimeError(msg)
         else:
             if sorted_array.min() < 1:
-                msg = '%s.min()=%s; did you allocate & build it?\n' % (field_name, sorted_array.min())
+                msg = '%s.min()=%s; did you allocate & build it?\n' % (
+                    field_name, sorted_array.min())
                 raise RuntimeError(msg)
+
         if not array_equal(argsort(sorted_array), arange(len(sorted_array))):
             msg2 = '%s is not sorted\nsorted_array=%s' % (msg, sorted_array)
             raise RuntimeError(msg2)
-        assert isinstance(self.n, (int64, int)), 'field_name=%s n=%s type=%s' % (field_name, self.n, type(self.n))
-        assert isinstance(check, bool)
+        if not isinstance(self.n, (int64, int)):
+            raise TypeError('field_name=%s n=%s type=%s' % (field_name, self.n, type(self.n)))
+        if not isinstance(check, bool):
+            raise TypeError('check should be a bool; check=%r' % check)
+
         if unsorted_array is None:
             i = slice(None)
             if self.n == 1:

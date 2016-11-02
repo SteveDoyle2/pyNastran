@@ -15,11 +15,14 @@ class CHEXA20(SolidElement):
         """
         Defines the CHEXA object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
@@ -60,7 +63,6 @@ class CHEXA20(SolidElement):
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
             self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
@@ -172,8 +174,12 @@ class CHEXA20(SolidElement):
 
     def _get_node_locations_by_index(self, i, xyz_cid0):
         """
-        :param i:        None or an array of node IDs
-        :param xyz_cid0: the node positions as a dictionary
+        Parameters
+        ----------
+        i : (nnodes, ) int ndarray; None -> all
+            node IDs
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
         """
         grid = self.model.grid
         get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
@@ -195,9 +201,14 @@ class CHEXA20(SolidElement):
         """
         Gets the volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the volume be summed
 
         .. note:: Volume for a CHEXA is the average area of two opposing faces
                   times the length between the centroids of those points
@@ -215,9 +226,14 @@ class CHEXA20(SolidElement):
         """
         Gets the centroid and volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed; centroid be averaged (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the volume be summed; centroid be averaged
 
         ..see:: CHEXA20.get_volume_by_element_id() and CHEXA20.get_centroid_by_element_id() for more information.
         """
@@ -239,9 +255,14 @@ class CHEXA20(SolidElement):
         """
         Gets the centroid for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be averaged (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the centroid be averaged
         """
         nodes = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         n1, n2, n3, n4, n5, n6, n7, n8 = nodes
@@ -254,12 +275,12 @@ class CHEXA20(SolidElement):
 
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
-        nids = self.node_ids[:4]
-        indx = nids.index(nid_opposite)
-        nids.pop(indx)
-        return nids
+        #nids = self.node_ids[:4]
+        #indx = nids.index(nid_opposite)
+        #nids.pop(indx)
+        #return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -268,9 +289,10 @@ class CHEXA20(SolidElement):
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 if eid in self._comments:
-                    f.write(self._comments[eid])
+                    bdf_file.write(self._comments[eid])
                 n = [ni if ni != 0 else None for ni in n]
-                card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
+                card = ['CHEXA', eid, pid,
+                        n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14], n[15], n[16], n[17], n[18], n[19]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 

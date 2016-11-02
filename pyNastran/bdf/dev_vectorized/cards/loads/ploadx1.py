@@ -14,7 +14,10 @@ class PLOADX1(object):
         """
         Defines the PLOADX1 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.n = 0
@@ -47,7 +50,7 @@ class PLOADX1(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -59,7 +62,7 @@ class PLOADX1(object):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Property ID
             self.load_id = zeros(ncards, 'int32')
             #: Element ID
@@ -109,13 +112,13 @@ class PLOADX1(object):
         #    i = searchsorted(load_ids, self.load_id)
         return i
 
-    def write_card(self, f, size=8, load_ids=None):
+    def write_card(self, bdf_file, size=8, load_ids=None):
         if self.n:
             i = self.get_index(load_ids)
             for (lid, eid, p, n, theta) in zip(self.load_id[i],
                     self.element_id[i], self.p[i], self.node_ids[i], self.theta[i]):
                 card = ['PLOADX1', lid, eid, p[0], p[1], n[0], n[1], theta]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

@@ -169,7 +169,7 @@ class CBAROR(object):
             raise RuntimeError('only one CBAROR is allowed')
         self.n = 1
         if comment:
-            self._comment = comment
+            self.comment = comment
 
         self.property_id = integer_or_blank(card, 2, 'pid')
 
@@ -259,7 +259,7 @@ class CBAR(LineElement):
                  pa=0, pb=0, wa=None, wb=None, comment=''):
         LineElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.x = x
@@ -568,7 +568,7 @@ class CBEAM3(LineElement):  # was CBAR
                  wa, wb, wc, tw, s, comment=''):
         LineElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.ga = ga
@@ -751,7 +751,7 @@ class CBEND(LineElement):
     def __init__(self, eid, pid, ga, gb, g0, x, geom, comment=''):
         LineElement.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.ga = ga
@@ -791,7 +791,7 @@ class CBEND(LineElement):
 
     #def add_op2_data(self, data, comment=''):
         #if comment:
-            #self._comment = comment
+            # self.comment = comment
         #raise NotImplementedError(data)
 
     def Length(self):

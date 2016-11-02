@@ -23,11 +23,14 @@ class CTETRA10(SolidElement):
         """
         Defines the CTETRA10 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         i = self.i
 
         #comment = self._comments[i]
@@ -101,16 +104,21 @@ class CTETRA10(SolidElement):
         """
         Gets the volume for one or more CTETRA10 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the volume be summed
         """
         if element_id is None:
             element_id = self.element_id
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, 4)
 
         n = len(element_id)
-        V = zeros(n, self.model.float)
+        V = zeros(n, self.model.float_fmt)
 
         i = 0
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
@@ -124,9 +132,14 @@ class CTETRA10(SolidElement):
         """
         Gets the centroid and volume for one or more CTETRA10 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the volume be summed
 
         ..see:: CTETRA10.volume() and CTETRA10.centroid() for more information.
         """
@@ -135,7 +148,7 @@ class CTETRA10(SolidElement):
 
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, 4)
         n = len(element_id)
-        volume = zeros(n, self.model.float)
+        volume = zeros(n, self.model.float_fmt)
 
         i = 0
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
@@ -152,9 +165,14 @@ class CTETRA10(SolidElement):
         """
         Gets the centroid for one or more CTETRA elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -169,9 +187,14 @@ class CTETRA10(SolidElement):
         """
         Gets the mass for one or more CTETRA10 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        xyz_cid0 : dict[int node_id] : (3, ) float ndarray xyz (default=None -> auto)
+            the positions of the GRIDs in CID=0
+        total : bool; default=False
+            should the centroid be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -189,12 +212,12 @@ class CTETRA10(SolidElement):
 
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
-        nids = self.node_ids[:4]
-        indx = nids.index(nid_opposite)
-        nids.pop(indx)
-        return nids
+        #nids = self.node_ids[:4]
+        #indx = nids.index(nid_opposite)
+        #nids.pop(indx)
+        #return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -202,10 +225,10 @@ class CTETRA10(SolidElement):
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 if eid in self._comments:
-                    f.write(self._comments[eid])
+                    bdf_file.write(self._comments[eid])
                 n = [ni if ni != 0 else None for ni in n]
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     #def slice_by_index(self, i):
         #i = self._validate_slice(i)

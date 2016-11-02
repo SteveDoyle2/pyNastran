@@ -56,7 +56,10 @@ class GRDSET(object):
         """
         Defines the GRID object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +--------+-----+----+----+----+----+----+----+------+
         |    1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
@@ -77,21 +80,21 @@ class GRDSET(object):
         #: Superelement ID
         self.seid = 0
 
-    def add(self, card, comment=''):
-        self._comment = comment
+    def add_card(self, card, comment=''):
+        self.comment = comment
         self.n = 1
         self.cp = integer_or_blank(card, 2, 'cp', 0)
         self.cd = integer_or_blank(card, 6, 'cd', 0)
         self.ps = integer_or_blank(card, 7, 'ps', -1)
         self.seid = integer_or_blank(card, 8, 'seid', 0)
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         if self.n:
             card = ['GRDSET', None, self.cp, None, None, None, self.cd, self.seid]
             if size == 8:
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
             else:
-                f.write(print_card_16(card))
+                bdf_file.write(print_card_16(card))
 
 
 class GRID(VectorizedCard):
@@ -100,7 +103,10 @@ class GRID(VectorizedCard):
         """
         Defines the GRID object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +------+-----+----+----+----+----+----+----+------+
         |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
@@ -119,7 +125,7 @@ class GRID(VectorizedCard):
             ncards = card_count['GRID']
             self.n = ncards
             #print('ngrid=%s' % self.n)
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.node_id = zeros(ncards, 'int32')
             self.xyz = zeros((ncards, 3), float_fmt)
             self.cp = zeros(ncards, 'int32')
@@ -132,15 +138,19 @@ class GRID(VectorizedCard):
         #return f(*args, **kwargs)
 
     #@size_check
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
         cp0 = self.model.grdset.cp
         cd0 = self.model.grdset.cd
         ps0 = self.model.grdset.ps
         seid0 = self.model.grdset.seid
 
         i = self.i
+        nid = integer(card, 1, 'nid')
+        if comment:
+            self._comments[nid] = comment
+
         #: Node ID
-        self.node_id[i] = integer(card, 1, 'nid')
+        self.node_id[i] = nid
 
         #: Grid point coordinate system
         self.cp[i] = integer_or_blank(card, 2, 'cp', cp0)
@@ -290,11 +300,18 @@ class GRID(VectorizedCard):
         """
         Write the BDF cards
 
-        :param f: a file object
-        :param i: the indicies (default=None -> all)
-        :param size: the field width (8/16)
-        :param is_double: is this double precision (default=False)
-        :param write_header: should the card marker be written
+        Parameters
+        ----------
+        bdf_file : file
+            a file object
+        i : List[int] (default=None -> all)
+            the indicies
+        size : int; default=8
+            the field width (8/16)
+        is_double: bool; default=False
+            is this double precision
+        write_header : bool; default=True
+            should the card marker be written
         """
         if i is None:
             i = slice(None, None)
@@ -310,43 +327,42 @@ class GRID(VectorizedCard):
             #seid0 = self.model.grdset.seid
 
             # default to the GRID defaults
-            cp0 = 0
-            cd0 = 0
+            #cp0 = 0
+            #cd0 = 0
             ps0 = -1
             seid0 = 0
             blank = ' ' * 8 if size == 8 else ' ' * 16
-            Cp = [cpi if cpi != cp0 else blank for cpi in self.cp[i]]
-            Cd = [cdi if cdi != cd0 else blank for cdi in self.cd[i]]
+            Cp = [cpi if cpi != 0 else blank for cpi in self.cp[i]]
+            Cd = [cdi if cdi != 0 else blank for cdi in self.cd[i]]
             Ps = [psi if psi != ps0 else blank for psi in self.ps[i]]
             Seid = [seidi if seidi != seid0 else blank for seidi in self.seid[i]]
             if size == 8:
                 for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
-                    msg = ('%-8s%8i%8s%s%s%s%s%8s%s\n' % ('GRID', nid, cp,
+                    msg = ('GRID    %8i%8s%s%s%s%8s%8s%s\n' % (nid, cp,
                             print_float_8(xyz[0]),
                             print_float_8(xyz[1]),
                             print_float_8(xyz[2]),
-                            cd, ps, seid)).rstrip() + '\n'
+                            cd, ps, seid))#.rstrip() + '\n'
+
                     bdf_file.write(msg)
             else:
                 if is_double:
                     for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
-                        msg = (('%-8s%16i%16s%16s%16s\n'
-                               '%-8s%16s%16s%16s%16s\n' % ('GRID*', nid,
-                                cp,
+                        msg = (('GRID*   %16i%16s%16s%16s\n'
+                                '*       %16s%16s%16s%16s\n' % (
+                                nid, cp,
                                 print_scientific_double(xyz[0]),
                                 print_scientific_double(xyz[1]),
-                                '*',
                                 print_scientific_double(xyz[2]),
                                 cd, ps, seid))).rstrip() + '\n'
                         bdf_file.write(msg)
                 else:
                     for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
-                        msg = (('%-8s%16i%16s%16s%16s\n'
-                               '%-8s%16s%16s%16s%16s\n' % ('GRID*', nid,
-                                cp,
+                        msg = (('GRID*   %16i%16s%16s%16s\n'
+                                '*       %-8s%16s%16s%16s%16s\n' % (
+                                nid, cp,
                                 print_float_16(xyz[0]),
                                 print_float_16(xyz[1]),
-                                '*',
                                 print_float_16(xyz[2]),
                                 cd, ps, seid))).rstrip() + '\n'
                         bdf_file.write(msg)
@@ -359,19 +375,20 @@ class GRID(VectorizedCard):
         return msg
 
     def __getitem__(self, node_id):
-        raise NotImplmementedError('Grid getitem')
-        return self.slice_by_index(i)
+        #raise NotImplementedError('Grid getitem')
+        #return self.slice_by_index(i)
+        return self.slice_by_node_id(node_id)
 
     def slice_by_node_id(self, node_id=None):
-        self.model.log.debug('self.node_id = %s' % self.node_id)
-        self.model.log.debug('node_id = %s' % node_id)
+        #self.model.log.debug('self.node_id = %s' % self.node_id)
+        #self.model.log.debug('node_id = %s' % node_id)
         #node_id = slice_to_iter(node_id)
         i = where(self.node_id == node_id)[0]
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)
-        self.model.log.debug('i = %s; type=%s' % (i, type(i)))
+        #self.model.log.debug('i = %s; type=%s' % (i, type(i)))
         obj = GRID(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

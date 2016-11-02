@@ -13,11 +13,6 @@ from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 #from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
     #MAT10, MAT11) #, MATS1)
-from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
-from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1
-
-from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
-from pyNastran.bdf.dev_vectorized.cards.materials.mathp import MATHP
 
 
 class Materials(object):
@@ -26,45 +21,43 @@ class Materials(object):
         self.n = 0
         self.is_built = False
 
-        self.mat1 = MAT1(model)
-        self.mats1 = MATS1(model)
-        #self.mat2 = MAT2(model)
-        #self.mat4 = MAT4(model)
-        #self.mat5 = MAT5(model)
-        self.mat8 = MAT8(model)
-        #self.mat10 = MAT10(model)
-        #self.mat11 = MAT11(model)
-        self.mathp = MATHP(model)
+        self.mat1 = model.mat1
+        self.mats1 = model.mats1
+        #self.mat2 = model.mat2
+        #self.mat4 = model.mat4
+        #self.mat5 = model.mat5
+        self.mat8 = model.mat8
+        #self.mat10 = model.mat10
+        #self.mat11 = model.mat11
+        self.mathp = model.mathp
 
-    def add_mat1(self, card, comment):
-        print('adding mat1')
-        #self.mat1.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        self.mat1.add(card=card, comment=comment)
+    #def add_mat1(self, card, comment):
+        #self.model.log.debug('adding mat1')
+        #self.mat1.add(card=card, comment=comment)
 
-    def add_mats1(self, card, comment):
-        self.mats1.add(card, comment)
+    #def add_mats1(self, card, comment):
+        #self.mats1.add(card, comment)
 
-    def add_mat2(self, card, comment):
-        self.mat2.add(card, comment)
+    #def add_mat2(self, card, comment):
+        #self.mat2.add(card, comment)
 
-    def add_mat4(self, card, comment):
-        self.mat4.add(card, comment)
+    #def add_mat4(self, card, comment):
+        #self.mat4.add(card, comment)
 
-    def add_mat5(self, card, comment):
-        self.mat5.add(card, comment)
+    #def add_mat5(self, card, comment):
+        #self.mat5.add(card, comment)
 
-    def add_mat8(self, card, comment):
-        self.mat8.add(card, comment)
+    #def add_mat8(self, card, comment):
+        #self.mat8.add(card, comment)
 
-    def add_mat10(self, card, comment):
-        self.mat10.add(card, comment)
+    #def add_mat10(self, card, comment):
+        #self.mat10.add(card, comment)
 
-    def add_mat11(self, card, comment):
-        self.mat11.add(card, comment)
+    #def add_mat11(self, card, comment):
+        #self.mat11.add(card, comment)
 
-    def add_mathp(self, card, comment):
-        self.mathp.add(card, comment)
+    #def add_mathp(self, card, comment):
+        #self.mathp.add(card, comment)
 
     def allocate(self, card_count):
         self.model.log.info('allocate Materials')
@@ -328,10 +321,10 @@ class Materials(object):
         for mid, material in sorted(iteritems(self.mat1)):
             material._verify(xref)
 
-    def write_card(self, f, size=8, is_double=False, material_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, material_id=None):
         self.model.log.debug('Materials.write_card.n=%s' % self.n)
         if self.n:
-            f.write('$MATERIALS\n')
+            bdf_file.write('$MATERIALS\n')
             types = [
                 self.mat1,
                 #self.mat2, self.mat4,
@@ -343,4 +336,4 @@ class Materials(object):
             for materials in types:
                 if materials.n:
                     self.model.log.debug('    writing %s' % materials.type)
-                    materials.write_card(f, size=size, material_id=material_id)
+                    materials.write_card(bdf_file, size=size, material_id=material_id)

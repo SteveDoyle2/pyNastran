@@ -298,7 +298,7 @@ class CTRIA3(TriShell):
                  thetaMcid=0.0, TFlag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
         TriShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         assert len(nids) == 3, nids
@@ -517,7 +517,7 @@ class CPLSTN3(TriShell):
         """NX specific card"""
         TriShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         assert len(nids) == 3, nids
@@ -646,7 +646,7 @@ class CTRIA6(TriShell):
                  TFlag, T1, T2, T3, comment=''):
         TriShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.thetaMcid = theta_mcid
@@ -862,7 +862,7 @@ class CTRIAR(TriShell):
                  TFlag, T1, T2, T3, comment=''):
         TriShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -1038,7 +1038,7 @@ class CTRIAX(TriShell):
     def __init__(self, eid, pid, nids, theta_mcid, comment=''):
         TriShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -1188,7 +1188,7 @@ class CTRIAX6(TriShell):
     def __init__(self, eid, mid, nids, theta, comment=''):
         TriShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Material ID
@@ -1495,7 +1495,7 @@ class CSHEAR(QuadShell):
     def __init__(self, eid, pid, nids, comment=''):
         QuadShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -1700,7 +1700,7 @@ class CQUAD4(QuadShell):
                  TFlag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment=''):
         QuadShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -2223,7 +2223,7 @@ class CPLSTN4(QuadShell):
     def __init__(self, eid, pid, nids, theta=0.0, comment=''):
         QuadShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -2330,7 +2330,7 @@ class CPLSTN6(TriShell):
     def __init__(self, eid, pid, nids, theta, comment=''):
         TriShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         self.theta = theta
@@ -2507,7 +2507,7 @@ class CPLSTN8(QuadShell):
     def __init__(self, eid, pid, nids, theta,  comment=''):
         QuadShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -2691,7 +2691,7 @@ class CQUADR(QuadShell):
                  T1, T2, T3, T4, comment=''):
         QuadShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -2874,7 +2874,7 @@ class CPLSTS3(TriShell):
                  theta=0.0, TFlag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
         TriShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         self.eid = eid
         self.pid = pid
         assert len(nids) == 3, nids
@@ -3053,7 +3053,7 @@ class CQUAD(QuadShell):
     def __init__(self, eid, pid, nids, comment=''):
         QuadShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -3157,7 +3157,7 @@ class CQUAD8(QuadShell):
                  comment=''):
         QuadShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
@@ -3367,7 +3367,7 @@ class CQUADX(QuadShell):
     def __init__(self, eid, pid, nids, comment=''):
         QuadShell.__init__(self)
         if comment:
-            self._comment = comment
+            self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID

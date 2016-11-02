@@ -465,7 +465,7 @@ class TestCoords(unittest.TestCase):
         for coord in coords:
             (cid, rid, x, y, z) = coord
             model.add_card(['CORD2R', cid, rid] + x + y + z, 'CORD2R')
-            coordObj = model.Coord(cid)
+            coord_obj = model.Coord(cid)
 
         model.cross_reference()
         for i, grid in enumerate(grids_expected):

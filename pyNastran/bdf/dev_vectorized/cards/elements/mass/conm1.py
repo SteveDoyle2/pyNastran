@@ -13,18 +13,23 @@ class CONM1(VectorizedCard):
     def __init__(self, model):
         VectorizedCard.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.element_id = zeros(ncards, 'int32')
-        self.node_id = zeros(ncards, 'int32')
-        self.coord_id = zeros(ncards, 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.element_id = zeros(ncards, 'int32')
+            self.node_id = zeros(ncards, 'int32')
+            self.coord_id = zeros(ncards, 'int32')
 
-        float_fmt = self.model.float
-        m = zeros((ncards, 6, 6), float_fmt)
-        self.mass_matrix = m
+            float_fmt = self.model.float_fmt
+            m = zeros((ncards, 6, 6), float_fmt)
+            self.mass_matrix = m
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        if comment:
+            self._comments[eid] = comment
         i = self.i
-        self.element_id[i] = integer(card, 1, 'eid')
+        self.element_id[i] = eid
         self.node_id[i] = integer(card, 2, 'nid')
         self.coord_id[i] = integer_or_blank(card, 3, 'cid', 0)
 
@@ -76,7 +81,7 @@ class CONM1(VectorizedCard):
         else:
             return mm
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -85,6 +90,8 @@ class CONM1(VectorizedCard):
 
             Cid = [cid if cid != 0 else '' for cid in self.coord_id[i]]
             for (eid, nid, cid, m) in zip(self.element_id[i], self.node_id[i], Cid, self.mass_matrix):
+                if eid in self._comments:
+                    bdf_file.write(self._comments[eid])
                 card = [
                     'CONM1', eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
                     m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
@@ -92,6 +99,6 @@ class CONM1(VectorizedCard):
                     m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]
                 ]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

@@ -25,31 +25,38 @@ class PSHELL(Property):
         """
         Defines the PSHELL object.
 
-        :param model: the BDF object
-        :param cards: the list of PSHELL cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.model.log.debug('allocate PSHELL')
-        self.n = ncards
-        float_fmt = self.model.float
-        self.property_id = zeros(ncards, 'int32')
-        self.material_id = zeros(ncards, 'int32')
-        self.thickness = zeros(ncards, float_fmt)
-        self.material_id2 = zeros(ncards, 'int32')
-        self.twelveIt3 = zeros(ncards, float_fmt)
-        self.material_id3 = zeros(ncards, 'int32')
-        self.tst = zeros(ncards, float_fmt)
-        self.nsm = zeros(ncards, float_fmt)
-        self.z1 = zeros(ncards, float_fmt)
-        self.z2 = zeros(ncards, float_fmt)
-        self.material_id4 = zeros(ncards, 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.model.log.debug('allocate PSHELL')
+            self.n = ncards
+            float_fmt = self.model.float_fmt
+            self.property_id = zeros(ncards, 'int32')
+            self.material_id = zeros(ncards, 'int32')
+            self.thickness = zeros(ncards, float_fmt)
+            self.material_id2 = zeros(ncards, 'int32')
+            self.twelveIt3 = zeros(ncards, float_fmt)
+            self.material_id3 = zeros(ncards, 'int32')
+            self.tst = zeros(ncards, float_fmt)
+            self.nsm = zeros(ncards, float_fmt)
+            self.z1 = zeros(ncards, float_fmt)
+            self.z2 = zeros(ncards, float_fmt)
+            self.material_id4 = zeros(ncards, 'int32')
 
-    def add(self, card, comment=''):
+    def add_card(self, card, comment=''):
+        pid = integer(card, 1, 'property_id')
+        if comment:
+            self._comments[pid] = comment
         i = self.i
         #self.model.log.debug('adding %s; i=%s' %(card, i))
-        self.property_id[i] = integer(card, 1, 'property_id')
+        self.property_id[i] = pid
         self.material_id[i] = integer(card, 2, 'material_id')
         self.thickness[i] = double(card, 3, 'thickness')
 
@@ -92,7 +99,9 @@ class PSHELL(Property):
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.material_id = self.material_id[i]
+            #print('self.t1', self.thickness)
             self.thickness = self.thickness[i]
+            #print('self.t2', self.thickness)
             self.material_id2 = self.material_id2[i]
             self.twelveIt3 = self.twelveIt3[i]
             self.material_id3 = self.material_id3[i]
@@ -109,13 +118,18 @@ class PSHELL(Property):
             self.property_id = array([], dtype='int32')
             self.material_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         """
         Writes the PSHELL properties.
 
-        :param f:     file object
-        :param size:  the bdf field size (8/16; default=8)
-        :param property_id:  the property_ids to write (default=None -> all)
+        Parameters
+        ----------
+        bdf_file: file
+            a file object
+        size : int; default=8
+            the bdf field size (8/16)
+        property_id : ???; default=None -> all
+            the property_ids to write
         """
         if self.n:
             i = self.get_property_index_by_property_id(property_id)
@@ -139,12 +153,14 @@ class PSHELL(Property):
             for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
                     self.property_id[i], self.material_id[i], self.thickness[i], Mid2,
                     TwelveIt3, Mid3, Tst, Nsm, Z1, Z2, Mid4):
+                if pid in self._comments:
+                    bdf_file.write(self._comments[pid])
                 card = ['PSHELL', pid, mid, t, mid2, twelveIt3, mid3,
                         tst, nsm, z1, z2, mid4]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def get_nonstructural_mass_by_property_id(self, property_id=None):
         """

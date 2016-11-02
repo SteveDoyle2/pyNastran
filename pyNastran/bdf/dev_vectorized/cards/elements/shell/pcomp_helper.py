@@ -242,6 +242,8 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the material IDs of all the plies
 
+        Returns
+        -------
         :returns mids: the material IDs
         """
         mids = []
@@ -474,7 +476,7 @@ class PCOMPi(CompositeShellProperty):
         ShellProperty.__init__(self, card, data)
 
         if comment:
-            self._comment = comment
+            self.comment = comment
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
