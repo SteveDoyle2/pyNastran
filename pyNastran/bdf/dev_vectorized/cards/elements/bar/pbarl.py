@@ -198,13 +198,13 @@ class PBARL(Property):
 
     #=========================================================================
     def write_card(self, bdf_file, size=8, property_id=None):
-        #print('PBARL.n = %s' % self.n)
+        #self.model.log.debug('PBARL.n = %s' % self.n)
         if self.n:
             if property_id is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.property_id, property_id)
-            #print('i = %s' % i)
+            #self.model.log.debug('i = %s' % i)
             #cid = [cid if cid != 0 else '' for cid in self.coord_id]
 
             #group = set_blank_if_default(self.group, 'MSCBMLO')

@@ -94,7 +94,7 @@ class LOADs(VectorizedCardDict):
         #self.loads.load.add(card, comment=comment)
         self.n += 1
 
-    def write_card(self, f, size=8, is_double=False, load_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, load_id=None):
         if load_id is None:
             load_id = self.get_load_ids()
         #if isinstance(load_id, integer_types):
@@ -104,8 +104,9 @@ class LOADs(VectorizedCardDict):
 
         #print('load_ids xx = %s' % load_id, type(load_id), load_id.shape)
         for lid in sorted(load_id):
+            self.model.log.debug('load_id = %s' % lid)
             for load in self._objs[lid]:
-                load.write_card(f, size=size, is_double=is_double, load_id=lid)
+                load.write_card(bdf_file, size=size, is_double=is_double, load_id=lid)
 
 class Loads(object):
     def __init__(self, model):
@@ -159,24 +160,29 @@ class Loads(object):
     def __getitem__(self, value):
         pass
 
-    def write_card(self, f, size=8, is_double=False, sort_data=False):
+    def write_card(self, bdf_file, size=8, is_double=False, sort_data=False):
         sort_data = True
+        bdf_file.write('$ LOADS\n')
         if sort_data:
             types = self._get_load_types(nlimit=True)
             all_load_ids = array([], dtype='int32')
             for load_type in types:
                 #print('*load-type = %s' % load_type.type)
                 all_load_ids = union1d(all_load_ids, load_type.get_load_ids())
-            #print('load_ids= %s' % all_load_ids)
+            self.model.log.debug('all_load_ids= %s' % all_load_ids)
 
             for load_id in sorted(all_load_ids):
                 for load_type in types:
-                    if load_id in load_type:
+                    #self.model.log.debug('load_type = %s' % load_type)
+                    #self.model.log.debug('load_type.load_id = %s' % load_type.load_id)
+                    if load_id in load_type.load_id:
+                        #self.model.log.debug('  load_id = %s' % load_id)
+                        assert load_id > 0, load_id
                         #print('******** load-type = %s' % load_type.type)
-                        load_type.write_card(f, size=size, is_double=is_double, load_id=load_id)
+                        load_type.write_card(bdf_file, size=size, is_double=is_double, load_id=load_id)
 
         else:
-            #self.loadcase.write_card(f, size)
+            #self.loadcase.write_card(bdf_file, size)
             for load_id, loads in sorted(iteritems(self.load)):
                 for load in loads:
                     load.write_card(f, size)
@@ -187,36 +193,37 @@ class Loads(object):
 
             #for load_id, loads in sorted(iteritems(self.sload)):
                 #for load in loads:
-                    #load.write_card(f, size)
+                    #load.write_card(bdf_file, size)
 
             #for load_id, loads in sorted(iteritems(self.lseq)):
                 #for load in loads:
-                    #load.write_card(f, size)
+                    #load.write_card(bdf_file, size)
 
-            #self.loadset.write_card(f, size)
-            self.force.write_card(f, size)
-            #self.force1.write_card(f, size)
-            #self.force2.write_card(f, size)
-            self.moment.write_card(f, size)
-            #self.moment1.write_card(f, size)
-            #self.moment2.write_card(f, size)
+            #self.loadset.write_card(bdf_file, size)
+            self.force.write_card(bdf_file, size)
+            #self.force1.write_card(bdf_file, size)
+            #self.force2.write_card(bdf_file, size)
+            self.moment.write_card(bdf_file, size)
+            #self.moment1.write_card(bdf_file, size)
+            #self.moment2.write_card(bdf_file, size)
 
-            self.pload.write_card(f, size)
-            self.pload1.write_card(f, size)
-            self.pload2.write_card(f, size)
-            #self.pload3.write_card(f, size)
-            self.pload4.write_card(f, size)
+            self.pload.write_card(bdf_file, size)
+            self.pload1.write_card(bdf_file, size)
+            self.pload2.write_card(bdf_file, size)
+            #self.pload3.write_card(bdf_file, size)
+            self.pload4.write_card(bdf_file, size)
 
-            self.ploadx1.write_card(f, size)
-            self.grav.write_card(f, size)
-            self.rforce.write_card(f, size)
+            self.ploadx1.write_card(bdf_file, size)
+            self.grav.write_card(bdf_file, size)
+            self.rforce.write_card(bdf_file, size)
 
-            #self.accel1.write_card(f, size)
+            #self.accel1.write_card(bdf_file, size)
 
-            #self.tload1.write_card(f, size)
-            #self.tload2.write_card(f, size)
-            #self.rload1.write_card(f, size)
-            #self.rload2.write_card(f, size)
-            #self.randps.write_card(f, size)
+            #self.tload1.write_card(bdf_file, size)
+            #self.tload2.write_card(bdf_file, size)
+            #self.rload1.write_card(bdf_file, size)
+            #self.rload2.write_card(bdf_file, size)
+            #self.randps.write_card(bdf_file, size)
 
             # DAREA
+        #self.model.log.debug('done with loads')

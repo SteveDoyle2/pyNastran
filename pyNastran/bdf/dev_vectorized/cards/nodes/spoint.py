@@ -15,6 +15,9 @@ class SPOINT(object):
     def __len__(self):
         return self.n
 
+    def allocate(self, card_count):
+        pass
+
     def add_card(self, card, comment=''):
         fields = []
         for i in range(1, len(card)):

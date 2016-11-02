@@ -20,7 +20,7 @@ class PCOMPG(Property):
     def build(self):
         self.property_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, property_ids=None):
+    def write_card(self, bdf_file, size=8, property_ids=None):
         pass
 
     def __repr__(self):

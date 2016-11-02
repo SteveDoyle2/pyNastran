@@ -1116,7 +1116,7 @@ class USET1(ABQSet1):
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = [self.type, self.name, self.components] + collapse_thru(self.node_ids)
+        list_fields = ['USET1', self.name, self.components] + collapse_thru(self.node_ids)
         return list_fields
 
     def __repr__(self):

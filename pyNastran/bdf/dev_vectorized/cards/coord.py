@@ -221,7 +221,7 @@ class Coord(VectorizedCard):
         #print('coord_ids = %s' % self.coords.keys())
         #print('T = \n%s' % self.T)
         for i, (cid, coord) in enumerate(sorted(iteritems(self.coords))):
-            self.model.log.debug('i=%s cid=%s' % (i, cid))
+            #self.model.log.debug('i=%s cid=%s' % (i, cid))
             self.coord_id[i] = cid
             self.Type[i] = coord.Type
             if coord.is_resolved:

@@ -87,7 +87,7 @@ class TestReadWriteVectorized(unittest.TestCase):
             quiet=False, dumplines=False, dictsort=False,
             nerrors=0, dev=False, crash_cards=None,
         )
-        os.remove(bdf_filename_out)
+        #os.remove(bdf_filename_out)
 
     @unittest.expectedFailure
     def test_isat_03(self):
@@ -106,7 +106,7 @@ class TestReadWriteVectorized(unittest.TestCase):
             quiet=False, dumplines=False, dictsort=False,
             nerrors=0, dev=False, crash_cards=None,
         )
-        os.remove(bdf_filename_out)
+        #os.remove(bdf_filename_out)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -279,7 +279,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'PSHELL', 'PCOMP', 'PCOMPG',
 
             'PSOLID', 'PLSOLID',
-            'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+            'CTETRA', 'CTETRA4', 'CTETRA10',
+            'CPYRAM',
+            'CPENTA',
+            'CHEXA', 'CHEXA8', 'CHEXA20',
 
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
             #'PBUSH', 'PBUSH1D', 'PBUSH2D',

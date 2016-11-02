@@ -11,19 +11,22 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-import numpy
 import warnings
-from six import iteritems
-warnings.simplefilter('always')
-numpy.seterr(all='raise')
 import traceback
 #import resource
+
+from six import iteritems, integer_types
+
+import numpy
 
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.dev_vectorized.bdf import BDF #, NastranMatrix
 from pyNastran.bdf.dev_vectorized.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.dev_vectorized.test
+
+warnings.simplefilter('always')
+numpy.seterr(all='raise')
 test_path = pyNastran.bdf.dev_vectorized.test.__path__[0]
 #print "test_path = ",test_path
 
@@ -37,7 +40,7 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
-                      punch=False, cid=None):
+                      punch=False, cid=None, size=8, is_double=False):
     """
     Runs multiple BDFs
 
@@ -382,6 +385,7 @@ def compute_ints(cards1, cards2, fem1):
             star = '*'
         if key not in fem1.cards_to_read:
             star = '-'
+            print('key = %r not in card_to_read' % key)
 
         factor1 = divide(value1, value2)
         factor2 = divide(value2, value1)
@@ -433,18 +437,18 @@ def compute(cards1, cards2):
 
 def get_element_stats(fem1, fem2):
     """verifies that the various element methods work"""
-    if 0:
-        for (key, loads) in sorted(iteritems(fem1.loads)):
-            for load in loads:
-                try:
-                    all_loads = load.get_loads()
-                    if not isinstance(all_loads, list):
-                        raise TypeError('allLoads should return a list...%s'
-                                        % (type(all_loads)))
-                except:
-                    print("load statistics not available - load.type=%s "
-                          "load.sid=%s" % (load.type, load.sid))
-                    raise
+    #if 0:
+        #for (key, loads) in sorted(iteritems(fem1.loads)):
+            #for load in loads:
+                #try:
+                    #all_loads = load.get_loads()
+                    #if not isinstance(all_loads, list):
+                        #raise TypeError('allLoads should return a list...%s'
+                                        #% (type(all_loads)))
+                #except:
+                    #print("load statistics not available - load.type=%s "
+                          #"load.sid=%s" % (load.type, load.sid))
+                    #raise
 
     fem1._verify_bdf()
 
@@ -499,7 +503,7 @@ def compare(fem1, fem2, xref=True, check=True, print_stats=True):
     compare_card_content(fem1, fem2)
     #compare_params(fem1,fem2)
     #print_points(fem1,fem2)
-    return diffCards
+    return diff_cards
 
 
 def compare_params(fem1, fem2):
@@ -574,16 +578,17 @@ def main():
         size = 8
         precision = 'single'
 
-    run_bdf('.',
-            data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
-            xref=not(data['--xref']),
-            check=not(data['--check']),
-            punch=data['--punch'],
-            reject=data['--reject'],
-            size=size,
-            precision=precision,
-            sum_load=data['--loads']
+    run_bdf(
+        '.',
+        data['BDF_FILENAME'],
+        debug=not(data['--quiet']),
+        xref=not(data['--xref']),
+        check=not(data['--check']),
+        punch=data['--punch'],
+        reject=data['--reject'],
+        size=size,
+        precision=precision,
+        sum_load=data['--loads'],
     )
     print("total time:  %.2f sec" % (time.time() - t0))
 

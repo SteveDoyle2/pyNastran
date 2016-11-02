@@ -133,7 +133,7 @@ class PSHELL(Property):
         """
         if self.n:
             i = self.get_property_index_by_property_id(property_id)
-            #print('i = %s' % i)
+            #self.model.log.debug('i = %s' % i)
             #self.model.log.debug('material_id2 = %s' % self.material_id2[i])
             #self.model.log.debug('material_id3 = %s' % self.material_id3[i])
             #self.model.log.debug('material_id4 = %s' % self.material_id4[i])
@@ -174,7 +174,7 @@ class PSHELL(Property):
             nsm = self.nsm
         else:
             i = self.get_property_index_by_property_id(property_id)
-            #print('i = %s' % i)
+            #self.model.log.debug('i = %s' % i)
             nsm = self.nsm[i]
         return nsm[0] if int_flag else nsm
 

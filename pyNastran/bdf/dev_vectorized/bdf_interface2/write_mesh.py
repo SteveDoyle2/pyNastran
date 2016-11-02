@@ -742,7 +742,7 @@ class WriteMesh(BDFAttributes):
     def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
         is_sets = (self.sets or self.asets or self.bsets or
-                   self.csets or self.qsets)
+                   self.csets or self.qsets or self.usets)
         if is_sets:
             msg = ['$SETS\n']
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
@@ -755,8 +755,9 @@ class WriteMesh(BDFAttributes):
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.qsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
-            #for (set_id, set_obj) in sorted(iteritems(self.setsSuper)):  # dict
-                #msg.append(set_obj.write_card(size, is_double))
+            for name, usets in sorted(iteritems(self.usets)):  # dict
+                for set_obj in usets:  # list
+                    msg.append(set_obj.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_superelements(self, outfile, size=8, is_double=False):

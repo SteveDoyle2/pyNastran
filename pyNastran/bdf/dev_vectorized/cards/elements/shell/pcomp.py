@@ -120,7 +120,7 @@ class PCOMP(Property):
             #nsm = self.nsm
         #else:
             #i = self.get_property_index_by_property_id(property_id)
-            ##print('i = %s' % i)
+            ##self.model.log.debug('i = %s' % i)
             #nsm = self.nsm[i]
         #return nsm[0] if int_flag else nsm
 
@@ -483,13 +483,13 @@ class PCOMP(Property):
             self.property_id = array([], dtype='int32')
             #self.material_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         if size == 8:
             for pid, pcomp in sorted(iteritems(self.properties)):
-                f.write(pcomp.write_card(size, print_card_8))
+                bdf_file.write(pcomp.write_card(size, print_card_8))
         else:
             for pid, pcomp in sorted(iteritems(self.properties)):
-                f.write(pcomp.write_card(size, print_card_16))
+                bdf_file.write(pcomp.write_card(size, print_card_16))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)

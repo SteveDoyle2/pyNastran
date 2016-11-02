@@ -52,7 +52,7 @@ class LoadCase(object):
         i = 0
         while all_loads_loop:
             #print("--------------------------")
-            #print("i = %s" % i)
+            #self.model.log.debug("i = %s" % i)
             all_loads_loop = []
             #print("all_loads", all_loads)
             for loads in all_loads:

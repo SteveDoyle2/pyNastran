@@ -184,7 +184,7 @@ class Elements(object):
             self.element_ids = asarray(eids, dtype='int32')
             self.element_ids.sort()
             self.element_groups = build_groups(etypes, 'element_id', is_element=True)
-            self.model.log.info('self.element_groups = %s' % self.element_groups)
+            #self.model.log.info('self.element_groups = %s' % self.element_groups)
         if self.nproperties:
             pids = check_duplicate('property_id', ptypes, self.model.log)
             self.property_ids = asarray(pids, dtype='int32')
@@ -271,14 +271,14 @@ class Elements(object):
         return Types, eids, pids
 
     def get_element_ids_by_property_type(self, element_ids, exclude_types=None):
-        #print('element_ids = %s' % element_ids)
+        #self.model.log.debug('element_ids = %s' % element_ids)
         Types, eids, pids = self.get_element_properties(exclude_types)
 
         # remove undefined properties
         #existing_pids = setdiff1d(unique(pids), self.property_ids, assume_unique=True)
-        #print('pids = %s' % pids)
-        #print('self.property_ids = %s' % self.property_ids)
-        #print('existing_pids = %s' % existing_pids)
+        #self.model.log.debug('pids = %s' % pids)
+        #self.model.log.debug('self.property_ids = %s' % self.property_ids)
+        #self.model.log.debug('existing_pids = %s' % existing_pids)
 
         # make sure oids is unique
         oids = np.hstack([Type.op2_id for Type in Types])
@@ -287,10 +287,10 @@ class Elements(object):
 
         oids = np.hstack([Type.op2_id * np.ones(Type.n, dtype='int32') for Type in Types])
         i = np.argsort(eids)
-        #print('i = %s' % i)
-        #print('eids = %s len=%s' % (eids, len(eids)))
-        #print('pids = %s len=%s' % (pids, len(pids)))
-        #print('oids = %s len=%s' % (oids, len(oids)))
+        #self.model.log.debug('i = %s' % i)
+        #self.model.log.debug('eids = %s len=%s' % (eids, len(eids)))
+        #self.model.log.debug('pids = %s len=%s' % (pids, len(pids)))
+        #self.model.log.debug('oids = %s len=%s' % (oids, len(oids)))
         assert len(eids) == len(pids), 'len(eids)=%i len(pids)=%i' % (len(eids), len(pids))
         assert len(eids) == len(oids), 'len(eids)=%i len(oids)=%i' % (len(eids), len(oids))
         eids = eids[i]
@@ -299,7 +299,7 @@ class Elements(object):
 
         data = np.vstack([eids, pids, oids]).T
 
-        #print(data)
+        #self.model.log.debug(data)
 
         # drop extra elements
         # for eids greater than the max allowable eid located at data[-1,0],
@@ -568,7 +568,7 @@ class Elements(object):
         #self.model.log.debug('property_idB = %s int_flag=%s' % (property_id, int_flag))
         type_map = self.get_property_typemap()
         out = []
-        #print('property_id = %s' % property_id)
+        #self.model.log.debug('property_id = %s' % property_id)
         for pid in property_id:
             for Type, pids in iteritems(self.property_groups):
                 if not isinstance(pid, integer_types):
@@ -577,8 +577,8 @@ class Elements(object):
 
                 if pid in pids:
                     i = np.where(pid == pids)[0]
-                    #print('i = %s, shape=%s' % (i, i.shape))
-                    #print('pids_extract = %s' % pids_extract)
+                    #self.model.log.debug('i = %s, shape=%s' % (i, i.shape))
+                    #self.model.log.debug('pids_extract = %s' % pids_extract)
                     #obj = TypeMap[Type].slice_by_index(i)
 
                     pids_extract = pids[i]
@@ -913,9 +913,9 @@ class Elements(object):
             #obj = None
             for Type, eids in iteritems(self.element_groups):
                 if eid in eids:
-                    #print('  found Type=%s' % Type)
+                    #self.model.log.debug('  found Type=%s' % Type)
                     i = np.where(eid == eids)[0]
-                    #print("    i = %s" % i)
+                    #self.model.log.debug("    i = %s" % i)
                     obj = type_map[Type].slice_by_index(i)
                     self.model.log.debug("    found eid=%s " % obj.element_id)
                     out.append(obj)

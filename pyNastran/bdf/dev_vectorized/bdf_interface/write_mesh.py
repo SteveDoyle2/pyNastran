@@ -401,12 +401,12 @@ class WriteMesh(object):
         #self._write_rejects(outfile, size)
         self._write_coords(outfile, size, is_double)
 
-    def _write_constraints(self, f, size, is_double):
+    def _write_constraints(self, bdf_file, size, is_double):
         """Writes the constraint cards sorted by ID"""
         spcs = [self.spcadd, self.spc, self.spcd, self.spc1]
         mpcs = [self.mpcadd, self.mpc]
-        self._write_constraints_spc_mpc(f, size, spcs)
-        self._write_constraints_spc_mpc(f, size, mpcs)
+        self._write_constraints_spc_mpc(bdf_file, size, spcs)
+        self._write_constraints_spc_mpc(bdf_file, size, mpcs)
 
     def _write_constraints_spc_mpc(self, bdf_file, size, types):
         interspersed = False
