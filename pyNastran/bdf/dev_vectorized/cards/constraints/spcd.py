@@ -4,13 +4,18 @@ from numpy import array
 
 class SPCD(object):
     """
-    Defines enforced displacement/temperature (static analysis)
-    velocity/acceleration (dynamic analysis).::
+    Defines an enforced displacement value for static analysis and an enforced
+    motion value (displacement, velocity or acceleration) in dynamic analysis.
 
-      SPCD SID G1 C1 D1   G2 C2 D2
-      SPCD 2   32 3  -2.6  5
+     +------+-----+-----+-----+------+----+----+----+
+     |   1  |  2  |  3  |  4  |   5  |  6 | 7  |  8 |
+     +======+=====+=====+=====+======+====+====+====+
+     | SPCD | SID |  G1 | C1  |  D1  | G2 | C2 | D2 |
+     +------+-----+-----+-----+------+----+----+----+
+     | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2  | .9 |
+     +------+-----+-----+-----+------+----+----+----+
     """
-    type = 'SPC'
+    type = 'SPCD'
 
     def __init__(self, model):
         self.model = model
@@ -22,14 +27,14 @@ class SPCD(object):
         self.components = []
 
     def add(self, i, constraint_id, node_id, dofs, enforced_motion, comment):
-        if i == 0:
-            n = 2
-        elif i == 1:
-            n = 5
-        else:
-            raise RuntimeError('i =', i)
+        #if i == 0:
+            #n = 2
+        #elif i == 1:
+            #n = 5
+        #else:
+            #raise RuntimeError('i =', i)
 
-        assert enforced_motion != 0.0
+        assert enforced_motion != 0.0, enforced_motion
 
         self._comments.append(comment)
         self.grid_id.append(node_id)

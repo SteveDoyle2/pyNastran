@@ -5,14 +5,16 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class MPCADD(object):
-    """
-    ::
+    r"""
+    Defines a multipoint constraint equation of the form
+    :math:`\Sigma_j A_j u_j =0` where :math:`u_j` represents
+    degree-of-freedom :math:`C_j` at grid or scalar point :math:`G_j`.
 
-      MPCADD SID G1 G2 G3 G4 G5 G6
-      G7 G8 G9 -etc.-
-
-      MPCADD SID G1 THRU G2
-      MPCADD 313 6 THRU 32
+    +--------+----+----+-----+
+    |    1   | 2  |  3 |  4  |
+    +========+====+====+=====+
+    | MPCADD | 2  |  1 |  3  |
+    +--------+----+----+-----+
     """
     def __init__(self, model):
         self.model = model

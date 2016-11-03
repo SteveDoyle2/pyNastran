@@ -3,6 +3,7 @@ from six.moves import StringIO
 from collections import defaultdict
 #from itertools import count
 
+import numpy as np
 #from numpy import array
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -55,7 +56,7 @@ class SPC1(object):
             # self.comment = comment
         assert isinstance(constraint_id, int), constraint_id
         self.constraint_id = constraint_id
-        self.components[dofs].append(node_ids)
+        self.components[dofs] += node_ids
 
     def add_card(self, card, comment=''):
         #if comment:
@@ -66,11 +67,11 @@ class SPC1(object):
 
         assert isinstance(constraint_id, int), constraint_id
         self.constraint_id = constraint_id
-        self.components[dofs].append(node_ids)
+        self.components[dofs] += node_ids
         self.n += 1
 
-    def allocate(self, card_count):
-        pass
+    #def allocate(self, card_count):
+        #pass
 
     def build(self):
         for comp, nodes_lists in iteritems(self.components):
@@ -78,11 +79,20 @@ class SPC1(object):
             for nodes in nodes_lists:
                 nodes2 += nodes
             nodes2.sort()
-            self.components[comp] = nodes2
+            self.components[comp] = np.array(nodes2, dtype='int32')
 
     def write_card(self, bdf_file, size=8):
         for comp, nodes in iteritems(self.components):
-            card = ['SPC1', self.constraint_id, comp] + list(nodes)
+            nodes = np.array(nodes, dtype='int32')
+            nodes = np.unique(nodes)
+            dnid = nodes.max() - nodes.min() + 1
+            nnodes = len(nodes)
+            #print('dnid=%s nnodes=%s' % (dnid, nnodes))
+            if dnid == len(nodes):
+                card = ['SPC1', self.constraint_id, comp, nodes.min(), 'THRU', nodes.max()]
+            else:
+                card = ['SPC1', self.constraint_id, comp] + list(nodes)
+
             if size == 8:
                 bdf_file.write(print_card_8(card))
             else:

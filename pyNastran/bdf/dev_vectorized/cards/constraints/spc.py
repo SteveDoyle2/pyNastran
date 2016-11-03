@@ -11,6 +11,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
 
 
 def get_spc_constraint(card, i):
+    """parses an SPC/SPCD card"""
     if i == 0:
         constraint_id = integer(card, 1, 'sid')
         node_id = integer(card, 2, 'G1')
@@ -29,10 +30,13 @@ def get_spc_constraint(card, i):
 class SPC(object):
     """
     Defines enforced displacement/temperature (static analysis)
-    velocity/acceleration (dynamic analysis).::
+    velocity/acceleration (dynamic analysis).
 
-      SPC SID G1 C1 D1   G2 C2 D2
-      SPC 2   32 3  -2.6  5
+     +-----+-----+----+----+------+----+----+----+
+     | SPC | SID | G1 | C1 |  D1  | G2 | C2 | D2 |
+     +-----+-----+----+----+------+----+----+----+
+     | SPC |  2  | 32 | 3  | -2.6 |  5 |    |    |
+     +-----+-----+----+----+------+----+----+----+
     """
     type = 'SPC'
 
@@ -47,8 +51,6 @@ class SPC(object):
         self.value = []
 
     def add(self, constraint_id, node_id, dofs, enforced_motion, comment):
-        if node_id is None:
-            return
         assert enforced_motion == 0.0
 
         self._comments.append(comment)
@@ -59,9 +61,9 @@ class SPC(object):
             self.constraint_id = constraint_id
         elif self.constraint_id != constraint_id:
             raise RuntimeError('self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (self.constraint_id. constraint_id))
+        self.n += 1
 
     def build(self):
-        #float_fmt = self.model.float_fmt
         self.n = len(self.components)
         if self.n:
             self.grid_id = array(self.grid_id)

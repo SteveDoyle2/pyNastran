@@ -20,13 +20,14 @@ def get_spcadd_constraint(card):
 
 class SPCADD(object):
     """
-    ::
+    Defines a single-point constraint set as a union of single-point constraint
+    sets defined on SPC or SPC1 entries.
 
-      SPCADD SID S1 S2 S3 S4 S5 S6
-      S7 S8 S9 -etc.-
-
-      SPCADD SID S1 S2 S2
-      SPCADD 313  1  2  3
+    +--------+----+----+-----+
+    |    1   | 2  |  3 |  4  |
+    +========+====+====+=====+
+    | SPCADD  | 2 | 1 |   3  |
+    +---------+---+---+------+
     """
     type = 'SPCADD'
     def __init__(self, model):

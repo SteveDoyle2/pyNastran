@@ -46,10 +46,15 @@ from pyNastran.bdf.dev_vectorized.bdf_interface2.cross_reference import CrossRef
 from pyNastran.bdf.dev_vectorized.bdf_interface2.add_card import AddCard
 from pyNastran.bdf.field_writer_16 import print_field_16
 
+from pyNastran.bdf.dev_vectorized.cards.constraints.spc import SPC, get_spc_constraint
+from pyNastran.bdf.dev_vectorized.cards.constraints.spcd import SPCD
 from pyNastran.bdf.dev_vectorized.cards.constraints.spc1 import SPC1, get_spc1_constraint
+from pyNastran.bdf.dev_vectorized.cards.constraints.spcadd import SPCADD, get_spcadd_constraint
+
 from pyNastran.bdf.dev_vectorized.cards.constraints.mpc import MPC, get_mpc_constraint
 #from pyNastran.bdf.dev_vectorized.cards.constraints.mpcax import MPCAX
 from pyNastran.bdf.dev_vectorized.cards.constraints.mpcadd import MPCADD
+from .cards.constraints.spcadd import SPCADD, get_spcadd_constraint
 
 
 # old cards
@@ -310,7 +315,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'PLOAD', 'PLOAD2', 'PLOAD4', 'PLOADX1',
 
             # constraints
-            'SPC1', 'SPCADD',
+            'SPC', 'SPCADD', 'SPC1', 'SPCD',
             'MPC', 'MPCADD',
 
             # aero cards
@@ -3181,52 +3186,86 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 spc1 = SPC1(self)
                 self.spc1[constraint_id] = spc1
             #spc1 = self.spc1.setdefault(constraint_id, SPC1(self))
-            spc1.add_card(card_obj, comment=comment)
+            #spc1.add_card(card_obj, comment=comment)
             spc1.add(constraint_id, dofs, node_ids, comment=comment)
 
-    def _parse_mpc(self, card_name, card):
+    def _parse_mpc(self, card_name, cards):
         """adds MPCs"""
-        for comment, card_lines in card:
+        for comment, card_lines in cards:
             card_obj = self._cardlines_to_card_obj(card_lines, card_name)
             constraint_id, constraint = get_mpc_constraint(card_obj)
 
-            if constraint_id in self.spc1:
+            if constraint_id in self.mpc:
                 mpc = self.mpc[constraint_id]
             else:
                 mpc = MPC(self)
                 self.mpc[constraint_id] = mpc
-            #spc1 = self.spc1.setdefault(constraint_id, SPC1(self))
+            #mpc = self.mpc.setdefault(constraint_id, MPC(self))
             #mpc.add_card(card_obj, comment=comment)
             mpc.add(constraint_id, constraint, comment=comment)
+        self._increase_card_count(card_name, len(cards))
 
-    def _parse_spcadd(self, card_name, card):
+    def _parse_spcadd(self, card_name, cards):
         """adds SPCADDs"""
-        for comment, card_lines in card:
+        for comment, card_lines in cards:
             card_obj = self._cardlines_to_card_obj(card_lines, card_name)
             constraint_id, node_ids = get_spcadd_constraint(card_obj)
 
-            if constraint_id in self.spc1:
+            if constraint_id in self.spcadd:
                 spcadd = self.spcadd[constraint_id]
             else:
-                spcadd = MPCADD(self)
+                spcadd = SPCADD(self)
                 self.spcadd[constraint_id] = spcadd
-            mpcadd.add_card(card_obj, comment=comment)
-
+            #spcadd.add_card(card_obj, comment=comment)
             spcadd.add(constraint_id, node_ids, comment=comment)
+        self._increase_card_count(card_name, len(cards))
 
-    def _parse_mpcadd(self, card_name, card):
+    def _parse_mpcadd(self, card_name, cards):
         """adds MPCADDs"""
-        for comment, card_lines in card:
+        for comment, card_lines in cards:
             card_obj = self._cardlines_to_card_obj(card_lines, card_name)
             constraint_id, node_ids = get_spcadd_constraint(card_obj)
 
-            if constraint_id in self.spc1:
+            if constraint_id in self.mpcadd:
                 mpcadd = self.mpcadd[constraint_id]
             else:
                 mpcadd = MPCADD(self)
                 self.mpcadd[constraint_id] = mpcadd
             #mpcadd.add_card(card_obj, comment=comment)
             mpcadd.add(constraint_id, node_ids, comment=comment)
+        self._increase_card_count(card_name, len(cards))
+
+    def _parse_spc(self, card_name, cards):
+        """SPC, SPCD"""
+        nspc = 0
+        nspcd = 0
+        for comment, card_lines in cards:
+            card_obj = self._cardlines_to_card_obj(card_lines, card_name)
+            for i in [0, 1]:
+                constraint_id, node_id, dofs, enforced_motion = get_spc_constraint(card_obj, i)
+                print('constraint_id=%s node_id=%s dofs=%s enforced=%s' % (constraint_id, node_id, dofs, enforced_motion))
+                if node_id is None:
+                    continue
+                if enforced_motion != 0.0:
+                    if constraint_id in self.spcd:
+                        spcd = self.spcd[constraint_id]
+                    else:
+                        spcd = SPCD(self)
+                        self.spcd[constraint_id] = spcd
+                    spcd.add(constraint_id, node_id, dofs, enforced_motion, comment=comment)
+                    nspcd += 1
+                else:
+                    if constraint_id in self.spc:
+                        spcd = self.spc[constraint_id]
+                    else:
+                        spc = SPC(self)
+                        self.spc[constraint_id] = spc
+                    spc.add(constraint_id, node_id, dofs, enforced_motion, comment=comment)
+                    nspc += 1
+        if nspc:
+            self._increase_card_count('SPC', nspc)
+        if nspcd:
+            self._increase_card_count('SPCD', nspcd)
 
     def _parse_ctetra(self, card_name, card):
         """adds ctetras"""
@@ -3332,7 +3371,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 'CPYRAM' : self._parse_cpyram,
                 'CHEXA' : self._parse_chexa,
                 'SPC1' : self._parse_spc1,
-                #'SPCADD' : self._parse_spcadd,
+                'SPCADD' : self._parse_spcadd,
+                'SPC' : self._parse_spc,
+                'SPCD' : self._parse_spc,
+
                 'MPC' : self._parse_mpc,
                 'MPCADD' : self._parse_mpcadd,
             }
