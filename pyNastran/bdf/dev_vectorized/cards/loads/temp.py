@@ -190,4 +190,4 @@ class TEMPs(VectorizedCardDict):
         for load_id, load in sorted(iteritems(self._objs)):
             #self.model.log.debug('TEMPs write_card load_id=%s' % load_id)
             load.write_card(bdf_file, size=size, is_double=is_double)
-        self._tempp1.write_card(bdf_file, size=size, is_double=is_double)
+        self.tempp1.write_card(bdf_file, size=size, is_double=is_double)

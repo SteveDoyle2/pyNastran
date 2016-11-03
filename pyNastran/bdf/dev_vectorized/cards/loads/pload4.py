@@ -103,9 +103,9 @@ class PLOAD4(VectorizedCard):
         #: (Integer >= 0;Default=0)
         self.cid[i] = integer_or_blank(card, 9, 'cid', 0)
         self.nvector[i, :] = [
-            double_or_blank(card, 10, 'N1', 0.0),
-            double_or_blank(card, 11, 'N2', 0.0),
-            double_or_blank(card, 12, 'N3', 0.0), ]
+            double_or_blank(card, 10, 'N1'),
+            double_or_blank(card, 11, 'N2'),
+            double_or_blank(card, 12, 'N3'), ]
         self.sorl[i] = string_or_blank(card, 13, 'sorl', 'SURF')
         self.ldir[i] = string_or_blank(card, 14, 'ldir', 'NORM')
         assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
@@ -167,32 +167,6 @@ class PLOAD4(VectorizedCard):
     def get_load_ids(self):
         return self.load_ids
 
-    #def build(self):
-        # PLOAD2
-        #ncards = self.n
-
-        #float_fmt = self.model.float_fmt
-        #self.load_id = zeros(ncards, 'int32')
-        #self.element_id = zeros(ncards, 'int32')
-        #self.p = zeros(ncards, float_fmt)
-
-        #self.n = ncards
-        #istart = 0
-        #iend = None
-        #for i in range(self.n):
-            #element_ids = self._element_ids[i]
-            #n = len(element_ids)
-            #iend = istart + n
-
-            #self.load_id[istart:iend] = self._load_id[i]
-            #self.element_id[istart:iend] = element_ids
-            #self.p[istart : iend] = self._p[i]
-
-            #self._load_id = []
-            #self._element_ids = []
-            #self._p = []
-            #self._comments = []
-
     def get_stats(self):
         msg = []
         if self.n:
@@ -207,16 +181,33 @@ class PLOAD4(VectorizedCard):
                 i = np.where(load_id == self.load_id)[0]
 
             #self.model.log.debug('i = %s' % i)
-            for (ii, load_idi, p) in zip(i, self.load_id[i], self.pressures[i, :]):
+            #n = [None, None, None]
+            #sorl = None
+            #ldir = None
+            for (ii, load_idi, p, n, cid, sorl, ldir) in zip(i,
+                                                             self.load_id[i], self.pressures[i, :],
+                                                             self.nvector[i, :], self.cid[i],
+                                                             self.sorl[i], self.ldir[i]):
                 #self.model.log.debug('ii = %s' % ii)
                 element_id = self.element_ids[ii]
-                #self.model.log.debug('element_id = %s' % element_id)
+                self.model.log.debug('element_id = %s' % element_id)
                 #self.model.log.debug('p = %s\n' % p)
                 #eidi = element_id[0]
-                if p.max() == p.min():
-                    card = ['PLOAD4', load_idi] + list(element_id) + [p[0]]
+
+                eidi = element_id[0]
+                if len(element_id) == 1:
+                    thru = [None, None]
                 else:
-                    card = ['PLOAD4', load_idi] + list(element_id) + list(p)
+                    thru = ['THRU', element_id[-1]]
+
+                if p.max() == p.min():
+                    card = ['PLOAD4', load_idi, eidi, p[0], None, None, None
+                            ] + thru + [cid] + list(n) + [sorl, ldir]
+                else:
+                    card = ['PLOAD4', load_idi, eidi] + list(p) + thru + [
+                        cid] + list(n) + [sorl, ldir]
+
+                assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
                 bdf_file.write(print_card_8(card))
 
     def slice_by_index(self, i):
