@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import unittest
 import numpy as np
@@ -5,9 +6,10 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.data_in_material_coord import (data_in_material_coord,
-        get_eids_from_op2_vector, force_vectors, stress_vectors,
-        strain_vectors)
+from pyNastran.op2.data_in_material_coord import (
+    data_in_material_coord,
+    get_eids_from_op2_vector, force_vectors, stress_vectors,
+    strain_vectors)
 pkg_path = pyNastran.__path__[0]
 
 
@@ -15,7 +17,7 @@ CASES = [
     ['test_flat_plate_metallic', 'flat_plate_metallic', 3],
     ['test_dummy_wing_metallic', 'dummy_wing_metallic', 1],
     ['test_flat_plate_composite', 'flat_plate_composite', 1],
-    ]
+]
 
 RTOL = 0.01
 ATOL = 0.01
@@ -45,7 +47,7 @@ class TestMaterialCoord(unittest.TestCase):
                     assert np.allclose(data[:, check][:, 0::5, :], ref_result[0::5], rtol=RTOL, atol=ATOL)
                 else:
                     assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
-            print('OK')
+            #print('OK')
 
     def test_stress(self):
         for folder, prefix, subcase in CASES:
@@ -71,7 +73,7 @@ class TestMaterialCoord(unittest.TestCase):
                     assert np.allclose(data[:, check][:, 1::10, :], ref_result[1::10], rtol=RTOL, atol=ATOL)
                 else:
                     assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
-            print('OK')
+            #print('OK')
 
     def test_strain(self):
         for folder, prefix, subcase in CASES:

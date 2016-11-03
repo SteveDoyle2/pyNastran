@@ -1,21 +1,21 @@
-import os
+"""
+Defines:
+ - data_in_material_coord(bdf, op2, in_place=False)
+"""
 import copy
 
 import numpy as np
 from numpy import cos, sin, cross
 from numpy.linalg import norm
 
-from pyNastran.op2.op2 import OP2
-from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.utils import integer_types
 
 force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
-        'ctria3_force', 'ctria6_force', 'ctriar_force']
+                 'ctria3_force', 'ctria6_force', 'ctriar_force']
 stress_vectors = ['cquad4_stress', 'cquad8_stress', 'cquadr_stress',
-        'ctria3_stress', 'ctria6_stress', 'ctriar_stress']
+                  'ctria3_stress', 'ctria6_stress', 'ctriar_stress']
 strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
-        'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
+                  'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
 
 
 def transf_Mohr(Sxx, Syy, Sxy, thetarad):
@@ -107,11 +107,29 @@ def check_theta(elem):
 
 
 def angle2vec(v1, v2):
-    den = norm(v1, axis=1) * norm(v2, axis=1)
-    return np.arccos((v1 * v2).sum(axis=1) / den)
+    """
+    Using the definition of the dot product to get the angle
+
+    v1 o v2 = |v1| * |v2| * cos(theta)
+    theta = np.arccos( (v1 o v2) / (|v1|*|v2|))
+    """
+    denom = norm(v1, axis=1) * norm(v2, axis=1)
+    return np.arccos((v1 * v2).sum(axis=1) / denom)
 
 
 def calc_imat(normals, csysi):
+    """
+    Calculates the i vector in the material coordinate system.
+
+    j = k x ihat
+    jhat = j / |j|
+    i = jhat x k
+
+    Note
+    ----
+    i is not a unit vector because k (the element normal)
+    is not a unit vector.
+    """
     jmat = cross(normals, csysi) # k x i
     jmat /= norm(jmat)
     imat = cross(jmat, normals)
@@ -240,7 +258,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
             veceids = get_eids_from_op2_vector(vector)
             #NOTE assuming thetarad=0 for elements that exist in the op2 but
             #     not in the supplied bdf file
-            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
+            vecthetarad = np.array([thetarad.get(eid, 0.0) for eid in veceids])
 
             # membrane terms
             Sxx = vector.data[:, :, 0]
@@ -285,7 +303,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
             veceids = veceids[check]
             #NOTE assuming thetarad=0 for elements that exist in the op2 but
             #     not in the supplied bdf file
-            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
+            vecthetarad = np.array([thetarad.get(eid, 0.0) for eid in veceids])
 
             # bottom and top in-plane stresses
             Sxx = vector.data[:, :, 1][:, check]
@@ -314,7 +332,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
             veceids = veceids[check]
             #NOTE assuming thetarad=0 for elements that exist in the op2 but
             #     not in the supplied bdf file
-            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
+            vecthetarad = np.array([thetarad.get(eid, 0.0) for eid in veceids])
 
             # bottom and top in-plane strains
             exx = vector.data[:, :, 1][:, check]
