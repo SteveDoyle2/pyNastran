@@ -61,6 +61,10 @@ from pyNastran.bdf.dev_vectorized.cards.bdf_sets import (
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
     SESET, SEQSEP)
+from pyNastran.bdf.dev_vectorized.cards.dynamic import (
+    #DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
+    TSTEP, TSTEPNL, NLPARM, NLPCI, #TF
+)
 
 from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
@@ -73,6 +77,13 @@ from pyNastran.bdf.dev_vectorized.cards.aero.aero_cards import (
     FLFACT, FLUTTER, GUST, MKAERO1,
     MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
     SPLINE5, TRIM, DIVERG)
+from pyNastran.bdf.dev_vectorized.cards.optimization import (
+    DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
+    DRESP1, DRESP2, DRESP3,
+    DVCREL1, DVCREL2,
+    DVMREL1, DVMREL2,
+    DVPREL1, DVPREL2,
+    DVGRID)
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -312,7 +323,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'AEPARM',   ## aeparams
             'AESTAT',   ## aestats
             'AESURF',  ## aesurf
-            'AESURF',  ## aesurf
             #'AESURFS', ## aesurfs
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',  ## caeros
             # 'CAERO5',
@@ -326,6 +336,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'DIVERG', ## divergs
 
             'PARAM', ## params
+
+            # optimization cards
+            'DEQATN', 'DTABLE',
+            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DRESP3',
+            'DVCREL1', 'DVCREL2',
+            'DVPREL1', 'DVPREL2',
+            'DVMREL1', 'DVMREL2',
+            'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
 
             'SET1', 'SET3',  ## sets
             'ASET', 'ASET1',  ## asets
@@ -1482,12 +1500,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
         class Crash(object):
-            """dummy class for crashing when an invalid card is called"""
+            """class for crashing on specific cards"""
             def __init__(self):
                 """dummy init"""
                 pass
             @classmethod
             def add_card(cls, card, comment=''):
+                """the method that forces the crash"""
                 raise NotImplementedError(card)
 
         self._card_parser = {
@@ -1698,8 +1717,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'FREQ2' : (FREQ2, self.add_FREQ),
             #'FREQ4' : (FREQ4, self.add_FREQ),
 
-            #'DOPTPRM' : (DOPTPRM, self._add_doptprm),
-            #'DESVAR' : (DESVAR, self.add_DESVAR),
+            'DOPTPRM' : (DOPTPRM, self._add_doptprm),
+            'DESVAR' : (DESVAR, self.add_desvar),
             ## BCTSET
 
             #'TEMP' : (TEMP, self.add_thermal_load),
@@ -1759,30 +1778,30 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'CSSCHD' : (CSSCHD, self.add_csschd),
             'MONPNT1' : (MONPNT1, self.add_monpnt),
 
-            #'NLPARM' : (NLPARM, self.add_NLPARM),
-            #'NLPCI' : (NLPCI, self.add_NLPCI),
-            #'TSTEP' : (TSTEP, self.add_TSTEP),
-            #'TSTEPNL' : (TSTEPNL, self.add_TSTEPNL),
+            'NLPARM' : (NLPARM, self.add_nlparm),
+            'NLPCI' : (NLPCI, self.add_nlpci),
+            'TSTEP' : (TSTEP, self.add_tstep),
+            'TSTEPNL' : (TSTEPNL, self.add_tstepnl),
 
             #'TF' : (TF, self.add_TF),
             #'DELAY' : (DELAY, self.add_DELAY),
 
-            #'DCONADD' : (DCONADD, self.add_DCONSTR),
-            #'DCONSTR' : (DCONSTR, self.add_DCONSTR),
-            #'DDVAL' : (DDVAL, self.add_DDVAL),
-            #'DLINK' : (DLINK, self.add_DLINK),
+            'DCONADD' : (DCONADD, self.add_dconstr),
+            'DCONSTR' : (DCONSTR, self.add_dconstr),
+            'DDVAL' : (DDVAL, self.add_ddval),
+            'DLINK' : (DLINK, self.add_dlink),
 
-            #'DTABLE' : (DTABLE, self.add_DTABLE),
-            #'DRESP1' : (DRESP1, self.add_DRESP),
-            #'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
-            #'DRESP3' : (DRESP3, self.add_DRESP),
-            #'DVCREL1' : (DVCREL1, self.add_DVCREL), # dvcrels
-            #'DVCREL2' : (DVCREL2, self.add_DVCREL),
-            #'DVPREL1' : (DVPREL1, self.add_DVPREL), # dvprels
-            #'DVPREL2' : (DVPREL2, self.add_DVPREL),
-            #'DVMREL1' : (DVMREL1, self.add_DVMREL), # ddvmrels
-            #'DVMREL2' : (DVMREL2, self.add_DVMREL),
-            #'DVGRID' : (DVGRID, self.add_DVGRID), # dvgrids
+            #'DTABLE' : (DTABLE, self.add_dtable),
+            'DRESP1' : (DRESP1, self.add_dresp),
+            'DRESP2' : (DRESP2, self.add_dresp), # deqatn
+            'DRESP3' : (DRESP3, self.add_dresp),
+            'DVCREL1' : (DVCREL1, self.add_dvcrel), # dvcrels
+            'DVCREL2' : (DVCREL2, self.add_dvcrel),
+            'DVPREL1' : (DVPREL1, self.add_dvprel), # dvprels
+            'DVPREL2' : (DVPREL2, self.add_dvprel),
+            'DVMREL1' : (DVMREL1, self.add_dvmrel), # ddvmrels
+            'DVMREL2' : (DVMREL2, self.add_dvmrel),
+            'DVGRID' : (DVGRID, self.add_dvgrid), # dvgrids
 
             #'TABLED1' : (TABLED1, self.add_table),
             #'TABLED2' : (TABLED2, self.add_table),
@@ -1846,7 +1865,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             ##'SEUSET' : (SEUSET, self.add_SEUSET),
             ##'SEUSET1' : (SEUSET1, self.add_SEUSET),
 
-            #'NLPARM' : (NLPARM, self.add_NLPARM),
+            'NLPARM' : (NLPARM, self.add_nlparm),
             ## BCTSET
         }
         self._card_parser_prepare = {

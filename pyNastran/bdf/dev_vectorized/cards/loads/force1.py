@@ -64,7 +64,9 @@ class FORCE1(VectorizedCard):
 
     def build(self):
         """
-        :param cards: the list of FORCE cards
+        Parameters
+        ----------
+        :param cards: the list of FORCE1 cards
         """
         cards = self._cards
         ncards = len(cards)

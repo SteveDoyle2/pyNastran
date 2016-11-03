@@ -7,53 +7,6 @@ class GetMethodsDeprecated(object):
     def __init__(self):
         pass
 
-    #def getElementIDsWithPID(self, pid):
-        #"""
-        #Gets all the element IDs with a specific property ID
-
-        #Parameters
-        #----------
-        #pid : int
-             #property ID
-
-        #Returns
-        #-------
-        #elementIDs : List[int]
-            #as a list
-
-        #.. deprecated:: 0.7
-           #Use :func:`get_element_ids_list_with_pids([pid], mode='list')`
-        #"""
-        #self.deprecated('getElementIDsWithPID(pid)', 'get_element_ids_list_with_pids([pid])', '0.8')
-        #return self.get_element_ids_list_with_pids([pid], mode='list')
-
-    #def Flfact(self, sid, msg):
-        #"""
-        #.. deprecated:: 0.7
-            #Use :func:`FLFACT(sid, msg)`
-        #"""
-        #self.deprecated('Flfact(sid)', 'FLFACT(sid)', '0.8')
-        #return self.FLFACT(sid, msg)
-
-    #def getNodes(self):
-        #"""
-        #.. deprecated:: 0.7
-            #Use :func:`get_nodes()`
-        #"""
-        #self.deprecated('getNodes()', 'get_nodes()', '0.8')
-        #return self.get_nodes()
-
-    #def _get_element_ids_with_pids(self, pids, mode='list'):
-        #if mode not in ['list', 'dict']:
-            #msg = "mode=%r is not supported.  Use 'list' or 'dict'\n" % mode
-            #raise ValueError(msg)
-        #if mode == 'list':
-            #self.deprecated('get_element_ids_with_pids(pids, "list")', 'get_element_ids_list_with_pids(pids)', '0.8')
-            #return self.get_element_ids_list_with_pids(pids)
-        #else:
-            #self.deprecated('get_element_ids_with_pids(pids, "dict")', 'get_element_ids_dict_with_pids(pids)', '0.8')
-            #return self.get_element_ids_dict_with_pids(pids)
-
 
 class DeprecatedCompositeShellProperty(object):
     """

@@ -2146,6 +2146,48 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'BCTSET' : self._prepare_bctset,
         }
 
+        new_reject_method = False
+        if new_reject_method:
+            self.cards_to_read.remove('CONM2')
+            # bwb_saero: 6.37-6.57 before using
+
+            all_cards = set(self._card_parser.keys() + self._card_parser_prepare.keys())
+            reject_cards = all_cards.difference(self.cards_to_read)
+            #print('reject_cards =', reject_cards)
+            for card_name in reject_cards:
+                if card_name in self._card_parser:
+                    del self._card_parser[card_name]
+                self._card_parser_prepare[card_name] = self.reject_card_obj2
+
+    def reject_card_obj2(self, card_name, card_obj):
+        """rejects a card object"""
+        self.reject_cards.append(card_obj)
+
+    def reject_card_lines(self, card_name, card_lines, comment=''):
+        """rejects a card"""
+        if card_name.isdigit():
+            # TODO: this should technically work (I think), but it's a problem
+            #       for the code
+            #
+            # prevents:
+            # spc1,100,456,10013832,10013833,10013830,10013831,10013836,10013837,
+            # 10013834,10013835,10013838,10013839,10014508,10008937,10008936,10008935,
+            msg = 'card_name=%r was misparsed...\ncard_lines=%s' % (
+                card_name, card_lines)
+            raise RuntimeError(msg)
+        if card_name not in self.card_count:
+            if ' ' in card_name:
+                msg = (
+                    'No spaces allowed in card name %r.  '
+                    'Should this be a comment?\n%s%s' % (
+                        card_name, comment, card_lines))
+                raise RuntimeError(msg)
+            if card_name in ['SUBCASE ', 'CEND']:
+                raise RuntimeError('No executive/case control deck was defined.')
+            self.log.info('    rejecting card_name = %s' % card_name)
+        self._increase_card_count(card_name)
+        self.rejects.append([comment] + card_lines)
+
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
         card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
@@ -2555,7 +2597,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except TypeError:
                 msg = 'problem adding %s' % card_obj
                 raise
-                raise TypeError(msg)
+                #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
@@ -3404,28 +3446,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     msg += 'card_lines = %s' % card_lines
                     raise RuntimeError(msg)
                 if self.is_reject(card_name):
-                    if card_name.isdigit():
-                        # TODO: this should technically work (I think), but it's a problem
-                        #       for the code
-                        #
-                        # prevents:
-                        # spc1,100,456,10013832,10013833,10013830,10013831,10013836,10013837,
-                        # 10013834,10013835,10013838,10013839,10014508,10008937,10008936,10008935,
-                        msg = 'card_name=%r was misparsed...\ncard_lines=%s' % (
-                            card_name, card_lines)
-                        raise RuntimeError(msg)
-                    if card_name not in self.card_count:
-                        if ' ' in card_name:
-                            msg = (
-                                'No spaces allowed in card name %r.  '
-                                'Should this be a comment?\n%s%s' % (
-                                    card_name, comment, card_lines))
-                            raise RuntimeError(msg)
-                        if card_name in ['SUBCASE ', 'CEND']:
-                            raise RuntimeError('No executive/case control deck was defined.')
-                        self.log.info('    rejecting card_name = %s' % card_name)
-                    self._increase_card_count(card_name)
-                    self.rejects.append([comment] + card_lines)
+                    self.reject_card_lines(card_name, card_lines, comment)
                 else:
                     self.add_card(card_lines, card_name, comment=comment,
                                   is_list=False, has_none=False)
