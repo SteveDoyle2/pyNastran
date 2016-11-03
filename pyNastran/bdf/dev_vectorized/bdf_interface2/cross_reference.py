@@ -19,7 +19,7 @@ class CrossReference(BDFAttributes):
 
     def build_loadcase(self):
         """builds the loadcase object"""
-        self.loadcase = LoadCase()
+        self.loadcase = LoadCase(self)
         self.loadcase.add_reference(self.loads.load)
         self.loadcase.add_reference(self.loads.dload)
         #self.loadcase.add_reference(self.loads.sload)

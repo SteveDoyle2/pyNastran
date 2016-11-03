@@ -100,7 +100,7 @@ from pyNastran.bdf.dev_vectorized.cards.materials.materials import Materials
 
 # loads
 from pyNastran.bdf.dev_vectorized.cards.loads.loads import Loads
-from pyNastran.bdf.dev_vectorized.cards.loads.temp import TEMPs
+from pyNastran.bdf.dev_vectorized.cards.loads.temp import TEMPs, TEMPP1, TEMP
 
 # constraints
 # spc
@@ -329,6 +329,8 @@ class BDFAttributes(object):
         #: stores LOAD, FORCE, MOMENT, etc.
         self.loads = Loads(self)
         # ----------------------------------------------------------------
+        self.tempp1 = TEMPP1(self)
+        self.temp = TEMP(self)
         self.temps = TEMPs(self)
 
         # ----------------------------------------------------------------

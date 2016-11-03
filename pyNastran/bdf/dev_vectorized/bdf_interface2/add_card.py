@@ -206,6 +206,118 @@ class AddCard(BDFAttributes):
         self.flfacts[key] = flfact  # set id...
         self._type_to_id_map[flfact.type].append(key)
 
+    def add_dconstr(self, dconstr):
+        #key = (dconstr.oid, dconstr.rid)
+        key = dconstr.oid
+        #assert key not in self.dconstrs, 'key=%r DCONSTR/DCONADD=\n%s' % (key, dconstr)
+        assert dconstr.oid > 0
+        #assert dconstr.dresp_id > 0
+        if key in self.dconstrs:
+            self.dconstrs[key].append(dconstr)
+        else:
+            self.dconstrs[key] = [dconstr]
+        self._type_to_id_map[dconstr.type].append(key)
+
+    def add_desvar(self, desvar):
+        key = desvar.desvar_id
+        assert key not in self.desvars, 'DESVAR=%s old=\n%snew=\n%s' % (
+            key, self.desvars[key], desvar)
+        assert key > 0
+        self.desvars[key] = desvar
+        self._type_to_id_map[desvar.type].append(key)
+
+    def add_ddval(self, ddval):
+        key = ddval.oid
+        assert key not in self.ddvals, 'DDVAL=%s old=\n%snew=\n%s' % (
+            key, self.ddvals[key], ddval)
+        assert key > 0
+        self.ddvals[key] = ddval
+        self._type_to_id_map[ddval.type].append(key)
+
+    def add_dlink(self, dlink):
+        key = dlink.oid
+        assert key not in self.dlinks, 'DLINK=%s old=\n%snew=\n%s' % (
+            key, self.dlinks[key], dlink)
+        assert key > 0
+        self.dlinks[key] = dlink
+        self._type_to_id_map[dlink.type].append(key)
+
+    def add_dresp(self, dresp):
+        key = dresp.dresp_id
+        assert key not in self.dresps, 'DRESPx=%s old=\n%snew=\n%s' % (
+                    key, self.dresps[key], dresp)
+        assert key > 0
+        self.dresps[key] = dresp
+        self._type_to_id_map[dresp.type].append(key)
+
+    def add_dvcrel(self, dvcrel):
+        key = dvcrel.oid
+        assert key not in self.dvprels, 'DVCRELx=%s old\n%snew=\n%s' % (
+                    key, self.dvcrels[key], dvcrel)
+        assert key > 0
+        self.dvcrels[key] = dvcrel
+        self._type_to_id_map[dvcrel.type].append(key)
+
+    def add_dvmrel(self, dvmrel):
+        key = dvmrel.oid
+        assert key not in self.dvmrels, 'DVMRELx=%s old=\n%snew=\n%s' % (
+                    key, self.dvmrels[key], dvmrel)
+        assert key not in self.dvmrels
+        assert key > 0
+        self.dvmrels[key] = dvmrel
+        self._type_to_id_map[dvmrel.type].append(key)
+
+    def add_dvprel(self, dvprel):
+        key = dvprel.oid
+        assert key not in self.dvprels, 'DVPRELx=%s old\n%snew=\n%s' % (
+                    key, self.dvprels[key], dvprel)
+        assert key > 0
+        self.dvprels[key] = dvprel
+        self._type_to_id_map[dvprel.type].append(key)
+
+    def add_dvgrid(self, dvgrid):
+        key = dvgrid.dvid
+        assert key not in self.dvgrids, 'DVGRID=%s old=\n%snew=\n%s' % (
+                    key, self.dvgrids[key], dvgrid)
+        assert key not in self.dvgrids
+        assert key > 0
+        self.dvgrids[key] = dvgrid
+        self._type_to_id_map[dvgrid.type].append(key)
+
+    def add_nlparm(self, nlparm):
+        key = nlparm.nlparm_id
+        assert key not in self.nlparms
+        assert key > 0, 'key=%s; nlparm=%s\n' % (key, nlparm)
+        self.nlparms[key] = nlparm
+        self._type_to_id_map[nlparm.type].append(key)
+
+    def add_nlpci(self, nlpci):
+        key = nlpci.nlpci_id
+        assert key not in self.nlpcis
+        assert key > 0
+        self.nlpcis[key] = nlpci
+        self._type_to_id_map[nlpci.type].append(key)
+
+    def add_tstep(self, tstep, allow_overwrites=False):
+        key = tstep.sid
+        if key in self.tsteps and not allow_overwrites:
+            if not tstep._is_same_card(self.tsteps[key]):
+                assert key not in self.tsteps, 'TSTEP=%s\nold=\n%snew=\n%s' % (key, self.tsteps[key], tstep)
+        else:
+            assert key > 0, 'sid=%s tstep=\n%s' % (key, tstep)
+            self.tsteps[key] = tstep
+            self._type_to_id_map[tstep.type].append(key)
+
+    def add_tstepnl(self, tstepnl, allow_overwrites=False):
+        key = tstepnl.sid
+        if key in self.tstepnls and not allow_overwrites:
+            if not tstepnl._is_same_card(self.tstepnls[key]):
+                assert key not in self.tstepnls, 'TSTEPNL=%s\nold=\n%snew=\n%s' % (key, self.tstepnls[key], tstepnl)
+        else:
+            assert key > 0, 'sid=%s tstepnl=\n%s' % (key, tstepnl)
+            self.tstepnls[key] = tstepnl
+            self._type_to_id_map[tstepnl.type].append(key)
+
 
     def add_set(self, set_obj):
         """adds an SET1/SET3 object"""

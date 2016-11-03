@@ -128,7 +128,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
 
     This function converts the 2D element vectors to the material OP2
     similarly to most of the post-processing tools (Patran, Femap, HyperView,
-    etc).
+    etc). It handles both 2D elements with MCID or THETA.
 
     Parameters
     ----------
@@ -238,7 +238,9 @@ def data_in_material_coord(bdf, op2, in_place=False):
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             veceids = get_eids_from_op2_vector(vector)
-            vecthetarad = np.array([thetarad[eid] for eid in veceids])
+            #NOTE assuming thetarad=0 for elements that exist in the op2 but
+            #     not in the supplied bdf file
+            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
 
             # membrane terms
             Sxx = vector.data[:, :, 0]
@@ -281,7 +283,9 @@ def data_in_material_coord(bdf, op2, in_place=False):
             veceids = get_eids_from_op2_vector(vector)
             check = veceids != 0
             veceids = veceids[check]
-            vecthetarad = np.array([thetarad[eid] for eid in veceids])
+            #NOTE assuming thetarad=0 for elements that exist in the op2 but
+            #     not in the supplied bdf file
+            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
 
             # bottom and top in-plane stresses
             Sxx = vector.data[:, :, 1][:, check]
@@ -308,7 +312,9 @@ def data_in_material_coord(bdf, op2, in_place=False):
             veceids = get_eids_from_op2_vector(vector)
             check = veceids != 0
             veceids = veceids[check]
-            vecthetarad = np.array([thetarad[eid] for eid in veceids])
+            #NOTE assuming thetarad=0 for elements that exist in the op2 but
+            #     not in the supplied bdf file
+            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
 
             # bottom and top in-plane strains
             exx = vector.data[:, :, 1][:, check]

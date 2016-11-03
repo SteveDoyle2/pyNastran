@@ -13,8 +13,8 @@ from .loads import VectorizedCardDict
 
 class TEMP(object):
     type = 'TEMP'
-    def __init__(self):
-        self.model = None
+    def __init__(self, model):
+        self.model = model
         self.temp_id = 0.
         self.n = 0
         self.default = 0.
@@ -24,8 +24,7 @@ class TEMP(object):
     def __len__(self):
         return self.n + 1 if self.is_default else 0
 
-    def allocate(self, model, card_count):
-        self.model = model
+    def allocate(self, card_count):
         n = card_count['TEMP']
         float_fmt = self.model.float_fmt
         self.temp_id = 0
@@ -79,6 +78,12 @@ class TEMP(object):
 class TEMPP1(object):
     def __init__(self, model):
         """
+        TEMPP1 SID  EID1 TBAR TPRIME T1   T2   NA    NA
+               EID2 EID3 EID4 EID5   EID6 EID7 -etc.-
+
+        TEMPP1 EID2 THRU EIDi EIDj THRU EIDk
+        TEMPP1 1    THRU 10   30   THRU 61
+
         TEMPP1    500001    2639.107E+03-.12E+02
         """
         self.model = model
@@ -149,10 +154,10 @@ class TEMPs(VectorizedCardDict):
     def __init__(self, model):
         VectorizedCardDict.__init__(self, model)
         self._objs = defaultdict(TEMP)
-        self._tempp1 = TEMPP1(model)
+        self.tempp1 = model.tempp1
 
     def allocate(self, card_count):
-        self._tempp1.allocate(card_count)
+        self.tempp1.allocate(card_count)
 
     def get_temperature_id(self):
         return array(self._objs.keys(), dtype='int32')
@@ -178,7 +183,7 @@ class TEMPs(VectorizedCardDict):
         self._objs[load.load_id].append(load)
 
     def add_tempp1(self, card, comment):
-        self._tempp1.add(card, comment)
+        self.tempp1.add(card, comment)
 
     def write_card(self, bdf_file, size=8, is_double=False, load_id=None, sort_data=False):
         #self.model.log.debug('TEMPs keys=%s' % self._objs.keys())

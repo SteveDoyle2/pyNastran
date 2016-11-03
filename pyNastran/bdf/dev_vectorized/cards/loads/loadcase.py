@@ -6,7 +6,8 @@ from numpy import unique, where
 from collections import defaultdict
 
 class LoadCase(object):
-    def __init__(self):
+    def __init__(self, model):
+        self.model = model
         self.loads = defaultdict(list)
 
     def __getitem__(self, key):
@@ -20,7 +21,8 @@ class LoadCase(object):
             for load_id in load_ids:
                 if load.type in ['FORCE', 'FORCE1', 'FORCE2',
                                 'MOMENT', 'MOMENT1', 'MOMENT2',
-                                'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOADX1']:  # PLOAD4, RFORCE, GRAV
+                                'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOADX1',
+                                'GRAV']:  # PLOAD4, RFORCE
                     i = where(load_id == load.load_id)[0]
                     #self.model.log.debug("i** =", i)
                     if len(i):
