@@ -565,8 +565,10 @@ class EPT(GeomCommon):
         NX only
         """
         ntotal = 48
-        s = Struct(b(self._endian + 'ifii 4f'))
+        s = Struct(b(self._endian + 'ifii 8f'))
         nproperties = (len(data) - n) // ntotal
+        delta = (len(data) - n) % ntotal
+        assert delta == 0, 'len(data)-n=%s n=%s' % (len(data) - n, (len(data) - n) / 48.)
         for i in range(nproperties):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)

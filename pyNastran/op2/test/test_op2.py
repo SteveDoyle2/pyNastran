@@ -177,7 +177,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             is_vector_failed = []
             for vectori, vector_stopi in zip(is_vector, vector_stop):
                 for binary_debugi in binary_debug:
-                    print('------running is_vector=%s binary_debug=%s------' % (vectori, binary_debugi))
+                    print('------running is_vector=%s binary_debug=%s------' % (
+                        vectori, binary_debugi))
                     is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                           write_f06=write_f06, write_op2=write_op2,
                                           is_mag_phase=False,
@@ -324,7 +325,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             op2._nastran_format = 'msc'
             op2.executive_control_lines = ['CEND\n']
             op2.write_bdf(bdf_filename, size=8)
-            print('bdf_filename = %s' % bdf_filename)
+            op2.log.debug('bdf_filename = %s' % bdf_filename)
             try:
                 op2_bdf.read_bdf(bdf_filename)
             except:
@@ -392,7 +393,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #table_names_op2 = op2.getTableNamesFromOP2()
         #print("subcases = ", op2.subcases)
 
-        #assert table_names_f06==table_names_op2, 'table_names_f06=%s table_names_op2=%s' % (table_names_f06, table_names_op2)
+        #if table_names_f06 != table_names_op2:
+            #msg = 'table_names_f06=%s table_names_op2=%s' % (table_names_f06, table_names_op2)
+            #raise RuntimeError(msg)
         #op2.case_control_deck.sol = op2.sol
         #print(op2.case_control_deck.get_op2_data())
         #print(op2.case_control_deck.get_op2_data())

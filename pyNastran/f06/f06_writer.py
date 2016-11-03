@@ -350,7 +350,7 @@ class F06Writer(OP2_F06_Common):
             self.page_num += 1
 
     def write_f06(self, f06_outname, is_mag_phase=False, is_sort1=True,
-                  delete_objects=True, end_flag=False, quiet=False, repr_check=False,
+                  delete_objects=True, end_flag=False, quiet=True, repr_check=False,
                   close=True):
         """
         Writes an F06 file based on the data we have stored in the object
