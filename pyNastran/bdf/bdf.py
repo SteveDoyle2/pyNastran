@@ -208,7 +208,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
             #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
             #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
-            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_TEMPD', 'add_TF', 'add_TRIM',
+            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_tempd', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
@@ -2226,13 +2226,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_tempd(self, card, card_obj, comment=''):
         """adds a TEMPD"""
-        self.add_TEMPD(TEMPD.add_card(card_obj, 0, comment=comment))
+        self.add_tempd(TEMPD.add_card(card_obj, 0, comment=comment))
         if card_obj.field(3):
-            self.add_TEMPD(TEMPD.add_card(card_obj, 1, comment=''))
+            self.add_tempd(TEMPD.add_card(card_obj, 1, comment=''))
             if card_obj.field(5):
-                self.add_TEMPD(TEMPD.add_card(card_obj, 2, comment=''))
+                self.add_tempd(TEMPD.add_card(card_obj, 2, comment=''))
                 if card_obj.field(7):
-                    self.add_TEMPD(TEMPD.add_card(card_obj, 3, comment=''))
+                    self.add_tempd(TEMPD.add_card(card_obj, 3, comment=''))
 
     def _add_doptprm(self, doptprm, comment=''):
         """adds a DOPTPRM"""
@@ -2241,7 +2241,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _prepare_dequatn(self, card, card_obj, comment=''):
         """adds a DEQATN"""
         if hasattr(self, 'test_deqatn') or 1:
-            self.add_DEQATN(DEQATN.add_card(card_obj, comment=comment))
+            self.add_deqatn(DEQATN.add_card(card_obj, comment=comment))
         else:
             if comment:
                 self.rejects.append([comment])

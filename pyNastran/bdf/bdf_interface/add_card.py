@@ -141,7 +141,8 @@ class AddMethods(BDFAttributes):
         """same as add_element at the moment..."""
         self.add_element(elem)
 
-    def add_DEQATN(self, deqatn, allow_overwrites=False):
+    def add_deqatn(self, deqatn, allow_overwrites=False):
+        """adds an DEQATN object"""
         key = deqatn.equation_id
         assert key > 0, 'ID=%s deqatn\n%s' % (key, deqatn)
         if key in self.dequations and not allow_overwrites:
@@ -222,7 +223,7 @@ class AddMethods(BDFAttributes):
             self.delays[key] = delay
             self._type_to_id_map[delay.type].append(key)
 
-    def add_TEMPD(self, tempd, allow_overwrites=False):
+    def add_tempd(self, tempd, allow_overwrites=False):
         key = tempd.sid
         if key in self.tempds and not allow_overwrites:
             if not tempd._is_same_card(self.tempds[key]):
@@ -694,6 +695,7 @@ class AddMethods(BDFAttributes):
             #self._type_to_id_map[dconadd.type].append(key)
 
     def add_desvar(self, desvar):
+        """adds a DESVAR object"""
         key = desvar.desvar_id
         assert key not in self.desvars, 'DESVAR=%s old=\n%snew=\n%s' % (
             key, self.desvars[key], desvar)
@@ -702,6 +704,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[desvar.type].append(key)
 
     def add_ddval(self, ddval):
+        """adds a DDVAL object"""
         key = ddval.oid
         assert key not in self.ddvals, 'DDVAL=%s old=\n%snew=\n%s' % (
             key, self.ddvals[key], ddval)
@@ -710,6 +713,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[ddval.type].append(key)
 
     def add_dlink(self, dlink):
+        """adds a DLINK object"""
         key = dlink.oid
         assert key not in self.dlinks, 'DLINK=%s old=\n%snew=\n%s' % (
             key, self.dlinks[key], dlink)
@@ -718,6 +722,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[dlink.type].append(key)
 
     def add_dresp(self, dresp):
+        """adds a DRESP1/DRESP2/DRESP3 object"""
         key = dresp.dresp_id
         assert key not in self.dresps, 'DRESPx=%s old=\n%snew=\n%s' % (
                     key, self.dresps[key], dresp)
@@ -726,6 +731,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[dresp.type].append(key)
 
     def add_dvcrel(self, dvcrel):
+        """adds a DVCREL1/DVCREL2 object"""
         key = dvcrel.oid
         assert key not in self.dvprels, 'DVCRELx=%s old\n%snew=\n%s' % (
                     key, self.dvcrels[key], dvcrel)
@@ -734,6 +740,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[dvcrel.type].append(key)
 
     def add_dvmrel(self, dvmrel):
+        """adds a DVMREL1/DVMREL2 object"""
         key = dvmrel.oid
         assert key not in self.dvmrels, 'DVMRELx=%s old=\n%snew=\n%s' % (
                     key, self.dvmrels[key], dvmrel)
@@ -743,6 +750,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[dvmrel.type].append(key)
 
     def add_dvprel(self, dvprel):
+        """adds a DVPREL1/DVPREL2 object"""
         key = dvprel.oid
         assert key not in self.dvprels, 'DVPRELx=%s old\n%snew=\n%s' % (
                     key, self.dvprels[key], dvprel)
@@ -751,6 +759,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[dvprel.type].append(key)
 
     def add_dvgrid(self, dvgrid):
+        """adds a DVGRID object"""
         key = dvgrid.dvid
         assert key not in self.dvgrids, 'DVGRID=%s old=\n%snew=\n%s' % (
                     key, self.dvgrids[key], dvgrid)
@@ -760,6 +769,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[dvgrid.type].append(key)
 
     def add_nlparm(self, nlparm):
+        """adds a NLPARM object"""
         key = nlparm.nlparm_id
         assert key not in self.nlparms
         assert key > 0, 'key=%s; nlparm=%s\n' % (key, nlparm)
@@ -767,6 +777,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[nlparm.type].append(key)
 
     def add_nlpci(self, nlpci):
+        """adds a NLPCI object"""
         key = nlpci.nlpci_id
         assert key not in self.nlpcis
         assert key > 0
@@ -774,6 +785,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[nlpci.type].append(key)
 
     def add_tstep(self, tstep, allow_overwrites=False):
+        """adds a TSTEP object"""
         key = tstep.sid
         if key in self.tsteps and not allow_overwrites:
             if not tstep._is_same_card(self.tsteps[key]):
@@ -784,6 +796,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[tstep.type].append(key)
 
     def add_tstepnl(self, tstepnl, allow_overwrites=False):
+        """adds a TSTEPNL object"""
         key = tstepnl.sid
         if key in self.tstepnls and not allow_overwrites:
             if not tstepnl._is_same_card(self.tstepnls[key]):
@@ -892,6 +905,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def add_method(self, method, allow_overwrites=False):
+        """adds a EIGR/EIGRL object"""
         key = method.sid
         if key in self.methods and not allow_overwrites:
             if not method._is_same_card(self.methods[key]):
@@ -902,6 +916,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[method.type].append(key)
 
     def add_cmethod(self, method, allow_overwrites=False):
+        """adds a EIGB/EIGC object"""
         key = method.sid
         if key in self.cMethods and not allow_overwrites:
             if not method._is_same_card(self.cMethods[key]):

@@ -1154,7 +1154,7 @@ class DRESP1(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
-                       self.region, self.atta, self.attb] + self.atti_values()
+                       self.region, self.atta, self.attb] + self.atti
         return list_fields
 
     def repr_fields(self):
@@ -1170,7 +1170,7 @@ class DRESP1(OptConstraint):
         if len(label) <= 6:
             label = ' %6s ' % label
         list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
-                       self.region, self.atta, self.attb] + self.atti_values()
+                       self.region, self.atta, self.attb] + self.atti
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1440,7 +1440,7 @@ class DRESP2(OptConstraint):
         return list_fields
 
     def raw_fields(self):
-        list_fields = ['DRESP2', self.dresp_id, self.label, self.DEquation(),
+        list_fields = ['DRESP2', self.dresp_id, self.label, self.dequation,
                        self.region, self.method, self.c1, self.c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
@@ -1450,7 +1450,7 @@ class DRESP2(OptConstraint):
         c1 = set_blank_if_default(self.c1, 100.)
         c2 = set_blank_if_default(self.c2, 0.005)
 
-        list_fields = ['DRESP2', self.dresp_id, self.label, self.DEquation(),
+        list_fields = ['DRESP2', self.dresp_id, self.label, self.dequation,
                        self.region, method, c1, c2, self.c3]
         list_fields += self._pack_params()
         return list_fields

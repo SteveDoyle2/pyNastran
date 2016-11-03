@@ -501,7 +501,7 @@ class WriteMesh(BDFAttributes):
         #self._write_thermal_materials(outfile, size, is_double)
 
         #self._write_constraints(outfile, size, is_double)
-        #self._write_optimization(outfile, size, is_double)
+        self._write_optimization(outfile, size, is_double)
         #self._write_tables(outfile, size, is_double)
         self._write_sets(outfile, size, is_double)
         self._write_superelements(outfile, size, is_double)

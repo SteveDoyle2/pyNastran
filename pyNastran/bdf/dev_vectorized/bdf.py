@@ -84,6 +84,7 @@ from pyNastran.bdf.dev_vectorized.cards.optimization import (
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
     DVGRID)
+from pyNastran.bdf.dev_vectorized.cards.deqatn import DEQATN
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -1896,7 +1897,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'DMIK' : self._prepare_dmik,
             #'DMIJI' : self._prepare_dmiji,
 
-            #'DEQATN' : self._prepare_dequatn,
+            'DEQATN' : self._prepare_dequatn,
 
             #'PVISC' : self._prepare_pvisc,
             #'PELAS' : self._prepare_pelas,
