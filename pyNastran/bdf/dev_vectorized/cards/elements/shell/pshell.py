@@ -53,7 +53,7 @@ class PSHELL(Property):
     def add_card(self, card, comment=''):
         pid = integer(card, 1, 'property_id')
         if comment:
-            self._comments[pid] = comment
+            self.set_comment(pid, comment)
         i = self.i
         #self.model.log.debug('adding %s; i=%s' %(card, i))
         self.property_id[i] = pid

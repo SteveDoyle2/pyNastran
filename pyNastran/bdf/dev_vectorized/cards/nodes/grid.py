@@ -173,7 +173,6 @@ class GRID(VectorizedCard):
 
     def build(self):
         if self.n:
-            self.model.log.debug('--------building grid--------')
             i = argsort(self.node_id)
             self.node_id = self.node_id[i]
             self.cp = self.cp[i]

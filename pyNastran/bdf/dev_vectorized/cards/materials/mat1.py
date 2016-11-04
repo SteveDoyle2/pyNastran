@@ -6,6 +6,7 @@ import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
 
@@ -65,7 +66,7 @@ class MAT1(Material):
         #self.model.log.debug('i=%s' % i)
         mid = integer(card, 1, 'mid')
         if comment:
-            self._comments[mid] = comment
+            self.set_comment(mid, comment)
         self.material_id[i] = mid
         self.set_E_G_nu(i, card)
         self.rho[i] = double_or_blank(card, 5, 'rho', 0.)
@@ -92,22 +93,23 @@ class MAT1(Material):
             #print('G =', self.G)
             #print('nu =', self.nu)
             i = self.material_id.argsort()
-            if not np.array_equal(np.arange(i.size), i):
-                self.material_id = self.material_id[i]
-                self.E = self.E[i]
-                self.G = self.G[i]
-                self.rho = self.rho[i]
-                self.a = self.a[i]
-                self.TRef = self.TRef[i]
-                self.ge = self.ge[i]
-                self.St = self.St[i]
-                self.Sc = self.Sc[i]
-                self.Ss = self.Ss[i]
-                self.mcsid = self.mcsid[i]
-                self.model.log.debug('MAT1.materialsB = %s' % self.material_id)
-                assert self.material_id.min() > 0, 'MAT1.materials = %s' % self.material_id
-                #print('G =', self.G)
-                #print('nu =', self.nu)
+            #if not np.array_equal(np.arange(i.size), i):
+            self.material_id = self.material_id[i]
+            self.E = self.E[i]
+            self.G = self.G[i]
+            self.nu = self.nu[i]
+            self.rho = self.rho[i]
+            self.a = self.a[i]
+            self.TRef = self.TRef[i]
+            self.ge = self.ge[i]
+            self.St = self.St[i]
+            self.Sc = self.Sc[i]
+            self.Ss = self.Ss[i]
+            self.mcsid = self.mcsid[i]
+            self.model.log.debug('MAT1.materialsB = %s' % self.material_id)
+            assert self.material_id.min() > 0, 'MAT1.materials = %s' % self.material_id
+            #print('G =', self.G)
+            #print('nu =', self.nu)
 
     def get_D_matrix(self):
         """
@@ -124,9 +126,11 @@ class MAT1(Material):
         """
         poisson2 = 2.0*poisson
         scale = young / ((1.0 + poisson) * (1.0 - poisson2))
+        D = np.array((6, 6), dtype='float64')
         D[0] = (1.0 - poisson) * scale
         D[1] = poisson * scale
         D[2] = young / (2.0  + poisson2)
+        return D
 
     def _G_default(self, E, G, nu):
         if G == 0.0 or nu == 0.0:
@@ -157,7 +161,7 @@ class MAT1(Material):
         i = self.get_material_index_by_material_id(material_id)
         return self.G[i]
 
-    def write_card(self, bdf_file, material_id=None, size=8):
+    def write_card(self, bdf_file, material_id=None, size=8, is_double=False):
         if self.n:
             if material_id is None:
                 i = np.arange(self.n)
@@ -184,7 +188,10 @@ class MAT1(Material):
             if size == 8:
                 fmt_card = print_card_8
             else:
-                fmt_card = print_card_16
+                if is_double:
+                    fmt_card = print_card_double
+                else:
+                    fmt_card = print_card_16
 
             bdf_file.write(fmt_card(card_a))
             bdf_file.write(fmt_card(card_b))

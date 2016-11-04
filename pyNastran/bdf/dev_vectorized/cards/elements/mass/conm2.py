@@ -42,7 +42,7 @@ class CONM2(VectorizedCard):
     def add_card(self, card, comment=''):
         eid = integer(card, 1, 'element_id')
         if comment:
-            self._comments[eid] = comment
+            self.set_comment(eid, comment)
         i = self.i
         self.element_id[i] = eid
         self.node_id[i] = integer(card, 2, 'node_id')

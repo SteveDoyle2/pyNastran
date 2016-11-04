@@ -42,8 +42,8 @@ class CROD(RodElement):
         self.model.log.debug('  adding CROD')
         i = self.i
         eid = integer(card, 1, 'element_id')
-        #if comment:
-            #self._comments[eid] = comment
+        if comment:
+            self.set_comment(eid, comment)
 
         self.element_id[i] = eid
         self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)

@@ -14,7 +14,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 #from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 #from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
-from pyNastran.bdf.bdf_interface.assign_type import (integer, string, double_or_blank, string_or_blank, fields)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, string, double_or_blank, string_or_blank, fields, double)
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 
@@ -53,7 +54,6 @@ class PBARL(Property):
            the BDF object
         """
         Property.__init__(self, model)
-        self._cards = []
 
     def allocate(self, card_count):
         ncards = card_count[self.type]
@@ -89,17 +89,20 @@ class PBARL(Property):
         self.Type[i] = Type
 
         ndim = self.valid_types[Type]
-        j = 9 + ndim + 1
-        dim = fields(double_or_blank, card, 'dim', i=9, j=j)
+
+        dim = []
+        for idim in range(ndim):
+            dimi = double(card, 9 + idim, 'dim%i' % (idim + 1))
+            dim.append(dimi)
+
+        assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
+        assert None not in dim
+
+        #: dimension list
+        self.dim[i] = dim
+
 
         nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
-
-        if ndim > 0:
-            nsm = set_default_if_blank(dim.pop(), 0.0)
-        #else:
-            #nsm = 0.0
-
-        self.dim[i] = dim
         self.nsm[i] = nsm
         assert isinstance(nsm, float), 'nsm=%r' % nsm
 
@@ -114,7 +117,6 @@ class PBARL(Property):
                 self.valid_types[Type])
             raise RuntimeError(msg)
 
-        assert None not in dim
         self.i += 1
 
     def add_op2(self, data):
@@ -147,15 +149,17 @@ class PBARL(Property):
 
     def build(self):
         if self.n:
+            unique_pids = unique(self.property_id)
+            if len(unique_pids) != len(self.property_id):
+                raise RuntimeError('There are duplicate PBARL IDs...')
+
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.material_id = self.material_id[i]
-            unique_pids = unique(self.property_id)
-
-            if len(unique_pids) != len(self.property_id):
-                raise RuntimeError('There are duplicate PCOMP IDs...')
-            self._cards = []
-            self._comments = []
+            self.group = self.group[i]
+            self.Type = self.Type[i]
+            self.nsm = self.nsm[i]
+            self.dim = {ii : self.dim[j] for ii, j in zip(count(), i)}
         else:
             self.property_id = array([], dtype='int32')
 
@@ -216,11 +220,20 @@ class PBARL(Property):
                                                        self.group[i], self.Type[i], self.nsm[i]):
                 if pid in self._comments:
                     bdf_file.write(self._comments[pid])
+
                 dim = self.dim[j]
+                ndim = self.valid_types[Type]
+                assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
+
                 sgroup = set_blank_if_default(group, 'MSCBMLO')
 
                 list_fields = ['PBARL', pid, mid, group, Type, None,
                                None, None, None] + dim + [nsm]
+
+                #group = set_blank_if_default(self.group, 'MSCBMLO')
+                #list_fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None,
+                               #None, None, None] + self.dim + [self.nsm]
+
                 if size == 8:
                     bdf_file.write(print_card_8(list_fields))
                 else:

@@ -184,13 +184,15 @@ class PLOAD4(VectorizedCard):
             #n = [None, None, None]
             #sorl = None
             #ldir = None
-            for (ii, load_idi, p, n, cid, sorl, ldir) in zip(i,
+            cid = ['' if cidi == 0 else cidi for cidi in self.cid[i]]
+            sorl = ['' if sorli == 'SURF' else sorli for sorli in self.sorl[i]]
+            ldir = ['' if ldiri == 'NORM' else ldiri for ldiri in self.ldir[i]]
+            for (ii, load_idi, p, n, cidi, sorli, ldiri) in zip(i,
                                                              self.load_id[i], self.pressures[i, :],
-                                                             self.nvector[i, :], self.cid[i],
-                                                             self.sorl[i], self.ldir[i]):
+                                                             self.nvector[i, :], cid, sorl, ldir):
                 #self.model.log.debug('ii = %s' % ii)
                 element_id = self.element_ids[ii]
-                self.model.log.debug('element_id = %s' % element_id)
+                #self.model.log.debug('element_id = %s' % element_id)
                 #self.model.log.debug('p = %s\n' % p)
                 #eidi = element_id[0]
 
@@ -202,10 +204,10 @@ class PLOAD4(VectorizedCard):
 
                 if p.max() == p.min():
                     card = ['PLOAD4', load_idi, eidi, p[0], None, None, None
-                            ] + thru + [cid] + list(n) + [sorl, ldir]
+                            ] + thru + [cidi] + list(n) + [sorli, ldiri]
                 else:
                     card = ['PLOAD4', load_idi, eidi] + list(p) + thru + [
-                        cid] + list(n) + [sorl, ldir]
+                        cidi] + list(n) + [sorli, ldiri]
 
                 assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
                 bdf_file.write(print_card_8(card))

@@ -41,13 +41,34 @@ class PBAR(Property):
             self.I1 = zeros(ncards, float_fmt)
             #: I2
             self.I2 = zeros(ncards, float_fmt)
+
             #: Polar Moment of Inertia J -> use J()
             #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
             self.J = zeros(ncards, float_fmt)
             self.nsm = zeros(ncards, float_fmt)
 
+            self.C1 = zeros(ncards, float_fmt)
+            self.C2 = zeros(ncards, float_fmt)
+            self.D1 = zeros(ncards, float_fmt)
+            self.D2 = zeros(ncards, float_fmt)
+            self.E1 = zeros(ncards, float_fmt)
+            self.E2 = zeros(ncards, float_fmt)
+            self.F1 = zeros(ncards, float_fmt)
+            self.F2 = zeros(ncards, float_fmt)
+
+            #: default=infinite; assume 1e8
+            self.K1 = zeros(ncards, float_fmt)
+
+            #: default=infinite; assume 1e8
+            self.K2 = zeros(ncards, float_fmt)
+
+            #: I12 -> use I12()
+            self.i12 = zeros(ncards, float_fmt)
+
+
     def add_card(self, card, comment=''):
         i = self.i
+
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
         self.area[i] = double_or_blank(card, 3, 'area', 0.0)
@@ -59,22 +80,43 @@ class PBAR(Property):
         self.J[i] = double_or_blank(card, 6, 'J', Jdefault)
         self.nsm[i] = double_or_blank(card, 7, 'non-structural_mass', 0.0)
 
-        #if 0:
-            #self.C1 = double_or_blank(card, 9, 'C1', 0.0)
-            #self.C2 = double_or_blank(card, 10, 'C2', 0.0)
-            #self.D1 = double_or_blank(card, 11, 'D1', 0.0)
-            #self.D2 = double_or_blank(card, 12, 'D2', 0.0)
-            #self.E1 = double_or_blank(card, 13, 'E1', 0.0)
-            #self.E2 = double_or_blank(card, 14, 'E2', 0.0)
-            #self.F1 = double_or_blank(card, 15, 'F1', 0.0)
-            #self.F2 = double_or_blank(card, 16, 'F2', 0.0)
+        if 1:
+            #c1 = double_or_blank(card, 9, 'C1', 0.0)
+            #c2 = double_or_blank(card, 10, 'C2', 0.0)
+            #d1 = double_or_blank(card, 11, 'D1', 0.0)
+            #d2 = double_or_blank(card, 12, 'D2', 0.0)
+            #e1 = double_or_blank(card, 13, 'E1', 0.0)
+            #e2 = double_or_blank(card, 14, 'E2', 0.0)
+            #f1 = double_or_blank(card, 15, 'F1', 0.0)
+            #f2 = double_or_blank(card, 16, 'F2', 0.0)
 
-            ##: default=infinite; assume 1e8
-            #self.K1 = double_or_blank(card, 17, 'K1', 1e8)
-            ##: default=infinite; assume 1e8
-            #self.K2 = double_or_blank(card, 18, 'K2', 1e8)
-            ##: I12 -> use I12()
-            #self.i12 = double_or_blank(card, 19, 'I12', 0.0)
+            #i12 = double_or_blank(card, 19, 'I12', 0.0)
+
+            #if A == 0.0:
+                #k1 = blank(card, 17, 'K1')
+                #k2 = blank(card, 18, 'K2')
+            #elif i12 != 0.0:
+                ## K1 / K2 are ignored
+                #k1 = None
+                #k2 = None
+            #else:
+                ##: default=infinite; assume 1e8
+                #k1 = double_or_blank(card, 17, 'K1', 1e8)
+                ##: default=infinite; assume 1e8
+                #k2 = double_or_blank(card, 18, 'K2', 1e8)
+
+            self.C1[i] = double_or_blank(card, 9, 'C1', 0.0)
+            self.C2[i] = double_or_blank(card, 10, 'C2', 0.0)
+            self.D1[i] = double_or_blank(card, 11, 'D1', 0.0)
+            self.D2[i] = double_or_blank(card, 12, 'D2', 0.0)
+            self.E1[i] = double_or_blank(card, 13, 'E1', 0.0)
+            self.E2[i] = double_or_blank(card, 14, 'E2', 0.0)
+            self.F1[i] = double_or_blank(card, 15, 'F1', 0.0)
+            self.F2[i] = double_or_blank(card, 16, 'F2', 0.0)
+
+            self.K1[i] = double_or_blank(card, 17, 'K1', 1e8)
+            self.K2[i] = double_or_blank(card, 18, 'K2', 1e8)
+            self.i12[i] = double_or_blank(card, 19, 'I12', 0.0)
             #if self.A == 0.0 and self.i12 == 0.0:
                 #assert self.K1 is None, 'K1 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K1=%r' % (self.A, self.i12, self.K1)
                 #assert self.K2 is None, 'K2 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K2=%r' % (self.A, self.i12, self.K2)
@@ -119,12 +161,34 @@ class PBAR(Property):
             else:
                 i = searchsorted(self.property_id, property_id)
 
-            for (pid, mid, area, I1, I2, J) in zip(self.property_id[i], self.material_id[i],
-                    self.area[i], self.I1[i], self.I2[i], self.J[i]):
+            for (pid, mid, area, I1, I2, J, nsm, c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                 i12) in zip(self.property_id[i], self.material_id[i],
+                    self.area[i], self.I1[i], self.I2[i], self.J[i], self.nsm[i],
+                    self.C1[i], self.C2[i], self.D1[i], self.D2[i],
+                    self.E1[i], self.E2[i], self.F1[i], self.F2[i],
+                    self.K1[i], self.K2[i], self.i12[i]):
                 if pid in self._comments:
                     bdf_file.write(self._comments[pid])
-                card = ['PBAR', pid, mid, area, I1, I2, J]
-                bdf_file.write(print_card_8(card))
+
+                #card = ['PBAR', pid, mid, area, I1, I2, J]
+                #c1 = set_blank_if_default(self.c1, 0.0)
+                #c2 = set_blank_if_default(self.c2, 0.0)
+
+                #d1 = set_blank_if_default(self.d1, 0.0)
+                #d2 = set_blank_if_default(self.d2, 0.0)
+
+                #e1 = set_blank_if_default(self.e1, 0.0)
+                #e2 = set_blank_if_default(self.e2, 0.0)
+
+                #f1 = set_blank_if_default(self.f1, 0.0)
+                #f2 = set_blank_if_default(self.f2, 0.0)
+
+                #k1 = set_blank_if_default(self.k1, 1e8)
+                #k2 = set_blank_if_default(self.k2, 1e8)
+
+                list_fields = ['PBAR', pid, mid, area, I1, I2, J, nsm,
+                               None, c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, i12]
+                bdf_file.write(print_card_8(list_fields))
 
     def get_mass_per_length_by_property_id(self, property_id=None):
         if property_id is None:

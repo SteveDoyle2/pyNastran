@@ -79,8 +79,8 @@ class MATHP(Material):
 
     def add_card(self, card, comment=''):
         i = self.i
-        #if comment:
-        #     self.comment = comment
+        if comment:
+            self.set_comment(mid, comment)
         self.material_id[i] = integer(card, 1, 'material_id')
         self.model.log.debug('add MATHP.material_id = %s' % self.material_id)
         a10 = double_or_blank(card, 2, 'a10', 0.)

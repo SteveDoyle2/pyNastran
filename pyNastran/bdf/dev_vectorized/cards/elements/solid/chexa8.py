@@ -80,7 +80,7 @@ class CHEXA8(SolidElement):
         eid = integer(card, 1, 'element_id')
 
         if comment:
-            self._comments[eid] = comment
+            self.set_comment(eid, comment)
 
         #: Element ID
         self.element_id[i] = eid

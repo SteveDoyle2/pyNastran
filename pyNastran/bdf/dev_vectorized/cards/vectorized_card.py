@@ -3,6 +3,7 @@ from six.moves import StringIO
 from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
                    arange, ndarray, asarray)
 from pyNastran.utils import object_attributes, integer_types
+from pyNastran.bdf.cards.base_card import _format_comment
 
 class VectorizedCard(object):
     type = 'VectorizedCard'
@@ -17,6 +18,10 @@ class VectorizedCard(object):
             else:
                 if self.type.startswith('C'):
                     print('there is no op2_id to apply for element=%r' % self.type)
+
+    def set_comment(self, idi, new_comment):
+        """sets a comment"""
+        self._comments[idi] = _format_comment(new_comment)
 
     def __len__(self):
         return self.n

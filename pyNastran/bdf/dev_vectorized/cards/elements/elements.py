@@ -49,8 +49,8 @@ class Elements(object):
         self.pshear = model.pshear
 
         # rigid
-        self.rbe2 = model.rbe2
-        self.rbe3 = model.rbe3
+        #self.rbe2 = model.rbe2
+        #self.rbe3 = model.rbe3
 
         # spring
         self.elements_spring = model.elements_spring

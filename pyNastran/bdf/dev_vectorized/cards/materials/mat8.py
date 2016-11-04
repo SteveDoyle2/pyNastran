@@ -59,7 +59,7 @@ class MAT8(Material):
 
         mid = integer(card, 1, 'mid')
         if comment:
-            self._comments[mid] = comment
+            self.set_comment(mid, comment)
         self.material_id[i] = mid
         self.e11[i] = double(card, 2, 'E11')    #: .. todo:: is this the correct default
         self.e22[i] = double(card, 3, 'E22')    #: .. todo:: is this the correct default

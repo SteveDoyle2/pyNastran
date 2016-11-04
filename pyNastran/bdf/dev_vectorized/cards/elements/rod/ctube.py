@@ -43,7 +43,8 @@ class CTUBE(RodElement):
         i = self.i
         eid = integer(card, 1, 'element_id')
         #if comment:
-            #self._comments[eid] = comment
+            #self.set_comment(eid, comment)
+
 
         self.element_id[i] = integer(card, 1, 'element_id')
         self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])

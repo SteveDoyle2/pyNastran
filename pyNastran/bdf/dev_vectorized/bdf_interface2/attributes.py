@@ -275,8 +275,8 @@ class BDFAttributes(object):
         self.mass = Mass(self)
         #----------------------------------------
         # b-list elements
-        self.rbe2 = None
-        self.rbe3 = None
+        #self.rbe2 = None
+        #self.rbe3 = None
         self.cbush = CBUSH(self)
         self.pbush = PBUSH(self)
         self.cbush1d = None
@@ -347,6 +347,8 @@ class BDFAttributes(object):
         #: stores PARAMs
         self.params = {}
 
+        #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
+        self.rigid_elements = {}
         #: stores PLOTELs
         self.plotels = {}
 

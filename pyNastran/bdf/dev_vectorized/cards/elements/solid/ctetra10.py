@@ -33,16 +33,16 @@ class CTETRA10(SolidElement):
     def add_card(self, card, comment=''):
         i = self.i
 
-        #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
-        #if comment:
-            #self._comments[eid] = comment
+        if comment:
+            self.set_comment(eid, comment)
+
 
         #: Element ID
         #comment = self._comments[i]
         element_id = integer(card, 1, 'element_id')
         if comment:
-            self._comments[eid] = comment
+            self.set_comment(eid, comment)
 
         #: Element ID
         self.element_id[i] = element_id

@@ -41,7 +41,7 @@ class PCOMP(Property):
         #self._comments = []
 
     def add_card(self, card, comment=''):
-        prop = PCOMPi(card, comment=comment)
+        prop = PCOMPi.add_card(card, comment=comment)
         self.properties[prop.pid] = prop
         #self._cards.append(card)
         #self._comments.append(comment)
@@ -400,7 +400,7 @@ class PCOMP(Property):
         self.nplies = zeros(n, dtype='int32')
         for i, pid in enumerate(property_id):
             prop = self.properties[pid]
-            npliesi = prop.get_nplies()
+            npliesi = prop.nplies
             self.nplies[i] = npliesi
 
     def is_symmetrical_by_property_index(self, i=None):

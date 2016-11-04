@@ -15,7 +15,7 @@ class PCOMPG(Property):
 
     def add_card(self, card, comment=''):
         if comment:
-            self._comments[pid] = comment
+            self.set_comment(pid, comment)
 
     def build(self):
         self.property_id = array([], dtype='int32')

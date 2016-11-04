@@ -738,12 +738,34 @@ class WriteMesh(BDFAttributes):
         """Writes the rigid elements in a sorted order"""
         #self.rbe2.write_card(bdf_file, size, is_double)
         #self.rbe3.write_card(bdf_file, size, is_double)
-        pass
+        if self.rigid_elements:
+            bdf_file.write('$RIGID ELEMENTS\n')
+            if self.is_long_ids:
+                for (eid, element) in sorted(iteritems(self.rigid_elements)):
+                    try:
+                        bdf_file.write(element.write_card_16(is_double))
+                    except:
+                        print('failed printing element...'
+                              'type=%s eid=%s' % (element.type, eid))
+                        raise
+            else:
+                for (eid, element) in sorted(iteritems(self.rigid_elements)):
+                    try:
+                        bdf_file.write(element.write_card(size, is_double))
+                    except:
+                        print('failed printing element...'
+                              'type=%s eid=%s' % (element.type, eid))
+                        raise
+        if self.plotels:
+            bdf_file.write('$PLOT ELEMENTS\n')
+            for (eid, element) in sorted(iteritems(self.plotels)):
+                bdf_file.write(element.write_card(size, is_double))
+
 
     def _write_sets(self, bdf_file, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        is_sets = (self.sets or self.asets or self.bsets or
-                   self.csets or self.qsets or self.usets)
+        is_sets = bool(self.sets or self.asets or self.bsets or
+                       self.csets or self.qsets or self.usets)
         if is_sets:
             msg = ['$SETS\n']
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
@@ -763,8 +785,8 @@ class WriteMesh(BDFAttributes):
 
     def _write_superelements(self, bdf_file, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        is_sets = (self.se_sets or self.se_bsets or self.se_csets or self.se_qsets
-                   or self.se_usets)
+        is_sets = bool(self.se_sets or self.se_bsets or self.se_csets or
+                       self.se_qsets or self.se_usets)
         if is_sets:
             msg = ['$SUPERELEMENTS\n']
             for set_obj in self.se_bsets:  # list

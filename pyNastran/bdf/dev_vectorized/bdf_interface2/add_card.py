@@ -38,6 +38,14 @@ class AddCard(BDFAttributes):
         self.plotels[key] = elem
         self._type_to_id_map[elem.type].append(key)
 
+    def add_rigid_element(self, elem, allow_overwrites=False):
+        key = elem.eid
+        assert key > 0, 'eid=%s elem=%s' % (key, elem)
+        if key in self.rigid_elements and not allow_overwrites:
+            assert elem.eid not in self.rigid_elements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.rigid_elements[elem.eid], elem)
+        self.rigid_elements[key] = elem
+        self._type_to_id_map[elem.type].append(key)
+
     def add_deqatn(self, deqatn, allow_overwrites=False):
         """adds an DEQATN object"""
         key = deqatn.equation_id

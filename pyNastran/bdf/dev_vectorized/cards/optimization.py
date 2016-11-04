@@ -121,7 +121,7 @@ def validate_dvprel(Type, pname_fid, validate):
         #elif Type == 'CBUSH':
             #assert pname_fid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
         elif Type == 'PBUSH':
-            assert pname_fid in [18, 'GE1', 'K2', 'B2', '-13', 'GE3', 'GE4', 'GE5', 'GE6'], msg # -13
+            assert pname_fid in [18, 'GE1', 'K2', 'B2', 'GE3', 'GE4', 'GE5', 'GE6'], msg # -13
         elif Type == 'PBUSH1D':
             assert pname_fid in ['K', 'C'], msg
         elif Type == 'PBUSHT':
@@ -573,37 +573,37 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
         #'PKNL',
         None,
     ]
-    stress_types = ['PBARL']
+    #stress_types = ['PBARL']
 
-    response_types = [
-        #'WEIGHT', 'VOLUME',
+    #response_types = [
+        ##'WEIGHT', 'VOLUME',
 
-        # static
-        #'DISP', 'STRESS', 'COMP', 'SPCFORCE', 'ESE', 'GPFORCP',
+        ## static
+        ##'DISP', 'STRESS', 'COMP', 'SPCFORCE', 'ESE', 'GPFORCP',
 
-        # aero
-        #'FLUTTER', 'STABDER', 'TRIM', 'DIVERG',
+        ## aero
+        ##'FLUTTER', 'STABDER', 'TRIM', 'DIVERG',
 
-        # ???
-        #'CEIG', 'CSTRAT',
+        ## ???
+        ##'CEIG', 'CSTRAT',
 
-        # modal
-        #'EIGN', 'LAMA',
+        ## modal
+        ##'EIGN', 'LAMA',
 
-        # time
-        #'TDISP', 'TVELO', 'TACCL', 'TFORC', 'TSPCF',
+        ## time
+        ##'TDISP', 'TVELO', 'TACCL', 'TFORC', 'TSPCF',
 
-        # frequency
-        #'FREQ',
-        #'FRDISP', 'FRVELO', 'FRACCL',
-        #'FRSPCF', 'FRMASS', 'FRFORC', 'FRSTRE',
+        ## frequency
+        ##'FREQ',
+        ##'FRDISP', 'FRVELO', 'FRACCL',
+        ##'FRSPCF', 'FRMASS', 'FRFORC', 'FRSTRE',
 
-        # random
-        #'PSDDISP', 'PSDACCL',
-        #'RMSDISP', 'RMSVELO', 'RMSACCL',
+        ## random
+        ##'PSDDISP', 'PSDACCL',
+        ##'RMSDISP', 'RMSVELO', 'RMSACCL',
 
-        #'CFAILURE', 'TOTSE',
-    ]
+        ##'CFAILURE', 'TOTSE',
+    #]
     msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
         property_type, response_type, atta, attb, atti)
     #print(msg)
@@ -1336,10 +1336,10 @@ class DRESP2(OptConstraint):
                 print('model.table =')
                 print(model.bdf_filename)
                 print(model.dtable)
-                self.dtable = model.dtable
+                #self.dtable = model.dtable
                 print(model.dtable)
                 for i, val in enumerate(vals):
-                    default_values[val] = self.dtable[val]
+                    default_values[val] = model.dtable[val]
             else:
                 raise NotImplementedError('  TODO: xref %s' % str(key))
         self.params_ref = self.params
@@ -1665,22 +1665,21 @@ class DCONADD(OptConstraint):
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'dcid')
         dconstrs = []
-
         for i in range(1, len(card)):
             dconstr = integer(card, i, 'dconstr_%i' % i)
             dconstrs.append(dconstr)
         return DCONADD(oid, dconstrs, comment=comment)
 
-    def _cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
+    #def _cross_reference(self, model):
+        #"""
+        #Cross links the card so referenced cards can be extracted directly
 
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstrs]
+        #Parameters
+        #----------
+        #model : BDF()
+            #the BDF object
+        #"""
+        #self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstrs]
 
     def raw_fields(self):
         list_fields = ['DCONADD', self.oid] + self.dconstrs
@@ -1820,51 +1819,42 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
         return DVCREL1(oid, Type, eid, cp_name, cp_min, cp_max, dvids, coeffs, c0=0.,
                        comment=comment)
 
-    def _verify(self, xref):
-        """
-        Verifies all methods for this object work
+    #def _verify(self, xref):
+        #"""
+        #Verifies all methods for this object work
 
-        Parameters
-        ----------
-        xref : bool
-            has this model been cross referenced
-        """
-        pass
+        #Parameters
+        #----------
+        #xref : bool
+            #has this model been cross referenced
+        #"""
+        #pass
 
     #def OptID(self):
         #return self.oid
 
-    def _cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
+    #def _cross_reference(self, model):
+        #"""
+        #Cross links the card so referenced cards can be extracted directly
 
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        msg = ', which is required by DVCREL1 name=%r' % self.type
-        if self.Type in ['CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CELAS2', 'CELAS4']:
-            self.eid = model.Element(self.eid, msg=msg)
-        elif self.Type in ['CONM1', 'CONM2', 'CMASS2', 'CMASS4']:
-            self.eid = model.masses[self.eid]
-        #elif Type in ['CBUSH']:
-        else:
-            raise NotImplementedError(self.Type)
-        self.eid_ref = self.eid
-        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
-
-    #def uncross_reference(self):
-        #self.eid = self.Eid()
-        #del self.eid_ref
+        #Parameters
+        #----------
+        #model : BDF()
+            #the BDF object
+        #"""
+        #msg = ', which is required by DVCREL1 name=%r' % self.type
+        #if self.Type in ['CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CELAS2', 'CELAS4']:
+            #self.eid = model.Element(self.eid, msg=msg)
+        #elif self.Type in ['CONM1', 'CONM2', 'CMASS2', 'CMASS4']:
+            #self.eid = model.masses[self.eid]
+        ##elif Type in ['CBUSH']:
+        #else:
+            #raise NotImplementedError(self.Type)
+        #self.eid_ref = self.eid
+        #self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
     def calculate(self, op2_model, subcase_id):
         raise NotImplementedError('\n' + str(self))
-
-    #def Eid(self):
-        #if isinstance(self.eid, integer_types):
-            #return self.eid
-        #return self.eid_ref.eid
 
     @property
     def desvar_ids(self):
@@ -1873,7 +1863,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
         return [desvar.desvar_id for desvar in self.dvids]
 
     def raw_fields(self):
-        list_fields = ['DVCREL1', self.oid, self.Type, self.Eid(),
+        list_fields = ['DVCREL1', self.oid, self.Type, self.eid,
                        self.cp_name, self.cp_min, self.cp_max, self.c0, None]
         for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
             list_fields.append(dvid)
@@ -2088,7 +2078,7 @@ class DVCREL2(OptConstraint):
         id_ref = model.Element(self.eid, msg=msg)
         #self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
-        self.dequation_ref = model.DEQATN(self.dequation)
+        dequation_ref = model.DEQATN(self.dequation)
         assert self.eid_ref.type in ['CDAMP2'], self.eid.type
 
 
@@ -2144,7 +2134,6 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         self.c0 = c0
         self.dvids = dvids
         self.coeffs = coeffs
-
         validate_dvmrel(validate, Type, mp_name)
 
     @classmethod
@@ -2193,16 +2182,16 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         #"""
         #mid_ref = model.Material(self.mid)
 
-    def _verify(self, xref):
-        """
-        Verifies all methods for this object work
+    #def _verify(self, xref):
+        #"""
+        #Verifies all methods for this object work
 
-        Parameters
-        ----------
-        xref : bool
-            has this model been cross referenced
-        """
-        pass
+        #Parameters
+        #----------
+        #xref : bool
+            #has this model been cross referenced
+        #"""
+        #pass
 
     #def OptID(self):
         #return self.oid
@@ -2349,9 +2338,11 @@ class DVMREL2(OptConstraint):
         this should really make a call the the DEQATN;
         see the PBEAM for an example of get/set_opt_value
         """
+
+        mid_ref = self.mid_ref
         try:
-            get = self.mid_ref.get_optimization_value(self.mp_name)
-            out = self.mid_ref.set_optimization_value(self.mp_name, get)
+            get = mid_ref.get_optimization_value(self.mp_name)
+            out = mid_ref.set_optimization_value(self.mp_name, get)
         except:
             print('DVMREL2 calculate : %s[%r] = ???' % (self.Type, self.mp_name))
             raise
@@ -2373,6 +2364,26 @@ class DVMREL2(OptConstraint):
         op2_model.log.info('  deqatn out = %s' % out)
         return out
         #raise NotImplementedError('\n' + str(self))
+
+    @property
+    def mid_ref(self):
+        msg = ', which is required by DVMREL2 name=%r' % self.type
+        if self.Type in self.allowed_materials:
+            mid_ref = model.Material(self.mid, msg=msg)
+
+        if self.Type == 'MAT1':
+            mid_ref = self.model.materials.mat1[mid]
+        elif self.Type == 'MAT2':
+            mid_ref = self.model.materials.mat2[mid]
+        else:
+            raise NotImplementedError(self)
+        return mid_ref
+
+    @property
+    def deqatn_ref(self):
+        msg = ', which is required by DVMREL2 name=%r' % self.type
+        dequation_ref = model.DEQATN(self.dequation, msg=msg)
+        return dequation_ref
 
     def cross_reference(self, model):
         """
@@ -2543,19 +2554,19 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         return DVPREL1(oid, Type, pid, pname_fid, p_min, p_max, dvids, coeffs, c0=c0,
                        comment=comment)
 
-    def _verify(self, xref):
-        """
-        Verifies all methods for this object work
+    #def _verify(self, xref):
+        #"""
+        #Verifies all methods for this object work
 
-        Parameters
-        ----------
-        xref : bool
-            has this model been cross referenced
-        """
-        pass
+        #Parameters
+        #----------
+        #xref : bool
+            #has this model been cross referenced
+        #"""
+        #pass
 
-    def OptID(self):
-        return self.oid
+    #def OptID(self):
+        #return self.oid
 
     def cross_reference(self, model):
         """
@@ -2580,10 +2591,6 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.pid_ref = self.pid
         self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
-
-    def uncross_reference(self):
-        self.pid = self.Pid()
-        del self.pid_ref
 
     def calculate(self, op2_model, subcase_id):
         raise NotImplementedError('\n' + str(self))
@@ -2759,8 +2766,8 @@ class DVPREL2(OptConstraint):
         return DVPREL2(oid, Type, pid, pname_fid, p_min, p_max, dequation, dvids,
                        labels, comment=comment)
 
-    def OptID(self):
-        return self.oid
+    #def OptID(self):
+        #return self.oid
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
@@ -2777,7 +2784,8 @@ class DVPREL2(OptConstraint):
             raise NotImplementedError('Type=%r is not supported' % self.Type)
         return pid
 
-    def DEquation(self):
+    @property
+    def dequation_ref(self):
         if isinstance(self.dequation, int):
             return self.dequation
         return self.dequation_ref.equation_id
@@ -2810,7 +2818,6 @@ class DVPREL2(OptConstraint):
         out = self.func(*argsi)
         op2_model.log.info('  deqatn out = %s' % out)
         return out
-        #raise NotImplementedError('\n' + str(self))
 
     def cross_reference(self, model):
         """
@@ -2840,10 +2847,10 @@ class DVPREL2(OptConstraint):
         self.dequation_ref = self.dequation
         assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
-    def uncross_reference(self):
-        self.pid = self.Pid()
-        self.dequation = self.DEquation()
-        del self.pid_ref, self.dequation_ref
+    #def uncross_reference(self):
+        #self.pid = self.Pid()
+        #self.dequation = self.DEquation()
+        #del self.pid_ref, self.dequation_ref
 
     def _verify(self, xref):
         """
@@ -2861,7 +2868,7 @@ class DVPREL2(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
-                       self.pname_fid, self.p_min, self.p_max, self.DEquation(), None]
+                       self.pname_fid, self.p_min, self.p_max, self.dequation, None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
             list_fields += build_table_lines(fields2, nstart=1, nend=0)

@@ -57,8 +57,6 @@ from pyNastran.bdf.dev_vectorized.cards.constraints.mpcadd import MPCADD
 from .cards.constraints.spcadd import SPCADD, get_spcadd_constraint
 
 
-# old cards
-from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.dev_vectorized.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
@@ -71,8 +69,6 @@ from pyNastran.bdf.dev_vectorized.cards.dynamic import (
     TSTEP, TSTEPNL, NLPARM, NLPCI, #TF
 )
 
-from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
-from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.dev_vectorized.cards.aero.aero_cards import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
     AESURF, AESURFS, AERO, AEROS, CSSCHD,
@@ -90,6 +86,14 @@ from pyNastran.bdf.dev_vectorized.cards.optimization import (
     DVPREL1, DVPREL2,
     DVGRID)
 from pyNastran.bdf.dev_vectorized.cards.deqatn import DEQATN
+
+
+# old cards
+from pyNastran.bdf.cards.params import PARAM
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
+from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
+from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
+from pyNastran.bdf.cards.base_card import _format_comment
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -166,7 +170,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
             #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
             #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
-            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_TEMPD', 'add_TF', 'add_TRIM',
+            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_tempd', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
@@ -236,7 +240,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         self.include_dir = ''
         self.dumplines = False
 
-
         # this flag will be flipped to True someday (and then removed), but
         # doesn't support 100% of cards yet.  It enables a new method for card
         # parsing.
@@ -277,6 +280,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         #: the list of possible cards that will be parsed
         self.cards_to_read = set([
             'GRID', 'SPOINT', 'EPOINT', 'POINT', 'POINTAX',
+            'PARAM', ## params
 
             # coords
             'CORD1R', 'CORD1C', 'CORD1S',
@@ -297,14 +301,15 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             'PSOLID', 'PLSOLID',
             'CTETRA', 'CTETRA4', 'CTETRA10',
-            'CPYRAM',
-            'CPENTA',
+            'CPYRAM', 'CPYRAM5', 'CPYRAM13',
+            'CPENTA', 'CPENTA6', 'CPENTA15',
             'CHEXA', 'CHEXA8', 'CHEXA20',
 
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
             #'PBUSH', 'PBUSH1D', 'PBUSH2D',
 
             'CONM1', 'CONM2',
+            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE',
 
             'MAT1', 'MAT8',
 
@@ -344,7 +349,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'CSSCHD', ## csschds
             'DIVERG', ## divergs
 
-            'PARAM', ## params
+            # ---- dynamic cards ---- #
+            'DAREA',  ## dareas
+            'DPHASE',  ## dphases
+            'DELAY',  ## delays
+            'NLPARM',  ## nlparms
+            'NLPCI',  ## nlpcis
+            'TSTEP',  ## tsteps
+            'TSTEPNL',  ## tstepnls
 
             # optimization cards
             'DEQATN', 'DTABLE',
@@ -1108,7 +1120,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     # cards[old_card_name].append([full_comment, card_lines])
 
                     # new list version
-                    cards.append([old_card_name, full_comment, card_lines])
+                    #if full_comment:
+                        #print('full_comment = ', full_comment)
+                    cards.append([old_card_name, _prep_comment(full_comment), card_lines])
 
                     card_count[old_card_name] += 1
                     card_lines = []
@@ -1133,16 +1147,16 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 card_lines.append(line)
                 if backup_comment:
                     if comment:
-                        full_comment += backup_comment + '$' + comment + '\n'
+                        full_comment += backup_comment + comment + '\n'
                     else:
                         full_comment += backup_comment
                     backup_comment = ''
                 elif comment:
-                    full_comment += '$' + comment + '\n'
+                    full_comment += comment + '\n'
                     backup_comment = ''
 
             elif comment:
-                backup_comment += '$' + comment + '\n'
+                backup_comment += comment + '\n'
                 #print('add backup=%r' % backup_comment)
             #elif comment:
                 #backup_comment += '$' + comment + '\n'
@@ -1156,7 +1170,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #cards[old_card_name].append([backup_comment + full_comment, card_lines])
 
             # new list version
-            cards.append([old_card_name, backup_comment + full_comment, card_lines])
+            #if backup_comment + full_comment:
+                #print('backup_comment + full_comment = ', backup_comment + full_comment)
+            cards.append([old_card_name, _prep_comment(backup_comment + full_comment), card_lines])
             card_count[old_card_name] += 1
         return cards, card_count
 
@@ -1210,19 +1226,19 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 card_lines.append(line)
                 if backup_comment:
                     if comment:
-                        full_comment += backup_comment + '$' + comment + '\n'
+                        full_comment += backup_comment + comment + '\n'
                     else:
                         full_comment += backup_comment
                     backup_comment = ''
                 elif comment:
-                    full_comment += '$' + comment + '\n'
+                    full_comment += comment + '\n'
                     backup_comment = ''
 
             elif comment:
-                backup_comment += '$' + comment + '\n'
+                backup_comment += comment + '\n'
                 #print('add backup=%r' % backup_comment)
             #elif comment:
-                #backup_comment += '$' + comment + '\n'
+                #backup_comment += comment + '\n'
 
         if card_lines:
             if self.echo:
@@ -1630,13 +1646,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             #'PCONEAX' : (PCONEAX, self.add_property),
 
-            #'RBAR' : (RBAR, self.add_rigid_element),
-            #'RBAR1' : (RBAR1, self.add_rigid_element),
-            #'RBE1' : (RBE1, self.add_rigid_element),
-            #'RBE2' : (RBE2, self.add_rigid_element),
-            #'RBE3' : (RBE3, self.add_rigid_element),
-            #'RROD' : (RROD, self.add_rigid_element),
-            #'RSPLINE' : (RSPLINE, self.add_rigid_element),
+            'RBAR' : (RBAR, self.add_rigid_element),
+            'RBAR1' : (RBAR1, self.add_rigid_element),
+            'RBE1' : (RBE1, self.add_rigid_element),
+            'RBE2' : (RBE2, self.add_rigid_element),
+            'RBE3' : (RBE3, self.add_rigid_element),
+            'RROD' : (RROD, self.add_rigid_element),
+            'RSPLINE' : (RSPLINE, self.add_rigid_element),
 
 
             ## there is no MAT6 or MAT7
@@ -1728,7 +1744,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
             'DESVAR' : (DESVAR, self.add_desvar),
-            ## BCTSET
+            # BCTSET
 
             #'TEMP' : (TEMP, self.add_thermal_load),
             #'QBDY1' : (QBDY1, self.add_thermal_load),
@@ -1869,13 +1885,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'SEQSET' : (SEQSET, self.add_seqset),
             'SEQSET1' : (SEQSET1, self.add_seqset),
 
-            ##'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
+            #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
 
-            ##'SEUSET' : (SEUSET, self.add_SEUSET),
-            ##'SEUSET1' : (SEUSET1, self.add_SEUSET),
+            #'SEUSET' : (SEUSET, self.add_SEUSET),
+            #'SEUSET1' : (SEUSET1, self.add_SEUSET),
 
             'NLPARM' : (NLPARM, self.add_nlparm),
-            ## BCTSET
+            # BCTSET
         }
         self._card_parser_prepare = {
             #'CORD2R' : (CORD2R, self.add_coord), # not vectorized
@@ -1918,6 +1934,35 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             #'BCTSET' : self._prepare_bctset,
         }
+
+    def reject_card_obj2(self, card_name, card_obj):
+        """rejects a card object"""
+        self.reject_cards.append(card_obj)
+
+    def reject_card_lines(self, card_name, card_lines, comment=''):
+        """rejects a card"""
+        if card_name.isdigit():
+            # TODO: this should technically work (I think), but it's a problem
+            #       for the code
+            #
+            # prevents:
+            # spc1,100,456,10013832,10013833,10013830,10013831,10013836,10013837,
+            # 10013834,10013835,10013838,10013839,10014508,10008937,10008936,10008935,
+            msg = 'card_name=%r was misparsed...\ncard_lines=%s' % (
+                card_name, card_lines)
+            raise RuntimeError(msg)
+        if card_name not in self.card_count:
+            if ' ' in card_name:
+                msg = (
+                    'No spaces allowed in card name %r.  '
+                    'Should this be a comment?\n%s%s' % (
+                        card_name, comment, card_lines))
+                raise RuntimeError(msg)
+            if card_name in ['SUBCASE ', 'CEND']:
+                raise RuntimeError('No executive/case control deck was defined.')
+            self.log.info('    rejecting card_name = %s' % card_name)
+        self._increase_card_count(card_name)
+        self.rejects.append([comment] + card_lines)
 
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
@@ -2663,6 +2708,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             nid_cp_cd[i, :] = [nid, cp, cd]
             xyz_cp[i, :] = node.xyz
             i += 1
+        if nspoints:
+            for nid in sorted(self.spoints.points):
+                nid_cp_cd[i] = nid
+                i += 1
+        if nepoints:
+            for nid in sorted(self.epoints.points):
+                nid_cp_cd[i] = nid
+                i += 1
 
         icp_transform = {}
         icd_transform = {}
@@ -2696,7 +2749,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
                 continue
-            coord = model.coords[cp]
+            coord = self.coords[cp]
             beta = coord.beta()
             is_beta = np.abs(np.diagonal(beta)).min() == 1.
             is_origin = np.abs(coord.origin).max() == 0.
@@ -3140,9 +3193,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     % (bdf_filename, self.active_filenames)
                 raise RuntimeError(msg)
             elif os.path.isdir(_filename(bdf_filename)):
-                current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
+                current_fname = self.active_filename if len(self.active_filenames) > 0 else 'None'
                 raise IOError('Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
-                    bdf_filename_inc, current_filename))
+                    bdf_filename_inc, current_fname))
             elif not os.path.isfile(_filename(bdf_filename)):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
 
@@ -3174,9 +3227,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         #self.mat1.allocate(card_count)
         #self.mat8.allocate(card_count)
 
-    def _parse_spc1(self, card_name, card):
+    def _parse_spc1(self, card_name, cards):
         """adds SPC1s"""
-        for comment, card_lines in card:
+        for comment, card_lines in cards:
             card_obj = self._cardlines_to_card_obj(card_lines, card_name)
             constraint_id, dofs, node_ids = get_spc1_constraint(card_obj)
 
@@ -3188,6 +3241,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #spc1 = self.spc1.setdefault(constraint_id, SPC1(self))
             #spc1.add_card(card_obj, comment=comment)
             spc1.add(constraint_id, dofs, node_ids, comment=comment)
+        self._increase_card_count(card_name, len(cards))
 
     def _parse_mpc(self, card_name, cards):
         """adds MPCs"""
@@ -3243,7 +3297,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             card_obj = self._cardlines_to_card_obj(card_lines, card_name)
             for i in [0, 1]:
                 constraint_id, node_id, dofs, enforced_motion = get_spc_constraint(card_obj, i)
-                print('constraint_id=%s node_id=%s dofs=%s enforced=%s' % (constraint_id, node_id, dofs, enforced_motion))
+                #self.log.debug('constraint_id=%s node_id=%s dofs=%s enforced=%s' % (
+                    #constraint_id, node_id, dofs, enforced_motion))
                 if node_id is None:
                     continue
                 if enforced_motion != 0.0:
@@ -3346,17 +3401,21 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         if ncards1:
             name1, obj1 = pair1
             self._increase_card_count(name1, ncards1)
+            self.log.debug('  allocating %r' % obj1.type)
             obj1.allocate(self.card_count)
             for comment, card_obj in cards1:
                 obj1.add_card(card_obj, comment)
+            self.log.debug('  building %r; n=%s' % (obj1.type, obj1.n))
             obj1.build()
 
         if ncards2:
             name2, obj2 = pair2
             self._increase_card_count(name2, ncards2)
+            self.log.debug('  allocating %r' % obj2.type)
             obj2.allocate(self.card_count)
             for comment, card_obj in cards2:
                 obj2.add_card(card_obj, comment)
+            self.log.debug('  building %r; n=%s' % (obj2.type, obj2.n))
             obj2.build()
 
     def _parse_cards(self, cards, card_count):
@@ -3386,8 +3445,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     card = cards[card_name]
                     ncards = len(card)
                     method = cards_to_get_lengths_of[card_name]
-                    method(card_name, card)
                     self.log.info('dynamic vectorized parse of n%s = %s' % (card_name, ncards))
+                    method(card_name, card)
                     del cards[card_name]
                     continue
 
@@ -3398,8 +3457,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 if self.is_reject(card_name):# and card_name not in :
                     self.log.warning('n%s = %s (rejecting)' % (card_name, ncards))
                     #self.log.info('  rejecting card_name = %s' % card_name)
-                    for cardi in card:
-                        self.rejects.append([cardi[0]] + cardi[1])
+                    for comment, card_lines in card:
+                        self.rejects.append([_format_comment(comment)] + card_lines)
+                        #self.rejects.append([cardi[0]] + cardi[1])
+                    self._increase_card_count(card_name, count_num=ncards)
                 elif card_name in cards_to_get_lengths_of:
                     #raise RuntimeError('this shouldnt happen because we deleted the cards above')
                     continue
@@ -3455,21 +3516,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     #msg += 'card_lines = %s' % card_lines
                     #raise RuntimeError(msg)
                 #if self.is_reject(card_name):
-                    #if card_name not in self.card_count:
-                        #if ' ' in card_name:
-                            #msg = (
-                                #'No spaces allowed in card name %r.  '
-                                #'Should this be a comment?\n%s%s' % (
-                                    #card_name, comment, card_lines))
-                            #raise RuntimeError(msg)
-                        #if card_name in ['SUBCASE ', 'CEND']:
-                            #raise RuntimeError('No executive/case control deck was defined.')
-                        #self.log.info('    rejecting card_name = %s' % card_name)
-                    #self._increase_card_count(card_name)
-                    #self.rejects.append([comment] + card_lines)
-                #else:
-                    #self.add_card(card_lines, card_name, comment=comment,
-                                  #is_list=False, has_none=False)
+                    #self.reject_card_lines(card_name, card_lines, comment)
 
         self.coords.build()
         self.elements.build()
@@ -3607,7 +3654,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         for key, card in sorted(iteritems(self.elements)):
             try:
                 card._verify(xref)
-            except Exception as e:
+            except Exception:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
@@ -3675,6 +3722,15 @@ IGNORE_COMMENTS = (
     'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
     'PROPERTIES_MASS', 'MASSES')
 
+def _prep_comment(comment):
+    return comment.rstrip()
+    #print('comment = %r' % comment)
+    #comment = '  this\n  is\n  a comment\n'
+    #print(comment.rstrip('\n').split('\n'))
+    #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
+             #for comment in comment.rstrip().split('\n')]
+    #print('sline = ', sline)
+    #asdh
 
 def _clean_comment(comment):
     """
