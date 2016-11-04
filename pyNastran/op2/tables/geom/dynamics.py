@@ -80,7 +80,7 @@ class DYNAMICS(GeomCommon):
             out = unpack('iiff', edata)
             #(sid,p,c,a) = out
             darea = DAREA.add_op2_data(data=out)
-            self.add_DAREA(darea)
+            self.add_darea(darea)
             n += ntotal
         return n
 
@@ -257,7 +257,8 @@ class DYNAMICS(GeomCommon):
                 nid1, component1, a0, a1, a2 = struct2.unpack(data[n2:n3])
 
                 if self.is_debug_file:
-                    self.binary_debug.write('  i=%s     -> %s\n' % (irow, [nid1, component1, a0, a1, a2]))
+                    self.binary_debug.write('  i=%s     -> %s\n' % (
+                        irow, [nid1, component1, a0, a1, a2]))
 
                 if nid1 == -1 and component1 == -1:
                     break

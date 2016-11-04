@@ -249,7 +249,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         Gets the material of the :math:`i^{th}` ply (not the ID unless
         it is not cross-referenced).
 
-        :param iply: the ply ID (starts from 0)
+        Parameters
+        ----------
+        iply : int
+            the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         mid = self.mids[iply]
@@ -259,7 +262,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the ply angle of the :math:`i^{th}` ply (not the ID)
 
-        :param iply: the ply ID (starts from 0)
+        Parameters
+        ----------
+        iply : int
+            the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         theta = self.thetas[iply]
@@ -270,7 +276,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         Gets the the flag identifying stress/strain outpur of the
         :math:`i^{th}` ply (not the ID).  default='NO'.
 
-        :param iply: the ply ID (starts from 0)
+        Parameters
+        ----------
+        iply : int
+            the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         sout = self.souts[iply]
@@ -280,7 +289,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the z locations for the various plies.
 
-        :param iply: the ply ID (starts from 0)
+        Parameters
+        ----------
+        iply : int
+            the ply ID (starts from 0)
 
         Assume there are 2 plies, each of 1.0 thick, starting from :math:`z=0`.
 

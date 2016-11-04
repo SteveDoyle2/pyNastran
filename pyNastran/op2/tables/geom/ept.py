@@ -112,16 +112,16 @@ class EPT(GeomCommon):
         """
         self.log.debug('skipping NSM in EPT\n')
         return len(data)
-        s = Struct(b(self._endian + 'i4sif'))
-        while len(data) >= 16:  # 4*4
-            edata = data[:16]
-            data = data[16:]
-            out = s.unpack(edata)
-            (sid, prop_set, ID, value) = out
-            #print("sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value))
-            prop = NSM.add_op2_data([sid, prop_set, ID, value])
-            #self._add_op2_property(prop)
-        return n
+        #s = Struct(b(self._endian + 'i4sif'))
+        #while len(data) >= 16:  # 4*4
+            #edata = data[:16]
+            #data = data[16:]
+            #out = s.unpack(edata)
+            #(sid, prop_set, ID, value) = out
+            ##print("sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value))
+            #prop = NSM.add_op2_data([sid, prop_set, ID, value])
+            ##self._add_op2_property(prop)
+        #return n
 
 # NSM1
 # NSML1
@@ -280,7 +280,7 @@ class EPT(GeomCommon):
 
             assert len(endpack) == 16, endpack
             (k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
-             m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b ) = endpack # 8 -> 16
+             m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
             self.log.debug('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
                            'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
             data_in.append(endpack)
@@ -396,10 +396,10 @@ class EPT(GeomCommon):
             assert isinstance(nlayers, int), out
             n += 32
 
-            Mid = []
+            mids = []
             T = []
-            Theta = []
-            Sout = []
+            thetas = []
+            souts = []
 
             # None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'
             is_symmetrical = 'NO'
@@ -412,17 +412,17 @@ class EPT(GeomCommon):
                 pid, nlayers, z0, nsm, sb, ft, Tref, ge)
             for ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+16])
-                Mid.append(mid)
+                mids.append(mid)
                 T.append(t)
-                Theta.append(theta)
-                Sout.append(sout)
+                thetas.append(theta)
+                souts.append(sout)
                 if self.is_debug_file:
                     self.binary_debug.write('  mid=%s t=%s theta=%s sout=%s' % (mid, t, theta, sout))
                 n += 16
 
             data_in = [
                 pid, z0, nsm, sb, ft, Tref, ge,
-                is_symmetrical, Mid, T, Theta, Sout]
+                is_symmetrical, mids, T, thetas, souts]
             prop = PCOMP.add_op2_data(data_in)
             self._add_op2_property(prop)
             nproperties += 1

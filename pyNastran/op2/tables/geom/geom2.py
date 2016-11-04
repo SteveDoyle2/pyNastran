@@ -215,8 +215,8 @@ class GEOM2(GeomCommon):
 
             # NX specific
             (17200, 172, 1000) : ['CPYRAM', self._read_cpyram],
-            (25700,257,9948) : ['CPYRA5FD', self._read_cpyram],
-            (25800,258,9947) : ['CPYRA13F', self._read_cpyram],
+            (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram],
+            (25800, 258, 9947) : ['CPYRA13F', self._read_cpyram],
             (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram],
         }
 
@@ -707,7 +707,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CHBDYP=%s\n' % str(out))
             #self.log.debug('  CHBDYP=%s' % str(out))
             data_in = [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
-             dislin, ce, e1, e2, e3]
+                       dislin, ce, e1, e2, e3]
             elem = CHBDYP.add_op2_data(data_in)
             self.add_thermal_element(elem)
             n += ntotal
@@ -1092,8 +1092,9 @@ class GEOM2(GeomCommon):
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
             if self.is_debug_file:
                 self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" % (
-                #eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
+            print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
+                  'tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
+                eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
             #data_init = [eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4]
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
             elem = element.add_op2_data(data)

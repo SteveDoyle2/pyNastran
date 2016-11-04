@@ -19,7 +19,7 @@ $   Date       : Wed Nov 02 22:10:33 2016
 $ ***************************************************************************
 $
 PARAM,POST,-1
-PARAM,OGEOM,NO
+$PARAM,OGEOM,NO
 PARAM,AUTOSPC,YES
 PARAM,K6ROT,100.
 PARAM,GRDPNT,0

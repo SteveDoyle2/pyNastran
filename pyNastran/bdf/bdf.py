@@ -1395,7 +1395,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 backup_comment += comment + '\n'
                 #print('add backup=%r' % backup_comment)
             #elif comment:
-                #backup_comment += '$' + comment + '\n'
+                #backup_comment += comment + '\n'
 
         if card_lines:
             if self.echo:
@@ -1832,7 +1832,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CELAS3' : (CELAS3, self.add_element),
             'CELAS4' : (CELAS4, self.add_element),
             'CVISC' : (CVISC, self.add_element),
-            'PELAST' : (PELAST, self.add_PELAST),
+            'PELAST' : (PELAST, self.add_pelast),
 
             'CDAMP1' : (CDAMP1, self.add_damper),
             'CDAMP2' : (CDAMP2, self.add_damper),
@@ -1859,8 +1859,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CRAC3D' : (CRAC3D, self.add_element),
             'PRAC3D' : (PRAC3D, self.add_property),
 
-            'PDAMPT' : (PDAMPT, self.add_PDAMPT),
-            'PBUSHT' : (PBUSHT, self.add_PBUSHT),
+            'PDAMPT' : (PDAMPT, self.add_pdampt),
+            'PBUSHT' : (PBUSHT, self.add_pbusht),
 
             'PCONEAX' : (PCONEAX, self.add_property),
 
@@ -1909,14 +1909,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CMASS3' : (CMASS3, self.add_mass),
             ## CMASS4 - added later because documentation is wrong
 
-            'MPC' : (MPC, self.add_constraint_MPC),
-            'MPCADD' : (MPCADD, self.add_constraint_MPC),
+            'MPC' : (MPC, self.add_constraint_mpc),
+            'MPCADD' : (MPCADD, self.add_constraint_mpc),
 
-            'SPC' : (SPC, self.add_constraint_SPC),
-            'SPC1' : (SPC1, self.add_constraint_SPC),
-            'SPCAX' : (SPCAX, self.add_constraint_SPC),
-            'SPCADD' : (SPCADD, self.add_constraint_SPC),
-            'GMSPC' : (GMSPC, self.add_constraint_SPC),
+            'SPC' : (SPC, self.add_constraint_spc),
+            'SPC1' : (SPC1, self.add_constraint_spc),
+            'SPCAX' : (SPCAX, self.add_constraint_spc),
+            'SPCADD' : (SPCADD, self.add_constraint_spc),
+            'GMSPC' : (GMSPC, self.add_constraint_spc),
 
             'SESUP' : (SESUP, self.add_sesuport), # pseudo-constraint
             'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
@@ -1955,10 +1955,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RLOAD1' : (RLOAD1, self.add_dload_entry),
             'RLOAD2' : (RLOAD2, self.add_dload_entry),
 
-            'FREQ' : (FREQ, self.add_FREQ),
-            'FREQ1' : (FREQ1, self.add_FREQ),
-            'FREQ2' : (FREQ2, self.add_FREQ),
-            'FREQ4' : (FREQ4, self.add_FREQ),
+            'FREQ' : (FREQ, self.add_freq),
+            'FREQ1' : (FREQ1, self.add_freq),
+            'FREQ2' : (FREQ2, self.add_freq),
+            'FREQ4' : (FREQ4, self.add_freq),
 
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
             'DESVAR' : (DESVAR, self.add_desvar),
@@ -2021,13 +2021,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CSSCHD' : (CSSCHD, self.add_csschd),
             'MONPNT1' : (MONPNT1, self.add_monpnt),
 
-            #'NLPARM' : (NLPARM, self.add_NLPARM),
+            #'NLPARM' : (NLPARM, self.add_nlparm),
             'NLPCI' : (NLPCI, self.add_nlpci),
             'TSTEP' : (TSTEP, self.add_tstep),
             'TSTEPNL' : (TSTEPNL, self.add_tstepnl),
 
             'TF' : (TF, self.add_TF),
-            'DELAY' : (DELAY, self.add_DELAY),
+            'DELAY' : (DELAY, self.add_delay),
 
             'DCONADD' : (DCONADD, self.add_dconstr),
             'DCONSTR' : (DCONSTR, self.add_dconstr),
@@ -2068,11 +2068,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'EIGC' : (EIGC, self.add_cmethod),
             'EIGP' : (EIGP, self.add_cmethod),
 
-            'BCRPARA' : (BCRPARA, self.add_BCRPARA),
-            'BCTADD' : (BCTADD, self.add_BCTADD),
-            'BCTPARA' : (BCTPARA, self.add_BCTPARA),
-            'BSURF' : (BSURF, self.add_BSURF),
-            'BSURFS' : (BSURFS, self.add_BSURFS),
+            'BCRPARA' : (BCRPARA, self.add_bcrpara),
+            'BCTADD' : (BCTADD, self.add_bctadd),
+            'BCTPARA' : (BCTPARA, self.add_bctpara),
+            'BSURF' : (BSURF, self.add_bsurf),
+            'BSURFS' : (BSURFS, self.add_bsurfs),
 
             'ASET' : (ASET, self.add_aset),
             'ASET1' : (ASET1, self.add_aset),
@@ -2191,7 +2191,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
         card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
-        self.add_BCTSET(card)
+        self.add_bctset(card)
 
     def _prepare_grdset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
@@ -2207,22 +2207,22 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _prepare_convm(self, card, card_obj, comment=''):
         """adds a CONVM"""
         boundary_condition = CONVM.add_card(card_obj, comment=comment)
-        self.add_thermal_BC(boundary_condition, boundary_condition.eid)
+        self.add_thermal_bc(boundary_condition, boundary_condition.eid)
 
     def _prepare_conv(self, card, card_obj, comment=''):
         """adds a CONV"""
         boundary_condition = CONV.add_card(card_obj, comment=comment)
-        self.add_thermal_BC(boundary_condition, boundary_condition.eid)
+        self.add_thermal_bc(boundary_condition, boundary_condition.eid)
 
     def _prepare_radm(self, card, card_obj, comment=''):
         """adds a RADM"""
         boundary_condition = RADM.add_card(card, comment=comment)
-        self.add_thermal_BC(boundary_condition, boundary_condition.radmid)
+        self.add_thermal_bc(boundary_condition, boundary_condition.radmid)
 
     def _prepare_radbc(self, card, card_obj, comment=''):
         """adds a RADBC"""
         boundary_condition = RADBC(card_obj, comment=comment)
-        self.add_thermal_BC(boundary_condition, boundary_condition.nodamb)
+        self.add_thermal_bc(boundary_condition, boundary_condition.nodamb)
 
     def _prepare_tempd(self, card, card_obj, comment=''):
         """adds a TEMPD"""
@@ -2256,14 +2256,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if name == 'UACCEL':  # special DMIG card
             if field2 == 0:
                 card = DMIG_UACCEL.add_card(card_obj, comment=comment)
-                self.add_DMIG(card)
+                self.add_dmig(card)
             else:
                 self._dmig_temp[name].append((card_obj, comment))
         else:
             field2 = integer_or_string(card_obj, 2, 'flag')
             if field2 == 0:
                 card = DMIG(card_obj, comment=comment)
-                self.add_DMIG(card)
+                self.add_dmig(card)
             else:
                 self._dmig_temp[name].append((card_obj, comment))
 
@@ -2279,19 +2279,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_dmi(self, card, card_obj, comment=''):
         """adds a DMI"""
-        self._prepare_dmix(DMI, self.add_DMI, card_obj, comment=comment)
+        self._prepare_dmix(DMI, self.add_dmi, card_obj, comment=comment)
 
     def _prepare_dmij(self, card, card_obj, comment=''):
         """adds a DMIJ"""
-        self._prepare_dmix(DMIJ, self.add_DMIJ, card_obj, comment=comment)
+        self._prepare_dmix(DMIJ, self.add_dmij, card_obj, comment=comment)
 
     def _prepare_dmik(self, card, card_obj, comment=''):
         """adds a DMIK"""
-        self._prepare_dmix(DMIK, self.add_DMIK, card_obj, comment=comment)
+        self._prepare_dmix(DMIK, self.add_dmik, card_obj, comment=comment)
 
     def _prepare_dmiji(self, card, card_obj, comment=''):
         """adds a DMIJI"""
-        self._prepare_dmix(DMIJI, self.add_DMIJI, card_obj, comment=comment)
+        self._prepare_dmix(DMIJI, self.add_dmiji, card_obj, comment=comment)
 
     def _prepare_cmass4(self, card, card_obj, comment=''):
         """adds a CMASS4"""
@@ -2343,15 +2343,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _prepare_darea(self, card, card_obj, comment=''):
         """adds a DAREA"""
         class_instance = DAREA.add_card(card_obj, comment=comment)
-        self.add_DAREA(class_instance)
+        self.add_darea(class_instance)
         if card_obj.field(5):
             class_instance = DAREA.add_card(card_obj, icard=1, comment=comment)
-            self.add_DAREA(class_instance)
+            self.add_darea(class_instance)
 
     def _prepare_dphase(self, card, card_obj, comment=''):
         """adds a DPHASE"""
         class_instance = DPHASE.add_card(card_obj, comment=comment)
-        self.add_DPHASE(class_instance)
+        self.add_dphase(class_instance)
         #if card_obj.field(5):
             #print('card_obj = ', card_obj)
             #class_instance = DPHASE(card_obj, icard=1, comment=comment)
@@ -2572,10 +2572,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         comment : str
             an optional the comment for the card
         """
-        if self._auto_reject:
-            self.reject_cards.append(card)
-            print('rejecting processed auto=rejected %s' % card)
-
         if card_name == 'ECHOON':
             self.echo = True
             return
@@ -3209,11 +3205,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     pass
                 else:
                     while not line.split('$')[0].endswith("'") and j < nlines:
-                        # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                        #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
                         try:
                             line = lines[j].split('$')[0].strip()
                         except IndexError:
-                            # print('bdf_filename=%r' % bdf_filename)
+                            #print('bdf_filename=%r' % bdf_filename)
                             crash_name = 'pyNastran_crash.bdf'
                             self._dump_file(crash_name, lines, i+1)
                             msg = 'There was an invalid filename found while parsing (index).\n'
@@ -3224,7 +3220,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                              #line.split('$')[0].strip().endswith(""), line.strip()))
                         include_lines.append(line.strip())
                         j += 1
-                    # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                    #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
 
                     #print('*** %s' % line)
                     #bdf_filename2 = line[7:].strip(" '")

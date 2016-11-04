@@ -10,24 +10,9 @@ environment:
 
   matrix:
 
-    # Python 2.7.10 is the latest version and is not pre-installed.
-
-    #- PYTHON: "C:\\Python27.10"
-    #  PYTHON_VERSION: "2.7.10"
-    #  PYTHON_ARCH: "32"
-
-    #- PYTHON: "C:\\Python27.10-x64"
-    #  PYTHON_VERSION: "2.7.10"
-    #  PYTHON_ARCH: "64"
-
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
-
-    #- PYTHON: "C:\\Python27"
-    #  PYTHON_VERSION: "2.7.x" # currently 2.7.9
-    #  PYTHON_ARCH: "32"
-
 
     ############################################################
     # conda set
@@ -45,17 +30,17 @@ environment:
       PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
       PYNASTRAN_LIBS: "numpy scipy pandas vtk pyqt"
 
-    - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3
-      PYTHON_ARCH: "32"
-      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
-      PYNASTRAN_LIBS: "numpy scipy pandas"
+    #- PYTHON: "C:\\Miniconda3"
+    #  PYTHON_VERSION: "3.4.x" # currently 3.4.3
+    #  PYTHON_ARCH: "32"
+    #  PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
+    #  PYNASTRAN_LIBS: "numpy scipy pandas"
 
-    - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3
-      PYTHON_ARCH: "64"
-      PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
-      PYNASTRAN_LIBS: "numpy scipy pandas"
+    #- PYTHON: "C:\\Miniconda3-x64"
+    #  PYTHON_VERSION: "3.4.x" # currently 3.4.3
+    #  PYTHON_ARCH: "64"
+    #  PYNASTRAN_TEST_PATH: "pyNastran/all_tests_no_gui.py"
+    #  PYNASTRAN_LIBS: "numpy scipy pandas"
 
     - PYTHON: "C:\\Miniconda35"
       PYTHON_VERSION: "3.5.x" # currently 3.5.1
@@ -70,70 +55,6 @@ environment:
       PYNASTRAN_LIBS: "numpy scipy pandas"
 
     ############################################################
-    # initial set
-    #- PYTHON: "C:\\Python27-x64"
-    #  PYTHON_VERSION: "2.7.x" # currently 2.7.12
-    #  PYTHON_ARCH: "64"
-
-    #- PYTHON: "C:\\Python33"
-    #  PYTHON_VERSION: "3.3.x" # currently 3.3.5
-    #  PYTHON_ARCH: "32"
-
-    #- PYTHON: "C:\\Python33-x64"
-    #  PYTHON_VERSION: "3.3.x" # currently 3.3.5
-    #  PYTHON_ARCH: "64"
-
-    #- PYTHON: "C:\\Python34"
-    #  PYTHON_VERSION: "3.4.x" # currently 3.4.4
-    #  PYTHON_ARCH: "32"
-
-    #- PYTHON: "C:\\Python34-x64"
-    #  PYTHON_VERSION: "3.4.x" # currently 3.4.4
-    #  PYTHON_ARCH: "64"
-
-    #- PYTHON: "C:\\Python35"
-    #  PYTHON_VERSION: "3.5.x" # currently 3.5.2
-    #  PYTHON_ARCH: "32"
-
-    #- PYTHON: "C:\\Python35-x64"
-    #  PYTHON_VERSION: "3.5.x" # currently 3.5.2
-    #  PYTHON_ARCH: "64"
-    ############################################################
-
-
-
-
-    # Python versions not pre-installed
-
-    # Python 2.6.6 is the latest Python 2.6 with a Windows installer
-    # See: https://github.com/ogrisel/python-appveyor-demo/issues/10
-
-    #- PYTHON: "C:\\Python266"
-    #  PYTHON_VERSION: "2.6.6"
-    #  PYTHON_ARCH: "32"
-
-    #- PYTHON: "C:\\Python266-x64"
-    #  PYTHON_VERSION: "2.6.6"
-    #  PYTHON_ARCH: "64"
-
-    #- PYTHON: "C:\\Python35"
-    #  PYTHON_VERSION: "3.5.0"
-    #  PYTHON_ARCH: "32"
-
-    #- PYTHON: "C:\\Python35-x64"
-    #  PYTHON_VERSION: "3.5.0"
-    #  PYTHON_ARCH: "64"
-
-    # Major and minor releases (i.e x.0.0 and x.y.0) prior to 3.3.0 use
-    # a different naming scheme.
-
-    #- PYTHON: "C:\\Python270"
-    #  PYTHON_VERSION: "2.7.0"
-    #  PYTHON_ARCH: "32"
-
-    #- PYTHON: "C:\\Python270-x64"
-    #  PYTHON_VERSION: "2.7.0"
-    #  PYTHON_ARCH: "64"
 
 install:
   # If there is a newer build queued for the same PR, cancel this one.
@@ -159,11 +80,6 @@ install:
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   #
-  # for base python:
-  #- "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  #
-  # for anaconda:
-  #- set PATH=C:\Miniconda3;C:\Miniconda3\Scripts;%PATH%
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Check that we have the expected version and architecture for Python
@@ -195,10 +111,6 @@ build_script:
 
 test_script:
   # Run the project tests
-  #- if "%PYTHON_VERSION%"=="2.7.x" ("%CMD_IN_ENV% python %pyNastran/all_tests_no_gui.py")
-  #- if "%PYTHON_VERSION%"=="3.3.x" ("%CMD_IN_ENV% python pyNastran/all_tests_no_gui.py")
-  #- if "%PYTHON_VERSION%"=="3.4.x" ("%CMD_IN_ENV% python pyNastran/all_tests_no_gui.py")
-  #- if "%PYTHON_VERSION%"=="3.5.x" ("%CMD_IN_ENV% python pyNastran/all_tests_no_gui.py")
   - "%CMD_IN_ENV% python %PYNASTRAN_TEST_PATH%"
 
 #after_test:

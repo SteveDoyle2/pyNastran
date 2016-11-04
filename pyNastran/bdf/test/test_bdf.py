@@ -317,9 +317,9 @@ def run_and_compare_fems(
         nastran_cmd = ''
         #try:
 
-        out_model, fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
-                                   size, is_double, cid,
-                                   encoding=encoding, crash_cards=crash_cards)
+        fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
+                        size, is_double, cid,
+                        encoding=encoding, crash_cards=crash_cards)
         if stop:
             if not quiet:
                 print('card_count:')
@@ -534,7 +534,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         print("failed reading %r" % bdf_model)
         raise
 
-    out_model = bdf_model + '_out'
+    #out_model = bdf_model + '_out'
     #if cid is not None and xref:
         #fem1.resolve_grids(cid=cid)
 
@@ -554,7 +554,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         fem1.get_area_breakdown()
         fem1.get_volume_breakdown()
         fem1.get_mass_breakdown()
-    return out_model, fem1
+    return fem1
 
 
 def run_fem2(bdf_model, out_model, xref, punch,

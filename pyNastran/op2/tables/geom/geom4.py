@@ -5,12 +5,13 @@ from six import b
 from six.moves import range
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
-from pyNastran.bdf.cards.elements.rigid import RBE2
+#from pyNastran.bdf.cards.elements.rigid import RBE2
 from pyNastran.bdf.cards.bdf_sets import (
-    ASET, ASET1, QSET, QSET1, USET, USET1, SEQSET, SEQSET1)
+    ASET, ASET1, QSET, QSET1, USET, USET1, SEQSET1 # SEQSET
+)
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.bdf.cards.constraints import SUPORT1, SUPORT, SPC, SPC1, MPC
+from pyNastran.bdf.cards.constraints import SUPORT1, SUPORT, SPC, SPC1#, MPC
     #SPCADD, SPCAX, MPCADD, SESUP, GMSPC
 
 class GEOM4(GeomCommon):
@@ -103,11 +104,11 @@ class GEOM4(GeomCommon):
 
     def _read_aset(self, data, n):
         """ASET(5561,76,215) - Record 1"""
-        return self._read_xset(data, n, 'ASET', ASET, self.add_ASET)
+        return self._read_xset(data, n, 'ASET', ASET, self.add_aset)
 
     def _read_qset(self, data, n):
         """QSET(610, 6, 316) - Record 21"""
-        return self._read_xset(data, n, 'QSET', QSET, self.add_QSET)
+        return self._read_xset(data, n, 'QSET', QSET, self.add_qset)
 
     def _read_xset(self, data, n, card_name, cls, add_method):
         """common method for ASET, QSET"""
@@ -132,7 +133,7 @@ class GEOM4(GeomCommon):
         """ASET1(5571,77,216) - Record 22"""
         #self.log.debug('skipping ASET1 in GEOM4\n')
         #return len(data)
-        return self._read_xset1(data, n, 'ASET1', ASET1, self.add_ASET)
+        return self._read_xset1(data, n, 'ASET1', ASET1, self.add_aset)
 
     def _read_xset1(self, data, n, card_name, cls, add_method, debug=False):
         """common method for ASET1, QSET1"""
@@ -187,39 +188,39 @@ class GEOM4(GeomCommon):
         self.log.debug('skipping MPC in GEOM4\n')
         return len(data)
         #self.show_data(data)
-        ndata = len(data)
-        nfields = (ndata-n) // 4
-        print('nfields = %s' % nfields)
-        datan = data[n:]
-        ints = unpack(b(self._endian + '%ii' % nfields), datan)
-        floats = unpack(b(self._endian + '%if' % nfields), datan)
-        i = 0
-        nentries = 0
-        mpc = []
-        j = 0
-        while i < nfields:
-            if ints[i] == -1:
-                assert ints[i+1] == -1, ints
-                assert ints[i+2] == -1, ints
-                mpci = MPC.add_op2_data(mpc)
-                self.add_suport(mpci) # extracts [sid, nid, c]
-                print(mpc)
-                nentries += 1
-                if self.is_debug_file:
-                    self.binary_debug.write('  MPC=%s\n' % str(mpc))
-                mpc = []
-                j = 0
-                i += 2
-                continue
-            if j == 0:
-                mpc = [ints[i], ints[i+1], ints[i+2], floats[i+3]]
-                i = 4
-            i += 1
-            #print(suport)
-            assert -1 not in mpc, mpc
+        #ndata = len(data)
+        #nfields = (ndata-n) // 4
+        #print('nfields = %s' % nfields)
+        #datan = data[n:]
+        #ints = unpack(b(self._endian + '%ii' % nfields), datan)
+        #floats = unpack(b(self._endian + '%if' % nfields), datan)
+        #i = 0
+        #nentries = 0
+        #mpc = []
+        #j = 0
+        #while i < nfields:
+            #if ints[i] == -1:
+                #assert ints[i+1] == -1, ints
+                #assert ints[i+2] == -1, ints
+                #mpci = MPC.add_op2_data(mpc)
+                #self.add_suport(mpci) # extracts [sid, nid, c]
+                #print(mpc)
+                #nentries += 1
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  MPC=%s\n' % str(mpc))
+                #mpc = []
+                #j = 0
+                #i += 2
+                #continue
+            #if j == 0:
+                #mpc = [ints[i], ints[i+1], ints[i+2], floats[i+3]]
+                #i = 4
+            #i += 1
+            ##print(suport)
+            #assert -1 not in mpc, mpc
 
-        MPC.add_op2_data(data)
-        aaa
+        #MPC.add_op2_data(data)
+        #aaa
 
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
@@ -235,7 +236,7 @@ class GEOM4(GeomCommon):
         """QSET1(610,6,316) - Record 22"""
         #self.log.debug('skipping QSET1 in GEOM4\n')
         #return len(data)
-        return self._read_xset1(data, n, 'QSET1', QSET1, self.add_QSET)
+        return self._read_xset1(data, n, 'QSET1', QSET1, self.add_qset)
 
     def _read_rbar(self, data, n):
         """RBAR(6601,66,292) - Record 22"""
@@ -253,18 +254,18 @@ class GEOM4(GeomCommon):
         return len(data)
         #n=0
         #ndata = len(data)  # 5*4
-        if 1:
-            edata = data[:12]
-            (eid, gn, cm, gm) = unpack(b(self._endian + '4i'), edata)
+        #if 1:
+            #edata = data[:12]
+            #(eid, gn, cm, gm) = unpack(b(self._endian + '4i'), edata)
 
-            edata = data[12:-4]
-            nGm = len(edata) // 4
-            iformat = bytes('i' * nGm)
-            Gm = list(unpack(iformat, edata))
-            alpha, = unpack(b(self._endian + 'f'), data[-4:])
-        elem = RBE2.add_op2_data([eid, gn, cm, Gm, alpha])
-        self.add_rigid_element(elem)
-        data = data[-1:]
+            #edata = data[12:-4]
+            #nGm = len(edata) // 4
+            #iformat = bytes('i' * nGm)
+            #Gm = list(unpack(iformat, edata))
+            #alpha, = unpack(b(self._endian + 'f'), data[-4:])
+        #elem = RBE2.add_op2_data([eid, gn, cm, Gm, alpha])
+        #self.add_rigid_element(elem)
+        #data = data[-1:]
 
     def _read_rbe3(self, data, n):
         """RBE3(7101,71,187) - Record 25"""
@@ -308,7 +309,7 @@ class GEOM4(GeomCommon):
         """SEQSET1(1210,12,322) - Record 41"""
         #self.log.debug('skipping SEQSET1 in GEOM4\n')
         #return len(data)
-        return self._read_xset1(data, n, 'SEQSET1', SEQSET1, self.add_SEQSET, debug=True)
+        return self._read_xset1(data, n, 'SEQSET1', SEQSET1, self.add_seqset, debug=True)
 
 # SESUP
 # SEUSET
@@ -327,7 +328,7 @@ class GEOM4(GeomCommon):
             if self.is_debug_file:
                 self.log.debug('SPC sid=%s id=%s c=%s dx=%s' % (sid, ID, c, dx))
             constraint = SPC.add_op2_data([sid, ID, c, dx])
-            self.add_constraint_SPC(constraint)
+            self.add_constraint_spc(constraint)
             n += 16
         return n
 
@@ -374,7 +375,7 @@ class GEOM4(GeomCommon):
             self.log.debug('   nids=%s\n' % str(nids[1:]))
             nentries += 1
             constraint = SPC1.add_op2_data([sid, g, nids])
-            self.add_constraint_SPC(constraint)
+            self.add_constraint_spc(constraint)
         self.card_count['SPC1'] = nentries
         return n
 
@@ -516,8 +517,8 @@ class GEOM4(GeomCommon):
 
     def _read_uset(self, data, n):
         """USET(2010,20,193) - Record 63"""
-        return self._read_xset(data, n, 'USET', USET, self.add_USET)
+        return self._read_xset(data, n, 'USET', USET, self.add_uset)
 
     def _read_uset1(self, data, n):
         """USET1(2110,21,194) - Record 65"""
-        return self._read_xset1(data, n, 'USET1', USET1, self.add_USET)
+        return self._read_xset1(data, n, 'USET1', USET1, self.add_uset)
