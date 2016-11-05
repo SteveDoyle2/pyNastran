@@ -977,6 +977,9 @@ class MAT4(ThermalMaterial):
     def get_density(self):
         return self.rho
 
+    def Rho(self):
+        return self.get_density()
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly

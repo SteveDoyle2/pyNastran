@@ -19,16 +19,17 @@ from six.moves.cPickle import load, dump
 
 import numpy as np
 
-from pyNastran.bdf.utils import _parse_pynastran_header
-from pyNastran.utils import object_attributes, print_bad_path
-from pyNastran.bdf.utils import (to_fields, get_include_filename,
-                                 parse_executive_control_deck, parse_patran_syntax)
-from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.utils import wipe_empty_fields
-
-from pyNastran.utils import _filename
+from pyNastran.utils import object_attributes, print_bad_path, _filename
 from pyNastran.utils.log import get_logger2
+from pyNastran.bdf.utils import (
+    _parse_pynastran_header, to_fields, get_include_filename,
+    parse_executive_control_deck, parse_patran_syntax)
+
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
+
+from pyNastran.bdf.cards.base_card import _format_comment
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 #from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
@@ -63,24 +64,16 @@ from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.bdf.cards.properties.mass import PMASS#, NSM
-from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
-                                      AESURF, AESURFS, AERO, AEROS, CSSCHD,
-                                      CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-                                      PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-                                      MONPNT1,
-                                      FLFACT, FLUTTER, GUST, MKAERO1,
-                                      MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
-                                      SPLINE5, TRIM, DIVERG)
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                     CORD2R, CORD2C, CORD2S, #CORD3G,
                                                     GMCORD)
-from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 from pyNastran.bdf.cards.deqatn import DEQATN
-from pyNastran.bdf.cards.dynamic import (DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4, TSTEP,
-                                         TSTEPNL, NLPARM, NLPCI, TF)
+from pyNastran.bdf.cards.dynamic import (
+    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
+    TSTEP, TSTEPNL, NLPARM, NLPCI, TF)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
@@ -97,13 +90,22 @@ from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT
-from pyNastran.bdf.cards.optimization import (DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
-                                              DRESP1, DRESP2, DRESP3,
-                                              DVCREL1, DVCREL2,
-                                              DVMREL1, DVMREL2,
-                                              DVPREL1, DVPREL2,
-                                              DVGRID)
-from pyNastran.bdf.cards.params import PARAM
+from pyNastran.bdf.cards.aero import (
+    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
+    AESURF, AESURFS, AERO, AEROS, CSSCHD,
+    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    MONPNT1,
+    FLFACT, FLUTTER, GUST, MKAERO1,
+    MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
+    SPLINE5, TRIM, DIVERG)
+from pyNastran.bdf.cards.optimization import (
+    DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
+    DRESP1, DRESP2, DRESP3,
+    DVCREL1, DVCREL2,
+    DVMREL1, DVMREL2,
+    DVPREL1, DVPREL2,
+    DVGRID)
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
@@ -112,6 +114,8 @@ from pyNastran.bdf.cards.bdf_sets import (
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
     SESET, #SEQSEP
 )
+from pyNastran.bdf.cards.params import PARAM
+from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, RADM, RADBC)
@@ -128,8 +132,6 @@ from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
 from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
-from pyNastran.bdf.field_writer_16 import print_field_16
-
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -474,7 +476,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
-
 
             # optimization cards
             'DEQATN', 'DTABLE',
@@ -2186,7 +2187,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 raise RuntimeError('No executive/case control deck was defined.')
             self.log.info('    rejecting card_name = %s' % card_name)
         self._increase_card_count(card_name)
-        self.rejects.append([comment] + card_lines)
+        self.rejects.append([_format_comment(comment)] + card_lines)
 
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
@@ -3426,9 +3427,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             for card_name, card in sorted(iteritems(cards)):
                 if self.is_reject(card_name):
                     self.log.info('    rejecting card_name = %s' % card_name)
-                    for cardi in card:
+                    for comment, card_lines in card:
                         self._increase_card_count(card_name)
-                        self.rejects.append([cardi[0]] + cardi[1])
+                        self.rejects.append([_format_comment(comment)] + card_lines)
                 else:
                     for comment, card_lines in card:
                         self.add_card(card_lines, card_name, comment=comment,
