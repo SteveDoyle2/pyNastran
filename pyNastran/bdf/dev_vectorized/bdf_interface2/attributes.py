@@ -56,6 +56,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad8 import CQUAD8
 #from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquadx import CQUADX
 #from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad9 import CQUAD9
 #from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctriax import CTRIAX
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctriax6 import CTRIAX6
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.pshell import PSHELL
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcomp import PCOMP
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcompg import PCOMPG
@@ -234,6 +235,7 @@ class BDFAttributes(object):
         self.ctria3 = CTRIA3(self)
         self.ctria6 = CTRIA6(self)
         self.cquad8 = CQUAD8(self)
+        self.ctriax6 = CTRIAX6(self)
         #self.cquad = CQUAD(self)
         #: stores PSHELL, PCOMP, PCOMPG
         self.properties_shell = PropertiesShell(self)

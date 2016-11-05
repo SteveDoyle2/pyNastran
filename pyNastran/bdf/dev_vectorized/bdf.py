@@ -19,16 +19,17 @@ from six.moves.cPickle import load, dump
 
 import numpy as np
 
-from pyNastran.bdf.utils import _parse_pynastran_header
-from pyNastran.utils import object_attributes, print_bad_path
-from pyNastran.bdf.utils import (to_fields, get_include_filename,
-                                 parse_executive_control_deck, parse_patran_syntax)
+from pyNastran.utils import object_attributes, print_bad_path, _filename
+from pyNastran.utils.log import get_logger2
+from pyNastran.bdf.utils import (
+    _parse_pynastran_header, to_fields, get_include_filename,
+    parse_executive_control_deck, parse_patran_syntax)
+
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.utils import wipe_empty_fields
 
-from pyNastran.utils import _filename
-from pyNastran.utils.log import get_logger2
+from pyNastran.bdf.cards.base_card import _format_comment
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 #from pyNastran.bdf.write_path import write_include
 #from pyNastran.bdf.bdf_interface.assign_type import (integer,
@@ -54,20 +55,13 @@ from pyNastran.bdf.dev_vectorized.cards.constraints.spcadd import SPCADD, get_sp
 from pyNastran.bdf.dev_vectorized.cards.constraints.mpc import MPC, get_mpc_constraint
 #from pyNastran.bdf.dev_vectorized.cards.constraints.mpcax import MPCAX
 from pyNastran.bdf.dev_vectorized.cards.constraints.mpcadd import MPCADD
-from .cards.constraints.spcadd import SPCADD, get_spcadd_constraint
 
-
-from pyNastran.bdf.dev_vectorized.cards.bdf_sets import (
-    ASET, BSET, CSET, QSET, USET,
-    ASET1, BSET1, CSET1, QSET1, USET1,
-    SET1, SET3, RADSET,
-    SEBSET, SECSET, SEQSET, # SEUSET
-    SEBSET1, SECSET1, SEQSET1, # SEUSET1
-    SESET, SEQSEP)
+from pyNastran.bdf.dev_vectorized.cards.deqatn import DEQATN
 from pyNastran.bdf.dev_vectorized.cards.dynamic import (
     #DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
     TSTEP, TSTEPNL, NLPARM, NLPCI, #TF
 )
+
 
 from pyNastran.bdf.dev_vectorized.cards.aero.aero_cards import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
@@ -85,15 +79,23 @@ from pyNastran.bdf.dev_vectorized.cards.optimization import (
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
     DVGRID)
-from pyNastran.bdf.dev_vectorized.cards.deqatn import DEQATN
+from pyNastran.bdf.dev_vectorized.cards.bdf_sets import (
+    ASET, BSET, CSET, QSET, USET,
+    ASET1, BSET1, CSET1, QSET1, USET1,
+    SET1, SET3, RADSET,
+    SEBSET, SECSET, SEQSET, # SEUSET
+    SEBSET1, SECSET1, SEQSET1, # SEUSET1
+    SESET, SEQSEP)
+
 
 
 # old cards
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
+from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.base_card import _format_comment
+from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -357,6 +359,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
             'TSTEPNL',  ## tstepnls
+            # direct matrix input cards
+            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
 
             # optimization cards
             'DEQATN', 'DTABLE',
@@ -435,45 +439,46 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         with open(obj_filename, 'w') as obj_file:
             dump(self, obj_file)
 
-    #def load(self, obj_filename='model.obj'):
-        #"""
-        #..warning:: doesn't work right
-        #"""
-        ##del self.log
-        ##del self.spcObject
-        ##del self.mpcObject
-        ##lines = print(self.case_control_deck)
-        ##self.case_control_lines = lines.split('\n')
-        ##del self.case_control_deck
-        ##self.uncross_reference()
-        ##import types
-        #with open(obj_filename, "r") as obj_file:
-            #obj = load(obj_file)
+    def load(self, obj_filename='model.obj'):
+        """
+        ..warning:: doesn't work right
+        """
+        return
+        #del self.log
+        #del self.spcObject
+        #del self.mpcObject
+        #lines = print(self.case_control_deck)
+        #self.case_control_lines = lines.split('\n')
+        #del self.case_control_deck
+        #self.uncross_reference()
+        #import types
+        with open(obj_filename, "r") as obj_file:
+            obj = load(obj_file)
 
-        #keys_to_skip = [
-            #'case_control_deck',
-            #'log', #'mpcObject', 'spcObject',
-            #'node_ids', 'coord_ids', 'element_ids', 'property_ids',
-            #'material_ids', 'caero_ids', 'is_long_ids',
-            #'nnodes', 'ncoords', 'nelements', 'nproperties',
-            #'nmaterials', 'ncaeros',
+        keys_to_skip = [
+            'case_control_deck',
+            'log', #'mpcObject', 'spcObject',
+            'node_ids', 'coord_ids', 'element_ids', 'property_ids',
+            'material_ids', 'caero_ids', 'is_long_ids',
+            'nnodes', 'ncoords', 'nelements', 'nproperties',
+            'nmaterials', 'ncaeros',
 
-            #'point_ids', 'subcases',
-            #'_card_parser', '_card_parser_b',
-        #]
-        #for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
-            #if key.startswith('__') and key.endswith('__'):
+            'point_ids', 'subcases',
+            '_card_parser', '_card_parser_b',
+        ]
+        for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
+            if key.startswith('__') and key.endswith('__'):
+                continue
+
+            #print('key =', key)
+            val = getattr(obj, key)
+            #print(key)
+            #if isinstance(val, types.FunctionType):
                 #continue
+            setattr(self, key, val)
 
-            ##print('key =', key)
-            #val = getattr(obj, key)
-            ##print(key)
-            ##if isinstance(val, types.FunctionType):
-                ##continue
-            #setattr(self, key, val)
-
-        #self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
-        #self.log.debug('done loading!')
+        self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
+        self.log.debug('done loading!')
 
     def replace_cards(self, replace_model):
         """
@@ -976,123 +981,121 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         self._dmig_temp = defaultdict(list)
 
-    #def pop_parse_errors(self):
-        #"""raises an error if there are parsing errors"""
-        #return
-        #if self._stop_on_parsing_error:
-            #if self._iparse_errors == 1 and self._nparse_errors == 0:
-                #raise
-            #is_error = False
-            #msg = ''
-            #if self._duplicate_elements:
-                #duplicate_eids = [elem.eid for elem in self._duplicate_elements]
-                #uduplicate_eids = np.unique(duplicate_eids)
-                #msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
-                #for eid in uduplicate_eids:
-                    #msg += 'old_element=\n%s\n' % self.elements[eid].print_repr_card()
-                    #msg += 'new_elements=\n'
-                    #for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
-                        #if eidi == eid:
-                            #msg += elem.print_repr_card()
-                    #msg += '\n'
-                    #is_error = True
-                    #raise DuplicateIDsError(msg)
+    def pop_parse_errors(self):
+        """raises an error if there are parsing errors"""
+        if self._stop_on_parsing_error:
+            if self._iparse_errors == 1 and self._nparse_errors == 0:
+                raise
+            is_error = False
+            msg = ''
+            if self._duplicate_elements:
+                duplicate_eids = [elem.eid for elem in self._duplicate_elements]
+                uduplicate_eids = np.unique(duplicate_eids)
+                msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
+                for eid in uduplicate_eids:
+                    msg += 'old_element=\n%s\n' % self.elements[eid].print_repr_card()
+                    msg += 'new_elements=\n'
+                    for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
+                        if eidi == eid:
+                            msg += elem.print_repr_card()
+                    msg += '\n'
+                    is_error = True
+                    raise DuplicateIDsError(msg)
 
-            #if self._duplicate_properties:
-                #duplicate_pids = [prop.pid for prop in self._duplicate_properties]
-                #uduplicate_pids = np.unique(duplicate_pids)
-                #msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
-                #for pid in duplicate_pids:
-                    #msg += 'old_property=\n%s\n' % self.properties[pid].print_repr_card()
-                    #msg += 'new_properties=\n'
-                    #for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
-                        #if pidi == pid:
-                            #msg += prop.print_repr_card()
-                    #msg += '\n'
-                    #is_error = True
+            if self._duplicate_properties:
+                duplicate_pids = [prop.pid for prop in self._duplicate_properties]
+                uduplicate_pids = np.unique(duplicate_pids)
+                msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
+                for pid in duplicate_pids:
+                    msg += 'old_property=\n%s\n' % self.properties[pid].print_repr_card()
+                    msg += 'new_properties=\n'
+                    for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
+                        if pidi == pid:
+                            msg += prop.print_repr_card()
+                    msg += '\n'
+                    is_error = True
 
-            #if self._duplicate_masses:
-                #duplicate_eids = [elem.eid for elem in self._duplicate_masses]
-                #uduplicate_eids = np.unique(duplicate_eids)
-                #msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
-                #for eid in uduplicate_eids:
-                    #msg += 'old_mass=\n%s\n' % self.masses[eid].print_repr_card()
-                    #msg += 'new_masses=\n'
-                    #for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
-                        #if eidi == eid:
-                            #msg += elem.print_repr_card()
-                    #msg += '\n'
-                    #is_error = True
+            if self._duplicate_masses:
+                duplicate_eids = [elem.eid for elem in self._duplicate_masses]
+                uduplicate_eids = np.unique(duplicate_eids)
+                msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
+                for eid in uduplicate_eids:
+                    msg += 'old_mass=\n%s\n' % self.masses[eid].print_repr_card()
+                    msg += 'new_masses=\n'
+                    for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
+                        if eidi == eid:
+                            msg += elem.print_repr_card()
+                    msg += '\n'
+                    is_error = True
 
-            #if self._duplicate_materials:
-                #duplicate_mids = [mat.mid for mat in self._duplicate_materials]
-                #uduplicate_mids = np.unique(duplicate_mids)
-                #msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
-                #for mid in uduplicate_mids:
-                    #msg += 'old_material=\n%s\n' % self.materials[mid].print_repr_card()
-                    #msg += 'new_materials=\n'
-                    #for mat, midi in zip(self._duplicate_materials, duplicate_mids):
-                        #if midi == mid:
-                            #msg += mat.print_repr_card()
-                    #msg += '\n'
-                    #is_error = True
+            if self._duplicate_materials:
+                duplicate_mids = [mat.mid for mat in self._duplicate_materials]
+                uduplicate_mids = np.unique(duplicate_mids)
+                msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
+                for mid in uduplicate_mids:
+                    msg += 'old_material=\n%s\n' % self.materials[mid].print_repr_card()
+                    msg += 'new_materials=\n'
+                    for mat, midi in zip(self._duplicate_materials, duplicate_mids):
+                        if midi == mid:
+                            msg += mat.print_repr_card()
+                    msg += '\n'
+                    is_error = True
 
-            #if self._duplicate_thermal_materials:
-                #duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
-                #uduplicate_mids = np.unique(duplicate_mids)
-                #msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
-                #for mid in uduplicate_mids:
-                    #msg += 'old_thermal_material=\n%s\n' % (
-                        #self.thermal_materials[mid].print_repr_card())
-                    #msg += 'new_thermal_materials=\n'
-                    #for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
-                        #if midi == mid:
-                            #msg += mat.print_repr_card()
-                    #msg += '\n'
-                    #is_error = True
+            if self._duplicate_thermal_materials:
+                duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
+                uduplicate_mids = np.unique(duplicate_mids)
+                msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
+                for mid in uduplicate_mids:
+                    msg += 'old_thermal_material=\n%s\n' % (
+                        self.thermal_materials[mid].print_repr_card())
+                    msg += 'new_thermal_materials=\n'
+                    for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
+                        if midi == mid:
+                            msg += mat.print_repr_card()
+                    msg += '\n'
+                    is_error = True
 
-            #if self._duplicate_coords:
-                #duplicate_cids = [coord.cid for coord in self._duplicate_coords]
-                #uduplicate_cids = np.unique(duplicate_cids)
-                #msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
-                #for cid in uduplicate_cids:
-                    #msg += 'old_coord=\n%s\n' % self.coords[cid].print_repr_card()
-                    #msg += 'new_coords=\n'
-                    #for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
-                        #if cidi == cid:
-                            #msg += coord.print_repr_card()
-                    #msg += '\n'
-                    #is_error = True
+            if self._duplicate_coords:
+                duplicate_cids = [coord.cid for coord in self._duplicate_coords]
+                uduplicate_cids = np.unique(duplicate_cids)
+                msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
+                for cid in uduplicate_cids:
+                    msg += 'old_coord=\n%s\n' % self.coords[cid].print_repr_card()
+                    msg += 'new_coords=\n'
+                    for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
+                        if cidi == cid:
+                            msg += coord.print_repr_card()
+                    msg += '\n'
+                    is_error = True
 
-            #if is_error:
-                #msg = 'There are dupliate cards.\n\n' + msg
+            if is_error:
+                msg = 'There are dupliate cards.\n\n' + msg
 
-            #if self._stop_on_xref_error:
-                #msg += 'There are parsing errors.\n\n'
-                #for (card, an_error) in self._stored_parse_errors:
-                    #msg += '%scard=%s\n' % (an_error[0], card)
-                    #msg += 'xref errror: %s\n\n'% an_error[0]
-                    #is_error = True
+            if self._stop_on_xref_error:
+                msg += 'There are parsing errors.\n\n'
+                for (card, an_error) in self._stored_parse_errors:
+                    msg += '%scard=%s\n' % (an_error[0], card)
+                    msg += 'xref errror: %s\n\n'% an_error[0]
+                    is_error = True
 
-            #if is_error:
-                #print('%s' % msg)
-                #raise DuplicateIDsError(msg.rstrip())
+            if is_error:
+                print('%s' % msg)
+                raise DuplicateIDsError(msg.rstrip())
 
-    #def pop_xref_errors(self):
-        #"""raises an error if there are cross-reference errors"""
-        #return
-        #is_error = False
-        #if self._stop_on_xref_error:
-            #if self._ixref_errors == 1 and self._nxref_errors == 0:
-                #raise
-            #if self._stored_xref_errors:
-                #msg = 'There are cross-reference errors.\n\n'
-                #for (card, an_error) in self._stored_xref_errors:
-                    #msg += '%scard=%s\n' % (an_error[0], card)
-                    #is_error = True
+    def pop_xref_errors(self):
+        """raises an error if there are cross-reference errors"""
+        is_error = False
+        if self._stop_on_xref_error:
+            if self._ixref_errors == 1 and self._nxref_errors == 0:
+                raise
+            if self._stored_xref_errors:
+                msg = 'There are cross-reference errors.\n\n'
+                for (card, an_error) in self._stored_xref_errors:
+                    msg += '%scard=%s\n' % (an_error[0], card)
+                    is_error = True
 
-                #if is_error and self._stop_on_xref_error:
-                    #raise CrossReferenceError(msg.rstrip())
+                if is_error and self._stop_on_xref_error:
+                    raise CrossReferenceError(msg.rstrip())
 
     def get_bdf_cards(self, bulk_data_lines):
         """Parses the BDF lines into a list of card_lines"""
@@ -1850,11 +1853,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'EIGC' : (EIGC, self.add_cmethod),
             'EIGP' : (EIGP, self.add_cmethod),
 
-            #'BCRPARA' : (BCRPARA, self.add_BCRPARA),
-            #'BCTADD' : (BCTADD, self.add_BCTADD),
-            #'BCTPARA' : (BCTPARA, self.add_BCTPARA),
-            #'BSURF' : (BSURF, self.add_BSURF),
-            #'BSURFS' : (BSURFS, self.add_BSURFS),
+            'BCRPARA' : (BCRPARA, self.add_bcrpara),
+            'BCTADD' : (BCTADD, self.add_bctadd),
+            'BCTPARA' : (BCTPARA, self.add_bctpara),
+            'BSURF' : (BSURF, self.add_bsurf),
+            'BSURFS' : (BSURFS, self.add_bsurfs),
 
             'ASET' : (ASET, self.add_aset),
             'ASET1' : (ASET1, self.add_aset),
@@ -1912,11 +1915,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'CMASS4' : self._prepare_cmass4,
             #'CDAMP4' : self._prepare_cdamp4,
 
-            #'DMIG' : self._prepare_dmig,
-            #'DMI' : self._prepare_dmi,
-            #'DMIJ' : self._prepare_dmij,
-            #'DMIK' : self._prepare_dmik,
-            #'DMIJI' : self._prepare_dmiji,
+            'DMIG' : self._prepare_dmig,
+            'DMI' : self._prepare_dmi,
+            'DMIJ' : self._prepare_dmij,
+            'DMIK' : self._prepare_dmik,
+            'DMIJI' : self._prepare_dmiji,
 
             'DEQATN' : self._prepare_dequatn,
 
@@ -3199,34 +3202,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             elif not os.path.isfile(_filename(bdf_filename)):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
 
-    #def _allocate(self):
-        #"""allocates the BDF objects"""
-        #self.grid.allocate(card_count)
-        ##self.grdset.allocate(card_count)
-        #self.spoint.allocate(card_count)
-
-        ## elements
-        #self.cquad4.allocate(card_count)
-        #self.ctria3.allocate(card_count)
-        #self.cquad8.allocate(card_count)
-        #self.ctria6.allocate(card_count)
-        ##self.cquad.allocate(card_count)
-
-        #self.pshell.allocate(card_count)
-        #self.pcomp.allocate(card_count)
-
-        #self.psolid.allocate(card_count)
-        #self.psolid.allocate(card_count)
-        #self.ctetra4.allocate(card_count)
-        #self.ctetra10.allocate(card_count)
-        #self.cpenta6.allocate(card_count)
-        #self.cpenta15.allocate(card_count)
-        #self.chexa8.allocate(card_count)
-        #self.chexa20.allocate(card_count)
-
-        #self.mat1.allocate(card_count)
-        #self.mat8.allocate(card_count)
-
     def _parse_spc1(self, card_name, cards):
         """adds SPC1s"""
         for comment, card_lines in cards:
@@ -3459,7 +3434,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     #self.log.info('  rejecting card_name = %s' % card_name)
                     for comment, card_lines in card:
                         self.rejects.append([_format_comment(comment)] + card_lines)
-                        #self.rejects.append([cardi[0]] + cardi[1])
                     self._increase_card_count(card_name, count_num=ncards)
                 elif card_name in cards_to_get_lengths_of:
                     #raise RuntimeError('this shouldnt happen because we deleted the cards above')

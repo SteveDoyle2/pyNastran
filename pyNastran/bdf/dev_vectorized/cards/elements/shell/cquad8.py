@@ -25,11 +25,11 @@ class CQUAD8(ShellElement):
             #: Property ID
             self.property_id = zeros(ncards, 'int32')
             #: Node IDs
-            self.node_ids = zeros((ncards, 4), 'int32')
+            self.node_ids = zeros((ncards, 8), 'int32')
 
             self.zoffset = zeros(ncards, 'int32')
             self.t_flag = zeros(ncards, 'int32')
-            self.thickness = zeros((ncards, 8), float_fmt)
+            self.thickness = zeros((ncards, 4), float_fmt)
 
     def add_card(self, card, comment=''):
         i = self.i
@@ -37,6 +37,7 @@ class CQUAD8(ShellElement):
 
         self.property_id[i] = integer(card, 2, 'property_id')
 
+        print(card)
         self.node_ids[i, :] = [
             integer(card, 3, 'n1'),
             integer(card, 4, 'n2'),
@@ -67,7 +68,7 @@ class CQUAD8(ShellElement):
             self.thickness = self.thickness[i, :]
             self.zoffset = self.zoffset[i]
             self.t_flag = self.t_flag[i]
-            assert self.node_ids.min() > 0
+            assert self.node_ids.min() >= 0
             self._cards = []
         else:
             self.element_id = array([], 'int32')

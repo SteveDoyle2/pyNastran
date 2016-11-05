@@ -7,23 +7,37 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
+from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
 
-class CTRIAX6(object):
+class CTRIAX6(Element):
     type = 'CTRIAX6'
     def __init__(self, model):
-        self.model = model
-        self.n = 0
-        self._cards = []
+        Element.__init__(self, model)
 
     def add_card(self, card, comment=''):
-        self._cards.append(card)
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'element_id')
+        self.material_id[i] = integer(card, 2, 'material_id')
 
-    def build(self):
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
+        nids = [integer(card, 3, 'n1'),
+                integer_or_blank(card, 4, 'n2'),
+                integer(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4'),
+                integer(card, 7, 'n5'),
+                integer_or_blank(card, 8, 'n6')]
+        self.node_ids[i, :] = nids
+
+        #: theta
+        self.theta[i] = double_or_blank(card, 9, 'theta', 0.0)
+
+        assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
+        self.i += 1
+
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
         if ncards:
+            self.n = ncards
             float_fmt = self.model.float_fmt
             #: Element ID
             self.element_id = zeros(ncards, 'int32')
@@ -34,23 +48,8 @@ class CTRIAX6(object):
 
             self.theta = zeros(ncards, float_fmt)
 
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'element_id')
-
-                self.material_id[i] = integer(card, 2, 'material_id')
-
-                nids = [integer(card, 3, 'n1'),
-                        integer_or_blank(card, 4, 'n2'),
-                        integer(card, 5, 'n3'),
-                        integer_or_blank(card, 6, 'n4'),
-                        integer(card, 7, 'n5'),
-                        integer_or_blank(card, 8, 'n6')]
-                self.node_ids[i, :] = nids
-
-                #: theta
-                self.theta[i] = double_or_blank(card, 9, 'theta', 0.0)
-
-                assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
+    def build(self):
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.material_id = self.material_id[i]
@@ -61,10 +60,10 @@ class CTRIAX6(object):
         else:
             self.element_id = array([], dtype='int32')
 
-    def get_index_by_element_id(self, element_id=None):
-        if element_id is None:
-            return arange(self.n)
-        return searchsorted(element_id, self.element_id)
+    #def get_index_by_element_id(self, element_id=None):
+        #if element_id is None:
+            #return arange(self.n)
+        #return searchsorted(element_id, self.element_id)
 
     def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:

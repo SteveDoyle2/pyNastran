@@ -485,7 +485,7 @@ class WriteMesh(BDFAttributes):
             part of the bdf
         """
         self._write_rigid_elements(bdf_file, size, is_double)
-        #self._write_dmigs(bdf_file, size, card_writer)
+        self._write_dmigs(bdf_file, size, is_double)
         self._write_loads(bdf_file, size, is_double)
 
         self._write_dynamic(bdf_file, size, is_double)

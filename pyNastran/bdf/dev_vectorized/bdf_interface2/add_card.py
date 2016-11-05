@@ -6,6 +6,31 @@ class AddCard(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
+    def add_dmi(self, dmi, allow_overwrites=False):
+        name = dmi.name
+        self.dmis[name] = dmi
+        self._type_to_id_map[dmi.type].append(name)
+
+    def add_dmig(self, dmig, allow_overwrites=False):
+        name = dmig.name
+        self.dmigs[name] = dmig
+        self._type_to_id_map[dmig.type].append(name)
+
+    def add_dmij(self, dmij, allow_overwrites=False):
+        name = dmij.name
+        self.dmijs[name] = dmij
+        self._type_to_id_map[dmij.type].append(name)
+
+    def add_dmiji(self, dmiji, allow_overwrites=False):
+        name = dmiji.name
+        self.dmijis[name] = dmiji
+        self._type_to_id_map[dmiji.type].append(name)
+
+    def add_dmik(self, dmik, allow_overwrites=False):
+        name = dmik.name
+        self.dmiks[name] = dmik
+        self._type_to_id_map[dmik.type].append(name)
+
     def add_param(self, param, allow_overwrites=False):
         """adds a PARAM object"""
         key = param.key
@@ -56,6 +81,37 @@ class AddCard(BDFAttributes):
                     key, self.dequations[key], deqatn)
         self.dequations[key] = deqatn
         self._type_to_id_map[deqatn.type].append(key)
+
+    def add_bcrpara(self, card, allow_overwrites=False):
+        key = card.crid
+        self.bcrparas[key] = card
+        self._type_to_id_map[card.type].append(key)
+
+    def add_bctadd(self, card, allow_overwrites=False):
+        key = card.csid
+        self.bctadds[key] = card
+        self._type_to_id_map[card.type].append(key)
+
+    def add_bctpara(self, card, allow_overwrites=False):
+        key = card.csid
+        self.bctparas[key] = card
+        self._type_to_id_map[card.type].append(key)
+
+    def add_bctset(self, card, allow_overwrites=False):
+        key = card.csid
+        self.bctsets[key] = card
+        self._type_to_id_map[card.type].append(key)
+
+    def add_bsurf(self, card, allow_overwrites=False):
+        key = card.sid
+        self.bsurf[key] = card
+        self._type_to_id_map[card.type].append(key)
+
+    def add_bsurfs(self, card, allow_overwrites=False):
+        key = card.id
+        self.bsurfs[key] = card
+        self._type_to_id_map[card.type].append(key)
+
 
     def add_aero(self, aero):
         """adds an AERO object"""
