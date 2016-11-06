@@ -23,7 +23,7 @@ $        |
 $ 1---A--2   E=10E6 psi
 $            Area A=1.0 in^2
 $                 J=2.0 in^2
-$          stress C=2.0 in^2
+$          stress C=11.0 in^2
 
 $NODES
 PARAM,POST,-1

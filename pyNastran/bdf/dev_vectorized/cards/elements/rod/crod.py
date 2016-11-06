@@ -1,6 +1,7 @@
 from __future__ import print_function
 from six.moves import zip, range
 
+import numpy as np
 from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, int64
 from numpy.linalg import norm
 
@@ -326,15 +327,23 @@ class CROD(RodElement):
         #print("----------------")
         pid = self.property_id[i]
         assert isinstance(pid, int), pid
-        A = self.get_area_by_element_id(pid)
-        E = self.get_E_by_element_id(pid)
-        G = self.get_G_by_element_id(pid)
-        J = self.get_J_by_element_id(pid)
+        element_id = self.element_id[i]
+        i = self.get_element_index_by_element_id(element_id)
+        A = self.get_area_by_element_index(i)
+        G = self.model.prod.get_G_by_property_id(pid)
+        E = self.model.prod.get_E_by_property_id(pid)
+        J = self.model.prod.get_J_by_property_id(pid)
+        #A = self.get_area_by_element_id(pid)
+        #E = self.get_E_by_element_id(pid)
+        #G = self.get_G_by_element_id(pid)
+        #J = self.get_J_by_element_id(pid)
         #print('A=%s E=%s G=%s J=%s' % (A, E, G, J))
 
         #========================
         #(n1, n2) = self.node_ids()
-        n1, n2 = self.node_ids[i, :]
+        i = np.asarray(i)
+        nids = self.node_ids[i, :]
+        n1, n2 = nids.squeeze()
 
         i1 = index0s[n1]
         i2 = index0s[n2]
@@ -439,11 +448,18 @@ class CROD(RodElement):
         f4 = zeros(n, 'float64')
 
 
-        As = self.get_area_by_element_id(self.property_id)
-        Es = self.get_E_by_element_id(self.property_id)
-        Gs = self.get_G_by_element_id(self.property_id)
-        Js = self.get_J_by_element_id(self.property_id)
-        Cs = self.get_c_by_element_id(self.property_id)
+        #As = self.get_area_by_element_id(self.property_id)
+        #Es = self.get_E_by_element_id(self.property_id)
+        #Gs = self.get_G_by_element_id(self.property_id)
+        #Js = self.get_J_by_element_id(self.property_id)
+        #Cs = self.get_c_by_element_id(self.property_id)
+
+        i = self.get_element_index_by_element_id(self.element_id)
+        As = self.get_area_by_element_index(i)
+        Gs = self.model.prod.get_G_by_property_id(self.property_id)
+        Es = self.model.prod.get_E_by_property_id(self.property_id)
+        Js = self.model.prod.get_J_by_property_id(self.property_id)
+        Cs = self.model.prod.get_c_by_property_id(self.property_id)
 
         for i in range(n):
             A = As[i]
@@ -520,9 +536,9 @@ class CROD(RodElement):
             #print("Lsize = ", Lambda.shape)
             #print("qsize = ", q.shape)
             u_axial = dot(array(Lambda), q_axial)
-            du_axial = -u_axial[0] + u_axial[1]
+            du_axial = u_axial[0] - u_axial[1]
             u_torsion = dot(array(Lambda), q_torsion)
-            du_torsion = -u_torsion[0] + u_torsion[1]
+            du_torsion = u_torsion[0] - u_torsion[1]
 
             #L = self.Length()
             #E = self.E()

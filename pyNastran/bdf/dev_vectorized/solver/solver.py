@@ -1260,6 +1260,8 @@ class Solver(OP2):
             element_type = 13
         elif element_name == 'CELAS4':
             element_type = 14
+        elif element_name == 'CROD':
+            element_type = None
         elif element_name == 'CONROD':
             element_type = None
         else:
