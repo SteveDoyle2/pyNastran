@@ -661,6 +661,7 @@ class BDFAttributes(object):
             'dvprels' : ['DVPREL1', 'DVPREL2'],
             'dvmrels' : ['DVMREL1', 'DVMREL2'],
             'dvcrels' : ['DVCREL1', 'DVCREL2'],
+            'dvgrids' : ['DVGRID'],
             'doptprm' : ['DOPTPRM'],
             'dscreen' : ['DSCREEN'],
 

@@ -315,13 +315,21 @@ class BCRPARA(BaseCard):
 
 class BCTPARA(BaseCard):
     """
-    +---------+--------+--------+--------+--------+--------+--------+--------+----+
-    |    1    |   2    |    3   |   4    |   5    |   6    |   7    |    8   |  9 |
-    +=========+========+========+========+========+========+========+========+====+
-    | BCTPARA | CSID   | Param1 | Value1 | Param2 | Value2 | Param3 | Value3 |    |
-    +---------+--------+--------+--------+--------+--------+--------+--------+----+
-    |         | Param4 | Value4 | Param5 | Value5 | -etc-  |        |        |    |
-    +---------+--------+--------+--------+--------+--------+--------+--------+----+
+    Defines parameters for a surface-to-surface contact region.
+
+    +---------+--------+--------+--------+--------+--------+---------+--------+----+
+    |    1    |   2    |    3   |   4    |   5    |   6    |    7    |    8   |  9 |
+    +=========+========+========+========+========+========+=========+========+====+
+    | BCTPARA | CSID   | Param1 | Value1 | Param2 | Value2 | Param3  | Value3 |    |
+    +---------+--------+--------+--------+--------+--------+---------+--------+----+
+    |         | Param4 | Value4 | Param5 | Value5 | -etc-  |         |        |    |
+    +---------+--------+--------+--------+--------+--------+---------+--------+----+
+
+    +---------+--------+--------+--------+--------+--------+---------+--------+----+
+    | BCTPARA |   1    | TYPE   |   0    | NSIDE  |   2    | SEGNORM |  -1    |    |
+    +---------+--------+--------+--------+--------+--------+---------+--------+----+
+    |         | CSTIFF |   1    | OFFSET | 0.015  |        |         |        |    |
+    +---------+--------+--------+--------+--------+--------+---------+--------+----+
     """
     type = 'BCTPARA'
     def __init__(self, csid, params, comment=''):
@@ -345,6 +353,10 @@ class BCTPARA(BaseCard):
             if param == 'TYPE':
                 value = integer_or_blank(card, i, 'value%s' % j, 0)
                 assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
+            #elif param == 'TYPE': # NX
+                #value = string_or_blank(card, i, 'value%s' % j, 'FLEX').upper()
+                #assert value in ['FLEX', 'RIGID', 'COATING'], 'TYPE must be [FLEX, RIGID, COATING.]; CSTIFF=%r' % value
+
             elif param == 'NSIDE':
                 value = integer_or_blank(card, i, 'value%s' % j, 1)
                 assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
@@ -395,9 +407,14 @@ class BCTPARA(BaseCard):
 
     def raw_fields(self):
         fields = ['BCTPARA', self.csid]
+        i = 0
         for key, value in sorted(iteritems(self.params)):
+            if i == 3:
+                fields.append(None)
+                i = 0
             fields.append(key)
             fields.append(value)
+            i += 1
         return fields
 
     def write_card(self, size=8, is_double=False):

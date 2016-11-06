@@ -153,6 +153,13 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[deqatn.type].append(key)
 
     def add_property(self, prop, allow_overwrites=False):
+        """
+        adds one of the following objects:
+          PELAS, PBUSH, PBUSH1D, PBUSH2D, PDAMP,
+          PROD, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+          PSHELL, PCOMP, PCOMPG,
+          PSOLID, PLSOLID
+        """
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         if key in self.properties and not allow_overwrites:
@@ -165,6 +172,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[prop.type].append(key)
 
     def add_property_mass(self, prop, allow_overwrites=False):
+        """adds an PMASS object"""
         key = prop.pid
         if key in self.properties_mass and not allow_overwrites:
             if not prop._is_same_card(self.properties_mass[key]):
@@ -176,6 +184,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[prop.type].append(key)
 
     def add_dtable(self, dtable, allow_overwrites=False):
+        """adds an DTABLE object"""
         if self.dtable is not None:
             if not dtable._is_same_card(self.dtable):
                 raise RuntimeError('DTABLE cannot be overwritten\nold:\n%s\nnew:\n%s',
@@ -185,36 +194,43 @@ class AddMethods(BDFAttributes):
             #self._type_to_id_map[dtable.type].append(1)
 
     def add_bcrpara(self, card, allow_overwrites=False):
+        """adds an BCRPARA object"""
         key = card.crid
         self.bcrparas[key] = card
         self._type_to_id_map[card.type].append(key)
 
     def add_bctadd(self, card, allow_overwrites=False):
+        """adds an BCTADD object"""
         key = card.csid
         self.bctadds[key] = card
         self._type_to_id_map[card.type].append(key)
 
     def add_bctpara(self, card, allow_overwrites=False):
+        """adds an BCTPARA object"""
         key = card.csid
         self.bctparas[key] = card
         self._type_to_id_map[card.type].append(key)
 
     def add_bctset(self, card, allow_overwrites=False):
+        """adds an BCTSET object"""
         key = card.csid
         self.bctsets[key] = card
         self._type_to_id_map[card.type].append(key)
 
     def add_bsurf(self, card, allow_overwrites=False):
+        """adds an BSURF object"""
         key = card.sid
         self.bsurf[key] = card
         self._type_to_id_map[card.type].append(key)
 
     def add_bsurfs(self, card, allow_overwrites=False):
+        """adds an BSURFS object"""
         key = card.id
         self.bsurfs[key] = card
         self._type_to_id_map[card.type].append(key)
 
     def add_delay(self, delay, allow_overwrites=False):
+        """adds an DELAY object"""
         key = delay.sid
         assert key > 0, 'sid=%s delay=%s' % (key, delay)
         if key in self.delays:
@@ -224,6 +240,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[delay.type].append(key)
 
     def add_tempd(self, tempd, allow_overwrites=False):
+        """adds an TEMPD object"""
         key = tempd.sid
         if key in self.tempds and not allow_overwrites:
             if not tempd._is_same_card(self.tempds[key]):
@@ -235,6 +252,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[tempd.type].append(key)
 
     def add_pbusht(self, prop, allow_overwrites=False):
+        """adds an PBUSHT object"""
         key = prop.pid
         if key in self.pbusht and not allow_overwrites:
             if not prop._is_same_card(self.pbusht[key]):
@@ -246,6 +264,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[prop.type].append(key)
 
     def add_pdampt(self, prop, allow_overwrites=False):
+        """adds an PDAMPT object"""
         key = prop.pid
         if key in self.pdampt and not allow_overwrites:
             if not prop._is_same_card(self.pdampt[key]):
@@ -257,6 +276,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[prop.type].append(key)
 
     def add_pelast(self, prop, allow_overwrites=False):
+        """adds an PELAST object"""
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         if key in self.pelast and not allow_overwrites:
@@ -269,6 +289,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[prop.type].append(key)
 
     def add_TF(self, tf, allow_overwrites=False):
+        """adds an TF (transfer function) object"""
         key = tf.sid
         assert key > 0, 'sid=%s tf=%s' % (key, tf)
         if key in self.transfer_functions:
@@ -278,6 +299,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[tf.type].append(key)
 
     def add_structural_material(self, material, allow_overwrites=False):
+        """adds an MAT1, MAT2, MAT8 object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.materials and not allow_overwrites:
@@ -288,6 +310,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[material.type].append(key)
 
     def add_thermal_material(self, material, allow_overwrites=False):
+        """adds an MAT4, MAT5 object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.thermal_materials and not allow_overwrites:
@@ -298,6 +321,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[material.type].append(key)
 
     def add_hyperelastic_material(self, material, allow_overwrites=False):
+        """adds an MATHP, MATHE object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.hyperelastic_materials and not allow_overwrites:
@@ -308,6 +332,12 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[material.type].append(key)
 
     def add_material_dependence(self, material, allow_overwrites=False):
+        """
+        adds the following objects:
+            MATS1, MATS3, MATS8,
+            MATT1, MATT2, MATT3,
+            MATT4, MATT5, MATT8, MATT9
+        """
         Type = material.type
         key = material.mid
         mapper = {
@@ -424,7 +454,7 @@ class AddMethods(BDFAttributes):
             self.bcs[key] = [bc]
             self._type_to_id_map[bc.type].append(key)
 
-    #def add_constraint_MPCADD(self, constraint):
+    #def add_constraint_mpcadd(self, constraint):
         #raise RuntimeError('is this used?')
         #key = constraint.conid
         #if key in self.mpcadds:
@@ -440,7 +470,7 @@ class AddMethods(BDFAttributes):
             self.mpcs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
-    #def add_constraint_SPCADD(self, constraint):
+    #def add_constraint_spcadd(self, constraint):
         #raise RuntimeError('is this used?')
         #key = constraint.conid
         #if key in self.spcadds:
