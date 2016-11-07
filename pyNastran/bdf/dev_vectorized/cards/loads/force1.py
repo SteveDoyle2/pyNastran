@@ -25,13 +25,16 @@ class FORCE1(VectorizedCard):
         """
         VectorizedCard.__init__(self, model)
 
-    def allocate(self, ncards):
-        float_fmt = self.model.float_fmt
-        self.load_id = zeros(ncards, 'int32')
-        self.node_id = zeros(ncards, 'int32')
-        self.coord_id = zeros(ncards, 'int32')
-        self.mag = zeros(ncards, float_fmt)
-        self.xyz = zeros((ncards, 3), float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float_fmt
+            self.load_id = zeros(ncards, 'int32')
+            self.node_id = zeros(ncards, 'int32')
+            self.coord_id = zeros(ncards, 'int32')
+            self.mag = zeros(ncards, float_fmt)
+            self.xyz = zeros((ncards, 3), float_fmt)
 
     def get_load_ids(self):
         return unique(self.load_id)
@@ -62,35 +65,21 @@ class FORCE1(VectorizedCard):
     def __rmul__(self, value):
         return self.__mul__(value)
 
+    def add_card(self, card, comment=''):
+        i = self.i
+        self.load_id[i] = integer(card, 1, 'sid')
+        self.node_id[i] = integer(card, 2, 'node')
+        self.coord_id[i] = integer_or_blank(card, 3, 'cid', 0)
+        self.mag[i] = double(card, 4, 'mag')
+        xyz = [double_or_blank(card, 5, 'X1', 0.0),
+               double_or_blank(card, 6, 'X2', 0.0),
+               double_or_blank(card, 7, 'X3', 0.0)]
+        self.xyz[i] = xyz
+        assert len(card) <= 8, 'len(FORCE card) = %i\ncard=%s' % (len(card), card)
+        self.i += 1
+
     def build(self):
-        """
-        Parameters
-        ----------
-        :param cards: the list of FORCE1 cards
-        """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float_fmt
-            #: Property ID
-            self.load_id = zeros(ncards, 'int32')
-            self.node_id = zeros(ncards, 'int32')
-            self.coord_id = zeros(ncards, 'int32')
-            self.mag = zeros(ncards, float_fmt)
-            self.xyz = zeros((ncards, 3), float_fmt)
-
-            for i, card in enumerate(cards):
-                self.load_id[i] = integer(card, 1, 'sid')
-                self.node_id[i] = integer(card, 2, 'node')
-                self.coord_id[i] = integer_or_blank(card, 3, 'cid', 0)
-                self.mag[i] = double(card, 4, 'mag')
-                xyz = [double_or_blank(card, 5, 'X1', 0.0),
-                       double_or_blank(card, 6, 'X2', 0.0),
-                       double_or_blank(card, 7, 'X3', 0.0)]
-                self.xyz[i] = xyz
-                assert len(card) <= 8, 'len(FORCE card) = %i\ncard=%s' % (len(card), card)
-
+        if self.n:
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]
             self.node_id = self.node_id[i]

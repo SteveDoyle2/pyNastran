@@ -8,14 +8,14 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
+
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
-
-class MOMENT(VectorizedCard):
-    type = 'MOMENT'
+class MOMENT1(VectorizedCard):
+    type = 'MOMENT1'
     def __init__(self, model):
         """
-        Defines the MOMENT object.
+        Defines the MOMENT1 object.
 
         Parameters
         ----------
@@ -29,9 +29,8 @@ class MOMENT(VectorizedCard):
 
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)
-        #print("force", unique_lid, i)
         if len(i):
-            f = MOMENT(self.model)
+            f = MOMENT1(self.model)
             f.load_id = self.load_id[i]
             f.node_id = self.node_id[i]
             f.coord_id = self.coord_id[i]
@@ -42,7 +41,7 @@ class MOMENT(VectorizedCard):
         raise RuntimeError('len(i) = 0')
 
     def __mul__(self, value):
-        f = MOMENT(self.model)
+        f = MOMENT1(self.model)
         f.load_id = self.load_id
         f.node_id = self.node_id
         f.coord_id = self.coord_id
@@ -71,12 +70,12 @@ class MOMENT(VectorizedCard):
         ncards = card_count[self.type]
         if ncards:
             self.n = ncards
-            float_fmt = self.model.float_fmt
-            self.load_id = zeros(ncards, 'int32')
-            self.node_id = zeros(ncards, 'int32')
-            self.coord_id = zeros(ncards, 'int32')
-            self.mag = zeros(ncards, float_fmt)
-            self.xyz = zeros((ncards, 3), float_fmt)
+        float_fmt = self.model.float_fmt
+        self.load_id = zeros(ncards, 'int32')
+        self.node_id = zeros(ncards, 'int32')
+        self.coord_id = zeros(ncards, 'int32')
+        self.mag = zeros(ncards, float_fmt)
+        self.xyz = zeros((ncards, 3), float_fmt)
 
     def build(self):
         if self.n:
@@ -99,7 +98,7 @@ class MOMENT(VectorizedCard):
             for (lid, nid, cid, mag, xyz) in zip(
                  self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
 
-                card = ['MOMENT', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
+                card = ['MOMENT1', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
                 if size == 8:
                     bdf_file.write(print_card_8(card))
                 else:
