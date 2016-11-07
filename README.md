@@ -59,7 +59,7 @@ The following are some new features from the v0.8 release.
  - BDF
    - unicode support
    - 278 cards supported
-   - simplifed method to add cards : `grid = GRID(nid, cp, xyz, cd, ps, eid, comment)`
+   - simplifed method to add cards : `grid = GRID(nid, cp, xyz, cd, ps, seid, comment)`
    - `verify=False` in `read_bdf(...)` will disable checks to allow reading in bad decks
    - lots of optimization work
    - bdf equivalence, renumber, deck merging
