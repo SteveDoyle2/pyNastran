@@ -319,6 +319,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #model.cdamp2,
         #model.cdamp3,
         #model.cdamp4,
+        model.conrod,
+        model.crod,
+        model.ctube,
         model.cbar,
         model.cbeam,
         model.cshear,
@@ -337,10 +340,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     props = [
         model.pelas,
         #model.pdamp,
+        model.ptube,
+        model.ptube,
+
         model.pbar,
         model.pbarl,
         model.pbeam,
         model.pbeaml,
+
         model.pshear,
         model.pshell,
         model.pcomp,
@@ -385,7 +392,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                 {(nid + nids[i]) : (i+1) for i in range(ngrids)})
             #reverse_nid_map.update(
                 #{(i+1) : (nid + nids[i]) for i in range(ngrids)}) # index to nid
-        print(min(nid_map))
+        #print(min(nid_map))
         # TODO: SPOINTs
         # TODO: EPOINTs
         #if model.spoints.points:
@@ -494,7 +501,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     set_map = {}
     if model.sets:
         sets = model.sets.keys()
-        print('sets =', sets)
         sets.sort()
         nsets = len(sets)
         set_map = {sets[i] : (i+1) for i in range(nsets)}
@@ -549,6 +555,23 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         flfact.update(maps)
     for flutter in itervalues(model.flutters):
         flutter.update(maps)
+
+    for desvar in itervalues(model.desvars):
+        desvar.update(maps)
+    for dconstr in itervalues(model.dconstrs):
+        dconstr.update(maps)
+    for dresp in itervalues(model.dresps):
+        dresp.update(maps)
+    for dconadd in itervalues(model.dconadds):
+        dconadd.update(maps)
+    for dvgrid in itervalues(model.dvgrids):
+        dvgrid.update(maps)
+    for dvcrel in itervalues(model.dvcrels):
+        dvcrel.update(maps)
+    for dvmrel in itervalues(model.dvmrels):
+        dvmrel.update(maps)
+    for dvprel in itervalues(model.dvprels):
+        dvprel.update(maps)
 
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,

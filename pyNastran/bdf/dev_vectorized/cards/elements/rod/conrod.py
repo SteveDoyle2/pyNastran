@@ -110,6 +110,21 @@ class CONROD(RodElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'property' : pid_map,
+            'material' : mid_map,
+        }
+        """
+        if self.n:
+            nid_map = maps['node']
+            mid_map = maps['material']
+            for i, (nids, mids) in enumerate(zip(self.node_id, self.material_ids)):
+                self.node_ids[i, 0] = nid_map[nids[0]]
+                self.node_ids[i, 1] = nid_map[nids[1]]
+                self.material_id[i] = mid_map[pid]
+
     #=========================================================================
     def get_area_from_index(self, i):
         return self.A[i]

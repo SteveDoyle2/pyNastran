@@ -251,8 +251,9 @@ class Coord(VectorizedCard):
         for i, cid in enumerate(self.coord_id):
             cid2 = cid_map[cid]
             self.coord_id[i] = cid2
-            coords2[cid2] = self.coords[cid]
-            # TODO: reference coords & nid_map
+            coord = self.coords[cid]
+            coord.update(nid_map, cid_map)
+            coords2[cid2] = coord
 
     def resolve_coords(self, cids_to_resolve):
         while cids_to_resolve:

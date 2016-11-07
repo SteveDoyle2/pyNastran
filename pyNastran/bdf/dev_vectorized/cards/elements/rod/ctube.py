@@ -67,6 +67,21 @@ class CTUBE(RodElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'property' : pid_map,
+            'material' : mid_map,
+        }
+        """
+        if self.n:
+            nid_map = maps['node']
+            pid_map = maps['property']
+            for i, (nids, pid) in enumerate(zip(self.node_id, self.property_id)):
+                self.node_ids[i, 0] = nid_map[nids[0]]
+                self.node_ids[i, 1] = nid_map[nids[1]]
+                self.property_id[i] = pid_map[pid]
+
     #=========================================================================
     def get_property_id_by_element_index(self, i=None):
         return self.property_id[i]

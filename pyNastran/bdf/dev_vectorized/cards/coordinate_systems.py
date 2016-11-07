@@ -313,6 +313,16 @@ class Cord2x(Coord):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+    def update(self, nid_map, cid_map):
+        """
+        maps = {
+            'node' : nid_map,
+            'coord' : cid_map,
+        }
+        """
+        self.cid = cid_map[self.cid]
+        self.rid = cid_map[self.rid]
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -381,6 +391,18 @@ class Cord1x(Coord):
         self.i = None
         self.j = None
         self.k = None
+
+    def update(self, nid_map, cid_map):
+        """
+        maps = {
+            'node' : nid_map,
+            'coord' : cid_map,
+        }
+        """
+        self.cid = cid_map[self.cid]
+        self.g1 = nid_map[self.g1]
+        self.g2 = nid_map[self.g2]
+        self.g3 = nid_map[self.g3]
 
     def to_CORD2x(self, model, rid=0):
         """

@@ -73,6 +73,20 @@ class PTUBE(Property):
         else:
             self.property_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'property' : pid_map,
+            'material' : mid_map,
+        }
+        """
+        if self.n:
+            nid_map = maps['node']
+            mid_map = maps['material']
+            for i, (pid, mid) in enumerate(zip(self.property_id, self.material_id)):
+                self.property_id[i] = pid_map[pid]
+                self.material_id[i] = mid_map[mid]
+
     #=========================================================================
 
     def get_mass_per_length_by_property_id(self, property_id=None):

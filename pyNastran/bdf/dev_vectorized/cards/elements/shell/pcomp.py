@@ -240,7 +240,6 @@ class PCOMP(Property):
     def get_z0_by_property_index(self, i=None):
         return self.z0[i]
 
-
     def get_material_id_by_property_id_ply(self, property_id, jply):
         int_flag = True if isinstance(property_id, int) else False
         i = self.get_property_index_by_property_id(property_id)
@@ -491,12 +490,18 @@ class PCOMP(Property):
         }
         """
         if self.n:
-            nid_map = maps['node']
             pid_map = maps['property']
             mid_map = maps['material']
-            return
-            #for i, pid, mids in enumerate(zip(self.property_id, self.material_ids)):
-                #self.property_id[i] = pid_map[pid]
+            properties2 = {}
+            for i, (pid, mids) in enumerate(zip(self.property_id, self.material_id)):
+                pid2 = pid_map[pid]
+                mids2 = [mid_map[mid] if mid != 0 else 0 for mid in mids]
+                prop = self.properties[pid]
+                self.property_id[i] = pid2
+                self.material_id[i, :] = mids2
+                properties2[pid2] = prop
+                prop.update(pid_map, mid_map)
+            self.properties = properties2
 
     def write_card(self, bdf_file, size=8, property_id=None):
         if size == 8:

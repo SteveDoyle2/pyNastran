@@ -656,6 +656,18 @@ class PCOMPi(CompositeShellProperty):
         return PCOMPi(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, TRef, ge,
                       lam, z0, comment=comment)
 
+    def update(self, pid_map, mid_map):
+        """
+        maps = {
+            'node' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        pid2 = pid_map[self.pid]
+        mids2 = [mid_map[mid] if mid != 0 else 0 for mid in self.mids]
+        self.pid = pid2
+        self.mids = mids2
+
     @classmethod
     def add_op2_data(cls, data, comment=''):
         #data_in = [
