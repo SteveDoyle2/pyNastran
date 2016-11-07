@@ -34,7 +34,6 @@ class CQUAD8(ShellElement):
     def add_card(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'element_id')
-
         self.property_id[i] = integer(card, 2, 'property_id')
 
         print(card)
