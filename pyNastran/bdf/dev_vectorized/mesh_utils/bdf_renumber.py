@@ -468,7 +468,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             spc_ids.sort()
             spc_map.update(
                 {spc_ids[i] : (spc_id + i) for i in range(nspc_ids)})
-            print('spc_ids =', spc_ids)
+            #print('spc_ids =', spc_ids)
 
     caero_map = {}
     #if model.caeros:

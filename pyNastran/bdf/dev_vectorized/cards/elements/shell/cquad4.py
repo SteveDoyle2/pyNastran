@@ -232,9 +232,7 @@ class CQUAD4(ShellElement):
             self.write_card_by_index(bdf_file, i, size=size)
 
     def write_card_by_index(self, bdf_file, i, size=8):
-        print('i =', i)
         for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-            #print('    n = %s' % n)
             card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
             bdf_file.write(print_card_8(card))
 

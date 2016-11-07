@@ -184,7 +184,6 @@ class GRID(VectorizedCard):
             self.node_id[i] = nid_map[nid]
             self.cp[i] = cid_map[cpi]
             self.cd[i] = cid_map[cdi]
-        print(self.node_id)
         assert self.node_id.min() >= 0, self.node_id.min()
 
     def build(self):

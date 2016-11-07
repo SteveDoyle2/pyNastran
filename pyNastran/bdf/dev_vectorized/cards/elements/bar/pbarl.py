@@ -173,7 +173,6 @@ class PBARL(Property):
         if self.n:
             nid_map = maps['node']
             pid_map = maps['property']
-            print('property_id = %s' % self.property_id)
             for i, pid in enumerate(self.property_id):
                 try:
                     self.property_id[i] = pid_map[pid]
