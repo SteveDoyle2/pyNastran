@@ -163,6 +163,24 @@ class PBARL(Property):
         else:
             self.property_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'node' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            nid_map = maps['node']
+            pid_map = maps['property']
+            print('property_id = %s' % self.property_id)
+            for i, pid in enumerate(self.property_id):
+                try:
+                    self.property_id[i] = pid_map[pid]
+                except KeyError:
+                    print('pid_map = %s' % pid_map)
+                    raise
+
     #=========================================================================
     def get_index(self, property_ids):
         if isinstance(property_ids, int):

@@ -63,6 +63,28 @@ class CPENTA6(SolidElement):
         assert len(card) == 9, 'len(CPENTA6 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
+    def update(self, maps):
+        """
+        maps = {
+            'node_id' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            eid_map = maps['element']
+            nid_map = maps['node']
+            pid_map = maps['property']
+            for i, (eid, pid, nids) in enumerate(zip(self.element_id, self.property_id, self.node_ids)):
+                print(self.print_card(i))
+                self.element_id[i] = eid_map[eid]
+                self.property_id[i] = pid_map[pid]
+                self.node_ids[i, 0] = nid_map[nids[0]]
+                self.node_ids[i, 1] = nid_map[nids[1]]
+                self.node_ids[i, 2] = nid_map[nids[2]]
+                self.node_ids[i, 3] = nid_map[nids[3]]
+                self.node_ids[i, 4] = nid_map[nids[4]]
+                self.node_ids[i, 5] = nid_map[nids[5]]
+
     def get_mass_matrix(self, i, model, positions, index0s):
         return M, dofs, nijv
 

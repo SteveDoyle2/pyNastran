@@ -108,6 +108,17 @@ class MAT8(Material):
             self.F12 = self.F12[i]
             self.strn = self.strn[i]
 
+    def update(self, maps):
+        """
+        maps = {
+            'material' : mid_map,
+        }
+        """
+        if self.n:
+            mid_map = maps['material']
+            for i, mid in enumerate(self.material_id):
+                self.material_id[i] = mid_map[mid]
+
     def get_density_by_index(self, i):
         return self.rho[i]
 

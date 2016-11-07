@@ -66,6 +66,42 @@ class CHEXA20(SolidElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'node_id' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            eid_map = maps['element']
+            nid_map = maps['node']
+            pid_map = maps['property']
+            for i, (eid, pid, nids) in enumerate(zip(self.element_id, self.property_id, self.node_ids)):
+                print(self.print_card(i))
+                self.element_id[i] = eid_map[eid]
+                self.property_id[i] = pid_map[pid]
+                self.node_ids[i, 0] = nid_map[nids[0]]
+                self.node_ids[i, 1] = nid_map[nids[1]]
+                self.node_ids[i, 2] = nid_map[nids[2]]
+                self.node_ids[i, 3] = nid_map[nids[3]]
+                self.node_ids[i, 4] = nid_map[nids[4]]
+                self.node_ids[i, 5] = nid_map[nids[5]]
+                self.node_ids[i, 6] = nid_map[nids[6]]
+                self.node_ids[i, 7] = nid_map[nids[7]]
+                self.node_ids[i, 8] = nid_map[nids[8]]
+                self.node_ids[i, 9] = nid_map[nids[9]]
+                self.node_ids[i, 10] = nid_map[nids[10]]
+                self.node_ids[i, 11] = nid_map[nids[11]]
+                self.node_ids[i, 12] = nid_map[nids[12]]
+                self.node_ids[i, 13] = nid_map[nids[13]]
+                self.node_ids[i, 14] = nid_map[nids[14]]
+                self.node_ids[i, 15] = nid_map[nids[15]]
+                self.node_ids[i, 16] = nid_map[nids[16]]
+                self.node_ids[i, 17] = nid_map[nids[17]]
+                self.node_ids[i, 18] = nid_map[nids[18]]
+                self.node_ids[i, 19] = nid_map[nids[19]]
+
     def get_mass_matrix(self, i, model, positions, index0s, is_lumped=True):
         nnodes = 8
         ndof = 3 * nnodes

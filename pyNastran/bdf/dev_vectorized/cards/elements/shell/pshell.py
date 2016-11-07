@@ -39,46 +39,58 @@ class PSHELL(Property):
             self.n = ncards
             float_fmt = self.model.float_fmt
             self.property_id = zeros(ncards, 'int32')
-            self.material_id = zeros(ncards, 'int32')
+
+            #: Material identification number for bending
+            #self.material_id = zeros(ncards, 'int32')
+            #self.material_id2 = zeros(ncards, 'int32')
+            #self.material_id3 = zeros(ncards, 'int32')
+            #self.material_id4 = zeros(ncards, 'int32')
+            self.material_ids = zeros((ncards, 4), 'int32')
+            self.material_id = self.material_ids[:, 0]
+            self.material_id2 = self.material_ids[:, 1]
+            self.material_id3 = self.material_ids[:, 2]
+            self.material_id4 = self.material_ids[:, 3]
+
             self.thickness = zeros(ncards, float_fmt)
-            self.material_id2 = zeros(ncards, 'int32')
+            # .. todo:: poor name
+            #: ..math:: I = \frac{12I}{t^3} I_{plate}
+            #: Scales the moment of interia of the element based on the
+            #: moment of interia for a plate
             self.twelveIt3 = zeros(ncards, float_fmt)
-            self.material_id3 = zeros(ncards, 'int32')
+
             self.tst = zeros(ncards, float_fmt)
+
+            #: Non-structural Mass
             self.nsm = zeros(ncards, float_fmt)
             self.z1 = zeros(ncards, float_fmt)
             self.z2 = zeros(ncards, float_fmt)
-            self.material_id4 = zeros(ncards, 'int32')
 
     def add_card(self, card, comment=''):
         pid = integer(card, 1, 'property_id')
         if comment:
             self.set_comment(pid, comment)
         i = self.i
-        #self.model.log.debug('adding %s; i=%s' %(card, i))
         self.property_id[i] = pid
-        self.material_id[i] = integer(card, 2, 'material_id')
         self.thickness[i] = double(card, 3, 'thickness')
 
-        #: Material identification number for bending
-        self.material_id2[i] = integer_or_blank(card, 4, 'material_id2', -1)
-
-        # .. todo:: poor name
-        #: ..math:: I = \frac{12I}{t^3} I_{plate}
-        #: Scales the moment of interia of the element based on the
-        #: moment of interia for a plate
         self.twelveIt3[i] = double_or_blank(card, 5, '12*I/t^3', 1.0)
-
-        self.material_id3[i] = integer_or_blank(card, 6, 'material_id3', -1)
         self.tst[i] = double_or_blank(card, 7, 'ts/t', 0.833333)
-
-        #: Non-structural Mass
         self.nsm[i] = double_or_blank(card, 8, 'nsm', 0.0)
 
         tOver2 = self.thickness[i] / 2.
         self.z1[i] = double_or_blank(card, 9, 'z1', -tOver2)
         self.z2[i] = double_or_blank(card, 10, 'z2', tOver2)
-        self.material_id4[i] = integer_or_blank(card, 11, 'material_id4', -1)
+        self.material_ids[i, :] = [
+            integer(card, 2, 'material_id'),
+            integer_or_blank(card, 4, 'material_id2', -1),
+            integer_or_blank(card, 6, 'material_id3', -1),
+            integer_or_blank(card, 11, 'material_id4', -1)
+        ]
+
+        #self.material_id[i] =
+        #self.material_id2[i] =
+        #self.material_id3[i] =
+        #self.material_id4[i] =
 
         #if self.material_id2 is None:
         #    assert self.material_id3 is None
@@ -98,18 +110,13 @@ class PSHELL(Property):
             # sort the NDARRAYs so we can use searchsorted
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
-            self.material_id = self.material_id[i]
-            #print('self.t1', self.thickness)
+            self.material_ids = self.material_ids[i, :]
             self.thickness = self.thickness[i]
-            #print('self.t2', self.thickness)
-            self.material_id2 = self.material_id2[i]
             self.twelveIt3 = self.twelveIt3[i]
-            self.material_id3 = self.material_id3[i]
             self.tst = self.tst[i]
             self.nsm = self.nsm[i]
             self.z1 = self.z1[i]
             self.z2 = self.z2[i]
-            self.material_id4 = self.material_id4[i]
 
             if len(unique(self.property_id)) != len(self.property_id):
                 pids = self.property_id
@@ -117,6 +124,19 @@ class PSHELL(Property):
         else:
             self.property_id = array([], dtype='int32')
             self.material_id = array([], dtype='int32')
+
+    def update(self, maps):
+        """
+        maps = {
+            'property' : pid_map,
+            'material' : mid_map,
+        }
+        """
+        if self.n:
+            pid_map = maps['property']
+            mid_map = maps['material']
+            for i, pid, mids in enumerate(zip(self.property_id, self.material_ids)):
+                self.property_id[i] = pid_map[pid]
 
     def write_card(self, bdf_file, size=8, property_id=None):
         """

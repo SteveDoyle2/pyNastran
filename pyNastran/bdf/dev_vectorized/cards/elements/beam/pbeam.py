@@ -73,6 +73,19 @@ class PBEAM(Property):
         self.n = len(self.properties)
         self.property_id = array(sorted(self.properties.keys()), dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'node' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            nid_map = maps['node']
+            pid_map = maps['property']
+            for i, pid in enumerate(self.property_id):
+                self.property_id[i] = pid_map[pid]
+
     #=========================================================================
     def write_card(self, bdf_file, size=8, property_id=None):
         if size == 8:

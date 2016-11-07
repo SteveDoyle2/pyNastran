@@ -60,6 +60,20 @@ class PLSOLID(Property):
             self.property_id = array([], dtype='int32')
             self.material_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'property' : pid_map,
+            'material' : mid_map,
+        }
+        """
+        if self.n:
+            nid_map = maps['node']
+            pid_map = maps['property']
+            mid_map = maps['material']
+            for i, pid, mids in enumerate(zip(self.property_id, self.material_ids)):
+                self.property_id[i] = pid_map[pid]
+
     #def get_density_by_property_id(self, property_id=None):
         #if property_id is None:
             #property_id = self.property_id

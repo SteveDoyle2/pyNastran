@@ -58,6 +58,19 @@ class PSHEAR(Property):
         else:
             self.property_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'property' : pid_map,
+            'material' : mid_map,
+        }
+        """
+        if self.n:
+            pid_map = maps['property']
+            mid_map = maps['material']
+            for i, pid, mids in enumerate(zip(self.property_id, self.material_ids)):
+                self.property_id[i] = pid_map[pid]
+
     def get_mass_per_area(self, property_id=None):
         # A * (rho * t + nsm)
         if property_id is None:

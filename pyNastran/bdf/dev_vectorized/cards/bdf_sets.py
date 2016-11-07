@@ -634,6 +634,24 @@ class SET1(Set):
             assert len(card) > 2, card
         return SET1(sid, ids[i:], is_skin=is_skin, comment=comment)
 
+    def update(self, maps):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        set_map = maps['set']
+        if self.xref_type == 'Node':
+            nid_map = maps['node']
+            self.ids = [nid_map[nid] for nid in self.ids]
+        else:
+            print(self.print_card())
+            raise NotImplementedError('%s.xref_type = %r' % (self.type, self.xref_type))
+        self.sid = set_map[self.sid]
+
     def symmetric_difference(self, set1):
         ids1 = set(self.ids)
         ids2 = set(set1.ids)
@@ -650,8 +668,7 @@ class SET1(Set):
         skin = []
         if self.is_skin:
             skin = ['SKIN']
-        ids = self.ids()
-        return ['SET1', self.sid] + skin + ids
+        return ['SET1', self.sid] + skin + self.ids
 
     def cross_reference(self, model, xref_type):
         """

@@ -142,6 +142,19 @@ class PBAR(Property):
         else:
             self.property_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'node' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            nid_map = maps['node']
+            pid_map = maps['property']
+            for i, pid in enumerate(self.property_id):
+                self.property_id[i] = pid_map[pid]
+
     #=========================================================================
     def get_index(self, property_id):
         if isinstance(property_id, integer_types):

@@ -796,6 +796,15 @@ class AERO(Aero):
         # T is the tabular function
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
+    def update(self, maps):
+        """
+        maps = {
+            'coord' : cid_map,
+        }
+        """
+        cid_map = maps['coord']
+        self.acsid = cid_map[self.acsid]
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -936,6 +945,16 @@ class AEROS(Aero):
         assert len(data) == 7, 'data = %s' % data
         return AEROS(cref, bref, sref, acsid, rcsid, sym_xz, sym_xy,
                      comment=comment)
+
+    def update(self, maps):
+        """
+        maps = {
+            'coord' : cid_map,
+        }
+        """
+        cid_map = maps['coord']
+        self.acsid = cid_map[self.acsid]
+        self.rcsid = cid_map[self.rcsid]
 
     def raw_fields(self):
         """
@@ -1322,7 +1341,7 @@ class CAERO1(BaseCard):
                         self.eid, ichord, ispan, nchord)
                     raise OverflowError(msg)
 
-    def update(self, model, maps):
+    def update(self, maps):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1343,7 +1362,7 @@ class CAERO1(BaseCard):
             self.lchord = aefact_map[self.lchord]
         if self.nspan == 0:
             self.lspan = aefact_map[self.lspan]
-        self._init_ids(model)
+        #self._init_ids(model)
 
     def min_max_eid(self, model):
         """
@@ -3655,7 +3674,7 @@ class SPLINE1(Spline):
     def aero_element_ids(self):
         return np.arange(self.box1, self.box2 + 1)
 
-    def update(self, maps):
+    def update(self, model, maps):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3664,11 +3683,19 @@ class SPLINE1(Spline):
         model : BDF()
             the BDF object
         """
-        #msg = ' which is required by SPLINE1 eid=%s' % self.eid
-        self.caero = caero_map[self.caero]
-        self.setg = set_map[self.setg]
-        #caero_ref = model.CAero(self.CAero(), msg=msg)
+        msg = ' which is required by SPLINE1 eid=%s' % self.eid
+        caero_map = maps['caero']
+        set_map = maps['set']
+        #print(self.print_card())
+        if caero_map:
+            self.caero = caero_map[self.caero]
+        caero_ref = model.CAero(self.caero, msg=msg)
+
         setg_ref = model.Set(self.setg, msg=msg)
+        setg_ref.xref_type = 'Node'
+        setg_ref.update(maps)
+
+        self.setg = set_map[self.setg]
         #self.setg_ref.cross_reference(model, 'Node')
 
         nnodes = len(setg_ref.ids)

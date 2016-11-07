@@ -91,6 +91,25 @@ class CQUAD4(ShellElement):
             self.element_id = array([], 'int32')
             self.property_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'node_id' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            eid_map = maps['element']
+            nid_map = maps['node']
+            pid_map = maps['property']
+            for i, (eid, pid, nids) in enumerate(zip(self.element_id, self.property_id, self.node_ids)):
+                self.element_id[i] = eid_map[eid]
+                self.property_id[i] = pid_map[pid]
+                self.node_ids[i, 0] = nid_map[nids[0]]
+                self.node_ids[i, 1] = nid_map[nids[1]]
+                self.node_ids[i, 2] = nid_map[nids[2]]
+                self.node_ids[i, 3] = nid_map[nids[3]]
+
     def get_node_indicies(self, i=None):
         if i is None:
             i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0])
@@ -195,23 +214,29 @@ class CQUAD4(ShellElement):
         return normal
 
     #=========================================================================
-    def write_card(self, bdf_file, size=8, element_id=None):
+    def write_card(self, bdf_file, element_id=None, size=8):
         if self.n:
             #print('    self.n = %s' % self.n)
             if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_id)) == len(element_id), unique(element_id)
+                if isinstance(element_id, int):
+                    element_id = [element_id]
+                #assert len(unique(element_id)) == len(element_id), unique(element_id)
                 i = searchsorted(self.element_id, element_id)
+                i = np.asarray(i)
             #if len(i) == 1:
                 #i = i[0]
             #print('    iwrite = %s' % i)
             #print('    all_nodes = %s' % str(self.node_ids))
+            self.write_card_by_index(bdf_file, i, size=size)
 
-            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                #print('    n = %s' % n)
-                card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
-                bdf_file.write(print_card_8(card))
+    def write_card_by_index(self, bdf_file, i, size=8):
+        print('i =', i)
+        for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+            #print('    n = %s' % n)
+            card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
+            bdf_file.write(print_card_8(card))
 
     def _verify(self, xref=True):
         self.get_mass_by_element_id()
@@ -441,6 +466,147 @@ class CQUAD4(ShellElement):
         self.model.log.info("K_norm / %s = \n" % knorm + list_print(K / knorm, float_fmt='%-4.4f'))
         return(K, dofs, n_ijv)
 
+    def displacement_stress(self, model, positions, q, dofs):
+        n = self.n
+        stress = zeros(n, 'float64')
+        strain = zeros(n, 'float64')
+        force = zeros(n, 'float64')
+
+        i = self.get_element_index_by_element_id(self.element_id)
+        As = self.get_area_by_element_index(i)
+        #Gs = self.model.prod.get_G_by_property_id(self.property_id)
+        #Es = self.model.prod.get_E_by_property_id(self.property_id)
+        #Js = self.model.prod.get_J_by_property_id(self.property_id)
+        #Cs = self.model.prod.get_c_by_property_id(self.property_id)
+
+        for i in range(n):
+            A = As[i]
+            n1, n2, n3, n4 = self.node_ids[i, :]
+
+
+            xyz1 = positions[n1]
+            xyz2 = positions[n2]
+            xyz3 = positions[n3]
+            xyz4 = positions[n4]
+
+            n11 = dofs[(n1, 1)]
+            n21 = dofs[(n2, 1)]
+
+            n12 = dofs[(n1, 2)]
+            n22 = dofs[(n2, 2)]
+
+            n13 = dofs[(n1, 3)]
+            n23 = dofs[(n2, 3)]
+
+            # moments
+            n14 = dofs[(n1, 4)]
+            n24 = dofs[(n2, 4)]
+
+            n15 = dofs[(n1, 5)]
+            n25 = dofs[(n2, 5)]
+
+            n16 = dofs[(n1, 6)]
+            n26 = dofs[(n2, 6)]
+
+            q_axial = array([
+                q[n11], q[n12], q[n13],
+                q[n21], q[n22], q[n23],
+            ])
+            q_torsion = array([
+                q[n14], q[n15], q[n16],
+                q[n24], q[n25], q[n26]
+            ])
+            #v1 = xyz1 - xyz2
+            #L = norm(xyz1 - xyz2)
+            #if L == 0.0:
+                #msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
+                #raise ZeroDivisionError(msg)
+
+            #========================
+
+            #print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
+            k_axial = A * E / L
+            k_torsion = G * J / L
+            #k_axial = 1.0
+            #k_torsion = 2.0
+
+            #k = array([[1., -1.],
+                       #[-1., 1.]])  # 1D rod
+
+            Lambda = _Lambda(v1, debug=False)
+
+            #print("**dofs =", dofs)
+            n11 = dofs[(n1, 1)]
+            n21 = dofs[(n2, 1)]
+
+            n12 = dofs[(n1, 2)]
+            n22 = dofs[(n2, 2)]
+
+            n13 = dofs[(n1, 3)]
+            n23 = dofs[(n2, 3)]
+
+            # moments
+            n14 = dofs[(n1, 4)]
+            n24 = dofs[(n2, 4)]
+
+            n15 = dofs[(n1, 5)]
+            n25 = dofs[(n2, 5)]
+
+            n16 = dofs[(n1, 6)]
+            n26 = dofs[(n2, 6)]
+
+            q_axial = array([
+                q[n11], q[n12], q[n13],
+                q[n21], q[n22], q[n23]
+            ])
+            q_torsion = array([
+                q[n14], q[n15], q[n16],
+                q[n24], q[n25], q[n26]
+            ])
+            #print("type=%s n1=%s n2=%s" % (self.type, n1, n2))
+            #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
+
+            #print("q2[%s] = %s" % (self.eid, q2))
+            #print("Lambda = \n"+str(Lambda))
+
+            #print("Lsize = ", Lambda.shape)
+            #print("qsize = ", q.shape)
+            u_axial = dot(array(Lambda), q_axial)
+            du_axial = u_axial[0] - u_axial[1]
+            u_torsion = dot(array(Lambda), q_torsion)
+            du_torsion = u_torsion[0] - u_torsion[1]
+
+            #L = self.Length()
+            #E = self.E()
+            #A = self.area()
+
+            #C = self.C()
+            #J = self.J()
+            #G = self.G()
+
+            axial_strain = du_axial / L
+            torsional_strain = du_torsion * C / L
+
+            axial_stress = E * axial_strain
+            torsional_stress = G * torsional_strain
+
+            axial_force = axial_stress * A
+            torsional_moment = du_torsion * G * J / L
+            #print("axial_strain = %s [psi]" % axial_strain)
+            #print("axial_stress = %s [psi]" % axial_stress)
+            #print("axial_force  = %s [lb]\n" % axial_force)
+            o1[i] = axial_stress
+            o4[i] = torsional_stress
+
+            e1[i] = axial_strain
+            e4[i] = torsional_strain
+
+            f1[i] = axial_force
+            f4[i] = torsional_moment
+
+        return (e1, e4,
+                o1, o4,
+                f1, f4)
 
 
 

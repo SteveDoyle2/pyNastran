@@ -70,6 +70,22 @@ class SPC(object):
             for dof, nodes in iteritems(self.components):
                 self.components[dof] = array(nodes)
 
+    def update(self, maps):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        nid_map = maps['node']
+        components = {}
+        for dof, nids in iteritems(self.components):
+            components[dof] = [nid_map[nid] for nid in nids]
+        self.components = components
+        # TODO: constraint_map...
+
     def write_card(self, bdf_file, size=8):
         if self.n:
             for dof, node_ids in sorted(iteritems(self.components)):

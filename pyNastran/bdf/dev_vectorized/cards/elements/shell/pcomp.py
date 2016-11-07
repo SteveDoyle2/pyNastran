@@ -483,6 +483,21 @@ class PCOMP(Property):
             self.property_id = array([], dtype='int32')
             #self.material_id = array([], dtype='int32')
 
+    def update(self, maps):
+        """
+        maps = {
+            'node' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            nid_map = maps['node']
+            pid_map = maps['property']
+            mid_map = maps['material']
+            return
+            #for i, pid, mids in enumerate(zip(self.property_id, self.material_ids)):
+                #self.property_id[i] = pid_map[pid]
+
     def write_card(self, bdf_file, size=8, property_id=None):
         if size == 8:
             for pid, pcomp in sorted(iteritems(self.properties)):

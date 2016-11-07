@@ -238,6 +238,22 @@ class Coord(VectorizedCard):
         #self.model.log.debug('T =\n%s' % self.T)
         self.resolve_coords(cids_to_resolve)
 
+    def update(self, maps):
+        """
+        maps = {
+            'node' : nid_map,
+            'coord' : cid_map,
+        }
+        """
+        nid_map = maps['node']
+        cid_map = maps['coord']
+        coords2 = {}
+        for i, cid in enumerate(self.coord_id):
+            cid2 = cid_map[cid]
+            self.coord_id[i] = cid2
+            coords2[cid2] = self.coords[cid]
+            # TODO: reference coords & nid_map
+
     def resolve_coords(self, cids_to_resolve):
         while cids_to_resolve:
             cids_to_resolve2 = []

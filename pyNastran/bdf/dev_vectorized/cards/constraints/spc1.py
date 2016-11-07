@@ -81,6 +81,22 @@ class SPC1(object):
             nodes2.sort()
             self.components[comp] = np.array(nodes2, dtype='int32')
 
+    def update(self, maps):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        nid_map = maps['node']
+        components = {}
+        for dof, nids in iteritems(self.components):
+            components[dof] = [nid_map[nid] for nid in nids]
+        self.components = components
+        # TODO: constraint_map...
+
     def write_card(self, bdf_file, size=8):
         for comp, nodes in iteritems(self.components):
             nodes = np.array(nodes, dtype='int32')

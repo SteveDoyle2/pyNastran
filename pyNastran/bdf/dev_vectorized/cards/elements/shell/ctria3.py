@@ -65,12 +65,33 @@ class CTRIA3(ShellElement):
             self.element_id = array([], 'int32')
             self.property_id = array([], dtype='int32')
 
-    def write_card(self, bdf_file, size=8, element_id=None):
+    def update(self, maps):
+        """
+        maps = {
+            'node_id' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            eid_map = maps['element']
+            nid_map = maps['node']
+            pid_map = maps['property']
+            for i, (eid, pid, nids) in enumerate(zip(self.element_id, self.property_id, self.node_ids)):
+                #print(self.print_card(i))
+                self.element_id[i] = eid_map[eid]
+                self.property_id[i] = pid_map[pid]
+                self.node_ids[i, 0] = nid_map[nids[0]]
+                self.node_ids[i, 1] = nid_map[nids[1]]
+                self.node_ids[i, 2] = nid_map[nids[2]]
+
+    def write_card(self, bdf_file, element_id=None, size=8):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_id)) == len(element_id), unique(element_id)
+                if isinstance(element_id, int):
+                    element_id = [element_id]
+                #assert len(unique(element_id)) == len(element_id), unique(element_id)
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]

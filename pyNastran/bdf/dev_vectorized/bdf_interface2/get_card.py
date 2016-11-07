@@ -109,7 +109,7 @@ class GetMethods(BDFAttributes):
             return self.caeros[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
-                           % (eid, msg, np.unique(list(self.caero_ids))))
+                           % (eid, msg, np.unique(list(self.caeros.keys()))))
 
     def PAero(self, pid, msg=''):
         """gets a PAEROx"""

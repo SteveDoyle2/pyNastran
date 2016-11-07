@@ -171,6 +171,22 @@ class GRID(VectorizedCard):
         self.seid[i] = integer_or_blank(card, 8, 'seid', seid0)
         self.i += 1
 
+    def update(self, maps):
+        """
+        maps = {
+            'node' : nid_map,
+            'coord' : cid_map,
+        }
+        """
+        nid_map = maps['node']
+        cid_map = maps['coord']
+        for i, (nid, cpi, cdi) in enumerate(zip(self.node_id, self.cp, self.cd)):
+            self.node_id[i] = nid_map[nid]
+            self.cp[i] = cid_map[cpi]
+            self.cd[i] = cid_map[cdi]
+        print(self.node_id)
+        assert self.node_id.min() >= 0, self.node_id.min()
+
     def build(self):
         if self.n:
             i = argsort(self.node_id)
@@ -358,7 +374,7 @@ class GRID(VectorizedCard):
                 else:
                     for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
                         msg = (('GRID*   %16i%16s%16s%16s\n'
-                                '*       %-8s%16s%16s%16s%16s\n' % (
+                                '*       %-8s%16s%16s%16s\n' % (
                                 nid, cp,
                                 print_float_16(xyz[0]),
                                 print_float_16(xyz[1]),

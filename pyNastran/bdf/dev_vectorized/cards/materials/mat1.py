@@ -111,6 +111,17 @@ class MAT1(Material):
             #print('G =', self.G)
             #print('nu =', self.nu)
 
+    def update(self, maps):
+        """
+        maps = {
+            'material' : mid_map,
+        }
+        """
+        if self.n:
+            mid_map = maps['material']
+            for i, mid in enumerate(self.material_id):
+                self.material_id[i] = mid_map[mid]
+
     def get_D_matrix(self):
         """
         // The isotropic Elasticity matrix D is given by
@@ -165,9 +176,9 @@ class MAT1(Material):
         if self.n:
             if material_id is None:
                 i = np.arange(self.n)
-            elif isinstance(material_id, int):
-                i = [material_id]
             else:
+                if isinstance(material_id, int):
+                    material_id = [material_id]
                 i = np.searchsorted(self.material_id, material_id)
 
             #print('imat1 = ', i)
@@ -183,18 +194,19 @@ class MAT1(Material):
             Sc = ['' if sc == 0.0 else sc for sc in self.Sc[i]]
             Ss = ['' if ss == 0.0 else ss for ss in self.Ss[i]]
 
-            card_a = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
-            card_b = ['$', 'st', 'sc', 'ss', 'mcsid']
             if size == 8:
                 fmt_card = print_card_8
+                bdf_file.write('$MAT1        mid       E       G      nu     rho       a    TRef      ge\n')
+                bdf_file.write('$             st      sc      ss   mcsid\n')
             else:
+                bdf_file.write('$MAT1*               mid               E               G              nu\n')
+                bdf_file.write('$*                   rho               a            TRef              ge\n')
+                bdf_file.write('$*                   st              sc              ss           mcsid\n')
                 if is_double:
                     fmt_card = print_card_double
                 else:
                     fmt_card = print_card_16
 
-            bdf_file.write(fmt_card(card_a))
-            bdf_file.write(fmt_card(card_b))
 
             for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
                     self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
