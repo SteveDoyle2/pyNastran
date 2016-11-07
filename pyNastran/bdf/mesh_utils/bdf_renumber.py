@@ -1,25 +1,11 @@
 from __future__ import print_function
 from math import ceil
 
-from six import iteritems, PY2, string_types
+from six import iteritems, string_types
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import integer_types, object_attributes
-
-
-if PY2:
-    import re
-    _name_re = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*$")
-    def isidentifier(string, dotted=False):
-        """Is the string a valid Python variable name?"""
-        assert dotted is False, dotted
-        return bool(_name_re.match(string))
-else:
-    def isidentifier(string, dotted=False):
-        """Is the string a valid Python variable name?"""
-        assert dotted is False, dotted
-        return string.isidentifier()
 
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,

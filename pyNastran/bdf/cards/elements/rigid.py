@@ -608,6 +608,19 @@ class RBE2(RigidElement):
         #raise NotImplementedError('RBE2 data...')
         return RBE2(eid, gn, cm, Gmi, alpha, comment=comment)
 
+    def update(self, maps):
+        """
+        Updates the card without xref
+        """
+        nid_map = maps['node']
+        eid_map = maps['element']
+        eid2 = eid_map[self.eid]
+        gn2 = nid_map[self.gn]
+        gm2 = [nid_map[nid] for nid in self.Gmi]
+        self.eid = eid2
+        self.gn = gn2
+        self.Gmi = gm2
+
     def _validate_input(self):
         assert self.gn is not None, 'gn=%s' % self.gn
         assert self.cm is not None, 'cm=%s' % self.cm
