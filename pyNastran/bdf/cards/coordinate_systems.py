@@ -1483,6 +1483,16 @@ class Cord2x(Coord):
         assert isinstance(cid, int), 'cid=%r' % cid
         assert isinstance(rid, int), 'rid=%r' % rid
 
+    def update(self, nid_map, cid_map):
+        """
+        maps = {
+            'node' : nid_map,
+            'coord' : cid_map,
+        }
+        """
+        self.cid = cid_map[self.cid]
+        self.rid = cid_map[self.rid]
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
