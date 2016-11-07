@@ -54,10 +54,6 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 ### pyNastran v0.8.0 has been released (8/21/2016)
 
-  [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)
-  
-  [Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
-
 The following are some new features from the v0.8 release.
 
  - BDF
@@ -83,7 +79,7 @@ The following are some new features from the v0.8 release.
       - deflection plots
       - area, max interior angle, skew angle, aspect ratio, taper ratio results
    - SOL 200 support
-   - imporoved legend
+   - improved legend
    - custom user (nodal/centroidal) results
    - aero models now support sideslip coordinate systems
  - OP4
@@ -91,8 +87,6 @@ The following are some new features from the v0.8 release.
 
 
 ### pyNastran v0.7.2 has been Released (4/25/2015)
-
-[Download pyNastran v0.7] (https://github.com/SteveDoyle2/pyNastran/releases)
 
 Highlights:
  * OP2
