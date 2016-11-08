@@ -1,9 +1,10 @@
 from __future__ import print_function
+from collections import defaultdict
+
 from six import iteritems
 from six.moves import zip, StringIO
 from numpy import unique, where
 
-from collections import defaultdict
 
 class LoadCase(object):
     def __init__(self, model):
@@ -20,9 +21,9 @@ class LoadCase(object):
             load_ids = unique(load.load_id)
             for load_id in load_ids:
                 if load.type in ['FORCE', 'FORCE1', 'FORCE2',
-                                'MOMENT', 'MOMENT1', 'MOMENT2',
-                                'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOADX1',
-                                'GRAV']:  # PLOAD4, RFORCE
+                                 'MOMENT', 'MOMENT1', 'MOMENT2',
+                                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
+                                 'GRAV']:  # RFORCE
                     i = where(load_id == load.load_id)[0]
                     #self.model.log.debug("i** =", i)
                     if len(i):
@@ -90,9 +91,9 @@ class LoadCase(object):
                 raise RuntimeError('i > 100')
         #print('------------------')
         #print("resolved LoadCase i=", i)
-        f = StringIO()
+        file_obj = StringIO()
         for load in all_loads_out:
-            load.write_card(f)
-        #print(f.getvalue())
+            load.write_card(file_obj)
+        #print(file_obj.getvalue())
         #print('------------------')
         return all_loads_out

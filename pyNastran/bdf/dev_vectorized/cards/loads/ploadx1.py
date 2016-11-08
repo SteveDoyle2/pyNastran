@@ -55,9 +55,6 @@ class PLOADX1(object):
         self._comments.append(comment)
 
     def build(self):
-        """
-        :param cards: the list of PLOADX1 cards
-        """
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
@@ -112,7 +109,7 @@ class PLOADX1(object):
         #    i = searchsorted(load_ids, self.load_id)
         return i
 
-    def write_card(self, bdf_file, size=8, load_ids=None):
+    def write_card(self, bdf_file, size=8, is_double=False, load_id=None):
         if self.n:
             i = self.get_index(load_ids)
             for (lid, eid, p, n, theta) in zip(self.load_id[i],

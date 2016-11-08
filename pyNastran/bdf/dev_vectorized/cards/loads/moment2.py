@@ -1,12 +1,12 @@
 from six.moves import zip
 
+import numpy as np
 from numpy import zeros, unique
 
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import integer, double
 
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
@@ -72,25 +72,25 @@ class MOMENT2(VectorizedCard):
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)
         if len(i):
-            f = MOMENT2(self.model)
-            f.load_id = self.load_id[i]
-            f.node_id = self.node_id[i]
-            f.mag = self.mag[i]
+            obj = MOMENT2(self.model)
+            obj.load_id = self.load_id[i]
+            obj.node_id = self.node_id[i]
+            obj.mag = self.mag[i]
             self.grids = self.grids[i, :]
-            f.xyz = self.xyz[i, :]
-            f.n = len(i)
-            return f
+            obj.xyz = self.xyz[i, :]
+            obj.n = len(i)
+            return obj
         raise RuntimeError('len(i) = 0')
 
     def __mul__(self, value):
-        f = MOMENT2(self.model)
-        f.load_id = self.load_id
-        f.node_id = self.node_id
-        self.grids = self.grids[i, :]
-        f.mag = self.mag * value
-        f.xyz = self.xyz * value
-        f.n = self.n
-        return f
+        obj = MOMENT2(self.model)
+        obj.load_id = self.load_id
+        obj.node_id = self.node_id
+        obj.grids = self.grids
+        obj.mag = self.mag * value
+        obj.xyz = self.xyz * value
+        obj.n = self.n
+        return obj
 
     def __rmul__(self, value):
         return self.__mul__(value)
@@ -99,7 +99,7 @@ class MOMENT2(VectorizedCard):
         i = self.i
         self.load_id[i] = integer(card, 1, 'sid')
         self.node_id[i] = integer(card, 2, 'node')
-        self.mag[i] = double(card, 4, 'mag')
+        self.mag[i] = double(card, 3, 'mag')
         n1234 = [
             integer(card, 4, 'g1'),
             integer(card, 5, 'g2'),
@@ -107,9 +107,6 @@ class MOMENT2(VectorizedCard):
             integer(card, 7, 'g4'),
         ]
         self.grids = n1234
-        #self.xyz[i] = xyz
-
-        mag = double(card, 3, 'mag')
         assert len(card) <= 8, 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
@@ -124,10 +121,10 @@ class MOMENT2(VectorizedCard):
             self.xyz = self.xyz[i, :]
             self._comments = []
 
-    def write_card(self, bdf_file, size=8, lids=None):
+    def write_card(self, bdf_file, size=8, is_double=False, load_id=None):
         if self.n:
             for (lid, nid, cid, mag, n1234) in zip(
-                 self.load_id, self.node_id, self.mag, self.grids):
+                    self.load_id, self.node_id, self.mag, self.grids):
 
                 card = ['MOMENT2', lid, nid, cid, mag] + list(n1234)
                 if size == 8:
