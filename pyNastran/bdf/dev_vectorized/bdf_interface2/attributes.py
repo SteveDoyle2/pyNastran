@@ -92,25 +92,19 @@ from pyNastran.bdf.dev_vectorized.cards.elements.properties import Properties
 from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
 #from pyNastran.bdf.dev_vectorized.cards.materials.mat2 import MAT2
 from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
-from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
 from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1
 
-from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
 from pyNastran.bdf.dev_vectorized.cards.materials.mathp import MATHP
 from pyNastran.bdf.dev_vectorized.cards.materials.materials import Materials
 
-# loads
-from pyNastran.bdf.dev_vectorized.cards.loads.loads import Loads
-from pyNastran.bdf.dev_vectorized.cards.loads.temp import TEMPs, TEMPP1, TEMP
-
 # constraints
 # spc
-from pyNastran.bdf.dev_vectorized.cards.constraints.spcadd import SPCADD, get_spcadd_constraint
+#from pyNastran.bdf.dev_vectorized.cards.constraints.spcadd import SPCADD
 
 # mpc
-from pyNastran.bdf.dev_vectorized.cards.constraints.mpc import MPC, get_mpc_constraint
+#from pyNastran.bdf.dev_vectorized.cards.constraints.mpc import MPC
 #from pyNastran.bdf.dev_vectorized.cards.constraints.mpcax import MPCAX
-from pyNastran.bdf.dev_vectorized.cards.constraints.mpcadd import MPCADD
+#from pyNastran.bdf.dev_vectorized.cards.constraints.mpcadd import MPCADD
 
 #------------------------------------------
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.elements_shell import ElementsShell
@@ -124,20 +118,18 @@ from pyNastran.bdf.dev_vectorized.cards.elements.solid.properties_solid import P
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.elements_spring import ElementsSpring
 
 #-------------------------------------------------------------------------------
+# loads
 from pyNastran.bdf.dev_vectorized.cards.loads.loads import Loads, LOADs
+from pyNastran.bdf.dev_vectorized.cards.loads.temp import TEMPs, TEMPP1, TEMP
 
-from pyNastran.bdf.dev_vectorized.cards.loads.load import LOAD
-from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD
-from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD as LSEQ
-from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD as SLOAD
-from pyNastran.bdf.dev_vectorized.cards.loads.grav import GRAV
-from pyNastran.bdf.dev_vectorized.cards.loads.force import FORCE
-from pyNastran.bdf.dev_vectorized.cards.loads.moment import MOMENT
-
-from pyNastran.bdf.dev_vectorized.cards.loads.force1 import FORCE1
-from pyNastran.bdf.dev_vectorized.cards.loads.force2 import FORCE2
-from pyNastran.bdf.dev_vectorized.cards.loads.moment1 import MOMENT1
-from pyNastran.bdf.dev_vectorized.cards.loads.moment2 import MOMENT2
+#from pyNastran.bdf.dev_vectorized.cards.loads.load import LOAD
+#from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD
+#from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD as LSEQ
+#from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD as SLOAD
+from pyNastran.bdf.dev_vectorized.cards.loads.static_loads import (
+    GRAV, FORCE, MOMENT, FORCE1, FORCE2, MOMENT1, MOMENT2,
+    PLOAD, PLOAD1, PLOAD2, PLOAD4
+)
 
 # ACCEL1
 # PLOAD3
@@ -150,15 +142,8 @@ from pyNastran.bdf.dev_vectorized.cards.loads.delay import DELAY
 #from pyNastran.bdf.dev_vectorized.cards.loads.dphase import DPHASE
 # RANDPS
 
-# loads
-from pyNastran.bdf.dev_vectorized.cards.loads.pload  import PLOAD
-from pyNastran.bdf.dev_vectorized.cards.loads.pload1 import PLOAD1
-from pyNastran.bdf.dev_vectorized.cards.loads.pload2 import PLOAD2
-#from pyNastran.bdf.dev_vectorized.cards.loads.pload3 import PLOAD3
-from pyNastran.bdf.dev_vectorized.cards.loads.pload4 import PLOAD4
 
 from pyNastran.bdf.dev_vectorized.cards.loads.ploadx1 import PLOADX1
-#from pyNastran.bdf.dev_vectorized.cards.loads.grav import GRAV
 
 from pyNastran.bdf.dev_vectorized.cards.loads.rforce import RFORCE
 #from pyNastran.bdf.dev_vectorized.cards.loads.sload import SLOAD
