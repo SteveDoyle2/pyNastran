@@ -32,8 +32,8 @@ from pyNastran.bdf.cards.base_card import _format_comment
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 #from pyNastran.bdf.write_path import write_include
-#from pyNastran.bdf.bdf_interface.assign_type import (integer,
-                                                     #integer_or_string, string)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_string, string)
 
 #from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
 #from pyNastran.bdf.field_writer_16 import print_field_16
@@ -311,6 +311,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'PBUSH', 'PBUSH1D', 'PBUSH2D',
 
             'CONM1', 'CONM2',
+            'PLOTEL',
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE',
 
             'MAT1', 'MAT8',

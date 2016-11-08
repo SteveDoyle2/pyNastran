@@ -47,7 +47,7 @@ class SPCADD(object):
 
     def write_card(self, bdf_file, size=8):
         card = ['SPCADD', self.spc_id] + self.spc_ids
-        #print "card = ", card
+        #print("card = ", card)
         if size == 8:
             bdf_file.write(print_card_8(card))
         else:

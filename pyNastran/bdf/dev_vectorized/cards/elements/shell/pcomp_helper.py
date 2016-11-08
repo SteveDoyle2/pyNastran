@@ -640,7 +640,7 @@ class PCOMPi(CompositeShellProperty):
                 iply += 1
             mid_last = mid
             thick_last = t
-        #print "nplies = ",nplies
+        #print("nplies = ",nplies)
 
         #self.plies = []
         #if self.lam == 'SYM':

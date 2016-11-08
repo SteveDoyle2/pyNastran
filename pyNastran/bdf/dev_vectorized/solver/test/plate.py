@@ -302,7 +302,7 @@ class CTRIA6(FEM):
         k4 = self.solveABC(N4, k4, 0.5, 0.5, 0)
         k5 = self.solveABC(N5, k5, 0, 0.5, 0.5)
         k6 = self.solveABC(N6, k6, 0.5, 0, 0.5)
-        #print "k1 = ",k1
+        #print("k1 = ",k1)
 
         # corners
         N1 = k1 * L23 * L46

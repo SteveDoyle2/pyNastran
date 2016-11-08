@@ -271,7 +271,7 @@ class WriteMesh(BDFAttributes):
         if pids_all is None:
             bdf_file.write('$MISSING_ELEMENTS because there are no properties\n')
             for t in etypes:
-                #print "t.type =", t.type
+                #print("t.type =", t.type)
                 t.write_card(bdf_file, size=size)
             return
 
@@ -281,7 +281,7 @@ class WriteMesh(BDFAttributes):
         n = 0
         pids = None
         for t in etypes:
-            #print "t.type =", t.type
+            #print("t.type =", t.type)
             if t.n and n == 0:
                 eids = t.element_id
                 pids = t.property_id
@@ -333,7 +333,7 @@ class WriteMesh(BDFAttributes):
                     if not t.n:
                         continue
                     eids3 = intersect1d(t.element_id, eids2, assume_unique=False)
-                    #print "eids3[pid=%s]" %(pid), eids3
+                    #print("eids3[pid=%s]" %(pid), eids3)
                     if n == 0 and len(eids3):
                         elements_by_pid[pid] = eids3
                         n = 1
@@ -354,7 +354,7 @@ class WriteMesh(BDFAttributes):
                         raise
                     del eids3
             #for pid, elements in elements_by_pid.items():
-                #print "pid=%s n=%s" % (pid, len(elements))
+                #print("pid=%s n=%s" % (pid, len(elements)))
             #print elements_by_pid
 
         # missing properties
@@ -661,8 +661,9 @@ class WriteMesh(BDFAttributes):
                            self.dvgrids)
         if is_optimization:
             msg = ['$OPTIMIZATION\n']
-            for (unused_id, dconstr) in sorted(iteritems(self.dconstrs)):
-                msg.append(dconstr.write_card(size, is_double))
+            for (unused_id, dconstrs) in sorted(iteritems(self.dconstrs)):
+                for dconstr in dconstrs:
+                    msg.append(dconstr.write_card(size, is_double))
             for (unused_id, desvar) in sorted(iteritems(self.desvars)):
                 msg.append(desvar.write_card(size, is_double))
             for (unused_id, ddval) in sorted(iteritems(self.ddvals)):

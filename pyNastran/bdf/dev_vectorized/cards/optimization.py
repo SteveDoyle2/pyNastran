@@ -254,11 +254,11 @@ class DCONSTR(OptConstraint):
         return list_fields
 
     def repr_fields(self):
-        lid = set_blank_if_default(self.Lid(), -1e20)
-        uid = set_blank_if_default(self.Uid(), 1e20)
+        lid = set_blank_if_default(self.lid, -1e20)
+        uid = set_blank_if_default(self.uid, 1e20)
         lowfq = set_blank_if_default(self.lowfq, 0.0)
         highfq = set_blank_if_default(self.highfq, 1e20)
-        list_fields = ['DCONSTR', self.oid, self.DRespID(), lid, uid, lowfq, highfq]
+        list_fields = ['DCONSTR', self.oid, self.dresp_id, lid, uid, lowfq, highfq]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1114,7 +1114,7 @@ class DRESP1(OptConstraint):
             for value in data:
                 assert not isinstance(value, BaseCard), value
         elif self.response_type == 'FRSTRE':
-            data = [prop if isinstance(prop, integer_types) else prop.Pid() for prop in self.atti]
+            data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
             for value in data:
                 assert not isinstance(value, BaseCard), value
         elif self.response_type in ['WEIGHT', 'STABDER', 'EIGN', 'FREQ']:
@@ -1293,7 +1293,8 @@ class DRESP2(OptConstraint):
                     argsi.append(arg)
             elif name == 'DTABLE':
                 for val in vals:
-                    arg = self.dtable[val]
+                    dtable_ref = op2_model.dtable
+                    arg = dtable_ref[val]
                     argsi.append(arg)
             else:
                 raise NotImplementedError('  TODO: xref %s' % str(key))
@@ -1344,10 +1345,9 @@ class DRESP2(OptConstraint):
                 raise NotImplementedError('  TODO: xref %s' % str(key))
         self.params_ref = self.params
 
-        if isinstance(self.DEquation(), int):
-            self.dequation = model.DEQATN(self.dequation, msg=msg)
-            self.dequation_ref = self.dequation
-            self.func = self.dequation_ref.func
+        if isinstance(self.dequation, int):
+            dequation_ref = model.DEQATN(self.dequation, msg=msg)
+            self.func = dequation_ref.func
         elif isinstance(self.dequation, str):
             self.func = fortran_to_python_short(self.dequation, default_values)
         else:
@@ -1873,7 +1873,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
     def repr_fields(self):
         cp_max = set_blank_if_default(self.cp_max, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
-        list_fields = ['DVCREL1', self.oid, self.Type, self.Eid(),
+        list_fields = ['DVCREL1', self.oid, self.Type, self.eid,
                        self.cp_name, self.cp_min, cp_max, c0, None]
         for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
             list_fields.append(dvid)
@@ -2042,7 +2042,8 @@ class DVCREL2(OptConstraint):
                 argsi.append(arg)
         if self.labels:
             for label in self.labels: # DTABLE
-                arg = self.dtable[label]
+                dtable_ref = op2_model.dtable
+                arg = dtable_ref[val]
                 argsi.append(arg)
         #op2_model.log.info('DVPREL2; args = %s' % argsi)
 
@@ -2079,8 +2080,35 @@ class DVCREL2(OptConstraint):
         #self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
         dequation_ref = model.DEQATN(self.dequation)
-        assert self.eid_ref.type in ['CDAMP2'], self.eid.type
 
+        eid_ref = self.eid_ref(model)
+        assert eid_ref.type in ['CDAMP2'], self.eid.type
+
+    def eid_ref(self, model):
+        if self.Type in ['CQUAD4']:
+            #assert cp_name in ['T1', 'T2', 'T3', 'T4'], msg # 'ZOFFS',
+            eid_ref = model.cquad4[eid]
+        elif self.Type in ['CTRIA3']:
+            #assert cp_name in [], msg
+            eid_ref = model.ctria3[eid]
+        elif self.Type in ['CONM2']:
+            #assert cp_name in ['M', 'X1', 'X2', 'X3'], msg
+            eid_ref = model.conm2[eid]
+        elif self.Type.Typepe in ['CBAR']:
+            #assert cp_name in ['X1', 'X2', 'X3'], msg
+            eid_ref = model.cbar[eid]
+        elif self.Type in ['CBEAM']:
+            #assert cp_name in ['X1', 'X2', 'X3'], msg
+            eid_ref = model.cbeam[eid]
+        elif self.Type in ['CELAS1']:
+            #assert cp_name in [], msg
+            eid_ref = model.celas1[eid]
+        elif self.Type in ['CBUSH']:
+            #assert cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3'], msg
+            eid_ref = model.cbush[eid]
+        else:
+            raise NotImplementedError(msg)
+        return eid_ref
 
     def raw_fields(self):
         list_fields = ['DVCREL2', self.oid, self.Type, self.eid,
@@ -2153,7 +2181,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         dvids = []
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
-        #print "end_fields = ",end_fields
+        #print("end_fields = ",end_fields)
         nfields = len(end_fields) - 1
         if nfields % 2 == 1:
             end_fields.append(None)
@@ -2339,7 +2367,7 @@ class DVMREL2(OptConstraint):
         see the PBEAM for an example of get/set_opt_value
         """
 
-        mid_ref = self.mid_ref
+        mid_ref = self.mid_ref(op2_model)
         try:
             get = mid_ref.get_optimization_value(self.mp_name)
             out = mid_ref.set_optimization_value(self.mp_name, get)
@@ -2365,25 +2393,24 @@ class DVMREL2(OptConstraint):
         return out
         #raise NotImplementedError('\n' + str(self))
 
-    @property
-    def mid_ref(self):
+    def mid_ref(self, model):
         msg = ', which is required by DVMREL2 name=%r' % self.type
         if self.Type in self.allowed_materials:
             mid_ref = model.Material(self.mid, msg=msg)
 
         if self.Type == 'MAT1':
-            mid_ref = self.model.materials.mat1[mid]
+            mid_ref = model.materials.mat1[mid]
         elif self.Type == 'MAT2':
-            mid_ref = self.model.materials.mat2[mid]
+            mid_ref = model.materials.mat2[mid]
         else:
             raise NotImplementedError(self)
         return mid_ref
 
-    @property
-    def deqatn_ref(self):
-        msg = ', which is required by DVMREL2 name=%r' % self.type
-        dequation_ref = model.DEQATN(self.dequation, msg=msg)
-        return dequation_ref
+    #@property
+    #def deqatn_ref(self):
+        #msg = ', which is required by DVMREL2 name=%r' % self.type
+        #dequation_ref = model.DEQATN(self.dequation, msg=msg)
+        #return dequation_ref
 
     def cross_reference(self, model):
         """
@@ -2610,16 +2637,16 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             raise NotImplementedError('Type=%r is not supported' % self.Type)
         return pid
 
-    @property
-    def desvar_ids(self):
-        if isinstance(self.dvids[0], int):
-            return self.dvids
-        return [desvar.desvar_id for desvar in self.dvids]
+    #@property
+    #def desvar_ids(self):
+        #if isinstance(self.dvids[0], int):
+            #return self.dvids
+        #return [desvar.desvar_id for desvar in self.dvids]
 
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                        self.pname_fid, self.p_min, self.p_max, self.c0, None]
-        for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
@@ -2629,7 +2656,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                        self.pname_fid, self.p_min, p_max, c0, None]
-        for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
@@ -2769,26 +2796,26 @@ class DVPREL2(OptConstraint):
     #def OptID(self):
         #return self.oid
 
-    def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        if self.Type in self.allowed_properties:
-            pid = self.pid_ref.pid
-        elif self.Type in self.allowed_elements:
-            pid = self.pid_ref.eid
-        elif self.Type in self.allowed_masses:
-            pid = self.pid_ref.eid
-        elif self.Type in self.allowed_properties_mass:
-            pid = self.pid_ref.pid
-        else:
-            raise NotImplementedError('Type=%r is not supported' % self.Type)
-        return pid
+    #def Pid(self):
+        #if isinstance(self.pid, integer_types):
+            #return self.pid
+        #if self.Type in self.allowed_properties:
+            #pid = pid_ref.pid
+        #elif self.Type in self.allowed_elements:
+            #pid = pid_ref.eid
+        #elif self.Type in self.allowed_masses:
+            #pid = pid_ref.eid
+        #elif self.Type in self.allowed_properties_mass:
+            #pid = pid_ref.pid
+        #else:
+            #raise NotImplementedError('Type=%r is not supported' % self.Type)
+        #return pid
 
-    @property
-    def dequation_ref(self):
-        if isinstance(self.dequation, int):
-            return self.dequation
-        return self.dequation_ref.equation_id
+    #@property
+    #def dequation_ref(self):
+        #if isinstance(self.dequation, int):
+            #return self.dequation
+        #return self.dequation_ref.equation_id
 
     def calculate(self, op2_model, subcase_id):
         """
@@ -2796,8 +2823,8 @@ class DVPREL2(OptConstraint):
         see the PBEAM for an example of get/set_opt_value
         """
         try:
-            get = self.pid_ref.get_optimization_value(self.pname_fid)
-            out = self.pid_ref.set_optimization_value(self.pname_fid, get)
+            get = pid_ref.get_optimization_value(self.pname_fid)
+            out = pid_ref.set_optimization_value(self.pname_fid, get)
         except:
             print('DVPREL2 calculate : %s[%r] = ???' % (self.Type, self.pname_fid))
             raise
@@ -2808,7 +2835,8 @@ class DVPREL2(OptConstraint):
                 argsi.append(arg)
         if self.labels:
             for label in self.labels: # DTABLE
-                arg = self.dtable[label]
+                dtable_ref = op2_model.dtable
+                arg = dtable_ref[label]
                 argsi.append(arg)
         #op2_model.log.info('DVPREL2; args = %s' % argsi)
 
@@ -2831,21 +2859,23 @@ class DVPREL2(OptConstraint):
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
         msg = ', which is required by DVPREL2 name=%r' % self.type
-        if self.Type in self.allowed_properties:
-            self.pid = model.Property(self.pid, msg=msg)
-        elif self.Type in self.allowed_elements:
-            self.pid = model.Element(self.pid, msg=msg)
-        elif self.Type in self.allowed_masses:
-            self.pid = model.masses[self.pid]
-        elif self.Type in self.allowed_properties_mass:
-            self.pid = model.properties_mass[self.pid]
-        else:
+        if self.Type == 'PSHELL':
+            pid_ref = model.pshell.get_property(self.pid, msg=msg)
+        #if self.Type in self.allowed_properties:
+            #self.pid = model.Property(self.pid, msg=msg)
+        #elif self.Type in self.allowed_elements:
+            #self.pid = model.Element(self.pid, msg=msg)
+        #elif self.Type in self.allowed_masses:
+            #self.pid = model.masses[self.pid]
+        #elif self.Type in self.allowed_properties_mass:
+            #self.pid = model.properties_mass[self.pid]
+        #else:
             raise NotImplementedError('Type=%r is not supported' % self.Type)
-        self.dequation = model.DEQATN(self.dequation)
+        dequation_ref = model.DEQATN(self.dequation)
 
-        self.pid_ref = self.pid
+        #self.pid_ref = self.pid
         self.dequation_ref = self.dequation
-        assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
+        assert pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
     #def uncross_reference(self):
         #self.pid = self.Pid()
@@ -2867,7 +2897,7 @@ class DVPREL2(OptConstraint):
         #self.pid_ref.OptValue(self.pNameFid)
 
     def raw_fields(self):
-        list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
+        list_fields = ['DVPREL2', self.oid, self.Type, self.pid,
                        self.pname_fid, self.p_min, self.p_max, self.dequation, None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids

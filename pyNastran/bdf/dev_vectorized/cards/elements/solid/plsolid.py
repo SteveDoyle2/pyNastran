@@ -111,7 +111,7 @@ class PLSOLID(Property):
 
     def write_card(self, bdf_file, size=8, property_id=None):
         if self.n:
-            #print "PSOLID.property_id =", self.property_id
+            #print("PSOLID.property_id =", self.property_id)
             for (pid, mid, stress) in zip(
                  self.property_id, self.material_id, self.stress_strain):
                 if eid in self._comments:

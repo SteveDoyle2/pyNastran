@@ -150,8 +150,8 @@ class ShellElement(Element):
         else:
             i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
-        #print 'element_ids =', element_ids
-        #print 'property_ids =', property_id
+        #print('element_ids =', element_ids)
+        #print('property_ids =', property_id)
         t = self.model.properties_shell.get_thickness_by_property_id(property_id)
         return t
 

@@ -70,7 +70,7 @@ class Properties(object):
             #props.build()
             self.nproperties += props.n
 
-        pids = check_duplicate('property_id', ptypes)
+        pids = check_duplicate('property_id', ptypes, self.model.log)
 
         self.property_ids = np.array(list(pids), dtype='int32')
         self.property_ids.sort()
@@ -151,7 +151,7 @@ class Properties(object):
     def __getitem__(self, property_ids):
         return self.model.elements.get_properties(property_ids)
 
-def check_duplicate(name, objs):
+def check_duplicate(name, objs, log):
     unique_vals = set([])
     for obj in objs:
         if hasattr(obj, name):
@@ -162,11 +162,11 @@ def check_duplicate(name, objs):
                 unique_vals.update(list(vals))
             #print unique_vals
         else:
-            #print "  %s has no %s"  % (obj.__class__.__name__, name)
+            #print("  %s has no %s"  % (obj.__class__.__name__, name))
             pass
-    #print "unique %s = %s\n" %(name, unique_vals)
+    #print("unique %s = %s\n" %(name, unique_vals))
     if len(unique_vals) == 0:
-        print("unique %s = %s" %(name, unique_vals)) # fails for CONRODs
+        log.info("unique %s = %s" %(name, unique_vals)) # fails for CONRODs
         #raise RuntimeError
     #print('unique %s = %s' % (name, unique_vals))
     return unique_vals

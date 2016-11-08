@@ -24,7 +24,7 @@ from pyNastran.bdf.dev_vectorized.bdf import BDF, read_bdf #, NastranMatrix
 
 import pyNastran.bdf.dev_vectorized.test
 test_path = pyNastran.bdf.dev_vectorized.test.__path__[0]
-#print "test_path = ",test_path
+#print("test_path = ",test_path)
 
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
@@ -261,7 +261,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #sys.exit('sys.exit...')
     #except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
-        #print "\n"
+        #print("\n")
         #traceback.print_exc(file=sys.stdout)
         #print msg
         #print("-" * 80)

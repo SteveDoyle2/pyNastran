@@ -75,11 +75,11 @@ class PSOLID(Property):
         """
         :param cards: the list of PSOLID cards
         """
-        #print "N[%s] = %s" % (self.type, self.n)
+        #print("N[%s] = %s" % (self.type, self.n))
         if self.n:
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
-            #print "PSOLID.property_id =", self.property_id
+            #print("PSOLID.property_id =", self.property_id)
             self.material_id = self.material_id[i]
             self.cordm = self.cordm[i]
             self.integ = self.integ[i]
@@ -145,7 +145,7 @@ class PSOLID(Property):
 
     def write_card(self, bdf_file, size=8, property_id=None):
         if self.n:
-            #print "PSOLID.property_id =", self.property_id
+            #print("PSOLID.property_id =", self.property_id)
             for(pid, mid, cordm, integ, stress, isop, fctn) in zip(
                 self.property_id, self.material_id, self.cordm,
                 self.integ, self.stress, self.isop, self.fctn):

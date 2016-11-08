@@ -129,7 +129,7 @@ class PSHELL(Property):
                 raise RuntimeError('There are duplicate PSHELL IDs...pids=%s' % pids)
         else:
             self.property_id = array([], dtype='int32')
-            self.material_id = array([], dtype='int32')
+            self.material_ids = array([], dtype='int32')
 
     def update(self, maps):
         """

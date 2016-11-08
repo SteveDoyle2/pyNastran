@@ -36,7 +36,7 @@ class PLOAD4(VectorizedCard):
 
     #def __getitem__(self, i):
         #unique_lid = unique(self.load_id)
-        ##print "force", unique_lid, i
+        ##print("force", unique_lid, i)
         ##if len(i):
         #f = PLOAD4(self.model)
         #f.load_id = self.load_id[i]

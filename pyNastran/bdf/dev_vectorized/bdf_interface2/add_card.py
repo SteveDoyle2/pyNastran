@@ -52,12 +52,12 @@ class AddCard(BDFAttributes):
         key = elem.eid
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         if not allow_overwrites:
-            if key in self.elements:
-                if elem._is_same_card(self.elements[key]):
-                    self._duplicate_elements.append(elem)
-                    if self._stop_on_duplicate_error:
-                        self.pop_parse_errors()
-            elif key in self.plotels:
+            #if key in self.elements:
+                #if elem._is_same_card(self.elements[key]):
+                    #self._duplicate_elements.append(elem)
+                    #if self._stop_on_duplicate_error:
+                        #self.pop_parse_errors()
+            if key in self.plotels:
                 if not elem._is_same_card(self.plotels[key]):
                     assert elem.eid not in self.plotels, 'eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, self.plotels[elem.eid], elem)
         self.plotels[key] = elem

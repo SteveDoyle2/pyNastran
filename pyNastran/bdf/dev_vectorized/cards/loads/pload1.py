@@ -29,7 +29,7 @@ class PLOAD1(object):
 
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)
-        #print "force", unique_lid, i
+        #print("force", unique_lid, i)
         if len(i):
             f = PLOAD1(self.model)
             f.load_id = self.load_id[i]
