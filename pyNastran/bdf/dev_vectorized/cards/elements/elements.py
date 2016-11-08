@@ -828,15 +828,54 @@ class Elements(object):
     def write_card(self, bdf_file, size=8, is_double=True,
                    include_properties=False, interspersed=True):
         interspersed = False
+        alternating = False
         include_properties = True
         if interspersed:
             #raise NotImplementedError('interspersed=False')
             self._write_interspersed_elements_properties(bdf_file, size)
             self.conrod.write_card(bdf_file, size)
         else:
-            self._write_alternating_elements_properties(bdf_file, size, is_double)
+            if alternating:
+                self._write_alternating_elements_properties(bdf_file, size, is_double)
+            else:
+                self._write_elements_properties(bdf_file, size, is_double)
+
+    def _write_elements_properties(self, bdf_file, size, is_double):
+        """
+        writes the elements/properties grouped
+        (e.g., PSHELL is near PCOMP, but not CQUAD4)
+        """
+        bdf_file.write('$ Elements-------------------------------------------------\n')
+        self.elements_spring.write_card(bdf_file, is_double)
+        self.conrod.write_card(bdf_file)
+        self.crod.write_card(bdf_file)
+        self.ctube.write_card(bdf_file)
+        self.cbush.write_card(bdf_file, size)
+
+        #self.elements_bars.write_card(bdf_file)
+        self.cbar.write_card(bdf_file, size)
+        self.cbeam.write_card(bdf_file, size)
+        self.cshear.write_card(bdf_file, size)
+        self.elements_shell.write_card(bdf_file)
+        self.elements_solid.write_card(bdf_file)
+        self.mass.write_card(bdf_file, size, is_double)
+
+        bdf_file.write('$ Properties-----------------------------------------------\n')
+        self.properties_bar.write_card(bdf_file, size)
+        self.pelas.write_card(bdf_file, size, is_double)
+        self.prod.write_card(bdf_file)
+        self.ptube.write_card(bdf_file)
+        self.pbush.write_card(bdf_file, size)
+        self.properties_beam.write_card(bdf_file, size)
+        self.pshear.write_card(bdf_file, size)
+        self.properties_shell.write_card(bdf_file, size)
+        self.properties_solid.write_card(bdf_file, size)
 
     def _write_alternating_elements_properties(self, bdf_file, size, is_double):
+        """
+        writes the elements/properties with properties near the element type
+         (e.g., PSHELL is near CQUAD4, but not PCOMP)
+        """
         self._write_alternating_elements_properties_0d(bdf_file, size, is_double)
         self._write_alternating_elements_properties_1d(bdf_file, size, is_double)
         self._write_alternating_elements_properties_2d(bdf_file, size, is_double)

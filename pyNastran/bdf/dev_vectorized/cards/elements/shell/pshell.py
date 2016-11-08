@@ -1,4 +1,5 @@
 from six.moves import zip, StringIO
+import numpy as np
 from numpy import array, zeros, searchsorted, unique, where
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
@@ -32,6 +33,22 @@ class PSHELL(Property):
         """
         Property.__init__(self, model)
 
+    @property
+    def material_id(self):
+        return self.material_ids[:, 0]
+
+    @property
+    def material_id2(self):
+        return self.material_ids[:, 1]
+
+    @property
+    def material_id3(self):
+        return self.material_ids[:, 2]
+
+    @property
+    def material_id4(self):
+        return self.material_ids[:, 3]
+
     def allocate(self, card_count):
         ncards = card_count[self.type]
         if ncards:
@@ -46,10 +63,6 @@ class PSHELL(Property):
             #self.material_id3 = zeros(ncards, 'int32')
             #self.material_id4 = zeros(ncards, 'int32')
             self.material_ids = zeros((ncards, 4), 'int32')
-            self.material_id = self.material_ids[:, 0]
-            self.material_id2 = self.material_ids[:, 1]
-            self.material_id3 = self.material_ids[:, 2]
-            self.material_id4 = self.material_ids[:, 3]
 
             self.thickness = zeros(ncards, float_fmt)
             # .. todo:: poor name
@@ -87,20 +100,13 @@ class PSHELL(Property):
             integer_or_blank(card, 11, 'material_id4', -1)
         ]
 
-        #self.material_id[i] =
-        #self.material_id2[i] =
-        #self.material_id3[i] =
-        #self.material_id4[i] =
+        #ii = np.array([i])
+        #file_obj = StringIO()
+        #file_obj.write('<PSHELL object> n=%s\n' % self.n)
+        #self.write_card_by_index(file_obj, i=ii)
+        #print(file_obj.getvalue())
 
-        #if self.material_id2 is None:
-        #    assert self.material_id3 is None
-        #else: # material_id2 is defined
-        #    #print "self.material_id2 = ",self.material_id2
-        #    assert self.material_id2 >= -1
-        #    #assert self.material_id3 >   0
 
-        #if self.material_id is not None and self.material_id2 is not None:
-        #    assert self.material_id4==None
         assert len(card) <= 12, 'len(PSHELL card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
         #self.model.log.debug('self.i = %s' % self.i)
@@ -138,7 +144,7 @@ class PSHELL(Property):
             for i, pid, mids in enumerate(zip(self.property_id, self.material_ids)):
                 self.property_id[i] = pid_map[pid]
 
-    def write_card(self, bdf_file, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, is_double=True, property_id=None):
         """
         Writes the PSHELL properties.
 
@@ -153,34 +159,40 @@ class PSHELL(Property):
         """
         if self.n:
             i = self.get_property_index_by_property_id(property_id)
-            #self.model.log.debug('i = %s' % i)
-            #self.model.log.debug('material_id2 = %s' % self.material_id2[i])
-            #self.model.log.debug('material_id3 = %s' % self.material_id3[i])
-            #self.model.log.debug('material_id4 = %s' % self.material_id4[i])
-            #self.model.log.debug('material_id2.shpae = %s' % str(self.material_id2[i].shape))
+            self.write_card_by_index(bdf_file, size=size, is_double=is_double, i=i)
 
-            Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
-            Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
-            Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
-            Nsm = ['' if nsmi == 0.0 else nsmi for nsmi in self.nsm[i]]
-            Tst = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
-            TwelveIt3 = ['' if tw == 1.0 else tw for tw in self.twelveIt3[i]]
+    def write_card_by_index(self, bdf_file, size=8, is_double=True, i=None):
+        """
+        Writes the PSHELL properties.
+        """
+        #self.model.log.debug('i = %s' % i)
+        #self.model.log.debug('material_id2 = %s' % self.material_id2[i])
+        #self.model.log.debug('material_id3 = %s' % self.material_id3[i])
+        #self.model.log.debug('material_id4 = %s' % self.material_id4[i])
+        #self.model.log.debug('material_id2.shpae = %s' % str(self.material_id2[i].shape))
 
-            to2 = self.thickness[i] / 2
-            Z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
-            Z2 = ['' if z2i == to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
+        Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
+        Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
+        Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
+        Nsm = ['' if nsmi == 0.0 else nsmi for nsmi in self.nsm[i]]
+        Tst = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
+        TwelveIt3 = ['' if tw == 1.0 else tw for tw in self.twelveIt3[i]]
 
-            for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
-                    self.property_id[i], self.material_id[i], self.thickness[i], Mid2,
-                    TwelveIt3, Mid3, Tst, Nsm, Z1, Z2, Mid4):
-                if pid in self._comments:
-                    bdf_file.write(self._comments[pid])
-                card = ['PSHELL', pid, mid, t, mid2, twelveIt3, mid3,
-                        tst, nsm, z1, z2, mid4]
-                if size == 8:
-                    bdf_file.write(print_card_8(card))
-                else:
-                    bdf_file.write(print_card_16(card))
+        to2 = self.thickness[i] / 2
+        Z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
+        Z2 = ['' if z2i == to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
+
+        for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
+                self.property_id[i], self.material_id[i], self.thickness[i], Mid2,
+                TwelveIt3, Mid3, Tst, Nsm, Z1, Z2, Mid4):
+            if pid in self._comments:
+                bdf_file.write(self._comments[pid])
+            card = ['PSHELL', pid, mid, t, mid2, twelveIt3, mid3,
+                    tst, nsm, z1, z2, mid4]
+            if size == 8:
+                bdf_file.write(print_card_8(card))
+            else:
+                bdf_file.write(print_card_16(card))
 
     def get_nonstructural_mass_by_property_id(self, property_id=None):
         """
@@ -263,14 +275,15 @@ class PSHELL(Property):
         return mid
 
     def __getitem__(self, property_id):
-        property_id, int_flag = slice_to_iter(property_id)
+        print(self.property_id)
+        property_id = slice_to_iter(property_id)[0]
         #print('looking for %s property_ids' % str(property_id))
+        print(property_id)
         i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)
-
         obj = PSHELL(self.model)
         try:
             obj.n = len(i)
@@ -283,16 +296,14 @@ class PSHELL(Property):
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
         obj.property_id = self.property_id[i]
-        obj.material_id = self.material_id[i]
+        obj.material_ids = self.material_ids[i, :]
         obj.thickness = self.thickness[i]
-        obj.material_id2 = self.material_id2[i]
         obj.twelveIt3 = self.twelveIt3[i]
-        obj.material_id3 = self.material_id3[i]
         obj.tst = self.tst[i]
         obj.nsm = self.nsm[i]
         obj.z1 = self.z1[i]
         obj.z2 = self.z2[i]
-        obj.material_id4 = self.material_id4[i]
+
         #print(obj)
         return obj
 

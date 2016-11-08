@@ -35,6 +35,42 @@ class TestReadWriteVectorized(unittest.TestCase):
         )
         os.remove(bdf_filename_out)
 
+    def test_static_solid_shell_bar(self):
+        """vectorized vs. standard test on static_solid_shell_bar.bdf"""
+        bdf_filename = os.path.join(test_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
+        bdf_filename_out = os.path.join(test_path, 'sol_101_elements', 'static_solid_shell_bar2.bdf')
+
+        vmodel = read_bdfv(bdf_filename)
+        vmodel.write_bdf(bdf_filename_out)
+        run_and_compare_fems(
+            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
+            punch=False, cid=None, mesh_form=None,
+            print_stats=False, encoding=None,
+            sum_load=False, size=8, is_double=False,
+            stop=False, nastran='', post=-1, dynamic_vars=None,
+            quiet=False, dumplines=False, dictsort=False,
+            nerrors=0, dev=False, crash_cards=None,
+        )
+        os.remove(bdf_filename_out)
+
+    def test_mode_solid_shell_bar(self):
+        """vectorized vs. standard test on mode_solid_shell_bar.bdf"""
+        bdf_filename = os.path.join(test_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
+        bdf_filename_out = os.path.join(test_path, 'sol_101_elements', 'mode_solid_shell_bar2.bdf')
+
+        vmodel = read_bdfv(bdf_filename)
+        vmodel.write_bdf(bdf_filename_out)
+        run_and_compare_fems(
+            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
+            punch=False, cid=None, mesh_form=None,
+            print_stats=False, encoding=None,
+            sum_load=False, size=8, is_double=False,
+            stop=False, nastran='', post=-1, dynamic_vars=None,
+            quiet=False, dumplines=False, dictsort=False,
+            nerrors=0, dev=False, crash_cards=None,
+        )
+        os.remove(bdf_filename_out)
+
     def test_bwb(self):
         """vectorized vs. standard test on BWB_saero.bdf"""
         bdf_filename = os.path.join(test_path, 'bwb', 'BWB_saero.bdf')
