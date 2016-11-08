@@ -804,7 +804,10 @@ class TLOAD2(TabularLoad):
     Defines a time-dependent dynamic load or enforced motion of the form:
 
     .. math::
-      \left\{ P(t) \right\} = \left\{ A \right\} \cdot F(t-\tau)
+    \left\{ P(t) \right\} = \left\{ A \right\} e^(C*t) cos(2 \pi f t + \phi)
+
+      P(t) = 0                                            (t<T1+tau or t >  T2+tau)
+      P(t) = {A} * t^b * e^(C*t) * cos(2*pi*f*t + phase)  (T1+tau <=   t <= T2+tau)
 
     for use in transient response analysis.
     """

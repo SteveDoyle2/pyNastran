@@ -142,10 +142,12 @@ from pyNastran.bdf.dev_vectorized.cards.loads.moment2 import MOMENT2
 # ACCEL1
 # PLOAD3
 # DAREA
-# TLOAD1
-# TLOAD2
-# RLOAD1
-# RLOAD2
+from pyNastran.bdf.dev_vectorized.cards.loads.tload1 import TLOAD1
+from pyNastran.bdf.dev_vectorized.cards.loads.tload2 import TLOAD2
+from pyNastran.bdf.dev_vectorized.cards.loads.delay import DELAY
+#from pyNastran.bdf.dev_vectorized.cards.loads.rload1 import RLOAD1
+#from pyNastran.bdf.dev_vectorized.cards.loads.rload2 import RLOAD2
+#from pyNastran.bdf.dev_vectorized.cards.loads.dphase import DPHASE
 # RANDPS
 
 # loads
@@ -327,6 +329,14 @@ class BDFAttributes(object):
         #self.pload3 = PLOAD3(self)
         self.pload4 = PLOAD4(self)
         self.ploadx1 = PLOADX1(self)
+
+        self.tload1 = TLOAD1(self)
+        self.tload2 = TLOAD2(self)
+        self.delay = DELAY(self)
+
+        #self.rload1 = RLOAD1(self)
+        #self.rload2 = RLOAD2(self)
+        #self.dphase = DPHASE(self)
 
         #: stores LOAD, FORCE, MOMENT, etc.
         self.loads = Loads(self)
@@ -784,6 +794,13 @@ class BDFAttributes(object):
             'PLOAD2' : self.pload2,
             'PLOAD4' : self.pload4,
             'PLOADX1' : self.ploadx1,
+
+            #'TLOAD1' : self.tload1,
+            'TLOAD2' : self.tload2,
+            'DELAY' : self.delay,
+            #'RLOAD1' : self.rload1,
+            #'RLOAD2' : self.rload2,
+            #'DPHASE' : self.dphase,
 
             # constraints
             #'SPC1' : self.spc1,

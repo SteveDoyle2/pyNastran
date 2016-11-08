@@ -135,12 +135,27 @@ class Loads(object):
 
         self.ploadx1 = model.ploadx1
 
+        self.tload1 = model.tload1
+        self.tload2 = model.tload2
+        self.delay = model.delay
+        #self.rload1 = model.rload1
+        #self.rload2 = model.rload2
+        #self.dphase = model.dphase
+
     def _get_load_types(self, nlimit):
         types = [
+            # static
             self.load,  #self.dload,
             self.force, self.force1, self.force2,
             self.grav, self.rforce,
             self.pload, self.pload1, self.pload2, self.pload4, self.ploadx1,
+            #self.accel, self.accel1,
+
+            # dynamic
+            self.tload1, self.tload2,
+            #self.rload1, self.rload2,
+
+            # thermal
         ]
         if nlimit:
             types2 = []
@@ -219,10 +234,14 @@ class Loads(object):
 
             #self.accel1.write_card(bdf_file, size)
 
-            #self.tload1.write_card(bdf_file, size)
-            #self.tload2.write_card(bdf_file, size)
+            self.tload1.write_card(bdf_file, size)
+            self.tload2.write_card(bdf_file, size)
+            self.delay.write_card(bdf_file, size)
+
             #self.rload1.write_card(bdf_file, size)
             #self.rload2.write_card(bdf_file, size)
+            #self.dphase.write_card(bdf_file, size)
+
             #self.randps.write_card(bdf_file, size)
 
             # DAREA

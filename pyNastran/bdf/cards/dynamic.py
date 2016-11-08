@@ -41,20 +41,20 @@ class DELAY(BaseCard):
         +-------+-----+-----------+-----+--------+------+-----+--------+-----+
         |   1   |  2  |     3     |  4  |   5    |  6   |  7  |   8    |  9  |
         +=======+=====+===========+=====+========+======+=====+========+=====+
-        | DELAY | SID | POINT ID1 | C1  | THETA1 | P2   | C2  | THETA2 |     |
+        | DELAY | SID | POINT ID1 | C1  |   T1   | P2   | C2  |   T2   |     |
         +-------+-----+-----------+-----+--------+------+-----+--------+-----+
         """
         if comment:
             self.comment = comment
 
-        #: Identification number of DPHASE entry. (Integer > 0)
+        #: Identification number of DELAY entry. (Integer > 0)
         self.sid = sid
         #: Grid, extra, or scalar point identification number. (Integer > 0)
         self.nodes = nodes
         #: Component number. (Integers 1 through 6 for grid points; zero or blank for extra
         #: or scalar points)
         self.components = components
-        #: Phase lead (degrees)
+        #: Time delay (tau) for designated point Pi and component Ci. (Real)
         self.delays = delays
 
     @classmethod

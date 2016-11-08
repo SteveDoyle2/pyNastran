@@ -321,6 +321,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'PLOAD', 'PLOAD2', 'PLOAD4', 'PLOADX1',
+            'TLOAD1', 'TLOAD2', 'DELAY',
+            #'RLOAD1', 'RLOAD2', 'DPHASE',
 
             # constraints
             'SPC', 'SPCADD', 'SPC1', 'SPCD',
