@@ -1405,6 +1405,8 @@ class MOMENT1(Moment):
         magnitude and two grid points that determine the direction.::
 
         +---------+-----+---+---+----+----+
+        |    1    |  2  | 3 | 4 | 5  | 6  |
+        +=========+=====+===+===+====+====+
         | MOMENT1 | SID | G | M | G1 | G2 |
         +---------+-----+---+---+----+----+
         """
