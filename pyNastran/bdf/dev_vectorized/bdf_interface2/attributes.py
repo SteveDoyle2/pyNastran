@@ -136,8 +136,8 @@ from pyNastran.bdf.dev_vectorized.cards.loads.moment import MOMENT
 
 from pyNastran.bdf.dev_vectorized.cards.loads.force1 import FORCE1
 from pyNastran.bdf.dev_vectorized.cards.loads.force2 import FORCE2
-#from pyNastran.bdf.dev_vectorized.cards.loads.moment1 import MOMENT1
-#from pyNastran.bdf.dev_vectorized.cards.loads.moment2 import MOMENT2
+from pyNastran.bdf.dev_vectorized.cards.loads.moment1 import MOMENT1
+from pyNastran.bdf.dev_vectorized.cards.loads.moment2 import MOMENT2
 
 # ACCEL1
 # PLOAD3
@@ -316,8 +316,8 @@ class BDFAttributes(object):
         self.force1 = FORCE1(self)
         self.force2 = FORCE2(self)
         self.moment = MOMENT(self)
-        #self.moment1 = MOMENT1(self)
-        #self.moment2 = MOMENT2(self)
+        self.moment1 = MOMENT1(self)
+        self.moment2 = MOMENT2(self)
         self.grav = GRAV(self)
         self.rforce = RFORCE(self)
 
