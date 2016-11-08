@@ -16,8 +16,9 @@ from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import _cquad4_nor
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
 from pyNastran.bdf.dev_vectorized.cards.elements.utils import build_groups, asarray
 
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import BaseMethods
 
-class Elements(object):
+class Elements(BaseMethods):
     def __init__(self, model):
         """
         Defines the Elements object.
@@ -185,6 +186,9 @@ class Elements(object):
             self.element_ids.sort()
             self.element_groups = build_groups(etypes, 'element_id', is_element=True)
             #self.model.log.info('self.element_groups = %s' % self.element_groups)
+        else:
+            self.model.log.warning('no elements...')
+
         if self.nproperties:
             pids = check_duplicate('property_id', ptypes, self.model.log)
             self.property_ids = asarray(pids, dtype='int32')
@@ -240,7 +244,7 @@ class Elements(object):
     def get_element_properties(self, exclude_types=None):
         if exclude_types is None:
             exclude_types = []
-        Types = [
+        element_objs = [
             self.elements_spring.celas1, self.elements_spring.celas2,
             self.elements_spring.celas3, self.elements_spring.celas4,
             self.cshear,
@@ -255,20 +259,21 @@ class Elements(object):
         if exclude_types is None:
             exclude_types = []
 
-        Types2 = []
-        for Type in Types:
-            if Type.type not in exclude_types:
-                Types2.append(Type)
-        Types = Types2
-        del Types2
+        element_objs2 = []
+        for element_obj in element_objs:
+            if element_obj.type not in exclude_types:
+                element_objs2.append(element_obj)
+        element_objs = element_objs2
+        del element_objs2
         # this isn't working...
-        #Types = [Type if Type.type not in exclude_types for Type in Types]
+        #element_objs = [element_obj if element_obj.type not in exclude_types
+                        #for element_obj in element_objs]
         elements_without_properties = ['CELAS2', 'CELAS4', 'CONROD']
-        eids = np.hstack([Type.element_id for Type in Types])
-        pids = np.hstack([np.zeros(Type.n, dtype='int32')
-                          if Type.type in elements_without_properties
-                          else Type.property_id for Type in Types])
-        return Types, eids, pids
+        eids = np.hstack([element_obj.element_id for element_obj in element_objs])
+        pids = np.hstack([np.zeros(element_obj.n, dtype='int32')
+                          if element_obj.type in elements_without_properties
+                          else element_obj.property_id for element_obj in element_objs])
+        return element_objs, eids, pids
 
     def get_element_ids_by_property_type(self, element_ids, exclude_types=None):
         #self.model.log.debug('element_ids = %s' % element_ids)
@@ -830,11 +835,30 @@ class Elements(object):
         interspersed = False
         include_properties = True
         if interspersed:
-            #raise NotImplementedError('interspersed=False')
-            self._write_interspersed_elements_properties(bdf_file, size)
-            self.conrod.write_card(bdf_file, size)
+            self._write_interspersed_elements_properties(bdf_file, size, is_double)
+            #self.conrod.write_card(bdf_file, size)
         else:
             self._write_alternating_elements_properties(bdf_file, size, is_double)
+
+    def _write_interspersed_elements_properties(self, bdf_file, size, is_double):
+        #raise NotImplementedError('interspersed=False')
+        print(self.object_attributes())
+        print(self.element_groups)
+        print(self.element_ids)
+        element_objs = self.get_element_typemap()
+        emap = {}
+        if self.element_ids is None:
+            self.build()
+        neids = self.element_ids.size
+        element_ids = np.ones((neids, 2)) * -1
+
+        i = 0
+        for key, element_obj in sorted(iteritems(element_objs)):
+            if element_obj.n == 0:
+                i += 1
+                continue
+            emap[i] = element_obj
+            i += 1
 
     def _write_alternating_elements_properties(self, bdf_file, size, is_double):
         self._write_alternating_elements_properties_0d(bdf_file, size, is_double)

@@ -1,20 +1,23 @@
+from __future__ import print_function
 from six.moves import zip, StringIO
 from numpy import array, zeros, searchsorted, unique, where
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank, double,
-    double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 class PSHELL(Property):
     """
     +--------+-------+------+--------+------+----------+------+------+---------+
+    |   1    |   2   |   3  |    4   |  5   |    6     |   7  |  8   |    9    |
+    +========+=======+======+========+======+==========+======+======+=========+
     | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
     +--------+-------+------+--------+------+----------+------+------+---------+
-    |        |  Z1   |  Z2  |  MID4  |
+    |        |  Z1   |  Z2  |  MID4  |      |          |      |      |         |
     +--------+-------+------+--------+------+----------+------+------+---------+
     | PSHELL | 41111 |  1   | 1.0000 |  1   |          |   1  |      | 0.02081 |
     +--------+-------+------+--------+------+----------+------+------+---------+
@@ -77,20 +80,16 @@ class PSHELL(Property):
         self.tst[i] = double_or_blank(card, 7, 'ts/t', 0.833333)
         self.nsm[i] = double_or_blank(card, 8, 'nsm', 0.0)
 
-        tOver2 = self.thickness[i] / 2.
-        self.z1[i] = double_or_blank(card, 9, 'z1', -tOver2)
-        self.z2[i] = double_or_blank(card, 10, 'z2', tOver2)
+        t_over_2 = self.thickness[i] / 2.
+        self.z1[i] = double_or_blank(card, 9, 'z1', -t_over_2)
+        self.z2[i] = double_or_blank(card, 10, 'z2', t_over_2)
         self.material_ids[i, :] = [
             integer(card, 2, 'material_id'),
             integer_or_blank(card, 4, 'material_id2', -1),
             integer_or_blank(card, 6, 'material_id3', -1),
             integer_or_blank(card, 11, 'material_id4', -1)
         ]
-
-        #self.material_id[i] =
-        #self.material_id2[i] =
-        #self.material_id3[i] =
-        #self.material_id4[i] =
+        print(self.material_ids[i, :])
 
         #if self.material_id2 is None:
         #    assert self.material_id3 is None
@@ -136,7 +135,10 @@ class PSHELL(Property):
             pid_map = maps['property']
             mid_map = maps['material']
             for i, pid, mids in enumerate(zip(self.property_id, self.material_ids)):
-                self.property_id[i] = pid_map[pid]
+                pid2 = pid_map[pid]
+                mids2 = [mid_map[mid] for mid in mids]
+                self.property_id[i] = pid2
+                self.material_ids[i, :] = mids2
 
     def write_card(self, bdf_file, size=8, property_id=None):
         """
@@ -159,24 +161,27 @@ class PSHELL(Property):
             #self.model.log.debug('material_id4 = %s' % self.material_id4[i])
             #self.model.log.debug('material_id2.shpae = %s' % str(self.material_id2[i].shape))
 
-            Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
-            Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
-            Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
-            Nsm = ['' if nsmi == 0.0 else nsmi for nsmi in self.nsm[i]]
-            Tst = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
+            mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
+            mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
+            mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
+            nsm = ['' if nsmi == 0.0 else nsmi for nsmi in self.nsm[i]]
+            tst = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
             TwelveIt3 = ['' if tw == 1.0 else tw for tw in self.twelveIt3[i]]
 
             to2 = self.thickness[i] / 2
-            Z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
-            Z2 = ['' if z2i == to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
+            z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
+            z2 = ['' if z2i == to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
 
-            for (pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4) in zip(
-                    self.property_id[i], self.material_id[i], self.thickness[i], Mid2,
-                    TwelveIt3, Mid3, Tst, Nsm, Z1, Z2, Mid4):
+            for (pid, mid1i, t, mid2i, twelveIt3, mid3i, tsti, nsmi, z1i, z2i, mid4i) in zip(
+                    self.property_id[i], self.material_id[i], self.thickness[i], mid2,
+                    TwelveIt3, mid3, tst, nsm, z1, z2, mid4):
                 if pid in self._comments:
                     bdf_file.write(self._comments[pid])
-                card = ['PSHELL', pid, mid, t, mid2, twelveIt3, mid3,
-                        tst, nsm, z1, z2, mid4]
+
+                #list_fields = ['PSHELL', self.pid, mid1, self.t, mid2,
+                               #twelveIt3, mid3, tst, nsm, z1, z2, mid4]
+                card = ['PSHELL', pid, mid1i, t, mid2i, twelveIt3, mid3i,
+                        tsti, nsmi, z1i, z2i, mid4i]
                 if size == 8:
                     bdf_file.write(print_card_8(card))
                 else:
@@ -206,11 +211,11 @@ class PSHELL(Property):
         """
         int_flag = True if isinstance(property_id, int) else False
         if property_id is None:
-            t = self.thickness
+            thickness = self.thickness
         else:
             i = self.get_property_index_by_property_id(property_id)
-            t = self.thickness[i]
-        return t[0] if int_flag else t
+            thickness = self.thickness[i]
+        return thickness[0] if int_flag else thickness
 
     def get_mass_per_area_by_property_id(self, property_id=None):
         """
@@ -220,15 +225,15 @@ class PSHELL(Property):
         """
         #mass_per_area = self.nsm + self.Rho() * self.t
         if property_id is None:
-            t = self.thickness
+            thickness = self.thickness
             nsm = self.nsm
         else:
             i = self.get_property_index_by_property_id(property_id)
-            t = self.thickness[i]
+            thickness = self.thickness[i]
             nsm = self.nsm[i]
 
         density = self.get_density_by_property_id(property_id)
-        return nsm + density * t
+        return nsm + density * thickness
 
     def get_density_by_property_id(self, property_id=None):
         """
@@ -263,7 +268,7 @@ class PSHELL(Property):
         return mid
 
     def __getitem__(self, property_id):
-        property_id, int_flag = slice_to_iter(property_id)
+        property_id = slice_to_iter(property_id)[0]
         #print('looking for %s property_ids' % str(property_id))
         i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)
@@ -297,7 +302,7 @@ class PSHELL(Property):
         return obj
 
     def __repr__(self):
-        f = StringIO()
-        f.write('<PSHELL object> n=%s\n' % self.n)
-        self.write_card(f)
-        return f.getvalue()
+        file_obj = StringIO()
+        file_obj.write('<PSHELL object> n=%s\n' % self.n)
+        self.write_card(file_obj)
+        return file_obj.getvalue()

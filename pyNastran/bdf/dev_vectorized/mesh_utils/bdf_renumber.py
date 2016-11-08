@@ -371,12 +371,16 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         model.force1,
         model.force2,
         model.moment,
-        #model.moment1,
-        #model.moment2,
+        model.moment1,
+        model.moment2,
         model.pload,
         model.pload1,
         model.pload2,
         model.pload4,
+        #model.rforce,
+        #model.dload,
+        #model.load,
+        #model.sload,
     ]
 
 
