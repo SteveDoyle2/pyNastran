@@ -80,6 +80,9 @@ class Coord(VectorizedCard):
 
             if len(self.coords) > 1:
                 bdf_file.write('$COORDs\n')
+
+            if max(self.coords) > self.model.max_int:
+                size = 16
             for cid, coord in iteritems(self.coords):
                 if cid > 0:
                     #if cid in self._comments:

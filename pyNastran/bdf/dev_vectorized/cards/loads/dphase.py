@@ -19,7 +19,7 @@ class DPHASE(VectorizedCard):
     +--------+-----+-----------+-----+------+------+-----+-----+-----+
 
     referenced by:
-      - RLOAD1, RLOAD2, and ??? entries
+      - RLOAD1, TLOAD2 (frequency domain loads)
     """
     type = 'DELAY'
     def __init__(self, model):

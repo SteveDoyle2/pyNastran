@@ -138,7 +138,7 @@ from pyNastran.bdf.dev_vectorized.cards.loads.darea import DAREA
 from pyNastran.bdf.dev_vectorized.cards.loads.tload1 import TLOAD1
 from pyNastran.bdf.dev_vectorized.cards.loads.tload2 import TLOAD2
 from pyNastran.bdf.dev_vectorized.cards.loads.delay import DELAY
-#from pyNastran.bdf.dev_vectorized.cards.loads.rload1 import RLOAD1
+from pyNastran.bdf.dev_vectorized.cards.loads.rload1 import RLOAD1
 #from pyNastran.bdf.dev_vectorized.cards.loads.rload2 import RLOAD2
 from pyNastran.bdf.dev_vectorized.cards.loads.dphase import DPHASE
 # RANDPS
@@ -162,6 +162,7 @@ class BDFAttributes(object):
         self._nastran_format = 'msc'
         self.is_nx = False
         self.is_msc = True
+        self.max_int = 100000000
 
         #----------------------------------------
         self._is_cards_dict = True
@@ -320,7 +321,7 @@ class BDFAttributes(object):
         self.tload2 = TLOAD2(self)
         self.delay = DELAY(self)
 
-        #self.rload1 = RLOAD1(self)
+        self.rload1 = RLOAD1(self)
         #self.rload2 = RLOAD2(self)
         self.dphase = DPHASE(self)
 
@@ -705,6 +706,7 @@ class BDFAttributes(object):
             'GRID' : self.grid,
             'GRIDSET' : self.grdset,
             'SPOINT' : self.spoint,
+            'EPOINT' : self.epoint,
 
             # springs
             'PELAS' : self.pelas,
@@ -775,8 +777,8 @@ class BDFAttributes(object):
             'FORCE2' : self.force2,
 
             'MOMENT' : self.moment,
-            #'MOMENT1' : self.moment1,
-            #'MOMENT2' : self.moment2,
+            'MOMENT1' : self.moment1,
+            'MOMENT2' : self.moment2,
 
             'PLOAD' : self.pload,
             'PLOAD2' : self.pload2,
@@ -786,7 +788,7 @@ class BDFAttributes(object):
             'TLOAD1' : self.tload1,
             'TLOAD2' : self.tload2,
             'DELAY' : self.delay,
-            #'RLOAD1' : self.rload1,
+            'RLOAD1' : self.rload1,
             #'RLOAD2' : self.rload2,
             'DPHASE' : self.dphase,
 

@@ -877,9 +877,9 @@ class Elements(BaseMethods):
 
     def _write_interspersed_elements_properties(self, bdf_file, size, is_double):
         #raise NotImplementedError('interspersed=False')
-        print(self.object_attributes())
-        print(self.element_groups)
-        print(self.element_ids)
+        #print(self.object_attributes())
+        #print(self.element_groups)
+        #print(self.element_ids)
         element_objs = self.get_element_typemap()
         emap = {}
         if self.element_ids is None:

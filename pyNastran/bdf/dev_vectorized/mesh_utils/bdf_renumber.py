@@ -577,6 +577,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     for dvprel in itervalues(model.dvprels):
         dvprel.update(maps)
 
+    model.darea.update(maps)
+    model.dphase.update(maps)
+
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
                         interspersed=False)

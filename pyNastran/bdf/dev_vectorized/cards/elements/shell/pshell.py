@@ -102,7 +102,7 @@ class PSHELL(Property):
             integer_or_blank(card, 6, 'material_id3', -1),
             integer_or_blank(card, 11, 'material_id4', -1)
         ]
-        print(self.material_ids[i, :])
+        #self.model.log.debug(self.material_ids[i, :])
 
         #ii = np.array([i])
         #file_obj = StringIO()
@@ -273,8 +273,8 @@ class PSHELL(Property):
 
     def __getitem__(self, property_id):
         property_id = slice_to_iter(property_id)[0]
-        #print('looking for %s property_ids' % str(property_id))
-        print(property_id)
+        #self.model.log.debug('looking for %s property_ids' % str(property_id))
+        #self.model.log.debug(property_id)
         i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)
 

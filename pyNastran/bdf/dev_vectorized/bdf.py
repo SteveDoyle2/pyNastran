@@ -81,10 +81,11 @@ from pyNastran.bdf.dev_vectorized.cards.optimization import (
 from pyNastran.bdf.dev_vectorized.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
-    SET1, SET3, RADSET,
+    SET1, SET3, #RADSET,
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
-    SESET, SEQSEP)
+    SESET, #SEQSEP,
+)
 
 
 
@@ -325,7 +326,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'PLOAD', 'PLOAD2', 'PLOAD4', 'PLOADX1',
             'TLOAD1', 'TLOAD2', 'DELAY',
-            'DPHASE', # 'RLOAD1', 'RLOAD2',
+            'RLOAD1', 'DPHASE', #'RLOAD2',
 
 
             # constraints
@@ -585,8 +586,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             elem.validate()
         for eid, plotel in sorted(iteritems(self.plotels)):
             plotel.validate()
-        for eid, mass in sorted(iteritems(self.masses)):
-            mass.validate()
+        #for eid, mass in sorted(iteritems(self.masses)):
+            #mass.validate()
         for pid, property_mass in sorted(iteritems(self.properties_mass)):
             property_mass.validate()
 
@@ -737,10 +738,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             mpcadd.validate()
 
         #------------------------------------------------
-        for key, darea in sorted(iteritems(self.dareas)):
-            darea.validate()
-        for key, dphase in sorted(iteritems(self.dphases)):
-            dphase.validate()
+        #for key, darea in sorted(iteritems(self.dareas)):
+            #darea.validate()
+        #for key, dphase in sorted(iteritems(self.dphases)):
+            #dphase.validate()
 
         for pid, pbusht in sorted(iteritems(self.pbusht)):
             pbusht.validate()
@@ -1983,12 +1984,12 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """adds a GRDSET"""
         self.grdset = GRDSET.add_card(card_obj, comment=comment)
 
-    def _prepare_cdamp4(self, card, card_obj, comment=''):
-        """adds a CDAMP4"""
-        self.add_damper(CDAMP4.add_card(card_obj, comment=comment))
-        if card_obj.field(5):
-            self.add_damper(CDAMP4.add_card(card_obj, 1, comment=''))
-        return card_obj
+    #def _prepare_cdamp4(self, card, card_obj, comment=''):
+        #"""adds a CDAMP4"""
+        #self.add_damper(CDAMP4.add_card(card_obj, comment=comment))
+        #if card_obj.field(5):
+            #self.add_damper(CDAMP4.add_card(card_obj, 1, comment=''))
+        #return card_obj
 
     def _prepare_convm(self, card, card_obj, comment=''):
         """adds a CONVM"""
@@ -2079,57 +2080,57 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """adds a DMIJI"""
         self._prepare_dmix(DMIJI, self.add_dmiji, card_obj, comment=comment)
 
-    def _prepare_cmass4(self, card, card_obj, comment=''):
-        """adds a CMASS4"""
-        class_instance = CMASS4.add_card(card_obj, icard=0, comment=comment)
-        self.add_mass(class_instance)
-        if card_obj.field(5):
-            class_instance = CMASS4.add_card(card_obj, icard=1, comment=comment)
-            self.add_mass(class_instance)
+    #def _prepare_cmass4(self, card, card_obj, comment=''):
+        #"""adds a CMASS4"""
+        #class_instance = CMASS4.add_card(card_obj, icard=0, comment=comment)
+        #self.add_mass(class_instance)
+        #if card_obj.field(5):
+            #class_instance = CMASS4.add_card(card_obj, icard=1, comment=comment)
+            #self.add_mass(class_instance)
 
-    def _prepare_pelas(self, card, card_obj, comment=''):
-        """adds a PELAS"""
-        class_instance = PELAS.add_card(card_obj, icard=0, comment=comment)
-        self.add_property(class_instance)
-        if card_obj.field(5):
-            class_instance = PELAS.add_card(card_obj, icard=1, comment=comment)
-            self.add_property(class_instance)
+    #def _prepare_pelas(self, card, card_obj, comment=''):
+        #"""adds a PELAS"""
+        #class_instance = PELAS.add_card(card_obj, icard=0, comment=comment)
+        #self.add_property(class_instance)
+        #if card_obj.field(5):
+            #class_instance = PELAS.add_card(card_obj, icard=1, comment=comment)
+            #self.add_property(class_instance)
 
-    def _prepare_pvisc(self, card, card_obj, comment=''):
-        """adds a PVISC"""
-        class_instance = PVISC.add_card(card_obj, icard=0, comment=comment)
-        self.add_property(class_instance)
-        if card_obj.field(5):
-            class_instance = PVISC.add_card(card_obj, icard=1, comment=comment)
-            self.add_property(class_instance)
+    #def _prepare_pvisc(self, card, card_obj, comment=''):
+        #"""adds a PVISC"""
+        #class_instance = PVISC.add_card(card_obj, icard=0, comment=comment)
+        #self.add_property(class_instance)
+        #if card_obj.field(5):
+            #class_instance = PVISC.add_card(card_obj, icard=1, comment=comment)
+            #self.add_property(class_instance)
 
-    def _prepare_pdamp(self, card, card_obj, comment=''):
-        """adds a PDAMP"""
-        class_instance = PDAMP.add_card(card_obj, icard=0, comment=comment)
-        self.add_property(class_instance)
-        if card_obj.field(3):
-            class_instance = PDAMP.add_card(card_obj, icard=1, comment=comment)
-            self.add_property(class_instance)
-        if card_obj.field(5):
-            class_instance = PDAMP.add_card(card_obj, icard=2, comment=comment)
-            self.add_property(class_instance)
-        if card_obj.field(7):
-            class_instance = PDAMP.add_card(card_obj, icard=3, comment=comment)
-            self.add_property(class_instance)
+    #def _prepare_pdamp(self, card, card_obj, comment=''):
+        #"""adds a PDAMP"""
+        #class_instance = PDAMP.add_card(card_obj, icard=0, comment=comment)
+        #self.add_property(class_instance)
+        #if card_obj.field(3):
+            #class_instance = PDAMP.add_card(card_obj, icard=1, comment=comment)
+            #self.add_property(class_instance)
+        #if card_obj.field(5):
+            #class_instance = PDAMP.add_card(card_obj, icard=2, comment=comment)
+            #self.add_property(class_instance)
+        #if card_obj.field(7):
+            #class_instance = PDAMP.add_card(card_obj, icard=3, comment=comment)
+            #self.add_property(class_instance)
 
-    def _prepare_pmass(self, card, card_obj, comment=''):
-        """adds a PMASS"""
-        card_instance = PMASS(card_obj, icard=0, comment=comment)
-        self.add_property_mass(card_instance)
-        for (i, j) in enumerate([3, 5, 7]):
-            if card_obj.field(j):
-                card_instance = PMASS(card_obj, icard=i+1, comment=comment)
-                self.add_property_mass(card_instance)
+    #def _prepare_pmass(self, card, card_obj, comment=''):
+        #"""adds a PMASS"""
+        #card_instance = PMASS(card_obj, icard=0, comment=comment)
+        #self.add_property_mass(card_instance)
+        #for (i, j) in enumerate([3, 5, 7]):
+            #if card_obj.field(j):
+                #card_instance = PMASS(card_obj, icard=i+1, comment=comment)
+                #self.add_property_mass(card_instance)
 
-    def _prepare_dphase(self, card, card_obj, comment=''):
-        """adds a DPHASE"""
-        class_instance = DPHASE.add_card(card_obj, comment=comment)
-        self.add_dphase(class_instance)
+    #def _prepare_dphase(self, card, card_obj, comment=''):
+        #"""adds a DPHASE"""
+        #class_instance = DPHASE.add_card(card_obj, comment=comment)
+        #self.add_dphase(class_instance)
         #if card_obj.field(5):
             #print('card_obj = ', card_obj)
             #class_instance = DPHASE(card_obj, icard=1, comment=comment)
@@ -2306,11 +2307,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         if self.spoints:
             spoints = self.spoints.points
             nspoints = len(spoints)
-        if self.epoints is not None:
-            raise NotImplementedError('EPOINTs')
+        if self.epoints:
+            epoints = self.epoints.points
+            nepoints = len(epoints)
+            raise NotImplementedError('EPOINT')
 
-        assert nnodes + nspoints > 0, 'nnodes=%s nspoints=%s' % (nnodes, nspoints)
-        xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
+        assert nnodes + nspoints + nepoints > 0, 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+        xyz_cid0 = np.zeros((nnodes + nspoints + nepoints, 3), dtype=dtype)
         if cid == 0:
             if nspoints:
                 nids = self.nodes.keys()
@@ -3344,6 +3347,26 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """adds dphases"""
         self._parse_multi(card_name, cards, self.dphase, [5])
 
+    def _parse_cmass4(self, card_name, cards):
+        """adds cmass4"""
+        self._parse_multi(card_name, cards, self.cmass4, [5])
+
+    def _parse_cdamp4(self, card_name, cards):
+        """adds cdamp4"""
+        self._parse_multi(card_name, cards, self.cmass4, [5])
+
+    def _parse_pvisc(self, card_name, cards):
+        """adds pvisc"""
+        self._parse_multi(card_name, cards, self.pvisc, [5])
+
+    def _parse_pdamp(self, card_name, cards):
+        """adds pdamp"""
+        self._parse_multi(card_name, cards, self.pdamp, [3, 5, 7])
+
+    def _parse_pmass(self, card_name, cards):
+        """adds pmass"""
+        self._parse_multi(card_name, cards, self.pmass, [3, 5, 7])
+
     def _parse_multi(self, card_name, cards, card_cls, icard):
         """parses a DAREA/DPHASE/???"""
         datas = []
@@ -3354,15 +3377,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             datas.append(data)
             for icardi in icard:
                 if card_obj.field(icardi):
-                    data  = card_cls.parse(card_obj, icard=icardi)
+                    data = card_cls.parse(card_obj, icard=icardi)
                     datas.append(data)
 
         ncards = len(datas)
         self._increase_card_count(card_name, ncards)
         self.log.debug('  allocating %r' % card_cls.type)
         card_cls.allocate(self.card_count)
-        print(data[0])
-        print(data)
         for datai, comment in datas:
             card_cls.add_card(datai, comment)
         self.log.debug('  building %r; n=%s' % (card_cls.type, card_cls.n))
@@ -3463,6 +3484,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
                 'DAREA' : self._parse_darea,
                 'DPHASE' : self._parse_dphase,
+
+                #'PELAS' : self._parse_pelas,
+                'PVISC' : self._parse_pvisc,
+                'PDAMP' : self._parse_pdamp,
+                'CMASS4' : self._parse_cmass4,
+                'PMASS' : self._parse_pmass,
+                'CDAMP4' : self._parse_cdamp4,
             }
             # self._is_cards_dict = True
             # this is the loop that hits...

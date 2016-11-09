@@ -12,21 +12,27 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.bdf.dev_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
-class TLOAD1(VectorizedLoad):
+class RLOAD1(VectorizedLoad):
     r"""
-    Transient Response Dynamic Excitation, Form 1
-
-    Defines a time-dependent dynamic load or enforced motion of the form:
+    Defines a frequency-dependent dynamic load of the form
+    for use in frequency response problems.
 
     .. math::
-      \left\{ P(t) \right\} = \left\{ A \right\} \cdot F(t-\tau)
+      \left\{ P(f)  \right\}  = \left\{A\right\} [ C(f)+iD(f)]
+         e^{  i \left\{\theta - 2 \pi f \tau \right\} }
 
-    for use in transient response analysis.
+    +--------+-----+----------+-------+--------+----+----+------+
+    |   1    |  2  |     3    |   4   |   5    |  6 |  7 |   8  |
+    +========+=====+==========+=======+========+====+====+======+
+    | RLOAD1 | SID | EXCITEID | DELAY | DPHASE | TC | TD | TYPE |
+    +--------+-----+----------+-------+--------+----+----+------+
+    | RLOAD1 |  5  |    3     |       |        | 1  |    |      |
+    +--------+-----+----------+-------+--------+----+----+------+
     """
-    type = 'TLOAD1'
+    type = 'RLOAD1'
     def __init__(self, model):
         """
-        Defines the TLOAD1 object.
+        Defines the RLOAD1 object.
 
         Parameters
         ----------
@@ -64,20 +70,46 @@ class TLOAD1(VectorizedLoad):
             self.delay_tau = zeros(ncards, float_fmt)
             self.is_delay_table = zeros(ncards, 'bool')
 
+            self.dphase_id = zeros(ncards, 'int32')
+            self.dphase_lead = zeros(ncards, float_fmt)
+            self.is_dphase_table = zeros(ncards, 'bool')
+
             #: Defines the type of the dynamic excitation. (Integer; character
             #: or blank; Default = 0)
             self.Type = zeros(ncards, '|S4')
 
-            #: Identification number of TABLEDi entry that gives F(t). (Integer > 0)
-            self.table_id = zeros(ncards, 'int32')
+            #: Identification number of TABLEDi entry that gives C/D(f). (Integer > 0)
+            self.table_cd = zeros((ncards, 2), 'int32')
 
-            #: Factor for initial displacements of the enforced degrees-of-freedom.
-            #: (Real; Default = 0.0)
-            self.us0 = zeros(ncards, float_fmt)
+            #: Value of C/D to be used for all frequencies. See Remark 2.. (Real or blank)
+            #:
+            #: If any of DELAYI/DELAYR, DPHASEI/DPHASER, TC/RC, or TD/RD fields are blank or zero,
+            #: the corresponding tau, theta, or will be zero. Either TC/RC or TD/RD may be blank
+            #: or zero, but not both.
+            self.constant_cd = zeros((ncards, 2), float_fmt)
 
-            #: Factor for initial velocities of the enforced degrees-of-freedom
-            #: (Real; Default = 0.0)
-            self.vs0 = zeros(ncards, float_fmt)
+            #: data flag
+            self.is_table_cd = zeros((ncards, 2), 'bool')
+
+    @property
+    def table_c(self):
+        """Identification number of TABLEDi entry that gives C(f). (Integer > 0)"""
+        return self.table_cd[:, 0]
+
+    @property
+    def table_d(self):
+        """Identification number of TABLEDi entry that gives D(f). (Integer > 0)"""
+        return self.table_cd[:, 1]
+
+    @property
+    def constant_c(self):
+        """Constant for C(f). (float)"""
+        return self.constant_cd[:, 0]
+
+    @property
+    def constant_d(self):
+        """Constant for D(f). (float)"""
+        return self.constant_cd[:, 1]
 
     def get_load_ids(self):
         return unique(self.load_id)
@@ -119,14 +151,13 @@ class TLOAD1(VectorizedLoad):
 
     def add_card(self, card, comment=''):
         i = self.i
-
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0.0)
-        Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
-        table_id = integer(card, 5, 'table_id')
-        us0 = double_or_blank(card, 6, 'us0', 0.0)
-        vs0 = double_or_blank(card, 7, 'vs0', 0.0)
+        delay = integer_double_or_blank(card, 3, 'delay', 0.)
+        dphase = integer_double_or_blank(card, 4, 'dphase', 0.)
+        tc = integer_double_or_blank(card, 5, 'tc', 0)
+        td = integer_double_or_blank(card, 6, 'td', 0)
+        Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
 
         if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
             Type = 'LOAD'
@@ -154,10 +185,29 @@ class TLOAD1(VectorizedLoad):
         else:
             raise NotImplementedError(delay)
 
+        if isinstance(dphase, int):
+            self.dphase_id[i] = dphase
+            self.is_dphase_table[i] = 1
+        elif isinstance(dphase, float):
+            self.dphase_lead[i] = dphase
+            self.is_dphase_table[i] = 0
+        else:
+            raise NotImplementedError(dphase)
+
         self.Type[i] = Type
-        self.table_id[i] = table_id
-        self.us0[i] = us0
-        self.vs0[i] = vs0
+        if isinstance(tc, int):
+            self.table_c[i] = tc
+        elif isinstance(tc, float):
+            self.constant_c[i] = tc
+        else:
+            raise NotImplementedError('tc=%r' % tc)
+
+        if isinstance(td, int):
+            self.table_d[i] = td
+        elif isinstance(td, float):
+            self.constant_d[i] = td
+        else:
+            raise NotImplementedError('tc=%r' % tc)
         self.i += 1
 
     def build(self):
@@ -165,27 +215,52 @@ class TLOAD1(VectorizedLoad):
             i = self.load_id.argsort()
             self.sid = self.sid[i]
             self.excite_id = self.excite_id[i]
+
             self.delay_id = self.delay_id[i]
             self.delay_tau = self.delay_tau[i]
             self.is_delay_table = self.is_delay_table[i]
+
+            self.dphase_id = self.dphase_id[i]
+            self.dphase_lead = self.dphase_lead[i]
+            self.is_dphase_table = self.is_dphase_table[i]
+
             self.Type = self.Type[i]
-            self.table_id = self.table_id[i]
-            self.us0 = self.us0[i]
-            self.vs0 = self.vs0[i]
+            self.table_cd = self.table_cd[i]
+            self.constant_cd = self.constant_cd[i]
+            self.is_table_cd = self.is_table_cd[i]
 
     def write_card_by_index(self, bdf_file, size=8, is_double=False, i=None):
-        for (sidi, excite_idi, delay_idi, delay_taui, is_delay_tablei, load_typei,
-             table_idi, us0i, vs0i) in zip(
-                 self.sid[i], self.excite_id[i], self.delay_id[i], self.delay_tau[i],
-                 self.is_delay_table[i], self.Type[i], self.table_id[i],
-                 self.us0[i], self.vs0[i]):
+        for (sidi, excite_idi,
+             delay_idi, delay_taui, is_delay_tablei,
+             dphase_idi, dphase_leadi, is_dphase_tablei,
+             load_typei,
+             tcd, kcd, is_cd) in zip(
+                 self.sid[i], self.excite_id[i],
+                 self.delay_id[i], self.delay_tau[i], self.is_delay_table[i],
+                 self.dphase_id[i], self.dphase_lead[i], self.is_dphase_table[i],
+                 self.Type[i], self.table_cd[i, :], self.constant_cd[i, :],
+                 self.is_table_cd[i, :]):
 
             if is_delay_tablei:
-                list_fields = ['TLOAD1', sidi, excite_idi, delay_idi, load_typei,
-                               table_idi, us0i, vs0i]
+                list_fields = ['RLOAD1', sidi, excite_idi, delay_idi]
             else:
-                list_fields = ['TLOAD1', sidi, excite_idi, delay_taui, load_typei,
-                               table_idi, us0i, vs0i]
+                list_fields = ['RLOAD1', sidi, excite_idi, delay_taui]
+
+            if is_dphase_tablei:
+                list_fields.append(dphase_idi)
+            else:
+                list_fields.append(dphase_leadi)
+
+            if is_cd[0]:
+                list_fields.append(tcd[0])
+            else:
+                list_fields.append(kcd[0])
+
+            if is_cd[1]:
+                list_fields.append(tcd[1])
+            else:
+                list_fields.append(kcd[1])
+            list_fields.append(load_typei)
 
             if size == 8:
                 bdf_file.write(print_card_8(list_fields))

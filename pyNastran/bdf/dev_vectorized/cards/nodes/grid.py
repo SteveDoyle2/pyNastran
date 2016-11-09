@@ -15,7 +15,7 @@ class Nodes(object):
     def __init__(self, model):
         self.model = model
         self.spoint = model.spoint
-        #self.epoint = model.epoint
+        self.epoint = model.epoint
         self.grdset = model.grdset
         self.grid = model.grid
         self.point = model.point
@@ -334,6 +334,8 @@ class GRID(VectorizedCard):
         if self.n:
             if write_header:
                 bdf_file.write('$GRID\n')
+            if max(self.node_id.max(), self.cd.max(), self.cp.max()) > self.model.max_int:
+                size = 16
             #self.model.log.debug('GRID i = %s' % i)
 
             # default to the GRDSET defaults

@@ -19,7 +19,9 @@ class DELAY(VectorizedCard):
     +-------+-----+-----------+-----+--------+------+-----+--------+-----+
 
     referenced by:
-      - TLOAD1, TLOAD2, and ??? entries
+      - TLOAD1, TLOAD2 (time domain loads)
+      - RLOAD1, TLOAD2 (frequency domain loads)
+      - ACSRCE
     """
     type = 'DELAY'
     def __init__(self, model):

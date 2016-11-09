@@ -6,9 +6,10 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer_or_blank,
     double, double_or_blank)
+from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 
-class PELAS(object):
+class PELAS(Property):
     """
     Specifies the stiffness, damping coefficient, and stress coefficient of a
     scalar elastic (spring) element (CELAS1 or CELAS3 entry).
@@ -88,13 +89,8 @@ class PELAS(object):
             for i, pid in enumerate(self.property_id):
                 self.property_id[i] = pid_map[pid]
 
-    def write_card(self, bdf_file, size=8, property_id=None):
+    def write_card_by_index(self, bdf_file, size=8, is_double=False, i=None):
         if self.n:
-            if property_id is None:
-                i = arange(self.n)
-            else:
-                i = property_id
-
             for (pid, k, ge, s) in zip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
                 card = ['PELAS', pid, k, ge, s]
                 if size == 8:

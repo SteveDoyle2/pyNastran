@@ -39,7 +39,7 @@ class PROD(Property):
             self.nsm = zeros(ncards, float_fmt)
 
     def add_card(self, card, comment=''):
-        self.model.log.debug('n=%s i=%s' % (self.n, self.i))
+        #self.model.log.debug('n=%s i=%s' % (self.n, self.i))
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')

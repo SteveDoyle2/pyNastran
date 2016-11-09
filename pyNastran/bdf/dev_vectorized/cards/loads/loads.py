@@ -140,7 +140,7 @@ class Loads(object):
         self.tload2 = model.tload2
         self.delay = model.delay
 
-        #self.rload1 = model.rload1
+        self.rload1 = model.rload1
         #self.rload2 = model.rload2
         self.dphase = model.dphase
         self.darea = model.darea
@@ -157,7 +157,7 @@ class Loads(object):
 
             # dynamic
             self.tload1, self.tload2,
-            #self.rload1, self.rload2,
+            self.rload1, #self.rload2,
 
             # thermal
         ]
