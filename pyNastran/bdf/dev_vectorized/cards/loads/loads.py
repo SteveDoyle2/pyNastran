@@ -138,9 +138,11 @@ class Loads(object):
         self.tload1 = model.tload1
         self.tload2 = model.tload2
         self.delay = model.delay
+
         #self.rload1 = model.rload1
         #self.rload2 = model.rload2
-        #self.dphase = model.dphase
+        self.dphase = model.dphase
+        self.darea = model.darea
 
     def _get_load_types(self, nlimit):
         types = [
@@ -240,7 +242,8 @@ class Loads(object):
 
             #self.rload1.write_card(bdf_file, size)
             #self.rload2.write_card(bdf_file, size)
-            #self.dphase.write_card(bdf_file, size)
+            self.dphase.write_card(bdf_file, size)
+            self.darea.write_card(bdf_file, size)
 
             #self.randps.write_card(bdf_file, size)
 

@@ -8,9 +8,9 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_string_or_blank, string_or_blank)
 
-from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from pyNastran.bdf.dev_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
-class PLOAD4(VectorizedCard):
+class PLOAD4(VectorizedLoad):
     type = 'PLOAD4'
 
     def __init__(self, model):
@@ -22,7 +22,7 @@ class PLOAD4(VectorizedCard):
         model : BDF
            the BDF object
         """
-        VectorizedCard.__init__(self, model)
+        VectorizedLoad.__init__(self, model)
         del self._comments
         #self.model = model
         #self.n = 0

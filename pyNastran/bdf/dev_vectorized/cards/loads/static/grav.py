@@ -7,10 +7,10 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
-from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from pyNastran.bdf.dev_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
 
-class GRAV(VectorizedCard):
+class GRAV(VectorizedLoad):
     """
     +------+-----+-----+------+-----+-----+------+-----+
     | GRAV | SID | CID | A    | N1  | N2  | N3   |  MB |
@@ -30,7 +30,7 @@ class GRAV(VectorizedCard):
 
         .. todo:: collapse loads
         """
-        VectorizedCard.__init__(self, model)
+        VectorizedLoad.__init__(self, model)
         #self.model = model
         #self.n = 0
         #self._cards = []
@@ -122,16 +122,15 @@ class GRAV(VectorizedCard):
             msg.append('  %-8s: %i' % ('GRAV', self.n))
         return msg
 
-    def write_card(self, bdf_file, size=8, is_double=False, load_id=None):
-        if self.n:
-            for (lid, cid, scale, N, mb) in zip(
-                 self.load_id, self.coord_id, self.scale, self.N, self.mb):
+    def write_card_by_index(self, bdf_file, size=8, is_double=False, i=None):
+        for (lid, cid, scale, N, mb) in zip(
+             self.load_id[i], self.coord_id[i], self.scale[i], self.N[i, :], self.mb[i]):
 
-                card = ['GRAV', lid, cid, scale, N[0], N[1], N[2], mb]
-                if size == 8:
-                    bdf_file.write(print_card_8(card))
-                else:
-                    bdf_file.write(print_card_16(card))
+            card = ['GRAV', lid, cid, scale, N[0], N[1], N[2], mb]
+            if size == 8:
+                bdf_file.write(print_card_8(card))
+            else:
+                bdf_file.write(print_card_16(card))
 
     def get_load_ids(self):
         return np.unique(self.load_id)

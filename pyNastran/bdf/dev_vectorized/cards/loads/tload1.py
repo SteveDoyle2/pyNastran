@@ -10,9 +10,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double_or_blank, integer_string_or_blank,
     integer_double_or_blank)
 
-from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from pyNastran.bdf.dev_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
-class TLOAD1(VectorizedCard):
+class TLOAD1(VectorizedLoad):
     r"""
     Transient Response Dynamic Excitation, Form 1
 
@@ -35,7 +35,7 @@ class TLOAD1(VectorizedCard):
 
         .. todo:: collapse loads
         """
-        VectorizedCard.__init__(self, model)
+        VectorizedLoad.__init__(self, model)
 
     @property
     def load_id(self):
@@ -178,23 +178,21 @@ class TLOAD1(VectorizedCard):
         assert isinstance(load_id, int), load_id
         return np.where(self.load_id == load_id)[0]
 
-    def write_card(self, bdf_file, size=8, is_double=False, load_id=None):
-        if self.n:
-            i = self.get_load_index_by_load_id(load_id)
-            for (sidi, excite_idi, delay_idi, delay_taui, is_delay_tablei, load_typei,
-                 table_idi, us0i, vs0i) in zip(
-                     self.sid[i], self.excite_id[i], self.delay_id[i], self.delay_tau[i],
-                     self.is_delay_table[i], self.Type[i], self.table_id[i],
-                     self.us0[i], self.vs0[i]):
+    def write_card_by_index(self, bdf_file, size=8, is_double=False, i=None):
+        for (sidi, excite_idi, delay_idi, delay_taui, is_delay_tablei, load_typei,
+             table_idi, us0i, vs0i) in zip(
+                 self.sid[i], self.excite_id[i], self.delay_id[i], self.delay_tau[i],
+                 self.is_delay_table[i], self.Type[i], self.table_id[i],
+                 self.us0[i], self.vs0[i]):
 
-                if is_delay_tablei:
-                    list_fields = ['TLOAD1', sidi, excite_idi, delay_idi, load_typei,
-                                   table_idi, us0i, vs0i]
-                else:
-                    list_fields = ['TLOAD1', sidi, excite_idi, delay_taui, load_typei,
-                                   table_idi, us0i, vs0i]
+            if is_delay_tablei:
+                list_fields = ['TLOAD1', sidi, excite_idi, delay_idi, load_typei,
+                               table_idi, us0i, vs0i]
+            else:
+                list_fields = ['TLOAD1', sidi, excite_idi, delay_taui, load_typei,
+                               table_idi, us0i, vs0i]
 
-                if size == 8:
-                    bdf_file.write(print_card_8(list_fields))
-                else:
-                    bdf_file.write(print_card_16(list_fields))
+            if size == 8:
+                bdf_file.write(print_card_8(list_fields))
+            else:
+                bdf_file.write(print_card_16(list_fields))

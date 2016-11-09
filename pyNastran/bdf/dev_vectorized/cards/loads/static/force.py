@@ -6,10 +6,10 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
-from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from pyNastran.bdf.dev_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
 
-class FORCE(VectorizedCard):
+class FORCE(VectorizedLoad):
     type = 'FORCE'
     def __init__(self, model):
         """
@@ -22,7 +22,7 @@ class FORCE(VectorizedCard):
 
         .. todo:: collapse loads
         """
-        VectorizedCard.__init__(self, model)
+        VectorizedLoad.__init__(self, model)
         #self.model = model
         #self.n = 0
         #self._cards = []
@@ -115,28 +115,25 @@ class FORCE(VectorizedCard):
             msg.append('  %-8s: %i' % ('FORCE', self.n))
         return msg
 
-    def write_card(self, bdf_file, size=8, is_double=False, load_id=None):
-        if self.n:
-            if load_id is None:
-                for (lid, nid, cid, mag, xyz) in zip(
-                     self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
+    def write_card_by_index(self, bdf_file, size=8, is_double=False, i=None):
+        #for (lid, nid, cid, mag, xyz) in zip(
+             #self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
 
-                    card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
-                    if size == 8:
-                        bdf_file.write(print_card_8(card))
-                    else:
-                        bdf_file.write(print_card_16(card))
-            else:
-                for lid in unique(load_id):
-                    i = where(self.load_id == lid)[0]
-                    for (lid, nid, cid, mag, xyz) in zip(
-                         self.load_id[i], self.node_id[i], self.coord_id[i], self.mag[i], self.xyz[i]):
+            #card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
+            #if size == 8:
+                #bdf_file.write(print_card_8(card))
+            #else:
+                #bdf_file.write(print_card_16(card))
+        #for lid in unique(load_id):
+            #i = where(self.load_id == lid)[0]
+            for (lid, nid, cid, mag, xyz) in zip(
+                 self.load_id[i], self.node_id[i], self.coord_id[i], self.mag[i], self.xyz[i]):
 
-                        card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
-                        if size == 8:
-                            bdf_file.write(print_card_8(card))
-                        else:
-                            bdf_file.write(print_card_16(card))
+                card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
+                if size == 8:
+                    bdf_file.write(print_card_8(card))
+                else:
+                    bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

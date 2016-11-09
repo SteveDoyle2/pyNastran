@@ -6,6 +6,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, integer_string_or_blank)
 
+from pyNastran.bdf.dev_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
 class PLOAD2(object):
     type = 'PLOAD2'

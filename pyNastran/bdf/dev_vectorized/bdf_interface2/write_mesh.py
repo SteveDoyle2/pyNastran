@@ -589,7 +589,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_dynamic(self, bdf_file, size=8, is_double=False):
         """Writes the dynamic cards sorted by ID"""
-        is_dynamic = (self.dareas or self.nlparms or self.frequencies or self.methods or
+        is_dynamic = (self.nlparms or self.frequencies or self.methods or
                       self.cMethods or self.tsteps or self.tstepnls)
         if is_dynamic:
             msg = ['$DYNAMIC\n']
@@ -597,8 +597,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(method.write_card(size, is_double))
             for (unused_id, cMethod) in sorted(iteritems(self.cMethods)):
                 msg.append(cMethod.write_card(size, is_double))
-            for (unused_id, darea) in sorted(iteritems(self.dareas)):
-                msg.append(darea.write_card(size, is_double))
+            #for (unused_id, darea) in sorted(iteritems(self.dareas)):
+                #msg.append(darea.write_card(size, is_double))
             for (unused_id, nlparm) in sorted(iteritems(self.nlparms)):
                 msg.append(nlparm.write_card(size, is_double))
             for (unused_id, nlpci) in sorted(iteritems(self.nlpcis)):

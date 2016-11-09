@@ -355,7 +355,7 @@ class RLOAD1(TabularLoad):
     def dphase_id(self):
         #if self.dphase in [0, 0.0]:
             #return 0
-        if isinstance(self.dphase, integer_types):
+        if isinstance(self.dphase, integer_float_types):
             return self.dphase
         return self.dphase_ref.sid
 
@@ -599,8 +599,7 @@ class RLOAD2(TabularLoad):
     def dphase_id(self):
         #if self.dphase in [0, 0.0]:
             #return 0
-        print(self.dphase)
-        if isinstance(self.dphase, integer_types):
+        if isinstance(self.dphase, integer_float_types):
             return self.dphase
         return self.dphase_ref.sid
 

@@ -8,9 +8,9 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
 
-from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from pyNastran.bdf.dev_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
-class MOMENT2(VectorizedCard):
+class MOMENT2(VectorizedLoad):
     """
     Defines a static concentrated moment at a grid point by specification
     of a magnitude and four grid points that determine the direction.::
@@ -31,7 +31,7 @@ class MOMENT2(VectorizedCard):
 
         .. todo:: collapse loads
         """
-        VectorizedCard.__init__(self, model)
+        VectorizedLoad.__init__(self, model)
 
     def allocate(self, card_count):
         ncards = card_count[self.type]
@@ -124,13 +124,12 @@ class MOMENT2(VectorizedCard):
             self.xyz = self.xyz[i, :]
             self._comments = []
 
-    def write_card(self, bdf_file, size=8, lids=None):
-        if self.n:
-            for (lid, nid, cid, mag, n1234) in zip(
-                 self.load_id, self.node_id, self.mag, self.grids):
+    def write_card_by_index(self, bdf_file, size=8, is_double=False, i=None):
+        for (lid, nid, cid, mag, n1234) in zip(
+             self.load_id, self.node_id, self.mag, self.grids):
 
-                card = ['MOMENT2', lid, nid, cid, mag] + list(n1234)
-                if size == 8:
-                    bdf_file.write(print_card_8(card))
-                else:
-                    bdf_file.write(print_card_16(card))
+            card = ['MOMENT2', lid, nid, cid, mag] + list(n1234)
+            if size == 8:
+                bdf_file.write(print_card_8(card))
+            else:
+                bdf_file.write(print_card_16(card))

@@ -62,7 +62,6 @@ from pyNastran.bdf.dev_vectorized.cards.dynamic import (
     TSTEP, TSTEPNL, NLPARM, NLPCI, #TF
 )
 
-
 from pyNastran.bdf.dev_vectorized.cards.aero.aero_cards import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
     AESURF, AESURFS, AERO, AEROS, CSSCHD,
@@ -96,6 +95,10 @@ from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, 
 from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
+#from pyNastran.bdf.cards.loads.loads import (
+    #DAREA, #LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN
+#)
+
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -322,7 +325,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'PLOAD', 'PLOAD2', 'PLOAD4', 'PLOADX1',
             'TLOAD1', 'TLOAD2', 'DELAY',
-            #'RLOAD1', 'RLOAD2', 'DPHASE',
+            'DPHASE', # 'RLOAD1', 'RLOAD2',
+
 
             # constraints
             'SPC', 'SPCADD', 'SPC1', 'SPCD',
@@ -2122,14 +2126,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 card_instance = PMASS(card_obj, icard=i+1, comment=comment)
                 self.add_property_mass(card_instance)
 
-    def _prepare_darea(self, card, card_obj, comment=''):
-        """adds a DAREA"""
-        class_instance = DAREA.add_card(card_obj, comment=comment)
-        self.add_darea(class_instance)
-        if card_obj.field(5):
-            class_instance = DAREA.add_card(card_obj, icard=1, comment=comment)
-            self.add_darea(class_instance)
-
     def _prepare_dphase(self, card, card_obj, comment=''):
         """adds a DPHASE"""
         class_instance = DPHASE.add_card(card_obj, comment=comment)
@@ -3340,6 +3336,56 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         card_obj = BDFCard(card, has_none=False)
         return card_obj
 
+    def _parse_darea(self, card_name, cards):
+        """adds dareas"""
+        self._parse_multi(card_name, cards, self.darea, [5])
+
+    def _parse_dphase(self, card_name, cards):
+        """adds dphases"""
+        self._parse_multi(card_name, cards, self.dphase, [5])
+
+    def _parse_multi(self, card_name, cards, card_cls, icard):
+        """parses a DAREA/DPHASE/???"""
+        datas = []
+        for comment, card_lines in cards:
+            card_obj = self._cardlines_to_card_obj(card_lines, card_name)
+
+            data = card_cls.parse(card_obj, icard=0, comment=comment)
+            datas.append(data)
+            for icardi in icard:
+                if card_obj.field(icardi):
+                    data  = card_cls.parse(card_obj, icard=icardi)
+                    datas.append(data)
+
+        ncards = len(datas)
+        self._increase_card_count(card_name, ncards)
+        self.log.debug('  allocating %r' % card_cls.type)
+        card_cls.allocate(self.card_count)
+        print(data[0])
+        print(data)
+        for comment, datai in datas:
+            card_cls.add_card(datai, comment)
+        self.log.debug('  building %r; n=%s' % (card_cls.type, card_cls.n))
+        card_cls.build()
+
+        #def _prepare_darea(self, card, card_obj, comment=''):
+            #"""adds a DAREA"""
+            ##def add_darea(self, darea, allow_overwrites=False):
+                ##key = (darea.sid, darea.p, darea.c)
+                ##if key in self.dareas and not allow_overwrites:
+                    ##if not darea._is_same_card(self.dareas[key]):
+                        ##assert key not in self.dareas, '\ndarea=\n%s oldDArea=\n%s' % (darea, self.dareas[key])
+                ##else:
+                    ##assert darea.sid > 0
+                    ##self.dareas[key] = darea
+                    ##self._type_to_id_map[darea.type].append(key)
+
+            #class_instance = DAREA.add_card(card_obj, comment=comment)
+            #self.add_darea(class_instance)
+            #if card_obj.field(5):
+                #class_instance = DAREA.add_card(card_obj, icard=1, comment=comment)
+                #self.add_darea(class_instance)
+
     def _parse_solid(self, card_name, cards, nsplit, pair1, pair2):
         """
         adds the cards to the object
@@ -3414,6 +3460,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
                 'MPC' : self._parse_mpc,
                 'MPCADD' : self._parse_mpcadd,
+
+                'DAREA' : self._parse_darea,
+                'DPHASE' : self._parse_dphase,
             }
             # self._is_cards_dict = True
             # this is the loop that hits...
