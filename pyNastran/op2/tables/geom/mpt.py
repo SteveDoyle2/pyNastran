@@ -114,10 +114,10 @@ class MPT(GeomCommon):
             #print("MAT2 = ",out)
             mat = MAT2.add_op2_data(out)
 
-            if mid > 1e8 or mid < 0:  # just a checker for out of range materials
-                self.big_materials[mid] = mat
-            else:
+            if 0 < mid <= 1e8:  # just a checker for out of range materials
                 self.add_op2_material(mat)
+            else:
+                self.big_materials[mid] = mat
             n += ntotal
         self.card_count['MAT2'] = nmaterials
         return n

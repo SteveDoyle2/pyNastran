@@ -11,7 +11,8 @@ bdf_filename = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_be
 
 class TestLog(unittest.TestCase):
 
-    def test_log_01(self):
+    @staticmethod
+    def test_log_01():
         print('---------------------------------------------------------------')
         model = BDF(debug=True)
         model.read_bdf(bdf_filename)

@@ -31,7 +31,8 @@ def read_write_compare(bdf_filename, bdf_filename_out):
 class TestReadWriteVectorized(unittest.TestCase):
     """tests the vectorized bdf read/write against the non-vectorized version"""
 
-    def test_solid_bending(self):
+    @staticmethod
+    def test_solid_bending():
         """vectorized vs. standard test on solid_bending.bdf"""
         bdf_filename = os.path.join(test_path, 'solid_bending', 'solid_bending.bdf')
         bdf_filename_out = os.path.join(test_path, 'solid_bending', 'solid_bending2.bdf')
@@ -39,7 +40,8 @@ class TestReadWriteVectorized(unittest.TestCase):
         read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
-    def test_static_solid_shell_bar(self):
+    @staticmethod
+    def test_static_solid_shell_bar():
         """vectorized vs. standard test on static_solid_shell_bar.bdf"""
         bdf_filename = os.path.join(test_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         bdf_filename_out = os.path.join(test_path, 'sol_101_elements', 'static_solid_shell_bar2.bdf')
@@ -47,7 +49,8 @@ class TestReadWriteVectorized(unittest.TestCase):
         read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
-    def test_mode_solid_shell_bar(self):
+    @staticmethod
+    def test_mode_solid_shell_bar():
         """vectorized vs. standard test on mode_solid_shell_bar.bdf"""
         bdf_filename = os.path.join(test_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
         bdf_filename_out = os.path.join(test_path, 'sol_101_elements', 'mode_solid_shell_bar2.bdf')
@@ -55,7 +58,8 @@ class TestReadWriteVectorized(unittest.TestCase):
         read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
-    def test_freq_solid_shell_bar(self):
+    @staticmethod
+    def test_freq_solid_shell_bar():
         """vectorized vs. standard test on freq_solid_shell_bar.bdf"""
         bdf_filename = os.path.join(test_path, 'sol_101_elements', 'freq_solid_shell_bar.bdf')
         bdf_filename_out = os.path.join(test_path, 'sol_101_elements', 'freq_solid_shell_bar2.bdf')
@@ -63,7 +67,8 @@ class TestReadWriteVectorized(unittest.TestCase):
         read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
-    def test_bwb(self):
+    @staticmethod
+    def test_bwb():
         """vectorized vs. standard test on BWB_saero.bdf"""
         bdf_filename = os.path.join(test_path, 'bwb', 'BWB_saero.bdf')
         bdf_filename_out = os.path.join(test_path, 'bwb', 'BWB_saero2.bdf')
@@ -71,7 +76,8 @@ class TestReadWriteVectorized(unittest.TestCase):
         read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
-    def test_isat_01(self):
+    @staticmethod
+    def test_isat_01():
         """vectorized vs. standard test on ISat_Dploy_Sm.dat"""
         bdf_filename = os.path.join(test_path, 'iSat', 'ISat_Dploy_Sm.dat')
         bdf_filename_out = os.path.join(test_path, 'iSat', 'ISat_Dploy_Sm2.dat')
@@ -79,7 +85,8 @@ class TestReadWriteVectorized(unittest.TestCase):
         read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
-    def test_isat_02(self):
+    @staticmethod
+    def test_isat_02():
         """vectorized vs. standard test on ISat_Launch_Sm_4pt.dat"""
         bdf_filename = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_4pt.dat')
         bdf_filename_outv = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_4ptv.dat')
@@ -101,7 +108,8 @@ class TestReadWriteVectorized(unittest.TestCase):
         )
         os.remove(bdf_filename_out)
 
-    def test_isat_03(self):
+    @staticmethod
+    def test_isat_03():
         """vectorized vs. standard test on ISat_Launch_Sm_Rgd.dat"""
         bdf_filename = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_Rgd.dat')
         #bdf_filename_outv = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_Rgdv.dat')
