@@ -14,25 +14,29 @@ pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, '..', 'models')
 #log = SimpleLogger('warning', encoding='utf8')
 
+def read_write_compare(bdf_filename, bdf_filename_out):
+    """runs checks on the two bdfs"""
+    vmodel = read_bdfv(bdf_filename)
+    vmodel.write_bdf(bdf_filename_out)
+    run_and_compare_fems(
+        bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
+        punch=False, cid=None, mesh_form=None,
+        print_stats=False, encoding=None,
+        sum_load=False, size=8, is_double=False,
+        stop=False, nastran='', post=-1, dynamic_vars=None,
+        quiet=False, dumplines=False, dictsort=False,
+        nerrors=0, dev=False, crash_cards=None,
+    )
+
 class TestReadWriteVectorized(unittest.TestCase):
-    """tests the pyNastran solver"""
+    """tests the vectorized bdf read/write against the non-vectorized version"""
 
     def test_solid_bending(self):
         """vectorized vs. standard test on solid_bending.bdf"""
         bdf_filename = os.path.join(test_path, 'solid_bending', 'solid_bending.bdf')
         bdf_filename_out = os.path.join(test_path, 'solid_bending', 'solid_bending2.bdf')
 
-        vmodel = read_bdfv(bdf_filename)
-        vmodel.write_bdf(bdf_filename_out)
-        run_and_compare_fems(
-            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
-            punch=False, cid=None, mesh_form=None,
-            print_stats=False, encoding=None,
-            sum_load=False, size=8, is_double=False,
-            stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False,
-            nerrors=0, dev=False, crash_cards=None,
-        )
+        read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
     def test_static_solid_shell_bar(self):
@@ -40,17 +44,7 @@ class TestReadWriteVectorized(unittest.TestCase):
         bdf_filename = os.path.join(test_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         bdf_filename_out = os.path.join(test_path, 'sol_101_elements', 'static_solid_shell_bar2.bdf')
 
-        vmodel = read_bdfv(bdf_filename)
-        vmodel.write_bdf(bdf_filename_out)
-        run_and_compare_fems(
-            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
-            punch=False, cid=None, mesh_form=None,
-            print_stats=False, encoding=None,
-            sum_load=False, size=8, is_double=False,
-            stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False,
-            nerrors=0, dev=False, crash_cards=None,
-        )
+        read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
     def test_mode_solid_shell_bar(self):
@@ -58,17 +52,15 @@ class TestReadWriteVectorized(unittest.TestCase):
         bdf_filename = os.path.join(test_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
         bdf_filename_out = os.path.join(test_path, 'sol_101_elements', 'mode_solid_shell_bar2.bdf')
 
-        vmodel = read_bdfv(bdf_filename)
-        vmodel.write_bdf(bdf_filename_out)
-        run_and_compare_fems(
-            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
-            punch=False, cid=None, mesh_form=None,
-            print_stats=False, encoding=None,
-            sum_load=False, size=8, is_double=False,
-            stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False,
-            nerrors=0, dev=False, crash_cards=None,
-        )
+        read_write_compare(bdf_filename, bdf_filename_out)
+        os.remove(bdf_filename_out)
+
+    def test_freq_solid_shell_bar(self):
+        """vectorized vs. standard test on freq_solid_shell_bar.bdf"""
+        bdf_filename = os.path.join(test_path, 'sol_101_elements', 'freq_solid_shell_bar.bdf')
+        bdf_filename_out = os.path.join(test_path, 'sol_101_elements', 'freq_solid_shell_bar2.bdf')
+
+        read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
     def test_bwb(self):
@@ -76,17 +68,7 @@ class TestReadWriteVectorized(unittest.TestCase):
         bdf_filename = os.path.join(test_path, 'bwb', 'BWB_saero.bdf')
         bdf_filename_out = os.path.join(test_path, 'bwb', 'BWB_saero2.bdf')
 
-        vmodel = read_bdfv(bdf_filename)
-        vmodel.write_bdf(bdf_filename_out)
-        run_and_compare_fems(
-            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
-            punch=False, cid=None, mesh_form='combined',
-            print_stats=False, encoding=None,
-            sum_load=False, size=8, is_double=False,
-            stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False,
-            nerrors=0, dev=False, crash_cards=None,
-        )
+        read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
     def test_isat_01(self):
@@ -94,17 +76,7 @@ class TestReadWriteVectorized(unittest.TestCase):
         bdf_filename = os.path.join(test_path, 'iSat', 'ISat_Dploy_Sm.dat')
         bdf_filename_out = os.path.join(test_path, 'iSat', 'ISat_Dploy_Sm2.dat')
 
-        vmodel = read_bdfv(bdf_filename)
-        vmodel.write_bdf(bdf_filename_out)
-        run_and_compare_fems(
-            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
-            punch=False, cid=None, mesh_form=None,
-            print_stats=False, encoding=None,
-            sum_load=False, size=8, is_double=False,
-            stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False,
-            nerrors=0, dev=False, crash_cards=None,
-        )
+        read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
     def test_isat_02(self):
@@ -135,17 +107,7 @@ class TestReadWriteVectorized(unittest.TestCase):
         #bdf_filename_outv = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_Rgdv.dat')
         bdf_filename_out = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_Rgd2.dat')
 
-        vmodel = read_bdfv(bdf_filename)
-        vmodel.write_bdf(bdf_filename_out)
-        run_and_compare_fems(
-            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
-            punch=False, cid=None, mesh_form=None,
-            print_stats=False, encoding=None,
-            sum_load=False, size=8, is_double=False,
-            stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False,
-            nerrors=0, dev=False, crash_cards=None,
-        )
+        read_write_compare(bdf_filename, bdf_filename_out)
         os.remove(bdf_filename_out)
 
     def test_isat_04(self):
@@ -154,18 +116,8 @@ class TestReadWriteVectorized(unittest.TestCase):
         #bdf_filename_outv = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_Rgdv.dat')
         bdf_filename_out = os.path.join(test_path, 'iSat', 'iSat_launch_100Hz2.dat')
 
-        vmodel = read_bdfv(bdf_filename)
-        vmodel.write_bdf(bdf_filename_out)
-        run_and_compare_fems(
-            bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
-            punch=False, cid=None, mesh_form=None,
-            print_stats=False, encoding=None,
-            sum_load=False, size=8, is_double=False,
-            stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False,
-            nerrors=0, dev=False, crash_cards=None,
-        )
-        #os.remove(bdf_filename_out)
+        read_write_compare(bdf_filename, bdf_filename_out)
+        os.remove(bdf_filename_out)
 
 
 if __name__ == '__main__':  # pragma: no cover
