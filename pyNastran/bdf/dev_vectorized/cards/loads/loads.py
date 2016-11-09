@@ -1,6 +1,7 @@
+from __future__ import print_function
+from collections import defaultdict
 from six import  iteritems
 from six.moves import StringIO
-from collections import defaultdict
 from numpy import array, union1d
 from pyNastran.bdf.dev_vectorized.cards.loads.load import LOAD
 
@@ -42,8 +43,8 @@ class VectorizedCardDict(object):
         objs = []
         if obj_keys is None:
             ids = obj_keys_default
-        for id in obj_dict:
-            obj = obj_dict[id]
+        for idi in obj_dict:
+            obj = obj_dict[idi]
             objs.append(obj)
         return objs
 
@@ -68,10 +69,10 @@ class VectorizedCardDict(object):
         return self.items()
 
     def __repr__(self):
-        f = StringIO()
-        f.write('<%s object> n=%s\n' % (self.type, self.n))
-        self.write_card(f)
-        return f.getvalue()
+        file_obj = StringIO()
+        file_obj.write('<%s object> n=%s\n' % (self.type, self.n))
+        self.write_card(file_obj)
+        return file_obj.getvalue()
 
 class LOADs(VectorizedCardDict):
     type = 'LOAD'
@@ -122,8 +123,8 @@ class Loads(object):
         self.force1 = model.force1
         self.force2 = model.force2
         self.moment = model.moment
-        #self.moment1 = model.moment1
-        #self.moment2 = model.moment2
+        self.moment1 = model.moment1
+        self.moment2 = model.moment2
         self.grav = model.grav
         self.rforce = model.rforce
 
@@ -149,6 +150,7 @@ class Loads(object):
             # static
             self.load,  #self.dload,
             self.force, self.force1, self.force2,
+            self.moment, self.moment1, self.moment2,
             self.grav, self.rforce,
             self.pload, self.pload1, self.pload2, self.pload4, self.ploadx1,
             #self.accel, self.accel1,
@@ -196,17 +198,18 @@ class Loads(object):
                         #self.model.log.debug('  load_id = %s' % load_id)
                         assert load_id > 0, load_id
                         #print('******** load-type = %s' % load_type.type)
-                        load_type.write_card(bdf_file, size=size, is_double=is_double, load_id=load_id)
+                        load_type.write_card(bdf_file, size=size, is_double=is_double,
+                                             load_id=load_id)
 
         else:
             #self.loadcase.write_card(bdf_file, size)
             for load_id, loads in sorted(iteritems(self.load)):
                 for load in loads:
-                    load.write_card(f, size)
+                    load.write_card(bdf_file, size)
 
             for load_id, loads in sorted(iteritems(self.dload)):
                 for load in loads:
-                    load.write_card(f, size)
+                    load.write_card(bdf_file, size)
 
             #for load_id, loads in sorted(iteritems(self.sload)):
                 #for load in loads:

@@ -5,8 +5,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
 
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 
@@ -14,10 +14,11 @@ from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 class Nodes(object):
     def __init__(self, model):
         self.model = model
-        self.spoint = SPOINT(model)
-        self.grdset = GRDSET(model)
-        self.grid = GRID(model)
-        self.point = POINT(model)
+        self.spoint = model.spoint
+        #self.epoint = model.epoint
+        self.grdset = model.grdset
+        self.grid = model.grid
+        self.point = model.point
 
     def build(self):
         self.spoint.build()
@@ -208,7 +209,8 @@ class GRID(VectorizedCard):
 
     def get_node_index_by_node_id(self, node_id=None, msg=''):
         #assert msg != ''
-        i = self._get_sorted_index(self.node_id, node_id, 'node_id', 'node_id in GRID%s' % msg, check=True)
+        i = self._get_sorted_index(self.node_id, node_id, 'node_id',
+                                   'node_id in GRID%s' % msg, check=True)
         return i
 
     def get_node_index_by_cp(self, cp=None, i=None):
@@ -351,34 +353,38 @@ class GRID(VectorizedCard):
             Ps = [psi if psi != ps0 else blank for psi in self.ps[i]]
             Seid = [seidi if seidi != seid0 else blank for seidi in self.seid[i]]
             if size == 8:
-                for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
-                    msg = ('GRID    %8i%8s%s%s%s%8s%8s%s\n' % (nid, cp,
-                            print_float_8(xyz[0]),
-                            print_float_8(xyz[1]),
-                            print_float_8(xyz[2]),
-                            cd, ps, seid))#.rstrip() + '\n'
+                for (nid, cp, xyz, cd, ps, seid) in zip(
+                        self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
+                    msg = ('GRID    %8i%8s%s%s%s%8s%8s%s\n' % (
+                        nid, cp,
+                        print_float_8(xyz[0]),
+                        print_float_8(xyz[1]),
+                        print_float_8(xyz[2]),
+                        cd, ps, seid))#.rstrip() + '\n'
 
                     bdf_file.write(msg)
             else:
                 if is_double:
-                    for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
+                    for (nid, cp, xyz, cd, ps, seid) in zip(
+                            self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
                         msg = (('GRID*   %16i%16s%16s%16s\n'
                                 '*       %16s%16s%16s%16s\n' % (
-                                nid, cp,
-                                print_scientific_double(xyz[0]),
-                                print_scientific_double(xyz[1]),
-                                print_scientific_double(xyz[2]),
-                                cd, ps, seid))).rstrip() + '\n'
+                                    nid, cp,
+                                    print_scientific_double(xyz[0]),
+                                    print_scientific_double(xyz[1]),
+                                    print_scientific_double(xyz[2]),
+                                    cd, ps, seid))).rstrip() + '\n'
                         bdf_file.write(msg)
                 else:
-                    for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
+                    for (nid, cp, xyz, cd, ps, seid) in zip(
+                            self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
                         msg = (('GRID*   %16i%16s%16s%16s\n'
                                 '*       %-8s%16s%16s%16s\n' % (
-                                nid, cp,
-                                print_float_16(xyz[0]),
-                                print_float_16(xyz[1]),
-                                print_float_16(xyz[2]),
-                                cd, ps, seid))).rstrip() + '\n'
+                                    nid, cp,
+                                    print_float_16(xyz[0]),
+                                    print_float_16(xyz[1]),
+                                    print_float_16(xyz[2]),
+                                    cd, ps, seid))).rstrip() + '\n'
                         bdf_file.write(msg)
             #return self.comment + msg.rstrip() + '\n'
 
@@ -419,7 +425,7 @@ class GRID(VectorizedCard):
 def _index_to_nslice(i, n):
     if i is None:
         i = slice(None, None)
-        n = self.n
+        #n = self.n
     else:
         n = len(i)
     return i, n
