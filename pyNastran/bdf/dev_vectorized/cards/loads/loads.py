@@ -241,12 +241,12 @@ class Loads(object):
 
             self.tload1.write_card(bdf_file, size)
             self.tload2.write_card(bdf_file, size)
-            self.delay.write_card(bdf_file, size)
 
             #self.rload1.write_card(bdf_file, size)
             #self.rload2.write_card(bdf_file, size)
-            self.dphase.write_card(bdf_file, size)
-            self.darea.write_card(bdf_file, size)
+        self.delay.write_card(bdf_file, size)
+        self.dphase.write_card(bdf_file, size)
+        self.darea.write_card(bdf_file, size)
 
             #self.randps.write_card(bdf_file, size)
 

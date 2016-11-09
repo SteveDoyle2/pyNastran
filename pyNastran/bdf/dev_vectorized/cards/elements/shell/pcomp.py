@@ -503,7 +503,7 @@ class PCOMP(Property):
                 prop.update(pid_map, mid_map)
             self.properties = properties2
 
-    def write_card(self, bdf_file, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, property_id=None):
         if size == 8:
             for pid, pcomp in sorted(iteritems(self.properties)):
                 bdf_file.write(pcomp.write_card(size, print_card_8))

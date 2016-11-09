@@ -33,11 +33,13 @@ class DAREA(VectorizedCard):
 
     RLOAD1 -> DAREA by SID
 
-     +-------+-----+----+----+-----+----+----+------+
-     | DAREA | SID | P1 | C1 |A1   | P2 | C2 | A2   |
-     +-------+-----+----+----+-----+----+----+------+
-     | DAREA | 3   | 6  | 2  | 8.2 | 15 | 1  | 10.1 |
-     +-------+-----+----+----+-----+----+----+------+
+    +-------+-----+----+----+-----+----+----+------+
+    |   1   |  2  | 3  |  4 |  5  | 6  |  7 |  8   |
+    +=======+=====+====+====+=====+====+====+======+
+    | DAREA | SID | P1 | C1 | A1  | P2 | C2 | A2   |
+    +-------+-----+----+----+-----+----+----+------+
+    | DAREA | 3   | 6  | 2  | 8.2 | 15 | 1  | 10.1 |
+    +-------+-----+----+----+-----+----+----+------+
 
     referenced by:
       - TLOAD1, TLOAD2, RLOAD1, RLOAD2 and ??? entries
@@ -59,10 +61,10 @@ class DAREA(VectorizedCard):
     def parse(self, card, icard=0, comment=''):
         noffset = 3 * icard
         sid = integer(card, 1, 'sid')
-        p = integer(card, 2 + noffset, 'p')
-        c = components_or_blank(card, 3 + noffset, 'c', 0)
+        node = integer(card, 2 + noffset, 'node_p')
+        component = int(components_or_blank(card, 3 + noffset, 'c', 0))
         scale = double(card, 4 + noffset, 'scale')
-        data = (sid, p, c, scale)
+        data = (sid, node, component, scale)
         return data, comment
 
     def allocate(self, card_count):
@@ -74,12 +76,12 @@ class DAREA(VectorizedCard):
             #: Identification number of DELAY entry. (Integer > 0)
             self.sid = np.zeros(ncards, 'int32')
             #: Grid, extra, or scalar point identification number. (Integer > 0)
-            self.nodes = np.zeros(ncards, 'int32')
+            self.node_id = np.zeros(ncards, 'int32')
             #: Component number. (Integers 1 through 6 for grid points; zero or blank for extra
             #: or scalar points)
             self.component = np.zeros(ncards, 'int32')
-            #: Time delay (tau) for designated point Pi and component Ci. (Real)
-            self.delay = np.zeros(ncards, float_fmt)
+            #: Scale (area) factor. (Real)
+            self.scale = np.zeros(ncards, float_fmt)
 
     #def __getitem__(self, i):
         #unique_lid = unique(self.load_id)
@@ -97,30 +99,30 @@ class DAREA(VectorizedCard):
     def add_card(self, data, comment=''):
         i = self.i
         print(data)
-        (sid, p, component, scale) = data
+        (sid, node, component, scale) = data
 
         #sid = integer(card, 1, 'sid')
         #node = integer(card, 2, 'node')
         #component = integer(card, 3, 'component')
         #delay = double_or_blank(card, 4, 'delay')
 
-        assert component in [0, 1, 2, 3, 4, 5, 6], component
+        assert component in [0, 1, 2, 3, 4, 5, 6], 'component=%r' % component
 
         #assert len(card) <= 13, 'len(TLOAD2 card) = %i\ncard=%s' % (len(card), card)
 
         self.sid[i] = sid
         self.node_id[i] = node
         self.component[i] = component
-        self.delay[i] = delay
+        self.scale[i] = scale
         self.i += 1
 
     def build(self):
-        if self.n:
+        if self.n > 1:
             i = self.sid.argsort()
             self.sid = self.sid[i]
             self.node_id = self.node_id[i]
             self.component = self.component[i]
-            self.delay = self.delay[i]
+            self.scale = self.scale[i]
 
     #def get_load_ids(self):
         #return unique(self.load_id)
@@ -129,19 +131,20 @@ class DAREA(VectorizedCard):
     #def load_id(self):
         #return self.sid
 
-    def get_delay_index_by_delay_id(self, sid):
-        #msg = ''
+    def get_darea_index_by_darea_id(self, sid):
+        if sid is None:
+            return np.arange(self.n)
+        ##msg = ''
         assert isinstance(sid, int), sid
         return np.where(self.sid == sid)[0]
 
     def write_card(self, bdf_file, size=8, is_double=False, sid=None):
         if self.n:
-            i = self.get_delay_index_by_delay_id(sid)
-            for (sid, nid, component, delay) in zip(
-                    self.sid[i], self.node_id[i], self.component[i], self.delay[i],):
+            i = self.get_darea_index_by_darea_id(sid)
+            for (sid, nid, component, scale) in zip(
+                    self.sid[i], self.node_id[i], self.component[i], self.scale[i],):
 
-                list_fields = ['DAREA', sid, nid, component, delay]
-
+                list_fields = ['DAREA', sid, nid, component, scale]
                 if size == 8:
                     bdf_file.write(print_card_8(list_fields))
                 else:

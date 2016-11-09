@@ -3363,7 +3363,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         card_cls.allocate(self.card_count)
         print(data[0])
         print(data)
-        for comment, datai in datas:
+        for datai, comment in datas:
             card_cls.add_card(datai, comment)
         self.log.debug('  building %r; n=%s' % (card_cls.type, card_cls.n))
         card_cls.build()

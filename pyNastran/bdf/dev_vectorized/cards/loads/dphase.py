@@ -97,6 +97,8 @@ class DPHASE(VectorizedCard):
         #return self.sid
 
     def get_dphase_index_by_dphase_id(self, sid):
+        if sid is None:
+            return np.arange(self.n)
         #msg = ''
         assert isinstance(sid, int), sid
         return np.where(self.sid == sid)[0]

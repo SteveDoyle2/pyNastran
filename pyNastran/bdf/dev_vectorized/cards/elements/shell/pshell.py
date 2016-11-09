@@ -151,7 +151,7 @@ class PSHELL(Property):
                 self.property_id[i] = pid2
                 self.material_ids[i, :] = mids2
 
-    def write_card(self, bdf_file, size=8, is_double=True, property_id=None):
+    def write_card_by_index(self, bdf_file, size=8, is_double=True, i=None):
         """
         Writes the PSHELL properties.
 
@@ -164,32 +164,31 @@ class PSHELL(Property):
         property_id : ???; default=None -> all
             the property_ids to write
         """
+        mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
+        mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
+        mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
+        nsm = ['' if nsmi == 0.0 else nsmi for nsmi in self.nsm[i]]
+        tst = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
+        TwelveIt3 = ['' if tw == 1.0 else tw for tw in self.twelveIt3[i]]
 
-            mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
-            mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
-            mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
-            nsm = ['' if nsmi == 0.0 else nsmi for nsmi in self.nsm[i]]
-            tst = ['' if tsti == 0.833333 else tsti for tsti in self.tst[i]]
-            TwelveIt3 = ['' if tw == 1.0 else tw for tw in self.twelveIt3[i]]
+        to2 = self.thickness[i] / 2
+        z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
+        z2 = ['' if z2i == to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
 
-            to2 = self.thickness[i] / 2
-            z1 = ['' if z1i == -to2[j] else z1i for j, z1i in enumerate(self.z1[i])]
-            z2 = ['' if z2i == to2[j] else z2i for j, z2i in enumerate(self.z2[i])]
+        for (pid, mid1i, t, mid2i, twelveIt3, mid3i, tsti, nsmi, z1i, z2i, mid4i) in zip(
+                self.property_id[i], self.material_id[i], self.thickness[i], mid2,
+                TwelveIt3, mid3, tst, nsm, z1, z2, mid4):
+            if pid in self._comments:
+                bdf_file.write(self._comments[pid])
 
-            for (pid, mid1i, t, mid2i, twelveIt3, mid3i, tsti, nsmi, z1i, z2i, mid4i) in zip(
-                    self.property_id[i], self.material_id[i], self.thickness[i], mid2,
-                    TwelveIt3, mid3, tst, nsm, z1, z2, mid4):
-                if pid in self._comments:
-                    bdf_file.write(self._comments[pid])
-
-                #list_fields = ['PSHELL', self.pid, mid1, self.t, mid2,
-                               #twelveIt3, mid3, tst, nsm, z1, z2, mid4]
-                card = ['PSHELL', pid, mid1i, t, mid2i, twelveIt3, mid3i,
-                        tsti, nsmi, z1i, z2i, mid4i]
-                if size == 8:
-                    bdf_file.write(print_card_8(card))
-                else:
-                    bdf_file.write(print_card_16(card))
+            #list_fields = ['PSHELL', self.pid, mid1, self.t, mid2,
+                           #twelveIt3, mid3, tst, nsm, z1, z2, mid4]
+            card = ['PSHELL', pid, mid1i, t, mid2i, twelveIt3, mid3i,
+                    tsti, nsmi, z1i, z2i, mid4i]
+            if size == 8:
+                bdf_file.write(print_card_8(card))
+            else:
+                bdf_file.write(print_card_16(card))
 
 
     def get_nonstructural_mass_by_property_id(self, property_id=None):

@@ -7,6 +7,8 @@ class VectorizedLoad(VectorizedCard):
         VectorizedCard.__init__(self, model)
 
     def get_load_index_by_load_id(self, load_id):
+        if load_id is None:
+            return np.arange(self.n)
         #msg = ''
         assert isinstance(load_id, int), load_id
         return np.where(self.load_id == load_id)[0]

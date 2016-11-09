@@ -98,6 +98,8 @@ class DELAY(VectorizedCard):
         #return self.sid
 
     def get_delay_index_by_delay_id(self, sid):
+        if sid is None:
+            return np.arange(self.n)
         #msg = ''
         assert isinstance(sid, int), sid
         return np.where(self.sid == sid)[0]

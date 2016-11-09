@@ -1,3 +1,4 @@
+import numpy as np
 from numpy import where
 
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
@@ -47,6 +48,14 @@ class Property(VectorizedCard):
     def get_property_index_by_property_id(self, property_id=None, msg=''):
         i = self._get_sorted_index(self.property_id, property_id, 'property_id', 'property_id in %s%s' % (self.type, msg), check=True)
         return i
+
+    def write_card(self, bdf_file, size=8, is_double=False, property_id=None):
+        if self.n:
+            if property_id is None:
+                i = np.arange(self.n)
+            else:
+                i = np.searchsorted(self.property_id, property_id)
+            return self.write_card_by_index(bdf_file, size=size, is_double=is_double, i=i)
 
     #def get_property_index_by_property_id(self, property_id=None):
         #if property_id is None:
