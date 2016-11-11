@@ -59,7 +59,7 @@ class RealSpringArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.build_data(ntimes, nelements, dtype)
+        self.build_data(self.ntimes, self.nelements, dtype)
 
     def build_data(self, ntimes, nelements, dtype):
         """actually performs the build step"""
