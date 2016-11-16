@@ -74,6 +74,9 @@ def get_bad_shells(model, max_theta=175., max_skew=70.,
 
 def get_bad_cquad4s(model, xyz_cid0, max_theta=175., max_skew=70.,
                     max_aspect_ratio=100., max_taper_ratio=4.0):
+    """
+    Get the bad elements
+    """
     min_theta_quad = 0.1
     min_theta_quad = np.radians(min_theta_quad)
     eids_failed = np.array([])
@@ -133,13 +136,10 @@ def get_bad_cquad4s(model, xyz_cid0, max_theta=175., max_skew=70.,
         #model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
         #continue
 
-    #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
-    #lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
     lengths = np.vstack([np.linalg.norm(v21, axis=1),
                          np.linalg.norm(v32, axis=1),
                          np.linalg.norm(v43, axis=1),
                          np.linalg.norm(v14, axis=1)])
-    #assert len(lengths) == 3, lengths
     length_min = lengths.min()
     ifail = np.where(length_min == 0.0)[0]
     if len(ifail):
@@ -231,6 +231,9 @@ def get_bad_cquad4s(model, xyz_cid0, max_theta=175., max_skew=70.,
 
 def get_bad_ctria3s(model, xyz_cid0, max_theta=175., max_skew=70.,
                     max_aspect_ratio=100.):
+    """
+    Get the bad elements
+    """
     min_theta_tri = 0.1
     min_theta_tri = np.radians(min_theta_tri)
     eids_failed = []
@@ -301,7 +304,6 @@ def get_bad_ctria3s(model, xyz_cid0, max_theta=175., max_skew=70.,
         #model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
         #continue
 
-    #assert len(lengths) == 3, lengths
     aspect_ratio = lengths.max() / length_min
     ifail = np.where(aspect_ratio > max_aspect_ratio)[0]
     if len(ifail):
