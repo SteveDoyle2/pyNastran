@@ -290,12 +290,12 @@ class OUG(OP2Common):
                 raise AssertionError(msg)
             n = self._read_oug_psd(data, ndata)
         elif self.table_name in [b'OUGRMS1', b'OUGRMS2']:
-            if self.table_code not in [1, 801]:
+            if self.table_code not in [1, 801, 811]:
                 msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 raise AssertionError(msg)
             n = self._read_oug_rms(data, ndata)
         elif self.table_name in [b'OUGNO1', b'OUGNO2']:
-            if self.table_code not in [1, 901]:
+            if self.table_code not in [1, 901, 911]:
                 msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 raise AssertionError(msg)
             n = self._read_oug_no(data, ndata)
@@ -308,7 +308,7 @@ class OUG(OP2Common):
             if self.table_code not in [1]:
                 msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 raise AssertionError(msg)
-            n = self._not_implemented_or_skip(data, ndata)
+            n = self._not_implemented_or_skip(data, ndata, msg='OUGCRM2')
 
         elif self.table_code == 1:   # Displacements
             if self.table_name not in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUGV1PAT', b'TOUGV1',
@@ -621,7 +621,7 @@ class OUG(OP2Common):
         table_code = 601/610/611
         """
         if self.thermal == 0:
-            if self.table_code in [601]:
+            if self.table_code == 601:
                 result_name = 'displacementsPSD'
                 storage_obj = self.displacementsPSD
                 if self._results.is_not_saved(result_name):
@@ -705,7 +705,7 @@ class OUG(OP2Common):
         table_code = 801  # /610/611
         """
         if self.thermal == 0:
-            if self.table_code in [801]:
+            if self.table_code == 801:
                 result_name = 'displacementsRMS'
                 storage_obj = self.displacementsRMS
                 if self._results.is_not_saved(result_name):
@@ -789,7 +789,7 @@ class OUG(OP2Common):
         table_code = 901  # /610/611
         """
         if self.thermal == 0:
-            if self.table_code in [901]:
+            if self.table_code == 901:
                 result_name = 'displacementsNO'
                 storage_obj = self.displacementsNO
                 if self._results.is_not_saved(result_name):
