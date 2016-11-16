@@ -89,6 +89,20 @@ class DPHASE(VectorizedCard):
             self.component = self.component[i]
             self.dphase = self.dphase[i]
 
+    def update(self, maps):
+        """
+        maps = {
+            'node_id' : nid_map,
+            'property' : pid_map,
+        }
+        """
+        if self.n:
+            ## TODO: support DPHASE id
+            nid_map = maps['node']
+            for i, nid in enumerate(self.node_id):
+                print(self.print_card(i))
+                self.node_ids[i] = nid_map[nid]
+
     #def get_load_ids(self):
         #return unique(self.load_id)
 

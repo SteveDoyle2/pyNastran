@@ -29,7 +29,7 @@ np.set_printoptions(edgeitems=3, infstr='inf',
 
 class TestMeshUtilsVectorized(unittest.TestCase):
     """runs the vectorized mesh utils tests"""
-    def _test_renumber_01(self):
+    def test_renumber_01(self):
         """renumber a bdf"""
         log = SimpleLogger(level='warning')
         bdf_filename = os.path.abspath(

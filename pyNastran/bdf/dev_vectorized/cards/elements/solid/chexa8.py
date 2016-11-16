@@ -284,7 +284,6 @@ class CHEXA8(SolidElement):
 
         integration = 'complete'
         if integration == 'complete':
-            case 'complete'
 
             locations = np.array([
                 [-0.577350269189626, -0.577350269189626, -0.577350269189626],
