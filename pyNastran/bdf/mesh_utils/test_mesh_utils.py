@@ -62,7 +62,6 @@ class TestMeshUtils(unittest.TestCase):
             'ENDDATA'
         )
         bdf_filename = 'cquad4.bdf'
-
         with codec_open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 

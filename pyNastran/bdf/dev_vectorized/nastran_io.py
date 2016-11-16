@@ -1055,12 +1055,12 @@ class NastranIO(NastranIO_xref):
                     elif hasattr(case, 'forces'):
                         word = 'forces'
                     else:
-                        print('ERROR!!!!', case.__dict__.keys())
+                        self.log.error('ERROR!!!!', case.__dict__.keys())
                         raise RuntimeError(case.__dict__.keys())
 
                     res = getattr(case, word)
 
-                    print('case.type =', case.__class__.__name__)
+                    self.log.debug('case.type =', case.__class__.__name__)
                     for (nid, txyz) in iteritems(res):
                         nid2 = self.nid_map[nid]
                         displacements[nid2] = txyz

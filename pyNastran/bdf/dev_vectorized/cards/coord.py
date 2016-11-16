@@ -103,7 +103,7 @@ class Coord(VectorizedCard):
         return msg
 
     def __getitem__(self, i):
-        print('i**** = %s' % i)
+        self.log.debug('i**** = %s' % i)
         #i = self.get_coord_index_for_coord_id()
         #return self.coords[value]
         return self.slice_by_index(i)
@@ -115,14 +115,14 @@ class Coord(VectorizedCard):
         return i
 
     def slice_by_coord_id(self, coord_id=None):
-        print('coord_id = %s' % coord_id)
-        #print('self.coord_id =', self.coord_id)
+        self.log.debug('coord_id = %s' % coord_id)
+        #self.log.debug('self.coord_id =', self.coord_id)
         i = self.get_coord_index_by_coord_id(coord_id)
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)
-        print('i**** = %s' % i)
+        self.log.debug('i**** = %s' % i)
         assert i.max() < self.n, 'i=%s n=%s i.shape=%s' % (i, self.n, i.shape)
         obj = Coord(self.model)
         obj.n = len(i)

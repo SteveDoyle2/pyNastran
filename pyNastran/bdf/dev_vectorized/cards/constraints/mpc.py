@@ -82,6 +82,7 @@ class MPC(object):
         self.n = len(self.constraints)
 
     def write_card(self, bdf_file, size=8):
+        assert self.n > 0, self.n
         if self.n:
             for constraint in self.constraints:
                 card = ['MPC', self.constraint_id]

@@ -1,10 +1,12 @@
 """
 tests
  - vectorized renumbering
+ - shell mesh quality
 """
 from __future__ import print_function
 import os
 import unittest
+from codecs import open as codec_open
 
 import numpy as np
 #import pyNastran
@@ -15,6 +17,7 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.dev_vectorized.bdf import read_bdf
 from pyNastran.bdf.dev_vectorized.mesh_utils.bdf_renumber import bdf_renumber
+from pyNastran.bdf.dev_vectorized.mesh_utils.delete_bad_elements import get_bad_shells
 from pyNastran.utils.log import SimpleLogger
 
 pkg_path = pyNastran.__path__[0]
@@ -25,8 +28,9 @@ np.set_printoptions(edgeitems=3, infstr='inf',
 
 
 class TestMeshUtilsVectorized(unittest.TestCase):
-
-    def test_renumber_01(self):
+    """runs the vectorized mesh utils tests"""
+    def _test_renumber_01(self):
+        """renumber a bdf"""
         log = SimpleLogger(level='warning')
         bdf_filename = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
@@ -53,6 +57,79 @@ class TestMeshUtilsVectorized(unittest.TestCase):
         read_bdf(bdf_filename_out2, log=log)
         read_bdf(bdf_filename_out3, log=log)
 
+    def test_quad_180_01(self):
+        r"""
+        Identify a 180+ degree quad
+
+        y
+        ^         4
+        |       / |
+        |     /   |
+        |   /     |
+        | /       |
+        /         |
+        1------2  |----> x
+                \ |
+                 \|
+                  3
+        """
+        msg = (
+            'CEND\n'
+            'BEGIN BULK\n'
+            'GRID,1,,0.,0.,0.\n'
+            'GRID,2,,1.,0.,0.\n'
+            'GRID,3,,2.,-1.,0.\n'
+            'GRID,4,,2., 1.,0.\n'
+
+            'CQUAD4,100,1, 1,2,3,4\n'
+            'PSHELL,1,1,0.1\n'
+            'MAT1,1,3.0,, 0.3\n'
+            'ENDDATA'
+        )
+        bdf_filename = 'cquad4.bdf'
+        with codec_open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(msg)
+
+        model = read_bdf(bdf_filename, xref=True)
+        eids_to_delete = get_bad_shells(model, max_theta=180.,
+                                        max_skew=1000., max_aspect_ratio=1000.)
+        assert eids_to_delete == [100], eids_to_delete
+        os.remove(bdf_filename)
+
+    def test_tri_180_01(self):
+        r"""
+        Identify a reasonable tri with super tight tolerances
+
+        y
+        ^         4
+        |       / /
+        |     /   /
+        |   /    /
+        | /      /
+        /       /
+        1------2-------> x
+        """
+        msg = (
+            'CEND\n'
+            'BEGIN BULK\n'
+            'GRID,1,,0.,0.,0.\n'
+            'GRID,2,,1.,0.,0.\n'
+            'GRID,4,,2., 1.,0.\n'
+
+            'CTRIA3,100,1, 1,2,4\n'
+            'PSHELL,1,1,0.1\n'
+            'MAT1,1,3.0,, 0.3\n'
+            'ENDDATA'
+        )
+        bdf_filename = 'ctria3.bdf'
+        with codec_open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(msg)
+
+        model = read_bdf(bdf_filename, xref=True)
+        eids_to_delete = get_bad_shells(model, max_theta=180.,
+                                        max_skew=1000., max_aspect_ratio=1000.)
+        assert eids_to_delete == [100], eids_to_delete
+        os.remove(bdf_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
