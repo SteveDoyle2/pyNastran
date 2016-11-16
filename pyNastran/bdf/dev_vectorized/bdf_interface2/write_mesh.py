@@ -513,26 +513,28 @@ class WriteMesh(BDFAttributes):
         """Writes the constraint cards sorted by ID"""
         spcs = [self.spcadd, self.spc, self.spcd, self.spc1]
         mpcs = [self.mpcadd, self.mpc]
-        self._write_constraints_spc_mpc(bdf_file, size, spcs)
-        self._write_constraints_spc_mpc(bdf_file, size, mpcs)
+        self._write_constraints_spc_mpc(bdf_file, size, spcs, 'SPC')
+        self._write_constraints_spc_mpc(bdf_file, size, mpcs, 'MPC')
 
-    def _write_constraints_spc_mpc(self, bdf_file, size, types):
+    def _write_constraints_spc_mpc(self, bdf_file, size, constraint_dicts, constraint_type):
         interspersed = False
         if interspersed:
             raise NotImplementedError()
         else:
             ids = []
-            for t in types:
-                ids += t.iterkeys()
+            for constraint_dict in constraint_dicts:
+                ids += constraint_dict.iterkeys()
+            #self.log.debug(ids)
             ids = unique(ids)
             ids.sort()
-            self.log.debug('spc/mpc ids = %s' % ids)
+            self.log.debug('%s ids = %s' % (constraint_type, ids))
             if len(ids) > 0:
                 bdf_file.write('$CONSTRAINTS\n')
-                for ID in ids:
-                    for t in types:
-                        for constraint_id, constraint in sorted(iteritems(t)):
-                            if ID == constraint_id:
+                for idi in ids:
+                    for constraint_dict in constraint_dicts:
+                        for constraint_id, constraint in sorted(iteritems(constraint_dict)):
+                            if idi == constraint_id:
+                                #self.log.debug('writing %s' % constraint.type)
                                 constraint.write_card(bdf_file, size=size)
 
     def _write_contact(self, bdf_file, size=8, is_double=False):

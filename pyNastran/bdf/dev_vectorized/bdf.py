@@ -1087,7 +1087,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     is_error = True
 
             if is_error:
-                print('%s' % msg)
+                self.log.error('%s' % msg)
                 raise DuplicateIDsError(msg.rstrip())
 
     def pop_xref_errors(self):
@@ -2283,6 +2283,29 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
+    @property
+    def nodes(self):
+        ngrids = len(self.grid)
+        assert ngrids > 0, ngrids
+        nspoints = 0
+        nepoints = 0
+        if self.spoint.n:
+            spoints = self.spoint.points
+            nspoints = len(spoints)
+        if self.epoint.n:
+            epoints = self.epoint.points
+            nepoints = len(epoints)
+            raise NotImplementedError('EPOINT')
+
+        assert ngrids + nspoints + nepoints > 0, 'ngrids=%s nspoints=%s nepoints=%s' % (ngrids, nspoints, nepoints)
+        nodes = np.zeros(ngrids + nspoints + nepoints, dtype='int32')
+        nodes[:ngrids] = self.grid.node_id
+        if nspoints:
+            nodes[ngrids:ngrids+nspoints] = self.spoint.points
+        if nepoints:
+            nodes[ngrids+nspoints:] = self.epoint.points
+        return nodes
+
     def get_xyz_in_coord(self, cid=0, dtype='float32'):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
@@ -2301,45 +2324,26 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         .. warning:: doesn't support EPOINTs
         """
-        nnodes = len(self.nodes)
+        ngrids = len(self.grid)
         nspoints = 0
+        nepoints = 0
         spoints = None
-        if self.spoints:
-            spoints = self.spoints.points
+        if self.spoint.n:
+            spoints = self.point.points
             nspoints = len(spoints)
-        if self.epoints:
-            epoints = self.epoints.points
+        if self.epoint.n:
+            epoints = self.point.points
             nepoints = len(epoints)
             raise NotImplementedError('EPOINT')
 
-        assert nnodes + nspoints + nepoints > 0, 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
-        xyz_cid0 = np.zeros((nnodes + nspoints + nepoints, 3), dtype=dtype)
+        assert ngrids + nspoints + nepoints > 0, 'ngrids=%s nspoints=%s nepoints=%s' % (ngrids, nspoints, nepoints)
+        xyz_cid0 = np.zeros((ngrids + nspoints + nepoints, 3), dtype=dtype)
         if cid == 0:
-            if nspoints:
-                nids = self.nodes.keys()
-                newpoints = nids + list(spoints)
-                newpoints.sort()
-                for i, nid in enumerate(newpoints):
-                    if nid not in spoints:
-                        node = self.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position()
-            else:
-                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                    xyz = node.get_position()
-                    xyz_cid0[i, :] = xyz
+            xyz_cid0 = self.grid.get_position_by_node_index()
+            assert nspoints == 0, nspoints
         else:
-            if nspoints:
-                nids = self.nodes.keys()
-                newpoints = nids + list(spoints)
-                newpoints.sort()
-                for i, nid in enumerate(newpoints):
-                    if nid not in spoints:
-                        node = self.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position_wrt(self, cid)
-            else:
-                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                    xyz = node.get_position_wrt(self, cid)
-                    xyz_cid0[i, :] = xyz
+            assert cid == 0, cid
+            assert nspoints == 0, nspoints
         return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
@@ -2915,7 +2919,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             the filename to print the lines of
         """
         lines = []
-        print('ENCODING - show_bad_file=%r' % self._encoding)
+        self.log.error('ENCODING - show_bad_file=%r' % self._encoding)
 
         # rU
         with codec_open(_filename(bdf_filename), 'r', encoding=self._encoding) as bdf_file:
@@ -2984,7 +2988,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 j = i + 1
                 line_base = line.split('$')[0]
                 include_lines = [line_base.strip()]
-                # print('----------------------')
+                #self.log.debug('----------------------')
 
                 line_base = line_base[8:].strip()
                 if line_base.startswith("'") and line_base.endswith("'"):
@@ -3234,6 +3238,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #mpc = self.mpc.setdefault(constraint_id, MPC(self))
             #mpc.add_card(card_obj, comment=comment)
             mpc.add(constraint_id, constraint, comment=comment)
+        for constraint_id, constraint in iteritems(self.mpc):
+            constraint.build()
         self._increase_card_count(card_name, len(cards))
 
     def _parse_spcadd(self, card_name, cards):

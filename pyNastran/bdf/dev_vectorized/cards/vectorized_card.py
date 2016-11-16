@@ -39,7 +39,7 @@ class VectorizedCard(object):
                 self.op2_id = model._element_name_to_element_type_mapper[self.type]
             else:
                 if self.type.startswith('C'):
-                    print('there is no op2_id to apply for element=%r' % self.type)
+                    self.model.log.warning('there is no op2_id to apply for element=%r' % self.type)
 
     def set_comment(self, idi, new_comment):
         """sets a comment"""

@@ -8,17 +8,17 @@ c = Symbol('c')
 
 
 class FEM(object):
-    def solveABC(self, N, k, av, bv=0., cv=0.):
+    def solve_abc(self, N, k, av, bv=0., cv=0.):
         N2 = self.subABC(N, av, bv, cv)
         #N2 = N.subs(a,av).subs(b,bv).subs(c,cv)
-        print("N  = ", N)
-        print("Nb = ", N2)
+        self.log.debug("N  = ", N)
+        self.log.debug("Nb = ", N2)
         k = solve(N2, k)
-        print("k  = ", k[0])
-        print("")
+        self.log.debug("k  = ", k[0])
+        self.log.debug("")
         return k[0]
 
-    def subABC(self, N, av, bv=0, cv=0):
+    def sub_abc(self, N, av, bv=0, cv=0):
         N2 = N.subs(a, av).subs(b, bv).subs(c, cv)
         return N2
 
@@ -35,9 +35,9 @@ class CTRIA3(FEM):
         # N1+N2+N3 = 1
         #N3 = 1-a-b
 
-        k1 = self.solveABC(N1, k1, 1, 0, 0)
-        k2 = self.solveABC(N2, k2, 0, 1, 0)
-        k3 = self.solveABC(N3, k3, 0, 0, 1)
+        k1 = self.solve_abc(N1, k1, 1, 0, 0)
+        k2 = self.solve_abc(N2, k2, 0, 1, 0)
+        k3 = self.solve_abc(N3, k3, 0, 0, 1)
 
         # corners
         N1 = k1 * a
@@ -222,7 +222,7 @@ class CTRIA5(FEM):
         print("N4 = %s" % (N4))
         print("N5 = %s" % (N5))
 
-    def verifyN(self, N, V):
+    def verify_n(self, N, V):
         v = [1, 0, 0]
         assert self.subABC(N, 1, 0, 0) == V[0], 'f(%s)=%s = %s' % (v, N, self.subABC(N, 1, 0, 0))
         v = [0, 1, 0]
