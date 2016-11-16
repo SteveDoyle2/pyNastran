@@ -163,6 +163,31 @@ class CHEXA8(SolidElement):
         return K, dofs, nijv
 
     def get_dofs_nijv(self, index0s, n0, n1, n2, n3, n4, n5, n6, n7):
+        pid = self.property_id[i]
+        prop = self.model.elements.properties_solid.psolid
+        rho = prop.get_density_by_property_id(pid)[0]
+
+        n0, n1, n2, n3 = self.node_ids[i, :]
+        xyz1 = positions[self.node_ids[i, 0]]
+        xyz2 = positions[self.node_ids[i, 1]]
+        xyz3 = positions[self.node_ids[i, 2]]
+        xyz4 = positions[self.node_ids[i, 3]]
+        vol = volume4(xyz1, xyz2, xyz3, xyz4)
+
+        #stiffness = rho * vol
+        #ki = stiffness / 4.
+        nnodes = 8
+        ndof = nnodes * 3
+        K = np.zeros((ndof, ndof), dtype='float32')
+
+        mid1 = prop.material_id[0]
+        mat = self.model.materials.get_solid_material(mid1)
+        print(mat)
+        E = mat.E[0]
+        nu = mat.nu[0]
+        G = mat.G[0]
+
+
         i0 = index0s[n0]
         i1 = index0s[n1]
         i2 = index0s[n2]
@@ -246,6 +271,49 @@ class CHEXA8(SolidElement):
         n6w = 0.125 * (1 + u) * (1 - v) * 1
         n7w = 0.125 * (1 + u) * (1 + v) * 1
         n8w = 0.125 * (1 - u) * (1 + v) * 1
+
+        Dcoeff = E / ((1. + nu) * (1. - 2. *nu))
+        D = Dcoeff * np.array([
+            [(1. - nu), nu, nu, 0, 0, 0],
+            [nu, (1. - nu), nu, 0, 0, 0],
+            [nu, nu, (1. - nu), 0, 0, 0],
+            [0, 0, 0, ((1 - 2 * nu)/2.), 0, 0],
+            [0, 0, 0, 0, ((1 - 2 * nu)/2.), 0],
+            [0, 0, 0, 0, 0, ((1 - 2 * nu)/2.)],
+        ], dtype='float32')
+
+        integration = 'complete'
+        if integration == 'complete':
+            case 'complete'
+
+            locations = np.array([
+                [-0.577350269189626, -0.577350269189626, -0.577350269189626],
+                [0.577350269189626, -0.577350269189626, -0.577350269189626],
+                [0.577350269189626,  0.577350269189626, -0.577350269189626],
+                [-0.577350269189626,  0.577350269189626, -0.577350269189626],
+                [-0.577350269189626, -0.577350269189626,  0.577350269189626],
+                [0.577350269189626, -0.577350269189626,  0.577350269189626],
+                [0.577350269189626,  0.577350269189626,  0.577350269189626],
+                [-0.577350269189626,  0.577350269189626,  0.577350269189626],
+            ], dtype='float32')
+            weights = np.array([1, 1, 1, 1, 1, 1, 1, 1], dtype='float32')
+
+            jacobian_matrix = natural_derivatives * global_coord
+            inv_jacobian = np.linalg.inv(jacobian_matrix)
+            xy_derivatives = inv_jacobian * natural_derivatives
+            B = array([
+                #[a1, 0., 0., a2, 0., 0., a3, 0., 0., a4, 0., 0.],
+                #[0., b1, 0., 0., b2, 0., 0., b3, 0., 0., b4, 0.],
+                #[0., 0., c1, 0., 0., c2, 0., 0., c3, 0., 0., c4],
+                #[b1, a1, 0., b2, a2, 0., b3, a3, 0., b4, a4, 0.],
+                #[0., c1, b1, 0., c2, b2, 0., c3, b3, 0., c4, b4],
+                #[c1, 0., a1, c2, 0., a2, c3, 0., a3, c4, 0., a4],
+            ]) / (6 * vol)
+
+        elif integration == 'reduced':
+            locations = np.array([0, 0], dtype='float32')
+            weights = np.array([4])
+
         return dofs, nijv
 
     def _verify(self, xref=True):
