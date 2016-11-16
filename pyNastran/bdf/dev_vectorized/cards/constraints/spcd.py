@@ -1,5 +1,9 @@
 from six.moves import zip
+import numpy as np
 from numpy import array
+
+from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class SPCD(object):
@@ -20,46 +24,56 @@ class SPCD(object):
     def __init__(self, model):
         self.model = model
         self.n = 0
+        self.i = 0
 
         self._comments = []
         self.constraint_id = None
-        self.grid_id = []
-        self.components = []
+        #self.grid_id = []
+        #self.components = []
 
-    def add(self, i, constraint_id, node_id, dofs, enforced_motion, comment):
-        #if i == 0:
-            #n = 2
-        #elif i == 1:
-            #n = 5
-        #else:
-            #raise RuntimeError('i =', i)
+    def allocate(self, card_count):
+        ncards = card_count['SPCD']
+        if ncards:
+            self.n = ncards
+            #print('ngrid=%s' % self.n)
+            float_fmt = self.model.float_fmt
+            self.node_id = np.zeros(ncards, 'int32')
+            self.components = np.zeros(ncards, 'int32')
+            self.enforced_motion = np.zeros(ncards, float_fmt)
 
+    def add(self, constraint_id, node_id, dofs, enforced_motion, comment):
+        i = self.i
         assert enforced_motion != 0.0, enforced_motion
 
         self._comments.append(comment)
-        self.grid_id.append(node_id)
-        self.components.append(dofs)
-        self.enforced_motion.append(enforced_motion)
+        self.node_id[i] = node_id
+        self.components[i] = dofs
+        self.enforced_motion[i] = enforced_motion
 
-        if self.constraint_id is None:
+        if self.constraint_id == constraint_id:
+            pass
+        elif self.constraint_id is None:
             self.constraint_id = constraint_id
         else:
             msg = ('self.constraint_id == constraint_id; constraint_id=%r '
-                   'expected; found=%r' % (self.constraint_id. constraint_id))
+                   'expected; found=%r' % (self.constraint_id, constraint_id))
             raise RuntimeError(msg)
             #assert self.constraint_id == constraint_id, ''
+        self.i += 1
 
     def build(self):
         #float_fmt = self.model.float_fmt
         self.n = len(self.self.constraint_id)
 
-        self.grid_id = array(self.grid_id)
-        self.components = array(self.components)
-        self.enforced_motion = array(self.enforced_motion)
+        self.node_id = np.array(self.node_id)
+        self.components = np.array(self.components)
+        self.enforced_motion = np.array(self.enforced_motion)
 
     def write_card(self, bdf_file, size=8):
         if self.n:
-            fields = ['SPCD', self.constraint_id]
-            for (nid, constraint, enforced) in zip(self.gids, self.components, self.enforced_motion):
-                fields += [nid, constraint, enforced]
-            bdf_file.write(fields)
+            for (nid, constraint, enforced) in zip(self.node_id, self.components, self.enforced_motion):
+                fields = ['SPCD', self.constraint_id, nid, constraint, enforced]
+                if size == 8:
+                    bdf_file.write(print_card_8(fields))
+                else:
+                    bdf_file.write(print_card_16(fields))

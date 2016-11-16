@@ -3273,37 +3273,37 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         self._increase_card_count(card_name, len(cards))
 
     def _parse_spc(self, card_name, cards):
+        """SPC"""
+        self._parse_spci(card_name, cards, SPC, self.spc)
+
+    def _parse_spcd(self, card_name, cards):
+        """SPCD"""
+        self._parse_spci(card_name, cards, SPCD, self.spcd)
+
+    def _parse_spci(self, card_name, cards, obj, slot):
         """SPC, SPCD"""
-        nspc = 0
-        nspcd = 0
+        #ncards = defaultdict(int)
+        data_comments = defaultdict(list)
         for comment, card_lines in cards:
             card_obj = self._cardlines_to_card_obj(card_lines, card_name)
             for i in [0, 1]:
-                constraint_id, node_id, dofs, enforced_motion = get_spc_constraint(card_obj, i)
+                data = get_spc_constraint(card_obj, i)
+                constraint_id, node_id = data[:2]
                 #self.log.debug('constraint_id=%s node_id=%s dofs=%s enforced=%s' % (
                     #constraint_id, node_id, dofs, enforced_motion))
                 if node_id is None:
                     continue
-                if enforced_motion != 0.0:
-                    if constraint_id in self.spcd:
-                        spcd = self.spcd[constraint_id]
-                    else:
-                        spcd = SPCD(self)
-                        self.spcd[constraint_id] = spcd
-                    spcd.add(constraint_id, node_id, dofs, enforced_motion, comment=comment)
-                    nspcd += 1
-                else:
-                    if constraint_id in self.spc:
-                        spcd = self.spc[constraint_id]
-                    else:
-                        spc = SPC(self)
-                        self.spc[constraint_id] = spc
-                    spc.add(constraint_id, node_id, dofs, enforced_motion, comment=comment)
-                    nspc += 1
-        if nspc:
-            self._increase_card_count('SPC', nspc)
-        if nspcd:
-            self._increase_card_count('SPCD', nspcd)
+                data_comments[constraint_id].append((data, comment))
+                comment = ''
+
+            for constraint_id, data_commentsi in iteritems(data_comments):
+                instance = obj(self)
+                slot[constraint_id] = instance
+                instance.allocate({card_name : len(data_commentsi)})
+                for data_comment in data_commentsi:
+                    data, comment = data_comment
+                    constraint_id, node_id, dofs, enforced_motion = data
+                    instance.add(constraint_id, node_id, dofs, enforced_motion, comment=comment)
 
     def _parse_ctetra(self, card_name, card):
         """adds ctetras"""
@@ -3483,7 +3483,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 'SPC1' : self._parse_spc1,
                 'SPCADD' : self._parse_spcadd,
                 'SPC' : self._parse_spc,
-                'SPCD' : self._parse_spc,
+                'SPCD' : self._parse_spcd,
 
                 'MPC' : self._parse_mpc,
                 'MPCADD' : self._parse_mpcadd,

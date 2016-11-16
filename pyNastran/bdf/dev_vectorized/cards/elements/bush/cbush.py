@@ -81,6 +81,10 @@ class CBUSH(Element):
             self.g0[i] = field5
         elif isinstance(field5, float):
             self.is_g0[i] = False
+
+            # TODO: why is this custom?
+            x2_default = 0.0
+            x3_default = 0.0
             x = array([field5,
                        double_or_blank(card, 6, 'x2', x2_default),
                        double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
@@ -98,10 +102,10 @@ class CBUSH(Element):
 
         #---------------------------------------------------------
         #: Element coordinate system identification. A 0 means the basic
-        #: coordinate system. If CID is blank, then the element coordinate
+        #: coordinate system. If CID is blank (-1), then the element coordinate
         #: system is determined from GO or Xi.
         #: (default=blank=element-based)
-        cid = integer_or_blank(card, 8, 'cid')
+        cid = integer_or_blank(card, 8, 'cid', -1)
         if cid is not None:
             self.cid[i] = cid
         #: Location of spring damper (0 <= s <= 1.0)
@@ -176,8 +180,14 @@ class CBUSH(Element):
 
                 ocid = set_blank_if_default(ocid, -1)
                 s = set_blank_if_default(s, 0.5)
-                card = ['CBUSH', eid, pid, n[0], n[1], x1, x2, x3,
-                        cid, s, ocid, si1, si2, si3]
+                if cid == -1:
+                    cid = ''
+                    card = ['CBUSH', eid, pid, n[0], n[1], x1, x2, x3,
+                            cid, s, ocid, si1, si2, si3]
+                else:
+                    card = ['CBUSH', eid, pid, n[0], n[1], x1, x2, x3,
+                            cid, s, ocid, si1, si2, si3]
+                    assert cid >= -1, card
                 if size == 8:
                     bdf_file.write(print_card_8(card))
                 else:

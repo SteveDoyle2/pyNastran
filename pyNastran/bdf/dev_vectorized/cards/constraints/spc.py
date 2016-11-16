@@ -1,6 +1,7 @@
 from six import iteritems
 from collections import defaultdict
 
+import numpy as np
 from numpy import array
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -50,6 +51,17 @@ class SPC(object):
         self.components = defaultdict(list)
         self.value = []
 
+    def allocate(self, card_count):
+        return
+        ncards = card_count['SPC']
+        if ncards:
+            self.n = ncards
+            #print('ngrid=%s' % self.n)
+            float_fmt = self.model.float_fmt
+            self.node_id = zeros(ncards, 'int32')
+            self.components = zeros(ncards, 'int32')
+            self.enforced_motion = zeros(ncards, float_fmt)
+
     def add(self, constraint_id, node_id, dofs, enforced_motion, comment):
         assert enforced_motion == 0.0
 
@@ -57,10 +69,14 @@ class SPC(object):
         #self.model.log.debug('dofs=%r node_id=%r' % (dofs, node_id))
         self.components[dofs].append(node_id)
 
-        if self.constraint_id is None:
+        if self.constraint_id == constraint_id:
+            pass
+        elif self.constraint_id is None:
             self.constraint_id = constraint_id
         elif self.constraint_id != constraint_id:
-            raise RuntimeError('self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (self.constraint_id. constraint_id))
+            msg = 'self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (
+                self.constraint_id. constraint_id)
+            raise RuntimeError(msg)
         self.n += 1
 
     def build(self):
