@@ -518,7 +518,7 @@ class F06Writer(OP2_F06_Common):
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
         res_types = [
-            self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
+            self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS, self.displacementsNO,
             self.displacements_scaled,  # ???
             self.accelerations, self.accelerationsPSD,
 

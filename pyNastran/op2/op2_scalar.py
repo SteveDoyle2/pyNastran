@@ -238,11 +238,12 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OQGCF1', b'OQGCF2', # contact force at grid point
     b'OQGGF1', b'OQGGF2', # glue forces in grid point basic coordinate system
 
-    # CRM - cumulative root mean square
-    # PSD - power spectral density function
-    # RMS - root mean square
-    # NO - number of zero crossings???
-    # ATO -autocorrelation???
+    # OP2 tables:
+    #   CRM - cumulative root mean square
+    #   PSD - power spectral density function
+    #   RMS - root mean square
+    #   NO - number of zero crossings???
+    #   ATO -autocorrelation???
 
     # QRG:
     #   RALL - PSDF, ATOC, CRMS

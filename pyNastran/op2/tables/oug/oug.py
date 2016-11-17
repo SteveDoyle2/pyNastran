@@ -286,7 +286,8 @@ class OUG(OP2Common):
     def _read_oug_4(self, data, ndata):
         if self.table_name == b'OUGPSD2':
             if self.table_code not in [1, 601, 610, 611]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                msg = 'table_name=%s table_code=%s\n' % (self.table_name, self.table_code)
+                msg += self.code_information()
                 raise AssertionError(msg)
             n = self._read_oug_psd(data, ndata)
         elif self.table_name in [b'OUGRMS1', b'OUGRMS2']:
@@ -619,9 +620,36 @@ class OUG(OP2Common):
     def _read_oug_psd(self, data, ndata):
         """
         table_code = 601/610/611
+
+        +-----+-------------+---------+
+        | Bit |     0       |    1    |
+        +-----+-------------+---------+
+        |  0  | Not Random  | Random  |
+        |  1  | SORT1       | SORT2   |
+        |  2  | Real        | Complex |
+        +-----+-------------+---------+
+
+          sort_code = 0 -> sort_bits = [0,0,0]  #         sort1, real
+          sort_code = 1 -> sort_bits = [0,0,1]  #         sort1, complex
+          sort_code = 2 -> sort_bits = [0,1,0]  #         sort2, real
+          sort_code = 3 -> sort_bits = [0,1,1]  #         sort2, complex
+          sort_code = 4 -> sort_bits = [1,0,0]  # random, sort1, real
+          sort_code = 5 -> sort_bits = [1,0,1]  # random, sort1, real
+          sort_code = 6 -> sort_bits = [1,1,0]  # random, sort2, real
+          sort_code = 7 -> sort_bits = [1,1,1]  # random, sort2, complex
+          # random, sort2, complex <- [1, 1, 1]
+
+          sort_bits[0] = 0 -> isSorted=True isRandom=False
+          sort_bits[1] = 0 -> is_sort1=True is_sort2=False
+          sort_bits[2] = 0 -> isReal=True   isReal/Imaginary=False
         """
+        #self.sort_code = 6
+        #self.sort_bits = [1, 1, 0]
+        #if self.table_code < 50:
+        #    self.table_code += 600
+
         if self.thermal == 0:
-            if self.table_code == 601:
+            if self.table_code in [1, 601]:
                 result_name = 'displacementsPSD'
                 storage_obj = self.displacementsPSD
                 if self._results.is_not_saved(result_name):
@@ -704,6 +732,11 @@ class OUG(OP2Common):
         """
         table_code = 801  # /610/611
         """
+        #self.sort_code = 6
+        #self.sort_bits = [1, 1, 0]
+        #if self.table_code < 50:
+        #    self.table_code += 800
+
         if self.thermal == 0:
             if self.table_code == 801:
                 result_name = 'displacementsRMS'

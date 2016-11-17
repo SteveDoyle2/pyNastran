@@ -103,14 +103,7 @@ def process_stl(stl_filename, fmt2, fname2, data=None):
     # model = STL()
     # model.read_stl(stl_filename)
     if fmt2 == 'nastran':
-        stl_temp_filename = '__temp__.stl'
-        model.write_stl(stl_out_filename, is_binary=True, #float_fmt='%6.12f',
-                        stop_on_failure=False)
-        stl_to_nastran_filename(stl_temp_filename, fname2)
-        os.remove(stl_temp_filename)
-        # stl_to_cart3d(model, fname2 + '.cart')
-        # process_cart3d(fname2 + '.cart', 'nastran', fname2)
-        # stl_to_nastran(model, fname2)
+        stl_to_nastran_filename(model, fname2)
     #elif fmt2 == 'cart3d':
         # we don't have an STL -> Cart3d, so we:
         #    - STL -> BDF
@@ -239,7 +232,7 @@ def run(fmt1, fname1, fmt2, fname2, data):
 def main():
     """Interface for format_converter"""
     msg = "Usage:\n"
-    msg += "  format_converter nastran <INPUT> <format2> <OUTPUT> [-o <OP2>]\n"
+    msg += "  format_converter nastran <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
     msg += "  format_converter <format1> <INPUT> tecplot <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
     msg += "  format_converter <format1> <INPUT> stl     <OUTPUT> [-b]  [--scale SCALE]\n"
     msg += "  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE]\n"
@@ -253,8 +246,16 @@ def main():
     msg += "  format2        format type (nastran, cart3d, stl, ugrid, tecplot)\n"
     msg += "  INPUT          path to input file\n"
     msg += "  OUTPUT         path to output file\n"
+
+
+    msg += "\n"
+    msg += "Nastran Options:\n"
     msg += "  -o OP2, --op2 OP2  path to results file (nastran-specific)\n"
     msg += "                 only used for Tecplot (not supported)\n"
+    msg += "  --no_xref      Don't cross-reference (nastran-specific)\n"
+
+    msg += "\n"
+    msg += "Tecplot Options:\n"
     msg += "  -x X, --xx X   Creates a constant x slice; keeps points < X\n"
     msg += "  -y Y, --yy Y   Creates a constant y slice; keeps points < Y\n"
     msg += "  -z Z, --zz Z   Creates a constant z slice; keeps points < Z\n"
@@ -262,6 +263,9 @@ def main():
     msg += "  --block        Writes the data in BLOCK (vs. POINT) format\n"
     msg += "  -r, --results  Specifies the results to write to limit output\n"
     msg += "  -b, --binary   writes the STL in binary (not supported for Tecplot)\n"
+
+    msg += "\n"
+    msg += "Info:\n"
     msg += "  -h, --help     show this help message and exit\n"
     msg += "  -v, --version  show program's version number and exit\n"
     msg += '\n'
@@ -271,7 +275,6 @@ def main():
     msg += "  Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)\n"
     msg += "  UGRID outfiles must be of the form model.b8.ugrid, where b8, b4, lb8, lb4 are valid choices and periods are important\n"
     msg += "  Scale has only been tested on STL -> STL\n"
-
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)

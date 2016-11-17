@@ -1408,6 +1408,58 @@ class CTETRA4(SolidElement):
     aster_type = 'TETRA4'
     calculixType = 'C3D4'
 
+    @property
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        faces = {
+            1 : [nodes[0], nodes[1], nodes[3]],
+            2 : [nodes[0], nodes[3], nodes[2]],
+            3 : [nodes[1], nodes[2], nodes[3]],
+            4 : [nodes[0], nodes[2], nodes[1]],
+        }
+        return faces
+
+    @property
+    def ansys_faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with ANSYS numbering.
+        .. warning:: higher order element ids not verified with ANSYS.
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        faces = {
+            1 : [nodes[0], nodes[1], nodes[2]],
+            2 : [nodes[0], nodes[1], nodes[3]],
+            3 : [nodes[1], nodes[2], nodes[3]],
+            4 : [nodes[2], nodes[0], nodes[3]],
+        }
+        return faces
+
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes

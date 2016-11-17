@@ -451,8 +451,11 @@ class Element(BaseCard):
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
-        .. note::  The order of the nodes are consistent with ANSYS numbering.
-        .. warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
+        .. old_warning:: higher order element ids not verified with ANSYS.
 
         Example
         =======
@@ -470,11 +473,6 @@ class Element(BaseCard):
             # both sides
             faces[1] = [nodes[0], nodes[1], nodes[2]]  # CTRIA6?
             faces[2] = [nodes[1], nodes[0], nodes[2]]
-        elif nnodes == 4:  # CTETRA4
-            faces[1] = [nodes[0], nodes[1], nodes[2]]
-            faces[2] = [nodes[0], nodes[1], nodes[3]]
-            faces[3] = [nodes[1], nodes[2], nodes[3]]
-            faces[4] = [nodes[2], nodes[0], nodes[3]]
         elif nnodes == 8: # CHEXA
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
             faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]
