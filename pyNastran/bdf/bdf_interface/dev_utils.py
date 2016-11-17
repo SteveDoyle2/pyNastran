@@ -350,9 +350,23 @@ def _write_nodes(self, outfile, size, is_double):
         outfile.write(''.join(msg))
 
 
-def get_free_edges(bdf_filename, eids=None):
+def get_free_edges(bdf_filename, eids=None, maps=None):
     """
     assumes no solids/bars
+
+    Parameters
+    ----------
+    bdf_filename : str, BDF()
+       a BDF object or filename
+    maps : List[...] (default=None -> calculate)
+       the output from _get_maps(eids, map_names=None,
+                              consider_0d=False, consider_0d_rigid=False,
+                              consider_1d=False, consider_2d=True, consider_3d=False)
+
+    Returns
+    -------
+    free_edges : List[(int nid1, int nid2), ...]
+       the free edges
     """
     if isinstance(bdf_filename, string_types):
         model = BDF(debug=False)
@@ -361,10 +375,11 @@ def get_free_edges(bdf_filename, eids=None):
         model = bdf_filename
 
     free_edges = []
-    out = model._get_maps(eids, map_names=None,
-                          consider_0d=False, consider_0d_rigid=False,
-                          consider_1d=False, consider_2d=True, consider_3d=False)
-    edge_to_eid_map = out[0]
+    if maps is None:
+        maps = model._get_maps(eids, map_names=None,
+                              consider_0d=False, consider_0d_rigid=False,
+                              consider_1d=False, consider_2d=True, consider_3d=False)
+    edge_to_eid_map = maps[0]
     for edge, eids in iteritems(edge_to_eid_map):
         if len(eids) == 2:
             continue
