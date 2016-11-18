@@ -269,8 +269,14 @@ class CBAR(LineElement):
         self.offt = offt
         self.pa = pa
         self.pb = pb
-        self.wa = wa
-        self.wb = wb
+        if wa is None:
+            self.wa = np.zeros(3, dtype='float64')
+        else:
+            self.wa = np.asarray(wa)
+        if wb is None:
+            self.wb = np.zeros(3, dtype='float64')
+        else:
+            self.wb = np.asarray(wb)
         self._validate_input()
 
     def _validate_input(self):

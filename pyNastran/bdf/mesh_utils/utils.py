@@ -1,3 +1,5 @@
+from __future__ import print_function
+import os
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
@@ -5,23 +7,25 @@ from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_
 
 
 def cmd_line_equivalence():  # pragma: no cover
+    """command line interface to bdf_equivalence_nodes"""
     import sys
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
-    msg += "  bdf equivalence IN_BDF_FILENAME EQ_TOL\n"
+    msg += "  bdf equivalence IN_BDF_FILENAME EQ_TOL  [-o OUT_BDF_FILENAME]\n"
 
     msg += '  bdf equivalence -h | --help\n'
     msg += '  bdf equivalence -v | --version\n'
     msg += '\n'
 
     msg += "Positional Arguments:\n"
-    msg += "  IN_BDF_FILENAMES   path to input BDF/DAT/NAS files\n"
-    #msg += "  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
+    msg += "  IN_BDF_FILENAME   path to input BDF/DAT/NAS file\n"
+    msg += "  EQ_TOL            the spherical equivalence tolerance\n\n"
+    #msg += "  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
     msg += '\n'
 
     msg += 'Options:\n'
-    msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+    msg += "  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
 
     msg += 'Info:\n'
     msg += '  -h, --help      show this help message and exit\n'
@@ -36,17 +40,23 @@ def cmd_line_equivalence():  # pragma: no cover
     #}
     data = docopt(msg, version=ver)
     print(data)
-    asdf
     size = 16
-    bdf_filenames = data['IN_BDF_FILENAMES']
+    bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         bdf_filename_out = 'merged.bdf'
-
-    cards_to_skip = ['AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2', 'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
-    aaa
-    bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
-              encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
+    tol = data['EQ_TOL']
+    size = 16
+    from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
+    bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                          renumber_nodes=False,
+                          neq_max=10, xref=True,
+                          node_set=None, size=size,
+                          is_double=False,
+                          remove_collapsed_elements=False,
+                          avoid_collapsed_elements=False,
+                          crash_on_collapse=False,
+                          debug=True)
 
 def cmd_line_bin():  # pragma: no cover
     import sys
@@ -153,6 +163,7 @@ def cmd_line_bin():  # pragma: no cover
 
 
 def cmd_line_renumber():  # pragma: no cover
+    """command line interface to bdf_renumber"""
     import sys
     from docopt import docopt
     import pyNastran
@@ -191,10 +202,75 @@ def cmd_line_renumber():  # pragma: no cover
 
     cards_to_skip = ['AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2', 'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
     bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
-                starting_id_dict=None, round_ids=False,
-                cards_to_skip=cards_to_skip)
+                 starting_id_dict=None, round_ids=False,
+                 cards_to_skip=cards_to_skip)
+
+def cmd_line_mirror():  # pragma: no cover
+    """command line interface to write_bdf_symmetric"""
+    import sys
+    from docopt import docopt
+    import pyNastran
+    msg = "Usage:\n"
+    msg += "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n"
+    msg += '  bdf mirror -h | --help\n'
+    msg += '  bdf mirror -v | --version\n'
+    msg += '\n'
+
+    msg += "Positional Arguments:\n"
+    msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+    #msg += "  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
+    msg += '\n'
+
+    msg += 'Options:\n'
+    msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+    msg += "  --plane PLANE                       the symmetry plane (xz, ???)\n\n"
+    msg += "  --tol   TOL                         the spherical equivalence tolerance (default=0.000001)\n\n"
+
+    msg += 'Info:\n'
+    msg += '  -h, --help      show this help message and exit\n'
+    msg += "  -v, --version   show program's version number and exit\n"
+
+    if len(sys.argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver)
+    if data['--tol'] is None:
+        data['--tol'] = 0.000001
+    print(data)
+    size = 16
+    bdf_filename = data['IN_BDF_FILENAME']
+    bdf_filename_out = data['--output']
+    if bdf_filename_out is None:
+        bdf_filename_out = 'mirrored.bdf'
+
+    from pyNastran.bdf.bdf import read_bdf
+    from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
+    model = read_bdf(bdf_filename)
+    size = 16
+    bdf_filename_temp = '__temp.bdf__'
+    model.write_bdf_symmetric(bdf_filename_temp, encoding=None, size=size,
+                              is_double=False,
+                              enddata=None,
+                              close=True,
+                              plane='xz')
+    tol = 0.000001
+    bdf_equivalence_nodes(bdf_filename_temp, bdf_filename_out, tol,
+                          renumber_nodes=False,
+                          neq_max=10, xref=True,
+                          node_set=None, size=size,
+                          is_double=False,
+                          remove_collapsed_elements=False,
+                          avoid_collapsed_elements=False,
+                          crash_on_collapse=False,
+                          debug=True)
+    os.remove(bdf_filename_temp)
 
 def cmd_line_merge():  # pragma: no cover
+    """command line interface to bdf_merge"""
     import sys
     from docopt import docopt
     import pyNastran
@@ -267,18 +343,21 @@ def cmd_line_merge():  # pragma: no cover
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
 def cmd_line():  # pragma: no cover
+    """command line interface to multiple other command line scripts"""
     import sys
     dev = True
     msg = 'Usage:\n'
     msg += '  bdf merge       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
     msg += '  bdf equivalence IN_BDF_FILENAME EQ_TOL\n'
     msg += '  bdf renumber    IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+    msg += '  bdf mirror      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
     if dev:
         msg += '  bdf bin         IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
     msg += '\n'
     msg += '  bdf merge       -h | --help\n'
     msg += '  bdf equivalence -h | --help\n'
     msg += '  bdf renumber    -h | --help\n'
+    msg += '  bdf mirror      -h | --help\n'
 
     if dev:
         msg += '  bdf bin         -h | --help\n'
@@ -296,6 +375,8 @@ def cmd_line():  # pragma: no cover
         cmd_line_equivalence()
     elif sys.argv[1] == 'renumber':
         cmd_line_renumber()
+    elif sys.argv[1] == 'mirror':
+        cmd_line_mirror()
     elif sys.argv[1] == 'bin' and dev:
         cmd_line_bin()
     else:

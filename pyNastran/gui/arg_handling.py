@@ -5,6 +5,7 @@ from six import iteritems
 
 from docopt import docopt
 import pyNastran
+from pyNastran.utils import print_bad_path
 #from gui.formats import format_string
 
 def determine_format(input_filename, allowed_formats):
@@ -96,12 +97,16 @@ def run_docopt():
         input_filenames += [data['INPUT']]
     if data['--input']:
         input_filenames += [data['--input']]
+    for input_filename in input_filenames:
+        assert os.path.exists(input_filename), print_bad_path(input_filename)
 
     output_filenames = []
     if data['OUTPUT']:
         output_filenames += [data['OUTPUT']]
     if data['--output']:
         output_filenames += data['--output']
+    for output_filename in output_filenames:
+        assert os.path.exists(output_filename), print_bad_path(output_filename)
     debug = not(data['--quiet'])
 
     # used to include None...
@@ -125,10 +130,12 @@ def run_docopt():
     geom_script = None
     if '--geomscript' in data:
         geom_script = data['--geomscript']
+        assert os.path.exists(geom_script), print_bad_path(geom_script)
 
     post_script = None
     if '--postscript' in data:
         post_script = data['--postscript']
+        assert os.path.exists(post_script), print_bad_path(post_script)
 
     magnify = 1
     if '--magnify' in data and data['--magnify'] is not None:

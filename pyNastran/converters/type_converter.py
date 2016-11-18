@@ -181,7 +181,12 @@ def process_ugrid(ugrid_filename, fmt2, fname2, data=None):
     """
     assert fmt2 in ['stl', 'nastran', 'cart3d', 'tecplot'], 'format2=%s' % fmt2
     model = UGRID()
-    model.read_ugrid(ugrid_filename)
+    read_shells = True
+    read_solids = True
+    if fmt2 in ['stl', 'cart3d']:
+        read_shells = True
+        read_solids = False
+    model.read_ugrid(ugrid_filename, read_shells=read_shells, read_solids=read_solids)
     if fmt2 == 'nastran':
         # ugrid_to_nastran(model, fname2
         include_shells = True
@@ -189,15 +194,15 @@ def process_ugrid(ugrid_filename, fmt2, fname2, data=None):
         bdf_filename = fname2
         model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
     elif fmt2 == 'cart3d':
-        include_shells = False
-        include_solids = True
+        include_shells = True
+        include_solids = False
         bdf_filename = fname2 + '.bdf'
         model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
         # ugrid_to_cart3d(model, fname2)
         process_nastran(bdf_filename, 'cart3d', fname2, data=None)
     elif fmt2 == 'stl':
-        include_shells = False
-        include_solids = True
+        include_shells = True
+        include_solids = False
         bdf_filename = fname2 + '.bdf'
         model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
         process_nastran(bdf_filename, 'cart3d', fname2, data=None)

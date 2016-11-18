@@ -3199,7 +3199,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.convert_units(result_name, result_value, x, y, z)
         if 1:
             source = vtk.vtkVectorText()
-            source.SetText(text)
+            source.SetText(str(text))
 
             # mappers are weird; they seem to do nothing
             mapper = vtk.vtkPolyDataMapper()

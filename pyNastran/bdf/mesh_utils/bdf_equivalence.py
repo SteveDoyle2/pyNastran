@@ -77,6 +77,8 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     .. todo:: remove_collapsed_elements is not supported
     .. todo:: avoid_collapsed_elements is not supported
     """
+    if not isinstance(tol, float):
+        tol = float(tol)
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
         bdf_filename, tol, renumber_nodes=renumber_nodes,
         xref=xref, node_set=node_set, debug=debug)
@@ -100,7 +102,6 @@ def _eq_nodes_setup(bdf_filename, tol,
                     renumber_nodes=False, xref=True,
                     node_set=None, debug=True):
     """helper function for `bdf_equivalence_nodes`"""
-    assert isinstance(tol, float), tol
     if node_set is not None:
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
@@ -303,6 +304,7 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
 
 def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max=4):
     """helper function for `bdf_equivalence_nodes`"""
+    assert isinstance(tol, float), 'tol=%r' % tol
     kdt = _get_tree(nodes_xyz)
 
     # check the closest 10 nodes for equality

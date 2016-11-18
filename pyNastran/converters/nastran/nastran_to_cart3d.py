@@ -28,7 +28,11 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     cart3d = Cart3D(log=log, debug=debug)
 
     nnodes = len(bdf.nodes)
-    nelements = len(bdf.elements)
+    nelements = 0
+    if 'CTRIA3' in bdf.card_count:
+        nelements += bdf.card_count['CTRIA3']
+    if 'CQUAD4' in bdf.card_count:
+        nelements += bdf.card_count['CQUAD4'] * 2
 
     nodes = zeros((nnodes, 3), 'float64')
     elements = zeros((nelements, 3), 'int32')
@@ -49,6 +53,10 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
                 nids = element.node_ids
                 elements[i, :] = nids
                 regions[i] = element.Mid()
+            #elif element.type == 'CQUAD4':
+                #nids = element.node_ids
+                #elements[i, :] = nids
+                #regions[i] = element.Mid()
             else:
                 raise NotImplementedError(element.type)
             i += 1
@@ -66,6 +74,10 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
                 nids = element.node_ids
                 elements[i, :] = [nid_map[nid] for nid in nids]
                 regions[i] = element.Mid()
+            #elif element.type == 'CQUAD4':
+                #nids = element.node_ids
+                #elements[i, :] = [nid_map[nid] for nid in nids]
+                #regions[i] = element.Mid()
             else:
                 raise NotImplementedError(element.type)
             i += 1

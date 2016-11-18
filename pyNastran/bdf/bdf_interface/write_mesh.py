@@ -399,6 +399,8 @@ class WriteMesh(BDFAttributes):
                     nodes = element.node_ids
                     bdf_file.write(element.write_card(size, is_double))
                     nodes = [node_id + nid_offset for node_id in nodes]
+                    if element.type in ['CTRIA3', 'CQUAD4']:
+                        nodes = nodes[::-1]
                     element.eid += eid_offset
                     element.nodes = nodes
                     bdf_file.write(element.write_card(size, is_double))

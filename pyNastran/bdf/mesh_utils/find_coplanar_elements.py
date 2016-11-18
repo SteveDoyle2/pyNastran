@@ -4,11 +4,21 @@ from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.utils import parse_patran_syntax_dict
 
 
-eids = parse_patran_syntax_dict(' Element 830:84798')['Element']
+def find_coplanar_triangles(bdf_filename, eids):
+    """
 
-def find_coplanar_elements(bdf_filename):
+    finds coplanar triangles
+
+    Parameters
+    ----------
+    bdf_filename : str
+        the path to the bdf input file
+    eids : list
+    """
     model = read_bdf(bdf_filename, xref=False)
 
+    if eids is None:
+        eids = model.elements.keys()
     neids = len(eids)
     nids = np.zeros((neids, 3), dtype='int32')
     for i, eid in enumerate(eids):
@@ -53,12 +63,19 @@ def find_coplanar_elements(bdf_filename):
 
     nids2 = np.vstack([imin, imid, imax]).T
     aset = set()
-
+    eids_to_remove = set()
     for eid, row in zip(eids, nids2):
         new_row = tuple(list(row))
         if new_row in aset:
             print('eid=%s exists already...' % eid)
+            eids_to_remove.add(eid)
         else:
             aset.add(new_row)
         #print('aset =', aset)
     print(nids2)
+    return model, eids_to_remove
+
+def main():
+    """the test case"""
+    eids = parse_patran_syntax_dict(' Element 830:84798')['Element']
+    eids = find_coplanar_elements(bdf_filename, eids)
