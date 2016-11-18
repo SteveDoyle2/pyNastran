@@ -246,7 +246,7 @@ class WriteMesh(BDFAttributes):
                             size=8, is_double=False,
                             enddata=None, close=True, plane='xz'):
         """
-        Writes the BDF.
+        Writes the BDF as a symmetric model.
 
         Parameters
         ----------

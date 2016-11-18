@@ -142,7 +142,7 @@ class TableArray(ScalarObject):  # displacement style table
     def get_stats(self, short=False):
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                '<%s>; table_name=%r\n' % (self.__class__.__name__, self.table_name),
                 '  ntimes: %i\n' % self.ntimes,
                 '  ntotal: %i\n' % self.ntotal,
             ]
@@ -166,11 +166,11 @@ class TableArray(ScalarObject):  # displacement style table
 
         msg.append('  isubcase = %s\n' % self.isubcase)
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%s nnodes=%s\n'
-                       % (self.__class__.__name__, ntimes, nnodes))
+            msg.append('  type=%s ntimes=%s nnodes=%s, table_name=%s\n'
+                       % (self.__class__.__name__, ntimes, nnodes, self.table_name))
         else:
-            msg.append('  type=%s nnodes=%s\n'
-                       % (self.__class__.__name__, nnodes))
+            msg.append('  type=%s nnodes=%s, table_name=%s\n'
+                       % (self.__class__.__name__, nnodes, self.table_name))
         headers = ', '.join(self._get_headers())
         #msg.append('  data: [%s] shape=%s dtype=%s\n'
                    #% (headers, [int(i) for i in self.data.shape], self.data.dtype))

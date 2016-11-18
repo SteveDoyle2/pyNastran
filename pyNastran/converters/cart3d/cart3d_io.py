@@ -120,9 +120,14 @@ class Cart3dIO(object):
         assert nodes is not None
         nnodes = nodes.shape[0]
 
-        mmax = amax(nodes, axis=0)
-        mmin = amin(nodes, axis=0)
+        mmax = nodes.max(axis=0)
+        mmin = nodes.min(axis=0)
         dim_max = (mmax - mmin).max()
+        xmax, ymax, zmax = mmax
+        xmin, ymin, zmin = mmin
+        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         self.create_global_axes(dim_max)
 
         data_type = vtk.VTK_FLOAT
