@@ -362,7 +362,7 @@ class CDAMP3(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CDAMP3 eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
@@ -458,7 +458,7 @@ class CDAMP4(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
 
@@ -542,7 +542,7 @@ class CDAMP5(LineDamper):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CDAMP5 eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)

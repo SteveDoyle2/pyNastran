@@ -238,7 +238,7 @@ class DCONSTR(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s oid=%s' % (self.type, self.oid)
+        msg = ' which is required by DCONSTR oid=%s' % (self.oid)
         self.dresp_id = model.DResp(self.DRespID(), msg)
         self.dresp_id_ref = self.dresp_id
         if isinstance(self.lid, integer_types):
@@ -1044,7 +1044,7 @@ class DRESP1(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s dresp_id=%s' % (self.type, self.dresp_id)
+        msg = ', which is required by DRESP1 dresp_id=%s' % (self.type, self.dresp_id)
         msg += '\n' + str(self)
 
         op2_results = [
@@ -1327,7 +1327,7 @@ class DRESP2(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s ID=%s' % (self.type, self.dresp_id)
+        msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):
             #assert key is not None, str(self)
@@ -1621,7 +1621,7 @@ class DRESP3(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s ID=%s' % (self.type, self.dresp_id)
+        msg = ', which is required by DRESP3 ID=%s' % (self.dresp_id)
         default_values = {}
         for name, vals in sorted(iteritems(self.params)):
             if name in ['DRESP1', 'DRESP2']:

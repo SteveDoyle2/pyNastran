@@ -1,3 +1,6 @@
+"""
+creates the pyNastranGUI
+"""
 # coding: utf-8
 # pylint: disable=C0111
 from __future__ import division, unicode_literals, print_function
@@ -105,7 +108,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         """
         inputs=None
         """
-        kwds['inputs'] = inputs
         html_logging = True
         fmt_order = [
             # results
@@ -117,6 +119,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             'lawgs', 'stl', 'fast', 'avus', 'abaqus', #'plot3d', 'tetgen',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
+        kwds['inputs'] = inputs
         kwds['fmt_order'] = fmt_order
         kwds['html_logging'] = html_logging
         super(MainWindow, self).__init__(**kwds)

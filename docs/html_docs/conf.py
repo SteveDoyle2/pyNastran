@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # pyNastran documentation build configuration file, created by
-# sphinx-quickstart2 on Tue Aug 14 13:26:34 2012.
+# sphinx-quickstart2 on Thr Nov 18 13:26:34 2016.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #

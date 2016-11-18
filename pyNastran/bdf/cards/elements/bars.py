@@ -454,7 +454,7 @@ class CBAR(LineElement):
         """
         #if self.g0:
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CBAR eid=%s' % (self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
         self.gb = model.Node(self.gb, msg=msg)
@@ -630,7 +630,7 @@ class CBEAM3(LineElement):  # was CBAR
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CBEAM3 eid=%s' % (self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
         self.gb = model.Node(self.gb, msg=msg)
@@ -893,7 +893,7 @@ class CBEND(LineElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CBEND eid=%s' % (self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)

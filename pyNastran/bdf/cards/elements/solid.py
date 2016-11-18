@@ -313,7 +313,7 @@ class CHEXA8(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CHEXA eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
@@ -517,7 +517,7 @@ class CHEXA20(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CHEXA eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
@@ -689,7 +689,7 @@ class CPENTA6(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CPENTA eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
@@ -1030,7 +1030,7 @@ class CPENTA15(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CPENTA eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
@@ -1177,7 +1177,7 @@ class CPYRAM5(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CPYRAM eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
@@ -1325,7 +1325,7 @@ class CPYRAM13(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CPYRAM eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
@@ -1513,7 +1513,7 @@ class CTETRA4(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CTETRA eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
@@ -1709,7 +1709,7 @@ class CTETRA10(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CTETRA eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)

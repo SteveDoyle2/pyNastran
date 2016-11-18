@@ -385,7 +385,7 @@ class CONROD(RodElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CONROD eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
         self.mid = model.Material(self.mid, msg=msg)

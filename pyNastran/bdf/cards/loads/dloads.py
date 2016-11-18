@@ -75,7 +75,7 @@ class ACSRCE(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by ACSRCE=%s' % (self.sid)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay, msg=msg)
             self.delay_ref = self.delay
@@ -182,7 +182,7 @@ class DLOAD(LoadCombination):
             the BDF object
         """
         load_ids2 = []
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by DLOAD=%s' % (self.sid)
         for load_id in self.load_ids:
             load_id2 = model.get_dload_entries(load_id, msg=msg)
             load_ids2.append(load_id2)
@@ -710,7 +710,7 @@ class TLOAD1(TabularLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
             self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = self.tid
@@ -719,7 +719,7 @@ class TLOAD1(TabularLoad):
             self.delay_ref = self.delay
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
             #try:
             self.tid = model.Table(self.tid, msg=msg)

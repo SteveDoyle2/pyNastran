@@ -1865,7 +1865,7 @@ class CORD3G(Coord):  # not done
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s cid=%s' % (self.type, self.cid)
+        msg = ' which is required by CORD3G cid=%s' % (self.cid)
         self.rid = model.Coord(self.rid, msg=msg)
         self.rid_ref = self.rid
 

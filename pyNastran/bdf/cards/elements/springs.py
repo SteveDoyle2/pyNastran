@@ -100,7 +100,7 @@ class CELAS1(SpringElement):
 
     @property
     def node_ids(self):
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CELAS1 eid=%s' % (self.eid)
         return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
@@ -145,7 +145,7 @@ class CELAS1(SpringElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CELAS1 eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
@@ -234,7 +234,7 @@ class CELAS2(SpringElement):
 
     @property
     def node_ids(self):
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CELAS2 eid=%s' % (self.eid)
         return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
@@ -249,7 +249,7 @@ class CELAS2(SpringElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CELAS2 eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
 
@@ -386,7 +386,7 @@ class CELAS3(SpringElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CELAS3 eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
@@ -403,7 +403,7 @@ class CELAS3(SpringElement):
 
     @property
     def node_ids(self):
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CELAS3 eid=%s' % (self.eid)
         return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
@@ -477,7 +477,7 @@ class CELAS4(SpringElement):
 
     @property
     def node_ids(self):
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CELAS4 eid=%s' % (self.eid)
         return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
@@ -492,7 +492,7 @@ class CELAS4(SpringElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ', which is required by CELAS4 eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
 
