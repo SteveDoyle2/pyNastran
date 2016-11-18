@@ -180,13 +180,13 @@ def process_ugrid(ugrid_filename, fmt2, fname2, data=None):
     Converts UGRID to Nastran/Cart3d/STL/Tecplot
     """
     assert fmt2 in ['stl', 'nastran', 'cart3d', 'tecplot'], 'format2=%s' % fmt2
-    model = UGRID()
     read_shells = True
     read_solids = True
     if fmt2 in ['stl', 'cart3d']:
         read_shells = True
         read_solids = False
-    model.read_ugrid(ugrid_filename, read_shells=read_shells, read_solids=read_solids)
+    model = UGRID(read_shells=read_shells, read_solids=read_solids)
+    model.read_ugrid(ugrid_filename)
     if fmt2 == 'nastran':
         # ugrid_to_nastran(model, fname2
         include_shells = True

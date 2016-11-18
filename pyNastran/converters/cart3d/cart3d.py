@@ -913,9 +913,9 @@ class Cart3D(Cart3dIO):
         self.log.debug('---finished read_results---')
         return loads
 
-    def get_normals(self, shift_nodes=True):
+    def _get_area_vector(self, shift_nodes=True):
         """
-        Gets the centroidal normals
+        Gets the area vector (unnormalized normal vector)
 
         Parameters
         ----------
@@ -927,8 +927,8 @@ class Cart3D(Cart3dIO):
 
         Returns
         -------
-        cnormals : (n, 3) ndarray
-            normalized centroidal normal vectors
+        normals : (n, 3) ndarray
+            unnormalized centroidal normal vectors
         """
         elements = self.elements
         nodes = self.nodes
@@ -947,6 +947,50 @@ class Cart3D(Cart3dIO):
         n = np.cross(avec, bvec)
         assert len(n) == ne, 'len(n)=%s ne=%s' % (len(n), ne)
 
+        return n
+
+    def get_area(self, shift_nodes=True):
+        """
+        Gets the element area
+
+        Parameters
+        ----------
+        shift_nodes : boolean; default=True
+            shifts element IDs such that the
+              - node IDs start at 0 instead of 1
+                  True : nodes start at 1
+                  False : nodes start at 0
+
+        Returns
+        -------
+        area : (n, 3) ndarray
+            the element areas
+        """
+        ne = self.elements.shape[0]
+        n = self._get_area_vector(shift_nodes=shift_nodes)
+        ni = np.linalg.norm(n, axis=1)
+        assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
+        return 0.5 * ni
+
+    def get_normals(self, shift_nodes=True):
+        """
+        Gets the centroidal normals
+
+        Parameters
+        ----------
+        shift_nodes : boolean; default=True
+            shifts element IDs such that the
+              - node IDs start at 0 instead of 1
+                  True : nodes start at 1
+                  False : nodes start at 0
+
+        Returns
+        -------
+        cnormals : (n, 3) ndarray
+            normalized centroidal normal vectors
+        """
+        ne = self.elements.shape[0]
+        n = self._get_area_vector(shift_nodes=shift_nodes)
         ni = np.linalg.norm(n, axis=1)
         assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
 

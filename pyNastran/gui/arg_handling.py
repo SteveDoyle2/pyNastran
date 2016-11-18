@@ -127,14 +127,12 @@ def run_docopt():
     if '--shots' in data:
         shots = data['--shots']
 
-    geom_script = None
-    if '--geomscript' in data:
-        geom_script = data['--geomscript']
+    geom_script = data['--geomscript']
+    if geom_script:
         assert os.path.exists(geom_script), print_bad_path(geom_script)
 
-    post_script = None
-    if '--postscript' in data:
-        post_script = data['--postscript']
+    post_script = data['--postscript']
+    if post_script:
         assert os.path.exists(post_script), print_bad_path(post_script)
 
     magnify = 1

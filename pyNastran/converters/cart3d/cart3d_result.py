@@ -1,27 +1,28 @@
 class Cart3dGeometry(object):
     def __init__(self, subcase_id, labels,
-                 nodes, elements, regions, cnormals,
+                 nodes, elements, regions, area, cnormals,
                  uname='Cart3dGeometry'):
         self.uname = uname
         self.n = 2
         self.nodes = nodes # 0
         self.elements = elements # 1
         self.regions = regions # 2
+        self.area = area
         self.centroid_normals = cnormals
         self.labels = labels
-        self.data_formats = ['%i', '%i', '%i',
+        self.data_formats = ['%i', '%i', '%i', '%.3f',
                              '%.3f', '%.3f', '%.3f']
-        self.titles = ['NodeID', 'ElementID', 'Region',
+        self.titles = ['NodeID', 'ElementID', 'Region', 'Area',
                        'NormalX', 'NormalY', 'NormalZ', ]
-        self.result_types = ['NodeID', 'ElementID', 'Region',
+        self.result_types = ['NodeID', 'ElementID', 'Region', 'Area',
                              'NormalX', 'NormalY', 'NormalZ', ]
         self.subcase_id = subcase_id
 
         self.min_default = [
-            nodes.min(), elements.min(), regions.min(),
+            nodes.min(), elements.min(), regions.min(), area.min(),
             cnormals[:, 0].min(), cnormals[:, 1].min(), cnormals[:, 2].min()]
         self.max_default = [
-            nodes.max(), elements.max(), regions.max(),
+            nodes.max(), elements.max(), regions.max(), area.max(),
             cnormals[:, 0].max(), cnormals[:, 1].max(), cnormals[:, 2].max()]
 
         self.min_value = self.min_default
@@ -51,6 +52,8 @@ class Cart3dGeometry(object):
         elif name == 'ElementID':
             return 'centroid'
         elif name == 'Region':
+            return 'centroid'
+        elif name == 'Area':
             return 'centroid'
         elif name in ['NormalX', 'NormalY', 'NormalZ',]:
             return 'centroid'
@@ -97,6 +100,8 @@ class Cart3dGeometry(object):
             return self.elements
         elif name == 'Region':
             return self.regions
+        elif name == 'Area':
+            return self.area
         elif name == 'NormalX':
             return self.centroid_normals[:, 0]
         elif name == 'NormalY':

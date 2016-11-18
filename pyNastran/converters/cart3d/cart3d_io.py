@@ -412,6 +412,7 @@ class Cart3dIO(object):
 
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
+        area = model.get_area(shift_nodes=False)
         cnormals = model.get_normals(shift_nodes=False)
         cnnodes = cnormals.shape[0]
         assert cnnodes == nelements, len(cnnodes)
@@ -420,27 +421,29 @@ class Cart3dIO(object):
         #print('nelements =', nelements)
         #print('regions.shape =', regions.shape)
         subcase_id = 0
-        labels = ['NodeID', 'ElementID', 'Region',
+        labels = ['NodeID', 'ElementID', 'Region', 'Area',
                   'Normal X', 'Normal Y', 'Normal Z']
         cart3d_geo = Cart3dGeometry(subcase_id, labels,
-                                    nids, eids, regions, cnormals,
+                                    nids, eids, regions, area, cnormals,
                                     uname='Cart3dGeometry')
 
         cases = {
             0 : (cart3d_geo, (0, 'NodeID')),
             1 : (cart3d_geo, (0, 'ElementID')),
             2 : (cart3d_geo, (0, 'Region')),
-            3 : (cart3d_geo, (0, 'NormalX')),
-            4 : (cart3d_geo, (0, 'NormalY')),
-            5 : (cart3d_geo, (0, 'NormalZ')),
+            3 : (cart3d_geo, (0, 'Area')),
+            4 : (cart3d_geo, (0, 'NormalX')),
+            5 : (cart3d_geo, (0, 'NormalY')),
+            6 : (cart3d_geo, (0, 'NormalZ')),
         }
         geometry_form = [
             ('NodeID', 0, []),
             ('ElementID', 1, []),
             ('Region', 2, []),
-            ('Normal X', 3, []),
-            ('Normal Y', 4, []),
-            ('Normal Z', 5, []),
+            ('Area', 3, []),
+            ('Normal X', 4, []),
+            ('Normal Y', 5, []),
+            ('Normal Z', 6, []),
         ]
         form = [
             ('Geometry', None, geometry_form),

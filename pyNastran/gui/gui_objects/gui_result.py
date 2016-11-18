@@ -1,5 +1,9 @@
 from copy import deepcopy
 
+REAL_TYPES = ['<i4', '<i8', '<f4', '<f8', '|i1', # this last one is a boolean
+              '>i4', '>i8', '>f4', '>f8']
+INT_TYPES = ['<i4', '<i8', '|i1',
+             '>i4', '>i8']
 
 class GuiResult(object):
     def __init__(self, subcase_id, header, title, location, scalar,
@@ -37,7 +41,7 @@ class GuiResult(object):
         self.scalar = scalar
         #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
         self.data_type = self.scalar.dtype.str # '<c8', '<f4'
-        self.is_real = True if self.data_type in ['<i4', '<i8', '<f4', '<f8', '|i1'] else False
+        self.is_real = True if self.data_type in REAL_TYPES else False
         self.is_complex = not self.is_real
         self.nlabels = nlabels
         self.labelsize = labelsize
@@ -45,7 +49,7 @@ class GuiResult(object):
         self.colormap = colormap
 
         #print('title=%r data_type=%r' % (self.title, self.data_type))
-        if self.data_type in ['<i4', '<i8', '|i1']:
+        if self.data_type in INT_TYPES:
             self.data_format = '%i'
         elif data_format is None:
             self.data_format = '%.2f'
