@@ -1133,7 +1133,7 @@ class GRID(BaseCard):
         p = self.cp_ref.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
-        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
+        msg = ' which is required by GRID nid=%s' % (self.nid)
         coord_b = model.Coord(cid, msg=msg)
         xyz = coord_b.transform_node_to_local(p)
         return xyz
@@ -1166,7 +1166,7 @@ class GRID(BaseCard):
             if not self.seid:
                 self.seid = grdset.seid
                 self.seid_ref = self.seid
-        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
+        msg = ' which is required by GRID nid=%s' % (self.nid)
         self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
         if self.cd != -1:
@@ -1478,7 +1478,7 @@ class POINT(BaseCard):
         p = self.cp.transform_node_to_global(self.xyz)
 
         # a matrix global->local matrix is found
-        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
+        msg = ' which is required by POINT nid=%s' % (self.nid)
         coord_b = model.Coord(cid, msg=msg)
         xyz = coord_b.transform_node_to_local(p)
         return xyz

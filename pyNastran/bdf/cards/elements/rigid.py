@@ -94,7 +94,7 @@ class RROD(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by RROD eid=%s' % (self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
         self.ga_ref = self.ga
@@ -230,7 +230,7 @@ class RBAR(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by RBAR eid=%s' % (self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
         self.ga_ref = self.ga
@@ -339,7 +339,7 @@ class RBAR1(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by RBAR1 eid=%s' % (self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
         self.ga_ref = self.ga
@@ -444,7 +444,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by RBE1 eid=%s' % (self.eid)
         self.Gni = model.Nodes(self.Gni, allow_empty_nodes=True, msg=msg)
         self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
         self.Gni_ref = self.Gni
@@ -705,7 +705,7 @@ class RBE2(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by RBE2 eid=%s' % (self.eid)
         self.Gmi = model.Nodes(self.Gmi_node_ids, allow_empty_nodes=True, msg=msg)
         self.gn = model.Node(self.Gn(), msg=msg)
         self.Gmi_ref = self.Gmi
@@ -963,7 +963,7 @@ class RBE3(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
         self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
         self.Gmi_ref = self.Gmi
@@ -990,7 +990,7 @@ class RBE3(RigidElement):
         del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
         self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
         self.Gmi_ref = self.Gmi
@@ -1109,7 +1109,7 @@ class RSPLINE(RigidElement):
             the BDF object
         """
         return
-        #msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        #msg = ' which is required by RSPLINE eid=%s' % (self.eid)
         #self.Gni = model.Nodes(self.Gni, allow_empty_nodes=True, msg=msg)
         #self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
         #self.Gni_ref = self.Gni

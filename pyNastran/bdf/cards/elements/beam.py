@@ -253,7 +253,7 @@ class CBEAM(CBAR):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CBEAM eid=%s' % (self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
         self.gb = model.Node(self.gb, msg=msg)
@@ -271,7 +271,7 @@ class CBEAM(CBAR):
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        msg = ' which is required by CBEAM eid=%s' % (self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
 

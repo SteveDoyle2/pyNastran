@@ -192,7 +192,7 @@ class SUPORT(Constraint):
 
     @property
     def node_ids(self):
-        msg = ', which is required by %s' % self.type
+        msg = ', which is required by SUPORT'
         return self._nodeIDs(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
@@ -204,7 +204,7 @@ class SUPORT(Constraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s' % self.type
+        msg = ', which is required by SUPORT'
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
 
@@ -453,7 +453,7 @@ class SPC(Constraint):
 
     @property
     def node_ids(self):
-        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        msg = ', which is required by SPC=%s' % (self.conid)
         return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
@@ -465,7 +465,7 @@ class SPC(Constraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        msg = ', which is required by SPC=%s' % (self.conid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
 
@@ -511,7 +511,7 @@ class GMSPC(Constraint):
 
     def cross_reference(self, model):
         """TODO: xref"""
-        #msg = ', which is required by %s=%s' % (self.type, self.conid)
+        #msg = ', which is required by GMSPC=%s' % (self.conid)
         pass
 
     def uncross_reference(self):
@@ -573,7 +573,7 @@ class SPCAX(Constraint):
 
     def cross_reference(self, model):
         pass
-        #msg = ', which is required by %s=%s' % (self.type, self.conid)
+        #msg = ', which is required by SPCAX=%s' % (self.conid)
         #self.rid = model.ring[self.rid]
         #self.hid = model.harmonic[self.hid]
 

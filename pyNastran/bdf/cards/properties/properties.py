@@ -490,7 +490,7 @@ class PCONEAX(Property):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s=%s' %(self.type, self.pid)
+        msg = ' which is required by PCONEAX=%s' %(self.pid)
         if self.mid1 > 0:
             self.mid1 = model.Material(self.mid1, msg=msg)
             self.mid1_ref = self.mid1

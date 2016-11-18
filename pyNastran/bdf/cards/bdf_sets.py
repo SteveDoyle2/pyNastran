@@ -567,7 +567,7 @@ class CSET1(Set):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s' % (self.type)
+        msg = ' which is required by CSET1'
         self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.ids_ref = self.ids
 
@@ -577,7 +577,7 @@ class CSET1(Set):
 
     @property
     def node_ids(self):
-        msg = ' which is required by %s' % (self.type)
+        msg = ' which is required by CSET1'
         return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
@@ -1154,7 +1154,7 @@ class USET(Set):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s name=%s' % (self.type, self.name)
+        msg = ' which is required by USET name=%s' % (self.name)
         self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.ids_ref = self.ids
 
@@ -1164,7 +1164,7 @@ class USET(Set):
 
     @property
     def node_ids(self):
-        msg = ' which is required by %s name=%s' % (self.type, self.name)
+        msg = ' which is required by USET name=%s' % (self.name)
         return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
@@ -1228,7 +1228,7 @@ class USET1(ABQSet1):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s name=%s' % (self.type, self.name)
+        msg = ' which is required by USET1 name=%s' % (self.name)
         self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.ids_ref = self.ids
 
@@ -1238,7 +1238,7 @@ class USET1(ABQSet1):
 
     @property
     def node_ids(self):
-        msg = ' which is required by %s name=%s' % (self.type, self.name)
+        msg = ' which is required by USET1 name=%s' % (self.name)
         return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):

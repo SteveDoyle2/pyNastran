@@ -206,7 +206,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by LSEQ=%s' % (self.sid)
         self.lid = model.Load(self.lid, msg=msg)
         self.lid_ref = self.lid
         #self.excite_id = model.Node(self.excite_id, msg=msg)
@@ -381,12 +381,12 @@ class DAREA(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        msg = ', which is required by DAREA=%s' % (self.sid)
         self.p = model.Node(self.node_id, allow_empty_nodes=False, msg=msg)
         self.p_ref = self.p
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        msg = ', which is required by DAREA=%s' % (self.sid)
         self.p = model.Node(self.node_id, allow_empty_nodes=False, msg=msg)
         self.p_ref = self.p
 
@@ -466,7 +466,7 @@ class SPCD(Load):
 
     @property
     def node_ids(self):
-        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        msg = ', which is required by SPCD=%s' % (self.sid)
         return _node_ids(self, nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
@@ -478,12 +478,12 @@ class SPCD(Load):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        msg = ', which is required by SPCD=%s' % (self.sid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ', which is required by %s=%s' % (self.type, self.sid)
+        msg = ', which is required by SPCD=%s' % (self.sid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
 
@@ -564,7 +564,7 @@ class SLOAD(Load):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        msg = ' which is required by SLOAD=%s' % (self.sid)
         for (i, nid) in enumerate(self.nids):
             self.nids[i] = model.Node(nid, msg=msg)
         self.nids_ref = self.nids
