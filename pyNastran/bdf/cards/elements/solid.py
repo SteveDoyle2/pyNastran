@@ -1426,6 +1426,7 @@ class CTETRA4(SolidElement):
         =======
         >>> print element.faces
         """
+        nodes = self.node_ids
         faces = {
             1 : [nodes[0], nodes[1], nodes[3]],
             2 : [nodes[0], nodes[3], nodes[2]],
