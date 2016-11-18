@@ -3,39 +3,38 @@ An attempt at a user friendly Cart3d GUI
 """
 # -*- coding: utf-8 -*-
 from __future__ import division, unicode_literals, print_function
-from six import string_types, iteritems
-from six.moves import range
+#from six.moves import range
 
 # standard library
 import sys
 import os.path
-import traceback
 
-# 3rd party
-from numpy import ndarray, eye
-import vtk
-from PyQt4 import QtCore, QtGui
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
         QApplication, qApp)
-    from PyQt4.QtCore import QString
+    #from PyQt4.QtCore import QString
 elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
         QApplication, qApp)
-    from six import text_type as QString
+    #from six import text_type as QString
+elif qt_version == 'pyside':
+    from PySide import QtCore, QtGui
+    from PySide.QtGui import QApplication, qApp
+else:
+    raise NotImplementedError(qt_version)
 
-
+# 3rd party
+import vtk
 
 # pyNastran
 import pyNastran
-from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import Cart3dIO, is_cart3d
 from pyNastran.gui.arg_handling import get_inputs
-from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
+#from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.gui_common import GuiCommon2
 
 
@@ -59,11 +58,14 @@ except:
 
 
 class MainWindow(GuiCommon2, Cart3dIO):
-    def __init__(self, inputs):
+    def __init__(self, inputs, **kwds):
         html_logging = True
         fmt_order = ['cart3d']
 
-        GuiCommon2.__init__(self, fmt_order, html_logging, inputs)
+        kwds['inputs'] = inputs
+        kwds['fmt_order'] = fmt_order
+        kwds['html_logging'] = html_logging
+        super(MainWindow, self).__init__(**kwds)
         Cart3dIO.__init__(self)
         self.base_window_title = "pyCart3d v%s"  % pyNastran.__version__
 
@@ -112,7 +114,7 @@ class MainWindow(GuiCommon2, Cart3dIO):
             #copyright = pyNastran.__copyright__
 
         about = [
-            'pyCart3d QT GUI',
+            'pyCart3d Qt GUI',
             '',
             'pyCart3d v%s' % pyNastran.__version__,
             copyright,
@@ -164,7 +166,19 @@ class MainWindow(GuiCommon2, Cart3dIO):
         settings = QtCore.QSettings()
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
-        settings.setValue("backgroundColor", self.background_col)
+        settings.setValue("backgroundColor", self.background_color)
+        settings.setValue("textColor", self.text_color)
+        settings.setValue("labelColor", self.label_color)
+
+        #screen_shape = QtGui.QDesktopWidget().screenGeometry()
+        main_window = self.window()
+        width = main_window.frameGeometry().width()
+        height = main_window.frameGeometry().height()
+        settings.setValue('screen_shape', (width, height))
+
+        qpos = self.pos()
+        pos = qpos.x(), qpos.y()
+        settings.setValue('pos', pos)
         qApp.quit()
 
 
