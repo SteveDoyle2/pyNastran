@@ -278,7 +278,10 @@ class STL(object):
         else:
             inotnan = np.where(normals_norm != 0.)[0]
             inan = np.where(normals_norm == 0.)[0]
-            normals_norm[inan] = np.array([1., 0., 0.])
+            if len(inan):
+                normals_norm[inan] = np.array([1., 0., 0.])
+                #normals_norm[inan] = 1.
+                #normals_norm[inan, [1,2]] = 0.
             #elements = elements[inotnan, :]
             #normals_norm = normals_norm[inotnan]
             #v123 = v123[inotnan]

@@ -2,6 +2,11 @@ from __future__ import print_function
 import os
 import unittest
 
+import warnings
+import numpy as np
+warnings.simplefilter('always')
+np.seterr(all='raise')
+
 import pyNastran
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
@@ -13,7 +18,7 @@ class TestSTL(unittest.TestCase):
 
     def test_stl_io_01(self):
         lines = (
-            'solid	testsphere\n'
+            'solid  testsphere\n'
             '    facet normal -0.13 -0.13 -0.98\n'
             '        outer loop\n'
             '            vertex 1.50000 1.50000 0.00000\n'
@@ -43,7 +48,7 @@ class TestSTL(unittest.TestCase):
 
     def test_stl_io_02(self):
         lines = (
-            'solid	testsphere\n'
+            'solid  testsphere\n'
             '    facet normal -0.13 -0.13 -0.98\n'
             '        outer loop\n'
             '            vertex 1.50000 1.50000 0.00000\n'

@@ -1,5 +1,11 @@
 import os
 
+import warnings
+import numpy as np
+warnings.simplefilter('always')
+np.seterr(all='raise')
+
+
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.stl.stl_io import STL_IO
 import pyNastran

@@ -21,7 +21,7 @@ class STL_IO(object):
         return data
 
     def load_stl_geometry(self, stl_filename, dirname, name='main', plot=True):
-        print("load_stl_geometry...")
+        #print("load_stl_geometry...")
         skip_reading = self._remove_old_geometry(stl_filename)
         if skip_reading:
             return
@@ -38,9 +38,7 @@ class STL_IO(object):
         self.nNodes = nodes.shape[0]
         self.nElements = elements.shape[0]
 
-        print("nnodes = %s" % self.nNodes)
-        print("nelements = %s" % self.nElements)
-
+        self.log.info('nnodes=%s nelements=%s' % (self.nNodes, self.nElements))
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
@@ -74,7 +72,7 @@ class STL_IO(object):
 
 
         nid = 0
-        print("nnodes=%s" % nnodes)
+        #print("nnodes=%s" % nnodes)
         for i in range(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
@@ -113,40 +111,27 @@ class STL_IO(object):
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
         icase = 0
-        #cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
         itime = 0
         eids = arange(1, nelements + 1, dtype='int32')
         nids = arange(1, nnodes + 1, dtype='int32')
-        if 0:
-            cases[(ID, icase, 'ElementID', 1, 'centroid', '%i', '')] = eids
-            cases[(ID, icase + 1, 'NodeID', 1, 'node', '%i', '')] = nids
-            cases[(ID, icase + 2, 'Area', 1, 'centroid', '%.4e', '')] = areas
-            cases[(ID, icase + 3, 'NormalX', 1, 'centroid', '%.3f', '')] = normals[:, 0]
-            cases[(ID, icase + 4, 'NormalY', 1, 'centroid', '%.3f', '')] = normals[:, 1]
-            cases[(ID, icase + 5, 'NormalZ', 1, 'centroid', '%.3f', '')] = normals[:, 2]
-        else:
-            eid_res = GuiResult(ID, header='ElementID', title='ElementID',
-                                location='centroid', scalar=eids)
-            nid_res = GuiResult(ID, header='NodeID', title='NodeID',
-                                location='node', scalar=nids)
-            area_res = GuiResult(ID, header='Area', title='Area',
-                                 location='centroid', scalar=areas)
-            nx_res = GuiResult(ID, header='NormalX', title='NormalX',
-                               location='centroid', scalar=normals[:, 0])
-            ny_res = GuiResult(ID, header='NormalY', title='NormalY',
-                               location='centroid', scalar=normals[:, 1])
-            nz_res = GuiResult(ID, header='NormalZ', title='NormalZ',
-                               location='centroid', scalar=normals[:, 2])
-            cases[icase] = (eid_res, (itime, 'ElementID'))
-            cases[icase + 1] = (nid_res, (itime, 'NodeID'))
-            cases[icase + 2] = (area_res, (itime, 'Area'))
-            cases[icase + 3] = (nx_res, (itime, 'NormalX'))
-            cases[icase + 4] = (ny_res, (itime, 'NormalY'))
-            cases[icase + 5] = (nz_res, (itime, 'NormalZ'))
-        #GuiResult(ID, title='ElementID', header='ElementID', scalar, location, uname='GuiResult'):
-        #cases[(ID, 'NormalX', 1, 'node', '%.3f')] = normals[:, 0]
-        #cases[(ID, 'NormalY', 1, 'node', '%.3f')] = normals[:, 1]
-        #cases[(ID, 'NormalZ', 1, 'node', '%.3f')] = normals[:, 2]
+        eid_res = GuiResult(ID, header='ElementID', title='ElementID',
+                            location='centroid', scalar=eids)
+        nid_res = GuiResult(ID, header='NodeID', title='NodeID',
+                            location='node', scalar=nids)
+        area_res = GuiResult(ID, header='Area', title='Area',
+                             location='centroid', scalar=areas)
+        nx_res = GuiResult(ID, header='NormalX', title='NormalX',
+                           location='centroid', scalar=normals[:, 0])
+        ny_res = GuiResult(ID, header='NormalY', title='NormalY',
+                           location='centroid', scalar=normals[:, 1])
+        nz_res = GuiResult(ID, header='NormalZ', title='NormalZ',
+                           location='centroid', scalar=normals[:, 2])
+        cases[icase] = (eid_res, (itime, 'ElementID'))
+        cases[icase + 1] = (nid_res, (itime, 'NodeID'))
+        cases[icase + 2] = (area_res, (itime, 'Area'))
+        cases[icase + 3] = (nx_res, (itime, 'NormalX'))
+        cases[icase + 4] = (ny_res, (itime, 'NormalY'))
+        cases[icase + 5] = (nz_res, (itime, 'NormalZ'))
 
         form = [
             ('ElementID', icase, []),
