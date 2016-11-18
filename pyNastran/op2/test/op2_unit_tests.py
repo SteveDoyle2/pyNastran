@@ -5,6 +5,12 @@ from six import iteritems
 import numpy as np
 from numpy import dot, array_equal
 
+try:
+    import pandas
+    is_pandas = True
+except ImportError:
+    is_pandas = False
+
 import pyNastran
 
 from pyNastran.bdf.bdf import BDF
@@ -20,7 +26,6 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointFo
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
 from pyNastran.utils.log import SimpleLogger
-
 test_path = pyNastran.__path__[0]
 
 class TestOP2(Tester):
@@ -786,76 +791,78 @@ class TestOP2(Tester):
 
         isubcase = 1
         rod_force = op2.crod_force[isubcase]
-        rod_force.build_dataframe()
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (1, 2, 2), rod_force.data.shape
 
         rod_stress = op2.crod_stress[isubcase]
-        rod_stress.build_dataframe()
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (1, 2, 4), rod_stress.data.shape
 
         cbar_force = op2.cbar_force[isubcase]
-        cbar_force.build_dataframe()
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (1, 1, 8), cbar_force.data.shape
 
         cbar_stress = op2.cbar_stress[isubcase]
-        cbar_stress.build_dataframe()
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (1, 1, 15), cbar_stress.data.shape
 
         cbeam_force = op2.cbeam_force[isubcase]
-        cbeam_force.build_dataframe()
         assert cbeam_force.nelements == 1, cbeam_force.nelements
         assert cbeam_force.data.shape == (1, 2, 8), cbeam_force.data.shape
 
         cbeam_stress = op2.cbeam_stress[isubcase]
-        cbeam_stress.build_dataframe()
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # wrong
         assert cbeam_stress.data.shape == (1, 2, 8), cbeam_stress.data.shape
 
         cquad4_force = op2.cquad4_force[isubcase]
-        cquad4_force.build_dataframe()
         assert cquad4_force.nelements == 4, cquad4_force.nelements
         assert cquad4_force.data.shape == (1, 20, 8), cquad4_force.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
-        cquad4_stress.build_dataframe()
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements # TODO: should this be 4; yes by actual count...
         assert cquad4_stress.data.shape == (1, 20, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance(), cquad4_stress
         assert cquad4_stress.is_von_mises(), cquad4_stress
 
         ctria3_force = op2.ctria3_force[isubcase]
-        ctria3_force.build_dataframe()
         assert ctria3_force.nelements == 8, ctria3_force.nelements
         assert ctria3_force.data.shape == (1, 8, 8), ctria3_force.data.shape
 
         ctria3_stress = op2.ctria3_stress[isubcase]
-        ctria3_stress.build_dataframe()
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance(), ctria3_stress
         assert ctria3_stress.is_von_mises(), ctria3_stress
 
         ctetra_stress = op2.ctetra_stress[isubcase]
-        ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 10, 10), ctetra_stress.data.shape
         assert ctetra_stress.is_von_mises(), ctetra_stress
 
         cpenta_stress = op2.cpenta_stress[isubcase]
-        cpenta_stress.build_dataframe()
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (1, 14, 10), cpenta_stress.data.shape
         assert cpenta_stress.is_von_mises(), cpenta_stress
 
         chexa_stress = op2.chexa_stress[isubcase]
-        chexa_stress.build_dataframe()
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (1, 9, 10), chexa_stress.data.shape
         assert chexa_stress.is_von_mises(), chexa_stress
+
+        if is_pandas:
+            rod_force.build_dataframe()
+            rod_stress.build_dataframe()
+            cbar_force.build_dataframe()
+            cbar_stress.build_dataframe()
+            cbeam_force.build_dataframe()
+            cbeam_stress.build_dataframe()
+            cquad4_force.build_dataframe()
+            cquad4_stress.build_dataframe()
+            ctria3_force.build_dataframe()
+            ctria3_stress.build_dataframe()
+            ctetra_stress.build_dataframe()
+            cpenta_stress.build_dataframe()
+            chexa_stress.build_dataframe()
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -1076,7 +1083,6 @@ class TestOP2(Tester):
         assert rod_stress.data.shape == (3, 2, 4), rod_stress.data.shape
 
         cbar_force = op2.cbar_force[isubcase]
-        cbar_force.build_dataframe()
         str(cbar_force.data_frame)
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (3, 1, 8), cbar_force.data.shape
@@ -1109,6 +1115,8 @@ class TestOP2(Tester):
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (3, 9, 10), chexa_stress.data.shape
 
+        if is_pandas:
+            cbar_force.build_dataframe()
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
@@ -1155,8 +1163,6 @@ class TestOP2(Tester):
         assert rod_stress.data.shape == (4, 2, 4), rod_stress.data.shape
 
         cbar_force = op2.cbar_force[isubcase]
-        cbar_force.build_dataframe()
-        str(cbar_force.data_frame)
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (4, 1, 8), cbar_force.data.shape
 
@@ -1187,6 +1193,10 @@ class TestOP2(Tester):
         chexa_stress = op2.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (4, 9, 10), chexa_stress.data.shape
+
+        if is_pandas:
+            cbar_force.build_dataframe()
+            str(cbar_force.data_frame)
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -1220,22 +1230,18 @@ class TestOP2(Tester):
         # isubcase = isubcases[1]
 
         rod_force = op2.crod_force[isubcase]
-        rod_force.build_dataframe()
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
         rod_stress = op2.crod_stress[isubcase]
-        rod_stress.build_dataframe()
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (7, 2, 2), rod_stress.data.shape
 
         cbar_force = op2.cbar_force[isubcase]
-        cbar_force.build_dataframe()
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (7, 1, 8), cbar_force.data.shape
 
         cbar_stress = op2.cbar_stress[isubcase]
-        cbar_stress.build_dataframe()
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (7, 1, 9), cbar_stress.data.shape
 
@@ -1245,36 +1251,42 @@ class TestOP2(Tester):
         #assert cbeam_stress.data.shape == (7, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
-        #cquad4_stress.build_dataframe()
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: wrong
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
 
         #print(op2.ctria3_stress.keys())
         ctria3_stress = op2.ctria3_stress[isubcase]
-        ctria3_stress.build_dataframe()
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements # TODO: wrong
         assert ctria3_stress.data.shape == (7, 32, 3), ctria3_stress.data.shape
 
         ctetra_stress = op2.ctetra_stress[isubcase]
-        ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (7, 10, 6), ctetra_stress.data.shape
 
         cpenta_stress = op2.cpenta_stress[isubcase]
-        cpenta_stress.build_dataframe()
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (7, 14, 6), cpenta_stress.data.shape
 
         chexa_stress = op2.chexa_stress[isubcase]
-        chexa_stress.build_dataframe()
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (7, 9, 6), chexa_stress.data.shape
 
         grid_point_forces = op2.grid_point_forces[isubcase]
-        grid_point_forces.build_dataframe()
         #print(grid_point_forces._ntotals)
         assert grid_point_forces.ntotal == 106, grid_point_forces.ntotal
         assert grid_point_forces.data.shape == (7, 106, 6), grid_point_forces.data.shape
+
+        if is_pandas:
+            rod_force.build_dataframe()
+            rod_stress.build_dataframe()
+            cbar_force.build_dataframe()
+            cbar_stress.build_dataframe()
+            #cquad4_stress.build_dataframe()
+            ctria3_stress.build_dataframe()
+            ctetra_stress.build_dataframe()
+            cpenta_stress.build_dataframe()
+            chexa_stress.build_dataframe()
+            grid_point_forces.build_dataframe()
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -1322,22 +1334,18 @@ class TestOP2(Tester):
         # isubcase = isubcases[1]
 
         rod_force = op2.crod_force[isubcase]
-        rod_force.build_dataframe()
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (21, 2, 2), rod_force.data.shape
 
         rod_stress = op2.crod_stress[isubcase]
-        rod_stress.build_dataframe()
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (21, 2, 4), rod_stress.data.shape
 
         cbar_force = op2.cbar_force[isubcase]
-        cbar_force.build_dataframe()
         assert cbar_force.nelements == 1, cbar_force.nelements
         assert cbar_force.data.shape == (21, 1, 8), cbar_force.data.shape
 
         cbar_stress = op2.cbar_stress[isubcase]
-        cbar_stress.build_dataframe()
         assert cbar_stress.nelements == 21, cbar_stress.nelements # 1-wrong
         assert cbar_stress.data.shape == (21, 1, 15), cbar_stress.data.shape
 
@@ -1347,36 +1355,42 @@ class TestOP2(Tester):
         # assert cbeam_stress.data.shape == (7, 11, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
-        #cquad4_stress.build_dataframe()
         assert cquad4_stress.nelements == 40, cquad4_stress.nelements # TODO: (840-wrong, 40-correct)
         assert cquad4_stress.data.shape == (21, 40, 8), cquad4_stress.data.shape
 
         #print(op2.ctria3_stress.keys())
         ctria3_stress = op2.ctria3_stress[isubcase]
-        ctria3_stress.build_dataframe()
         assert ctria3_stress.nelements == 16, ctria3_stress.nelements # TODO: 8-wrong
         assert ctria3_stress.data.shape == (21, 16, 8), ctria3_stress.data.shape
 
         ctetra_stress = op2.ctetra_stress[isubcase]
-        ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (21, 10, 10), ctetra_stress.data.shape
 
         cpenta_stress = op2.cpenta_stress[isubcase]
-        cpenta_stress.build_dataframe()
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (21, 14, 10), cpenta_stress.data.shape
 
         chexa_stress = op2.chexa_stress[isubcase]
-        chexa_stress.build_dataframe()
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (21, 9, 10), chexa_stress.data.shape
 
         grid_point_forces = op2.grid_point_forces[isubcase]
-        grid_point_forces.build_dataframe()
         #print(grid_point_forces._ntotals)
         assert grid_point_forces.ntotal == 130, grid_point_forces.ntotal
         assert grid_point_forces.data.shape == (21, 130, 6), grid_point_forces.data.shape
+
+        if is_pandas:
+            rod_force.build_dataframe()
+            rod_stress.build_dataframe()
+            cbar_force.build_dataframe()
+            cbar_stress.build_dataframe()
+            #cquad4_stress.build_dataframe()
+            ctria3_stress.build_dataframe()
+            ctetra_stress.build_dataframe()
+            cpenta_stress.build_dataframe()
+            chexa_stress.build_dataframe()
+            grid_point_forces.build_dataframe()
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -1422,7 +1436,8 @@ class TestOP2(Tester):
         assert len(op2.ctria3_stress) == 0
 
         ctetra_stress = op2.ctetra_stress[isubcase]
-        ctetra_stress.build_dataframe()
+        if is_pandas:
+            ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 3951, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 19755, 10), ctetra_stress.data.shape
 
@@ -1478,7 +1493,8 @@ class TestOP2(Tester):
             # no index 0; fortran 1-based
             acc.extract_xyplot(nids, 0, 'real')
 
-        acc.build_dataframe()
+        if is_pandas:
+            acc.build_dataframe()
         accx = acc.extract_xyplot(nids, 1, 'real')
         accxi = acc.extract_xyplot(nids, 1, 'imag')
         #print(accx)
@@ -1569,19 +1585,20 @@ class TestOP2(Tester):
         isubcase = 1
 
         cbush_stress = op2.cbush_stress[isubcase]
-        cbush_stress.build_dataframe()
         assert cbush_stress.nelements == 1, cbush_stress.nelements
         assert cbush_stress.data.shape == (1, 1, 6), cbush_stress.data.shape
 
         cbush_strain = op2.cbush_strain[isubcase]
-        cbush_strain.build_dataframe()
         assert cbush_strain.nelements == 1, cbush_strain.nelements
         assert cbush_strain.data.shape == (1, 1, 6), cbush_strain.data.shape
 
         cbush_force = op2.cbush_force[isubcase]
-        cbush_force.build_dataframe()
         assert cbush_force.nelements == 1, cbush_force.nelements
         assert cbush_force.data.shape == (1, 1, 6), cbush_force.data.shape
+        if is_pandas:
+            cbush_stress.build_dataframe()
+            cbush_strain.build_dataframe()
+            cbush_force.build_dataframe()
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
