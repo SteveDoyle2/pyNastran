@@ -691,8 +691,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 
-            b'OUGRMS1' : [self._read_oug1_3, self._read_oug_4],
+            b'OUGATO1' : [self._read_oug1_3, self._read_oug_4],
+            b'OUGCRM1' : [self._read_oug1_3, self._read_oug_4],
             b'OUGNO1'  : [self._read_oug1_3, self._read_oug_4],
+            b'OUGPSD1' : [self._read_oug1_3, self._read_oug_4],
+            b'OUGRMS1' : [self._read_oug1_3, self._read_oug_4],
 
             b'OUGATO2' : [self._read_oug2_3, self._read_oug_4],
             b'OUGCRM2' : [self._read_oug2_3, self._read_oug_4],
@@ -857,11 +860,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSMPF2M' : [self._table_passer, self._table_passer],
             b'OGPMPF2M' : [self._table_passer, self._table_passer],
 
-            b'OVGATO2' : [self._table_passer, self._table_passer],
-            b'OVGCRM2' : [self._table_passer, self._table_passer],
-            b'OVGNO2' : [self._table_passer, self._table_passer],
-            b'OVGPSD2' : [self._table_passer, self._table_passer],
-            b'OVGRMS2' : [self._table_passer, self._table_passer],
+            # velocity
+            b'OVGATO1' : [self._read_oug1_3, self._read_oug_4],
+            b'OVGCRM1' : [self._read_oug1_3, self._read_oug_4],
+            b'OVGNO1'  : [self._read_oug1_3, self._read_oug_4],
+            b'OVGPSD1' : [self._read_oug1_3, self._read_oug_4],
+            b'OVGRMS1' : [self._read_oug1_3, self._read_oug_4],
+
+            b'OVGATO2' : [self._read_oug2_3, self._read_oug_4],
+            b'OVGCRM2' : [self._read_oug2_3, self._read_oug_4],
+            b'OVGNO2'  : [self._read_oug2_3, self._read_oug_4],
+            b'OVGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
+            b'OVGRMS2' : [self._read_oug2_3, self._read_oug_4],
 
             #==================================
             #b'GPL': [self._table_passer, self._table_passer],
@@ -875,11 +885,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'EDOM' : [self._table_passer, self._table_passer],
             b'OUG2T' : [self._table_passer, self._table_passer],
 
-            b'OAGPSD2' : [self._table_passer, self._table_passer],
-            b'OAGATO2' : [self._table_passer, self._table_passer],
-            b'OAGRMS2' : [self._table_passer, self._table_passer],
-            b'OAGNO2' : [self._table_passer, self._table_passer],
-            b'OAGCRM2' : [self._table_passer, self._table_passer],
+            # acceleration
+            b'OAGATO1' : [self._read_oug1_3, self._read_oug_4],
+            b'OAGCRM1' : [self._read_oug1_3, self._read_oug_4],
+            b'OAGNO1'  : [self._read_oug1_3, self._read_oug_4],
+            b'OAGPSD1' : [self._read_oug1_3, self._read_oug_4],
+            b'OAGRMS1' : [self._read_oug1_3, self._read_oug_4],
+
+            b'OAGATO2' : [self._read_oug2_3, self._read_oug_4],
+            b'OAGCRM2' : [self._read_oug2_3, self._read_oug_4],
+            b'OAGNO2'  : [self._read_oug2_3, self._read_oug_4],
+            b'OAGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
+            b'OAGRMS2' : [self._read_oug2_3, self._read_oug_4],
         }
         return table_mapper
 

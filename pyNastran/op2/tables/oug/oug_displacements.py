@@ -47,15 +47,27 @@ class RealDisplacementArray(RealTableArray):
         if header is None:
             header = []
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n', ]
-                 #' \n',
-                 #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #' \n',
+        #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        if self.table_name in ['OUGV1', 'OUGV2']:
+            pass
+        elif self.table_name in ['OUGPSD1', 'OUGPSD2']:
+            words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
+        elif self.table_name in ['OUGRMS1', 'OUGRMS2']:
+            words += ['                                                     ( ROOT MEAN SQUARE )']
+        elif self.table_name in ['OUGCRM1', 'OUGCRM2']:
+            words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
+        elif self.table_name in ['OUGNO1', 'OUGNO2']:
+            words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
+        else:
+            raise NotImplementedError(self.table_name)
         #words += self.get_table_marker()
         write_words = True
         if self.nonlinear_factor is not None:
             return self._write_f06_transient_block(words, header, page_stamp, page_num, f, write_words,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(words, header, page_stamp, page_num, f, write_words,
-                                         is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                                     is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
 
 class ComplexDisplacementArray(ComplexTableArray):

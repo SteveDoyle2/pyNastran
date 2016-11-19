@@ -9,8 +9,21 @@ class RealMPCForcesArray(RealTableArray):
         if header is None:
             header = []
         words = ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n', ]
-                 #' \n',
-                 #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #' \n',
+        #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        if self.table_name in ['OQMG1', 'OQMG2']:
+            pass
+        elif self.table_name in ['OQGPSD1', 'OQGPSD2']:
+            words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
+        elif self.table_name in ['OQGRMS1', 'OQGRMS2']:
+            words += ['                                                     ( ROOT MEAN SQUARE )']
+        elif self.table_name in ['OQGCRM1', 'OQGCRM2']:
+            words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
+        elif self.table_name in ['OQGNO1', 'OQGNO2']:
+            words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
+        else:
+            raise NotImplementedError(self.table_name)
+
         #words += self.get_table_marker()
         write_words = True
         if self.nonlinear_factor is not None:

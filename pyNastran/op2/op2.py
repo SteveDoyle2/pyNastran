@@ -438,7 +438,7 @@ class OP2(OP2_Scalar):
                         #raise
                     continue
                 if obj.is_sort2():
-                    self.log.warning(obj)
+                    #self.log.warning(obj)
                     self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
                     continue
                 try:

@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 import copy
 from struct import Struct, pack
+import warnings
 
 from six import iteritems
 from six.moves import zip, range
@@ -161,7 +162,10 @@ class TableArray(ScalarObject):  # displacement style table
             assert nmajor == ntimes, 'ntimes=%s expected=%s' % (nmajor, ntimes)
             assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, nnodes)
         else:
-            assert nmajor == nnodes, 'nnodes=%s expected=%s' % (nmajor, nnodes)
+            if not nmajor == nnodes:
+                msgi = 'nnodes=%s expected=%s' % (nmajor, nnodes)
+                warnings.warn(msgi)
+                msg.append('  WARNING: ' + msgi + '\n')
             assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, ntimes)
 
         msg.append('  isubcase = %s\n' % self.isubcase)
@@ -202,6 +206,18 @@ class TableArray(ScalarObject):  # displacement style table
             #self.itotal = 0
             return
 
+        # we have a SORT1 data array that will be (ntimes, nnodes, 6)
+        # we start by sizing the total number of entries (_nnodes = ntimes * nnodes)
+        # we also keep track of the number of times
+        # then we compute nnodes
+        #
+        # for sort1, we just use what was discussed above
+        # for sort2, we flip nnodes and ntimes
+        #
+        # note that in both cases, ntotal is the major dimension:
+        #  - SORT1 - ntimes
+        #  - SORT2 - nnodes
+        #print('ntotal=%s ntimes=%s _nnodes=%s' % (self.ntotal, self.ntimes, self._nnodes))
         self._nnodes //= self.ntimes
         self.itime = 0
         self.itotal = 0
@@ -210,29 +226,31 @@ class TableArray(ScalarObject):  # displacement style table
         if self.is_sort1():
             ntimes = self.ntimes
             nnodes = self.ntotal
+            ntotal = self.ntotal
             nx = ntimes
             ny = self.ntotal
             #print("ntimes=%s nnodes=%s" % (ntimes, nnodes))
         if self.is_sort2():
-            ntotal = self.ntotal
             nnodes = self.ntimes
             ntimes = self.ntotal
+            ntotal = self.ntotal
             nx = nnodes
             ny = ntimes
-            #print("ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
-        self.build_data(ntimes, nnodes, nx, ny, self._times_dtype)
+            #print("***ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
+        self.build_data(ntimes, nnodes, ntotal, nx, ny, self._times_dtype)
 
-    def build_data(self, ntimes, nnodes, nx, ny, float_fmt):
+    def build_data(self, ntimes, nnodes, ntotal, nx, ny, float_fmt):
         """actually performs the build step"""
         self.ntimes = ntimes
         self._nnodes = nnodes
-        self.ntotal = nnodes
+        self.ntotal = ntotal
 
         self._times = zeros(ntimes, dtype=float_fmt)
         self.node_gridtype = zeros((nnodes, 2), dtype='int32')
 
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((nx, ny, 6), self.data_type())
+        #print('ntimes=%s nnodes=%s; nx=%s ny=%s; ntotal=%s' % (ntimes, nnodes, nx, ny, self.ntotal))
 
     def build_dataframe(self):
         headers = self.get_headers()
@@ -802,7 +820,9 @@ class ComplexTableArray(TableArray):  # displacement style table
         if not len(header) >= 3:
             header.append('')
 
-        if self.is_sort1():
+        #is_sort1_table = self.is_sort1()
+        is_sort1_table = self.table_name[-1] == '1'
+        if is_sort1_table:
             if is_sort1:
                 words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
                 page_num = self.write_sort1_as_sort1(f, page_num, page_stamp, header, words, is_mag_phase)

@@ -237,6 +237,11 @@ class OP2_F06_Common(object):
         #: OUG - velocity
         self.velocities = {}              # tCode=10 thermal=0
         self.velocitiesPSD = {}
+        self.velocitiesATO = {}
+        self.velocitiesRMS = {}
+        self.velocitiesCRM = {}
+        self.velocitiesNO = {}
+
         #self.velocity_scaled_response_spectra_NRL = {}
         self.velocity_scaled_response_spectra_ABS = {}
         #self.velocity_scaled_response_spectra_PSD = {}
@@ -248,6 +253,11 @@ class OP2_F06_Common(object):
         #: OUG - acceleration
         self.accelerations = {}            # tCode=11 thermal=0
         self.accelerationsPSD = {}
+        self.accelerationsATO = {}
+        self.accelerationsRMS = {}
+        self.accelerationsCRM = {}
+        self.accelerationsNO = {}
+
         self.acceleration_scaled_response_spectra_NRL = {}
         self.acceleration_scaled_response_spectra_ABS = {}
         #self.acceleration_scaled_response_spectra_PSD = {}
@@ -369,11 +379,15 @@ class OP2_F06_Common(object):
         self.spc_forcesPSD = {}
         self.spc_forcesATO = {}
         self.spc_forcesRMS = {}
+        self.spc_forcesCRM = {}
+        self.spc_forcesNO = {}
 
         self.mpc_forces = {}  # tCode=39
         self.mpc_forcesPSD = {}
         self.mpc_forcesATO = {}
         self.mpc_forcesRMS = {}
+        self.mpc_forcesCRM = {}
+        self.mpc_forcesNO = {}
         self.mpc_forces_RAQCONS = {}
         #self.mpc_forces_RAQEATC = {}
 
@@ -510,16 +524,25 @@ class OP2_F06_Common(object):
             # OUG - velocity
             'velocities',
             'velocitiesPSD',
+            'velocitiesATO',
+            'velocitiesRMS',
+            'velocitiesCRM',
+            'velocitiesNO',
 
             # OUG - acceleration
             'accelerations',
             'accelerationsPSD',
+            'accelerationsATO',
+            'accelerationsRMS',
+            'accelerationsCRM',
+            'accelerationsNO',
+
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS',
+            'spc_forces', 'spc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS', 'spc_forcesCRM', 'spc_forcesNO',
             'spc_forces_scaled_response_spectra_NRL',
 
-            'mpc_forces', 'mpc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS',
+            'mpc_forces', 'mpc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS', 'mpc_forcesCRM', 'mpc_forcesNO',
             'mpc_forces_RAQCONS',
             #'mpc_forces_RAQEATC',
 

@@ -9,6 +9,21 @@ class RealAccelerationArray(RealTableArray):
         if header is None:
             header = []
         words = ['                                             A C C E L E R A T I O N   V E C T O R\n', ]
+        #' \n',
+        #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        if self.table_name in ['OUGV1', 'OUGV2']:
+            pass
+        elif self.table_name in ['OUGPSD1', 'OUGPSD2', 'OAGPSD1', 'OAGPSD2']:
+            words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
+        elif self.table_name in ['OUGRMS1', 'OUGRMS2', 'OAGRMS1', 'OAGRMS2']:
+            words += ['                                                     ( ROOT MEAN SQUARE )']
+        elif self.table_name in ['OUGCRM1', 'OUGCRM2', 'OAGCRM1', 'OAGCRM2']:
+            words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
+        elif self.table_name in ['OUGNO1', 'OUGNO2', 'OAGNO1', 'OAGNO2']:
+            words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
+        else:
+            raise NotImplementedError(self.table_name)
+
                  #' \n',
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.get_table_marker()

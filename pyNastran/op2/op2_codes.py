@@ -1002,10 +1002,16 @@ class Op2Codes(object):
 
 
     def is_sort1(self):
+        #is_sort1_table = self.is_sort1()
+        #try:
+        #    is_sort1_table = int(self.table_name[-1]) == '1'
+        #    return is_sort1_table
+        #except ValueError:
         sort_method, is_real, is_random = self._table_specs()
         return True if sort_method == 1 else False
 
     def is_sort2(self):
+        #return not self.is_sort1()
         sort_method, is_real, is_random = self._table_specs()
         return True if sort_method == 2 else False
 
@@ -1063,10 +1069,10 @@ class Op2Codes(object):
         else:
             assert self.sort_bits[1] == 1, 'should be SORT2; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
 
-        if is_real:
-            assert self.sort_bits[2] == 0, 'should be REAL; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        else:
-            assert self.sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        #if is_real:
+            #assert self.sort_bits[2] == 0, 'should be REAL; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        #else:
+            #assert self.sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
         return sort_method, is_real, is_random
 
     #----

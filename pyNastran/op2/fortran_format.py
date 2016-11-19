@@ -409,7 +409,7 @@ class FortranFormat(object):
         """
         datai = b''
         n = 0
-        if self.read_mode ==2:
+        if self.read_mode == 2:
             self.ntotal = 0
 
             if 0:
@@ -473,10 +473,11 @@ class FortranFormat(object):
                         # can it happen any other time?
                         msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
                         self.log.debug(msga)
-                        msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s' % (
+                        msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (
                             self.obj.ntotal, str(self.obj.data.shape),
                             self.obj.data.shape[1], self._data_factor)
-                        self.log.debug(msgb)
+                        msgb += 'obj._ntotals=%s' % self.obj._ntotals
+                        self.log.error(msgb)
                         raise RuntimeError(msga + '\n' + msgb)
 
                 #else:
@@ -506,7 +507,7 @@ class FortranFormat(object):
                 else:
                     data, ndata = self._skip_record_ndata()
                 n = table4_parser(data, ndata)
-                assert isinstance(n, integer_types), 'table_name=%s n=%s' % (self.table_name, n)
+                assert isinstance(n, integer_types), 'table_name=%s n=%s table4_parser=%s' % (self.table_name, n, table4_parser)
 
             #self._goto(n)
             #n = self._skip_record()
@@ -529,7 +530,6 @@ class FortranFormat(object):
                     #if class_name == 'RealBush1DStressArray':
                         #print('%s.ntotal = %s' % (class_name, ntotal))
                         #print('num_wide=%s factor=%s len=%s ntotal=%s' % (self.num_wide, self._data_factor, record_len, ntotal))
-
                     self.obj.ntotal = ntotal
                     self.obj._ntotals.append(ntotal)
 

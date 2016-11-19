@@ -338,18 +338,47 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     msg += '\n             '
 
             if hasattr(self, 'format_code'):
-                if self.is_complex():
-                    self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
+                try:
+                    is_complex = self.is_complex()
+                except AssertionError:
+                    self.binary_debug.write('\n  ERROR: cannot determine is_complex() properly; check_sort_bits!!!\n')
+                    is_complex = '???'
+
+                try:
+                    is_random = self.is_random()
+                except AssertionError:
+                    is_random = '???'
+
+                try:
+                    is_sort1 = self.is_sort1()
+                except AssertionError:
+                    is_sort1 = '???'
+
+                try:
+                    is_real = self.is_real()
+                except AssertionError:
+                    is_real = '???'
+
+                if is_complex:
+                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
+                        'format_code', self.format_code)
+                    self.binary_debug.write(msg)
                 else:
                     self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
-                self.binary_debug.write('    sort_bits[0] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[0], self.is_random()))
-                self.binary_debug.write('    sort_bits[1] = %i -> is_sort1 =%s vs sort2\n' % (self.sort_bits[1], self.is_sort1()))
-                self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], self.is_real()))
-                sort_method, is_real, is_random = self._table_specs()
-                self.binary_debug.write('    sort_method = %s\n' % sort_method)
+                self.binary_debug.write('    sort_bits[0] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[0], is_random))
+                self.binary_debug.write('    sort_bits[1] = %i -> is_sort1 =%s vs sort2\n' % (self.sort_bits[1], is_sort1))
+                self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], is_real))
 
-                if self.is_complex():
-                    self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
+                try:
+                    sort_method, is_real, is_random = self._table_specs()
+                    self.binary_debug.write('    sort_method = %s\n' % sort_method)
+                except AssertionError:
+                    self.binary_debug.write('    sort_method = ???\n')
+
+                if is_complex:
+                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
+                        'format_code', self.format_code)
+                    self.binary_debug.write(msg)
                 else:
                     self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
 
@@ -502,10 +531,74 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
+    def _read_random_table(self, data, ndata, result_name, storage_obj,
+                           real_vector, node_elem, random_code=None, is_cid=False):
+        """
+        Reads a real table (for random analysis)
+        """
+        assert self.format_code == 1, self.format_code
+        assert self.num_wide == 8, self.num_wide
+        is_vectorized = True
+
+        #if self.format_code == 1 and self.num_wide == 8:  # real/random
+        # real
+        nnodes = ndata // 32  # 8*4
+        #self.log.debug('  create table_vector')
+        auto_return = self._create_table_vector(
+            result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
+        if auto_return:
+            return ndata
+        #self.log.debug('  *create table_vector')
+
+        #self._fix_format_code(format_code=1)
+        is_sort1 = self.is_sort1()  # uses the sort_bits
+
+        if is_sort1:
+            #self.log.debug('   sort1; table_name=%r' % self.table_name)
+            if self.nonlinear_factor is None:
+                n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+            else:
+                n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+        else:
+            #self.log.debug('   sort2; table_name=%r' % self.table_name)
+            n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+        assert n is not None
+        return n
+
+    def _read_table_sort1_real(self, data, ndata, result_name, storage_obj,
+                               real_vector, node_elem, random_code=None, is_cid=False):
+        """
+        Reads a real table (for random analysis)
+        """
+        assert self.format_code == 1, self.format_code
+        assert self.num_wide == 8, self.num_wide
+        is_vectorized = True
+
+        #if self.format_code == 1 and self.num_wide == 8:  # real/random
+        # real
+        nnodes = ndata // 32  # 8*4
+        self.log.debug('  create table_vector')
+        auto_return = self._create_table_vector(
+            result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
+        if auto_return:
+            return ndata
+        self.log.debug('  *create table_vector')
+
+        #self._fix_format_code(format_code=1)
+        self.log.debug('   sort1; table_name=%r' % self.table_name)
+        if self.nonlinear_factor is None:
+            n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+        else:
+            n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+        assert n is not None
+        return n
+
     def _read_table_vectorized(self, data, ndata, result_name, storage_obj,
                                real_vector, complex_vector,
                                node_elem, random_code=None, is_cid=False):
-
+        """
+        Reads a generalized real/complex table
+        """
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #print('self.num_wide =', self.num_wide)
@@ -948,7 +1041,10 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
             flag = 'freq/dt/mode'
             s = Struct(b(self._endian + self._analysis_code_fmt + 'i6f'))
-            assert eid > 0, self.code_information()
+            if 'RMS' != self.table_name[-4:-1] and 'NO' != self.table_name[-3:-1]:
+                #table_cap = self.table_name[-4:-1]
+                #print('table_cap = %r' % table_cap)
+                assert eid > 0, self.code_information()
             for inode in range(nnodes):
                 edata = data[n:n+32]
                 out = s.unpack(edata)
@@ -1226,7 +1322,9 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:
                 class_obj.is_cid = is_cid
-                self.obj = class_obj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
+                is_sort1 = self.is_sort1()  # uses the sort_bits
+
+                self.obj = class_obj(self.data_code, is_sort1, self.isubcase, self.nonlinear_factor)
             storage_obj[code] = self.obj
         else:
             if code in storage_obj:
@@ -1476,7 +1574,12 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
     @property
     def _sort_method(self):
-        sort_method, is_real, is_random = self._table_specs()
+        try:
+            sort_method = int(self.table_name[-1])
+        except:
+            sort_method, is_real, is_random = self._table_specs()
+        #is_sort1 = self.table_name.endswith('1')
+        #is_sort1 = self.is_sort1()  # uses the sort_bits
         assert sort_method in [1, 2], sort_method
         return sort_method
 

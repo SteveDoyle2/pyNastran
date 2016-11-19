@@ -1804,7 +1804,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         if is_sort1:
             self.add = self.add_sort1
         else:
-            raise NotImplementedError('SORT2')
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
         self.itotal = 0
@@ -1993,7 +1993,7 @@ class RealConeAxForceArray(ScalarObject):
         if is_sort1:
             self.add = self.add_sort1
         else:
-            raise NotImplementedError('SORT2')
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
         self.itotal = 0
@@ -2190,7 +2190,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         if is_sort1:
             self.add = self.add_sort1
         else:
-            raise NotImplementedError('SORT2')
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def get_headers(self):
         headers = [
@@ -2387,7 +2387,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         if is_sort1:
             self.add = self.add_sort1
         else:
-            raise NotImplementedError('SORT2')
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
         self.itotal = 0
@@ -2777,7 +2777,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         if is_sort1:
             self.add = self.add_sort1
         else:
-            raise NotImplementedError('SORT2')
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
         self.itotal = 0
@@ -2899,7 +2899,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         if self.is_sort1():
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f)
         else:
-            raise NotImplementedError('sort2')
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
         return page_num
 
     def _write_sort2_as_sort1(self, header, page_stamp, page_num=1, f=None):
@@ -2985,7 +2985,7 @@ class RealCBushForceArray(ScalarObject):
         if is_sort1:
             self.add = self.add_sort1
         else:
-            raise NotImplementedError('SORT2')
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
         self.itotal = 0
