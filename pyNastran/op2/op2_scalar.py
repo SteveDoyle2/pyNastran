@@ -189,6 +189,15 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUGPSD2', b'OUGCRM2', b'OUGRMS2', b'OUGATO2', b'OUGNO2',
     b'OVGPSD2', b'OVGCRM2', b'OVGRMS2', b'OVGATO2', b'OVGNO2',
     b'OSTRPSD2', b'OSTRCRM2', b'OSTRRMS2', b'OSTRATO2', b'OSTRNO2',
+
+    # stress
+    b'OESATO1', b'OESCRM1', b'OESNO1', b'OESPSD1', b'OESRMS1',
+    b'OESATO2', b'OESCRM2', b'OESNO2', b'OESPSD2', b'OESRMS2',
+
+    # force
+    b'OEFATO1', b'OEFCRM1', b'OEFNO1', b'OEFPSD1', b'OEFRMS1',
+    b'OEFATO2', b'OEFCRM2', b'OEFNO2', b'OEFPSD2', b'OEFRMS2',
+
     b'OCRUG',
     b'OCRPG',
 
@@ -895,8 +904,34 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OAGATO2' : [self._read_oug2_3, self._read_oug_4],
             b'OAGCRM2' : [self._read_oug2_3, self._read_oug_4],
             b'OAGNO2'  : [self._read_oug2_3, self._read_oug_4],
-            b'OAGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
+            b'OAGPSD2' : [self._read_oug2_3, self._read_oug_4],
             b'OAGRMS2' : [self._read_oug2_3, self._read_oug_4],
+
+            # stress
+            b'OESATO1' : [self._table_passer, self._table_passer],
+            b'OESCRM1' : [self._table_passer, self._table_passer],
+            b'OESNO1'  : [self._table_passer, self._table_passer],
+            b'OESPSD1' : [self._table_passer, self._table_passer],
+            b'OESRMS1' : [self._table_passer, self._table_passer],
+
+            b'OESATO2' : [self._table_passer, self._table_passer],
+            b'OESCRM2' : [self._table_passer, self._table_passer],
+            b'OESNO2'  : [self._table_passer, self._table_passer],
+            b'OESPSD2' : [self._table_passer, self._table_passer],
+            b'OESRMS2' : [self._table_passer, self._table_passer],
+
+            # force
+            b'OEFATO1' : [self._table_passer, self._table_passer],
+            b'OEFCRM1' : [self._table_passer, self._table_passer],
+            b'OEFNO1'  : [self._table_passer, self._table_passer],
+            b'OEFPSD1' : [self._table_passer, self._table_passer],
+            b'OEFRMS1' : [self._table_passer, self._table_passer],
+
+            b'OEFATO2' : [self._table_passer, self._table_passer],
+            b'OEFCRM2' : [self._table_passer, self._table_passer],
+            b'OEFNO2'  : [self._table_passer, self._table_passer],
+            b'OEFPSD2' : [self._table_passer, self._table_passer],
+            b'OEFRMS2' : [self._table_passer, self._table_passer],
         }
         return table_mapper
 

@@ -691,6 +691,19 @@ class OUG(OP2Common):
                 result_name = 'accelerationsPSD'
                 storage_obj = self.accelerationsPSD
                 obj = RealAccelerationArray
+
+            elif self.table_code == 601:
+                # displacement
+                assert self.table_name in ['OUGPSD1', 'OUGPSD2'], 'self.table_name=%r' % self.table_name
+                result_name = 'displacementsPSD'
+                storage_obj = self.displacementsPSD
+                obj = RealDisplacementArray
+            elif self.table_code == 611:
+                # acceleration
+                assert self.table_name in ['OUGPSD1', 'OUGPSD2'], 'self.table_name=%r' % self.table_name
+                result_name = 'accelerationsPSD'
+                storage_obj = self.accelerationsPSD
+                obj = RealDisplacementArray
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())
                 return n
@@ -751,50 +764,22 @@ class OUG(OP2Common):
                 assert self.table_name in ['OUGRMS1', 'OUGRMS2'], 'self.table_name=%r' % self.table_name
                 result_name = 'displacementsRMS'
                 storage_obj = self.displacementsRMS
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealDisplacementArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealDisplacementArray
             elif self.table_code == 10:
                 # velocity
                 assert self.table_name in ['velocity'], 'self.table_name=%r' % self.table_name
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealVelocityArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealVelocityArray
             elif self.table_code == 11:
                 # acceleration
                 assert self.table_name in ['OAGRMS1', 'OAGRMS2'], 'self.table_name=%r' % self.table_name
                 result_name = 'accelerationsRMS'
                 storage_obj = self.accelerationsRMS
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealAccelerationArray, 'node',
-                                            random_code=self.random_code)
-
+                obj = RealAccelerationArray
             elif self.table_code == 801:
                 result_name = 'displacementsRMS'
                 storage_obj = self.displacementsRMS
                 assert self.table_name in ['OUGRMS1', 'OUGRM2'], 'self.table_name=%r' % self.table_name
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealDisplacementArray, 'node',
-                                            random_code=self.random_code)
-                #n = self._read_table_sort1_real(data, ndata, result_name, storage_obj,
-                                                #RealDisplacementArray, 'node',
-                                                #random_code=self.random_code)
-                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                                #RealDisplacementArray, ComplexDisplacementArray,
-                                                #'node')
-
+                obj = RealDisplacementArray
             #elif self.table_code == 610:
                 #result_name = 'velocitiesPSD'
                 #storage_obj = self.velocitiesPSD
@@ -806,15 +791,10 @@ class OUG(OP2Common):
                     #RealVelocityArray, ComplexVelocityArray,
                     #'node', random_code=self.random_code)
             elif self.table_code == 811:
-                assert self.table_name in ['OAGRMS1', 'OAGRMS2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in ['OUGRMS1', 'OUGRMS2', 'OAGRMS1', 'OAGRMS2'], 'self.table_name=%r' % self.table_name
                 result_name = 'accelerationsRMS'
                 storage_obj = self.accelerationsRMS
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealAccelerationArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealAccelerationArray
             #elif self.table_code in [1]:
                 #if self.format_code == 2:
                     #self.format_code = 1
@@ -830,6 +810,21 @@ class OUG(OP2Common):
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())
                 #raise RuntimeError(self.code_information())
+                return n
+
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                        RealDisplacementArray, 'node',
+                                        random_code=self.random_code)
+            #n = self._read_table_sort1_real(data, ndata, result_name, storage_obj,
+                                            #RealDisplacementArray, 'node',
+                                            #random_code=self.random_code)
+            #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                            #RealDisplacementArray, ComplexDisplacementArray,
+                                            #'node')
+
         #elif self.thermal == 1:
             #result_name = 'accelerations'
             #storage_obj = self.accelerations
@@ -875,78 +870,43 @@ class OUG(OP2Common):
                 assert self.table_name in ['OUGNO1', 'OUGNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'displacementsNO'
                 storage_obj = self.displacementsNO
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealDisplacementArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealDisplacementArray
             elif self.table_code == 10:
                 # velocity
                 assert self.table_name in ['velocity'], 'self.table_name=%r' % self.table_name
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealVelocityArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealVelocityArray
             elif self.table_code == 11:
                 # acceleration
                 assert self.table_name in ['OAGNO1', 'OAGNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'accelerationsNO'
                 storage_obj = self.accelerationsNO
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealAccelerationArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealAccelerationArray
 
             elif self.table_code == 901:
                 assert self.table_name in ['OUGNO1', 'OUGNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'displacementsNO'
                 storage_obj = self.displacementsNO
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealDisplacementArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealDisplacementArray
             #elif self.table_code == 610:
                 #result_name = 'velocitiesNO'
                 #storage_obj = self.velocitiesNO
-                #if self._results.is_not_saved(result_name):
-                    #return ndata
-                #self._results._found_result(result_name)
-                #n = self._read_table_vectorized(
-                    #data, ndata, result_name, storage_obj,
-                    #RealVelocityArray, ComplexVelocityArray,
-                    #'node', random_code=self.random_code)
+                #obj = RealVelocityArray
             elif self.table_code == 911:
-                assert self.table_name in ['OAGNO1', 'OAGNO2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in ['OUGNO1', 'OUGNO2', 'OAGNO1', 'OAGNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'accelerationsNO'
                 storage_obj = self.accelerationsNO
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealAccelerationArray, 'node',
-                                            random_code=self.random_code)
-            #elif self.table_code in [1]:
-                #if self.format_code == 2:
-                    #self.format_code = 1
-                    #self.data['format_code'] = 1
-                #result_name = 'displacements'
-                #storage_obj = self.displacements
-                #if self._results.is_not_saved(result_name):
-                    #return ndata
-                #self._results._found_result(result_name)
-                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                     #RealDisplacementArray, ComplexDisplacementArray,
-                                     #'node', random_code=self.random_code)
+                obj = RealAccelerationArray
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())
                 #raise RuntimeError(self.code_information())
+                return n
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                        obj, 'node',
+                                        random_code=self.random_code)
+            
         #elif self.thermal == 1:
             #result_name = 'accelerations'
             #storage_obj = self.accelerations
@@ -1080,115 +1040,38 @@ class OUG(OP2Common):
                 assert self.table_name in ['OUGCRM1', 'OUGCRM2'], 'self.table_name=%r' % self.table_name
                 result_name = 'displacementsCRM'
                 storage_obj = self.displacementsCRM
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealDisplacementArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealDisplacementArray
             elif self.table_code == 10:
                 # velocity
                 assert self.table_name in ['velocity'], 'self.table_name=%r' % self.table_name
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealVelocityArray, 'node',
-                                            random_code=self.random_code)
+                obj = RealVelocityArray
             elif self.table_code == 11:
                 # acceleration
                 assert self.table_name in ['OAGCRM1', 'OAGCRM2'], 'self.table_name=%r' % self.table_name
                 result_name = 'accelerationsCRM'
                 storage_obj = self.accelerationsCRM
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealAccelerationArray, 'node',
-                                            random_code=self.random_code)
-
+                obj = RealAccelerationArray
             elif self.table_code == 501:
                 result_name = 'displacementsCRM'
                 storage_obj = self.displacementsCRM
+                obj = RealDisplacementArray
                 assert self.table_name in ['OUGCRM1', 'OUGCRM2'], 'self.table_name=%r' % self.table_name
-                if self._results.is_not_saved(result_name):
-                    return ndata
-                self._results._found_result(result_name)
-                n = self._read_random_table(data, ndata, result_name, storage_obj,
-                                            RealDisplacementArray, 'node',
-                                            random_code=self.random_code)
+            else:
+                n = self._not_implemented_or_skip(data, ndata, self.code_information())
+                #raise RuntimeError(self.code_information())
+                return n
+
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                        obj, 'node',
+                                        random_code=self.random_code)
+
                 #n = self._read_table_sort1_real(data, ndata, result_name, storage_obj,
                                                 #RealDisplacementArray, 'node',
                                                 #random_code=self.random_code)
                 #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                                #RealDisplacementArray, ComplexDisplacementArray,
-                                                #'node')
-
-            #elif self.table_code == 610:
-                #result_name = 'velocitiesPSD'
-                #storage_obj = self.velocitiesPSD
-                #if self._results.is_not_saved(result_name):
-                    #return ndata
-                #self._results._found_result(result_name)
-                #n = self._read_table_vectorized(
-                    #data, ndata, result_name, storage_obj,
-                    #RealVelocityArray, ComplexVelocityArray,
-                    #'node', random_code=self.random_code)
-            #elif self.table_code == 611:
-                #result_name = 'accelerationsPSD'
-                #storage_obj = self.accelerationsPSD
-                #if self._results.is_not_saved(result_name):
-                    #return ndata
-                #n = self._read_table_vectorized(
-                    #data, ndata, result_name, storage_obj,
-                    #RealAccelerationArray, ComplexAccelerationArray,
-                    #'node', random_code=self.random_code)
-            #elif self.table_code in [1]:
-                #if self.format_code == 2:
-                    #self.format_code = 1
-                    #self.data['format_code'] = 1
-                #result_name = 'displacements'
-                #storage_obj = self.displacements
-                #if self._results.is_not_saved(result_name):
-                    #return ndata
-                #self._results._found_result(result_name)
-                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                     #RealDisplacementArray, ComplexDisplacementArray,
-                                     #'node', random_code=self.random_code)
-            else:
-                n = self._not_implemented_or_skip(data, ndata, self.code_information())
-                #raise RuntimeError(self.code_information())
-        #elif self.thermal == 1:
-            #result_name = 'accelerations'
-            #storage_obj = self.accelerations
-            #if self._results.is_not_saved(result_name):
-                #return ndata
-            #self._results._found_result(result_name)
-            #n = self._read_table(data, ndata, result_name, storage_obj,
-                                 #None, None,
-                                 #None, None, 'node', random_code=self.random_code)
-        #elif self.thermal == 2:
-            #result_name = 'acceleration_scaled_response_spectra_ABS'
-            #storage_obj = self.acceleration_scaled_response_spectra_ABS
-            #if self._results.is_not_saved(result_name):
-                #return ndata
-            #self._results._found_result(result_name)
-            #n = self._read_table(data, ndata, result_name, storage_obj,
-                                 #RealAcceleration, ComplexAcceleration,
-                                 #RealAccelerationArray, ComplexAccelerationArray,
-                                 #'node', random_code=self.random_code)
-            ##n = self._not_implemented_or_skip(data, ndata, msg='thermal=2')
-        #elif self.thermal == 4:
-            #result_name = 'acceleration_scaled_response_spectra_NRL'
-            #storage_obj = self.acceleration_scaled_response_spectra_NRL
-            #if self._results.is_not_saved(result_name):
-                #return ndata
-            #self._results._found_result(result_name)
-            #n = self._read_table(data, ndata, result_name, storage_obj,
-                                 #RealAcceleration, ComplexAcceleration,
-                                 #RealAccelerationArray, ComplexAccelerationArray,
-                                 #'node', random_code=self.random_code)
-            ##n = self._not_implemented_or_skip(data, ndata, msg='thermal=4')
         else:
             raise NotImplementedError(self.thermal)
         return n
