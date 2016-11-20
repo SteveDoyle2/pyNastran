@@ -285,39 +285,7 @@ class OUG(OP2Common):
         assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
 
     def _read_oug_4(self, data, ndata):
-        if self.table_name in [b'OUGPSD1', b'OUGPSD2']:
-            if self.table_code not in [1, 601, 610, 611]:
-                msg = 'table_name=%s table_code=%s\n' % (self.table_name, self.table_code)
-                msg += self.code_information()
-                raise AssertionError(msg)
-            n = self._read_oug_psd(data, ndata)
-        elif self.table_name in [b'OUGCRM1', b'OUGCRM2']:
-            if self.table_code not in [1, 501, 511]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                raise AssertionError(msg)
-            n = self._read_oug_crm(data, ndata)
-        elif self.table_name in [b'OUGRMS1', b'OUGRMS2']:
-            if self.table_code not in [1, 801, 811]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                raise AssertionError(msg)
-            n = self._read_oug_rms(data, ndata)
-        elif self.table_name in [b'OUGNO1', b'OUGNO2']:
-            if self.table_code not in [1, 901, 911]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                raise AssertionError(msg)
-            n = self._read_oug_no(data, ndata)
-        elif self.table_name in [b'OUGATO1', b'OUGATO2']:
-            if self.table_code not in [1]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                raise AssertionError(msg)
-            n = self._read_oug_ato(data, ndata)
-        elif self.table_name in [b'OUGCRM2']:
-            if self.table_code not in [1]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                raise AssertionError(msg)
-            n = self._not_implemented_or_skip(data, ndata, msg='OUGCRM2')
-
-        elif self.table_code == 1:   # Displacements
+        if self.table_code == 1:   # Displacements
             if self.table_name not in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUGV1PAT', b'TOUGV1',
                                        b'OUGV2',
                                        b'OUPV1', b'ROUGV1']:
@@ -326,13 +294,13 @@ class OUG(OP2Common):
             is_cid = False
             if self.table_name == b'OUGV1PAT':
                 is_cid = True
-            n = self._read_displacement(data, ndata, is_cid)
+            n = self._read_oug_displacement(data, ndata, is_cid)
         elif self.table_code == 7:
-            n = self._read_eigenvector(data, ndata)
+            n = self._read_oug_eigenvector(data, ndata)
         elif self.table_code == 10:
-            n = self._read_velocity(data, ndata)
+            n = self._read_oug_velocity(data, ndata)
         elif self.table_code == 11:
-            n = self._read_acceleration(data, ndata)
+            n = self._read_oug_acceleration(data, ndata)
         else:
             raise NotImplementedError(self.code_information())
         #else:
@@ -363,7 +331,7 @@ class OUG(OP2Common):
         """
         raise NotImplementedError()
 
-    def _read_displacement(self, data, ndata, is_cid):
+    def _read_oug_displacement(self, data, ndata, is_cid):
         if self.read_mode == 1:
             if self.isubcase not in self.case_control_deck.subcases:
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
@@ -405,7 +373,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in ['BOUGV1', 'OUGV1'], self.table_name
+            assert self.table_name in ['BOUGV1', 'ROUGV1', 'OUGV1', 'OUGV2'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,
@@ -416,7 +384,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [''], self.table_name
+            assert self.table_name in ['OUGV1', 'OUGV2'], self.table_name
             n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                                    RealTemperatureArray, None,
                                                    'node', random_code=self.random_code,
@@ -459,7 +427,7 @@ class OUG(OP2Common):
             #raise NotImplementedError(self.thermal)
         return n
 
-    def _read_velocity(self, data, ndata):
+    def _read_oug_velocity(self, data, ndata):
         """
         table_code = 10
         """
@@ -520,7 +488,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_acceleration(self, data, ndata):
+    def _read_oug_acceleration(self, data, ndata):
         """
         table_code = 11
         """
@@ -576,9 +544,9 @@ class OUG(OP2Common):
                 return ndata
             self._results._found_result(result_name)
             raise NotImplementedError(self.code_information())
-            n = self._read_table(data, ndata, result_name, storage_obj,
-                                 None, None,
-                                 None, None, 'node', random_code=self.random_code)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #None, None,
+                                 #None, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
             result_name = 'acceleration_scaled_response_spectra_ABS'
             storage_obj = self.acceleration_scaled_response_spectra_ABS
@@ -603,7 +571,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_eigenvector(self, data, ndata):
+    def _read_oug_eigenvector(self, data, ndata):
         """
         table_code = 7
         """
@@ -683,7 +651,9 @@ class OUG(OP2Common):
                 obj = RealDisplacementArray
             elif self.table_code == 10:
                 # velocity
-                assert self.table_name in [''], 'self.table_name=%r' % self.table_name
+                assert self.table_name in ['OVGPSD1', 'OVGPSD2'], 'self.table_name=%r' % self.table_name
+                #result_name = 'velocitiesPSD'
+                #storage_obj = self.velocitiesPSD
                 obj = RealVelocityArray
             elif self.table_code == 11:
                 # acceleration
@@ -698,6 +668,12 @@ class OUG(OP2Common):
                 result_name = 'displacementsPSD'
                 storage_obj = self.displacementsPSD
                 obj = RealDisplacementArray
+            elif self.table_code == 610:
+                # velocity
+                assert self.table_name in ['OUGPSD1', 'OUGPSD2'], 'self.table_name=%r' % self.table_name
+                #result_name = 'velocitiesPSD'
+                #storage_obj = self.velocitiesPSD
+                obj = RealVelocityArray
             elif self.table_code == 611:
                 # acceleration
                 assert self.table_name in ['OUGPSD1', 'OUGPSD2'], 'self.table_name=%r' % self.table_name
@@ -906,7 +882,7 @@ class OUG(OP2Common):
             n = self._read_random_table(data, ndata, result_name, storage_obj,
                                         obj, 'node',
                                         random_code=self.random_code)
-            
+
         #elif self.thermal == 1:
             #result_name = 'accelerations'
             #storage_obj = self.accelerations
