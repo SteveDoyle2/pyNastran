@@ -1582,12 +1582,12 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
     @property
     def _sort_method(self):
         try:
-            sort_method = int(self.table_name[-1])
-        except:
             sort_method, is_real, is_random = self._table_specs()
+        except:
+            sort_method = int(self.table_name[-1])
         #is_sort1 = self.table_name.endswith('1')
         #is_sort1 = self.is_sort1()  # uses the sort_bits
-        assert sort_method in [1, 2], sort_method
+        assert sort_method in [1, 2], 'sort_method=%r\n%s' % (sort_method, self.code_information())
         return sort_method
 
     def is_real(self):

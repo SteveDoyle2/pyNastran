@@ -851,20 +851,20 @@ class OES(OP2Common):
             slot = self.cbar_stress_PSD
         """
         is_random = True
-        if self.table_name in ['OES1', 'OES1X1', 'OES1X', 'OES1C', 'OESCP', 'OESRT',
-                               'OSTR1X', 'OSTR1C',
-                               'OESTRCP', 'OESNLXR', 'OESNLXD',]:
+        if self.table_name in [b'OES1', b'OES1X1', b'OES1X', b'OES1C', b'OESCP', b'OESRT',
+                               b'OSTR1X', b'OSTR1C',
+                               b'OESTRCP', b'OESNLXR', b'OESNLXD',]:
             is_random = False
-        elif self.table_name in ['OESCRM1']:
+        elif self.table_name in [b'OESCRM1']:
             assert self.table_code in [504], self.code_information()
             result_name += '_CRM'
-        elif self.table_name in ['OESPSD1']:
+        elif self.table_name in [b'OESPSD1']:
             assert self.table_code in [604], self.code_information()
             result_name += '_PSD'
-        elif self.table_name in ['OESRMS1']:
+        elif self.table_name in [b'OESRMS1']:
             assert self.table_code in [804], self.code_information()
             result_name += '_RMS'
-        elif self.table_name in ['OESNO1']:
+        elif self.table_name in [b'OESNO1']:
             assert self.table_code in [904], self.code_information()
             result_name += '_NO'
         else:
