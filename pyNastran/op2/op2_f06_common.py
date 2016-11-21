@@ -232,11 +232,11 @@ class OP2_F06_Common(object):
 
         #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
-        self.displacementsPSD = {}        # random
-        self.displacementsATO = {}        # random
-        self.displacementsRMS = {}        # random
-        self.displacementsCRM = {}        # random
-        self.displacementsNO = {}         # random
+        self.displacements_PSD = {}        # random
+        self.displacements_ATO = {}        # random
+        self.displacements_RMS = {}        # random
+        self.displacements_CRM = {}        # random
+        self.displacements_NO = {}         # random
         self.displacements_scaled = {}    # tCode=1 thermal=8
 
         #: OUP
@@ -253,11 +253,11 @@ class OP2_F06_Common(object):
 
         #: OUG - velocity
         self.velocities = {}              # tCode=10 thermal=0
-        self.velocitiesPSD = {}
-        self.velocitiesATO = {}
-        self.velocitiesRMS = {}
-        self.velocitiesCRM = {}
-        self.velocitiesNO = {}
+        self.velocities_PSD = {}
+        self.velocities_ATO = {}
+        self.velocities_RMS = {}
+        self.velocities_CRM = {}
+        self.velocities_NO = {}
 
         #self.velocity_scaled_response_spectra_NRL = {}
         self.velocity_scaled_response_spectra_ABS = {}
@@ -269,11 +269,11 @@ class OP2_F06_Common(object):
 
         #: OUG - acceleration
         self.accelerations = {}            # tCode=11 thermal=0
-        self.accelerationsPSD = {}
-        self.accelerationsATO = {}
-        self.accelerationsRMS = {}
-        self.accelerationsCRM = {}
-        self.accelerationsNO = {}
+        self.accelerations_PSD = {}
+        self.accelerations_ATO = {}
+        self.accelerations_RMS = {}
+        self.accelerations_CRM = {}
+        self.accelerations_NO = {}
 
         self.acceleration_scaled_response_spectra_NRL = {}
         self.acceleration_scaled_response_spectra_ABS = {}
@@ -526,11 +526,11 @@ class OP2_F06_Common(object):
         table_types = [
             # OUG - displacement
             'displacements',
-            'displacementsPSD',
-            'displacementsATO',
-            'displacementsRMS',
-            'displacementsCRM',
-            'displacementsNO',
+            'displacements_PSD',
+            'displacements_ATO',
+            'displacements_RMS',
+            'displacements_CRM',
+            'displacements_NO',
             'displacements_scaled',
 
             # OUG - temperatures
@@ -546,26 +546,26 @@ class OP2_F06_Common(object):
 
             # OUG - velocity
             'velocities',
-            'velocitiesPSD',
-            'velocitiesATO',
-            'velocitiesRMS',
-            'velocitiesCRM',
-            'velocitiesNO',
+            'velocities_PSD',
+            'velocities_ATO',
+            'velocities_RMS',
+            'velocities_CRM',
+            'velocities_NO',
 
             # OUG - acceleration
             'accelerations',
-            'accelerationsPSD',
-            'accelerationsATO',
-            'accelerationsRMS',
-            'accelerationsCRM',
-            'accelerationsNO',
+            'accelerations_PSD',
+            'accelerations_ATO',
+            'accelerations_RMS',
+            'accelerations_CRM',
+            'accelerations_NO',
 
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS', 'spc_forcesCRM', 'spc_forcesNO',
+            'spc_forces', 'spc_forces_PSD', 'spc_forces_ATO', 'spc_forces_RMS', 'spc_forces_CRM', 'spc_forces_NO',
             'spc_forces_scaled_response_spectra_NRL',
 
-            'mpc_forces', 'mpc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS', 'mpc_forcesCRM', 'mpc_forcesNO',
+            'mpc_forces', 'mpc_forces_PSD', 'mpc_forces_ATO', 'mpc_forces_RMS', 'mpc_forces_CRM', 'mpc_forces_NO',
             'mpc_forces_RAQCONS',
             #'mpc_forces_RAQEATC',
 

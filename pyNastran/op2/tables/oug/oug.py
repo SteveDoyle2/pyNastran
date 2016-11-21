@@ -646,8 +646,8 @@ class OUG(OP2Common):
             if self.table_code == 1:
                 # displacement
                 assert self.table_name in [b'OUGPSD1', b'OUGPSD2'], 'self.table_name=%r' % self.table_name
-                result_name = 'displacementsPSD'
-                storage_obj = self.displacementsPSD
+                result_name = 'displacements_PSD'
+                storage_obj = self.displacements_PSD
                 obj = RealDisplacementArray
             elif self.table_code == 10:
                 # velocity
@@ -658,15 +658,15 @@ class OUG(OP2Common):
             elif self.table_code == 11:
                 # acceleration
                 assert self.table_name in [b'OAGPSD1', b'OAGPSD2'], 'self.table_name=%r' % self.table_name
-                result_name = 'accelerationsPSD'
-                storage_obj = self.accelerationsPSD
+                result_name = 'accelerations_PSD'
+                storage_obj = self.accelerations_PSD
                 obj = RealAccelerationArray
 
             elif self.table_code == 601:
                 # displacement
                 assert self.table_name in [b'OUGPSD1', b'OUGPSD2'], 'self.table_name=%r' % self.table_name
-                result_name = 'displacementsPSD'
-                storage_obj = self.displacementsPSD
+                result_name = 'displacements_PSD'
+                storage_obj = self.displacements_PSD
                 obj = RealDisplacementArray
             elif self.table_code == 610:
                 # velocity
@@ -677,8 +677,8 @@ class OUG(OP2Common):
             elif self.table_code == 611:
                 # acceleration
                 assert self.table_name in [b'OUGPSD1', b'OUGPSD2'], 'self.table_name=%r' % self.table_name
-                result_name = 'accelerationsPSD'
-                storage_obj = self.accelerationsPSD
+                result_name = 'accelerations_PSD'
+                storage_obj = self.accelerations_PSD
                 obj = RealDisplacementArray
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())
@@ -738,38 +738,36 @@ class OUG(OP2Common):
             if self.table_code == 1:
                 # displacement
                 assert self.table_name in [b'OUGRMS1', b'OUGRMS2'], 'self.table_name=%r' % self.table_name
-                result_name = 'displacementsRMS'
-                storage_obj = self.displacementsRMS
+                result_name = 'displacements_RMS'
+                storage_obj = self.displacements_RMS
                 obj = RealDisplacementArray
             elif self.table_code == 10:
                 # velocity
                 assert self.table_name in ['velocity'], 'self.table_name=%r' % self.table_name
+                result_name = 'velocities_RMS'
+                storage_obj = self.velocities_RMS
                 obj = RealVelocityArray
             elif self.table_code == 11:
                 # acceleration
                 assert self.table_name in [b'OAGRMS1', b'OAGRMS2'], 'self.table_name=%r' % self.table_name
-                result_name = 'accelerationsRMS'
-                storage_obj = self.accelerationsRMS
+                result_name = 'accelerations_RMS'
+                storage_obj = self.accelerations_RMS
                 obj = RealAccelerationArray
             elif self.table_code == 801:
-                result_name = 'displacementsRMS'
-                storage_obj = self.displacementsRMS
+                result_name = 'displacements_RMS'
+                storage_obj = self.displacements_RMS
                 assert self.table_name in [b'OUGRMS1', b'OUGRM2'], 'self.table_name=%r' % self.table_name
                 obj = RealDisplacementArray
-            #elif self.table_code == 610:
-                #result_name = 'velocitiesPSD'
-                #storage_obj = self.velocitiesPSD
-                #if self._results.is_not_saved(result_name):
-                    #return ndata
-                #self._results._found_result(result_name)
-                #n = self._read_table_vectorized(
-                    #data, ndata, result_name, storage_obj,
-                    #RealVelocityArray, ComplexVelocityArray,
-                    #'node', random_code=self.random_code)
+            elif self.table_code == 810:
+                assert self.table_name in [b'OUGRMS1', b'OUGRM2'], 'self.table_name=%r' % self.table_name
+                result_name = 'velocities_RMS'
+                storage_obj = self.velocities_RMS
+                obj = RealVelocityArray
             elif self.table_code == 811:
-                assert self.table_name in [b'OUGRMS1', b'OUGRMS2', b'OAGRMS1', b'OAGRMS2'], 'self.table_name=%r' % self.table_name
-                result_name = 'accelerationsRMS'
-                storage_obj = self.accelerationsRMS
+                #assert self.table_name in [b'OUGRMS1', b'OUGRMS2', b'OAGRMS1', b'OAGRMS2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [], 'self.table_name=%r' % self.table_name
+                result_name = 'accelerations_RMS'
+                storage_obj = self.accelerations_RMS
                 obj = RealAccelerationArray
             #elif self.table_code in [1]:
                 #if self.format_code == 2:
@@ -844,33 +842,35 @@ class OUG(OP2Common):
             if self.table_code == 1:
                 # displacement
                 assert self.table_name in [b'OUGNO1', b'OUGNO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'displacementsNO'
-                storage_obj = self.displacementsNO
+                result_name = 'displacements_NO'
+                storage_obj = self.displacements_NO
                 obj = RealDisplacementArray
             elif self.table_code == 10:
                 # velocity
                 assert self.table_name in ['velocity'], 'self.table_name=%r' % self.table_name
+                result_name = 'velocities_NO'
+                storage_obj = self.velocities_NO
                 obj = RealVelocityArray
             elif self.table_code == 11:
                 # acceleration
                 assert self.table_name in [b'OAGNO1', b'OAGNO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'accelerationsNO'
-                storage_obj = self.accelerationsNO
+                result_name = 'accelerations_NO'
+                storage_obj = self.accelerations_NO
                 obj = RealAccelerationArray
 
             elif self.table_code == 901:
                 assert self.table_name in [b'OUGNO1', b'OUGNO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'displacementsNO'
-                storage_obj = self.displacementsNO
+                result_name = 'displacements_NO'
+                storage_obj = self.displacements_NO
                 obj = RealDisplacementArray
-            #elif self.table_code == 610:
-                #result_name = 'velocitiesNO'
-                #storage_obj = self.velocitiesNO
+            #elif self.table_code == 910:
+                #result_name = 'velocities_NO'
+                #storage_obj = self.velocities_NO
                 #obj = RealVelocityArray
             elif self.table_code == 911:
                 assert self.table_name in [b'OUGNO1', b'OUGNO2', b'OAGNO1', b'OAGNO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'accelerationsNO'
-                storage_obj = self.accelerationsNO
+                result_name = 'accelerations_NO'
+                storage_obj = self.accelerations_NO
                 obj = RealAccelerationArray
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())
