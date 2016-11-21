@@ -518,14 +518,14 @@ class F06Writer(OP2_F06_Common):
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
         res_types = [
-            self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS, self.displacementsNO,
+            self.displacements, self.displacements_PSD, self.displacements_ATO, self.displacements_RMS, self.displacementsCRM, self.displacements_NO,
             self.displacements_scaled,  # ???
-            self.accelerations, self.accelerationsPSD,
+            self.accelerations, self.accelerations_PSD, self.accelerations_ATO, self.accelerations_RMS, self.accelerationsCRM, self.accelerations_NO,
+            self.velocities, self.velocities_PSD, self.velocities_ATO, self.velocities_RMS, self.velocities_CRM, self.velocities_NO,
 
             self.force_vectors,
             self.load_vectors,
             self.temperatures,
-            self.velocities, self.velocitiesPSD,
             #self.eigenvectors,
             self.eigenvectors_RADCONS,
             self.eigenvectors_RADEFFM,

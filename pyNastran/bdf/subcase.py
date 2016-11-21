@@ -66,6 +66,7 @@ class Subcase(object):
         self.id = id
         self.params = {}
         self.sol = None
+        self.log = None
         #print("\n***adding subcase %s***" % self.id)
 
     def deprecated(self, old_name, new_name, deprecated_version):
@@ -96,10 +97,11 @@ class Subcase(object):
         #    stress_code += 16  material coord (1) vs element (0)
         return stress_code
 
-    def add_op2_data(self, data_code, msg, log=None):
+    def add_op2_data(self, data_code, msg, log):
         """
         >>> self.subcase.add_op2_data(self.data_code, 'VECTOR')
         """
+        assert log is not None, log
         #subtable_name = data_code['subtable_name']
         table_name = data_code['table_name']
         if PY2 and isinstance(table_name, str):
@@ -145,6 +147,21 @@ class Subcase(object):
                 self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
             else:
                 _write_op2_error_msg(log, self.log, msg, data_code)
+
+        # OAG-random
+        elif table_name in ['OAGPSD1', 'OAGPSD2']:
+            options = ['PSDF']
+            self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OAGCRM1', 'OAGCRM2']:
+            options = ['CRM']
+            self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OAGRMS1', 'OAGRMS2']:
+            options = ['RMS']
+            self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OAGNO1', 'OAGNO2']:
+            options = ['NO']
+            self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
+
         elif table_name == 'TOUGV1':
             thermal = data_code['thermal']
             if thermal == 1:
@@ -220,18 +237,22 @@ class Subcase(object):
                             'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC',]:
             pass
         else:
-            _write_op2_error_msg(log, self.log, msg, data_code)
+            self._write_op2_error_msg(log, self.log, msg, data_code)
         #print(self)
 
-    def _write_op2_error_msg(log, log_error, msg, data_code):
-        if log is None:
+    def _write_op2_error_msg(self, log, log_error, msg, data_code):
+        if log is not None:
+            log.error(msg)
+            log.error(data_code)
+        elif log_error is not None:
+            log_error.error(msg)
+            log_error.error(data_code)
+        else:
+            # log_error is None
             print('Error calling subcase.add_op2_data...')
             print(msg)
             print(data_code)
-        else:
-            log_error.error(msg)
-            log_error.error(data_code)
-        #raise NotImplementedError(data_code)
+            raise RuntimeError(data_code)
 
     def get_format_code(self, options, value):
         """
