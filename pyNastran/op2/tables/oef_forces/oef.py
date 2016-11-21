@@ -1005,7 +1005,7 @@ class OEF(OP2Common):
             slot = self.cbar_forces_PSD
         """
         is_random = True
-        if self.table_name in ['OEF1X', 'OEFIT']:
+        if self.table_name in ['OEF1', 'OEF1X', 'OEFIT']:
             is_random = False
         elif self.table_name in ['OEFCRM1']:
             assert self.table_code in [504], self.code_information()
