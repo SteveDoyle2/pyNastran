@@ -851,8 +851,9 @@ class OES(OP2Common):
             slot = self.cbar_stress_PSD
         """
         is_random = True
-        if self.table_name in ['OES1X1', 'OES1X', 'OES1C', 'OESCP', 'OESRT', 'OESNLXR', 'OESNLXD',
-                               'OSTR1X', 'OSTR1C', 'OESTRCP']:
+        if self.table_name in ['OES1', 'OES1X1', 'OES1X', 'OES1C', 'OESCP', 'OESRT',
+                               'OSTR1X', 'OSTR1C',
+                               'OESTRCP', 'OESNLXR', 'OESNLXD',]:
             is_random = False
         elif self.table_name in ['OESCRM1']:
             assert self.table_code in [504], self.code_information()
