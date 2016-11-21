@@ -212,7 +212,7 @@ class RealPlateArray(OES_Object):
         else:
             msgi = '  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
                 self.__class__.__name__, nelements, nnodes, nlayers, ntotal)
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append(msgi)
         headers = self.get_headers()
         n = len(headers)
@@ -595,7 +595,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         else:
             msgi = '  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
                 self.__class__.__name__, nelements, nnodes, nlayers, ntotal)
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append(msgi)
         headers = self.get_headers()
         n = len(headers)

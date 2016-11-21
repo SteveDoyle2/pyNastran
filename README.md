@@ -52,6 +52,25 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 # News
 
+### pyNastran v0.9 progress (11/20/2016)
+ - OP2
+   - preliminary random results (ATO/CRM/PSD/RMS/NO)
+ - BDF
+   - comments can now be created without worrying about $ signs
+
+     `>>> model.add_card(['GRID', 10, None, 4.0, 5.0, 6.0], comment='GRID comment\ngrid,nid,cp,x,y,z')`
+
+     `$GRID comment`
+
+     `$grid,nid,cp,x,y,z`
+
+     `GRID,10,,4.0,5.0,6.0`
+
+- GUI
+   - buttons for picking, rotation center
+   - PyQt5 support
+   - QScintilla & pygments support for scripting code editor
+
 ### pyNastran v0.8.0 has been released (8/21/2016)
 
 The following are some new features from the v0.8 release.

@@ -199,6 +199,23 @@ class Subcase(object):
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
                 _write_op2_error_msg(log, self.log, msg, data_code)
+
+        elif table_name in ['OEFATO1', 'OEFATO2']:
+            options.append('PSDF')
+            self.add('FORCE', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OEFCRM1', 'OEFCRM2']:
+            options.append('CRM')
+            self.add('FORCE', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OEFRMS1', 'OEFRMS2']:
+            options.append('RMS')
+            self.add('FORCE', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OEFNO1', 'OEFNO2']:
+            options.append('NO')
+            self.add('FORCE', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OEFPSD1', 'OEFPSD2']:
+            options.append('PSDF')
+            self.add('FORCE', 'ALL', options, 'STRESS-type')
+
         elif table_name in ['OEFIT']:
             if table_code in [25]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')

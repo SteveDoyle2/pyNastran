@@ -169,7 +169,7 @@ class UGRID(object):
             ## CTRIA3
             data = ugrid_file.read(ntris * 3 * 4)
             self.n += ntris * 3 * 4
-            dtype = endian + b'i'
+            dtype = endian + 'i'
             tris = np.fromstring(data, dtype=dtype).reshape((ntris, 3))
             #print('min tris value = ' , tris.min())
             #print('max tris value = ' , tris.max())

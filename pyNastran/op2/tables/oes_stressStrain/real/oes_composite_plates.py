@@ -1,16 +1,17 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 from six.moves import zip, range
 import numpy as np
-from numpy import zeros, searchsorted, unique, ravel, array_equal
+from numpy import zeros, searchsorted, unique, ravel
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats12E, _eigenvalue_header
 try:
     import pandas as pd
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
+from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header
 
 
 class RealCompositePlateArray(OES_Object):
@@ -64,7 +65,8 @@ class RealCompositePlateArray(OES_Object):
         elif self.element_type == 98:  # CTRIA6
             nnodes_per_element = 1
         else:
-            raise NotImplementedError('element_name=%s element_type=%s' %(self.element_name, self.element_type))
+            msg = 'element_name=%s element_type=%s' %(self.element_name, self.element_type)
+            raise NotImplementedError(msg)
 
         self.nnodes = nnodes_per_element
         self.itime = 0
@@ -106,11 +108,13 @@ class RealCompositePlateArray(OES_Object):
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_layer, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element_layer, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_layer, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=element_layer, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
 
@@ -141,10 +145,12 @@ class RealCompositePlateArray(OES_Object):
 
                     # vm stress can be NaN for some reason...
                     if not np.array_equal(t1[:-1], t2[:-1]):
-                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
-                            eid, layer,
-                            o11, o22, t12, t1z, t2z, angle, major, minor, ovm,
-                            o112, o222, t122, t1z2, t2z2, angle2, major2, minor2, ovm2)
+                        msg += (
+                            '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                            '  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                eid, layer,
+                                o11, o22, t12, t1z, t2z, angle, major, minor, ovm,
+                                o112, o222, t122, t1z2, t2z2, angle2, major2, minor2, ovm2))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -171,10 +177,12 @@ class RealCompositePlateArray(OES_Object):
 
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            msg = [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+            return msg
 
         nelements = self.nelements
         ntimes = self.ntimes
@@ -190,7 +198,7 @@ class RealCompositePlateArray(OES_Object):
         else:
             msg.append('  type=%s nelements=%i ntotal=%i\n'
                        % (self.__class__.__name__, nelements, ntotal))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -231,7 +239,8 @@ class RealCompositePlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #msg, nnodes, is_bilinear = self._get_msgs()
@@ -275,7 +284,8 @@ class RealCompositePlateArray(OES_Object):
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
         else:
-            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+            msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
+            raise NotImplementedError(msg)
 
         # write the f06
         ntimes = self.data.shape[0]
@@ -304,8 +314,8 @@ class RealCompositePlateArray(OES_Object):
             for eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
                 eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 
-                ([o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi], is_all_zeros) = writeFloats12E([
-                  o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
+                [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e([
+                 o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
                 f.write('0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %s\n'
                         % (eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi))
             f.write(page_stamp % page_num)

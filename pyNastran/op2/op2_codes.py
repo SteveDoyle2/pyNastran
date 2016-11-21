@@ -1,6 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, PY2, PY3
+
 
 class Op2Codes(object):
     def __init__(self):
@@ -860,8 +861,17 @@ class Op2Codes(object):
 
         table = '???'
         table_code = self.table_code
-        if table_code in [601, 610, 611]:
+        if table_code in [501, 510, 511]:
+            table_code -= 500
+        elif table_code in [601, 610, 611]:
             table_code -= 600
+        elif table_code in [701, 710, 711]:
+            table_code -= 700
+        elif table_code in [801, 810, 811]:
+            table_code -= 700
+        elif table_code in [901, 910, 911]:
+            table_code -= 900
+
         if table_code == 1:
             table = "OUG - %s vector/scalar" % disp_temp
         elif table_code == 2:
@@ -944,15 +954,25 @@ class Op2Codes(object):
             table = "OGPKE - Grip point kinetic energy"
         else:
             table = '%s - Unknown' % self.table_name
+
+        table_name = self.table_name
+        if PY2 and isinstance(self.table_name, str):
+            table_name = self.table_name.decode(self._encoding)
+        elif PY3 and isinstance(table_name, bytes):
+            table_name = self.table_name.decode(self._encoding)
+
         msg = '--Table3Data--\n\n'
         msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
         msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
-        msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name, table)
+        msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, table_name, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
 
-        msg += "  dataFormat    = %-3s %s\n" % (self.sort_bits[0], sort_word1)
-        msg += "  sortType      = %-3s %s\n" % (self.sort_bits[1], sort_word2)
-        msg += "  isRandom      = %-3s %s\n" % (self.sort_bits[2], sort_word3)
+        msg += "  sort_code     = %s\n" % self.sort_code
+        msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
+        msg += "    data_format = %-3s %s\n" % (self.sort_bits[0], sort_word1)
+        msg += "    sort_type   = %-3s %s\n" % (self.sort_bits[1], sort_word2)
+        msg += "    is_random   = %-3s %s\n" % (self.sort_bits[2], sort_word3)
+
         random_code = self.random_code if hasattr(self, 'random_code') else 0
         msg += "  random_code   = %-3s\n" % (random_code)
 

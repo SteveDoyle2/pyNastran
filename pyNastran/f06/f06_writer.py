@@ -561,12 +561,12 @@ class F06Writer(OP2_F06_Common):
 
             # alphabetical order...
             # bars
-            self.cbar_force,
+            self.cbar_force, self.cbar_force_ATO, self.cbar_force_CRM, self.cbar_force_PSD, self.cbar_force_RMS, self.cbar_force_NO,
             self.cbar_force_10nodes,
 
             # beam
             self.cbend_force,
-            self.cbeam_force,
+            self.cbeam_force, self.cbeam_force_ATO, self.cbeam_force_CRM, self.cbeam_force_PSD, self.cbeam_force_RMS, self.cbeam_force_NO,
 
             # alphabetical
             self.celas1_force,
@@ -574,7 +574,7 @@ class F06Writer(OP2_F06_Common):
             self.celas3_force,
             self.celas4_force,
 
-            self.cquad4_force,
+            self.cquad4_force, self.cquad4_force_ATO, self.cquad4_force_CRM, self.cquad4_force_PSD, self.cquad4_force_RMS, self.cquad4_force_NO,
             self.cquad8_force,
             self.cquadr_force,
 
@@ -599,7 +599,7 @@ class F06Writer(OP2_F06_Common):
             self.cdamp4_force,
 
             # other
-            self.cbush_force,
+            self.cbush_force, self.cbush_force_ATO, self.cbush_force_PSD, self.cbush_force_CRM, self.cbush_force_RMS, self.cbush_force_NO,
             self.cgap_force,
             self.cvisc_force,
 

@@ -8,7 +8,7 @@ from numpy import array, zeros, angle, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12E
+from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 
 
 class ElementTableArray(ScalarObject):  # displacement style table
@@ -353,7 +353,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                    write_float_12E(dt), etypei, dx, dy, dz, rx, ry, rz))
+                    write_float_12e(dt), etypei, dx, dy, dz, rx, ry, rz))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num
@@ -406,7 +406,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                    write_float_12E(dt), etypei, dx, dy, dz, rx, ry, rz))
+                    write_float_12e(dt), etypei, dx, dy, dz, rx, ry, rz))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num
@@ -570,7 +570,7 @@ class ComplexElementTableArray(ElementTableArray):  # displacement style table
                 vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                sdt = write_float_12E(dt)
+                sdt = write_float_12e(dt)
                 #if not is_all_zeros:
                 if sgridtype == 'G':
                     f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
@@ -613,7 +613,7 @@ class ComplexElementTableArray(ElementTableArray):  # displacement style table
                 vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                sdt = write_float_12E(dt)
+                sdt = write_float_12e(dt)
                 #if not is_all_zeros:
                 if sgridtype == 'G':
                     f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'

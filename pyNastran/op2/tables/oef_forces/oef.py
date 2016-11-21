@@ -4,9 +4,9 @@ Defines the Real/Complex Forces created by:
     FORCE = ALL
 """
 from __future__ import print_function
+from struct import Struct
 from six import b
 from six.moves import range
-from struct import Struct
 import numpy as np
 from numpy import fromstring, vstack, sin, cos, radians, array
 from numpy import hstack, zeros
@@ -988,11 +988,48 @@ class OEF(OP2Common):
             return n
         return new_func
 
+    def _apply_oef_ato_crm_psd_rms_no(self, result_name):
+        """
+        Appends a keyword onto the result_name in order to handle random results
+        without 100 if loops.
+        keywords = {_ATO, _CRM, _PSD, _RMS, _NO}
+
+        Do this:
+            result_name = 'cbar_forces'
+            table_name = 'OEFPSD1'
+            result_name, is_random = _apply_oef_ato_crm_psd_rms_no(self, result_name)
+            slot = getattr(self, result_name)
+
+        Or this:
+            result_name = 'cbar_forces_PSD'
+            slot = self.cbar_forces_PSD
+        """
+        is_random = True
+        if self.table_name in [b'OEF1', b'OEF1X', b'OEFIT']:
+            is_random = False
+        elif self.table_name in [b'OEFCRM1']:
+            assert self.table_code in [504], self.code_information()
+            result_name += '_CRM'
+        elif self.table_name in [b'OEFPSD1']:
+            assert self.table_code in [604], self.code_information()
+            result_name += '_PSD'
+        elif self.table_name in [b'OEFRMS1']:
+            assert self.table_code in [804], self.code_information()
+            result_name += '_RMS'
+        elif self.table_name in [b'OEFNO1']:
+            assert self.table_code in [904], self.code_information()
+            result_name += '_NO'
+        else:
+            raise NotImplementedError(self.code_information())
+        #print(result_name, self.table_name)
+        return result_name, is_random
+
     # @_print_obj_name_on_crash
     def _read_oef1_loads(self, data, ndata):
         """
         Reads the OEF1 table; stores the element forces/heat flux.
         """
+        self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
         if self._results.is_not_saved('element_forces'):
             return ndata
         flag = 'element_id'
@@ -1145,7 +1182,6 @@ class OEF(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
                 raise RuntimeError('is this used?')
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1191,7 +1227,11 @@ class OEF(OP2Common):
                         eid = eid_device // 10
                         n += 36
 
-            elif self.format_code == 1 and self.num_wide == 100:  # real
+            elif self.format_code in [1, 2] and self.num_wide == 100:  # real/random
+                # real - format_code == 1
+                # random - format_code == 2
+                result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+                slot = getattr(self, result_name)
                 ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1256,6 +1296,7 @@ class OEF(OP2Common):
                                     dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
                             n += 36
             elif self.format_code in [2, 3] and self.num_wide == 177: # imag
+                slot = getattr(self, result_name)
                 ntotal = 708  # 3*4
                 nelements = ndata // ntotal
 
@@ -1624,13 +1665,17 @@ class OEF(OP2Common):
 
         elif self.element_type == 34:  # cbar
             # 34-CBAR
-            slot = self.cbar_force
             result_name = 'cbar_force'
 
             obj_real = RealCBarForceArray
             obj_complex = ComplexCBarForceArray
 
-            if self.format_code == 1 and self.num_wide == 9: # real
+            if self.format_code in [1, 2] and self.num_wide == 9:
+                # real - format_code == 1
+                # random - format_code == 2
+                result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+                slot = getattr(self, result_name)
+
                 ntotal = 36  # 9*4
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1671,6 +1716,8 @@ class OEF(OP2Common):
                         obj.add(dt, data_in)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 17: # imag
+                slot = self.cbar_force
+
                 # TODO: vectorize
                 ntotal = 68  # 17*4
                 nelements = ndata // ntotal
@@ -1772,18 +1819,21 @@ class OEF(OP2Common):
         elif self.element_type in [33, 74]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
+
             if self.element_type == 33:
                 result_name = 'cquad4_force'
-                slot = self.cquad4_force
             elif self.element_type == 74:
                 result_name = 'ctria3_force'
-                slot = self.ctria3_force
             else:
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, ndata, msg)
+            result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+            slot = getattr(self, result_name)
 
             assert self._data_factor == 1, self._data_factor
-            if self.format_code == 1 and self.num_wide == 9:  # real
+            if self.format_code in [1, 2] and self.num_wide == 9:
+                # real - format_code == 1
+                # random - format_code == 2
                 ntotal = 36 # 9*4
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -2627,8 +2677,8 @@ class OEF(OP2Common):
                             trqB = complex(trqBr, trqBi)
 
                         obj.add_sort1(dt, eid,
-                                nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                                nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB)
+                                      nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                                      nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -2789,12 +2839,15 @@ class OEF(OP2Common):
 
         elif self.element_type == 102:  # cbush
             # 102-CBUSH
-            self._results._found_result('cbush_force')
             result_name = 'cbush_force'
+            result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
+            self._results._found_result(result_name)
             slot = getattr(self, result_name)
 
             numwide_real = 7
-            if self.format_code == 1 and self.num_wide == 7:  # real
+            if self.format_code in [1, 2] and self.num_wide == 7:  # real/random
+                # real - format_code == 1
+                # random - format_code == 2
                 ntotal = 28 # 7*4
                 nelements = ndata // ntotal
 
@@ -2876,6 +2929,9 @@ class OEF(OP2Common):
 
                     obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
                     n += ntotal
+            #elif self.format_code == 2 and self.num_wide == 7:
+                #self.log.warning(self.code_information())
+                #asdf
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)

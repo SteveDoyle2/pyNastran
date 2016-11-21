@@ -302,7 +302,7 @@ class RealStrainEnergyArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))

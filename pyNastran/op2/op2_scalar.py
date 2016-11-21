@@ -4,11 +4,12 @@ Defines the OP2 class.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import os
+import sys
+from struct import unpack, Struct
+
 from six import string_types, iteritems, PY2, b
 from six.moves import range
-import os
-from struct import unpack, Struct
-import sys
 
 from numpy import array
 import numpy as np
@@ -189,6 +190,15 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUGPSD2', b'OUGCRM2', b'OUGRMS2', b'OUGATO2', b'OUGNO2',
     b'OVGPSD2', b'OVGCRM2', b'OVGRMS2', b'OVGATO2', b'OVGNO2',
     b'OSTRPSD2', b'OSTRCRM2', b'OSTRRMS2', b'OSTRATO2', b'OSTRNO2',
+
+    # stress
+    b'OESATO1', b'OESCRM1', b'OESNO1', b'OESPSD1', b'OESRMS1',
+    b'OESATO2', b'OESCRM2', b'OESNO2', b'OESPSD2', b'OESRMS2',
+
+    # force
+    b'OEFATO1', b'OEFCRM1', b'OEFNO1', b'OEFPSD1', b'OEFRMS1',
+    b'OEFATO2', b'OEFCRM2', b'OEFNO2', b'OEFPSD2', b'OEFRMS2',
+
     b'OCRUG',
     b'OCRPG',
 
@@ -561,12 +571,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             # off force
             b'OEF2'    : [self._table_passer, self._table_passer],  # element forces or heat flux
-
-            b'OEFATO2' : [self._table_passer, self._table_passer],
-            b'OEFCRM2' : [self._table_passer, self._table_passer],
-            b'OEFNO2' : [self._table_passer, self._table_passer],
-            b'OEFPSD2' : [self._table_passer, self._table_passer],
-            b'OEFRMS2' : [self._table_passer, self._table_passer],
             #=======================
             # OQG
             # spc forces
@@ -655,14 +659,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             # off stress
             b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only
-            b'OESNO1'  : [self._table_passer, self._table_passer],
-            b'OESRMS1' : [self._table_passer, self._table_passer],
-
-            b'OESATO2' : [self._table_passer, self._table_passer],
-            b'OESCRM2' : [self._table_passer, self._table_passer],
-            b'OESNO2'  : [self._table_passer, self._table_passer],
-            b'OESPSD2' : [self._table_passer, self._table_passer],
-            b'OESRMS2' : [self._table_passer, self._table_passer],
             #=======================
             # strain
             b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
@@ -691,17 +687,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 
-            b'OUGATO1' : [self._read_oug1_3, self._read_oug_4],
-            b'OUGCRM1' : [self._read_oug1_3, self._read_oug_4],
-            b'OUGNO1'  : [self._read_oug1_3, self._read_oug_4],
-            b'OUGPSD1' : [self._read_oug1_3, self._read_oug_4],
-            b'OUGRMS1' : [self._read_oug1_3, self._read_oug_4],
+            b'OUGATO1' : [self._read_oug1_3, self._read_oug_ato],
+            b'OUGCRM1' : [self._read_oug1_3, self._read_oug_crm],
+            b'OUGNO1'  : [self._read_oug1_3, self._read_oug_no],
+            b'OUGPSD1' : [self._read_oug1_3, self._read_oug_psd],
+            b'OUGRMS1' : [self._read_oug1_3, self._read_oug_rms],
 
-            b'OUGATO2' : [self._read_oug2_3, self._read_oug_4],
-            b'OUGCRM2' : [self._read_oug2_3, self._read_oug_4],
-            b'OUGNO2'  : [self._read_oug2_3, self._read_oug_4],
-            b'OUGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
-            b'OUGRMS2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGATO2' : [self._read_oug2_3, self._read_oug_ato],
+            b'OUGCRM2' : [self._read_oug2_3, self._read_oug_crm],
+            b'OUGNO2'  : [self._read_oug2_3, self._read_oug_no],
+            b'OUGPSD2' : [self._read_oug2_3, self._read_oug_psd],
+            b'OUGRMS2' : [self._read_oug2_3, self._read_oug_rms],
 
             #=======================
             # extreme values of the respective table
@@ -861,17 +857,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OGPMPF2M' : [self._table_passer, self._table_passer],
 
             # velocity
-            b'OVGATO1' : [self._read_oug1_3, self._read_oug_4],
-            b'OVGCRM1' : [self._read_oug1_3, self._read_oug_4],
-            b'OVGNO1'  : [self._read_oug1_3, self._read_oug_4],
-            b'OVGPSD1' : [self._read_oug1_3, self._read_oug_4],
-            b'OVGRMS1' : [self._read_oug1_3, self._read_oug_4],
+            b'OVGATO1' : [self._read_oug1_3, self._read_oug_ato],
+            b'OVGCRM1' : [self._read_oug1_3, self._read_oug_crm],
+            b'OVGNO1'  : [self._read_oug1_3, self._read_oug_no],
+            b'OVGPSD1' : [self._read_oug1_3, self._read_oug_psd],
+            b'OVGRMS1' : [self._read_oug1_3, self._read_oug_rms],
 
-            b'OVGATO2' : [self._read_oug2_3, self._read_oug_4],
-            b'OVGCRM2' : [self._read_oug2_3, self._read_oug_4],
-            b'OVGNO2'  : [self._read_oug2_3, self._read_oug_4],
-            b'OVGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
-            b'OVGRMS2' : [self._read_oug2_3, self._read_oug_4],
+            b'OVGATO2' : [self._read_oug2_3, self._read_oug_ato],
+            b'OVGCRM2' : [self._read_oug2_3, self._read_oug_crm],
+            b'OVGNO2'  : [self._read_oug2_3, self._read_oug_no],
+            b'OVGPSD2' : [self._read_oug2_3, self._read_oug_psd],
+            b'OVGRMS2' : [self._read_oug2_3, self._read_oug_rms],
 
             #==================================
             #b'GPL': [self._table_passer, self._table_passer],
@@ -886,17 +882,43 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUG2T' : [self._table_passer, self._table_passer],
 
             # acceleration
-            b'OAGATO1' : [self._read_oug1_3, self._read_oug_4],
-            b'OAGCRM1' : [self._read_oug1_3, self._read_oug_4],
-            b'OAGNO1'  : [self._read_oug1_3, self._read_oug_4],
-            b'OAGPSD1' : [self._read_oug1_3, self._read_oug_4],
-            b'OAGRMS1' : [self._read_oug1_3, self._read_oug_4],
+            b'OAGATO1' : [self._read_oug1_3, self._read_oug_ato],
+            b'OAGCRM1' : [self._read_oug1_3, self._read_oug_crm],
+            b'OAGNO1'  : [self._read_oug1_3, self._read_oug_no],
+            b'OAGPSD1' : [self._read_oug1_3, self._read_oug_psd],
+            b'OAGRMS1' : [self._read_oug1_3, self._read_oug_rms],
 
-            b'OAGATO2' : [self._read_oug2_3, self._read_oug_4],
-            b'OAGCRM2' : [self._read_oug2_3, self._read_oug_4],
-            b'OAGNO2'  : [self._read_oug2_3, self._read_oug_4],
-            b'OAGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
-            b'OAGRMS2' : [self._read_oug2_3, self._read_oug_4],
+            b'OAGATO2' : [self._read_oug2_3, self._read_oug_ato],
+            b'OAGCRM2' : [self._read_oug2_3, self._read_oug_crm],
+            b'OAGNO2'  : [self._read_oug2_3, self._read_oug_no],
+            b'OAGPSD2' : [self._read_oug2_3, self._read_oug_psd],
+            b'OAGRMS2' : [self._read_oug2_3, self._read_oug_rms],
+
+            # stress
+            b'OESATO1' : [self._table_passer, self._table_passer],
+            b'OESCRM1' : [self._table_passer, self._table_passer],
+            b'OESNO1'  : [self._table_passer, self._table_passer],
+            b'OESPSD1' : [self._table_passer, self._table_passer],
+            b'OESRMS1' : [self._table_passer, self._table_passer],
+
+            b'OESATO2' : [self._table_passer, self._table_passer],
+            b'OESCRM2' : [self._table_passer, self._table_passer],
+            b'OESNO2'  : [self._table_passer, self._table_passer],
+            b'OESPSD2' : [self._table_passer, self._table_passer],
+            b'OESRMS2' : [self._table_passer, self._table_passer],
+
+            # force
+            b'OEFATO1' : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFCRM1' : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFNO1'  : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFPSD1' : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFRMS1' : [self._read_oef1_3, self._read_oef1_4],
+
+            b'OEFATO2' : [self._table_passer, self._table_passer],
+            b'OEFCRM2' : [self._table_passer, self._table_passer],
+            b'OEFNO2'  : [self._table_passer, self._table_passer],
+            b'OEFPSD2' : [self._table_passer, self._table_passer],
+            b'OEFRMS2' : [self._table_passer, self._table_passer],
         }
         return table_mapper
 
@@ -1489,20 +1511,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         jj = 1
         while niter < niter_max:
-            #nvalues, = self.get_nmarkers(1, rewind=True)
+            #nvalues = self.get_marker1(rewind=True)
             #print('nvalues4a =', nvalues)
             self.read_markers([itable, 1])
-            one, = self.get_nmarkers(1, rewind=False)
+            one = self.get_marker1(rewind=False)
 
             if one:  # if keep going
-                nvalues, = self.get_nmarkers(1, rewind=True)
+                nvalues = self.get_marker1(rewind=True)
                 while nvalues >= 0:
-                    nvalues, = self.get_nmarkers(1, rewind=False)
+                    nvalues = self.get_marker1(rewind=False)
                     data = self._skip_block()
-                    nvalues, = self.get_nmarkers(1, rewind=True)
+                    nvalues = self.get_marker1(rewind=True)
                 jj += 1
             else:
-                nvalues, = self.get_nmarkers(1, rewind=False)
+                nvalues = self.get_marker1(rewind=False)
                 assert nvalues == 0, nvalues
                 return
             itable -= 1
@@ -1671,15 +1693,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         reals = []
         jj = 1
         while niter < niter_max:
-            #nvalues, = self.get_nmarkers(1, rewind=True)
+            #nvalues = self.get_marker1(rewind=True)
             self.read_markers([itable, 1])
-            one, = self.get_nmarkers(1, rewind=False)
+            one = self.get_marker1(rewind=False)
 
             if one:  # if keep going
-                nvalues, = self.get_nmarkers(1, rewind=True)
+                nvalues = self.get_marker1(rewind=True)
 
                 while nvalues >= 0:
-                    nvalues, = self.get_nmarkers(1, rewind=False)
+                    nvalues = self.get_marker1(rewind=False)
                     fmt, nfloats, nterms = self._get_matrix_row_fmt_nterms_nfloats(nvalues, tout)
                     GCj += [jj] * nterms
 
@@ -1693,7 +1715,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
                     GCi += list(range(ii, ii + nterms))
                     reals += values
-                    nvalues, = self.get_nmarkers(1, rewind=True)
+                    nvalues = self.get_marker1(rewind=True)
                 assert len(GCi) == len(GCj), 'nGCi=%s nGCj=%s' % (len(GCi), len(GCj))
                 if tout in [1, 2]:
                     assert len(GCi) == len(reals), 'tout=%s nGCi=%s nReals=%s' % (tout, len(GCi), len(reals))
@@ -1701,7 +1723,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     assert len(GCi)*2 == len(reals), 'tout=%s nGCi=%s nReals=%s' % (tout, len(GCi)*2, len(reals))
                 jj += 1
             else:
-                nvalues, = self.get_nmarkers(1, rewind=False)
+                nvalues = self.get_marker1(rewind=False)
                 assert nvalues == 0, nvalues
                 # print('nvalues =', nvalues)
                 # print('returning...')
@@ -1761,7 +1783,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 m.data = matrix
                 if matrix is not None:
                     self.matrices[table_name.decode('utf-8')] = m
-                #nvalues, = self.get_nmarkers(1, rewind=True)
+                #nvalues = self.get_marker1(rewind=True)
                 #self.show(100)
                 return
             itable -= 1
@@ -2083,7 +2105,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         marker = -2
         while 1:
             self.read_markers([marker, 1, 0])
-            nfields, = self.get_nmarkers(1, rewind=True)
+            nfields = self.get_marker1(rewind=True)
             if nfields > 0:
                 data = self._read_record()
                 #self.show_data(data, types='s', endian=None)
@@ -2093,7 +2115,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             else:
                 raise RuntimeError('nfields=%s' % nfields)
             marker -= 1
-        marker_end, = self.get_nmarkers(1, rewind=False)
+        marker_end = self.get_marker1(rewind=False)
 
     def _read_meff(self):
         self.table_name = self._read_table_name(rewind=False)
@@ -2239,7 +2261,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         desvar_values = unpack('%sf' % ndvs, data[28:])
 
         self.convergence_data.append(design_iter, iconvergence, conv_result, obj_intial,
-                                    obj_final, constraint_max, row_constraint_max, desvar_values)
+                                     obj_final, constraint_max, row_constraint_max, desvar_values)
         self.read_markers([-4, 1, 0, 0])
 
 

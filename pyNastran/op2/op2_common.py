@@ -1356,7 +1356,14 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     if msg == '':
                         self.log.warning(self.code_information())
                     self.log.warning(msg)
-                #self.log.warning(self.code_information())
+                #if self.table_name in ['OEFPSD1', 'OEFPSD2',
+                #                       'OEFCRM1', 'OEFCRM2',
+                #                       'OEFNO1', 'OEFNO2',
+                #                       'OEFRMS1', 'OEFRMS2']:
+                #    pass
+                #else:
+                #    self.log.warning(self.code_information())
+
                 self._last_comment = msg
             return ndata
         else:
@@ -1575,12 +1582,12 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
     @property
     def _sort_method(self):
         try:
-            sort_method = int(self.table_name[-1])
-        except:
             sort_method, is_real, is_random = self._table_specs()
+        except:
+            sort_method = int(self.table_name[-1])
         #is_sort1 = self.table_name.endswith('1')
         #is_sort1 = self.is_sort1()  # uses the sort_bits
-        assert sort_method in [1, 2], sort_method
+        assert sort_method in [1, 2], 'sort_method=%r\n%s' % (sort_method, self.code_information())
         return sort_method
 
     def is_real(self):

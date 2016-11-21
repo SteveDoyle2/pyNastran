@@ -1,9 +1,9 @@
 from __future__ import print_function
+import sys
+from copy import deepcopy
+from struct import unpack, Struct
 from six import iteritems, b
 from six.moves import range
-import sys
-from struct import unpack, Struct
-from copy import deepcopy
 
 from pyNastran.utils import integer_types
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
@@ -259,6 +259,33 @@ class FortranFormat(object):
                 for i in range(n):
                     self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (i, macro_rewind or rewind))
         return markers
+
+    def get_marker1(self, rewind=True, macro_rewind=False):
+        """
+        Gets 1 marker
+        See get_n_markers(...)
+
+        Parameters
+        ----------
+        rewind : bool
+            should the file be returned to the starting point
+
+        Returns
+        -------
+        markers : int
+            a single marker
+        """
+        ni = self.n
+        markers = []
+        data = self.read_block()
+        marker, = self.struct_i.unpack(data)
+        if rewind:
+            self.n = ni
+            self.f.seek(self.n)
+        else:
+            if self.is_debug_file:
+                self.binary_debug.write('get_marker - [4, %i, 4]; macro_rewind=%s\n' % (marker, macro_rewind or rewind))
+        return marker
 
     def _skip_subtables(self):
         self.isubtable = -3
@@ -726,13 +753,16 @@ class FortranFormat(object):
     def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))
+            self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
+                markers0[0], macro_rewind))
         record, nrecord = self._skip_block_ndata()
 
         if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
+            self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (
+                nrecord, nrecord, macro_rewind))
         if markers0[0]*4 != nrecord:
-            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (markers0[0]*4, nrecord, self.table_name)
+            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (
+                markers0[0]*4, nrecord, self.table_name)
             raise FortranMarkerError(msg)
 
         markers1 = self.get_nmarkers(1, rewind=True)

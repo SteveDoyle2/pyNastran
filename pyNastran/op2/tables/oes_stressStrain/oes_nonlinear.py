@@ -157,7 +157,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -420,7 +420,7 @@ class RealNonlinearPlateArray(OES_Object):
         else:
             msgi = '  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
                 self.__class__.__name__, nelements, nnodes, nlayers, ntotal)
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append(msgi)
         headers = self.get_headers()
         n = len(headers)

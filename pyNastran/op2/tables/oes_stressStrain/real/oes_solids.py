@@ -221,7 +221,7 @@ class RealSolidArray(OES_Object):
         else:
             msg.append('  type=%s nelements=%i nnodes=%i\n  nodes_per_element=%i (including centroid)\n'
                        % (self.__class__.__name__, nelements, nnodes, nnodes_per_element))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType, cid\n')
         headers = self.get_headers()
         n = len(headers)
