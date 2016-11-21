@@ -143,7 +143,7 @@ class RealShearArray(OES_Object):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)

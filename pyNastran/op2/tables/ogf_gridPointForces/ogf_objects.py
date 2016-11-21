@@ -652,7 +652,7 @@ class RealGridPointForcesArray(ScalarObject):
                 self.__class__.__name__, nelements, ntotal)
             if self.ntotal != min(self._ntotals):
                 msgi += '  _ntotals=%s\n' % (self._ntotals)
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append(msgi)
         headers = self.get_headers()
         n = len(headers)
@@ -1083,7 +1083,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         else:
             msgi = '  type=%s nelements=%i total=%i\n' % (
                 self.__class__.__name__, nelements, ntotal)
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append(msgi)
         headers = self.get_headers()
         n = len(headers)

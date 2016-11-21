@@ -230,7 +230,7 @@ class OES(OP2Common):
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
         #print "element_name =", self.element_name
         assert isinstance(self.format_code, int), self.format_code
-        assert self.is_stress() == True, self.code_information()
+        assert self.is_stress() is True, self.code_information()
         self.data_code['is_stress_flag'] = True
         self.data_code['is_strain_flag'] = False
 
@@ -352,7 +352,7 @@ class OES(OP2Common):
         #if self.is_debug_file:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
         #print "element_name =", self.element_name
-        assert self.is_strain() == True, self.code_information()
+        assert self.is_strain() is True, self.code_information()
         self.data_code['is_stress_flag'] = False
         self.data_code['is_strain_flag'] = True
 
@@ -367,17 +367,17 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _autojit3(func):
-        """
-        Debugging function to print the object name and an needed parameters
-        """
-        def new_func(self, data):
-            """
-            The actual function exec'd by the decorated function.
-            """
-            n = func(self, data)
-            return n
-        return new_func
+    #def _autojit3(func):
+        #"""
+        #Debugging function to print the object name and an needed parameters
+        #"""
+        #def new_func(self, data):
+            #"""
+            #The actual function exec'd by the decorated function.
+            #"""
+            #n = func(self, data)
+            #return n
+        #return new_func
 
     def _print_obj_name_on_crash(func):
         """
@@ -416,7 +416,7 @@ class OES(OP2Common):
             #assert self.num_wide != 146
             #assert ndata != 146, self.code_information()
         assert isinstance(self.format_code, int), self.format_code
-        assert self.is_sort1() == True
+        assert self.is_sort1() is True
         if self.thermal == 0:
             n = self._read_oes1_loads(data, ndata)
         elif self.thermal == 1:
@@ -434,7 +434,7 @@ class OES(OP2Common):
         #if self.num_wide == 146:
             #assert self.num_wide != 146
             #assert ndata != 146, self.code_information()
-        assert self.is_sort1() == True
+        assert self.is_sort1() is True
         if self.thermal == 0:
             n = self._read_oes1_loads(data, ndata)
         elif self.thermal == 1:
@@ -834,10 +834,48 @@ class OES(OP2Common):
             raise
             return None, None
 
+    def _apply_oes_ato_crm_psd_rms_no(self, result_name):
+        """
+        Appends a keyword onto the result_name in order to handle random results
+        without 100 if loops.
+        keywords = {_ATO, _CRM, _PSD, _RMS, _NO}
+
+        Do this:
+            result_name = 'cbar_stress'
+            table_name = 'OEFPSD1'
+            result_name, is_random = _apply_oef_ato_crm_psd_rms_no(self, result_name)
+            slot = getattr(self, result_name)
+
+        Or this:
+            result_name = 'cbar_stress_PSD'
+            slot = self.cbar_stress_PSD
+        """
+        is_random = True
+        if self.table_name in ['OES1X1', 'OES1X', 'OES1C', 'OESCP', 'OESRT', 'OESNLXR', 'OESNLXD',
+                               'OSTR1X', 'OSTR1C', 'OESTRCP']:
+            is_random = False
+        elif self.table_name in ['OESCRM1']:
+            assert self.table_code in [504], self.code_information()
+            result_name += '_CRM'
+        elif self.table_name in ['OESPSD1']:
+            assert self.table_code in [604], self.code_information()
+            result_name += '_PSD'
+        elif self.table_name in ['OESRMS1']:
+            assert self.table_code in [804], self.code_information()
+            result_name += '_RMS'
+        elif self.table_name in ['OESNO1']:
+            assert self.table_code in [904], self.code_information()
+            result_name += '_NO'
+        else:
+            raise NotImplementedError(self.code_information())
+        #print(result_name, self.table_name)
+        return result_name, is_random
+
     def _read_oes1_loads(self, data, ndata):
         """
         Reads OES self.thermal=0 stress/strain
         """
+        self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
@@ -1862,7 +1900,7 @@ class OES(OP2Common):
                 obj = self.obj
                 #print('dt=%s, itime=%s' % (obj.itime, dt))
                 #is_vectorized = False
-                assert obj.is_built == True, obj.is_built
+                assert obj.is_built is True, obj.is_built
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     ielement = obj.ielement
@@ -2823,13 +2861,13 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 37: # imag
                 # TODO: vectorize object
                 return ndata
-
+                obj_vector_complex = None
                 if self.is_stress():
                     raise NotImplementedError('ComplexTriaxStressArray')
-                    obj_vector_complex = ComplexTriaxStressArray
+                    #obj_vector_complex = ComplexTriaxStressArray
                 else:
                     raise NotImplementedError('ComplexTriaxStrainArray')
-                    obj_vector_complex = ComplexTriaxStrainArray
+                    #obj_vector_complex = ComplexTriaxStrainArray
 
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_complex)
@@ -3990,7 +4028,7 @@ class OES(OP2Common):
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
 
-    def OESRT_CQUAD4_95(self, data, ndata):
+    def oesrt_cquad4_95(self, data, ndata):
         """unsupported element"""
         assert self.num_wide == 9, "num_wide=%s not 9" % self.num_wide
         ntotal = 36  # 4*9

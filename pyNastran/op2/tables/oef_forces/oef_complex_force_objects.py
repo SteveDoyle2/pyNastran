@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_imag_floats_13e, get_key0, write_float_12E
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, get_key0, write_float_12e
 from pyNastran.f06.f06_formatting import _eigenvalue_header
 import numpy as np
 from numpy import zeros, array_equal, searchsorted, allclose
@@ -132,7 +132,7 @@ class ComplexRodForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -353,7 +353,7 @@ class ComplexCShearForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -570,7 +570,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -782,7 +782,7 @@ class ComplexViscForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -991,7 +991,7 @@ class ComplexPlateForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -1228,7 +1228,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -1583,7 +1583,7 @@ class ComplexCBarForceArray(ScalarObject):
 
                 f.write('0%16s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         ' %15s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            write_float_12E(dt),
+                            write_float_12e(dt),
                             bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
                             '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
             f.write(page_stamp % page_num)
@@ -1997,7 +1997,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -2212,7 +2212,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
@@ -2550,7 +2550,7 @@ class ComplexCBushForceArray(ScalarObject):
 
                 f.write('0%26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            write_float_12E(dt),
+                            write_float_12e(dt),
                             fxir, fyir, fzir, mxir, myir, mzir,
                             '', fxii, fyii, fzii, mxii, myii, mzii))
             f.write(page_stamp % page_num)

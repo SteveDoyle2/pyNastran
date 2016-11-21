@@ -1,18 +1,23 @@
 #pylint disable=C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
-from six.moves import zip, range
 from itertools import cycle
+from six.moves import zip, range
 import numpy as np
-from numpy import zeros, searchsorted, array_equal, allclose, sqrt, pi
+from numpy import zeros, searchsorted, allclose
 
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats12E, _eigenvalue_header, get_key0, write_float_13e
 try:
     import pandas as pd
 except ImportError:
     pass
+
+from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.f06.f06_formatting import (
+    write_floats_13e, write_floats_12e,
+    write_float_13e, write_float_12e,
+    _eigenvalue_header, get_key0,
+    )
+
 
 class RealForceObject(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
@@ -126,7 +131,7 @@ class FailureIndices(RealForceObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -138,26 +143,27 @@ class FailureIndices(RealForceObject):
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
         raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-
-        asd
-        if self.is_sort1():
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
-        else:
-            raise NotImplementedError(self.code_information())
+        NotImplementedError(self.code_information())
+        #asd
+        #if self.is_sort1():
+            #page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
+        #else:
+            #raise NotImplementedError(self.code_information())
             #page_num = self._write_sort2_as_sort2(header, page_stamp, page_num, f, msg_temp)
 
-        '          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'
-        '   ELEMENT  FAILURE        PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG\n'
-        '     ID      THEORY         ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES\n'
-        '         1   HOFFMAN       101      6.987186E-02      \n'
-        '                                                                     1.687182E-02                                              \n'
-        '                           102      9.048269E-02      \n'
-        '                                                                     1.721401E-02                                               \n'
-        return page_num
+        #'          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'
+        #'   ELEMENT  FAILURE        PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG\n'
+        #'     ID      THEORY         ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES\n'
+        #'         1   HOFFMAN       101      6.987186E-02      \n'
+        #'                                                                     1.687182E-02                                              \n'
+        #'                           102      9.048269E-02      \n'
+        #'                                                                     1.721401E-02                                               \n'
+        #return page_num
 
 
 class RealSpringDamperForceArray(RealForceObject):
@@ -208,10 +214,12 @@ class RealSpringDamperForceArray(RealForceObject):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -292,10 +300,11 @@ class RealSpringDamperForceArray(RealForceObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -304,7 +313,8 @@ class RealSpringDamperForceArray(RealForceObject):
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
         raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -370,7 +380,8 @@ class RealSpringForceArray(RealSpringDamperForceArray):
         elif self.element_type == 14:  # CELAS4
             msg = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
         else:
-            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+            msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
+            raise NotImplementedError(msg)
 
         msg += [
             '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n'
@@ -396,7 +407,8 @@ class RealDamperForceArray(RealSpringDamperForceArray):
         #elif self.element_type == 14:  # CDAMP4
             #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
         else:
-            raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
+            msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
+            raise NotImplementedError(msg)
 
         if is_sort1:
             msg += [
@@ -407,7 +419,7 @@ class RealDamperForceArray(RealSpringDamperForceArray):
             msg += [
                 '                         AXIAL                                                       AXIAL\n'
                 '       TIME              FORCE         TORQUE                      TIME              FORCE         TORQUE\n'
-        ]
+            ]
         return msg
 
 
@@ -517,7 +529,7 @@ class RealRodForceArray(RealForceObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -537,7 +549,8 @@ class RealRodForceArray(RealForceObject):
             msg = ctube_msg
         return self.element_name, msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
@@ -671,7 +684,7 @@ class RealCBeamForceArray(ScalarObject):
 
         # the number is messed up because of the offset for the element's properties
 
-        if not self.nelements * nnodes == self.ntotal:
+        if not (self.nelements * nnodes) == self.ntotal:
             msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
                                                                            self.nelements, nnodes,
                                                                            self.nelements * nnodes,
@@ -781,7 +794,8 @@ class RealCBeamForceArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #name = self.data_code['name']
@@ -798,13 +812,13 @@ class RealCBeamForceArray(ScalarObject):
             raise NotImplementedError('CBEAM-SORT2')
 
         if self.is_sort1():
-            assert self.is_sort1() == True, str(self)
+            assert self.is_sort1() is True, str(self)
             #if is_sort1:
             page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp)
             #else:
                 #self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp)
         else:
-            assert self.is_sort1() == True, str(self)
+            assert self.is_sort1() is True, str(self)
         return page_num - 1
 
     def get_headers(self):
@@ -824,9 +838,9 @@ class RealCBeamForceArray(ScalarObject):
             #    '       ID.     (PCT)                                                                                                         M.S.-C\n'
             #]
             msg = header + [
-                 '                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
-                 '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
-                 '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
+                '                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+                '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
+                '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
 
             long_form = True
 
@@ -841,7 +855,7 @@ class RealCBeamForceArray(ScalarObject):
             f.write(''.join(msg))
 
             #sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq
-            assert self.is_sort1() == True, str(self)
+            assert self.is_sort1() is True, str(self)
             sd = self.data[itime, :, 0]
             bm1 = self.data[itime, :, 1]
             bm2 = self.data[itime, :, 2]
@@ -893,7 +907,7 @@ class RealCShearForceArray(ScalarObject):
         headers = [
             'force41', 'force21', 'force12', 'force32', 'force23', 'force43',
             'force34', 'force14',
-            'kick_force1', 'shear12',  'kick_force2', 'shear23',
+            'kick_force1', 'shear12', 'kick_force2', 'shear23',
             'kick_force3', 'shear34', 'kick_force4', 'shear41',
         ]
         return headers
@@ -1031,7 +1045,7 @@ class RealCShearForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1041,7 +1055,8 @@ class RealCShearForceArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = [
@@ -1085,11 +1100,13 @@ class RealCShearForceArray(ScalarObject):
                 f14, f12, f21, f23, f32, f34, f43, f41,
                 kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
             ]
-            for (eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i, kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
-                eids, f14, f12, f21, f23, f32, f34, f43, f41, kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41):
-                (vals2, is_all_zeros) = writeFloats12E(
-                    [f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
-                     kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i])
+            for (eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
+                 kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
+                    eids, f14, f12, f21, f23, f32, f34, f43, f41,
+                    kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41):
+                vals2 = write_floats_12e([
+                    f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
+                    kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i])
                 [
                     f14i, f12i,
                     f21i, f23i,
@@ -1159,10 +1176,12 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -1195,7 +1214,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1224,7 +1243,8 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             ]
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase)
@@ -1437,7 +1457,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1467,7 +1487,8 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             raise NotImplementedError(self.element_name)
         return self.element_name, nnodes, msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
@@ -1496,7 +1517,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             if self.element_type == 74:
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
-                     [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                        [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                     # ctria3
                     #          8      -7.954568E+01  2.560061E+03 -4.476376E+01    1.925648E+00  1.914048E+00  3.593237E-01    8.491534E+00  5.596094E-01  #
                     f.write('   %8i %18s %13s %13s   %13s %13s %13s   %13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
@@ -1666,7 +1687,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         else:
             msg.append('  type=%s nelements=%i ntotal=%i nnodes/element=%i\n'
                        % (self.__class__.__name__, nelements, ntotal, self.nnodes_per_element))
-            ntimes_word = 1
+            ntimes_word = '1'
 
         headers = self.get_headers()
         n = len(headers)
@@ -1740,7 +1761,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
         return element_name, nnodes, msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
@@ -1903,7 +1925,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1917,13 +1939,14 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         ind = searchsorted(eids, self.element)
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
-        msg = []
+        #msg = []
         #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
         eids = self.element
         #f.write(''.join(words))
@@ -1942,10 +1965,12 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             ts2 = self.data[itime, :, 5]
             af = self.data[itime, :, 6]
             trq = self.data[itime, :, 7]
-            for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+            for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(
+                    eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
                 [bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = write_floats_13e([
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi])
-            f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+            f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (
+                eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
             f.write(page_stamp % page_num)
         return page_num
 
@@ -1958,7 +1983,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element):
+                for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
                     (bm1a1, bm2a1, bm1b1, bm2b1, ts11, ts21, af1, trq1) = t1
@@ -2113,7 +2138,7 @@ class RealConeAxForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -2123,7 +2148,8 @@ class RealConeAxForceArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = [
@@ -2153,12 +2179,11 @@ class RealConeAxForceArray(ScalarObject):
             sv = self.data[itime, :, 5]
 
             for (eid, hopai, bmui, bmvi, tmi, sui, svi) in zip(
-                eids, hopa, bmu, bmv, tm, su, sv):
+                    eids, hopa, bmu, bmv, tm, su, sv):
                 if hopai > 0.1:
                     raise NotImplementedError(hopai)
 
-                vals2 = write_floats_13e(
-                    [hopai, bmui, bmvi, tmi, sui, svi])
+                vals2 = write_floats_13e([hopai, bmui, bmvi, tmi, sui, svi])
                 [hopai, bmui, bmvi, tmi, sui, svi] = vals2
 
                 # TODO: hopa is probably the wrong type
@@ -2255,8 +2280,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         #print(self.data_frame)
 
-    def add(self, eid, sd, bm1, bm2, ts1, ts2, af, trq):
-        self.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
+    #def add(self, eid, sd, bm1, bm2, ts1, ts2, af, trq):
+        #self.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
 
     def add_sort1(self, dt, eid, sd, bm1, bm2, ts1, ts2, af, trq):
         self._times[self.itime] = dt
@@ -2268,10 +2293,12 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            msg = [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+            return msg
 
         nelements = self.nelements
         ntimes = self.ntimes
@@ -2285,10 +2312,11 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
@@ -2299,7 +2327,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         ind = searchsorted(eids, self.element)
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #'                         F O R C E   D I S T R I B U T I O N   I N   B A R   E L E M E N T S          ( C B A R )'
@@ -2315,7 +2344,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             '0    ELEMENT  STATION         BEND-MOMENT                      SHEAR FORCE                     AXIAL\n'
             '       ID.     (PCT)     PLANE 1        PLANE 2           PLANE 1        PLANE 2               FORCE              TORQUE\n']
             # '        15893   0.000   1.998833E+02   9.004551E+01      2.316835E+00   1.461960E+00         -2.662207E+03       9.795244E-02'
-        msg = []
+        #msg = []
         #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
         eids = self.element
         #f.write(''.join(words))
@@ -2336,7 +2365,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             trq = self.data[itime, :, 6]
             for eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi in zip(eids, sd, bm1, bm2, ts1, ts2, af, trq):
                 [bm1i, bm2i, ts1i, ts2i, afi, trqi] = write_floats_13e([
-                 bm1i, bm2i, ts1i, ts2i, afi, trqi])
+                    bm1i, bm2i, ts1i, ts2i, afi, trqi])
             #f.write('     %8i  %4.3f  %-13s  %-13s     %-13s  %-13s     %-13s     %s\n' % (
                 #eid, sd, bm1i, bm2i, ts1i, ts2i, afi, trqi))
             f.write('     %8i   %4.3f  %-13s  %-13s     %-13s  %-13s         %-13s      %s\n' % (
@@ -2352,7 +2381,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element):
+                for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
                     (sd1, bm11, bm21, ts11, ts21, af1, trq1) = t1
@@ -2499,7 +2528,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -2509,7 +2538,8 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = [
@@ -2541,11 +2571,10 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
             sw = self.data[itime, :, 7]
 
             for (eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi) in zip(eids, fx, sfy, sfz, u, v, w, sv, sw):
-                (vals2, is_all_zeros) = writeFloats12E(
-                    [fxi, sfyi, sfzi, ui, vi, wi, svi, swi])
+                vals2 = write_float_12e([fxi, sfyi, sfzi, ui, vi, wi, svi, swi])
                 [fxi, sfyi, sfzi, ui, vi, wi, svi, swi] = vals2
                 f.write('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                            eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi))
+                    eid, fxi, sfyi, sfzi, ui, vi, wi, svi, swi))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -2647,7 +2676,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -2657,7 +2686,8 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = [
@@ -2698,9 +2728,10 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
 
             for (eid,
                  nid_ai, bending_moment_1ai, bending_moment_2ai, shear_1ai, shear_2ai, axial_ai, torque_ai,
-                 nid_bi, bending_moment_1bi, bending_moment_2bi, shear_1bi, shear_2bi, axial_bi, torque_bi) in zip(eids,
-                                             nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
-                                             nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
+                 nid_bi, bending_moment_1bi, bending_moment_2bi, shear_1bi, shear_2bi, axial_bi, torque_bi) in zip(
+                     eids,
+                     nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
+                     nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
                 [bending_moment_1ai, bending_moment_2ai, shear_1ai, shear_2ai, axial_ai, torque_ai,
                  bending_moment_1bi, bending_moment_2bi, shear_1bi, shear_2bi, axial_bi, torque_bi] = write_floats_13e(
                      [bending_moment_1ai, bending_moment_2ai, shear_1ai, shear_2ai, axial_ai, torque_ai,
@@ -2880,7 +2911,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -2890,7 +2921,8 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -2924,7 +2956,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
             pressure = self.data[itime, :, 5]
 
             for (eid, vxi, vyi, vzi, axi, ayi, azi, pressurei) in zip(
-                eids, vx, vy, vz, ax, ay, az, pressure):
+                    eids, vx, vy, vz, ax, ay, az, pressure):
 
                 vals2 = write_floats_13e([axi, ayi, azi, pressurei])
                 [sax, say, saz, spressure] = vals2
@@ -2958,7 +2990,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
             pressure = self.data[itime, :, 5]
 
             for (eid, vxi, vyi, vzi, axi, ayi, azi, pressurei) in zip(
-                eids, vx, vy, vz, ax, ay, az, pressure):
+                    eids, vx, vy, vz, ax, ay, az, pressure):
 
                 vals2 = write_floats_13e([axi, ayi, azi, pressurei])
                 [sax, say, saz, spressure] = vals2
@@ -3110,7 +3142,7 @@ class RealCBushForceArray(ScalarObject):
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -3121,10 +3153,11 @@ class RealCBushForceArray(ScalarObject):
         return msg
 
     def get_f06_header(self):
-        msg = ['                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
-        ' \n'
-        '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
-        #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        msg = [
+            '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
+            ' \n'
+            '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         return msg
 
     def get_element_index(self, eids):
@@ -3139,7 +3172,8 @@ class RealCBushForceArray(ScalarObject):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header()
@@ -3233,7 +3267,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
         self.bendingZ[eid] = {}
 
         for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion,
+            [nid, position, forceX, shearY, shearZ, torsion,
              bendingY, bendingZ] = force
             self.forceX[eid][nid] = forceX
             self.shearY[eid][nid] = shearY
@@ -3258,7 +3292,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
         self.bendingZ[dt][eid] = {}
 
         for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion,
+            [nid, position, forceX, shearY, shearZ, torsion,
              bendingY, bendingZ] = force
             self.forceX[dt][eid][nid] = forceX
             self.shearY[dt][eid][nid] = shearY
@@ -3282,7 +3316,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
         self.bendingY[dt][eid] = {}
         self.bendingZ[dt][eid] = {}
         for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion,
+            [nid, position, forceX, shearY, shearZ, torsion,
              bendingY, bendingZ] = force
             self.forceX[dt][eid][nid] = forceX
             self.shearY[dt][eid][nid] = shearY

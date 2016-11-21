@@ -1356,7 +1356,14 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     if msg == '':
                         self.log.warning(self.code_information())
                     self.log.warning(msg)
-                #self.log.warning(self.code_information())
+                #if self.table_name in ['OEFPSD1', 'OEFPSD2',
+                #                       'OEFCRM1', 'OEFCRM2',
+                #                       'OEFNO1', 'OEFNO2',
+                #                       'OEFRMS1', 'OEFRMS2']:
+                #    pass
+                #else:
+                #    self.log.warning(self.code_information())
+
                 self._last_comment = msg
             return ndata
         else:

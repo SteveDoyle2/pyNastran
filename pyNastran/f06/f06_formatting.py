@@ -28,7 +28,7 @@ def writeFloats12E(vals):
     return vals2, is_all_zeros
 
 
-def write_float_12E(val):
+def write_float_12e(val):
     vals2 = []
     v2 = '%12.5E' % val
     if v2 in (' 0.00000E+00', '-0.00000E+00'):
@@ -64,6 +64,14 @@ def write_floats_13e(vals):
         vals2.append(v2)
     return vals2
 
+def write_floats_12e(vals):
+    vals2 = []
+    for v in vals:
+        v2 = '%12.5E' % v
+        if v2 in (' 0.00000E+00', '-0.00000E+00'):
+            v2 = ' 0.0'
+        vals2.append(v2)
+    return vals2
 
 def write_imag_floats_13e(vals, is_mag_phase):
     vals2 = []

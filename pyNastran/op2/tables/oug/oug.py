@@ -1020,6 +1020,8 @@ class OUG(OP2Common):
             elif self.table_code == 10:
                 # velocity
                 assert self.table_name in ['velocity'], 'self.table_name=%r' % self.table_name
+                result_name = 'velocitiesCRM'
+                storage_obj = self.velocitiesCRM
                 obj = RealVelocityArray
             elif self.table_code == 11:
                 # acceleration
@@ -1031,6 +1033,11 @@ class OUG(OP2Common):
                 result_name = 'displacementsCRM'
                 storage_obj = self.displacementsCRM
                 obj = RealDisplacementArray
+                assert self.table_name in ['OUGCRM1', 'OUGCRM2'], 'self.table_name=%r' % self.table_name
+            elif self.table_code == 511:
+                result_name = 'velocitiesCRM'
+                storage_obj = self.velocitiesCRM
+                obj = RealVelocityArray
                 assert self.table_name in ['OUGCRM1', 'OUGCRM2'], 'self.table_name=%r' % self.table_name
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())

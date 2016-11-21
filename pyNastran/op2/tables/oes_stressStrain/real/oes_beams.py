@@ -201,7 +201,7 @@ class RealBeamArray(OES_Object):
         else:
             msg.append('  type=%s nelements=%i nnodes_per_element=%i ntotal=%i\n'
                        % (self.__class__.__name__, nelements, nnodes, ntotal))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
 
         n = len(headers)
@@ -375,7 +375,7 @@ class RealNonlinearBeamArray(OES_Object):
         else:
             msg.append('  type=%s nelements=%i nnodes_per_element=%i ntotal=%i\n'
                        % (self.__class__.__name__, nelements, nnodes, ntotal))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
 
         n = len(headers)

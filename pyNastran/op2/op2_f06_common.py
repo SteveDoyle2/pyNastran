@@ -91,6 +91,12 @@ class OP2_F06_Common(object):
 
         # bars/beams
         self.cbar_force = {}
+        self.cbar_force_ATO = {}
+        self.cbar_force_CRM = {}
+        self.cbar_force_PSD = {}
+        self.cbar_force_RMS = {}
+        self.cbar_force_NO = {}
+
         self.cbar_stress = {}
         self.cbar_strain = {}
 
@@ -99,6 +105,11 @@ class OP2_F06_Common(object):
         self.cbar_strain_10nodes = {}
 
         self.cbeam_force = {}
+        self.cbeam_force_ATO = {}
+        self.cbeam_force_CRM = {}
+        self.cbeam_force_PSD = {}
+        self.cbeam_force_RMS = {}
+        self.cbeam_force_NO = {}
         self.cbeam_stress = {}
         self.cbeam_strain = {}
 
@@ -109,6 +120,12 @@ class OP2_F06_Common(object):
         self.ctriar_force = {}
 
         self.cquad4_force = {}
+        self.cquad4_force_ATO = {}
+        self.cquad4_force_CRM = {}
+        self.cquad4_force_PSD = {}
+        self.cquad4_force_RMS = {}
+        self.cquad4_force_NO = {}
+
         self.cquad8_force = {}
         self.cquadr_force = {}
 
@@ -281,6 +298,12 @@ class OP2_F06_Common(object):
 
         self.cbend_force = {}
         self.cbush_force = {}
+        self.cbush_force_ATO = {}
+        self.cbush_force_PSD = {}
+        self.cbush_force_CRM = {}
+        self.cbush_force_RMS = {}
+        self.cbush_force_NO = {}
+
         self.coneax_force = {}
 
         self.cdamp1_force = {}
@@ -583,7 +606,7 @@ class OP2_F06_Common(object):
             # OES - isotropic CBAR stress/strain
             'cbar_stress',
             'cbar_strain',
-            'cbar_force',
+            'cbar_force', 'cbar_force_ATO', 'cbar_force_CRM', 'cbar_force_PSD', 'cbar_force_RMS', 'cbar_force_NO',
 
             'cbar_stress_10nodes',
             'cbar_strain_10nodes',
@@ -592,7 +615,7 @@ class OP2_F06_Common(object):
             # OES - isotropic CBEAM stress/strain
             'cbeam_stress',
             'cbeam_strain',
-            'cbeam_force',
+            'cbeam_force', 'cbeam_force_ATO', 'cbeam_force_CRM', 'cbeam_force_PSD', 'cbeam_force_RMS', 'cbeam_force_NO',
             'nonlinear_cbeam_stress',
             #'nonlinear_cbeam_strain',
 
@@ -672,7 +695,7 @@ class OP2_F06_Common(object):
             # bar/beam/bend
             'cbend_force',
 
-            'cbush_force',
+            'cbush_force', 'cbush_force_ATO', 'cbush_force_CRM', 'cbush_force_PSD', 'cbush_force_RMS', 'cbush_force_NO',
             'coneax_force',
             'cdamp1_force',
             'cdamp2_force',
@@ -680,7 +703,7 @@ class OP2_F06_Common(object):
             'cdamp4_force',
             'cgap_force',
 
-            'cquad4_force',
+            'cquad4_force', 'cquad4_force_ATO', 'cquad4_force_CRM', 'cquad4_force_PSD', 'cquad4_force_RMS', 'cquad4_force_NO',
             'cquad8_force',
             'cquadr_force',
 

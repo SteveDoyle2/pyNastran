@@ -156,7 +156,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -346,7 +346,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -612,7 +612,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -902,7 +902,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1212,7 +1212,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
@@ -1388,7 +1388,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         else:
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
-            ntimes_word = 1
+            ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))

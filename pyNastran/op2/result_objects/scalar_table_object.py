@@ -8,7 +8,7 @@ from numpy import allclose, asarray, vstack, array_equal
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.op2.result_objects.table_object import append_sort1_sort2
-from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12E
+from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
 try:
     import pandas as pd
 except ImportError:
@@ -519,13 +519,13 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                 vals2 = write_floats_13e(vals)
                 dx = vals2[0]
                 if sgridtype == 'G':
-                    f.write('%14s %6s     %s\n' % (write_float_12E(dt), sgridtype, dx))
+                    f.write('%14s %6s     %s\n' % (write_float_12e(dt), sgridtype, dx))
                 elif sgridtype == 'S':
                     f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
                 elif sgridtype == 'H':
-                    f.write('%14s %6s     %s\n' % (write_float_12E(dt), sgridtype, dx))
+                    f.write('%14s %6s     %s\n' % (write_float_12e(dt), sgridtype, dx))
                 elif sgridtype == 'L':
-                    f.write('%14s %6s     %s\n' % (write_float_12E(dt), sgridtype, dx))
+                    f.write('%14s %6s     %s\n' % (write_float_12e(dt), sgridtype, dx))
                 else:
                     raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
@@ -579,13 +579,13 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                 vals2 = write_floats_13e(vals)
                 dx = vals2[0]
                 if sgridtype == 'G':
-                    f.write('%14s %6s     %s\n' % (write_float_12E(dt), sgridtype, dx))
+                    f.write('%14s %6s     %s\n' % (write_float_12e(dt), sgridtype, dx))
                 elif sgridtype == 'S':
                     f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
                 elif sgridtype == 'H':
-                    f.write('%14s %6s     %s\n' % (write_float_12E(dt), sgridtype, dx))
+                    f.write('%14s %6s     %s\n' % (write_float_12e(dt), sgridtype, dx))
                 elif sgridtype == 'L':
-                    f.write('%14s %6s     %s\n' % (write_float_12E(dt), sgridtype, dx))
+                    f.write('%14s %6s     %s\n' % (write_float_12e(dt), sgridtype, dx))
                 else:
                     raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
@@ -755,7 +755,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                 #vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 #[dxr, dyr, dzr, rxr, ryr, rzr,
                  #dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                #sdt = write_float_12E(dt)
+                #sdt = write_float_12e(dt)
                 ##if not is_all_zeros:
                 #if sgridtype == 'G':
                     #f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
@@ -798,7 +798,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                 #vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 #[dxr, dyr, dzr, rxr, ryr, rzr,
                  #dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                #sdt = write_float_12E(dt)
+                #sdt = write_float_12e(dt)
                 ##if not is_all_zeros:
                 #if sgridtype == 'G':
                     #f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'

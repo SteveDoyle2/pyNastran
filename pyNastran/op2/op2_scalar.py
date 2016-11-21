@@ -921,11 +921,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESRMS2' : [self._table_passer, self._table_passer],
 
             # force
-            b'OEFATO1' : [self._table_passer, self._table_passer],
-            b'OEFCRM1' : [self._table_passer, self._table_passer],
-            b'OEFNO1'  : [self._table_passer, self._table_passer],
-            b'OEFPSD1' : [self._table_passer, self._table_passer],
-            b'OEFRMS1' : [self._table_passer, self._table_passer],
+            b'OEFATO1' : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFCRM1' : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFNO1'  : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFPSD1' : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFRMS1' : [self._read_oef1_3, self._read_oef1_4],
 
             b'OEFATO2' : [self._table_passer, self._table_passer],
             b'OEFCRM2' : [self._table_passer, self._table_passer],
