@@ -230,13 +230,15 @@ class TableArray(ScalarObject):  # displacement style table
             nx = ntimes
             ny = self.ntotal
             #print("ntimes=%s nnodes=%s" % (ntimes, nnodes))
-        if self.is_sort2():
+        elif self.is_sort2():
             nnodes = self.ntimes
             ntimes = self.ntotal
             ntotal = self.ntotal
             nx = nnodes
             ny = ntimes
             #print("***ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
+        else:
+            raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
         self.build_data(ntimes, nnodes, ntotal, nx, ny, self._times_dtype)
 
     def build_data(self, ntimes, nnodes, ntotal, nx, ny, float_fmt):

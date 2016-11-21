@@ -399,18 +399,18 @@ class OP2_F06_Common(object):
         # OQG - spc/mpc forces
         self.spc_forces = {}  # tCode=3?
         self.spc_forces_scaled_response_spectra_NRL = {}
-        self.spc_forcesPSD = {}
-        self.spc_forcesATO = {}
-        self.spc_forcesRMS = {}
-        self.spc_forcesCRM = {}
-        self.spc_forcesNO = {}
+        self.spc_forces_PSD = {}
+        self.spc_forces_ATO = {}
+        self.spc_forces_RMS = {}
+        self.spc_forces_CRM = {}
+        self.spc_forces_NO = {}
 
         self.mpc_forces = {}  # tCode=39
-        self.mpc_forcesPSD = {}
-        self.mpc_forcesATO = {}
-        self.mpc_forcesRMS = {}
-        self.mpc_forcesCRM = {}
-        self.mpc_forcesNO = {}
+        self.mpc_forces_PSD = {}
+        self.mpc_forces_ATO = {}
+        self.mpc_forces_RMS = {}
+        self.mpc_forces_CRM = {}
+        self.mpc_forces_NO = {}
         self.mpc_forces_RAQCONS = {}
         #self.mpc_forces_RAQEATC = {}
 

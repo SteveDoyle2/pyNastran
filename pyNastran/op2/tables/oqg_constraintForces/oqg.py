@@ -74,7 +74,8 @@ class OQG(OP2Common):
             ## mode or cycle .. todo:: confused on the type - F1???
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
             self.update_mode_cycle('mode_cycle')
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
+            self.data_names = self.apply_data_code_value('data_names',
+                                                         ['mode', 'eigr', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
@@ -114,7 +115,8 @@ class OQG(OP2Common):
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif self.analysis_code == 12:
+            # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
@@ -189,7 +191,8 @@ class OQG(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'mode_cycle'])
+            self.data_names = self.apply_data_code_value('data_names',
+                                                         ['node_id', 'eigr', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data, 'i', 5) ## load set number
             #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
@@ -236,7 +239,8 @@ class OQG(OP2Common):
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             self._analysis_code_fmt = 'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif self.analysis_code == 12:
+            # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             self._analysis_code_fmt = 'i'
@@ -375,8 +379,8 @@ class OQG(OP2Common):
                                             'node', random_code=self.random_code)
         else:
             raise RuntimeError(self.code_information())
-            msg = 'thermal=%s' % self.thermal
-            return self._not_implemented_or_skip(data, ndata, msg)
+            #msg = 'thermal=%s' % self.thermal
+            #return self._not_implemented_or_skip(data, ndata, msg)
         return n
 
     def _read_mpc_forces(self, data, ndata):
@@ -412,8 +416,8 @@ class OQG(OP2Common):
                                  #None, None, 'node')
         else:
             raise RuntimeError(self.code_information())
-            msg = 'thermal=%s' % self.thermal
-            return self._not_implemented_or_skip(data, ndata, msg)
+            #msg = 'thermal=%s' % self.thermal
+            #return self._not_implemented_or_skip(data, ndata, msg)
         assert isinstance(n, integer_types), 'table_name=%s n=%s' % (self.table_name, n)
         return n
 
@@ -423,8 +427,8 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3]:
-                result_name = 'spc_forcesPSD'
-                storage_obj = self.spc_forcesPSD
+                result_name = 'spc_forces_PSD'
+                storage_obj = self.spc_forces_PSD
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
@@ -432,8 +436,8 @@ class OQG(OP2Common):
                                             RealSPCForcesArray, 'node',
                                             random_code=self.random_code)
             #elif self.table_code == 610:
-                #result_name = 'velocitiesPSD'
-                #storage_obj = self.velocitiesPSD
+                #result_name = 'velocities_PSD'
+                #storage_obj = self.velocities_PSD
                 #if self._results.is_not_saved(result_name):
                     #return ndata
                 #self._results._found_result(result_name)
@@ -441,8 +445,8 @@ class OQG(OP2Common):
                                                 #RealVelocityArray, ComplexVelocityArray,
                                                 #'node', random_code=self.random_code)
             #elif self.table_code == 611:
-                #result_name = 'accelerationsPSD'
-                #storage_obj = self.accelerationsPSD
+                #result_name = 'accelerations_PSD'
+                #storage_obj = self.accelerations_PSD
                 #if self._results.is_not_saved(result_name):
                     #return ndata
                 #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
@@ -472,8 +476,8 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3]:
-                result_name = 'spc_forcesRMS'
-                storage_obj = self.spc_forcesRMS
+                result_name = 'spc_forces_RMS'
+                storage_obj = self.spc_forces_RMS
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
@@ -481,8 +485,8 @@ class OQG(OP2Common):
                                             RealSPCForcesArray, 'node',
                                             random_code=self.random_code)
             #elif self.table_code == 610:
-                #result_name = 'velocitiesPSD'
-                #storage_obj = self.velocitiesPSD
+                #result_name = 'velocities_PSD'
+                #storage_obj = self.velocities_PSD
                 #if self._results.is_not_saved(result_name):
                     #return ndata
                 #self._results._found_result(result_name)
@@ -490,8 +494,8 @@ class OQG(OP2Common):
                                                 #RealVelocityArray, ComplexVelocityArray,
                                                 #'node', random_code=self.random_code)
             #elif self.table_code == 611:
-                #result_name = 'accelerationsPSD'
-                #storage_obj = self.accelerationsPSD
+                #result_name = 'accelerations_PSD'
+                #storage_obj = self.accelerations_PSD
                 #if self._results.is_not_saved(result_name):
                     #return ndata
                 #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
@@ -521,8 +525,8 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3]:
-                result_name = 'spc_forcesCRM'
-                storage_obj = self.spc_forcesCRM
+                result_name = 'spc_forces_CRM'
+                storage_obj = self.spc_forces_CRM
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
@@ -530,8 +534,8 @@ class OQG(OP2Common):
                                             RealSPCForcesArray, 'node',
                                             random_code=self.random_code)
             #elif self.table_code == 610:
-                #result_name = 'velocitiesPSD'
-                #storage_obj = self.velocitiesPSD
+                #result_name = 'velocities_PSD'
+                #storage_obj = self.velocities_PSD
                 #if self._results.is_not_saved(result_name):
                     #return ndata
                 #self._results._found_result(result_name)
@@ -539,8 +543,8 @@ class OQG(OP2Common):
                                                 #RealVelocityArray, ComplexVelocityArray,
                                                 #'node', random_code=self.random_code)
             #elif self.table_code == 611:
-                #result_name = 'accelerationsPSD'
-                #storage_obj = self.accelerationsPSD
+                #result_name = 'accelerations_PSD'
+                #storage_obj = self.accelerations_PSD
                 #if self._results.is_not_saved(result_name):
                     #return ndata
                 #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
@@ -571,8 +575,8 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [3]:
                 assert self.table_name in ['OQGNO1', 'OQGNO2'], 'self.table_name=%r' % self.table_name
-                result_name = 'spc_forcesNO'
-                storage_obj = self.spc_forcesNO
+                result_name = 'spc_forces_NO'
+                storage_obj = self.spc_forces_NO
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
@@ -580,8 +584,8 @@ class OQG(OP2Common):
                                             RealSPCForcesArray, 'node',
                                             random_code=self.random_code)
             #elif self.table_code == 610:
-                #result_name = 'velocitiesPSD'
-                #storage_obj = self.velocitiesPSD
+                #result_name = 'velocities_PSD'
+                #storage_obj = self.velocities_PSD
                 #if self._results.is_not_saved(result_name):
                     #return ndata
                 #self._results._found_result(result_name)
@@ -589,8 +593,8 @@ class OQG(OP2Common):
                                                 #RealVelocityArray, ComplexVelocityArray,
                                                 #'node', random_code=self.random_code)
             #elif self.table_code == 611:
-                #result_name = 'accelerationsPSD'
-                #storage_obj = self.accelerationsPSD
+                #result_name = 'accelerations_PSD'
+                #storage_obj = self.accelerations_PSD
                 #if self._results.is_not_saved(result_name):
                     #return ndata
                 #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
@@ -621,8 +625,8 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.table_code in [603]:
                 assert self.table_name in [''], 'self.table_name=%r' % self.table_name
-                result_name = 'mpc_forcesPSD'
-                storage_obj = self.mpc_forcesPSD
+                result_name = 'mpc_forces_PSD'
+                storage_obj = self.mpc_forces_PSD
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
