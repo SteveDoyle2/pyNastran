@@ -507,11 +507,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         table_mapper = {
 
             # per NX
-            b'OESVM1' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],
-            #b'OSTRVM1C' : [self._read_oes1_3, self._read_oes1_4],
-            #b'OSTRVM1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESVM1' : [self._read_oes1_3, self._read_oes1_4],    # isat_random
+            b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],   # isat_random
             b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
+
+            #b'OSTRVM1' : [self._table_passer, self._table_passer],
+            #b'OSTRVM1C' : [self._table_passer, self._table_passer],
+            b'OSTRVM1' : [self._read_oes1_3, self._read_ostr1_4],   # isat_random
+            b'OSTRVM1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
             b'OSTR2C' : [self._read_oes2_3, self._read_oes2_4],
             b'OSTR2' : [self._read_oes2_3, self._read_oes2_4],
 
@@ -525,8 +528,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
 
             # broken
-            #b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
-            #b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
+            b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
+            b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
 
             #b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
             #b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
@@ -585,6 +588,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQP1' : [self._read_oqg1_3, self._read_oqg_4],
             b'OQP2' : [self._read_oqg2_3, self._read_oqg_4],
 
+            # SPC/MPC tables depending on table_code
+            # SPC - NX/MSC
+            # MPC - MSC
             b'OQGATO2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGCRM2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGNO2'  : [self._read_oqg2_3, self._read_oqg_4],
@@ -593,13 +599,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             #=======================
             # MPC Forces
+            # these are NX tables
+
             # OQGM1 - mpc forces in the nodal frame
-            b'OQMG1'   : [self._read_oqg1_3, self._read_oqg_4],
-            b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQMATO2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQMRMS2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQMNO2'  : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQMCRM2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQMG1'   : [self._read_oqg1_3, self._read_oqg_mpc_forces],
+            b'OQMPSD1' : [self._read_oqg2_3, self._read_oqg_mpc_psd],
+            b'OQMATO1' : [self._read_oqg2_3, self._read_oqg_mpc_ato],
+            b'OQMRMS1' : [self._read_oqg2_3, self._read_oqg_mpc_rms],
+            b'OQMNO1'  : [self._read_oqg2_3, self._read_oqg_mpc_no],
+            b'OQMCRM1' : [self._read_oqg2_3, self._read_oqg_mpc_crm],
+
+            #b'OQMG2'   : [self._read_oqg1_3, self._read_oqg_mpc_forces],
+            b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_mpc_psd],
+            b'OQMATO2' : [self._read_oqg2_3, self._read_oqg_mpc_ato],
+            b'OQMRMS2' : [self._read_oqg2_3, self._read_oqg_mpc_rms],
+            b'OQMNO2'  : [self._read_oqg2_3, self._read_oqg_mpc_no],
+            b'OQMCRM2' : [self._read_oqg2_3, self._read_oqg_mpc_crm],
 
             #=======================
             # OPG
@@ -634,8 +649,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OES1'   : [self._read_oes1_3, self._read_oes1_4],  # stress - linear only
             b'OES1X'  : [self._read_oes1_3, self._read_oes1_4],  # element stresses at intermediate stations & nonlinear stresses
             b'OES1C'  : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
-            b'OESCP'  : [self._read_oes1_3, self._read_oes1_4],
+            b'OESCP'  : [self._read_oes1_3, self._read_oes1_4],  # stress - nonlinear???
             b'OESRT'  : [self._read_oes1_3, self._read_oes1_4], # ply strength ratio
+
+            b'OSTRRMS1' : [self._table_passer, self._table_passer], # isat_random
+            b'OSTRNO1' : [self._table_passer, self._table_passer],  # isat_random
+            b'OSTRMS1C' : [self._table_passer, self._table_passer], # isat_random
+            b'OSTRMS1C' : [self._table_passer, self._table_passer], # isat_random
+            b'OSTNO1C' : [self._table_passer, self._table_passer],  # isat_random
 
             #b'OSTRRMS1' : [self._read_oes1_3, self._read_oes1_4], # isat_random
             #b'OSTRNO1' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
@@ -659,6 +680,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             # off stress
             b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only
+            b'OESPSD2C' : [self._table_passer, self._table_passer],
+            #b'OESATO2' : [self._table_passer, self._table_passer],
+            #b'OESRMS2' : [self._table_passer, self._table_passer],
+            #b'OESNO2'  : [self._table_passer, self._table_passer],
+            #b'OESCRM2' : [self._table_passer, self._table_passer],
             #=======================
             # strain
             b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
@@ -671,6 +697,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRRMS2' : [self._table_passer, self._table_passer],
             b'OSTRNO2'  : [self._table_passer, self._table_passer],
             b'OSTRCRM2' : [self._table_passer, self._table_passer],
+
+            b'OSTPSD2C' : [self._table_passer, self._table_passer],
             #=======================
             # OUG
             # displacement/velocity/acceleration/eigenvector/temperature

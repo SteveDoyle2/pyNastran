@@ -231,8 +231,11 @@ class Subcase(object):
                 self.add('GPFORCE', 'ALL', options, 'STRESS-type')
             else:
                 _write_op2_error_msg(log, self.log, msg, data_code)
+
+        # stress
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
-                            'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP']:
+                            'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
+                            'OESVM1', 'OESVM1C']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
@@ -244,12 +247,22 @@ class Subcase(object):
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
                 _write_op2_error_msg(log, self.log, msg, data_code)
+
+        # strain
         elif table_name in ['OSTR1X', 'OSTR1C']:
             assert data_code['is_strain_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
             else:
                 _write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OSTRVM1', 'OSTRVM1C']:
+            #assert data_code['is_stress_flag'] == True, data_code
+            if table_code == 5:
+                self.add('STRAIN', 'ALL', options, 'STRESS-type')
+            else:
+                _write_op2_error_msg(log, self.log, msg, data_code)
+
+        # special tables
         elif table_name in ['RADCONS', 'RADEFFM', 'RADEATC', 'RAPEATC', 'RAQEATC', 'RADCONS',
                             'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC',]:
             pass
