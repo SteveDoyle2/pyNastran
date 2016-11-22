@@ -46,8 +46,8 @@ class SurfIO(object):
         self.nElements = nelements
         self.nNodes = nnodes
 
-        print("nNodes = %s" % self.nNodes)
-        print("nElements = %s" % self.nElements)
+        #print("nNodes = %s" % self.nNodes)
+        #print("nElements = %s" % self.nElements)
         assert nelements > 0, nelements
 
         self.grid.Allocate(self.nElements, 1000)
@@ -258,21 +258,21 @@ class SurfIO(object):
             tag_form.append(('bl_thickness', icase + 9, []))
 
             visc_res = GuiResult(0, header='is_visc', title='is_visc',
-                                 location='node', scalar=int_data[:, 0])
+                                 location='centroid', scalar=int_data[:, 0])
             recon_res = GuiResult(0, header='is_recon', title='is_recon',
-                                  location='node', scalar=int_data[:, 1])
+                                  location='centroid', scalar=int_data[:, 1])
             rebuild_res = GuiResult(0, header='is_rebuild', title='is_rebuild',
-                                    location='node', scalar=int_data[:, 2])
+                                    location='centroid', scalar=int_data[:, 2])
             fixed_res = GuiResult(0, header='is_fixed', title='is_fixed',
-                                  location='node', scalar=int_data[:, 3])
+                                  location='centroid', scalar=int_data[:, 3])
             source_res = GuiResult(0, header='is_source', title='is_source',
-                                   location='node', scalar=int_data[:, 4])
+                                   location='centroid', scalar=int_data[:, 4])
             trans_res = GuiResult(0, header='is_trans', title='is_trans',
-                                  location='node', scalar=int_data[:, 5])
+                                  location='centroid', scalar=int_data[:, 5])
             delete_res = GuiResult(0, header='is_delete', title='is_delete',
-                                   location='node', scalar=int_data[:, 6])
+                                   location='centroid', scalar=int_data[:, 6])
             nlayers_res = GuiResult(0, header='nlayers', title='nlayers',
-                                    location='node', scalar=int_data[:, 7])
+                                    location='centroid', scalar=int_data[:, 7])
 
             spacing_res = GuiResult(0, header='bl_spacing', title='bl_spacing',
                                     location='centroid', scalar=float_data[:, 0])

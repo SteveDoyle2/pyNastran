@@ -15,10 +15,22 @@ def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, includ
         the input UGRID filename
     bdf_filename : str
         the output BDF filename
+    include_shells : bool; default=True
+        should the shells be written
+    include_solids : bool; default=True
+        should the solids be written
+    convert_pyram_to_penta : bool; default=False
+        False : NX Nastran
+        True : MSC Nastran
     size : int; {8, 16}; default=16
         the bdf write precision
     is_double : bool; default=False
         the field precision to write
+
+    Returns
+    -------
+    ugrid_model : UGRID()
+        the ugrid model
     """
     model = UGRID(log=None, debug=False)
     assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
@@ -26,7 +38,7 @@ def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, includ
     model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids,
                     convert_pyram_to_penta=convert_pyram_to_penta,
                     encoding=encoding, size=size, is_double=is_double)
-
+    return model
 
 def main():
     import sys

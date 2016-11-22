@@ -174,7 +174,7 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
     tecplot.hexa_elements = elements
     tecplot.write_tecplot(tecplot_filename)
     tecplot.results = array([], dtype='float32')
-
+    return tecplot
 
 def main():  # pragma: no cover
     bdf_filename = 'threePlugs.bdf'

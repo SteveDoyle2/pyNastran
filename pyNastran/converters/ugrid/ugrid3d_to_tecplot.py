@@ -12,14 +12,20 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None):
 
     Parameters
     ----------
-    ugrid_filename : str
-        the input UGRID filename
+    ugrid_filename : varies
+        str : the input UGRID filename
+        UGRID : the UGRID object
     bdf_filename : str
         the output Tecplot filename
+    log : logger; default=None
+        a logger object
     """
-    model = UGRID(log=log)
-    assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
-    model.read_ugrid(ugrid_filename)
+    if isinstance(ugrid_filename, str):
+        #assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
+        model = UGRID(log=log)
+        model.read_ugrid(ugrid_filename)
+    else:
+        model = ugrid_filename
     model.write_tecplot(tecplot_filename)
 
 

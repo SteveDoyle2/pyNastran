@@ -182,16 +182,18 @@ class UGRID(object):
             #print('min quads value = ' , quads.min())
             #print('max quads value = ' , quads.max())
 
-            data = ugrid_file.read(npids * 4)
-            self.n += npids * 4
-            pids = np.fromstring(data, dtype=dtype)
-            #print('min pids value = ' , pids.min())
-            #print('max pids value = ' , pids.max())
+            if npids:
+                data = ugrid_file.read(npids * 4)
+                assert len(data) == (npids * 4), 'len(data)=%s' % (len(data))
+                self.n += npids * 4
+                pids = np.fromstring(data, dtype=dtype)
+                #print('min pids value = ' , pids.min())
+                #print('max pids value = ' , pids.max())
+                self.pids = pids
 
             self.nodes = nodes
             self.tris = tris
             self.quads = quads
-            self.pids = pids
 
             #==========================================
             # solids
@@ -354,8 +356,10 @@ class UGRID(object):
                 nquads = self.quads.shape[0]
                 eid += ntris + nquads
 
-
-            max_pid = pids.max()
+            if len(pids) == 0:
+                max_pid = 1
+            else:
+                max_pid = pids.max()
             #==========================================
             # solids
             if include_solids:

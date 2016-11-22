@@ -53,8 +53,8 @@ class TetgenIO(object):
             raise RuntimeError()
         self.nElements = ntris + ntets
 
-        print("nNodes = ",self.nNodes)
-        print("nElements = ", self.nElements)
+        #print("nNodes = ",self.nNodes)
+        #print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)

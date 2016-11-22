@@ -3,7 +3,6 @@ import os
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot, nastran_to_tecplot_filename
-
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]
@@ -33,6 +32,12 @@ class TestTecplot(unittest.TestCase):
         #os.remove(nastran_filename2)
         #os.remove(tecplot_filename)
 
+    def _test_tecplot_02(self):
+        nastran_filename1 = os.path.join(nastran_path, 'solid_bending', 'solid_bending.bdf')
+        nastran_filename2 = os.path.join(nastran_path, 'solid_bending', 'solid_bending2.bdf')
+        tecplot_filename = os.path.join(nastran_path, 'solid_bending', 'solid_bending.plt')
+        tecplot = nastran_to_tecplot_filename(nastran_filename1, tecplot_filename)
+        tecplot_to_nastran_filename(tecplot_filename, nastran_filename2)
 
 
 if __name__ == '__main__':  # pragma: no cover

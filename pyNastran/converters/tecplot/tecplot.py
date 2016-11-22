@@ -239,7 +239,7 @@ class Tecplot(FortranFormat):
                     nresults = len(variables) - 3 # x, y, z, rho, u, v, w, p
                     self.log.debug('nresults = %s' % nresults)
 
-                print(headers_dict)
+                self.log.debug(headers_dict)
                 nnodesi = int(headers_dict['N'])
                 nelementsi = int(headers_dict['E'])
                 #print('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
@@ -264,7 +264,7 @@ class Tecplot(FortranFormat):
                     if data_packing == 'POINT':
                         for inode in range(nnodesi):
                             if inode == 0:
-                                print('zone_type=%s sline=%s' %(zone_type, sline))
+                                self.log.debug('zone_type=%s sline=%s' %(zone_type, sline))
                             try:
                                 xyz[inode, :] = sline[:3]
                                 results[inode, :] = sline[3:]
@@ -409,7 +409,7 @@ class Tecplot(FortranFormat):
             data = self.f.read(8)
             self.n += 8
             word, = unpack(b'8s', data)
-            print('word = ', word)
+            self.log.debug('word = %r' % word)
 
             values = []
             ii = 0
@@ -445,8 +445,8 @@ class Tecplot(FortranFormat):
             self.n += nbytes
             nnodes2, nelements2 = unpack('2i', data)
             if nnodes and nelements:
-                print('nnodes=%s nelements=%s' % (nnodes, nelements))
-                print('nnodes2=%s nelements2=%s' % (nnodes2, nelements2))
+                self.log.debug('nnodes=%s nelements=%s' % (nnodes, nelements))
+                self.log.debug('nnodes2=%s nelements2=%s' % (nnodes2, nelements2))
             else:
                 nnodes = nnodes2
                 nelements = nelements2
@@ -798,8 +798,7 @@ class Tecplot(FortranFormat):
 
             if adjust_nids:
                 elements += 1
-            self.log.info('inode_min = %s' % elements.min())
-            self.log.info('inode_max = %s' % elements.max())
+            self.log.info('inode: min=%s max=%s' % (elements.min(), elements.max()))
             assert elements.min() >= 1, elements.min()
             assert elements.max() <= nnodes, elements.max()
             # assert elements.min() == 1, elements.min()
@@ -867,7 +866,7 @@ class Tecplot(FortranFormat):
         """
         doesn't work...
         """
-        print('slicing...')
+        self.log.info('slicing...')
         y = self.xyz[:, 1]
         nodes = self.xyz
         assert tol > 0.0, tol
@@ -876,8 +875,8 @@ class Tecplot(FortranFormat):
 
         iy = where((y0 - tol <= y) & (y <= y0 + tol))[0]
 
-        print(y[iy])
-        print(nodes[iy, 1].min(), nodes[iy, 1].max())
+        self.log.debug(y[iy])
+        self.log.debug(nodes[iy, 1].min(), nodes[iy, 1].max())
         #iy = where(y <= y0 + tol)[0]
         assert len(iy) > 0, iy
         #inode = iy + 1
@@ -900,7 +899,7 @@ class Tecplot(FortranFormat):
         #ri = [where(element == iy)[0] for element in elements if where(element == iy)[0]]
         #print(ri)
         #ielements = unique(ri)
-        print(ielements)
+        self.log.debug(ielements)
         assert len(ielements) > 0, ielements
 
         # find nodes
@@ -917,7 +916,7 @@ class Tecplot(FortranFormat):
              for element in elements2],
             dtype='int32')
 
-        print(inodes)
+        self.log.debug(inodes)
         nodes2 = nodes[inodes, :]
         results2 = results[inodes, :]
         model = Tecplot()

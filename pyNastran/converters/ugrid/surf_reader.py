@@ -119,7 +119,15 @@ class SurfReader(object):
                 nodes[inode, :] = [x, y, z]
         else:
             for inode in range(nnodes):
-                (x, y, z, initial_normal_spacing, bl_thickness) = f.readline().strip().split()
+                x_y_z_initalnormalspacing_blthickness = f.readline().strip().split()
+                if len(x_y_z_initalnormalspacing_blthickness) == 4:
+                    (x, y, z, initial_normal_spacing) = x_y_z_initalnormalspacing_blthickness
+                    bl_thickness = 0.0
+                elif len(x_y_z_initalnormalspacing_blthickness) == 5:
+                    (x, y, z, initial_normal_spacing,
+                     bl_thickness) = x_y_z_initalnormalspacing_blthickness
+                else:
+                    raise NotImplementedError(x_y_z_initalnormalspacing_blthickness)
                 nodes[inode, :] = [x, y, z]
                 node_props[inode, :] = [initial_normal_spacing, bl_thickness]
 
@@ -143,7 +151,7 @@ class SurfReader(object):
         self.quad_props = quad_props
 
     def read_surf_failnode(self, surf_filename):
-        print(surf_filename)
+        #print(surf_filename)
         basename = os.path.splitext(surf_filename)[0]
         fail_node_filename = basename + '.FAIL.node'
 
@@ -178,8 +186,8 @@ class SurfReader(object):
         n2 = self.quads[:, 1] - 1
         n3 = self.quads[:, 2] - 1
         n4 = self.quads[:, 3] - 1
-        print(n1)
-        print(n3)
+        #print(n1)
+        #print(n3)
         a = self.nodes[n3, :] - self.nodes[n1, :]
         b = self.nodes[n4, :] - self.nodes[n2, :]
         normal = cross(a, b)

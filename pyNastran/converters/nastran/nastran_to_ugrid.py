@@ -1,27 +1,33 @@
 from six import iteritems
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
 
 from numpy import array, hstack
 
-def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None,
+def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
                      check_shells=True, check_solids=True):
     """
     set xref=False
 
     Parameters
     ----------
-    bdf_model : BDF()
-        a BDF object
+    bdf_filename : varies
+        str : a bdf filename
+        BDF() : a BDF object
     ugrid_filename_out : str (default=None -> ???)
         the path to the ugrid_filename
     properties : dict???
         ???
     check_shells : bool (default=True)
-        ???
+        verify that there is at least one shell element
     check_solids : bool (default=True)
-        ???
+        verify that there is at least one solid element
     """
+    if isinstance(bdf_filename, str):
+        bdf_model = read_bdf(bdf_filename)
+    else:
+        bdf_model = bdf_filename
+
     # pids_to_inlcude = []
     # for pid, prop in iteritems(model.properties):
         # if prop.type == 'PSHELL':
@@ -90,7 +96,7 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None,
     if nhexa:
         model.hexas = array([elements[eid].node_ids for eid in chexa], dtype='int32')
 
-    print('ugrid_filename_out = %r' % ugrid_filename_out)
+    model.log.debug('ugrid_filename_out = %r' % ugrid_filename_out)
     if ugrid_filename_out is not None:
         model.write_ugrid(ugrid_filename_out, check_shells=check_shells)
     return model
