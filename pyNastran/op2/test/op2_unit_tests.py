@@ -1832,6 +1832,26 @@ class TestOP2(Tester):
                 print('==========================')
                 #raise RuntimeError(msg)
 
+    @unittest.expectedFailure
+    def test_set_times_01(self):
+        """specify the modes to extract"""
+        model = OP2(debug=True, log=None, debug_file=None, mode='msc')
+
+        # subcase : times
+        times = {1 : [2, 3]}
+        model.set_transient_times(times)
+        op2_filename = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements',
+                                                    'mode_solid_shell_bar.op2'))
+        model.read_op2(op2_filename, combine=True, build_dataframe=None,
+                       skip_undefined_matrices=False,
+                       encoding=None)
+        isubcase = 1
+        #print(model.get_op2_stats(short=False))
+        eigenvector = model.eigenvectors[isubcase]
+        #print(eigenvector)
+        assert len(eigenvector.modes) == 2, eigenvector.modes
+
+
 def _get_gpforce_data():
     data = [
         #eids, nids, cid, summation_point

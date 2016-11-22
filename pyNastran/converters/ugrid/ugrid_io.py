@@ -43,7 +43,7 @@ class UGRID_IO(object):
             is_2d = True
 
         self.model_type = 'ugrid'
-        print('ugrid_filename = %s' % ugrid_filename)
+        self.log.debug('ugrid_filename = %s' % ugrid_filename)
 
 
         assert ext == 'ugrid', ugrid_filename
@@ -75,8 +75,7 @@ class UGRID_IO(object):
         self.nElements = nelements
         self.nNodes = nnodes
 
-        print("nnodes = %s" % self.nNodes)
-        print("nelements = %s" % self.nElements)
+        self.log.info("nnodes=%s nelements=%s" % (self.nNodes, self.nElements))
         assert nelements > 0, nelements
 
         self.grid.Allocate(self.nElements, 1000)
@@ -129,10 +128,10 @@ class UGRID_IO(object):
         self.nElements = nelements
         self.grid.SetPoints(points)
         self.grid.Modified()
-        self.log_info('update...')
+        self.log.info('update...')
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-        #self.log_info("updated grid")
+        #self.log.info("updated grid")
 
         # loadCart3dResults - regions/loads
         self. turn_text_on()
@@ -168,7 +167,7 @@ class UGRID_IO(object):
 
         for nid in diff_node_ids:
             node = nodes[nid, :]
-            print('nid=%s node=%s' % (nid, node))
+            self.log.info('nid=%s node=%s' % (nid, node))
             points.InsertPoint(nid, *node)
 
             #if 1:
@@ -229,7 +228,7 @@ class UGRID_IO(object):
     def _fill_ugrid3d_case(self, base, cases, ID, nnodes, nelements, model):
         tag_filename = base + '.tags'
         mapbc_filename = base.split('.')[0] + '.mapbc'
-        print('mapbc_filename = %r' % mapbc_filename)
+        self.log.info('mapbc_filename = %r' % mapbc_filename)
 
         cases_new = []
         has_tag_data = False
@@ -341,7 +340,7 @@ class UGRID_IO(object):
 
             icase += 10
         else:
-            self.log_info('tag_filename=%r could not be found' % tag_filename)
+            self.log.warning('tag_filename=%r could not be found' % tag_filename)
 
         if os.path.exists(mapbc_filename):
             has_mapbc_data = True
@@ -363,14 +362,14 @@ class UGRID_IO(object):
                     msg = 'ipatch=%s not found in pids=%s' % (ipatch + 1, upids)
                     raise RuntimeError(msg)
                 mapbcs[islot] = bc_num
-                print(line)
+                self.log.info(line)
             mapbc_form.append(('Map BC', icase, []))
 
             mapbc_res = GuiResult(0, header='Map BC', title='Map BC',
                                   location='centroid', scalar=mapbcs)
             cases[icase + 9] = (mapbc_res, (0, 'Map BC'))
         else:
-            self.log_info('mapbc_filename=%r could not be found' % mapbc_filename)
+            self.log.warning('mapbc_filename=%r could not be found' % mapbc_filename)
 
 
         #norm_spacing = model.node_props[:, 0]
@@ -389,5 +388,5 @@ class UGRID_IO(object):
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        print(form)
+        self.log.info(form)
         return form, cases

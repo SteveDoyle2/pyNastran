@@ -101,15 +101,15 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
         model.write_ugrid(ugrid_filename_out, check_shells=check_shells)
     return model
 
-def merge_ugrids(a_model, b_model):
-    """
-    Merges two UGrid models
+#def merge_ugrids(a_model, b_model):
+    #"""
+    #Merges two UGrid models
 
-    TODO: not implemented
-    """
-    a_model
+    #TODO: not implemented
+    #"""
+    #a_model
 
-def main():
+def main():  # pragma: no cover
     """
     Converts a Nastran model to UGRID model and renumbers the properties.
     Also creates a fun3d.mapbc file.
@@ -176,5 +176,5 @@ def main():
     nastran_to_ugrid(bdf_model, ugrid_filename_out) #, properties=properties
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

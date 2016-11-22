@@ -27,8 +27,10 @@ class UGRID2D_Reader(object):
         nnodes, ntrias, nquads, ntets, npyram5, npenta6, nhexas8s = (int(val) for val in data[:7])
         i = 7
 
-        print('nnodes=%s ntrias=%s nquads=%s ntets4=%s npyram5=%s npenta6=%s nhexas8s=%s' % (
-            nnodes, ntrias, nquads, ntets, npyram5, npenta6, nhexas8s))
+        self.log.debug('nnodes=%s ntrias=%s nquads=%s ntets4=%s '
+                       'npyram5=%s npenta6=%s nhexas8s=%s' % (
+                           nnodes, ntrias, nquads, ntets,
+                           npyram5, npenta6, nhexas8s))
 
 
         #nodes = zeros(nnodes * 3, dtype=ndarray_float)
@@ -45,9 +47,9 @@ class UGRID2D_Reader(object):
         iend = i + nnodes * 3
         nodes = array(data[i:iend], dtype='float64')
         nodes = nodes.reshape((nnodes, 3))
-        print(nodes[0, :])
-        print(nodes[nnodes-1, :])
-        print(nodes[-1, :])
+        self.log.debug(nodes[0, :])
+        self.log.debug(nodes[nnodes-1, :])
+        self.log.debug(nodes[-1, :])
         assert nodes[:, 2].max() == 0.0
         assert nodes[:, 2].min() == 0.0
         i = iend

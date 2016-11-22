@@ -1,12 +1,20 @@
+"""
+Defines:
+ - tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True)
+ - tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True)
+"""
+
 from numpy import unique
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_interface.dev_utils import remove_unassociated_nodes
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 
+
 def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, debug=True):
     """Converts a Tecplot file to Nastran."""
     return tecplot_to_nastran_filename(tecplot_filename, bdf_filename, debug=debug)
+
 
 def tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True):
     """Converts a Tecplot file to Nastran."""
@@ -28,10 +36,11 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True):
 
         if len(model.tri_elements):
             # tris only
+            itri = 0
             for itri, tri in enumerate(model.tri_elements):
                 card = ['CTRIA3', itri + 1, shell_pid] + list(tri)
                 bdf_file.write(print_card_8(card))
-            istart += bdf_model
+            #istart += bdf_model
 
         if len(model.quad_elements):
             if len(model.tri_elements) != 0:

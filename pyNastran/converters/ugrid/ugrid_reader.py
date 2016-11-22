@@ -244,12 +244,13 @@ class UGRID(object):
                 data = ugrid_file.read(4)
                 nBL_tets = unpack(endian + 'i', data)
                 self.n += 4
-                print('nBL_tets=%s' % (nBL_tets)) # trash
+                self.log.debug('nBL_tets=%s' % (nBL_tets)) # trash
 
 
                 data = ugrid_file.read(nvol_elements * 4)
                 self.n += nvol_elements * 4
-                print('len(data)=%s len/4=%s nvol_elements=%s' % (len(data), len(data) / 4., nvol_elements))
+                self.log.debug('len(data)=%s len/4=%s nvol_elements=%s' % (
+                    len(data), len(data) / 4., nvol_elements))
                 assert len(data) == (nvol_elements * 4)
 
                 fmt = endian + '%ii' % (nvol_elements * 4)
@@ -499,9 +500,11 @@ class UGRID(object):
                 f_ugrid.write(sfmt.pack(*quads.ravel()))
 
             # PSHELL
-            fmt = endian + '%ii' % (nshells)
-            sfmt = Struct(fmt)
-            f_ugrid.write(sfmt.pack(*pids.ravel()))
+            if nshells:
+                self.log.info('pids = %s' % pids)
+                fmt = endian + '%ii' % (nshells)
+                sfmt = Struct(fmt)
+                f_ugrid.write(sfmt.pack(*pids.ravel()))
 
             if ntets:
                 # CTETRA
@@ -841,7 +844,7 @@ class UGRID(object):
             it_start[2] = it
             iq_start[2] = iq
             min_eids[eid] = self.hexas
-            print('HEXA it=%s iq=%s' % (it, iq))
+            self.log.debug('HEXA it=%s iq=%s' % (it, iq))
             for element in self.hexas-1:
                 (n1, n2, n3, n4, n5, n6, n7, n8) = element
 
@@ -878,7 +881,7 @@ class UGRID(object):
             it_start[3] = it
             iq_start[3] = iq
             min_eids[eid] = self.penta5s
-            print('PENTA5 it=%s iq=%s' % (it, iq))
+            self.log.debug('PENTA5 it=%s iq=%s' % (it, iq))
             for element in self.penta5s-1:
                 (n1, n2, n3, n4, n5) = element
 
@@ -913,7 +916,7 @@ class UGRID(object):
             it_start[4] = it
             iq_start[4] = iq
             min_eids[eid] = self.penta6s
-            print('PENTA6 it=%s iq=%s' % (it, iq))
+            self.log.debug('PENTA6 it=%s iq=%s' % (it, iq))
             for element in self.penta6s-1:
                 (n1, n2, n3, n4, n5, n6) = element
 
@@ -950,7 +953,7 @@ class UGRID(object):
             #print('t0', tri_faces_sort[0, :])
             #print('t1', tri_faces_sort[1, :])
 
-            print('nt=%s nq=%s' % (ntri_faces, nquad_faces))
+            self.log.debug('nt=%s nq=%s' % (ntri_faces, nquad_faces))
             tri_faces_sort.sort(axis=1)
             #for i, tri in enumerate(tri_faces):
                 #assert tri[2] > tri[0], 'i=%s tri=%s' % (i, tri)

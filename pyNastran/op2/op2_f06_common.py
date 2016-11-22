@@ -24,6 +24,7 @@ class OP2_F06_Common(object):
         self.subtitles = defaultdict(list)
         self.case_control_deck = CaseControlDeck([], log=self.log)
         self.labels = {}
+        self.expected_times = {}
 
         self.make_geom = False
 
@@ -886,7 +887,7 @@ class OP2_F06_Common(object):
                   and table not in [
                       'card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
                       'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
-                      'end_options']]
+                      'end_options', 'expected_times']]
         for table in tables:
             if self.make_geom:
                 break

@@ -34,7 +34,7 @@ class SurfIO(object):
         model = SurfReader()
 
         self.model_type = 'surf'
-        print('surf_filename = %s' % surf_filename)
+        self.log.debug('surf_filename = %s' % surf_filename)
 
         model.read_surf(surf_filename)
         nnodes = model.nodes.shape[0]
@@ -104,7 +104,7 @@ class SurfIO(object):
             for j, nid in enumerate(model.nodes_failed):
                 elem = vtk.vtkVertex()
                 c = nodes[nid - 1, :]
-                print(nid, c)
+                self.log.debug('%s %s' % (nid, c))
                 points2.InsertPoint(j, *c)
                 elem.GetPointIds().SetId(0, j)
                 self.alt_grids['failed_nodes'].InsertNextCell(elem.GetCellType(),
