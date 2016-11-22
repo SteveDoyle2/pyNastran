@@ -48,6 +48,11 @@ class TestNastran(unittest.TestCase):
         os.remove(skin_bdf_filename)
         os.remove(skin_bdf_filename2)
 
+    def test_nastran_to_stl(self):
+        """tests nastran_to_stl"""
+        bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
+        stl_filename = os.path.join(model_path, 'plate', 'plate.stl')
+        nastran_to_stl(bdf_filename, stl_filename, is_binary=False)
 
 if __name__ == '__main__':  # pragma: no cover
     import time

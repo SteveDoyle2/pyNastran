@@ -9,7 +9,7 @@ np.seterr(all='raise')
 
 import pyNastran
 from pyNastran.converters.stl.stl import read_stl
-from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
+from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran, stl_to_nastran_filename
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'converters', 'stl')
@@ -95,8 +95,8 @@ class TestSTL(unittest.TestCase):
         bdf_filename_16 = os.path.join(test_path, 'sphere_16.bdf')
         bdf_filename_double = os.path.join(test_path, 'sphere_double.bdf')
         stl_to_nastran_filename(stl_filename, bdf_filename_8)
-        stl_to_nastran_filename(stl_filename, bdf_filename_16, size=16)
-        stl_to_nastran_filename(stl_filename, bdf_filename_double, size=16, is_double=True)
+        stl_to_nastran(stl_filename, bdf_filename_16, size=16)
+        stl_to_nastran(stl_filename, bdf_filename_double, size=16, is_double=True)
         os.remove(bdf_filename_8)
         os.remove(bdf_filename_16)
         os.remove(bdf_filename_double)

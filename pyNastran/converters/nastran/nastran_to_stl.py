@@ -1,14 +1,31 @@
 from six import iteritems
 from numpy import zeros, array
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import read_bdf
 from pyNastran.converters.stl.stl import STL
 
 def nastran_to_stl_filename(bdf_filename, stl_filename, is_binary=False, log=None):
-    model = BDF(log=log)
-    model.read_bdf(bdf_filename)
-    return nastran_to_stl(model, stl_filename, is_binary=is_binary)
+    """Converts a Nastran model to an STL"""
+    return nastran_to_stl(bdf_filename, stl_filename, is_binary=is_binary)
 
-def nastran_to_stl(model, stl_filename, is_binary=False):
+def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None):
+    """
+    Converts a Nastran model to an STL
+
+    Parameters
+    ----------
+    bdf_filename : varies
+        str : the path to a BDF input file
+        BDF() : a BDF() model object
+    stl_filename : str
+        the output STL path
+    is_binary : bool; default=False
+        should the output file be binary
+    """
+    if isinstance(bdf_filename, str):
+        model = read_bdf(bdf_filename, log=None)
+    else:
+        model = bdf_filename
+
     #log.info('card_count = %s' % model.card_count)
 
     nnodes = len(model.nodes)
@@ -55,4 +72,4 @@ def nastran_to_stl(model, stl_filename, is_binary=False):
 if __name__ == '__main__':  # pragma: no cover
     bdf_filename = 'threePlugs.bdf'
     stl_filename = 'threePlugs.stl'
-    nastran_to_stl_filename(bdf_filename, stl_filename)
+    nastran_to_stl(bdf_filename, stl_filename)

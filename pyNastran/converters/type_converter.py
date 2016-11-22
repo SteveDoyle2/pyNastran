@@ -19,7 +19,7 @@ from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
 from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 
-from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
+from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran
 #from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d, stl_to_cart3d_filename
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
@@ -103,13 +103,13 @@ def process_stl(stl_filename, fmt2, fname2, data=None):
     # model = STL()
     # model.read_stl(stl_filename)
     if fmt2 == 'nastran':
-        stl_to_nastran_filename(model, fname2)
+        stl_to_nastran(model, fname2)
     #elif fmt2 == 'cart3d':
         # we don't have an STL -> Cart3d, so we:
         #    - STL -> BDF
         #    - BDF -> Cart3D
         # stl_to_cart3d(model, fname2)
-        #stl_to_nastran_filename(stl_filename, fname2 + '.bdf')
+        #stl_to_nastran(stl_filename, fname2 + '.bdf')
         #stl_to_cart3d_filename(fname2 + '.bdf', fname2)
     elif fmt2 == 'stl':
         is_binary = data['--binary']

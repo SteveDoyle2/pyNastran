@@ -2,15 +2,16 @@ from numpy import unique
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_interface.dev_utils import remove_unassociated_nodes
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.converters.tecplot.tecplot import Tecplot
+from pyNastran.converters.tecplot.tecplot import read_tecplot
 
 def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, debug=True):
-    """
-    Converts a Tecplot file to Nastran.
-    """
+    """Converts a Tecplot file to Nastran."""
+    return tecplot_to_nastran_filename(tecplot_filename, bdf_filename, debug=debug)
+
+def tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True):
+    """Converts a Tecplot file to Nastran."""
     if isinstance(tecplot_filename, str):
-        model = Tecplot()
-        model.read_tecplot(tecplot_filename)
+        model = read_tecplot(tecplot_filename, debug=debug)
     else:
         model = tecplot_filename
 
