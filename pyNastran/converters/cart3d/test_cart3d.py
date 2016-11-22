@@ -134,6 +134,18 @@ class TestCart3d(unittest.TestCase):
                        #interspersed=True,
                        #enddata=None)
 
+    #def test_cart3d_input_cntl(self):
+        #"""tests the input.cntl reading"""
+        #from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
+        #input_cntl_filename = os.path.join(test_path, '')
+        #read_input_cntl(input_cntl_filename, log=None, debug=False)
+
+    def test_cart3d_input_c3d(self):
+        """tests the input.c3d reading"""
+        from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
+        input_c3d_filename = os.path.join(test_path, 'input.c3d')
+        read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True)
+
 def check_array(points, points2):
     nnodes = points.shape[0]
     if not array_equal(points, points2):
