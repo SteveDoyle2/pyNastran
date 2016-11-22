@@ -653,19 +653,22 @@ class OP2(OP2_Scalar):
         """
         #output = {}
         disp_like_dicts = [
+            # should NO results be transformed?
+            #self.displacements_NO, self.velocities_NO, self.accelerations_NO,
+            #self.spc_forces_NO, self.mpc_forces_NO,
+
             self.displacements,
-            self.displacementsATO,
-            self.displacementsCRM,
-            self.displacementsPSD,
-            self.displacementsRMS,
+            self.displacements_ATO, self.displacements_CRM, self.displacements_PSD, self.displacements_RMS,
             self.displacements_scaled,
             self.displacement_scaled_response_spectra_ABS,
             self.displacement_scaled_response_spectra_NRL,
 
             self.velocities,
+            self.velocities_ATO, self.velocities_CRM, self.velocities_PSD, self.velocities_RMS,
             self.velocity_scaled_response_spectra_ABS,
 
             self.accelerations,
+            self.accelerations_ATO, self.accelerations_CRM, self.accelerations_PSD, self.accelerations_RMS,
             self.acceleration_scaled_response_spectra_ABS,
             self.acceleration_scaled_response_spectra_NRL,
 
@@ -673,11 +676,9 @@ class OP2(OP2_Scalar):
             self.eigenvectors_RADCONS, self.eigenvectors_RADEFFM,
             self.eigenvectors_RADEATC, self.eigenvectors_ROUGV1,
 
-            self.spc_forces, self.spc_forcesATO, self.spc_forcesPSD,
-            self.spc_forcesRMS,
-            self.mpc_forces, self.mpc_forcesATO, self.mpc_forcesPSD,
+            self.spc_forces, self.spc_forces_ATO, self.spc_forces_CRM, self.spc_forces_PSD, self.spc_forces_RMS,
+            self.mpc_forces, self.mpc_forces_ATO, self.mpc_forces_CRM, self.mpc_forces_PSD, self.mpc_forces_RMS,
 
-            self.mpc_forcesRMS,
             self.applied_loads, self.load_vectors,
         ]
         for disp_like_dict in disp_like_dicts:

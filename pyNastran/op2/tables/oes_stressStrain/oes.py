@@ -825,6 +825,14 @@ class OES(OP2Common):
             (276, 1, 32, b'OES1X1') : ('cplsts4', 'NA'),
             (277, 1, 26, b'OES1X1') : ('cplsts6', 'NA'),
             (278, 1, 32, b'OES1X1') : ('cplsts8', 'NA'),
+
+            (95, 2, 13, b'OESVM1C') : ('cquad4', 'NA'),
+            (97, 2, 13, b'OESVM1C') : ('ctria3', 'NA'),
+            (34, 2, 19, b'OESVM1') : ('cbar', 'NA'),
+            (144, 2, 87, b'OESVM1') : ('cquad4', 'NA'),
+            (102, 2, 13, b'OESVM1') : ('cbush', 'NA'),
+
+            (67, 2, 130, b'OESVM1') : ('chexa', 'NA'),
         }
 
         try:
@@ -853,18 +861,19 @@ class OES(OP2Common):
         is_random = True
         if self.table_name in [b'OES1', b'OES1X1', b'OES1X', b'OES1C', b'OESCP', b'OESRT',
                                b'OSTR1X', b'OSTR1C',
-                               b'OESTRCP', b'OESNLXR', b'OESNLXD',]:
+                               b'OESTRCP', b'OESNLXR', b'OESNLXD',
+                               b'OESVM1C']:
             is_random = False
-        elif self.table_name in [b'OESCRM1']:
+        elif self.table_name in [b'OESCRM1', b'OESCRM2']:
             assert self.table_code in [504], self.code_information()
             result_name += '_CRM'
-        elif self.table_name in [b'OESPSD1']:
+        elif self.table_name in [b'OESPSD1', b'OESPSD2']:
             assert self.table_code in [604], self.code_information()
             result_name += '_PSD'
-        elif self.table_name in [b'OESRMS1']:
+        elif self.table_name in [b'OESRMS1', b'OESRMS2']:
             assert self.table_code in [804], self.code_information()
             result_name += '_RMS'
-        elif self.table_name in [b'OESNO1']:
+        elif self.table_name in [b'OESNO1', b'OESNO2']:
             assert self.table_code in [904], self.code_information()
             result_name += '_NO'
         else:
@@ -876,7 +885,7 @@ class OES(OP2Common):
         """
         Reads OES self.thermal=0 stress/strain
         """
-        self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
+        #self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor

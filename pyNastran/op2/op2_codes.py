@@ -955,16 +955,10 @@ class Op2Codes(object):
         else:
             table = '%s - Unknown' % self.table_name
 
-        table_name = self.table_name
-        if PY2 and isinstance(self.table_name, str):
-            table_name = self.table_name.decode(self._encoding)
-        elif PY3 and isinstance(table_name, bytes):
-            table_name = self.table_name.decode(self._encoding)
-
         msg = '--Table3Data--\n\n'
         msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
         msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
-        msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, table_name, table)
+        msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name_str, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
 
         msg += "  sort_code     = %s\n" % self.sort_code
@@ -1005,8 +999,29 @@ class Op2Codes(object):
         assert isinstance(self.format_code, int), type(self.format_code)
         return msg
 
+    @property
+    def table_name_str(self):
+        """
+        Converts the table_name from bytes/str to a str
+
+        Returns
+        -------
+        table_name_str : varies
+            PY2 : unicode
+            PY3 : str
+
+        ..note :: Refers to bytes/str in the Python 3 sense.
+        """
+        table_name = self.table_name
+        if PY2 and isinstance(self.table_name, str):
+            table_name = self.table_name.decode(self._encoding)
+        elif PY3 and isinstance(table_name, bytes):
+            table_name = self.table_name.decode(self._encoding)
+        return table_name
+
     #----
     def is_thermal(self):
+        """is this result thermal solution?"""
         if self.thermal == 0:
             return False
         elif self.thermal == 1:
@@ -1023,17 +1038,23 @@ class Op2Codes(object):
 
     def is_sort1(self):
         #is_sort1_table = self.is_sort1()
-        #try:
-        #    is_sort1_table = int(self.table_name[-1]) == '1'
-        #    return is_sort1_table
-        #except ValueError:
-        sort_method, is_real, is_random = self._table_specs()
-        return True if sort_method == 1 else False
+        try:
+            sort_method, is_real, is_random = self._table_specs()
+            return True if sort_method == 1 else False
+        except AssertionError:
+            table_name = self.table_name_str
+            is_sort1_table = int(table_name[-1]) == 1
+            return is_sort1_table
 
     def is_sort2(self):
         #return not self.is_sort1()
-        sort_method, is_real, is_random = self._table_specs()
-        return True if sort_method == 2 else False
+        try:
+            sort_method, is_real, is_random = self._table_specs()
+            return True if sort_method == 2 else False
+        except AssertionError:
+            table_name = self.table_name_str
+            is_sort2_table = int(table_name[-1]) == 2
+            return is_sort2_table
 
     def _table_specs(self):
         """
