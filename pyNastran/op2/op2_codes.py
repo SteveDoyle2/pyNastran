@@ -998,8 +998,6 @@ class Op2Codes(object):
             msg += '  NX Nastran\n'
         #print msg
         assert isinstance(self.format_code, int), type(self.format_code)
-        print(msg)
-        asdf
         return msg
 
     @property
