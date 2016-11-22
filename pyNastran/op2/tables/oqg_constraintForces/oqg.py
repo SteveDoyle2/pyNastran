@@ -269,66 +269,64 @@ class OQG(OP2Common):
         self._write_debug_bits()
 
     def _read_oqg_4(self, data, ndata):
+        """
+        This function is called by:
+
+        MSC : SPC/MPC forces
+         - SPC forces table_code = 3  (OQGPSD1 ???)
+         - MPC forces table_code = 39 (OQGPSD1 ???)
+
+        NX  : SPC forces
+         - SPC forces table_code = 3  (OQGPSD1 ???)
+         - MPC forces table_code = 3  (OQGMPSD1 ???)
+
+        elif table_code == 3:
+            table = "OQG - SPC Force vector"
+        elif table_code == 39:
+            table = "OQG - MPC Forces"
+
+        """
         result_name = 'constraint_forces'
         if self._results.is_not_saved(result_name):
             return ndata
 
-        if self.is_msc:
-            if self.table_name == b'OQGPSD2':
-                if self.table_code not in [3]:
-                    msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                    raise AssertionError(msg)
-                n = self._read_oqg_spc_psd(data, ndata)
-            elif self.table_name == b'OQGRMS2':
-                if self.table_code not in [3]:
-                    msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                    raise AssertionError(msg)
-                n = self._read_oqg_spc_rms(data, ndata)
-            elif self.table_name == b'OQGCRM2':
-                if self.table_code not in [3]:
-                    msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                    raise AssertionError(msg)
-                n = self._read_oqg_spc_crm(data, ndata)
-            elif self.table_name == b'OQGNO2':
-                if self.table_code not in [3]:
-                    msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                    raise AssertionError(msg)
-                n = self._read_oqg_spc_no(data, ndata)
+        if self.table_name in [b'OQGCRM1', b'OQGCRM2']:
+            if self.table_code not in [3, 503]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._read_oqg_spc_crm(data, ndata)
+        elif self.table_name in [b'OQGPSD1', b'OQGPSD2']:
+            if self.table_code not in [3, 603]:  # was 3
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg + '\n%s' % self.code_information())
+            n = self._read_oqg_spc_psd(data, ndata)
+        elif self.table_name in [b'OQGATO1', b'OQGATO2']:
+            if self.table_code not in [3, 703]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._read_oqg_spc_ato(data, ndata)
+        elif self.table_name in [b'OQGRMS1', b'OQGRMS2']:
+            if self.table_code not in [3, 803]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._read_oqg_spc_rms(data, ndata)
+        elif self.table_name in [b'OQGNO1', b'OQGNO2']:
+            if self.table_code not in [3, 903]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._read_oqg_spc_no(data, ndata)
 
-            elif self.table_code == 3:   # SPC Forces
-                assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1'], self.code_information()
-                n = self._read_spc_forces(data, ndata)
-            elif self.table_code == 39:  # MPC Forces
-                assert self.table_name in [b'OQMG1', b'OQMG2', b'OQMPSD1', b'OQMPSD2'], self.code_information()
-                n = self._read_oqg_mpc_forces(data, ndata)
-            else:
-                raise RuntimeError(self.code_information())
-                #msg = self.code_information()
-                #return self._not_implemented_or_skip(data, ndata, msg)
-        elif self.is_nx:
-            #if self.table_name in [b'OQMPSD1', b'OQMPSD2']:
-                #if self.table_code not in [603]:
-                    #msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-                    #raise AssertionError(msg)
-                #n = self._read_oqg_mpc_psd(data, ndata)
-
-            if self.table_code == 3:   # SPC Forces
-                if self.table_name in [b'OQG1', b'OQG2', b'OQGV1', b'OQP1']:
-                    n = self._read_spc_forces(data, ndata)
-                #elif self.table_name in [b'OQMG1']:
-                    #n = self._read_mpc_forces(data, ndata)
-                else:
-                    raise RuntimeError(self.code_information())
-                    #msg = self.code_information()
-                    #return self._not_implemented_or_skip(data, ndata, msg)
-            elif self.table_code == 5 and self.table_name in [b'RAQEATC', b'RAQCONS']:
-                n = self._read_oqg_mpc_forces(data, ndata)
-            else:
-                raise RuntimeError(self.code_information())
+        elif self.table_code == 3:   # SPC Forces
+            assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1'], self.code_information()
+            n = self._read_spc_forces(data, ndata)
+        elif self.table_code == 39:  # MPC Forces
+            assert self.table_name in [b'OQMG1', b'OQMG2'], self.code_information() # , b'OQMPSD1', b'OQMPSD2'
+            n = self._read_oqg_mpc_forces(data, ndata)
+        elif self.table_name in [b'RAQEATC', b'RAQCONS']:
+            # self.table_code == 5 and
+            n = self._read_oqg_mpc_forces(data, ndata)
         else:
             raise RuntimeError(self.code_information())
-            #msg = 'table_code=%s' % self.table_code
-            #return self._not_implemented_or_skip(data, ndata, msg)
         return n
 
     def _read_spc_forces(self, data, ndata):
@@ -397,6 +395,8 @@ class OQG(OP2Common):
             result_name = 'mpc_forces_RAQEATC'
         elif self.table_name == b'RAQCONS':
             result_name = 'mpc_forces_RAQCONS'
+        elif self.table_name == b'RAQEATC':
+            result_name = 'mpc_forces_RAQEATC'
         else:
             msg = 'mpc_forces; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
@@ -426,7 +426,7 @@ class OQG(OP2Common):
         table_code = 601/610/611
         """
         if self.thermal == 0:
-            if self.table_code in [3]:
+            if self.table_code in [3, 603]:
                 result_name = 'spc_forces_PSD'
                 storage_obj = self.spc_forces_PSD
                 if self._results.is_not_saved(result_name):
@@ -446,7 +446,7 @@ class OQG(OP2Common):
         table_code = 3/???/?10/?11
         """
         if self.thermal == 0:
-            if self.table_code in [3]:
+            if self.table_code in [3, 803]:
                 result_name = 'spc_forces_RMS'
                 storage_obj = self.spc_forces_RMS
                 if self._results.is_not_saved(result_name):
@@ -466,7 +466,7 @@ class OQG(OP2Common):
         table_code = 3/???/?10/?11
         """
         if self.thermal == 0:
-            if self.table_code in [3]:
+            if self.table_code in [3, 503]:
                 result_name = 'spc_forces_CRM'
                 storage_obj = self.spc_forces_CRM
                 if self._results.is_not_saved(result_name):
@@ -486,7 +486,7 @@ class OQG(OP2Common):
         table_code = 3/???/?10/?11
         """
         if self.thermal == 0:
-            if self.table_code in [3]:
+            if self.table_code in [3, 903]:
                 assert self.table_name in ['OQGNO1', 'OQGNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'spc_forces_NO'
                 storage_obj = self.spc_forces_NO

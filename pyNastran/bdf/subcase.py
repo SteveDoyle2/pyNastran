@@ -264,7 +264,8 @@ class Subcase(object):
 
         # special tables
         elif table_name in ['RADCONS', 'RADEFFM', 'RADEATC', 'RAPEATC', 'RAQEATC', 'RADCONS',
-                            'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC',]:
+                            'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC', 'RAQCONS',
+                            'RAPCONS']:
             pass
         else:
             self._write_op2_error_msg(log, self.log, msg, data_code)

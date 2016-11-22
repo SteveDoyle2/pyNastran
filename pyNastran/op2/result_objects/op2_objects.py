@@ -394,7 +394,17 @@ class ScalarObject(BaseScalarObject):
         return msg + '\n'
 
     def recast_gridtype_as_string(self, grid_type):
-        """converts a grid_type integer to a string"""
+        """
+        converts a grid_type integer to a string
+
+        Point type (per NX 10; OUG table; p.5-663):
+        =1, GRID Point
+        =2, Scalar Point
+        =3, Extra Point
+        =4, Modal
+        =5, p-elements, 0-DOF
+        -6, p-elements, number of DOF
+        """
         if grid_type == 1:
             grid_type_str = 'G'  # GRID
         elif grid_type == 2:

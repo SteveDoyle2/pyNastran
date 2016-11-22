@@ -413,7 +413,7 @@ class OP2_F06_Common(object):
         self.mpc_forces_CRM = {}
         self.mpc_forces_NO = {}
         self.mpc_forces_RAQCONS = {}
-        #self.mpc_forces_RAQEATC = {}
+        self.mpc_forces_RAQEATC = {}
 
         # OQG - thermal forces
         self.thermal_gradient_and_flux = {}
@@ -567,8 +567,7 @@ class OP2_F06_Common(object):
             'spc_forces_scaled_response_spectra_NRL',
 
             'mpc_forces', 'mpc_forces_PSD', 'mpc_forces_ATO', 'mpc_forces_RMS', 'mpc_forces_CRM', 'mpc_forces_NO',
-            'mpc_forces_RAQCONS',
-            #'mpc_forces_RAQEATC',
+            'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
 
             'thermal_gradient_and_flux',
 

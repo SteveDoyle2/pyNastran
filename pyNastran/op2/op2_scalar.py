@@ -7,6 +7,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 from struct import unpack, Struct
+from collections import Counter
 
 from six import string_types, iteritems, PY2, b
 from six.moves import range
@@ -176,28 +177,64 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # grid point stresses
     b'OGS1', # grid point stresses/strains - sort 1
 
-    #----------------------
-    # other
-    b'OPNL1', b'OFMPF2M',
-    b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',
+    #-----------------------------------------------------
+    # random analysis
+    # OP2 tables:
+    #   CRM - cumulative root mean square
+    #   PSD - power spectral density function
+    #   RMS - root mean square
+    #   NO - number of zero crossings???
+    #   ATO -autocorrelation???
 
-    b'OAGPSD2', b'OAGCRM2', b'OAGRMS2', b'OAGATO2', b'OAGNO2',
-    b'OESPSD2', b'OESCRM2', b'OESRMS2', b'OESATO2', b'OESNO2',
-    b'OEFPSD2', b'OEFCRM2', b'OEFRMS2', b'OEFATO2', b'OEFNO2',
-    b'OPGPSD2', b'OPGCRM2', b'OPGRMS2', b'OPGATO2', b'OPGNO2',
-    b'OQGPSD2', b'OQGCRM2', b'OQGRMS2', b'OQGATO2', b'OQGNO2',
-    b'OQMPSD2', b'OQMCRM2', b'OQMRMS2', b'OQMATO2', b'OQMNO2',
-    b'OUGPSD2', b'OUGCRM2', b'OUGRMS2', b'OUGATO2', b'OUGNO2',
-    b'OVGPSD2', b'OVGCRM2', b'OVGRMS2', b'OVGATO2', b'OVGNO2',
-    b'OSTRPSD2', b'OSTRCRM2', b'OSTRRMS2', b'OSTRATO2', b'OSTRNO2',
+    # QRG:
+    #   RALL - PSDF, ATOC, CRMS
+    #   ATOC - autocorrelation
+    #   CRMS - cumulative root mean square
+    #   PSDF - power spectral density function
+
+    # msc displacement/velocity/acceleration
+    # nx displacement
+    b'OUGATO1', b'OUGCRM1', b'OUGPSD1', b'OUGRMS1', b'OUGNO1',
+    b'OUGATO2', b'OUGCRM2', b'OUGPSD2', b'OUGRMS2', b'OUGNO2',
+
+    # nx velocity
+    b'OVGATO1', b'OVGCRM1', b'OVGPSD1', b'OVGRMS1', b'OVGNO1',
+    b'OVGATO2', b'OVGCRM2', b'OVGPSD2', b'OVGRMS2', b'OVGNO2',
+
+    # nx acceleration
+    b'OAGATO1', b'OAGCRM1', b'OAGPSD1', b'OAGRMS1', b'OAGNO1',
+    b'OAGATO2', b'OAGCRM2', b'OAGPSD2', b'OAGRMS2', b'OAGNO2',
+
+    # msc spc/mpc forces
+    # nx spc forces
+    b'OQGATO1', b'OQGCRM1', b'OQGPSD1', b'OQGRMS1', b'OQGNO1',
+    b'OQGATO2', b'OQGCRM2', b'OQGPSD2', b'OQGRMS2', b'OQGNO2',
+
+    # nx mpc forces
+    b'OQMATO2', b'OQMCRM2', b'OQMPSD2', b'OQMRMS2', b'OQMNO2',
 
     # stress
-    b'OESATO1', b'OESCRM1', b'OESNO1', b'OESPSD1', b'OESRMS1',
-    b'OESATO2', b'OESCRM2', b'OESNO2', b'OESPSD2', b'OESRMS2',
+    b'OESATO1', b'OESCRM1', b'OESPSD1', b'OESRMS1', b'OESNO1',
+    b'OESATO2', b'OESCRM2', b'OESPSD2', b'OESRMS2', b'OESNO2',
+
+    # load vector ???
+    b'OPGATO1', b'OPGCRM1', b'OPGPSD1', b'OPGRMS1', b'OPGNO1',
+    b'OPGATO2', b'OPGCRM2', b'OPGPSD2', b'OPGRMS2', b'OPGNO2',
+
+    #------------------
+    # strain
+    b'OSTRATO1', b'OSTRCRM1', b'OSTRPSD1', b'OSTRRMS1', b'OSTRNO1',
+    b'OSTRATO2', b'OSTRCRM2', b'OSTRPSD2', b'OSTRRMS2', b'OSTRNO2',
 
     # force
-    b'OEFATO1', b'OEFCRM1', b'OEFNO1', b'OEFPSD1', b'OEFRMS1',
-    b'OEFATO2', b'OEFCRM2', b'OEFNO2', b'OEFPSD2', b'OEFRMS2',
+    b'OEFATO1', b'OEFCRM1', b'OEFPSD1', b'OEFRMS1', b'OEFNO1',
+    b'OEFATO2', b'OEFCRM2', b'OEFPSD2', b'OEFRMS2', b'OEFNO2',
+    #b'OEFPSD2', b'OEFCRM2', b'OEFRMS2', b'OEFATO2', b'OEFNO2',
+
+    #-----------------------------------------------------
+    # other
+    b'OFMPF2M',
+    b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',
 
     b'OCRUG',
     b'OCRPG',
@@ -239,7 +276,6 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OBG1', # glue normal and tangential tractions at grid points in basic coordinate system
     b'OES2', # element stresses - sort 2 - v0.8
     b'OEF2', # element forces - sort 2 - v0.8
-    b'OPG2', # applied loads - sort 2 - v0.8
     b'OUGV2', # absolute displacements/velocity/acceleration - sort 2
 
     # contact
@@ -247,23 +283,6 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OSPDS1',  # final separation distance
     b'OQGCF1', b'OQGCF2', # contact force at grid point
     b'OQGGF1', b'OQGGF2', # glue forces in grid point basic coordinate system
-
-    # OP2 tables:
-    #   CRM - cumulative root mean square
-    #   PSD - power spectral density function
-    #   RMS - root mean square
-    #   NO - number of zero crossings???
-    #   ATO -autocorrelation???
-
-    # QRG:
-    #   RALL - PSDF, ATOC, CRMS
-    #   ATOC - autocorrelation
-    #   CRMS - cumulative root mean square
-    #   PSDF - power spectral density function
-    #'OAGPSD2', b'OAGCRM2', b'OAGRMS2', b'OAGATO2', b'OAGNO2',
-    b'OUGPSD1', b'OUGRMS1',                         b'OUGNO1', b'OUGCRM1',
-                b'OESRMS1',
-                                                    b'OESNO1',
 
     b'OSPDSI2',
     b'OSPDS2',
@@ -281,6 +300,15 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUG2T',
     b'AEMONPT',
 ]
+
+if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
+    counter = Counter(MSC_RESULT_TABLES)
+    _MSG = 'Invalid count:\n'
+    for key, value in counter.items():
+        if value != 1:
+            _MSG += '%s = %s\n' % (key, value)
+    raise RuntimeError(_MSG)
+
 
 NX_MATRIX_TABLES = [
     b'RADEFMP', # Modal Effective Inertia Matrix - Modal Matrix (per Vibrata)
@@ -527,27 +555,37 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RADEFFM': [self._read_oug1_3, self._read_oug_4], # Displacement Effective Inertia Mode (OUG)
             b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
 
-            # broken
-            b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
-            b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
+            # broken - isat_launch_100hz.op2 - wrong numwide
+            #b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
+            #b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
+            b'RAQCONS': [self._table_passer, self._table_passer], # temporary
+            b'RAQEATC': [self._table_passer, self._table_passer], # temporary
 
             #b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
             #b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
+            b'RAFCONS': [self._table_passer, self._table_passer], # temporary
+            b'RAFEATC': [self._table_passer, self._table_passer], # temporary
 
             #b'RAGCONS': [self._read_oef1_3, self._read_oef1_4], # Grid Point Forces Constraint Mode (OGPFB)
             #b'RAGEATC': [self._table_passer, self._table_passer], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
+            b'RAGCONS': [self._table_passer, self._table_passer], # temporary
+            b'RAGEATC': [self._table_passer, self._table_passer], # temporary
 
-            #b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
-            #b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
+            b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
+            b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
 
             #b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
             #b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
+            b'RASCONS': [self._table_passer, self._table_passer], # temporary
+            b'RASEATC': [self._table_passer, self._table_passer], # temporary
 
             #b'RAEEATC': [self._table_passer, self._table_passer], # Strain Equivalent Inertia Attachment mode (OES)
             #b'RAECONS': [self._read_oes1_3, self._read_oes1_4], # Strain Constraint Mode (OSTR)
+            b'RAEEATC': [self._table_passer, self._table_passer], # temporary
+            b'RAECONS': [self._table_passer, self._table_passer], # temporary
 
-            #b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
-            #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
+            b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
+            b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
 
             b'R1TABRG': [self._table_passer, self._read_r1tabrg],
@@ -591,11 +629,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # SPC/MPC tables depending on table_code
             # SPC - NX/MSC
             # MPC - MSC
+            b'OQGATO1' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGCRM1' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGPSD1' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGRMS1' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGNO1'  : [self._read_oqg2_3, self._read_oqg_4],
+
             b'OQGATO2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGCRM2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQGNO2'  : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGPSD2' : [self._read_oqg2_3, self._read_oqg_4],
             b'OQGRMS2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGNO2'  : [self._read_oqg2_3, self._read_oqg_4],
 
             #=======================
             # MPC Forces
@@ -624,6 +668,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'OPGV1' : [self._read_opg1_3, self._read_opg1_4],  # solution set applied loads?
             b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],  # nonlinear loads
+
+            b'OPGPSD1' : [self._table_passer, self._table_passer],
+            b'OPGATO1' : [self._table_passer, self._table_passer],
+            b'OPGRMS1' : [self._table_passer, self._table_passer],
+            b'OPGNO1'  : [self._table_passer, self._table_passer],
+            b'OPGCRM1' : [self._table_passer, self._table_passer],
 
             b'OPGPSD2' : [self._table_passer, self._table_passer],
             b'OPGATO2' : [self._table_passer, self._table_passer],
@@ -654,7 +704,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'OSTRRMS1' : [self._table_passer, self._table_passer], # isat_random
             b'OSTRNO1' : [self._table_passer, self._table_passer],  # isat_random
-            b'OSTRMS1C' : [self._table_passer, self._table_passer], # isat_random
             b'OSTRMS1C' : [self._table_passer, self._table_passer], # isat_random
             b'OSTNO1C' : [self._table_passer, self._table_passer],  # isat_random
 
@@ -1066,7 +1115,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             return ndata
             #else: # response not added...
                 #pass
-        if 1:
+
+        read_r1tabrg = True
+        if read_r1tabrg:
             #self.show_data(data, types='ifs', endian=None)
             out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
             # per the R1TAB DMAP page:
@@ -1447,50 +1498,50 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.log.debug('  table_name=%r' % table_name)
 
             self.table_name = table_name
-            if 0:
-                self._skip_table(table_name)
+            #if 0:
+                #self._skip_table(table_name)
+            #else:
+            if table_name in GEOM_TABLES:
+                self._read_geom_table()  # DIT (agard)
+            elif table_name == b'GPL':
+                self._read_gpl()
+            #elif table_name == b'MEFF':
+                #self._read_meff()
+            elif table_name == b'INTMOD':
+                self._read_intmod()
+            elif table_name == b'HISADD':
+                self._read_hisadd()
+            elif table_name == b'FRL':  # frequency response list
+                self._skip_table(self.table_name)
+            elif table_name == b'EXTDB':
+                self._read_extdb()
+            elif table_name == b'OMM2':
+                self._read_omm2()
+            elif table_name in [b'DIT', b'DITS']:  # tables
+                self._read_dit()
+            elif table_name == b'TOL':
+                self._read_tol()
+            elif table_name == b'PCOMPTS': # blade
+                self._read_pcompts()
+            elif table_name == b'FOL':
+                self._read_fol()
+            elif table_name in [b'SDF', b'PMRF']:  #, 'PERF'
+                self._read_sdf()
+            elif table_name in [b'IBULK', b'CDDATA']:
+                self._read_ibulk()
+            elif table_name in MATRIX_TABLES:
+                self._read_matrix()
+            elif table_name in RESULT_TABLES:
+                self._read_results_table()
+            elif self.skip_undefined_matrices:
+                self._read_matrix()
+            elif table_name.strip() in self.additional_matrices:
+                self._read_matrix()
             else:
-                if table_name in GEOM_TABLES:
-                    self._read_geom_table()  # DIT (agard)
-                elif table_name == b'GPL':
-                    self._read_gpl()
-                #elif table_name == b'MEFF':
-                    #self._read_meff()
-                elif table_name == b'INTMOD':
-                    self._read_intmod()
-                elif table_name == b'HISADD':
-                    self._read_hisadd()
-                elif table_name == b'FRL':  # frequency response list
-                    self._skip_table(self.table_name)
-                elif table_name == b'EXTDB':
-                    self._read_extdb()
-                elif table_name == b'OMM2':
-                    self._read_omm2()
-                elif table_name in [b'DIT', b'DITS']:  # tables
-                    self._read_dit()
-                elif table_name == b'TOL':
-                    self._read_tol()
-                elif table_name == b'PCOMPTS': # blade
-                    self._read_pcompts()
-                elif table_name == b'FOL':
-                    self._read_fol()
-                elif table_name in [b'SDF', b'PMRF']:  #, 'PERF'
-                    self._read_sdf()
-                elif table_name in [b'IBULK', b'CDDATA']:
-                    self._read_ibulk()
-                elif table_name in MATRIX_TABLES:
-                    self._read_matrix()
-                elif table_name in RESULT_TABLES:
-                    self._read_results_table()
-                elif self.skip_undefined_matrices:
-                    self._read_matrix()
-                elif table_name.strip() in self.additional_matrices:
-                    self._read_matrix()
-                else:
-                    msg = 'geom/results split: %r\n\n' % table_name
-                    msg += 'If you have matrices that you want to read, see:\n'
-                    msg += '  model.set_additional_matrices(matrices)'
-                    raise NotImplementedError(msg)
+                msg = 'geom/results split: %r\n\n' % table_name
+                msg += 'If you have matrices that you want to read, see:\n'
+                msg += '  model.set_additional_matrices(matrices)'
+                raise NotImplementedError(msg)
 
             table_name = self._read_table_name(rewind=True, stop_on_failure=False)
         return table_names
@@ -1703,9 +1754,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         if len(data) == 16:
-            name, a, b = unpack(self._endian + '8s 2i', data)
-            assert a == 170, a
-            assert b == 170, b
+            name, ai, bi = unpack(self._endian + '8s 2i', data)
+            assert ai == 170, ai
+            assert bi == 170, bi
         else:
             self.log.warning('unexpected matrix length=%s' % len(data))
             self.log.warning(self.show_data(data, types='if'))

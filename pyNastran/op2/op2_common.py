@@ -1371,7 +1371,59 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.table_name, self.table_code, msg, self.code_information())
             raise NotImplementedError(msg)
 
+    def _function1(self, value):
+        """function1(value)"""
+        if value // 1000 in [2, 3, 6]:
+            return 2
+        return 1
+
+    def _function2(self, value):
+        """function2(value)"""
+        return value % 100
+
+    def _function3(self, value):
+        """function3(value)"""
+        return value % 1000
+
+    def _function4(self, value):
+        """function4(value)"""
+        return value // 10
+
+    def _function5(self, value):
+        """function5(value)"""
+        return value % 10
+
+    def _function6(self, value):
+        """weird..."""
+        if value != 8:
+            return 0
+        return 1
+
+    def _function7(self, value):
+        """function7(value)"""
+        if value in [0, 2]:
+            return 0
+        elif value in [1, 3]:
+            return 1
+        raise RuntimeError(value)
+
     def parse_approach_code(self, data):
+        """
+        Function  Formula                                                Manual
+        ========  =======                                                ======
+        1         if item_name/1000 in 2,3,6: 2; else 1                  if(item_name/1000 = 2,3,6) then return 2, else return 1
+        2         item_name % 100                                        mod(item_name,100)
+        3         item_name % 1000                                       mod(item_name,1000)
+        4         item_name // 10                                        item_name/10
+        5         item_name % 10                                         mod(item_name,10)
+        6         if item_name != 8; 0; else 1 # ???                     if iand(item_name,8)<> then set to 0, else set to 1
+        7         if item_name in [0,2]: 0; elif item_name in [1,3] 1    if item_name/1000 = 0 or 2, then set to 0; = 1 or 3, then set to 1
+
+        TCODE,1=02 means:
+          TCODE1 = 2
+          TCODE1/1000 = 0
+          TCODE = f1(TCODE1)
+        """
         (approach_code, tCode, int3, isubcase) = unpack(b(self._endian + '4i'), data[:16])
         self.approach_code = approach_code
         self.tCode = tCode
@@ -1392,11 +1444,15 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #: the type of result being processed
         self.table_code = tCode % 1000
         self.data_code['table_code'] = self.table_code
+        self.data_code['tCode'] = self.tCode
 
         #: used to create sort_bits
         self.sort_code = tCode // 1000
+        assert self.sort_code in [0, 1, 2, 3, 4, 5, 6], self.sort_code
 
         self.data_code['sort_code'] = self.sort_code
+        self.sort_method = self._function1(tCode)
+        self.data_code['sort_method'] = self.sort_method
 
         #: what type of data was saved from the run; used to parse the
         #: approach_code and grid_device.  device_code defines what options

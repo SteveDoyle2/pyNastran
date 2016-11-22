@@ -961,6 +961,7 @@ class Op2Codes(object):
         msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name_str, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
 
+        msg += "  sort_method   = %s\n" % self.sort_method
         msg += "  sort_code     = %s\n" % self.sort_code
         msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
         msg += "    data_format = %-3s %s\n" % (self.sort_bits[0], sort_word1)
@@ -997,6 +998,8 @@ class Op2Codes(object):
             msg += '  NX Nastran\n'
         #print msg
         assert isinstance(self.format_code, int), type(self.format_code)
+        print(msg)
+        asdf
         return msg
 
     @property
@@ -1087,33 +1090,15 @@ class Op2Codes(object):
         +-----+-------------+---------+
         """
         #tcode = self.table_code // 1000
+        table_code = self.tCode
         tcode = self.sort_code
         sort_code = tcode
-        sort_method = 1
-        is_real = True
-        is_random = False
         assert sort_code in [0, 1, 2, 3, 4, 5, 6], 'sort_code=%s\n%s' % (sort_code, self.code_information())
-        if tcode in [2, 3, 5, 6]:
-            sort_method = 2
-        if tcode in [1, 3]:
-            is_real = False
-        if tcode in [4, 5, 6]:
-            is_random = True
-
-        if is_random:
-            assert self.sort_bits[0] == 1, 'should be RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        else:
-            assert self.sort_bits[0] == 0, 'should be NOT RANDOM; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-
-        if sort_method == 1:
-            assert self.sort_bits[1] == 0, 'should be SORT1; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        else:
-            assert self.sort_bits[1] == 1, 'should be SORT2; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-
-        #if is_real:
-            #assert self.sort_bits[2] == 0, 'should be REAL; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
-        #else:
-            #assert self.sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; tcode=%s' % (self.sort_bits, tcode)
+        try:
+            sort_method, is_real, is_random = determine_sort_bits_meaning(table_code, sort_code, self.sort_bits)
+        except AssertionError:
+            #print(self.code_information())
+            raise
         return sort_method, is_real, is_random
 
     #----
@@ -1188,3 +1173,58 @@ def get_scode_word(s_code, stress_bits):
         #s_word = 'Stress or Strain - UNDEFINED'
         s_word = '???'
     return s_word
+
+def determine_sort_bits_meaning(table_code, sort_code, sort_bits):
+    """
+    Value Sort type Data format Random
+    ===== ========= =========== ======
+    0     SORT1     Real        No
+    1     SORT1     Complex     No
+    2     SORT2     Real        No
+    3     SORT2     Complex     No
+    4     SORT1     Real        Yes
+    5     ???       ???         ???
+    6     SORT2     Real        Yes
+
+    table_code%1000 = function3()
+
+    SPCForce = table_code % 1000 (function 3)
+    """
+    sort_method = 1
+    is_real = True
+    is_random = False
+    # old
+    #if sort_code in [2, 3, 5, 6]:
+        #sort_method = 2
+    #if sort_code in [1, 3]:
+        #is_real = False
+    #if sort_code in [4, 5, 6]:
+        #is_random = True
+
+    # new
+    if sort_code in [2, 3, 5, 6]:
+        sort_method = 2
+    if sort_code in [1, 3]:
+        is_real = False
+    if sort_code in [4, 5, 6]:
+        is_random = True
+
+    try:
+        if is_random:
+            assert sort_bits[0] == 1, 'should be RANDOM; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+        else:
+            assert sort_bits[0] == 0, 'should be NOT RANDOM; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+
+        if sort_method == 1:
+            assert sort_bits[1] == 0, 'should be SORT1; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+        else:
+            assert sort_bits[1] == 1, 'should be SORT2; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+
+        if is_real:
+            assert sort_bits[2] == 0, 'should be REAL; sort_bits=%s; sort_code=%s; table_code=%s table_code%%1000=%s' % (sort_bits, sort_code, table_code, table_code % 1000)
+        else:
+            assert sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; sort_code=%s; table_code=%s table_code%%1000=%s' % (sort_bits, sort_code, table_code, table_code % 1000)
+    except AssertionError:
+        #print('sort_method=%r; is_real=%r is_random=%r' % (sort_method, is_real, is_random))
+        raise
+    return sort_method, is_real, is_random
