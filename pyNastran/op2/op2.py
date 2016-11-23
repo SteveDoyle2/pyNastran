@@ -373,7 +373,7 @@ class OP2(OP2_Scalar):
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
         self.log.debug('combine=%s' % combine)
-        self.log.debug('-------- reading op2 with read_mode=1 --------')
+        self.log.debug('-------- reading op2 with read_mode=1 (array sizing) --------')
         self.read_mode = 1
         self._close_op2 = False
 
@@ -385,7 +385,7 @@ class OP2(OP2_Scalar):
         # TODO: clear out objects the user doesn't want
         self.read_mode = 2
         self._close_op2 = True
-        self.log.debug('-------- reading op2 with read_mode=2 --------')
+        self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
         OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
         self.finalize()
