@@ -324,7 +324,10 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             msg = ''
             for i, param in enumerate(self.words):
                 if param == 's_code':
-                    s_word = get_scode_word(self.s_code, self.stress_bits)
+                    try:
+                        s_word = get_scode_word(self.s_code, self.stress_bits)
+                    except AttributeError:
+                        raise
                     self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
                     self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises()))
                     self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain()))
@@ -1448,7 +1451,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         #: used to create sort_bits
         self.sort_code = tCode // 1000
-        assert self.sort_code in [0, 1, 2, 3, 4, 5, 6], self.sort_code
+        #Sort 1 - SortCode=((TCODE//1000)+2)//2
 
         self.data_code['sort_code'] = self.sort_code
         self.sort_method = self._function1(tCode)
@@ -1491,6 +1494,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             self.binary_debug.write('  %-14s = %r\n' % ('  table_code', self.table_code))
             self.binary_debug.write('  %-14s = %r\n' % ('  sort_code', self.sort_code))
         self._parse_sort_code()
+        assert self.sort_code in [0, 1, 2, 3, 4, 5, 6], self.sort_code #self.code_information()
 
     def _parse_thermal_code(self):
         """

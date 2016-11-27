@@ -317,7 +317,7 @@ class OQG(OP2Common):
             n = self._read_oqg_spc_no(data, ndata)
 
         elif self.table_code == 3:   # SPC Forces
-            assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1'], self.code_information()
+            assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1', b'OQG2'], self.code_information()
             n = self._read_spc_forces(data, ndata)
         elif self.table_code == 39:  # MPC Forces
             assert self.table_name in [b'OQMG1', b'OQMG2'], self.code_information() # , b'OQMPSD1', b'OQMPSD2'

@@ -29,6 +29,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
+from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
 from pyNastran.op2.tables.ogs import OGS
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
@@ -402,7 +403,7 @@ MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + 
 
 
 class OP2_Scalar(LAMA, ONR, OGPF,
-                 OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
+                 OEF, OES, OESM, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
     Defines an interface for the Nastran OP2 file.
     """
@@ -453,6 +454,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         OEF.__init__(self)
         OES.__init__(self)
+        OESM.__init__(self)
         OGS.__init__(self)
 
         OPG.__init__(self)
@@ -535,16 +537,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         table_mapper = {
 
             # per NX
-            b'OESVM1' : [self._read_oes1_3, self._read_oes1_4],    # isat_random
-            b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],   # isat_random
-            b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
+            b'OESVM1' : [self._read_oesm1_3, self._read_oesm1_4],    # isat_random
+            b'OESVM1C' : [self._read_oesm1_3, self._read_oesm1_4],   # isat_random
+            b'OSTRVM1' : [self._read_oesm1_3, self._read_ostrm1_4],   # isat_random
+            b'OSTRVM1C' : [self._read_oesm1_3, self._read_ostrm1_4],  # isat_random
 
-            #b'OSTRVM1' : [self._table_passer, self._table_passer],
-            #b'OSTRVM1C' : [self._table_passer, self._table_passer],
-            b'OSTRVM1' : [self._read_oes1_3, self._read_ostr1_4],   # isat_random
-            b'OSTRVM1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
-            b'OSTR2C' : [self._read_oes2_3, self._read_oes2_4],
             b'OSTR2' : [self._read_oes2_3, self._read_oes2_4],
+            b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
+            b'OSTR2C' : [self._read_oes2_3, self._read_oes2_4],
 
             # MSC TABLES
 
@@ -769,6 +769,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'BOPHIG':  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
+            b'ROUGV2'  : [self._read_oug2_3, self._read_oug_4], # relative OUG
 
             b'OUGATO1' : [self._read_oug1_3, self._read_oug_ato],
             b'OUGCRM1' : [self._read_oug1_3, self._read_oug_crm],
@@ -1535,6 +1536,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_sdf()
             elif table_name in [b'IBULK', b'CDDATA']:
                 self._read_ibulk()
+            elif table_name in [b'CMODEXT']:
+                self._read_cmodext()
             elif table_name in MATRIX_TABLES:
                 self._read_matrix()
             elif table_name in RESULT_TABLES:
@@ -2134,6 +2137,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             markers = self.get_nmarkers(1, rewind=True)
 
     def _read_extdb(self):
+        """
+        fails if a streaming block:
+         - nx_spike\extse04c_0.op2
+          """
         self.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.is_debug_file:
@@ -2146,35 +2153,127 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
-        self.read_markers([-2, 1, 0])
+
+        marker = -2
+        while 1:
+            try:
+                self.read_markers([marker, 1, 0])
+            except FortranMarkerError:
+                self.show_ndata(100)
+                raise
+            nfields = self.get_marker1(rewind=True)
+            if nfields > 0:
+                data = self._read_record()
+                #self.show_data(data, types='s', endian=None)
+            elif nfields == 0:
+                #self.show_ndata(100, types='ifs')
+                break
+            else:
+                raise RuntimeError('nfields=%s' % nfields)
+            marker -= 1
+        marker_end = self.get_marker1(rewind=False)
+
+    def _read_cmodext(self):
+        """
+        fails if a streaming block???:
+         - nx_spike\mnf16_0.op2
+          """
+        self.table_name = self._read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
 
-        #markers = self.get_nmarkers(3, rewind=False)
-        #print('markers =', markers)
+        markers = self.get_nmarkers(1, rewind=True)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
 
-        self.read_markers([-3, 1, 0])
+        marker = -2
+        markers = self.read_markers([marker, 1, 0])
+
         data = self._read_record()
+        table_name, oneseventy_a, oneseventy_b = unpack('8sii', data)
+        assert oneseventy_a == 170, oneseventy_a
+        assert oneseventy_b == 170, oneseventy_b
+        print('170*4 =', 170*4)
+        #self.show_data(data)
+        marker -= 1
+        marker = self._read_cmodext_helper(marker) # -3
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        print('table8')
+        marker = self._read_cmodext_helper(marker, debug=True)
+        self.show_ndata(100)
 
-        self.read_markers([-4, 1, 0])
-        data = self._read_record()
+    def _read_cmodext_helper(self, marker_orig, debug=False):
+        marker = marker_orig
+        #markers = self.read_nmarkers([marker, 1, 1]) # -3
 
-        self.read_markers([-5, 1, 0])
-        data = self._read_record()
+        if debug:
+            self.show_ndata(100)
+        markers = self.get_nmarkers(3, rewind=False)
+        assert markers == [marker_orig, 1, 1], markers
+        print('markers =', markers)
 
-        self.read_markers([-6, 1, 0])
-        data = self._read_record()
+        #marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+        val_old = 0
+        if debug:
+            print('-----------------------------')
+        i = 0
+        #icheck = 7
+        while 1:
+            #print('i = %i' % i)
+            marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+            if marker != 6:
+                print('marker = %s' % marker)
 
-        self.read_markers([-7, 1, 0, 0])
-    #self.read_markers([-1])
+            assert marker == 6, marker
+            data = self.read_block()
+            val = unpack('i', data[:4])[0]
+            if debug:
+                print('val=%s delta=%s' % (val, val - val_old))
+                self.show_data(data, types='ifs')
+            assert len(data) > 4
+            #print('i=%s val=%s delta=%s' % (i, val, val - val_old))
+            val_old = val
+
+            marker2 = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
+            #print(marker2)
+            if marker2 == 696:
+                break
+            i += 1
+        if debug:
+            print('----------------------------------------')
+
+        marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+        if debug:
+            print('****marker = %s' % marker)
+        assert marker == 696, marker
+        data = self.read_block()
+        #self.show_data(data)
+
+        marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
+        assert marker == (marker_orig - 1), marker
+
+        if debug:
+            self.show_ndata(200)
+        return marker
 
         #data = self._read_record()
+        #marker -= 1
 
-        #markers = self.get_nmarkers(3, rewind=False)
-        #print('markers =', markers)
+
 
         #self.show_ndata(100)
-        #import sys
-        #sys.exit()
+
+        ##marker -= 1
+        ##marker_end = self.get_marker1(rewind=False)
+        #asdf
 
     def _read_ibulk(self):
         self.table_name = self._read_table_name(rewind=False)
