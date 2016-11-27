@@ -190,6 +190,12 @@ class TestOP2(Tester):
             quiet=False, check_memory=False, stop_on_failure=True,
             dev=False)
 
+        f06_filename = os.path.join(folder, 'buckling_solid_shell_bar.test_op2_sort2.f06')
+        op2.write_f06(f06_filename, is_mag_phase=False, is_sort1=False,
+                      #delete_objects=True,
+                      end_flag=False, quiet=True,
+                      repr_check=False, close=True)
+
         assert len(op2.displacements) == 1, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
@@ -1054,7 +1060,7 @@ class TestOP2(Tester):
         assert cquad4_strain.is_fiber_distance(), cquad4_strain
         assert cquad4_strain.is_von_mises() == False, cquad4_strain
 
-    def test_op2_solid_shell_bar_02(self):
+    def test_op2_solid_shell_bar_mode(self):
         op2_filename = os.path.join('mode_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, op2_filename)
@@ -1120,7 +1126,7 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_solid_shell_bar_02_export(self):
+    def test_op2_solid_shell_bar_mode_export(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         bdf_filename = os.path.join(folder, 'mode_solid_shell_bar.bdf')
         op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
@@ -1128,7 +1134,7 @@ class TestOP2(Tester):
         export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
         os.remove(vtk_filename)
 
-    def test_op2_solid_shell_bar_03(self):
+    def test_op2_solid_shell_bar_buckling(self):
         op2_filename = os.path.join('buckling_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, op2_filename)
@@ -1202,7 +1208,7 @@ class TestOP2(Tester):
         os.remove(debug_file)
 
     #@unittest.expectedFailure
-    def test_op2_solid_shell_bar_04(self):
+    def test_op2_solid_shell_bar_freq(self):
         op2_filename = os.path.join('freq_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, op2_filename)
@@ -1233,6 +1239,8 @@ class TestOP2(Tester):
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
+        #if op2.is_nx:
+            #return
         rod_stress = op2.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (7, 2, 2), rod_stress.data.shape
@@ -1291,7 +1299,7 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_solid_shell_bar_03_export(self):
+    def test_op2_solid_shell_bar_freq_export(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         bdf_filename = os.path.join(folder, 'freq_solid_shell_bar.bdf')
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
@@ -1299,7 +1307,7 @@ class TestOP2(Tester):
         export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
         os.remove(vtk_filename)
 
-    def test_op2_solid_shell_bar_05(self):
+    def test_op2_solid_shell_bar_transient(self):
         """
         MSC 2005r2 Tables : GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPTS, DYNAMICS, DIT
                             OQG1, OUGV1, OGPFB1, OEF1X, OES1X1, OSTR1X, OPG1

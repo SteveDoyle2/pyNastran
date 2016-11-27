@@ -794,7 +794,7 @@ class RealCBeamForceArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -803,20 +803,20 @@ class RealCBeamForceArray(ScalarObject):
             #name = 'FREQUENCY'
         #else: # mode
             #raise RuntimeError(name)
-        if is_sort1:
-            msg_temp = [
-                '                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
-                '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
-                '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
-        else:
-            raise NotImplementedError('CBEAM-SORT2')
+        #if is_sort1:
+        msg_temp = [
+            '                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+            '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
+            '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
+        #else:
+            #raise NotImplementedError('CBEAM-SORT2')
 
         if self.is_sort1():
-            assert self.is_sort1() is True, str(self)
+            #assert self.is_sort1() is True, str(self)
             #if is_sort1:
-            page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp)
+            page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, msg_temp)
             #else:
-                #self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp)
+                #self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp)
         else:
             assert self.is_sort1() is True, str(self)
         return page_num - 1
@@ -827,7 +827,7 @@ class RealCBeamForceArray(ScalarObject):
             'axial_force', 'total_torque', 'warping_torque', ]
         return headers
 
-    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, msg_temp):
+    def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, msg_temp):
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
         long_form = False
@@ -852,7 +852,7 @@ class RealCBeamForceArray(ScalarObject):
                 dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dt_line
             msg = header + msg_temp
-            f.write(''.join(msg))
+            f06_file.write(''.join(msg))
 
             #sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq
             assert self.is_sort1() is True, str(self)
@@ -871,14 +871,14 @@ class RealCBeamForceArray(ScalarObject):
                 (sbm1i, sbm2i, sts1i, sts2i, safi, sttrqi, swtrq) = vals2
 
                 if long_form:
-                    f.write('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (
+                    f06_file.write('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (
                         eid, sdi, sbm1i, sbm2i, sts1i, sts2i, safi, sttrqi, swtrq))
                 else:
                     if sdi == 0.:
-                        f.write('0  %8i\n' % eid)
-                    f.write('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (
+                        f06_file.write('0  %8i\n' % eid)
+                    f06_file.write('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (
                         nid, sdi, sbm1i, sbm2i, sts1i, sts2i, safi, sttrqi, swtrq))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 

@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import get_key0
+import numpy as np
 try:
     import pandas as pd
 except ImportError:
@@ -50,7 +51,7 @@ class ComplexShearArray(OES_Object):
         #self.names = []
         #self.nelements //= nnodes
         self.nelements //= self.ntimes
-        self.ntotal = self.nelements * nnodes * 2
+        self.ntotal = self.nelements * nnodes# * 2
         #self.ntotal
         self.itime = 0
         self.ielement = 0
@@ -59,27 +60,27 @@ class ComplexShearArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
+        self._times = np.zeros(self.ntimes, 'float32')
         #self.ntotal = self.nelements * nnodes
 
-        self.element = zeros((self.nelements, 2), 'int32')
+        self.element = np.zeros((self.nelements, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
 
         if not self.nelements == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                self.ntimes, self.nelements, nnodes, self.nelements * nnodes,
+                self.ntotal)
             raise RuntimeError(msg)
 
         # [max_shear, avg_shear]
-        self.data = zeros((self.ntimes, self.ntotal, 2), 'complex64')
+        self.data = np.zeros((self.ntimes, self.ntotal, 2), 'complex64')
 
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -136,7 +137,7 @@ class ComplexShearArray(OES_Object):
 
         nelements = self.nelements
         ntimes = self.ntimes
-        nnodes = self.element_node.shape[0]
+        nnodes = self.element.shape[0]
         #ntotal = self.ntotal
         msg = []
         if self.nonlinear_factor is not None:  # transient
@@ -150,9 +151,12 @@ class ComplexShearArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
+        f.write(self.code_information())
+        return page_num
         raise NotImplementedError('ComplexShearArray')
         msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
 

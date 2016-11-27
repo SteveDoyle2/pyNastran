@@ -537,10 +537,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         table_mapper = {
 
             # per NX
-            b'OESVM1' : [self._read_oesm1_3, self._read_oesm1_4],    # isat_random
-            b'OESVM1C' : [self._read_oesm1_3, self._read_oesm1_4],   # isat_random
-            b'OSTRVM1' : [self._read_oesm1_3, self._read_ostrm1_4],   # isat_random
-            b'OSTRVM1C' : [self._read_oesm1_3, self._read_ostrm1_4],  # isat_random
+            b'OESVM1' : [self._read_oes1_3, self._read_oes1_4],    # isat_random
+            b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],   # isat_random
+            b'OSTRVM1' : [self._read_oes1_3, self._read_ostr1_4],   # isat_random
+            b'OSTRVM1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
 
             b'OSTR2' : [self._read_oes2_3, self._read_oes2_4],
             b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
@@ -1082,8 +1082,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self._count += 1
         self._table4_count += 1
 
-        if self.read_mode == 0:
-            return ndata
         #if self._table4_count == 0:
             #self._count += 1
         #self._table4_count += 1

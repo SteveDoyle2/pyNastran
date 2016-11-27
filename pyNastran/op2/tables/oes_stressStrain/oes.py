@@ -470,14 +470,14 @@ class OES(OP2Common):
 
             (3, 1, 5, b'OES1X1') : ('ctube_stress', RealRodStressArray),
             (3, 1, 5, b'OES1X') : ('ctube_stress', RealRodStressArray),
-            (3, 2, 5) : ('ctube_stress', ComplexRodStressArray),
-            (3, 3, 5) : ('ctube_stress', ComplexRodStressArray),
+            #(3, 2, 5) : ('ctube_stress', ComplexRodStressArray),
+            #(3, 3, 5) : ('ctube_stress', ComplexRodStressArray),
 
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X1') : ('conrod_stress', RealRodStressArray),
-            (10, 2, 5) : ('conrod_stress', ComplexRodStressArray),
-            (10, 3, 5) : ('conrod_stress', ComplexRodStressArray),
+            #(10, 2, 5) : ('conrod_stress', ComplexRodStressArray),
+            #(10, 3, 5) : ('conrod_stress', ComplexRodStressArray),
 
             # beams
             (2, 1, 111, b'OES1X1') : ('cbeam_stress', RealBeamStressArray),
@@ -827,25 +827,27 @@ class OES(OP2Common):
             (277, 1, 26, b'OES1X1') : ('cplsts6', 'NA'),
             (278, 1, 32, b'OES1X1') : ('cplsts8', 'NA'),
 
-            #(1, 2, 5, 'OESVM1') : ('crod', 'NA'),
-            #(10, 2, 5, 'OESVM1') : ('conrod', 'NA'),
+            (1, 2, 5, 'OESVM1') : ('crod', 'NA'),
+            (10, 2, 5, 'OESVM1') : ('conrod', 'NA'),
 
-            #(12, 2, 3, 'OESVM1') : ('celas2', 'NA'),
+            (11, 2, 3, 'OESVM1') : ('celas1', 'NA'),
+            (12, 2, 3, 'OESVM1') : ('celas2', 'NA'),
 
-            #(2, 2, 111, b'OESVM1') : ('cbeam', 'NA'),
-            #(34, 2, 19, b'OESVM1') : ('cbar', 'NA'),
+            (2, 2, 111, b'OESVM1') : ('cbeam', 'NA'),
+            (34, 2, 19, b'OESVM1') : ('cbar', 'NA'),
 
-            #(74, 2, 17, 'OESVM1') : ('ctria3', 'NA'),
-            #(144, 2, 87, b'OESVM1') : ('cquad4', 'NA'),
+            (4, 2, 5, 'OESVM1') : ('cshear', 'NA'),
+            (74, 2, 17, 'OESVM1') : ('ctria3', 'NA'),
+            (144, 2, 87, b'OESVM1') : ('cquad4', 'NA'),
 
-            #(95, 2, 13, b'OESVM1C') : ('cquad4', 'NA'),
-            #(97, 2, 13, b'OESVM1C') : ('ctria3', 'NA'),
+            (95, 2, 13, b'OESVM1C') : ('cquad4', 'NA'),
+            (97, 2, 13, b'OESVM1C') : ('ctria3', 'NA'),
 
-            #(102, 2, 13, b'OESVM1') : ('cbush', 'NA'),
+            (102, 2, 13, b'OESVM1') : ('cbush', 'NA'),
 
-            #(39, 2, 74, 'OESVM1') : ('ctetra', 'NA'),
-            #(67, 2, 130, b'OESVM1') : ('chexa', 'NA'),
-            #(68, 2, 102, b'OESVM1') : ('cpenta', 'NA'),
+            (39, 2, 74, 'OESVM1') : ('ctetra', 'NA'),
+            (67, 2, 130, b'OESVM1') : ('chexa', 'NA'),
+            (68, 2, 102, b'OESVM1') : ('cpenta', 'NA'),
         }
 
         try:
@@ -1234,6 +1236,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
+                obj = self.obj
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
@@ -1269,7 +1272,7 @@ class OES(OP2Common):
                         else:
                             etmax = complex(etmaxr, etmaxi)
                             etavg = complex(etavgr, etavgi)
-                        obj.add_new_eid_sort1(dt, eid, (etmax, etavg))
+                        obj.add_sort1(dt, eid, etmax, etavg)
                         n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
                 raise RuntimeError(self.code_information())
@@ -1860,7 +1863,7 @@ class OES(OP2Common):
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
             elif self.format_code == 2 and self.num_wide == numwide_random2:
-                raise RuntimeError(self.code_information())
+                #raise RuntimeError(self.code_information())
                 ## a = 18
                 ## b = 14
                 ## a + b * nnodes = numwide_random3
@@ -3460,8 +3463,6 @@ class OES(OP2Common):
                 raise RuntimeError(self.code_information())
 
         elif self.element_type == 94:
-            if self.read_mode == 0:
-                return ndata
             # 94-BEAMNL
             numwide_real = 51
             numwide_random = 0
@@ -3756,7 +3757,7 @@ class OES(OP2Common):
                     msg = 'numwide=%s A=%s B=%s C=%s' % (self.num_wide, numwide_a, numwide_b, numwide_c)
                     raise RuntimeError(self.code_information())
             else:
-                raise RuntimeError(self.code_information())
+                #raise RuntimeError(self.code_information())
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
 

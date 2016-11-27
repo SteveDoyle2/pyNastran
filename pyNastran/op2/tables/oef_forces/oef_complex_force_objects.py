@@ -439,8 +439,7 @@ class ComplexCShearForceArray(ScalarObject):
                     kick_force1i, kick_force2i, kick_force3i, kick_force4i,
                     shear12i, shear23i, shear34i, shear41i
                 ] = vals2
-                for val in vals2:
-                    assert val == ' 0.0', vals2
+
                 #complex_cshear_force_f06
                 #'                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======'
                 #' ELEMENT          F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1'
