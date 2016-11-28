@@ -2,32 +2,6 @@ from numpy import angle, float32
 from pyNastran.utils import object_attributes
 
 
-def writeFloats10E(vals):
-    vals2 = []
-    is_all_zeros = True
-    for v in vals:
-        v2 = '%10.3E' % v
-        if v2 in (' 0.000E+00', '-0.000E+00'):
-            v2 = ' 0.0'
-        else:
-            is_all_zeros = False
-        vals2.append(v2)
-    return vals2, is_all_zeros
-
-
-def writeFloats12E(vals):
-    vals2 = []
-    is_all_zeros = True
-    for v in vals:
-        v2 = '%12.5E' % v
-        if v2 in (' 0.00000E+00', '-0.00000E+00'):
-            v2 = ' 0.0'
-        else:
-            is_all_zeros = False
-        vals2.append(v2)
-    return vals2, is_all_zeros
-
-
 def write_float_12e(val):
     vals2 = []
     v2 = '%12.5E' % val
@@ -43,17 +17,25 @@ def write_float_13e(val):
     return val2
 
 
-#def writeFloats13E(vals):
-    #vals2 = []
-    #is_all_zeros = True
-    #for v in vals:
-        #v2 = '%13.6E' % v
-        #if v2 in (' 0.000000E+00', '-0.000000E+00'):
-            #v2 = ' 0.0'
-        #else:
-            #is_all_zeros = False
-        #vals2.append(v2)
-    #return vals2, is_all_zeros
+def write_floats_10e(vals):
+    vals2 = []
+    for v in vals:
+        v2 = '%10.3E' % v
+        if v2 in (' 0.000E+00', '-0.000E+00'):
+            v2 = ' 0.0'
+        vals2.append(v2)
+    return vals2
+
+
+def write_floats_12e(vals):
+    vals2 = []
+    for v in vals:
+        v2 = '%12.5E' % v
+        if v2 in (' 0.00000E+00', '-0.00000E+00'):
+            v2 = ' 0.0'
+        vals2.append(v2)
+    return vals2
+
 
 def write_floats_13e(vals):
     vals2 = []
@@ -64,14 +46,6 @@ def write_floats_13e(vals):
         vals2.append(v2)
     return vals2
 
-def write_floats_12e(vals):
-    vals2 = []
-    for v in vals:
-        v2 = '%12.5E' % v
-        if v2 in (' 0.00000E+00', '-0.00000E+00'):
-            v2 = ' 0.0'
-        vals2.append(v2)
-    return vals2
 
 def write_imag_floats_13e(vals, is_mag_phase):
     vals2 = []
@@ -106,19 +80,16 @@ def write_imag_floats_13e(vals, is_mag_phase):
     return vals2
 
 
-def writeFloats8p4F(vals):
+def write_floats_8p4f(vals):
     vals2 = []
-    is_all_zeros = True
     for v in vals:
         if v >= 1000.0 or v <= -100.0:
             raise RuntimeError(v)
         v2 = '%8.4f' % v
         if v2 in ('  0.0000', ' -0.0000'):
             v2 = '  0.0   '
-        else:
-            is_all_zeros = False
         vals2.append(v2)
-    return vals2, is_all_zeros
+    return vals2
 
 
 def _eigenvalue_header(obj, header, itime, ntimes, dt):

@@ -1084,7 +1084,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             phase = floats[:, 8:]
             rtheta = radians(phase)
             real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-            #assert mag.shape == phase.shape, 'mag.shape=%s phase.shape=%s' % (str(mag.shape), str(phase.shape))
             #abs(real_imag), angle(real_imag, deg=True)
 
             obj._times[obj.itime] = dt
@@ -1131,7 +1130,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 14)
             real = floats[:, 2:8]
             imag = floats[:, 8:]
-            #assert real.shape == imag.shape, 'real.shape=%s imag.shape=%s' % (str(real.shape), str(imag.shape))
 
             obj._times[obj.itime] = dt
             obj.data[obj.itime, itotal:itotal2, :] = real + 1.j * imag
@@ -1304,7 +1302,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #storage_obj = getattr(self, storageName)
         #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
 
-        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (self.table_name, self.isubcase, self.subtitle.strip()))
+        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (
+            #self.table_name, self.isubcase, self.subtitle.strip()))
         self.data_code['table_name'] = self.table_name.decode(self.encoding)
         assert self.log is not None
 
@@ -1886,7 +1885,9 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     msg += "There's probably an extra check for read_mode=1...%s" % result_name
                     self.log.error(msg)
                     raise
-                assert self.obj.table_name == self.table_name.decode('utf-8'), 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
+                if not self.obj.table_name == self.table_name.decode('utf-8'):
+                    msg = 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
+                    raise TypeError(msg)
 
                 #obj.update_data_code(self.data_code)
                 self.obj.build()
