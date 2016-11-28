@@ -2726,7 +2726,7 @@ class NastranIO(object):
 
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif etype in ('CBAR', 'CBEAM', 'CROD', 'CONROD'):
-                if etype == 'CROD':
+                if etype == 'CONROD':
                     pid = 0
                     areai = element.Area()
                 else:
@@ -3042,6 +3042,8 @@ class NastranIO(object):
                         z0 = element.pid.z0
                     elif pid_type == 'PLPLANE':
                         z0 = 0.
+                    elif pid_type == 'PSHEAR':
+                        z0 = 0.
                     else:
                         raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
 
@@ -3070,7 +3072,7 @@ class NastranIO(object):
                         elif element.type in ['CTRIA6', 'CTRIAX6', 'CPLSTN6']:
                             nnodesi = 6
 
-                        elif element.type in ['CQUAD4', 'CQUADR', 'CPLSTN4']:
+                        elif element.type in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR']:
                             nnodesi = 4
                         elif element.type in ['CQUAD8', 'CPLSTN8']:
                             nnodesi = 8
@@ -3112,7 +3114,8 @@ class NastranIO(object):
                     ie = self.eid_map[eid]
                     element_dimi = 1
                     nnodesi = 2
-                elif element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CVISC',
+                elif element.type in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
+                                      'CFAST', 'CVISC',
                                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
                     ie = self.eid_map[eid]
