@@ -181,8 +181,9 @@ class Cart3dIO(object):
             rhoV = loads['rhoV']
             rhoW = loads['rhoW']
             E = loads['E']
-
-            nrows = len(Cp)
+            npoints = self.points.shape[0]
+            assert len(Cp) == npoints, 'len(Cp)=%s npoints=%s' % (len(Cp), npoints)
+            #nrows = len(Cp)
             fmt = '%s\n%s %s %s %s %s\n' % (float_fmt, float_fmt, float_fmt,
                                             float_fmt, float_fmt, float_fmt)
             for (cpi, rhoi, rhou, rhov, rhoe, e) in zip(Cp, rho, rhoU, rhoV, rhoW, E):
