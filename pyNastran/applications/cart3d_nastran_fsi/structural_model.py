@@ -60,7 +60,7 @@ class StructuralModel(Model):
         return self.fem.Element(eid).type
 
     def getElementIDsWithPIDs(self):
-        self.log.info('pids =%s' % pids)
+        self.log.info('pids =%s' % self.pids)
         return self.fem.get_element_ids_list_with_pids(self.pids)
 
     def get_element_nodes(self, eid):

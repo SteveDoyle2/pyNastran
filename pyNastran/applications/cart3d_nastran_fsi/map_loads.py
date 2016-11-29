@@ -53,9 +53,9 @@ class LoadMapping(object):
         self.bdf = None
         self.load_cases = None
 
-        self.Sref = 1582876. # inches
-        self.Lref = 623.  # inch
-        self.xref = 268.
+        self.Sref = 1.  # inches
+        self.Lref = 1.  # inch
+        self.xref = 0.  # inch
 
     #@entry_exit
     def set_output(self, bdffile='fem.bdf', load_case=1):
@@ -66,6 +66,21 @@ class LoadMapping(object):
     def set_flight_condition(self, pInf=499.3, qInf=237.885):
         self.pInf = pInf
         self.qInf = qInf  #1.4/2.*pInf*Mach**2.
+
+    def set_reference_quantities(self, Sref=1, Lref=1., xref=0.):
+        """
+        Parameters
+        ----------
+        Sref : float
+            the reference area (in^2)
+        Lref : float
+            the force/moment reference length (in)
+        xref : float
+            the moment reference position (in)
+        """
+        self.Sref = Sref
+        self.Lref = Lref
+        self.xref = xref
 
     #@entry_exit
     def load_mapping_matrix(self):
@@ -224,16 +239,16 @@ class LoadMapping(object):
         sys.stdout.flush()
 
     #@entry_exit
-    def parseMapFile(self, map_filename='mappingMatrix.new.out'):
+    def parse_map_file(self, map_filename='mappingMatrix.new.out'):
         """
         This is used for rerunning an analysis quickly
         (cuts out building the mapping matrix ~1.5 hours).
         1 {8131: 0.046604568185355716, etc...}
         """
-        log.info("---starting parseMapFile---")
+        log.info("---starting parse_map_file---")
         mapping_matrix = {}
 
-        log.info('loading mapFile=%r' % map_filename)
+        log.info('loading map_file=%r' % map_filename)
         with open(map_filename, 'r') as map_file:
             lines = map_file.readlines()
 
@@ -256,7 +271,7 @@ class LoadMapping(object):
             mapping_matrix[aEID] = distribution
         #log.info("mappingKeys = %s" %(sorted(mapping_matrix.keys())))
         self.run_map_test(mapping_matrix)
-        log.info("---finished parseMapFile---")
+        log.info("---finished parse_map_file---")
         return mapping_matrix
 
     #@entry_exit
@@ -293,8 +308,9 @@ class LoadMapping(object):
 
         log.info("---starting build_mapping_matrix---")
         #print("self.mapping_matrix = ",self.mapping_matrix)
-        if os.path.exists('mappingMatrix.new.out'):
-            self.mapping_matrix = self.parseMapFile('mappingMatrix.new.out')
+        mapping_matrix_filename = os.path.join(self.configpath, 'mappingMatrix.new.out')
+        if os.path.exists(mapping_matrix_filename):
+            self.mapping_matrix = self.parse_map_file(mapping_matrix_filename)
             log.info("---finished build_mapping_matrix based on mappingMatrix.new.out---")
             sys.stdout.flush()
             return self.mapping_matrix
@@ -612,7 +628,7 @@ class LoadMapping(object):
         normal = Normal(a, b)
         return normal
 
-def is_inside(self, u, v):
+def is_inside(u, v):
     if (0. <= u <= 1.) and (0. <= v <= 1.):
         return True
     return False
@@ -667,37 +683,47 @@ def is_inside(self, u, v):
 
 def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
                   bdf_model_out='fem.loads.out'):
+    """
+    inputs : dict
+        aero_format : str
+            'cart3d' is the only option
+        skin_property_regions : List[int, int, ...]
+            list of property ids for the skin
+        isubcase : int
+            the SUBCASE number for the load
+        pInf : float
+            the static pressure (psi)
+        qInf : float
+            the dynamic pressure (psi)
+        Sref : float
+            the reference area (in^2)
+        Lref : float
+            the reference length (in)
+        xref : float
+            the reference location (in)
+    cart3d_geom : str; default='Components.i.triq'
+        path to the cart3d model
+        only maps half model loads, so:
+           '_half' on the end : use the +y side of the model
+           without 'half' : cut the model and use the +y half
+    bdf_model : str
+        the path to the input fem
+    bdf_model_out : str
+        the location to save the loads
+    """
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
     t0 = time()
     print(inputs)
     aero_format = inputs['aero_format'].lower()
 
-    # the property regions to map elements to
-    property_regions = [
-        1, 1101, 1501, 1601, 1701, 1801, 1901, 2101, 2501, 2601, 2701, 2801,
-        2901, 10103, 10201, 10203, 10301, 10401, 10501, 10601, 10701, 10801,
-        10901, 20103, 20203, 20301, 20401, 20501, 20601, 20701, 20801, 20901,
-        701512, 801812,
-    ]
-    if inputs is None:
-        pInf = 2116.  # sea level
-        Mach = 0.8
-        inputs = {
-            'aero_format' : 'Cart3d',
-            'Mach' : 0.825,
-            # 'pInf' : 499.3,        # psf, alt=35k (per Schaufele p. 11)
-            'pInf' : pInf / 144.,  # convert to psi
-            'qInf' : 1.4 / 2. * pInf * Mach**2.,
-            'Sref' : 1582876.,  # inch^2
-            'Lref' : 623.,  # inch
-            'xref' : 268.,  # inch
-            'isubcase' : 1,
-        }
-
+    property_regions = inputs['skin_property_regions']
     isubcase = inputs['isubcase']
     pInf = inputs['pInf']
     qInf = inputs['qInf']
+    Sref = inputs['Sref']
+    Lref = inputs['Lref']
+    xref = inputs['xref']
 
     if aero_format == 'cart3d':
         cart3d_model = Cart3D(debug=True)
@@ -718,7 +744,6 @@ def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
             cart3d_model.read_cart3d(half_model, result_names=result_names)
             elements = cart3d_model.elements
         Cp = cart3d_model.loads['Cp']
-        #Cp = loads['Cp']
         mesh = cart3d_model
 
     else:
@@ -728,21 +753,16 @@ def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
     log.info("elements[1] = %s" % elements[1])
     #del elements, nodes, Cp
 
-
     fem = BDF(debug=True, log=log)
     fem.read_bdf(bdf_model)
     sys.stdout.flush()
-
-    # 1 inboard
-    # 1000s upper - lower inboard
-    # 2000s lower - lower inboard
-    # big - fin
 
     structural_model = StructuralModel(fem, property_regions)
 
     mapper = LoadMapping(aero_model, structural_model)
     t1 = time()
     mapper.set_flight_condition(pInf, qInf)
+    mapper.set_reference_quantities(Sref, Lref, xref)
     mapper.set_output(bdffile=bdf_model_out, load_case=isubcase)
     log.info("setup time = %g sec; %g min" % (t1-t0, (t1-t0)/60.))
 
@@ -755,7 +775,9 @@ def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
     log.info("map loads time = %g sec" % (t3 - t2))
     log.info("total time = %g min" % ((t3 - t0) / 60.))
 
+
 def main():
+    """runs the bwb mapping problem"""
     basepath = os.getcwd()
     configpath = os.path.join(basepath, 'inputs')
     workpath = os.path.join(basepath, 'outputs')
@@ -772,17 +794,28 @@ def main():
 
     pInf = 499.3 / 144 # psf -> psi, alt=35k (per Schaufele p. 11)
     mach = 0.825
+
+    # 1 inboard
+    # 1000s upper - lower inboard
+    # 2000s lower - lower inboard
+    # big - fin
+    skin_property_regions = [
+        1, 1101, 1501, 1601, 1701, 1801, 1901, 2101, 2501, 2601, 2701, 2801,
+        2901, 10103, 10201, 10203, 10301, 10401, 10501, 10601, 10701, 10801,
+        10901, 20103, 20203, 20301, 20401, 20501, 20601, 20701, 20801, 20901,
+        701512, 801812,
+    ]
+
     inputs = {
         'aero_format' : 'cart3d',
         'isubcase' : 1,
         'Mach' : mach,
         'pInf' : pInf,  # convert to psi
-        'qInf' : 1.4 / 2. * pInf * mach**2.,  #
+        'qInf' : 1.4 / 2. * pInf * mach**2.,  # psi
         'Sref' : 1582876.,  # inch^2
         'Lref' : 623.,  # inch
         'xref' : 268.,  # inch
-
-
+        'skin_property_regions' : skin_property_regions,
     }
     run_map_loads(inputs, cart3d_geom, bdf_model, bdf_model_out)
 
