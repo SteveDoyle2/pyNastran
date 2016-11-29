@@ -29,7 +29,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
-from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
+#from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
 from pyNastran.op2.tables.ogs import OGS
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
@@ -403,7 +403,7 @@ MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + 
 
 
 class OP2_Scalar(LAMA, ONR, OGPF,
-                 OEF, OES, OESM, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
+                 OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
     Defines an interface for the Nastran OP2 file.
     """
@@ -454,7 +454,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         OEF.__init__(self)
         OES.__init__(self)
-        OESM.__init__(self)
+        #OESM.__init__(self)
         OGS.__init__(self)
 
         OPG.__init__(self)

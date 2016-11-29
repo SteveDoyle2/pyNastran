@@ -2,7 +2,7 @@ from six import iteritems
 from numpy import zeros
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats10E, writeFloats8p4F, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_10e, write_floats_8p4f, get_key0
 
 
 class GridPointStressesArray(ScalarObject):
@@ -211,11 +211,11 @@ class GridPointStresses(ScalarObject):
                 (elemName) = self.elemName[ekey][iLoad]
                 eid = self.eids[ekey][iLoad]
                 vals = [nx, ny, txy, majorP, minorP, tmax, ovm]
-                (vals2, is_all_zeros) = writeFloats10E(vals)
+                vals2 = write_floats_10e(vals)
                 [nx, ny, txy, majorP, minorP, tmax, ovm] = vals2
                 if eid == 0:
                     eid = zero
-                angle, isAllZero = writeFloats8p4F([angle])
+                angle = write_floats_8p4f([angle])
                 anglei = angle[0]
                 msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (zero, ekey2, eid, elemName, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
                 zero = ' '
@@ -415,7 +415,7 @@ class GridPointStressesVolume(ScalarObject):
                 #(elemName) = self.elemName[ekey][iLoad]
                 #eid = self.eids[ekey][iLoad]
                 vals = [nx, ny, nz, txy, tyz, txz, pressure, ovm]
-                (vals2, is_all_zeros) = writeFloats10E(vals)
+                vals2 = write_floats_10e(vals)
                 [nx, ny, nz, txy, tyz, txz, pressure, ovm] = vals2
                 msg.append('%s%8s  %s %s %s   %s %s %s %s  %-s\n' % (zero, ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm.rstrip()))
                 zero = ' '

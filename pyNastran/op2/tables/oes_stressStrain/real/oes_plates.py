@@ -8,7 +8,7 @@ from itertools import count
 import numpy as np
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats8p4F, _eigenvalue_header, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, get_key0
 try:
     import pandas as pd
 except ImportError:

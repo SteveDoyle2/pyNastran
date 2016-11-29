@@ -374,9 +374,9 @@ class ComplexCShearForceArray(ScalarObject):
 
         if is_sort1:
             msg += [
-                '                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======'
-                ' ELEMENT          F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1'
-                '         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41'
+                '                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======\n'
+                ' ELEMENT          F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1\n'
+                '         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41\n'
             ]
         else:
             raise NotImplementedError('sort2')
@@ -392,7 +392,6 @@ class ComplexCShearForceArray(ScalarObject):
         ntimes = self.data.shape[0]
 
         eids = self.element
-
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
@@ -403,7 +402,7 @@ class ComplexCShearForceArray(ScalarObject):
             ## TODO: I'm sure this ordering is wrong...
             force41 = self.data[itime, :, 0]
             force14 = self.data[itime, :, 1]
-            force21 = self.data[itime, :, 2]
+            force21 = self.data[itime, :, 2]  # TODO: this is wrong...
             force12 = self.data[itime, :, 3]
             force32 = self.data[itime, :, 4]
             force23 = self.data[itime, :, 5]
@@ -417,6 +416,7 @@ class ComplexCShearForceArray(ScalarObject):
             shear23 = self.data[itime, :, 13]
             shear34 = self.data[itime, :, 14]
             shear41 = self.data[itime, :, 15]
+            assert len(force12) > 0, force12
 
             for (eid, iforce41, force14i, iforce21, iforce12, iforce32, iforce23, iforce43, iforce34,
                  ikick_force1, ikick_force2, ikick_force3, ikick_force4,
@@ -447,9 +447,19 @@ class ComplexCShearForceArray(ScalarObject):
                 #'            25  0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0'
                 #'                0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0'
 
-                #f.write('      %8i   %-13s %-13s %-13s / %s\n' % (eid,
-                                                                  #force41r, 0force42r, force21r, kick
-                                                                  #force41i, ))
+                f.write('      %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
+                        '               %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
+                        '                      %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
+                        '                      %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'% (
+                    eid,
+                    force41r, force14r, force21i, force12r, force32r, force23r, force43r, force34r,
+                    kick_force1r, kick_force2r, kick_force3r, kick_force4r,
+                    shear12r, shear23r, shear34r, shear41r,
+
+                    force41i, force14i, force21i, force12i, force32i, force23i, force43i, force34i,
+                    kick_force1i, kick_force2i, kick_force3i, kick_force4i,
+                    shear12i, shear23i, shear34i, shear41i
+                    ))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

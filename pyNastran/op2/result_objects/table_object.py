@@ -261,7 +261,8 @@ class TableArray(ScalarObject):  # displacement style table
 
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_gridtype, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=node_gridtype, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'Type', 'Item']
 

@@ -829,6 +829,7 @@ class OES(OP2Common):
 
             (1, 2, 5, 'OESVM1') : ('crod', 'NA'),
             (10, 2, 5, 'OESVM1') : ('conrod', 'NA'),
+            (10, 2, 5, 'OES1X') : ('conrod', 'NA'),
 
             (11, 2, 3, 'OESVM1') : ('celas1', 'NA'),
             (12, 2, 3, 'OESVM1') : ('celas2', 'NA'),
@@ -837,6 +838,7 @@ class OES(OP2Common):
             (34, 2, 19, b'OESVM1') : ('cbar', 'NA'),
 
             (4, 2, 5, 'OESVM1') : ('cshear', 'NA'),
+            (4, 2, 5, 'OES1X') : ('cshear', 'NA'),
             (74, 2, 17, 'OESVM1') : ('ctria3', 'NA'),
             (144, 2, 87, b'OESVM1') : ('cquad4', 'NA'),
 
