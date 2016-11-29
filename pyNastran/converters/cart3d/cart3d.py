@@ -798,7 +798,11 @@ class Cart3D(Cart3dIO):
             the variables to calculate
         results : (n,6) ndarray
             the non-dimensional prmitive flow variables
+        loads : dict; default=None -> {}
+            key : ???
+            value : ???
         """
+        print('result_names =', result_names)
         if loads is None:
             loads = {}
         Cp = results[:, 0]
@@ -889,6 +893,7 @@ class Cart3D(Cart3dIO):
         q = 0.5 * rho * Mach ** 2
 
         if 'a' in result_names:
+            print('T: min=%s max=%s' % (T.min(), T.max()))
             loads['a'] = np.sqrt(T)
         if 'T' in result_names:
             loads['T'] = T

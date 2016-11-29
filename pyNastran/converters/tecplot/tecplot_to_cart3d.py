@@ -21,13 +21,8 @@ def tecplot_to_cart3d(tecplot_filename, cart3d_filename=None, debug=True):
     else:
         model = tecplot_filename
 
-    print(model.variables)
     headers_no_xyz = model.variables[3:] # drop the xyz, get what's left
-    print(headers_no_xyz)
     iCp = headers_no_xyz.index('cp')
-    print(model.results)
-    print(model.results.shape)
-    print(model.results.max(axis=0))
     cp = model.results[:, iCp]
     tris = model.quad_elements[:, :3]
 
