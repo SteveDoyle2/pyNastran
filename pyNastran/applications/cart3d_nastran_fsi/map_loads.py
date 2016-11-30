@@ -33,13 +33,13 @@ def entry_exit(func):
     return new_f
 
 class LoadMapping(object):
-    def __init__(self, aeroModel, structuralModel, configpath='', workpath=''):
+    def __init__(self, aero_model, structural_model, configpath='', workpath=''):
         self.nCloseElements = 30
 
         self.configpath = configpath
         self.workpath = workpath
-        self.aero_model = aeroModel
-        self.structural_model = structuralModel
+        self.aero_model = aero_model
+        self.structural_model = structural_model
 
         self.mapping_matrix = {}
         self.mapfile = 'mapfile.in'
@@ -385,7 +385,8 @@ class LoadMapping(object):
                     (aArea, aCentroid, aNormal) = aero_model.get_element_properties(aero_eid)
                     percentDone = i / nAeroElements * 100
                     if debug:
-                        log.info('aEID=%s percentDone=%.2f aElement=%s aArea=%s aCentroid=%s aNormal=%s' % (
+                        log.info('aEID=%s percentDone=%.2f aElement=%s '
+                                 'aArea=%s aCentroid=%s aNormal=%s' % (
                             aero_eid, percentDone, aElement, aArea, aCentroid, aNormal))
                     pSource = aCentroid
                     (distribution) = self.pierce_elements(aCentroid, aero_eid, pSource, aNormal)
@@ -405,27 +406,27 @@ class LoadMapping(object):
         sys.stdout.flush()
         return self.mapping_matrix
 
-    def poor_mans_mapping(self, aCentroid, aero_eid, pSource, normal):
-        """
-        distributes load without piercing elements
-        based on distance
-        """
-        (sElements, sDists) = self.centroid_tree.getCloseElementIDs(aCentroid)
-        log.debug("aCentroid = %s" % aCentroid)
-        log.debug("sElements = %s" % sElements)
-        log.debug("sDists    = %s" % ListPrint(sDists))
+    #def poor_mans_mapping(self, aCentroid, aero_eid, pSource, normal):
+        #"""
+        #distributes load without piercing elements
+        #based on distance
+        #"""
+        #(sElements, sDists) = self.centroid_tree.getCloseElementIDs(aCentroid)
+        #log.debug("aCentroid = %s" % aCentroid)
+        #log.debug("sElements = %s" % sElements)
+        #log.debug("sDists    = %s" % ListPrint(sDists))
 
-        setNodes = set([])
-        structural_model = self.structural_model
-        for structural_eid in sElements:
-            sNodes = structural_model.get_element_nodes(structural_eid)
-            setNodes.union(set(sNodes))
+        #setNodes = set([])
+        #structural_model = self.structural_model
+        #for structural_eid in sElements:
+            #sNodes = structural_model.get_element_nodes(structural_eid)
+            #setNodes.union(set(sNodes))
 
-        nIDs = list(setNodes)
-        sNodes = structural_model.getNodeIDLocations(nIDs)
-        weights = self.get_weights(close_point, sNodes)
-        distribution = self.create_distribution(nIDs, weights)
-        return distribution
+        #nIDs = list(setNodes)
+        #sNodes = structural_model.getNodeIDLocations(nIDs)
+        #weights = self.get_weights(close_point, sNodes)
+        #distribution = self.create_distribution(nIDs, weights)
+        #return distribution
 
     def pierce_elements(self, aCentroid, aEID, pSource, normal):
         r"""
@@ -738,7 +739,8 @@ def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
             cart3d_model.elements = elements
             cart3d_model.regions = regions
             cart3d_model.loads = loads
-            #(nodes, elements, regions, Cp) = cart3d_model.renumber_mesh(nodes, elements, regions, Cp)
+            #(nodes, elements, regions, Cp) = cart3d_model.renumber_mesh(
+                #nodes, elements, regions, Cp)
             cart3d_model.write_cart3d(half_model)
         else:
             cart3d_model.read_cart3d(half_model, result_names=result_names)

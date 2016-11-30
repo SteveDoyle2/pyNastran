@@ -26,7 +26,7 @@ from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
-
+from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
 
 def process_nastran(bdf_filename, fmt2, fname2, data=None, debug=True):
     """
@@ -170,8 +170,12 @@ def process_tecplot(tecplot_filename, fmt2, fname2, data=None):
         tecplot_to_nastran_filename(model, fname2 + '.bdf')
         process_nastran(fname2 + '.bdf', fmt2, fname2, data=data)
     elif fmt2 == 'cart3d':
+        # supports tris/quads, not loads
         tecplot_to_nastran_filename(model, fname2 + '.bdf')
         process_nastran(fname2 + '.bdf', fmt2, fname2, data=data)
+
+        # supports quads/loads, not tris
+        #tecplot_to_cart3d_filename(model, fname2)
     else:
         raise NotImplementedError(fmt2)
 
