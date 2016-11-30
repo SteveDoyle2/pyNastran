@@ -3625,13 +3625,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except:
                 print(str(card))
                 raise
-        #for key, cards in sorted(iteritems(self.dvgrids)):
-            #for card in cards:
-                #try:
-                    #card._verify(xref)
-                #except:
-                    #print(str(card))
-                    #raise
+        for key, cards in sorted(iteritems(self.dvgrids)):
+            for card in cards:
+                try:
+                    card._verify(xref)
+                except:
+                    print(str(card))
+                    raise
 
 
 IGNORE_COMMENTS = (
