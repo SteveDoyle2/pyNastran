@@ -1,7 +1,7 @@
 from __future__ import print_function
 from pyNastran.applications.cart3d_nastran_fsi.model import Model
 
-from pyNastran.bdf.field_writer_8 import print_card
+from pyNastran.bdf.field_writer import print_card
 from pyNastran.utils.log import get_logger
 
 
@@ -20,11 +20,11 @@ class StructuralModel(Model):
         self.fem = fem
         #nodes = fem.getNodes()
         #elements = fem.getElements()
-        nodeIDs = fem.node_ids
-        elementIDs = fem.elementIDs()
+        node_ids = fem.node_ids
+        element_ids = fem.element_ids
 
-        self.nNodes = len(nodeIDs)
-        self.nElements = len(elementIDs)
+        self.nNodes = len(node_ids)
+        self.nElements = len(element_ids)
         self.pids = pids
         #self.points   = points
         #self.elements = elements
@@ -42,7 +42,7 @@ class StructuralModel(Model):
 
     def ElementIDs(self):
         #(elements, eids) = getElementsWithPIDs(self, properties)
-        eids = self.fem.elementIDs()
+        eids = self.fem.element_ids
         return eids
 
     def get_element_node_ids(self, eid):
@@ -60,7 +60,8 @@ class StructuralModel(Model):
         return self.fem.Element(eid).type
 
     def getElementIDsWithPIDs(self):
-        return self.fem.getElementIDsWithPIDs(self.pids)
+        self.log.info('pids =%s' % self.pids)
+        return self.fem.get_element_ids_list_with_pids(self.pids)
 
     def get_element_nodes(self, eid):
         e = self.fem.Element(eid)

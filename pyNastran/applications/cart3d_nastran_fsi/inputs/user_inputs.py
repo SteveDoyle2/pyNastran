@@ -2,7 +2,7 @@ import os
 configpath  = 'inputs'
 workpath = 'outputsFinal'
 
-areo_format = 'nastran'
+aero_format = 'nastran'
 structural_call = 'nastran scr=yes bat=no '
 #structural_symmetry = None  # no symmetry
 structural_symmetry = '+y'  # symmetry

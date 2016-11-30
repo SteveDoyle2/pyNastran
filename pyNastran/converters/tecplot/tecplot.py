@@ -217,7 +217,10 @@ class Tecplot(FortranFormat):
                         #value = value.strip()
 
                         # 'T', 'ZONE T',  ???
-                        assert key in ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING', 'N', 'E', 'F', 'DT'], 'key=%r' % (key)
+                        allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
+                                        'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
+                                        'I', 'J']
+                        assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
                         parse = False
                 #print(headers_dict.keys())
 
@@ -254,6 +257,8 @@ class Tecplot(FortranFormat):
                 elif zone_type == 'FETRIANGLE':
                     # tris
                     elements = zeros((nelementsi, 3), dtype='int32')
+                #elif zone_type == 'FEBLOCK':
+                    #pass
                 else:
                     #if isinstance(zone_type, list):
                         #raise NotImplementedError(zone_type[0])

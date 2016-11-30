@@ -1,3 +1,20 @@
+"""
+Defines:
+  - Cart3D(log=None, debug=False)
+     - read_cart3d(self, infilename, result_names=None)
+     - write_cart3d(self, outfilename, is_binary=False, float_fmt='%6.7f')
+
+     - flip_model()
+     - make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001)
+     - make_half_model(self, axis='y', remap_nodes=True)
+     - get_free_edges(self, elements)
+     - get_area(self, shift_nodes=True)
+     - get_normals(self, shift_nodes=True)
+     - get_normals_at_nodes(self, cnormals, shift_nodes=True)
+
+  - comp2tri(in_filenames, out_filename,
+             is_binary=False, float_fmt='%6.7f')
+"""
 from __future__ import print_function, unicode_literals
 import sys
 from struct import pack, unpack
@@ -92,6 +109,18 @@ class Cart3dIO(object):
         self.loads = {}
 
     def _write_header(self, outfile, points, elements, is_loads, is_binary=False):
+        """
+        writes the cart3d header
+
+        Without results
+        ---------------
+        npoints nelements
+
+        With results
+        ------------
+        npoints nelements nresults
+
+        """
         npoints = points.shape[0]
         nelements = elements.shape[0]
 
@@ -118,6 +147,7 @@ class Cart3dIO(object):
         return int_fmt
 
     def _write_points(self, outfile, points, is_binary, float_fmt='%6.6f'):
+        """writes the points"""
         if is_binary:
             four = pack(self._endian + b('i'), 4)
             outfile.write(four)
@@ -136,6 +166,7 @@ class Cart3dIO(object):
             np.savetxt(outfile, points, fmt_ascii)
 
     def _write_elements(self, outfile, elements, is_binary, int_fmt='%6i'):
+        """writes the triangles"""
         min_e = elements.min()
         assert min_e == 1, 'min(elements)=%s' % min_e
         if is_binary:
@@ -156,6 +187,7 @@ class Cart3dIO(object):
             np.savetxt(outfile, elements, fmt_ascii)
 
     def _write_regions(self, outfile, regions, is_binary):
+        """writes the regions"""
         if is_binary:
             fmt = self._endian + b('i')
             four = pack(fmt, 4)
@@ -172,6 +204,7 @@ class Cart3dIO(object):
             np.savetxt(outfile, regions, fmt)
 
     def _write_loads(self, outfile, loads, is_binary, float_fmt='%6.6f'):
+        """writes the *.triq loads"""
         if is_binary:
             raise NotImplementedError('is_binary=%s' % is_binary)
         else:
@@ -181,8 +214,9 @@ class Cart3dIO(object):
             rhoV = loads['rhoV']
             rhoW = loads['rhoW']
             E = loads['E']
-
-            nrows = len(Cp)
+            npoints = self.points.shape[0]
+            assert len(Cp) == npoints, 'len(Cp)=%s npoints=%s' % (len(Cp), npoints)
+            #nrows = len(Cp)
             fmt = '%s\n%s %s %s %s %s\n' % (float_fmt, float_fmt, float_fmt,
                                             float_fmt, float_fmt, float_fmt)
             for (cpi, rhoi, rhou, rhov, rhoe, e) in zip(Cp, rho, rhoU, rhoV, rhoW, E):
@@ -204,28 +238,34 @@ class Cart3dIO(object):
 
     @property
     def nresults(self):
+        """get the number of results"""
         if isinstance(self.loads, dict):
             return len(self.loads)
         return 0
 
     @property
     def nnodes(self):
+        """alternate way to access number of points"""
         return self.npoints
 
     @property
     def npoints(self):
+        """get the number of points"""
         return self.points.shape[0]
 
     @property
     def nodes(self):
+        """alternate way to access the points"""
         return self.points
 
     @nodes.setter
     def nodes(self, points):
+        """alternate way to access the points"""
         self.points = points
 
     @property
     def nelements(self):
+        """get the number of elements"""
         return self.elements.shape[0]
 
     def _read_points_ascii(self, npoints):
@@ -299,7 +339,7 @@ class Cart3dIO(object):
             self._endian = b'<'
             size = size_little
         else:
-            self.rewind()
+            self._rewind()
             self.show(100)
             raise RuntimeError('unknown endian')
 
@@ -316,13 +356,14 @@ class Cart3dIO(object):
             nresults = 0
             self.log.info("npoints=%s nelements=%s" % (npoints, nelements))
         else:
-            self.rewind()
+            self._rewind()
             self.show(100)
             raise RuntimeError('in the wrong spot...endian...size/4=%s' % so4)
         self.infile.read(8)  # end of first block, start of second block
         return (npoints, nelements, nresults)
 
     def _read_points_binary(self, npoints):
+        """reads the xyz points"""
         size = npoints * 12  # 12=3*4 all the points
         data = self.infile.read(size)
 
@@ -333,6 +374,7 @@ class Cart3dIO(object):
         return points
 
     def _read_elements_binary(self, nelements):
+        """reads the triangles"""
         size = nelements * 12  # 12=3*4 all the elements
         data = self.infile.read(size)
 
@@ -343,6 +385,7 @@ class Cart3dIO(object):
         return elements
 
     def _read_regions_binary(self, nelements):
+        """reads the regions"""
         size = nelements * 4  # 12=3*4 all the elements
         data = self.infile.read(size)
 
@@ -354,9 +397,11 @@ class Cart3dIO(object):
         return regions
 
     def _read_results_binary(self, i, infile, result_names=None):
+        """binary results are not supported"""
         pass
 
-    def rewind(self):
+    def _rewind(self):
+        """go back to the beginning of the file"""
         self.n = 0
         self.infile.seek(self.n)
 
@@ -369,9 +414,9 @@ class Cart3dIO(object):
         return strings, ints, floats
 
     def show_data(self, data, types='ifs', endian=None):
-        return self.write_data(sys.stdout, data, types=types, endian=endian)
+        return self._write_data(sys.stdout, data, types=types, endian=endian)
 
-    def write_data(self, outfile, data, types='ifs', endian=None):
+    def _write_data(self, outfile, data, types='ifs', endian=None):
         """
         Useful function for seeing what's going on locally when debugging.
         """
@@ -411,9 +456,9 @@ class Cart3dIO(object):
         return strings, ints, floats
 
     def show_ndata(self, n, types='ifs'):
-        return self.write_ndata(sys.stdout, n, types=types)
+        return self._write_ndata(sys.stdout, n, types=types)
 
-    def write_ndata(self, outfile, n, types='ifs'):
+    def _write_ndata(self, outfile, n, types='ifs'):
         """
         Useful function for seeing what's going on locally when debugging.
         """
@@ -421,7 +466,7 @@ class Cart3dIO(object):
         data = self.infile.read(n)
         self.n = nold
         self.infile.seek(self.n)
-        return self.write_data(outfile, data, types=types)
+        return self._write_data(outfile, data, types=types)
 
 
 class Cart3D(Cart3dIO):
@@ -437,6 +482,15 @@ class Cart3D(Cart3dIO):
         self.loads = {}
         self.points = None
         self.elements = None
+
+    def flip_model(self):
+        """flip the model about the y-axis"""
+        self.points[:, 1] *= -1.
+        self.elements = np.vstack([
+            self.elements[:, 0],
+            self.elements[:, 2],
+            self.elements[:, 1],
+        ])
 
     def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
         """
@@ -524,6 +578,7 @@ class Cart3D(Cart3dIO):
         return (nodes2, elements2, regions2, loads2)
 
     def _get_ax(self, axis):
+        """helper method to convert an axis_string into an integer"""
         axis = axis.lower().strip()
         if axis in ['+x', 'x', 0]:
             ax = 0
@@ -599,11 +654,11 @@ class Cart3D(Cart3dIO):
             if save_element:
                 ielements_save.add(ielement)
 
-        ielements_save = list(ielements_save)
-        ielements_save.sort()
+        ielements_save_lst = list(ielements_save)
+        ielements_save_lst.sort()
 
-        elements2 = elements[ielements_save]
-        regions2 = regions[ielements_save]
+        elements2 = elements[ielements_save_lst]
+        regions2 = regions[ielements_save_lst]
 
         # renumbers mesh
         nelements2 = elements2.shape[0]
@@ -630,6 +685,10 @@ class Cart3D(Cart3dIO):
         return (nodes2, elements2, regions2, loads2)
 
     def get_free_edges(self, elements):
+        """
+        Cart3d must be a closed model with each edge shared by 2 elements
+        The free edges indicate the problematic areas.
+        """
         edge_to_eid_map = defaultdict(list)
         for i, element in enumerate(elements):
             edge1 = tuple(sorted([element[0], element[1]]))
@@ -797,6 +856,9 @@ class Cart3D(Cart3dIO):
             the variables to calculate
         results : (n,6) ndarray
             the non-dimensional prmitive flow variables
+        loads : dict; default=None -> {}
+            key : ???
+            value : ???
         """
         if loads is None:
             loads = {}
@@ -888,6 +950,7 @@ class Cart3D(Cart3dIO):
         q = 0.5 * rho * Mach ** 2
 
         if 'a' in result_names:
+            #print('T: min=%s max=%s' % (T.min(), T.max()))
             loads['a'] = np.sqrt(T)
         if 'T' in result_names:
             loads['T'] = T

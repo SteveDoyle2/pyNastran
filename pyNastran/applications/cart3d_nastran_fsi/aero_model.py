@@ -1,9 +1,10 @@
 from __future__ import print_function
 from six.moves import range
 from pyNastran.applications.cart3d_nastran_fsi.model import Model
-from numpy import array, cross, ndarray
+from numpy import array, cross, ndarray, isnan
 
-from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import Triangle_AreaCentroidNormal, ListPrint
+from pyNastran.applications.cart3d_nastran_fsi.math_functions import (
+    Triangle_AreaCentroidNormal, ListPrint)
 
 from pyNastran.utils.log import get_logger
 debug = True
@@ -46,7 +47,13 @@ class AeroModel(Model):
             normal = self.normals[key]
             p = cp * self.qInf + self.pInf
             F = area * normal * p  # negative sign is b/c the normals are flipped...
-            r = sum_moments - centroid
+            r = moment_center - centroid
+            if any(isnan(r)):
+                msg = 'r=%s moment_center=%s centroid=%s' % (r, moment_center, centroid)
+                raise RuntimeError(msg)
+            if any(isnan(F)):
+                msg = 'area=%s normal=%s p=%s' % (area, normal, p)
+                raise RuntimeError(msg)
 
             sum_forces += F
             sum_moments += cross(r, F)
