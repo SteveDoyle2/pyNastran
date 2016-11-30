@@ -1,3 +1,6 @@
+"""
+tests aero cards
+"""
 from __future__ import print_function
 import os
 import unittest
@@ -5,11 +8,11 @@ import numpy as np
 
 import pyNastran
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard
+from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID
 from pyNastran.bdf.cards.aero import (
     FLFACT, AEFACT, AEPARM, AERO, AEROS, CAERO1, CAERO2, CAERO3, PAERO1, PAERO2, PAERO3,
     AELIST, FLUTTER, TRIM, CSSCHD, MKAERO1, MKAERO2, GUST, AESURF, AELINK, DIVERG,
-    SPLINE1,
+    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5
 )
 
 root_path = pyNastran.__path__[0]
@@ -220,10 +223,10 @@ class TestAero(unittest.TestCase):
         p2 = [1., 0., 0.]
         p3 = [0.2, 1., 0.]
         p4 = [0.1, 1., 0.]
-        span = 5
-        chord = 10
+        nspan = 5
+        nchord = 10
         igid = -1
-        caeroq = CAERO1.add_quad(eid, pid, cp, span, chord, igid, p1, p2, p3, p4,
+        caeroq = CAERO1.add_quad(eid, pid, cp, nspan, nchord, igid, p1, p2, p3, p4,
                                  spanwise='y', comment='')
         caeroq.validate()
 
@@ -304,6 +307,76 @@ class TestAero(unittest.TestCase):
                          melements=10, comment='$ spline1')
         spline.validate()
         spline.write_card(size=8, is_double=False)
+
+    def test_spline2(self):
+        """checks the SPLINE2 card"""
+        #| SPLINE2 | EID  | CAERO |  ID1  |  ID2  | SETG | DZ | DTOR | CID |
+        #|         | DTHX | DTHY  | None  | USAGE |      |    |      |     |
+        #+---------+------+-------+-------+-------+------+----+------+-----+
+        #| SPLINE2 |   5  |   8   |  12   | 24    | 60   | 0. | 1.0  |  3  |
+        #|         |  1.  |       |       |       |      |    |      |     |
+
+        eid = 5
+        caero = 8
+        id1 = 12
+        id2 = 24
+        setg = 60
+        dz = 0.
+        dtor = 1.0
+        cid = 3
+        dthx = 1.
+        dthy = None
+        usage = None
+        card = ['SPLINE2', eid, caero, id1, id2, setg, dz, dtor, cid,
+                dthx, dthy, None, usage]
+
+        cid = 3
+        origin = [0., 0., 0.]
+        xaxis = [1., 0., 0.]
+        xyplane = [0., 1., 0.]
+        coord = CORD2R.add_axes(cid, rid=0, origin=origin, xaxis=xaxis,
+                               yaxis=None,
+                               zaxis=None,
+                               xyplane=xyplane,
+                               yzplane=None,
+                               xzplane=None,
+                               comment='comment')
+        eid = 8
+        pid = 10
+        cp = 0
+        nsb = 4
+        nint = 2
+        lsb = None
+        lint = None
+        p1 = [0., 0., 0.]
+        x12 = 42.
+        igid = None
+        caero2 = CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12,
+                        comment='this is a caero')
+        #caero = CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12)
+
+        sid = 60
+        ids = [7, 13]
+        set_obj = SET1(sid, ids, is_skin=False, comment='set card')
+        grid7 = GRID(nid=7, cp=0, xyz=[7., 0., 0.], cd=0, ps='', seid=0, comment='')
+        grid13 = GRID(nid=13, cp=0, xyz=[13., 0., 0.], cd=0, ps='', seid=0, comment='')
+
+        model = BDF(log=None)
+        model.add_coord(coord)
+        model.add_caero(caero2)
+        model.add_set(set_obj)
+        model.add_node(grid7)
+        model.add_node(grid13)
+
+        bdf_card = BDFCard(card, has_none=True)
+        spline_a = SPLINE2.add_card(bdf_card, comment='spline2_a')
+        spline_b = SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid, dthx,
+                          dthy, usage, comment='spline2_b')
+        spline_b.validate()
+        spline_b.write_card()
+        spline_b.cross_reference(model)
+        spline_b.write_card()
+
 
     def test_caero2_1(self):
         """checks the CAERO2/PAERO2/AERO/AEFACT card"""
@@ -402,7 +475,7 @@ class TestAero(unittest.TestCase):
         lsb = None
         lint = None
         caero2 = CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12,
-                       comment='this is a caero')
+                        comment='this is a caero')
         caero2.validate()
         caero2.cross_reference(model)
         caero2.write_card()
@@ -649,16 +722,32 @@ class TestAero(unittest.TestCase):
         gust2.validate()
         gust2.write_card()
 
-    def test_cssch(self):
+    def test_csschd(self):
         """checks the CSSCHD card"""
-        sid = 10
-        aesid = 0
+        #sid = 10
+        #aesid = 0
+        #lalpha = None
+        #lmach = None
+        #lschd = None
+
+        sid = 5
+        aesid = 50
+        lalpha = 12
+        lmach = 15
+        lschd = 25
+
+        card = ['CSSCHD', sid, aesid, lalpha, lmach, lschd]
+        bdf_card = BDFCard(card, has_none=True)
+        csshcd1 = CSSCHD.add_card(bdf_card, comment='csschd card')
+        csshcd1.validate()
+        csshcd1.write_card()
+
         lalpha = None
         lmach = None
-        lschd = None
-        csshcd = CSSCHD(sid, aesid, lalpha, lmach, lschd, comment='cssch card')
-        csshcd.validate()
-        csshcd.write_card()
+        csshcd2 = CSSCHD(sid, aesid, lschd, lalpha=lalpha, lmach=lmach, comment='cssch card')
+        csshcd2.write_card()
+        with self.assertRaises(RuntimeError):
+            csshcd2.validate()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

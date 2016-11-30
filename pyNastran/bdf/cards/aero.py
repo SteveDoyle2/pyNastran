@@ -1100,13 +1100,17 @@ class CSSCHD(Aero):
     +========+=====+=======+========+=======+=======+
     | CSSCHD | SlD | AESID | LALPHA | LMACH | LSCHD |
     +--------+-----+-------+--------+-------+-------+
+
+    +--------+-----+-------+--------+-------+-------+
+    | CSSCHD |  5  |  50   |   12   |   15  |   25  |
+    +--------+-----+-------+--------+-------+-------+
     """
     type = 'CSSCHD'
     _field_map = {
         1: 'sid', 2:'aesid', 3:'lalpha', 4:'lmach', 5:'lschd',
     }
 
-    def __init__(self, sid, aesid, lalpha, lmach, lschd, comment=''):
+    def __init__(self, sid, aesid, lschd, lalpha=None, lmach=None, comment=''):
         Aero.__init__(self)
         if comment:
             self.comment = comment
@@ -1118,6 +1122,11 @@ class CSSCHD(Aero):
 
     def validate(self):
         assert self.lalpha is None or isinstance(self.lalpha, integer_types), 'lalpha=%r' % self.lalpha
+        assert self.lmach is None or isinstance(self.lmach, integer_types), 'lmach=%r' % self.lmach
+        msg = ('CSSCHD sid=%s; lalpha and lmach are both None'
+               ' (one must be an integer (AEFACT)\n%s' % (self.sid, str(self)))
+        if self.lalpha is None and self.lmach is None:
+            raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -4124,12 +4133,16 @@ class SPLINE2(Spline):
     aerodynamic points.
 
       +---------+------+-------+-------+-------+------+----+------+-----+
+      |    1    |   2  |   3   |   4   |   5   |  6   |  7 |   8  |  9  |
+      +=========+======+=======+=======+=======+======+====+======+=====+
       | SPLINE2 | EID  | CAERO |  ID1  |  ID2  | SETG | DZ | DTOR | CID |
       +---------+------+-------+-------+-------+------+----+------+-----+
       |         | DTHX | DTHY  | None  | USAGE |      |    |      |     |
       +---------+------+-------+-------+-------+------+----+------+-----+
 
       +---------+------+-------+-------+-------+------+----+------+-----+
+      |    1    |   2  |   3   |   4   |   5   |  6   |  7 |   8  |  9  |
+      +=========+======+=======+=======+=======+======+====+======+=====+
       | SPLINE2 |   5  |   8   |  12   | 24    | 60   | 0. | 1.0  |  3  |
       +---------+------+-------+-------+-------+------+----+------+-----+
       |         |  1.  |       |       |       |      |    |      |     |
