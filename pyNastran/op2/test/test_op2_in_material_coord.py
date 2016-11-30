@@ -28,7 +28,7 @@ class TestMaterialCoord(unittest.TestCase):
         for folder, prefix, subcase in CASES:
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
-            basepath = os.path.join(pkg_path, 'op2', 'test', folder)
+            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
             bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
             op2_new = data_in_material_coord(bdf, op2)
@@ -53,7 +53,7 @@ class TestMaterialCoord(unittest.TestCase):
         for folder, prefix, subcase in CASES:
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
-            basepath = os.path.join(pkg_path, 'op2', 'test', folder)
+            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
             bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
             op2_new = data_in_material_coord(bdf, op2)
@@ -79,7 +79,7 @@ class TestMaterialCoord(unittest.TestCase):
         for folder, prefix, subcase in CASES:
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
-            basepath = os.path.join(pkg_path, 'op2', 'test', folder)
+            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
             bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
             op2_new = data_in_material_coord(bdf, op2)
