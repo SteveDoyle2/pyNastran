@@ -1,10 +1,10 @@
 from __future__ import print_function
 from six.moves import range
-from pyNastran.applications.cart3d_nastran_fsi.model import Model
 from numpy import array, cross, ndarray, isnan
 
+from pyNastran.applications.cart3d_nastran_fsi.model import Model
 from pyNastran.applications.cart3d_nastran_fsi.math_functions import (
-    Triangle_AreaCentroidNormal, ListPrint)
+    Triangle_AreaCentroidNormal, list_print)
 
 from pyNastran.utils.log import get_logger
 debug = True
@@ -59,12 +59,12 @@ class AeroModel(Model):
             sum_moments += cross(r, F)
         log.info("pInf=%s [psi]; qInf= %s [psi]" % (self.pInf, self.qInf))
 
-        log.info("sumForcesCFD  [lb]    = %s" % ListPrint(sum_forces))
-        log.info("sumMomentsCFD [ft-lb] = %s" % ListPrint(sum_moments/12.))
+        log.info("sumForcesCFD  [lb]    = %s" % list_print(sum_forces))
+        log.info("sumMomentsCFD [ft-lb] = %s" % list_print(sum_moments/12.))
         Cf = sum_forces  / (self.Sref * self.qInf)
         Cm = sum_moments / (self.Sref * self.qInf * self.Lref) * 12.
-        log.info("Cf = %s" % ListPrint(Cf))
-        log.info("Cm = %s" % ListPrint(Cm))
+        log.info("Cf = %s" % list_print(Cf))
+        log.info("Cm = %s" % list_print(Cm))
         return (sum_forces, sum_moments/12.)
 
     def prepare_centroid_area_normals(self):
@@ -80,7 +80,9 @@ class AeroModel(Model):
 
             eidi = eid + 1
             if centroid is not None:
-                assert len(centroid) == 3, "eid=%s centroid=%s n1=%s n2=%s n3=%s" % (eidi, centroid, n1, n2, n3)
+                if len(centroid) != 3:
+                    msg = "eid=%s centroid=%s n1=%s n2=%s n3=%s" % (eidi, centroid, n1, n2, n3)
+                    raise RuntimeError(msg)
 
             self.areas[eidi] = area
             self.centroids[eidi] = centroid

@@ -29,13 +29,13 @@ def is_float_ranged(a, x, b):
     return True
 
 
-def printMatrix(A):
+def print_matrix(A):
     msg = ''
     for row in A:
-        msg += ListPrint(row) + '\n'
+        msg += list_print(row) + '\n'
     return msg
 
-def ListPrint(listA):
+def list_print(listA):
     if len(listA) == 0:
         return '[]'
 
@@ -229,7 +229,7 @@ def Centroid(A, B, C):
     return centroid
 
 
-def main():
+def main(): # pragma: no cover
     n1 = array([0., 0., 0.])
     n2 = array([1., 1., 1.])
     n3 = array([1., 0., 0.])
@@ -245,5 +245,5 @@ def main():
     print("area=%s centroid=%s normal=%s" % (area, centroid, normal))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     main()

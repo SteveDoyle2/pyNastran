@@ -5,7 +5,7 @@ from six.moves import zip
 from numpy import array, cross, dot, abs as npabs
 from numpy.linalg import norm, solve #, cond
 
-from pyNastran.applications.cart3d_nastran_fsi.math_functions import is_list_ranged, ListPrint, shepard_weight
+from pyNastran.applications.cart3d_nastran_fsi.math_functions import is_list_ranged, list_print, shepard_weight
 #from pyNastran.applications.cart3d_nastran_fsi.matTest import fIsNatural
 from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -123,7 +123,7 @@ class Tet4(object):
         log.info('d4=%s' % d4)
         #log.info("A = \n%s" % (A))
         #condA = cond(A,2)
-        #log.info("A cond=%g;  A=\n%s" % (condA, printMatrix(A)))
+        #log.info("A cond=%g;  A=\n%s" % (condA, print_matrix(A)))
         #print("ID  = ",self.ID)
 
         #condMax = 1E6  # max allowable condition number before alternate approach
@@ -151,7 +151,7 @@ class Tet4(object):
         """
         di = array([d1[i], d2[i], d3[i], d4[i]])
         diMax = max(npabs(di)) # L1 norm
-        log.info("d%s = %s" % (dType, ListPrint(di)))
+        log.info("d%s = %s" % (dType, list_print(di)))
 
         abcd = solve(A, di)
 
