@@ -992,8 +992,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             dvcrel.validate()
         for key, dscreen in sorted(iteritems(self.dscreen)):
             dscreen.validate()
-        for dvid, dvgrid in iteritems(self.dvgrids):
-            dvgrid.validate()
+        for dvid, dvgrids in iteritems(self.dvgrids):
+            for dvgrid in dvgrids:
+                dvgrid.validate()
         #------------------------------------------------
 
     def read_bdf(self, bdf_filename=None,
@@ -3624,12 +3625,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.dvgrids)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
+        #for key, cards in sorted(iteritems(self.dvgrids)):
+            #for card in cards:
+                #try:
+                    #card._verify(xref)
+                #except:
+                    #print(str(card))
+                    #raise
 
 
 IGNORE_COMMENTS = (

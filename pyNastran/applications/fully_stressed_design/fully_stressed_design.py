@@ -32,6 +32,7 @@ def fully_stressed_design(bdf_filename, keywords=None,
         model = read_bdf(bdf_filename)
     elif isinstance(bdf_filename, BDF):
         model = bdf_filename
+        bdf_filename = model.bdf_filename
     else:
         raise TypeError(bdf_filename)
 
@@ -69,7 +70,11 @@ def fully_stressed_design(bdf_filename, keywords=None,
     pid_to_eid = model.get_property_id_to_element_ids_map()
     bdf_filename2 = 'fem_baseline.bdf'
     op2_filename2 = 'fem_baseline.op2'
-    shutil.copyfile(bdf_filename, bdf_filename2)
+    try:
+        shutil.copyfile(bdf_filename, bdf_filename2)
+    except TypeError:
+        msg = 'cannot copy %r to %r' % (bdf_filename, bdf_filename2)
+        raise TypeError(msg)
 
     while iteration < niterations_max:
         if not os.path.exists(op2_filename2) or force:
@@ -183,13 +188,16 @@ def get_inputs(model):
     # PSHELL/PCOMP thickness
     # PSHEAR thickness
     dresps_to_consider = []
-    dresp_rtypes_to_skip = ['WEIGHT', 'DISP', 'VOLUME']
-    dresp_rtypes_to_consider = ['VON-MIS']
+    desvars_to_consider = []
+    dvprels_to_consider = []
+    dresp_response_types_to_skip = ['WEIGHT', 'DISP', 'VOLUME']
+    dresp_response_types_to_consider = ['VON-MIS']
 
     assert len(model.dresps) >= 1, len(model.dresps)
-    for dresp in model.dresps:
+    for dresp in itervalues(model.dresps):
+        print('dresp:\n%s' % str(dresp))
         if dresp.type == 'DRESP1':
-            if dresp.response_type in dresp_types_to_skip:
+            if dresp.response_type in dresp_response_types_to_skip:
                 continue
             elif dresp.response_type in ['STRESS', 'STRAIN']:
                 pass

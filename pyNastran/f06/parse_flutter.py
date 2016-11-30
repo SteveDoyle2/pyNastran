@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from pyNastran.utils.atmosphere import get_alt_for_density
+from pyNastran.utils.log import get_logger2
 
 
 class FlutterResponse(object):
@@ -155,7 +156,7 @@ class FlutterResponse(object):
         # g - green
         # m - magenta
         # y - yellow
-        colors = ['b', 'c', 'g', 'k', 'm', 'r'] #, 'y']
+        #colors = ['b', 'c', 'g', 'k', 'm', 'r'] #, 'y']
         # D - wide diamond
         # h - hexagon
         # * - star
@@ -165,24 +166,27 @@ class FlutterResponse(object):
         # d - thin diamond
         # 1 - Y shape
         # s - square
-        shapes = ['D', 'h', '*', 's', 'd', '3', 'o', '1', '2', '4', 'x', '^', '<', '>'] # '+',
-
-        # this symbol list is taken from a series of "good" colors (e.g. not yellow)
-        # and easily distinguishable shapes.  Far more combinations that is necessary
-        # is defined
+        #shapes = ['D', 'h', '*', 's', 'd', '3', 'o', '1', '2', '4', 'x', '^', '<', '>'] # '+',
         #symbol_list = []
         #for shape in shapes:
             #for color in colors:
                 #symbol_list.append('%s-%s' % (shape, color))
+        self.noline = False
+        self._symbols = []
+        self.generate_symbols()
 
-
+    def generate_symbols(self):
+        """
+        This symbol list is taken from a series of "good" colors (e.g. not yellow)
+        and easily distinguishable shapes.  Far more combinations that is necessary
+        is defined
+        """
         colors = ['r', 'g', 'b', 'k']
         symbols = ['o', '*', 'x', 'v', '>', '<', '^']
         self._symbols = []
         for symbol in symbols:
             for color in colors:
                 self._symbols.append(color + symbol)
-        self.noline = False
 
     def set_plot_options(self, noline=False):
         self.noline = noline
@@ -410,8 +414,6 @@ class FlutterResponse(object):
         else:
             modes = np.asarray(modes)
 
-        #for mode in modes:
-
     def plot_root_locus(self, modes=None,
                         fig=None,
                         xlim=None, ylim=None,
@@ -440,13 +442,16 @@ class FlutterResponse(object):
 
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[i]
+            freq = self.results[imode, :, self.ifreq].ravel()
             real = self.results[imode, :, self.ieigr].ravel()
             imag = self.results[imode, :, self.ieigi].ravel()
-            axes.plot(real, imag, symbol, label='Mode %i' % mode, markersize=0)
+
+            iplot = np.where(freq > 0.0)
+            axes.plot(real[iplot], imag[iplot], symbol, label='Mode %i' % mode, markersize=0)
 
             s = np.linspace(.75, 50., len(real))
             #assert symbol[2] == '-', symbol
-            axes.scatter(real, imag, s=s, color=symbol[0], marker=symbol[1])
+            axes.scatter(real[iplot], imag[iplot], s=s, color=symbol[0], marker=symbol[1])
 
         axes.grid(True)
         axes.set_xlabel('Eigenvalue (Real)')
@@ -499,8 +504,10 @@ class FlutterResponse(object):
             vel = self.results[imode, :, self.ivelocity].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
-            damp_axes.plot(vel, damping, symbols[i], label='Mode %i' % mode)
-            freq_axes.plot(vel, freq, symbols[i])
+
+            iplot = np.where(freq > 0.0)
+            damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
+            freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
 
         damp_axes.set_xlabel('Velocity [%s]' % velocity_units)
         damp_axes.set_ylabel('Damping')
@@ -590,18 +597,29 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
         out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
                      'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
 
+    log = get_logger2(log=None, debug=True, encoding='utf-8')
     flutters = []
     iline = 0
-    with open(f06_filename, 'r') as f06_file:
-        subcase = 1
-        results = []
-        modes = []
 
+    # 1 is the default subcase number
+    subcase = 1
+    results = []
+    modes = []
+
+    configuration = None
+    xysym = None
+    xzsym = None
+    mach = None
+    density_ratio = None
+    method = None
+
+    log.info('f06_filename = %r' % f06_filename)
+    with open(f06_filename, 'r') as f06_file:
         while 1:
             nblank = 0
             line = f06_file.readline()
             iline += 1
-            #print('line%ia = %r' % (iline, line))
+            #log.debug('line%ia = %r' % (iline, line))
             while 'SUBCASE ' not in line and 'FLUTTER  SUMMARY' not in line:
                 line = f06_file.readline()
                 iline += 1
@@ -613,15 +631,16 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
             if nblank == 100:
                 break
 
-            #print('line%ib = %r' % (iline, line))
+            #log.debug('line%ib = %r' % (iline, line))
             if 'SUBCASE' in line[109:]:
                 sline = line.strip().split()
                 isubcase = sline.index('SUBCASE')
                 new_subcase = int(sline[isubcase + 1])
                 #print('subcasei = %r' % new_subcase)
                 if new_subcase > subcase:
-                    print('\nsubcase=%s -> new_subcase=%s' % (subcase, new_subcase))
-                    print('modes1 =', modes)
+                    print()
+                    log.info('subcase=%s -> new_subcase=%s' % (subcase, new_subcase))
+                    log.info('modes1 = %s' % modes)
                     flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                               mach, density_ratio, method,
                                               modes, results,
@@ -634,17 +653,32 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                     #break
                 continue
 
-            #print('line%i_FS = %r' % (iline, line))
+            #log.debug('line%i_FSa = %r' % (iline, line))
+            last_line = None
             while 'FLUTTER  SUMMARY' not in line:
+                last_line = line
                 line = f06_file.readline()
+                #log.debug('i=%s %s' % (iline, line.strip().replace('   ', ' ')))
+
                 iline += 1
                 if not line:
                     nblank += 1
                 if nblank == 100:
                     print(line.strip())
+                    log.warning('breaking on nblank=100 a')
                     break
             if nblank == 100:
+                log.warning('breaking on nblank=100 b')
                 break
+
+            # pulls the subcase id for the first subcase
+            if last_line is not None:
+                #log.debug('line%i_FSb = %r' % (iline, line))
+                #log.debug('line%i_FSb = %r' % (iline-1, last_line.replace('     ', ' ')))
+                sline = last_line.strip().split()
+                isubcase = sline.index('SUBCASE')
+                subcase = int(sline[isubcase + 1])
+                log.info('subcase = %s' % subcase)
 
             configuration_sline = f06_file.readline().split()
             iline += 1
@@ -657,24 +691,29 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
             iline += 1
             mode = int(point_sline[2])
             method = point_sline[-1]  # 13 for PN, 5 for PK
-            #print(point_sline)
+
+            #log.debug(point_sline)
             if method == 'PK':
                 mach = float(point_sline[6])
                 density_ratio = float(point_sline[10])
                 #method = point_sline[13]
+                if mode == 1:
+                    print('# iline mode mach density_ratio method')
                 print(iline, mode, mach, density_ratio, method)
             elif method == 'PKNL':
                 mach = None
                 density_ratio = None
+                if mode == 1:
+                    print('# iline mode method')
                 print(iline, mode, method)
                 f06_file.readline()
                 iline += 1
             else:
                 raise NotImplementedError(point_sline)
-            if 1:
-                if mode in modes:
-                    print('found existing mode...')
-                    continue
+
+            if mode in modes:
+                log.warning('found existing mode...')
+                continue
             modes.append(mode)
 
             # blanks
@@ -684,8 +723,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
 
             lines = []
 
-            #KFREQ           1./KFREQ                                 VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE - PK
-            # KFREQ          1./KFREQ       DENSITY     MACH NO.      VELOCITY       DAMPING     FREQUENCY      COMPLEX   EIGENVALUE - PKNL
+            # KFREQ  1./KFREQ                      VELOCITY  DAMPING  FREQUENCY   COMPLEX   EIGENVALUE - PK
+            # KFREQ  1./KFREQ  DENSITY   MACH NO.  VELOCITY  DAMPING  FREQUENCY   COMPLEX   EIGENVALUE - PKNL
             if method == 'PK':
                 nvalues = 7
             elif method == 'PKNL':
@@ -708,26 +747,32 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
             #print('')
 
         #print(len(results))
-        print('modes =', modes)
+        log.info('modes = %s' % modes)
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
                                   f06_units=f06_units, out_units=out_units)
         flutters.append(flutter)
 
-        for flutter in flutters:
-            if plot_vg:
-                flutter.plot_vg(show=False,
-                                xlim=xlim, ylim=ylim_damping)
-            if plot_vg_vf:
-                flutter.plot_vg_vf(show=False,
-                                   xlim=xlim,
-                                   ylim_damping=ylim_damping, ylim_freq=ylim_freq)
-            if plot_root_locus:
-                flutter.plot_root_locus(show=False)
-        if show:
-            plt.show()
+    make_flutter_plots(flutters, xlim, ylim_damping, ylim_freq,
+                       plot_vg, plot_vg_vf, plot_root_locus, show=show)
     return flutters
+
+def make_flutter_plots(flutters, xlim, ylim_damping, ylim_freq,
+                       plot_vg, plot_vg_vf, plot_root_locus, show=True):
+    """actually makes the flutter plots"""
+    for flutter in flutters:
+        if plot_vg:
+            flutter.plot_vg(show=False,
+                            xlim=xlim, ylim=ylim_damping)
+        if plot_vg_vf:
+            flutter.plot_vg_vf(show=False,
+                               xlim=xlim,
+                               ylim_damping=ylim_damping, ylim_freq=ylim_freq)
+        if plot_root_locus:
+            flutter.plot_root_locus(show=False)
+    if show:
+        plt.show()
 
 if __name__ == '__main__':
     plot_flutter_f06('bah_plane.f06')
