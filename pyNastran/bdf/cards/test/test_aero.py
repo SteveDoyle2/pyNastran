@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID
 from pyNastran.bdf.cards.aero import (
     FLFACT, AEFACT, AEPARM, AERO, AEROS, CAERO1, CAERO2, CAERO3, PAERO1, PAERO2, PAERO3,
     AELIST, FLUTTER, TRIM, CSSCHD, MKAERO1, MKAERO2, GUST, AESURF, AELINK, DIVERG,
-    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5
+    SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
 
 root_path = pyNastran.__path__[0]
@@ -164,7 +164,7 @@ class TestAero(unittest.TestCase):
 
     def test_aeros_1(self):
         """checks the AEROS card"""
-        acsid = 0.
+        #acsid = 0.
         #velocity = None
         cref = 1.0
         bref = 2.0
@@ -259,7 +259,7 @@ class TestAero(unittest.TestCase):
         coord.validate()
         model.coords[cp] = coord
 
-        acsid = 0.
+        #acsid = 0.
         #velocity = None
         cref = 1.0
         bref = 2.0
@@ -316,31 +316,14 @@ class TestAero(unittest.TestCase):
         #| SPLINE2 |   5  |   8   |  12   | 24    | 60   | 0. | 1.0  |  3  |
         #|         |  1.  |       |       |       |      |    |      |     |
 
-        eid = 5
-        caero = 8
-        id1 = 12
-        id2 = 24
-        setg = 60
-        dz = 0.
-        dtor = 1.0
-        cid = 3
-        dthx = 1.
-        dthy = None
-        usage = None
-        card = ['SPLINE2', eid, caero, id1, id2, setg, dz, dtor, cid,
-                dthx, dthy, None, usage]
-
         cid = 3
         origin = [0., 0., 0.]
         xaxis = [1., 0., 0.]
         xyplane = [0., 1., 0.]
-        coord = CORD2R.add_axes(cid, rid=0, origin=origin, xaxis=xaxis,
-                               yaxis=None,
-                               zaxis=None,
-                               xyplane=xyplane,
-                               yzplane=None,
-                               xzplane=None,
-                               comment='comment')
+        coord = CORD2R.add_axes(cid, rid=0, origin=origin,
+                                xaxis=xaxis, yaxis=None, zaxis=None,
+                                xyplane=xyplane, yzplane=None, xzplane=None,
+                                comment='comment')
         eid = 8
         pid = 10
         cp = 0
@@ -368,10 +351,26 @@ class TestAero(unittest.TestCase):
         model.add_node(grid7)
         model.add_node(grid13)
 
+        eid = 5
+        caero = 8
+        id1 = 12
+        id2 = 24
+        setg = 60
+        dz = 0.
+        dtor = 1.0
+        cid = 3
+        dthx = 1.
+        dthy = None
+        usage = None
+        card = ['SPLINE2', eid, caero, id1, id2, setg, dz, dtor, cid,
+                dthx, dthy, None, usage]
+
         bdf_card = BDFCard(card, has_none=True)
         spline_a = SPLINE2.add_card(bdf_card, comment='spline2_a')
+        spline_a.write_card()
+
         spline_b = SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid, dthx,
-                          dthy, usage, comment='spline2_b')
+                           dthy, usage, comment='spline2_b')
         spline_b.validate()
         spline_b.write_card()
         spline_b.cross_reference(model)
@@ -550,11 +549,12 @@ class TestAero(unittest.TestCase):
                          #hmllim, hmulim, tqllim, tqulim,
                          comment='aesurf comment')
         aesurf2 = AESURF.add_card(BDFCard(
-            ['AESURF', aesid, label, cid1, aelist_id1, cid2, alid2,
-             #eff, ldw,
-             #crefc, crefs, pllim, pulim,
-             #hmllim, hmulim, tqllim, tqulim,
-             ]), comment='aesurf comment')
+            [
+                'AESURF', aesid, label, cid1, aelist_id1, cid2, alid2,
+                #eff, ldw,
+                #crefc, crefs, pllim, pulim,
+                #hmllim, hmulim, tqllim, tqulim,
+            ]), comment='aesurf comment')
         #assert aesurf1 == aesurf2
 
         aesurf1.validate()
