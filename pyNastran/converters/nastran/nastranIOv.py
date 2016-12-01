@@ -3038,7 +3038,7 @@ class NastranIO(object):
                     pid_type = pid.type
                     if pid_type == 'PSHELL':
                         z0 = element.pid.z1
-                    elif pid_type == 'PCOMP':
+                    elif pid_type in ['PCOMP', 'PCOMPG']:
                         z0 = element.pid.z0
                     elif pid_type == 'PLPLANE':
                         z0 = 0.
