@@ -817,12 +817,14 @@ class AERO(Aero):
         6:'symXY',
     }
 
-    def __init__(self, acsid, velocity, cref, rho_ref, sym_xz=0., sym_xy=0, comment=''):
+    def __init__(self, velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0, comment=''):
         Aero.__init__(self)
         if comment:
             self.comment = comment
 
         #: Aerodynamic coordinate system identification
+        if acsid is None:
+            acsid = 0
         self.acsid = acsid
 
         #: Velocity for aerodynamic force data recovery and to calculate the BOV
@@ -845,6 +847,20 @@ class AERO(Aero):
         #: and +1 for antisymmetry; Default = 0)
         self.sym_xy = sym_xy
 
+    def validate(self):
+        if not isinstance(self.acsid, int):
+            msg = 'AERO acsid=%s expected int, got %s' % (
+                self.acsid, type(self.acsid))
+            raise TypeError(msg)
+        if not isinstance(self.sym_xz, int):
+            msg = 'AERO acsid=%s sym_xz=%s; expected int, got %s' % (
+                self.acsid, self.sym_xz, type(self.sym_xz))
+            raise TypeError(msg)
+        if not isinstance(self.sym_xy, int):
+            msg = 'AERO acsid=%s sym_xy=%s; expected int, got %s' % (
+                self.acsid, self.sym_xy, type(self.sym_xy))
+            raise TypeError(msg)
+
     def cross_reference(self, model):
         """
         Cross refernece aerdynamic coordinate system.
@@ -866,7 +882,7 @@ class AERO(Aero):
         sym_xz = integer_or_blank(card, 5, 'symXZ', 0)
         sym_xy = integer_or_blank(card, 6, 'symXY', 0)
         assert len(card) <= 7, 'len(AERO card) = %i\ncard=%s' % (len(card), card)
-        return AERO(acsid, velocity, cref, rho_ref, sym_xz, sym_xy,
+        return AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy,
                     comment=comment)
 
     @classmethod
@@ -1123,9 +1139,9 @@ class CSSCHD(Aero):
     def validate(self):
         assert self.lalpha is None or isinstance(self.lalpha, integer_types), 'lalpha=%r' % self.lalpha
         assert self.lmach is None or isinstance(self.lmach, integer_types), 'lmach=%r' % self.lmach
-        msg = ('CSSCHD sid=%s; lalpha and lmach are both None'
-               ' (one must be an integer (AEFACT)\n%s' % (self.sid, str(self)))
         if self.lalpha is None and self.lmach is None:
+            msg = ('CSSCHD sid=%s; lalpha and lmach are both None'
+                   ' (one must be an integer (AEFACT)\n%s' % (self.sid, str(self)))
             raise RuntimeError(msg)
 
     @classmethod
@@ -1831,8 +1847,8 @@ class CAERO2(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, cp, nsb, nint, lsb, lint, igid,
-                 p1, x12, comment=''):
+    def __init__(self, eid, pid, igid, p1, x12,
+                 cp=0, nsb=0, nint=0, lsb=0, lint=0, comment=''):
         """
         ::
 
@@ -1844,6 +1860,15 @@ class CAERO2(BaseCard):
           |      |
           2------4
         """
+        if lsb is None:
+            lsb = 0
+        if lint is None:
+            lint = 0
+        if nint is None:
+            nint = 0
+        if nsb is None:
+            nsb = 0
+
         if comment:
             self.comment = comment
         #: Element identification number
@@ -1884,19 +1909,19 @@ class CAERO2(BaseCard):
         #: Length of body in the x-direction of the aerodynamic coordinate
         #: system.  (Real > 0)
         self.x12 = x12
-        if self.lsb is 0:
-            self.lsb = None
-        if self.lint is 0:
-            self.lint = None
 
     def validate(self):
+        #print('nsb=%s lsb=%s' % (self.nsb, self.lsb))
+        #print('nint=%s lint=%s' % (self.nint, self.lint))
+        assert isinstance(self.lsb, int), self.lsb
+        assert isinstance(self.lint, int), self.lint
         assert len(self.p1) == 3, 'p1=%s' % self.p1
         if self.nsb == 0 and self.lsb == 0:
             msg = 'nsb=%s lsb=%s; nsb or lsb must be > 0' % (self.nsb, self.lsb)
-            raise RuntimeError(msg)
+            raise ValueError(msg)
         if self.nint == 0 and self.lint == 0:
             msg = 'nint=%s lint=%s; nint or lint must be > 0' % (self.nint, self.lint)
-            raise RuntimeError(msg)
+            raise ValueError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1916,7 +1941,8 @@ class CAERO2(BaseCard):
             double_or_blank(card, 11, 'z1', 0.0)])
         x12 = double_or_blank(card, 12, 'x12', 0.)
         assert len(card) <= 13, 'len(CAERO2 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12,
+        return CAERO2(eid, pid, igid, p1, x12,
+                      cp=cp, nsb=nsb, nint=nint, lsb=lsb, lint=lint,
                       comment=comment)
 
     def Cp(self):
@@ -1953,10 +1979,10 @@ class CAERO2(BaseCard):
         self.pid_ref = self.pid
         self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
-        if self.lsb is not None and isinstance(self.lsb, integer_types): #  > 0
+        if self.nsb == 0:
             self.lsb = model.AEFact(self.lsb, msg=msg)
             self.lsb_ref = self.lsb
-        if self.lint is not None and isinstance(self.lint, integer_types): #  > 0
+        if self.nint == 0:
             self.lint = model.AEFact(self.lint, msg=msg)
             self.lint_ref = self.lint
         self.ascid_ref = model.Acsid(msg=msg)
@@ -1964,6 +1990,12 @@ class CAERO2(BaseCard):
     def uncross_reference(self):
         self.pid = self.Pid()
         self.cp = self.Cp()
+        if self.nsb == 0:
+            self.lsb = self.Lsb()
+            del self.lsb_ref
+        if self.nint == 0:
+            self.lint = self.Lint()
+            del self.lint_ref
         del self.pid_ref, self.cp_ref
 
     def get_points(self):
@@ -1986,7 +2018,7 @@ class CAERO2(BaseCard):
         """
         paero2 = self.pid_ref
 
-        if self.nsb in [0, None]:
+        if self.nsb == 0:
             xstation = self.lsb_ref.data
             nx = len(xstation) - 1
             #print('xstation = ', xstation)
@@ -2410,9 +2442,27 @@ class CAERO4(BaseCard):
 
 
 class CAERO5(BaseCard):
+    """
+    Defines an aerodynamic macro element for Piston theory.
+
+    +--------+------+------+-----+-------+-------+-------+--------+-------+
+    |   1    |  2   |   3  |  4  |   5   |   6   |   7   |   8    |   9   |
+    +========+======+======+=====+=======+=======+=======+========+=======+
+    | CAERO5 | EID  | PID  | CP  | NSPAN | LSPAN | NTHRY | NTHICK |       |
+    +--------+------+------+-----+-------+-------+-------+--------+-------+
+    |        | X1   |  Y1  | Z1  |  X12  |  X4   |  Y4   |   Z4   |  X43  |
+    +--------+------+------+-----+-------+-------+-------+--------+-------+
+
+    +--------+------+------+-----+-------+-------+-------+--------+-------+
+    | CAERO5 | 6000 | 6001 | 100 |       |  315  |   0   |   0    |       |
+    +--------+------+------+-----+-------+-------+-------+--------+-------+
+    |        | 0.0  |  0.0 | 0.0 |  1.0  |  0.2  |  1.0  |   0.   |  0.8  |
+    +--------+------+------+-----+-------+-------+-------+--------+-------+
+    """
     type = 'CAERO5'
-    def __init__(self, eid, pid, cp, nspan, lspan, ntheory, nthick,
-                 p1, x12, p4, x43, comment=''):
+    def __init__(self, eid, pid, p1, x12, p4, x43,
+                 cp=0, nspan=0, lspan=0, ntheory=0, nthick=0,
+                 comment=''):
         if comment:
             self.comment = comment
 
@@ -2428,9 +2478,9 @@ class CAERO5(BaseCard):
         self.lspan = lspan
         self.ntheory = ntheory
         self.nthick = nthick
-        self.p1 = p1
+        self.p1 = np.asarray(p1, dtype='float64')
         self.x12 = x12
-        self.p4 = p4
+        self.p4 = np.asarray(p4, dtype='float64')
         self.x43 = x43
 
         assert self.x12 > 0., 'x12=%s' % self.x12
@@ -2441,6 +2491,9 @@ class CAERO5(BaseCard):
             msg = 'x12=%r or x43=%r must be > 0.0' % (self.x12, self.x43)
             raise ValueError(msg)
 
+    def validate(self):
+        assert self.ntheory in [0, 1, 2], 'ntheory=%r' % self.ntheory
+
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
@@ -2448,7 +2501,7 @@ class CAERO5(BaseCard):
         cp = integer_or_blank(card, 3, 'cp', 0)
         nspan = integer_or_blank(card, 4, 'nspan', 0)
         lspan = integer_or_blank(card, 5, 'lspan', 0)
-        ntheory = integer_or_blank(card, 6, 'ntheory')
+        ntheory = integer_or_blank(card, 6, 'ntheory', 0)
         nthick = integer_or_blank(card, 7, 'nthick')
         # 8 - blank
         p1 = np.array([
@@ -2462,8 +2515,9 @@ class CAERO5(BaseCard):
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.0)
         assert len(card) <= 17, 'len(CAERO3 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO5(eid, pid, cp, nspan, lspan, ntheory, nthick,
-                      p1, x12, p4, x43, comment=comment)
+        return CAERO5(eid, pid, p1, x12, p4, x43,
+                      cp=cp, nspan=nspan, lspan=lspan, ntheory=ntheory, nthick=nthick,
+                      comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2479,14 +2533,17 @@ class CAERO5(BaseCard):
         self.pid_ref = self.pid
         self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
-        self.lspan = model.AEFact(self.lspan, msg=msg)
-        self.lspan_ref = self.lspan
+        if self.nspan == 0:
+            self.lspan = model.AEFact(self.lspan, msg=msg)
+            self.lspan_ref = self.lspan
 
     def uncross_reference(self):
         self.pid = self.Pid()
         self.cp = self.Cp()
-        self.lspan = self.LSpan()
-        del self.pid_ref, self.cp_ref, self.lspan_ref
+        if self.nspan == 0:
+            self.lspan = self.LSpan()
+            del self.lspan_ref
+        del self.pid_ref, self.cp_ref
 
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)
@@ -2659,8 +2716,11 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
 
 
 class PAERO5(BaseCard):
-    def __init__(self, pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus,
-                 caoci, comment=''):
+    type = 'PAERO5'
+    def __init__(self, pid, caoci,
+                 nalpha=0, lalpha=0,
+                 nxis=0, lxis=0,
+                 ntaus=0, ltaus=0, comment=''):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
         |   1    |   2   |    3   |   4    |    5    |   6   |   7   |   8   |
@@ -2712,7 +2772,8 @@ class PAERO5(BaseCard):
         for n, i in enumerate(range(9, len(card))):
             ca = double(card, i, 'ca/ci_%i' % (n+1))
             caoci.append(ca)
-        return PAERO5(pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus, caoci,
+        return PAERO5(pid, caoci,
+                      nalpha=0, lalpha=0, nxis=0, lxis=0, ntaus=0, ltaus=0,
                       comment=comment)
     @property
     def lxis_id(self):
@@ -3904,8 +3965,8 @@ class PAERO4(BaseCard):
         #else:
             #self.y[spot] = value
 
-    def __init__(self, pid, cla, lcla, circ, lcirc,
-                 docs, caocs, gapocs, comment=''):
+    def __init__(self, pid, docs, caocs, gapocs,
+                 cla=0, lcla=0, circ=0, lcirc=0, comment=''):
         if comment:
             self.comment = comment
         #: Property identification number. (Integer > 0)
@@ -3943,8 +4004,8 @@ class PAERO4(BaseCard):
             caocs.append(caoc)
             gapocs.append(gapoc)
             j += 1
-        return PAERO4(pid, cla, lcla, circ, lcirc,
-                      docs, caocs, gapocs, comment=comment)
+        return PAERO4(pid, docs, caocs, gapocs,
+                      cla=cla, lcla=lcla, circ=circ, lcirc=lcirc, comment=comment)
 
     def cross_reference(self, model):
         pass
