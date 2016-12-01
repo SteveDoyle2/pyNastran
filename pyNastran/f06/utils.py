@@ -1,5 +1,5 @@
 import os
-from parse_flutter import plot_flutter_f06
+from pyNastran.f06.parse_flutter import plot_flutter_f06
 
 
 def cmd_line_plot_flutter():  # pragma: no cover

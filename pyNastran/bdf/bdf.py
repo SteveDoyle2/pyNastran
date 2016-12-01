@@ -2520,44 +2520,45 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         .. warning:: doesn't support EPOINTs
         """
-        nnodes = len(self.nodes)
-        nspoints = 0
-        spoints = None
-        if self.spoints:
-            spoints = self.spoints.points
-            nspoints = len(spoints)
-        if self.epoints is not None:
-            raise NotImplementedError('EPOINTs')
+        return self.get_displacement_index_xyz_cp_cd(cid=cid, dtype=dtype)[2]
+        #nnodes = len(self.nodes)
+        #nspoints = 0
+        #spoints = None
+        #if self.spoints:
+            #spoints = self.spoints.points
+            #nspoints = len(spoints)
+        #if self.epoints is not None:
+            #raise NotImplementedError('EPOINTs')
 
-        assert nnodes + nspoints > 0, 'nnodes=%s nspoints=%s' % (nnodes, nspoints)
-        xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        if cid == 0:
-            if nspoints:
-                nids = self.nodes.keys()
-                newpoints = nids + list(spoints)
-                newpoints.sort()
-                for i, nid in enumerate(newpoints):
-                    if nid not in spoints:
-                        node = self.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position()
-            else:
-                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                    xyz = node.get_position()
-                    xyz_cid0[i, :] = xyz
-        else:
-            if nspoints:
-                nids = self.nodes.keys()
-                newpoints = nids + list(spoints)
-                newpoints.sort()
-                for i, nid in enumerate(newpoints):
-                    if nid not in spoints:
-                        node = self.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position_wrt(self, cid)
-            else:
-                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                    xyz = node.get_position_wrt(self, cid)
-                    xyz_cid0[i, :] = xyz
-        return xyz_cid0
+        #assert nnodes + nspoints > 0, 'nnodes=%s nspoints=%s' % (nnodes, nspoints)
+        #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
+        #if cid == 0:
+            #if nspoints:
+                #nids = self.nodes.keys()
+                #newpoints = nids + list(spoints)
+                #newpoints.sort()
+                #for i, nid in enumerate(newpoints):
+                    #if nid not in spoints:
+                        #node = self.nodes[nid]
+                        #xyz_cid0[i, :] = node.get_position()
+            #else:
+                #for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                    #xyz = node.get_position()
+                    #xyz_cid0[i, :] = xyz
+        #else:
+            #if nspoints:
+                #nids = self.nodes.keys()
+                #newpoints = nids + list(spoints)
+                #newpoints.sort()
+                #for i, nid in enumerate(newpoints):
+                    #if nid not in spoints:
+                        #node = self.nodes[nid]
+                        #xyz_cid0[i, :] = node.get_position_wrt(self, cid)
+            #else:
+                #for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                    #xyz = node.get_position_wrt(self, cid)
+                    #xyz_cid0[i, :] = xyz
+        #return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
         """
@@ -2955,7 +2956,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 continue
             nids = np.array(nids)
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
-
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform, cid=0):
