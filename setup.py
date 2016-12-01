@@ -114,10 +114,10 @@ try:
     import matplotlib
     sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
     if sver < [1, 5, 0]:
-        print("matplotlib.__version__ = %r < '1.5.0'" % six.__version__)
-        py_packages.append('matplotlib >= 1.5.0, <2')
+        print("matplotlib.__version__ = %r < '1.4.0'" % six.__version__)
+        py_packages.append('matplotlib >= 1.4.0, <2')
 except ImportError:
-    py_packages.append('matplotlib >= 1.5.0, <2')
+    py_packages.append('matplotlib >= 1.4.0, <2')
 
 try:
     import docopt

@@ -76,11 +76,11 @@ install:
   # install dependencies
   # if line per https://docs.travis-ci.com/user/multi-os/
   - echo "python version=$TRAVIS_PYTHON_VERSION"
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib==1.5.3 pandas vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.3" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib==1.5.3 pandas; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib==1.5.3 pandas; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib==1.5.3 pandas; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib==1.5.3 pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib>=1.4.0,<2 pandas vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.3" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib>=1.4.0,<2 pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib>=1.4.0,<2 pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib>=1.4.0,<2 pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib>=1.4.0,<2 pandas; fi
   - source activate test-environment
   - conda list
   - python setup.py develop

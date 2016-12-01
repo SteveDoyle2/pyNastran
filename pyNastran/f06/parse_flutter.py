@@ -5,8 +5,11 @@ from __future__ import print_function
 from itertools import count
 import numpy as np
 
+
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib
+matplotlib.use('Agg')
 
 from pyNastran.utils.atmosphere import get_alt_for_density
 from pyNastran.utils.log import get_logger2
