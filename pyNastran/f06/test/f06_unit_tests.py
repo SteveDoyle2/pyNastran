@@ -9,15 +9,15 @@ from numpy import array, array_equiv, array_equal, allclose
 from itertools import count
 
 
-class DummyWriter(object):
-    def __init__(self, *args):
-        pass
-    def open(self, *args, **kwargs):
-        pass
-    def close(self):
-        pass
-    def write(self, msg):
-        raise RuntimeError('remove this')
+#class DummyWriter(object):
+    #def __init__(self, *args):
+        #pass
+    #def open(self, *args, **kwargs):
+        #pass
+    #def close(self):
+        #pass
+    #def write(self, msg):
+        #raise RuntimeError('remove this')
 
 #import sys
 #sys.stdout = DummyWriter()
@@ -45,7 +45,7 @@ def run_model(bdf_name=None, op2_name=None, f06_name=None,
 
     if op2_name:
         op2 = OP2(debug=False)
-        op2.read_op2(op2_name, vectorized=vectorized)
+        op2.read_op2(op2_name)
         op2.write_f06(op2_name[:-4] + '.test_op2.out', quiet=True)
         outputs.append(op2)
 

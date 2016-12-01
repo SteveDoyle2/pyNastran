@@ -147,6 +147,7 @@ class TestAero(unittest.TestCase):
    # def test_aestat_1(self):
    # def test_aesurf_1(self):
     def test_aesurfs_1(self):
+        """checks the AESURFS cards"""
         aesid = 6001
         label = 'ELEV'
         list1 = 6002

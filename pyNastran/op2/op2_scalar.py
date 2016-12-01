@@ -702,18 +702,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESCP'  : [self._read_oes1_3, self._read_oes1_4],  # stress - nonlinear???
             b'OESRT'  : [self._read_oes1_3, self._read_oes1_4], # ply strength ratio
 
-            b'OSTRRMS1' : [self._table_passer, self._table_passer], # isat_random
-            b'OSTRNO1' : [self._table_passer, self._table_passer],  # isat_random
-            b'OSTRMS1C' : [self._table_passer, self._table_passer], # isat_random
-            b'OSTNO1C' : [self._table_passer, self._table_passer],  # isat_random
-
-            #b'OSTRRMS1' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTRNO1' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
-            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
-            #b'OSTNO1C' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
-
-
             # special nonlinear tables
             # OESNLBR - Slideline stresses
             # OESNLXD - Nonlinear transient stresses
@@ -744,14 +732,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRATO1' : [self._table_passer, self._table_passer],
             b'OSTRCRM1' : [self._table_passer, self._table_passer],
             b'OSTRPSD1' : [self._table_passer, self._table_passer],
-            b'OSTRRMS1' : [self._table_passer, self._table_passer],
-            b'OSTRNO1'  : [self._table_passer, self._table_passer],
+            b'OSTRRMS1' : [self._table_passer, self._table_passer], # isat_random
+            b'OSTRNO1' : [self._table_passer, self._table_passer],  # isat_random
 
             b'OSTRATO2' : [self._table_passer, self._table_passer],
             b'OSTRCRM2' : [self._table_passer, self._table_passer],
             b'OSTRPSD2' : [self._table_passer, self._table_passer],
             b'OSTRRMS2' : [self._table_passer, self._table_passer],
             b'OSTRNO2'  : [self._table_passer, self._table_passer],
+
+            b'OSTRMS1C' : [self._table_passer, self._table_passer], # isat_random
+            b'OSTNO1C' : [self._table_passer, self._table_passer],  # isat_random
+            #b'OSTRRMS1' : [self._read_oes1_3, self._read_oes1_4], # isat_random
+            #b'OSTRNO1' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
+            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
+            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
+            #b'OSTNO1C' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
 
             b'OSTPSD2C' : [self._table_passer, self._table_passer],
             #=======================

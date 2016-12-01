@@ -5,7 +5,9 @@ import sys
 import os
 import pyNastran
 pkg_path = pyNastran.__path__[0]
-manual_path = os.path.abspath(os.path.join(pkg_path, '..', 'docs', 'html_docs', 'manual')) # , 'py_to_rst.py'
+
+# , 'py_to_rst.py'
+manual_path = os.path.abspath(os.path.join(pkg_path, '..', 'docs', 'html_docs', 'manual'))
 sys.path.append(manual_path)
 
 #print(sys.path)
@@ -19,10 +21,7 @@ from pyNastran.bdf.test.all_tests import *
 from pyNastran.op2.test.all_tests import *
 
 #f06
-#try:
-   #from pyNastran.f06.test.all_tests import *
-##except ImportError:
-   #pass
+from pyNastran.f06.test.all_tests import *
 
 #op4
 from pyNastran.op4.test.op4_test import TestOP4

@@ -193,7 +193,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
         nline_slots = nline * 3
         nshell_slots = 4 * nctria3 + 5 * (ncquad4 + ncshear) + 7 * nctria6 + 9 * ncquad8
         nsolid_slots = 5 * nctetra4 + 6 * ncpyram5 + 7 * ncpenta6 + 9 * nchexa8
-        print('nline=%s nshell=%s nsolid=%s' % (nline, nshell, nsolid))
+        bdf.log.debug('nline=%s nshell=%s nsolid=%s' % (nline, nshell, nsolid))
         assert nelements == bdf_nelements, 'nelements=%s bdf.nelements=%s card_count=\n%s' % (
             nelements, bdf_nelements, bdf.card_count)
         nelements_slots = nline_slots + nshell_slots + nsolid_slots

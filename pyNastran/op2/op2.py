@@ -435,7 +435,7 @@ class OP2(OP2_Scalar):
                     except:
                         self.log.error(obj)
                         self.log.error('build_dataframe is broken for %s' % class_name)
-                        #raise
+                        raise
                     continue
                 if obj.is_sort2():
                     #self.log.warning(obj)
@@ -446,11 +446,11 @@ class OP2(OP2_Scalar):
                 except NotImplementedError:
                     self.log.warning(obj)
                     self.log.warning('build_dataframe is broken for %s' % class_name)
-                    #raise
+                    raise
                 except:
                     self.log.error(obj)
                     self.log.error('build_dataframe is broken for %s' % class_name)
-                    #raise
+                    raise
                 #if i >= nbreak:
                     #return
 

@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import unittest
 from pyNastran.f06.f06_formatting import write_floats_8p4f
 
-class TestFormatting(unittest.TestCase):
+class TestF06Formatting(unittest.TestCase):
 
     def test_write_floats_8p4F(self):
         val = 0.0
