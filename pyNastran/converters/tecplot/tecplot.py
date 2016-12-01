@@ -420,28 +420,33 @@ class Tecplot(FortranFormat):
             ii = 0
             for ii in range(100):
                 datai = self.f.read(4)
-                val, = unpack(b'i', datai)
+                vali, = unpack(b'i', datai)
+                valf, = unpack(b'f', datai)
                 self.n += 4
-                values.append(val)
-                if val == 9999:
+                values.append((vali, valf))
+                if vali == 9999:
                     break
             assert ii < 100, ii
-            #print(values)
+            #for vals in values:
+                #print('  ', vals)
 
             nbytes = 3 * 4
             data = self.f.read(nbytes)
             self.n += nbytes
+            self.show_data(data, types='if', endian='<')
 
             nbytes = 1 * 4
             data = self.f.read(nbytes)
             self.n += nbytes
             zone_type, = unpack(b'i', data)
-            #self.show(100, endian='<')
+            self.show(100, types='if', endian='<')
 
             nbytes = 11 * 4
             data = self.f.read(nbytes)
             self.n += nbytes
-            self.show_data(data, types='i', endian='<') # 'if'?
+            #self.show_data(data, types='if', endian='<') # 'if'?
+            s = unpack('2f 9i', data)
+            print(s)
             #assert self.n == 360, self.n
             #print('----------')
 
@@ -449,12 +454,15 @@ class Tecplot(FortranFormat):
             data = self.f.read(nbytes)
             self.n += nbytes
             nnodes2, nelements2 = unpack('2i', data)
+            #self.show_data(data, types='if', endian='<') # 'if'?
             if nnodes and nelements:
                 self.log.debug('nnodes=%s nelements=%s' % (nnodes, nelements))
                 self.log.debug('nnodes2=%s nelements2=%s' % (nnodes2, nelements2))
             else:
                 nnodes = nnodes2
                 nelements = nelements2
+
+            self.log.info('nnodes=%s nelements=%s' % (nnodes, nelements))
             assert nnodes == nnodes2
             assert nelements == nelements2
             #assert nnodes2 < 10000, nnodes
@@ -463,15 +471,24 @@ class Tecplot(FortranFormat):
             nbytes = 35 * 4
             data = self.f.read(nbytes)
             self.n += nbytes
-            #self.show_data(data, types='ifs', endian='<')
+            #self.show_data(data, types='if', endian='<')
             #print('----------')
 
             nbytes = 30 * 4
             data = self.f.read(nbytes)
             self.n += nbytes
 
-            #self.show_data(data, types='ifs', endian='<')
-            assert zone_type in [5], zone_type
+            #print('----------------------')
+            #self.show_data(data, types='if', endian='<')
+            #print('----------------------')
+
+            # 0 - ORDERED (meaning?)
+            # 1 - FELINESEG (meaning?)
+            # 2 - FETRIANGLE
+            # 3 - FEQUADRILATERAL
+            # 4 - FETETRAHEDRON
+            # 5 - FEBRICK
+            assert zone_type in [0, 1, 2, 3, 4, 5], zone_type
 
             # p.98
             # zone_title
@@ -497,49 +514,73 @@ class Tecplot(FortranFormat):
 
             # http://www.hgs.k12.va.us/tecplot/documentation/tp_data_format_guide.pdf
 
+            # 0=POINT
+            # 1=BLOCK
+            is_block = False
 
-            #print('----------')
-            # the variables: [x, y, z]
-            nvars = 3
-            #nnodes = 3807
-            ni = nnodes * nvars
-            nbytes = ni * 4
-            data = self.f.read(nbytes)
-            self.n += nbytes
-            xyzvals = unpack(b'%sf' % ni, data)
-            xyz = array(xyzvals, dtype='float32').reshape(3, nnodes).T
+            # 0=cell-centered
+            # 1=node-centered
+            value_location = None
+            if is_block:
+                raise NotImplementedError('is_block=%s' % is_block)
+            else:
+                # is_point
+                #print('----------')
+                # the variables: [x, y, z]
+                nvars = 3
+                #nnodes = 3807
 
-            # the variables: [rho, u, v, w, p]
-            nvars = 5
-            dunno = 0    # what's with this...
-            ni = nnodes * nvars + dunno
-            nbytes = ni * 4
-            data = self.f.read(nbytes)
-            self.n += nbytes
-            resvals = unpack(b'%sf' % ni, data)
-            results = array(resvals, dtype='float32').reshape(nvars, nnodes).T
+                ni = nnodes * nvars
+                nbytes = ni * 4
+                data = self.f.read(nbytes)
+                self.n += nbytes
+                xyzvals = unpack(b'%sf' % ni, data)
+                xyz = array(xyzvals, dtype='float32').reshape(3, nnodes).T
 
-            #
-            # 7443 elements
-            nnodes_per_element = 8 # 8 nodes/elements
-            #nelements = 7443
-            nvals = nnodes_per_element * nelements
-            nbytes = nvals * 4
-            node_ids = unpack(b'%ii' % nvals, self.f.read(nbytes))
-            self.n += nbytes
+                # the variables: [rho, u, v, w, p]
+                nvars = 5
+                dunno = 0    # what's with this...
+                ni = nnodes * nvars + dunno
+                nbytes = ni * 4
+                data = self.f.read(nbytes)
+                self.n += nbytes
+                resvals = unpack(b'%sf' % ni, data)
+                results = array(resvals, dtype='float32').reshape(nvars, nnodes).T
 
-            elements = array(node_ids).reshape(nelements, nnodes_per_element)
-            #print(elements)
+                #
+                # 7443 elements
+                if zone_type == 5:
+                    # CHEXA
+                    nnodes_per_element = 8 # 8 nodes/elements
+                    nvals = nnodes_per_element * nelements
+                elif zone_type == 0:
+                    # CQUAD4
+                    nnodes_per_element = 4
+                    nvals = nnodes_per_element * nelements
+                    print('nvals = %s' % nvals)
 
-            #self.show_data(data, types='ifs', endian='<')
-            #print(vals)
+                nbytes = nvals * 4
+                node_ids = unpack(b'%ii' % nvals, self.f.read(nbytes))
+                self.n += nbytes
 
-            #self.show(100, endian='<')
-            self.hexa_elements = elements
+                elements = array(node_ids).reshape(nelements, nnodes_per_element)
+                #print(elements)
+
+                #self.show_data(data, types='ifs', endian='<')
+                #print(vals)
+
+                #self.show(100, endian='<')
+                if zone_type == 5:
+                    self.hexa_elements = elements
+                elif zone_type == 0:
+                    self.quad_elements = elements
+                else:
+                    raise NotImplementedError(zone_type)
             del self.f
 
         self.xyz = xyz
         self.results = results
+        print('done...')
 
     def slice_x(self, xslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
@@ -695,6 +736,8 @@ class Tecplot(FortranFormat):
             nnodes = self.nnodes
             nelements = self.nelements
             for etype, elements in etype_elements:
+                if not len(elements):
+                    continue
                 if etype == 'CHEXA' and len(elements):
                     #print(etype)
                     # is_points = False
