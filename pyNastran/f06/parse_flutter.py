@@ -5,9 +5,6 @@ from __future__ import print_function
 from itertools import count
 import numpy as np
 
-
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
