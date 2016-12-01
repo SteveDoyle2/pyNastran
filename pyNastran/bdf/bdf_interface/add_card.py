@@ -792,12 +792,11 @@ class AddMethods(BDFAttributes):
     def add_dvgrid(self, dvgrid):
         """adds a DVGRID object"""
         key = dvgrid.dvid
-        assert key not in self.dvgrids, 'DVGRID=%s old=\n%snew=\n%s' % (
-                    key, self.dvgrids[key], dvgrid)
-        assert key not in self.dvgrids
         assert key > 0
-        self.dvgrids[key] = dvgrid
-        self._type_to_id_map[dvgrid.type].append(key)
+        if key not in self.dvgrids:
+            self.dvgrids[key] = []
+            self._type_to_id_map[dvgrid.type].append(key)
+        self.dvgrids[key].append(dvgrid)
 
     def add_nlparm(self, nlparm):
         """adds a NLPARM object"""

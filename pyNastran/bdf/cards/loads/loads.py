@@ -722,23 +722,70 @@ class RFORCE(Load):
 
 
 class RFORCE1(Load):
+    """
+    NX Nastran specific card
+
+    +---------+------+----+---------+---+----+----+----+--------+
+    |    1    |   2  | 3  |    4    | 5 |  6 |  7 |  8 |   9    |
+    +=========+======+====+=========+===+====+====+====+========+
+    | RFORCE1 | SID  | G  |   CID   | A | R1 | R2 | R3 | METHOD |
+    +---------+------+----+---------+---+----+----+----+--------+
+    |         | RACC | MB | GROUPID |   |    |    |    |        |
+    +---------+------+----+---------+---+----+----+----+--------+
+    """
     type = 'RFORCE1'
 
-    def __init__(self, sid, nid, scale, r1, r2, r3, racc,
-                 mb, group_id, cid=0, method=2, comment=''):
+    def __init__(self, sid, nid, scale, group_id,
+                 cid=0, r123=None, racc=0., mb=0, method=2, comment=''):
+        """
+        Defines the RFORCE1 card
+
+        Parameters
+        ----------
+        sid : int
+            load set id
+        nid : int
+            grid point through which the rotation vector acts
+        scale : float
+            scale factor of the angular velocity in revolutions/time
+        r123 : List[float, float, float] / (3, ) float ndarray
+            rectangular components of the rotation vector R that passes
+            through point G
+        racc : int; default=0.0
+        mb : int; default=0
+            Indicates whether the CID coordinate system is defined in the main
+            Bulk Data Section (MB = -1) or the partitioned superelement Bulk
+            Data Section (MB = 0). Coordinate systems referenced in the main
+            Bulk Data Section are considered stationary with respect to the
+            assembly basic coordinate system.
+        group_id : int
+            Group identification number. The GROUP entry referenced in the
+            GROUPID field selects the grid points to which the load is applied.
+        cid : int; default=0
+            Coordinate system defining the components of the rotation vector.
+        method : int; default=2
+            Method used to compute centrifugal forces due to angular velocity.
+        comment : str
+        """
         if comment:
             self.comment = comment
         self.sid = sid
         self.nid = nid
         self.cid = cid
         self.scale = scale
-        self.r1 = r1
-        self.r2 = r2
-        self.r3 = r3
+        if r123 is None:
+            self.r123 = np.array([1., 0., 0.])
+        else:
+            self.r123 = np.asarray(r123)
         self.method = method
         self.racc = racc
         self.mb = mb
         self.group_id = group_id
+
+    def validate(self):
+        if not np.linalg.norm(self.r123) > 0.:
+            msg = 'r123=%s norm=%s' % (self.r123, np.linalg.norm(self.r123))
+            raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -746,16 +793,18 @@ class RFORCE1(Load):
         nid = integer_or_blank(card, 2, 'nid', 0)
         cid = integer_or_blank(card, 3, 'cid', 0)
         scale = double_or_blank(card, 4, 'scale', 1.)
-        r1 = double_or_blank(card, 5, 'r1', 0.)
-        r2 = double_or_blank(card, 6, 'r2', 0.)
-        r3 = double_or_blank(card, 7, 'r3', 0.)
+        r123 = [
+            double_or_blank(card, 5, 'r1', 1.),
+            double_or_blank(card, 6, 'r2', 0.),
+            double_or_blank(card, 7, 'r3', 0.),
+        ]
         method = integer_or_blank(card, 8, 'method', 1)
         racc = double_or_blank(card, 9, 'racc', 0.)
         mb = integer_or_blank(card, 10, 'mb', 0)
         group_id = integer_or_blank(card, 11, 'group_id', 0)
-        assert len(card) <= 12, 'len(RFORCE card) = %i\ncard=%s' % (len(card), card)
-        return RFORCE1(sid, nid, scale, r1, r2, r3, racc, mb,
-                       group_id, cid=cid, method=method, comment=comment)
+        assert len(card) <= 12, 'len(RFORCE1 card) = %i\ncard=%s' % (len(card), card)
+        return RFORCE1(sid, nid, scale, cid=cid, r123=r123, racc=racc,
+                       mb=mb, group_id=group_id, method=method, comment=comment)
 
     def get_loads(self):
         return [self]

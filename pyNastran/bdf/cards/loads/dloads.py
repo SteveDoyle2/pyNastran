@@ -42,7 +42,8 @@ class ACSRCE(BaseCard):
     """
     type = 'ACSRCE'
 
-    def __init__(self, sid, excite_id, delay, dphase, power, rho, b, comment=''):
+    def __init__(self, sid, excite_id, rho, b,
+                 delay=0, dphase=0, power=0, comment=''):
         if comment:
             self.comment = comment
         self.sid = sid
@@ -64,7 +65,8 @@ class ACSRCE(BaseCard):
         b = double(card, 7, 'bulk modulus')
 
         assert len(card) <= 8, 'len(ACSRCE card) = %i\n%s' % (len(card), card)
-        return ACSRCE(sid, excite_id, delay, dphase, power, rho, b, comment=comment)
+        return ACSRCE(sid, excite_id, rho, b,
+                      delay=delay, dphase=dphase, power=power, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -426,10 +428,13 @@ class RLOAD2(TabularLoad):
     .. math:: \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
         e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} }
 
+
     +--------+-----+----------+-------+--------+----+----+------+
+    |   1    |  2  |     3    |   4   |    5   |  6 |  7 |  8   |
+    +========+=====+==========+=======+========+====+====+======+
     | RLOAD2 | SID | EXCITEID | DELAY | DPHASE | TB | TP | TYPE |
     +--------+-----+----------+-------+--------+----+----+------+
-    | RLOAD2 | 5   | 3        |       |        | 1  |    |      |
+    | RLOAD2 |  5  |    3     |       |        | 1  |    |      |
     +--------+-----+----------+-------+--------+----+----+------+
     """
     type = 'RLOAD2'

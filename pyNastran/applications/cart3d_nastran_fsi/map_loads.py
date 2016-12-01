@@ -11,7 +11,7 @@ from numpy import argsort, mean, array, cross
 
 
 from pyNastran.applications.cart3d_nastran_fsi.math_functions import (
-    pierce_plane_vector, shepard_weight, Normal, ListPrint)
+    pierce_plane_vector, shepard_weight, Normal, list_print)
 #from pyNastran.applications.cart3d_nastran_fsi.math_functions import get_triangle_weights
 from pyNastran.applications.cart3d_nastran_fsi.structural_model import StructuralModel
 from pyNastran.applications.cart3d_nastran_fsi.aero_model import AeroModel
@@ -162,17 +162,17 @@ class LoadMapping(object):
         self.bdf.close()
 
         log.info("pInf=%g [psi]; qInf= %g [psi]" % (self.pInf, self.qInf))
-        log.info("sumForcesFEM  [lb]    = %s" % ListPrint(sum_forces))
+        log.info("sumForcesFEM  [lb]    = %s" % list_print(sum_forces))
 
         # divided by 12 to have moments in lb-ft
-        log.info("sumMomentsFEM [lb-ft] = %s" % ListPrint(sum_moments / 12.))
+        log.info("sumMomentsFEM [lb-ft] = %s" % list_print(sum_moments / 12.))
 
         Cf = sum_forces /(self.Sref * self.qInf)
-        log.info("Cf = %s" % ListPrint(Cf))
+        log.info("Cf = %s" % list_print(Cf))
 
         Cm = sum_moments / (self.Sref * self.qInf * self.Lref)
         # multiply by 12 to nondimensionalize ???  maybe 144...
-        log.info("Cm = %s" % ListPrint(Cm * 12.))
+        log.info("Cm = %s" % list_print(Cm * 12.))
 
         #self.bdf.write('$***********\n')
         log.info("wrote loads to %r" % self.bdffile)
@@ -414,7 +414,7 @@ class LoadMapping(object):
         #(sElements, sDists) = self.centroid_tree.getCloseElementIDs(aCentroid)
         #log.debug("aCentroid = %s" % aCentroid)
         #log.debug("sElements = %s" % sElements)
-        #log.debug("sDists    = %s" % ListPrint(sDists))
+        #log.debug("sDists    = %s" % list_print(sDists))
 
         #setNodes = set([])
         #structural_model = self.structural_model
@@ -446,7 +446,7 @@ class LoadMapping(object):
         (sElements, sDists) = self.centroid_tree.getCloseElementIDs(aCentroid)
         log.info("aCentroid = %s" % aCentroid)
         log.info("sElements = %s" % sElements)
-        log.info("sDists    = %s" % ListPrint(sDists))
+        log.info("sDists    = %s" % list_print(sDists))
         #(nearbySElements, nearbyDistances) = sElements
         pierced_elements = []
 
@@ -586,7 +586,7 @@ class LoadMapping(object):
             distribution = self.create_distribution(nIDs, weights)
 
             log.debug("element aEID=%s sEID=%s weights=%s" % (
-                aero_eid, structural_eid, ListPrint(weights)))
+                aero_eid, structural_eid, list_print(weights)))
             #print("distribution = ", distribution)
             #print("nIDs         = ", nIDs)
             #print("weights      = ", weights)
@@ -618,7 +618,7 @@ class LoadMapping(object):
             distribution = self.create_distribution(nIDs, weights)
 
             log.info("element aEID=%s sEID=%s weights=%s" % (
-                aero_eid, structural_eid, ListPrint(weights)))
+                aero_eid, structural_eid, list_print(weights)))
         log.info("-------------------------\n")
         sys.stdout.flush()
         return distribution

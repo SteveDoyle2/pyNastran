@@ -219,6 +219,10 @@ class TableArray(ScalarObject):  # displacement style table
         #  - SORT2 - nnodes
         #print('ntotal=%s ntimes=%s _nnodes=%s' % (self.ntotal, self.ntimes, self._nnodes))
         self._nnodes //= self.ntimes
+        #print('ntotal=%s ntimes=%s _nnodes=%s\n' % (self.ntotal, self.ntimes, self._nnodes))
+        #if self.ntimes > 1000:
+        #    raise RuntimeError(self.ntimes)
+
         self.itime = 0
         self.itotal = 0
         self.is_built = True
@@ -228,7 +232,7 @@ class TableArray(ScalarObject):  # displacement style table
             nnodes = self.ntotal
             ntotal = self.ntotal
             nx = ntimes
-            ny = self.ntotal
+            ny = nnodes
             #print("ntimes=%s nnodes=%s" % (ntimes, nnodes))
         elif self.is_sort2():
             nnodes = self.ntimes
