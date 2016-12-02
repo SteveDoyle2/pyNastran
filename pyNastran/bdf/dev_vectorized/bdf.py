@@ -1901,7 +1901,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'SEUSET' : (SEUSET, self.add_SEUSET),
             #'SEUSET1' : (SEUSET1, self.add_SEUSET),
 
-            'NLPARM' : (NLPARM, self.add_nlparm),
             # BCTSET
         }
         self._card_parser_prepare = {
