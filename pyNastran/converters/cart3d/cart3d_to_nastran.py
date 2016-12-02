@@ -4,7 +4,7 @@ from numpy import unique
 
 from codecs import open as codec_open
 from pyNastran.bdf.bdf import BDF
-from pyNastran.converters.cart3d.cart3d import Cart3D
+from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -28,11 +28,18 @@ def cart3d_to_nastran_model(cart3d_filename, log=None, debug=False):
     bdf_model : BDF
         BDF() model object
     """
-    cart3d = Cart3D(log=log, debug=debug)
-    cart3d.read_cart3d(cart3d_filename)
+    if isinstance(cart3d_filename, Cart3D):
+        cart3d = cart3d_filename
+    else:
+        cart3d = read_cart3d(cart3d_filename, log=log, debug=debug, result_names=None)
     nodes = cart3d.nodes
     elements = cart3d.elements
     regions = cart3d.regions
+
+    if regions.min() == 0:
+        # bit of a hack to take an invalid cart3d model and make it
+        # work in Nastran, which requires property_ids > 0
+        regions += 1
 
     i = 0
     nid = 1
@@ -85,11 +92,19 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     bdf_filename = 'threePlugs.bdf'
     cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
     """
-    cart3d = Cart3D(log=log, debug=debug)
-    cart3d.read_cart3d(cart3d_filename)
+    if isinstance(cart3d_filename, Cart3D):
+        cart3d = cart3d_filename
+    else:
+        cart3d = read_cart3d(cart3d_filename, log=log, debug=debug, result_names=None)
+
     nodes = cart3d.nodes
     elements = cart3d.elements
     regions = cart3d.regions
+
+    if regions.min() == 0:
+        # bit of a hack to take an invalid cart3d model and make it
+        # work in Nastran, which requires property_ids > 0
+        regions += 1
 
     #bdf = BDF()
     #bdf.nodes = cart3d.nodes

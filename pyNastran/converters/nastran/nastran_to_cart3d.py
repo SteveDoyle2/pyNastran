@@ -43,6 +43,8 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     nids_expected = arange(1, len(nids) + 1)
 
     if array_equal(nids, nids_expected):
+        # we don't need to renumber the nodes
+        # so we don't need to make an nid_map
         for node_id, node in sorted(iteritems(bdf.nodes)):
             nodes[i, :] = node.get_position()
             i += 1
@@ -73,11 +75,19 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
             if element.type == 'CTRIA3':
                 nids = element.node_ids
                 elements[i, :] = [nid_map[nid] for nid in nids]
-                regions[i] = element.Mid()
-            #elif element.type == 'CQUAD4':
-                #nids = element.node_ids
-                #elements[i, :] = [nid_map[nid] for nid in nids]
-                #regions[i] = element.Mid()
+                regions[i] = element.material_ids[0]
+            elif element.type == 'CQUAD4':
+                nids = element.node_ids
+                quad = [nid_map[nid] for nid in nids]
+                mid = element.material_ids[0]
+
+                # TODO: splits on edge 1-3, not the max angle
+                #       since we're just comparing the models, it doesn't matter
+                elements[i, :] = [quad[0], quad[1], quad[2]]
+                regions[i] = mid
+                i += 1
+                elements[i, :] = [quad[0], quad[2], quad[3]]
+                regions[i] = mid
             else:
                 raise NotImplementedError(element.type)
             i += 1
