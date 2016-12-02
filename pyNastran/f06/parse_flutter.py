@@ -3,6 +3,7 @@ SOL 145 plotter
 """
 from __future__ import print_function
 from itertools import count
+from six import iteritems
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -10,10 +11,63 @@ import matplotlib.gridspec as gridspec
 
 from pyNastran.utils.atmosphere import get_alt_for_density
 from pyNastran.utils.log import get_logger2
-
+from pyNastran.utils import object_attributes, object_methods
 
 class FlutterResponse(object):
     """storage object for single subcase SOL 145 results"""
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        """
+        List the names of attributes of a class as strings. Returns public
+        attributes as default.
+
+        Parameters
+        ----------
+        obj : instance
+            the object for checking
+        mode : str
+            defines what kind of attributes will be listed
+            * 'public' - names that do not begin with underscore
+            * 'private' - names that begin with single underscore
+            * 'both' - private and public
+            * 'all' - all attributes that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        attribute_names : List[str]
+            sorted list of the names of attributes of a given type or None
+            if the mode is wrong
+        """
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        """
+        List the names of methods of a class as strings. Returns public methods
+        as default.
+
+        Parameters
+        ----------
+        obj : instance
+            the object for checking
+        mode : str
+            defines what kind of methods will be listed
+            * "public" - names that do not begin with underscore
+            * "private" - names that begin with single underscore
+            * "both" - private and public
+            * "all" - all methods that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        method : List[str]
+            sorted list of the names of methods of a given type
+            or None if the mode is wrong
+        """
+        return object_methods(obj, mode=mode, keys_to_skip=keys_to_skip)
+
     def __init__(self, subcase, configuration, xysym, xzsym, mach, density_ratio, method,
                  modes, results,
                  f06_units=None, out_units=None,
@@ -83,7 +137,7 @@ class FlutterResponse(object):
             self.xysym = xysym
             self.xzsym = xzsym
             self.density_ratio = density_ratio
-            print('mach=%s' % mach)
+            #print('mach=%s' % mach)
 
         self.method = method
         self.modes = np.asarray(modes, dtype='int32')
@@ -418,7 +472,8 @@ class FlutterResponse(object):
                         fig=None,
                         xlim=None, ylim=None,
                         show=True, clear=False, legend=True,
-                        png_filename=None):
+                        png_filename=None,
+                        **kwargs):
         """
         Plots a root locus
 
@@ -426,7 +481,36 @@ class FlutterResponse(object):
         ----------
         modes : List[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
+        fig : plt.figure
+            figure object
+        xlim : list[float/None, float/None]
+            the x plot limits
+        ylim : list[float/None, float/None]
+            the y plot limits
+        show : bool; default=True
+            show the plot
+        clear : bool; default=False
+            clear the plot
+        legend : bool; default=False
+            show the legend
+
+        kwargs : dict; default=None
+           key : various matplotlib parameters
+           value : depends
+
+        Legend kwargs
+        -------------
+           loc : str
+              'best'
+           fancybox : bool; default=False
+              makes the box look cool
+           framealpha : float; 0.0 <= alpha <= 1.0
+               0.0 - fully transparent
+               1.0 - no transparency / opaque
         """
+        if kwargs is None:
+            kwargs = {}
+
         if modes is None:
             modes = self.modes
         else:
@@ -463,7 +547,7 @@ class FlutterResponse(object):
         fig.suptitle(title)
         #self._finalize_plot(legend, show, png_filename, clear)
         if legend:
-            axes.legend()
+            axes.legend(**kwargs)
 
         if show:
             plt.show()
@@ -572,6 +656,14 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      xlim=None, ylim_damping=None, ylim_freq=None):
     """
     Plots a flutter (SOL 145) deck
+
+    Returns
+    -------
+    flutters : dict
+        key : int
+           subcase_id
+        value : FlutterResponse()
+
     Supports:
     ---------
      o single subcase
@@ -598,7 +690,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
 
     log = get_logger2(log=None, debug=True, encoding='utf-8')
-    flutters = []
+    flutters = {}
     iline = 0
 
     # 1 is the default subcase number
@@ -645,7 +737,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                                               mach, density_ratio, method,
                                               modes, results,
                                               f06_units=f06_units, out_units=out_units)
-                    flutters.append(flutter)
+                    flutters[subcase] = flutter
                     modes = []
                     results = []
 
@@ -752,7 +844,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                                   mach, density_ratio, method,
                                   modes, results,
                                   f06_units=f06_units, out_units=out_units)
-        flutters.append(flutter)
+        flutters[subcase] = flutter
 
     make_flutter_plots(flutters, xlim, ylim_damping, ylim_freq,
                        plot_vg, plot_vg_vf, plot_root_locus, show=show)
@@ -761,7 +853,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
 def make_flutter_plots(flutters, xlim, ylim_damping, ylim_freq,
                        plot_vg, plot_vg_vf, plot_root_locus, show=True):
     """actually makes the flutter plots"""
-    for flutter in flutters:
+    for subcase, flutter in sorted(iteritems(flutters)):
         if plot_vg:
             flutter.plot_vg(show=False,
                             xlim=xlim, ylim=ylim_damping)

@@ -43,13 +43,13 @@ class LoadMapping(object):
         self.structural_model = structural_model
 
         self.mapping_matrix = {}
-        self.mapfile = 'mapfile.in'
-        self.bdffile = 'fem.bdf'
+        self.map_filename = 'mapfile.in'
+        self.bdf_filename = 'fem.bdf'
 
         self.centroid_tree = None
         self.nodal_tree = None
         self.load_case = None
-        self.bdf = None
+        #self.bdf = None
         self.load_cases = None
 
         self.pInf = None
@@ -97,14 +97,14 @@ class LoadMapping(object):
 
     #@entry_exit
     def load_mapping_matrix(self):
-        with open(self.mapfile, 'r') as infile:
-            self.mapping_matrix = cPickle.loads(infile)
+        with open(self.map_filename, 'r') as map_file:
+            self.mapping_matrix = cPickle.loads(map_file)
 
     #@entry_exit
     def save_mapping_matrix(self):
         out_string = cPickle.dumps(self.mapping_matrix)
-        with open(self.mapfile, 'wb') as outfile:
-            outfile.write(out_string)
+        with open(self.map_filename, 'wb') as map_file:
+            map_file.write(out_string)
 
     #@entry_exit
     def get_pressure(self, Cp):
@@ -146,58 +146,57 @@ class LoadMapping(object):
         sum_moments = array([0., 0., 0.])
         sys.stdout.flush()
 
+        for aero_eid, distribution in iteritems(self.mapping_matrix):
+            #print("aero_eid = ", aero_eid)
+            #print("***distribution = ", distribution)
+            sum_load = 0.
+            area = self.aero_model.Area(aero_eid)
+            normal = self.aero_model.Normal(aero_eid)
+            Cp = self.aero_model.Cp(aero_eid)
+            #print("Cp = ", Cp)
+            #print("area[%s]=%s" % (aero_eid, area))
+
+            p = self.get_pressure(Cp)
+            centroid = self.aero_model.Centroid(aero_eid)
+            r = moment_center - centroid
+            F = area * p
+            Fn = F * normal
+            sum_moments += cross(r, Fn)
+            sum_forces += Fn
+            for structural_nid, percent_load in sorted(iteritems(distribution)):
+                sum_load += percent_load
+
+                Fxyz = Fn * percent_load  # negative sign is to be consistent with nastran
+                self.add_force(structural_nid, Fxyz)
+
+                #print("Fxyz = ",Fxyz)
+                #print("type(structuralModel) = ", type(self.structuralModel))
+
+                #comment = 'percent_load=%.2f' % percent_load
+                #self.structuralModel.write_load(bdf_file, self.loadCase, structural_nid,
+                #                                Fxyz[0], Fxyz[1], Fxyz[2], comment)
+
+            #msg = '$ End of aEID=%s sumLoad=%s p=%s area=%s F=%s normal=%s\n' % (
+                #aEID, sumLoad, p, area, F, normal)
+            #bdf_file.write(msg)
 
         with open(self.bdffile, 'wb') as bdf_file:
             #self.build_mapping_matrix()
-            for aero_eid, distribution in iteritems(self.mapping_matrix):
-                #print("aero_eid = ", aero_eid)
-                #print("***distribution = ", distribution)
-                sum_load = 0.
-                area = self.aero_model.Area(aero_eid)
-                normal = self.aero_model.Normal(aero_eid)
-                Cp = self.aero_model.Cp(aero_eid)
-                #print("Cp = ", Cp)
-                #print("area[%s]=%s" % (aero_eid, area))
-
-                p = self.get_pressure(Cp)
-                centroid = self.aero_model.Centroid(aero_eid)
-                r = moment_center - centroid
-                F = area * p
-                Fn = F * normal
-                sum_moments += cross(r, Fn)
-                sum_forces += Fn
-                for structural_nid, percent_load in sorted(iteritems(distribution)):
-                    sum_load += percent_load
-
-                    Fxyz = Fn * percent_load  # negative sign is to be consistent with nastran
-                    self.add_force(structural_nid, Fxyz)
-
-                    #print("Fxyz = ",Fxyz)
-                    #print("type(structuralModel) = ", type(self.structuralModel))
-
-                    #comment = 'percent_load=%.2f' % percent_load
-                    #self.structuralModel.write_load(self.bdf, self.loadCase, structural_nid,
-                    #                                Fxyz[0], Fxyz[1], Fxyz[2], comment)
-
-                #msg = '$ End of aEID=%s sumLoad=%s p=%s area=%s F=%s normal=%s\n' % (
-                    #aEID, sumLoad, p, area, F, normal)
-                #self.bdf.write(msg)
-
-            self.write_loads()  # short version of writing loads...
+            self.write_loads(bdf_file)  # short version of writing loads...
 
 
         log.info("pInf=%g [%s]; qInf=%g [%s]" % (
             pinf, pinf_unit,
             qinf, qinf_unit))
         log.info("sumForcesFEM  [%s]    = %s" % (
-            list_print(sum_forces),
             force_scale_unit,
+            list_print(sum_forces * force_scale),
         ))
 
         # divided by 12 to have moments in lb-ft
         log.info("sumMomentsFEM [%s] = %s" % (
-            list_print(sum_moments * moment_scale),
             moment_scale_unit,
+            list_print(sum_moments * moment_scale),
         ))
 
         Cf = sum_forces / (sref * qinf)
@@ -207,20 +206,20 @@ class LoadMapping(object):
         # multiply by 12 to nondimensionalize ???  maybe 144...
         log.info("Cm = %s" % list_print(Cm))
 
-        #self.bdf.write('$***********\n')
+        #bdf_file.write('$***********\n')
         log.info("wrote loads to %r" % self.bdffile)
         log.info("---finished map_loads---")
 
     #@entry_exit
-    def write_loads(self):
+    def write_loads(self, bdf_file):
         """writes the load in BDF format"""
         log.info("---starting write_loads---")
-        self.bdf.write('$ ***write_loads***\n')
-        self.bdf.write('$ nCloseElements=%s\n' % self.nclose_elements)
+        bdf_file.write('$ ***write_loads***\n')
+        bdf_file.write('$ nCloseElements=%s\n' % self.nclose_elements)
         for load_case, loads in sorted(iteritems(self.load_cases)):
             log.info("  load_case = %s" % load_case)
             for (structural_nid, Fxyz) in sorted(iteritems(loads)):
-                self.structural_model.write_load(self.bdf, load_case, structural_nid, *Fxyz)
+                self.structural_model.write_load(bdf_file, load_case, structural_nid, *Fxyz)
 
         log.info("finished write_loads---")
 
@@ -341,14 +340,14 @@ class LoadMapping(object):
 
         log.info("---starting build_mapping_matrix---")
         #print("self.mapping_matrix = ",self.mapping_matrix)
-        mapping_matrix_filename = os.path.join(self.configpath, 'mappingMatrix.new.out')
+        mapping_matrix_filename = os.path.join(self.configpath, 'mappingMatrix.out')
         if os.path.exists(mapping_matrix_filename):
             self.mapping_matrix = self.parse_map_file(mapping_matrix_filename)
             log.info("---finished build_mapping_matrix based on mappingMatrix.new.out---")
             sys.stdout.flush()
             return self.mapping_matrix
-        log.info("...couldn't find 'mappingMatrix.new.out' in %r"
-                 ", so going to make it..." % os.getcwd())
+        log.info("...couldn't find 'mappingMatrix.out' in %r"
+                 ", so going to make it..." % self.configpath)
 
         # this is the else...
         log.info("creating...")
@@ -389,7 +388,7 @@ class LoadMapping(object):
         percent_done = 0.
         use_multiprocessing = False
 
-        mapping_matrix_filename_out = os.path.join(workpath, 'mappingMatrix.out')
+        mapping_matrix_filename_out = os.path.join(self.workpath, 'mappingMatrix.out')
         with open(mapping_matrix_filename_out, 'wb') as map_file:
             map_file.write('# aEID distribution (sEID:  weight)\n')
 
@@ -416,7 +415,8 @@ class LoadMapping(object):
                         sys.stdout.flush()
 
                     aero_element = aero_model.Element(aero_eid)
-                    (aero_area, aero_centroid, aero_normal) = aero_model.get_element_properties(aero_eid)
+                    (aero_area, aero_centroid, aero_normal) = aero_model.get_element_properties(
+                        aero_eid)
                     percent_done = i / naero_elements * 100
                     if debug:
                         log.info('aEID=%s percentDone=%.2f aElement=%s '
@@ -729,7 +729,7 @@ def is_inside(u, v):
 #------------------------------------------------------------------
 
 def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
-                  bdf_model_out='fem.loads.out'):
+                  bdf_model_out='fem.loads.out', configpath='', workpath=''):
     """
     inputs : dict
         aero_format : str
@@ -817,7 +817,7 @@ def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
         sys.stdout.flush()
     structural_model = StructuralModel(fem, property_regions)
 
-    mapper = LoadMapping(aero_model, structural_model)
+    mapper = LoadMapping(aero_model, structural_model, configpath=configpath, workpath=workpath)
     t1 = time()
     mapper.set_flight_condition(pInf, qInf)
     mapper.set_reference_quantities(Sref, Lref, xref)
@@ -840,7 +840,7 @@ def main():
     basepath = os.getcwd()
     configpath = os.path.join(basepath, 'inputs')
     workpath = os.path.join(basepath, 'outputs')
-    cart3d_geom = os.path.join(configpath, 'Cart3d_35000_0.825_10_0_0_0_0.i.triq')
+    cart3d_geom = os.path.join(configpath, 'Cart3d_35000_0.825_10_0_0_0_0.i.triq_half')
 
     bdf_model = os.path.join(configpath, 'aeroModel_mod.bdf')
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
@@ -869,14 +869,17 @@ def main():
         'aero_format' : 'cart3d',
         'isubcase' : 1,
         'Mach' : mach,
-        'pInf' : pInf,  # convert to psi
-        'qInf' : 1.4 / 2. * pInf * mach**2.,  # psi
-        'Sref' : 1582876.,  # inch^2
-        'Lref' : 623.,  # inch
-        'xref' : 268.,  # inch
+        'pInf' : (pInf, 'psi'),
+        'qInf' : (1.4 / 2. * pInf * mach**2., 'psi'),
+        'Sref' : (1582876., 'in^2'),
+        'Lref' : (623., 'in'),
+        'xref' : (268., 'in'),
         'skin_property_regions' : skin_property_regions,
+        'force_scale' : (1., 'lb'),
+        'moment_scale' : (1/12., 'ft-lb'),
     }
-    run_map_loads(inputs, cart3d_geom, bdf_model, bdf_model_out)
+    run_map_loads(inputs, cart3d_geom, bdf_model, bdf_model_out,
+                  configpath=configpath, workpath=workpath)
 
 
 if __name__ == '__main__':

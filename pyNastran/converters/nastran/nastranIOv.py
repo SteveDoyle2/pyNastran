@@ -2914,7 +2914,7 @@ class NastranIO(object):
                     t = prop.Thickness()
                     mids[i] = mid
                     thickness[i] = t
-                elif prop.type == 'PCOMP':
+                elif prop.type in ['PCOMP', 'PCOMPG']:
                     # TODO: only considers iply=0
                     i = np.where(pids == pid)[0]
                     mid = prop.Mid(0)

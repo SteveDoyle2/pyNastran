@@ -40,6 +40,13 @@ else:
     write_ascii = 'wb'
 
 
+def read_cart3d(cart3d_filename, log=None, debug=False, result_names=None):
+    """loads a Cart3D file"""
+    model = Cart3D(log=log, debug=debug)
+    model.read_cart3d(cart3d_filename, result_names)
+    return model
+
+
 def comp2tri(in_filenames, out_filename,
              is_binary=False, float_fmt='%6.7f'):
     """
@@ -486,11 +493,12 @@ class Cart3D(Cart3dIO):
     def flip_model(self):
         """flip the model about the y-axis"""
         self.points[:, 1] *= -1.
-        self.elements = np.vstack([
-            self.elements[:, 0],
-            self.elements[:, 2],
-            self.elements[:, 1],
+        self.elements = np.hstack([
+            self.elements[:, 0:1],
+            self.elements[:, 2:3],
+            self.elements[:, 1:2],
         ])
+        print(self.elements.shape)
 
     def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
         """

@@ -72,14 +72,16 @@ class AeroModel(Model):
             sum_moments += cross(r, F)
         log.info("pInf=%s [%s]; qInf=%s [%s]" % (pinf, pinf_unit,
                                                  qinf, qinf_unit))
+        log.info("force_scale=%s %s" % (force_scale, force_scale_unit))
+        log.info("moment_scale=%s %s" % (moment_scale, moment_scale_unit))
 
         log.info("sumForcesCFD  [%s] = %s" % (
-            list_print(sum_forces * force_scale), force_scale_unit))
+            force_scale_unit, list_print(sum_forces * force_scale)))
         log.info("sumMomentsCFD [%s] = %s" % (
-            list_print(sum_moments * moment_scale), moment_scale_unit))
+            moment_scale_unit, list_print(sum_moments * moment_scale)))
 
-        Cf = sum_forces * force_scale / (sref * qinf)
-        Cm = sum_moments * moment_scale / (sref * qinf * lref)
+        Cf = sum_forces / (sref * qinf)
+        Cm = sum_moments / (sref * qinf * lref)
         log.info("Cf = %s" % list_print(Cf))
         log.info("Cm = %s" % list_print(Cm))
         return (sum_forces * force_scale, sum_moments * moment_scale)

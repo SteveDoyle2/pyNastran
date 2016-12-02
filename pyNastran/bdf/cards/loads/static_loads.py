@@ -20,6 +20,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip
 
+import numpy as np
 from numpy import array, cross, allclose, unique
 from numpy.linalg import norm
 
@@ -2236,7 +2237,39 @@ class PLOAD4(Load):
         #self.deprecated('transformLoad()', 'transform_load()', '0.8')
         #return self.transform_load()
 
-    def __init__(self, sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=''):
+    def __init__(self, sid, eids, pressures,
+                 g1=None, g34=None, cid=0, NVector=None, sorl='SURF', ldir='NORM', comment=''):
+        """
+        Parameters
+        ----------
+        sid : int
+            the load id
+        eids : List[int, ...]
+            shells : the range of element ids; must be sequential
+            solids : must be length 1
+        pressures : List[float, float, float, float]
+            tri : must be length 4 (the last value should be the same as the 0th value)
+            quad : must be length 4
+        G1 : int/None
+            only used for solid elements
+        G34 : int / None
+            only used for solid elements
+        cid : int; default=0
+            the coordinate system for ???
+        NVector : (3, ) float ndarray
+           the local pressure vector
+        sorl : str; default='SURF'
+           ???
+        ldir : str; default='NORM'
+           ???
+
+        TODO: fix the way "pressures" works
+        """
+        if NVector is None:
+            NVector = np.zeros(3, dtype='float64')
+        else:
+            NVector = np.asarray(NVector, dtype='float64')
+
         if comment:
             self.comment = comment
         self.sid = sid
