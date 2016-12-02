@@ -231,8 +231,8 @@ class XrefMesh(BDFAttributes):
             aelist.uncross_reference()
         for aeparam in itervalues(self.aeparams):
             aeparam.uncross_reference()
-        for aestat in itervalues(self.aestats):
-            aestat.uncross_reference()
+        #for aestat in itervalues(self.aestats):
+            #aestat.uncross_reference()
         for aesurf in itervalues(self.aesurf):
             aesurf.uncross_reference()
         for aesurfs in itervalues(self.aesurfs):
@@ -467,8 +467,8 @@ class XrefMesh(BDFAttributes):
             aelist.cross_reference(self)
         for aeparam in itervalues(self.aeparams):
             aeparam.cross_reference(self)
-        for aestat in itervalues(self.aestats):
-            aestat.cross_reference(self)
+        #for aestat in itervalues(self.aestats):
+            #aestat.cross_reference(self)
         for aesurf in itervalues(self.aesurf):
             aesurf.cross_reference(self)
         for aesurfs in itervalues(self.aesurfs):
@@ -532,8 +532,8 @@ class XrefMesh(BDFAttributes):
             aelist.safe_cross_reference(self)
         for aeparam in itervalues(self.aeparams):
             aeparam.safe_cross_reference(self)
-        for aestat in itervalues(self.aestats):
-            aestat.safe_cross_reference(self)
+        #for aestat in itervalues(self.aestats):
+            #aestat.safe_cross_reference(self)
         for aesurf in itervalues(self.aesurf):
             aesurf.safe_cross_reference(self)
         for aesurfs in itervalues(self.aesurfs):

@@ -14,7 +14,7 @@ from pyNastran.bdf.cards.aero import (
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     AELIST, FLUTTER, TRIM, CSSCHD, MKAERO1, MKAERO2, GUST, AESURF, AESURFS,
-    AELINK, DIVERG,
+    AELINK, DIVERG, AECOMP,
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
 
@@ -42,6 +42,77 @@ class TestAero(unittest.TestCase):
      * PAERO1 / PAERO2 / PAERO3
      * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
     """
+    def test_aecomp_1(self):
+        """checks the AECOMP card"""
+        #sid = 10
+        #aesid = 0
+        #lalpha = None
+        #lmach = None
+        #lschd = None
+
+        #sid = 5
+        #aesid = 50
+        #lalpha = 12
+        #lmach = 15
+        name = 'WING'
+        list_type = 'AELIST' # or SET1, CAEROx
+        aelist_ids = [75, 76]
+
+        card = ['AECOMP', name, list_type] + aelist_ids
+        bdf_card = BDFCard(card, has_none=True)
+        aecomp1 = AECOMP.add_card(bdf_card, comment='aecomp card')
+        aecomp1.validate()
+        aecomp1.write_card()
+
+        #label = 'ELEV'
+        #cid1 = 0
+        #alid1 = 37
+        #aesurf = AESURF(aesid, label, cid1, alid1)
+
+        #aefact_sid = alid1
+        #Di = [0., 0.5, 1.]
+        #aefact_elev = AEFACT(aefact_sid, Di)
+
+        #aefact_sid = lalpha
+        #Di = [0., 5., 10.]
+        #aefact_alpha = AEFACT(aefact_sid, Di)
+
+        #aefact_sid = lmach
+        #Di = [0., 0.7, 0.8]
+        #aefact_mach = AEFACT(aefact_sid, Di)
+
+        #aefact_sid = lschd
+        #Di = [0., 15., 30., 45.]
+        #aefact_delta = AEFACT(aefact_sid, Di)
+
+        model = BDF()
+        data = ['AELIST', 75, 1001, 'THRU', 1075, 1101, 'THRU', 1109, 1201, 1202]
+        model.add_card(data, data[0], comment_bad, is_list=True)
+
+        data = ['AELIST', 76, 2000, 'THRU', 2010]
+        model.add_card(data, data[0], comment_bad, is_list=True)
+
+        #model.add_aesurf(aesurf)
+        #model.add_aefact(aefact_elev)
+        #model.add_aefact(aefact_alpha)
+        #model.add_aefact(aefact_mach)
+        #model.add_aefact(aefact_delta)
+
+        aecomp1.cross_reference(model)
+        aecomp1.write_card()
+        aecomp1.uncross_reference()
+        aecomp1.write_card()
+
+        #-----------
+        aecomp2 = AECOMP(name, list_type, aelist_ids, comment='cssch card')
+        aecomp2.validate()
+        aecomp2.write_card()
+
+        list_type = 'INVALID'
+        aecomp3 = AECOMP(name, list_type, aelist_ids, comment='cssch card')
+        with self.assertRaises(RuntimeError):
+            aecomp3.validate()
+
     def test_aefact_1(self):
         """checks the AEFACT card"""
         data = ['AEFACT', 97, .3, 0.7, 1.0]
@@ -84,6 +155,12 @@ class TestAero(unittest.TestCase):
         aefact = AEFACT(200, Di, comment='')
         aefact.validate()
         aefact.write_card()
+        #model = BDF()
+        #aefact.cross_reference(model)
+        #aefact.write_card()
+        #aefact.uncross_reference()
+        #aefact.write_card()
+
 
     def test_aelink_1(self):
         log = SimpleLogger(level='warning')
@@ -135,6 +212,11 @@ class TestAero(unittest.TestCase):
         elements = list(set(elements))
         elements.sort()
         self.assertTrue(elements == aelist76.elements)
+
+        elements = [1000, 1000, 1000, 2000, 1000, 2000]
+        aelist = AELIST(75, elements)
+        aelist.clean_ids()
+        str(aelist.write_card())
 
     def test_aeparm_1(self):
         """checks the AEPARM card"""
@@ -335,6 +417,66 @@ class TestAero(unittest.TestCase):
         caero.safe_cross_reference(model)
         caero.panel_points_elements()
         caero.raw_fields()
+        min_max_eid = caero.min_max_eid
+        self.assertEqual(min_max_eid, [1, 26])
+        #print('min_eid, max_eid', min_eid, max_eid)
+
+        points = [
+            [0., 0., 0.], # p1
+            [10., 0., 0.],
+            [10., 20., 0.],
+            [5., 20., 0.],
+        ]
+        caero.set_points(points)
+        caero.get_points()
+        str(caero.write_card())
+
+        nspan = None
+        lspan = None
+        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
+                       x12, p4, x43, comment='caero1')
+        with self.assertRaises(ValueError):
+            caero.validate()
+
+        nspan = 5
+        lspan = 5
+        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
+                       x12, p4, x43, comment='caero1')
+        with self.assertRaises(ValueError):
+            caero.validate()
+
+        nspan = 5
+        nchord = None
+        lchord = None
+        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
+                       x12, p4, x43, comment='caero1')
+        with self.assertRaises(ValueError):
+            caero.validate()
+
+        nchord = 10
+        lchord = 10
+        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
+                       x12, p4, x43, comment='caero1')
+        with self.assertRaises(ValueError):
+            caero.validate()
+
+        lspan = None
+        lchord = None
+        nspan = 10
+        nchord = 10
+        p1 = [0., 0., 0., 0.]
+        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
+                       x12, p4, x43, comment='caero1')
+        with self.assertRaises(AssertionError):
+            caero.validate()
+
+        p1 = [0., 0., 0.]
+        p4 = [1., 2., 3., 4.]
+        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
+                       x12, p4, x43, comment='caero1')
+        with self.assertRaises(AssertionError):
+            caero.validate()
+
 
     def test_spline1(self):
         """checks the SPLINE1 card"""
@@ -647,6 +789,23 @@ class TestAero(unittest.TestCase):
                         nalpha=0, lalpha=0, nxis=0, lxis=0, ntaus=0, ltaus=0,
                         comment='msg')
 
+        #| PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
+        #+--------+-------+--------+--------+---------+-------+-------+-------+
+        #|        | CAOC1 | CAOC2  | CAOC3  | CAOC4   | CAOC5 |       |       |
+        nalpha = 0
+        lalpha = 0
+        nxis = 0
+        lxis = 0
+        ntaus = 0
+        ltaus = 0
+        card = ['PAERO5', pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus, ] + caoci
+
+        model = BDF()
+        model.add_card(card, card[0], comment='', is_list=True,
+                       has_none=True)
+        paero5 = model.paeros[pid]
+        paero5.raw_fields()
+
         eid = 6000
         cp = 0
         nspan = 5
@@ -694,7 +853,7 @@ class TestAero(unittest.TestCase):
    # def test_spline4_1(self):
    # def test_spline5_1(self):
 
-    def test_aesurf(self):
+    def test_aesurf_1(self):
         """checks the AESURF/AELIST cards"""
         aesid = 10
         label = 'FLAP'
@@ -717,10 +876,14 @@ class TestAero(unittest.TestCase):
         #assert aesurf1 == aesurf2
 
         cid2 = 1
+        coord = CORD2R(cid2, rid=0, origin=[0., 0., 0.],
+                       zaxis=[1., 0., 0.], xzplane=[0., 1., 1.], comment='')
+
         aelist_id1 = 10
+        aelist_id2 = 20
         aesurf2 = AESURF.add_card(BDFCard(
             [
-                'AESURF', aesid, label, cid1, aelist_id1, cid2, alid2,
+                'AESURF', aesid, label, cid1, aelist_id1, cid2, aelist_id2,
                 #eff, ldw,
                 #crefc, crefs, pllim, pulim,
                 #hmllim, hmulim, tqllim, tqulim,
@@ -729,12 +892,19 @@ class TestAero(unittest.TestCase):
         aesurf1.validate()
         aesurf2.validate()
         log = SimpleLogger(level='warning')
-        model = BDF(log=log)
-        model.aesurf[aesid] = aesurf1
+
+        model = BDF()
+        model.add_coord(coord)
+        model.add_aesurf(aesurf1)
 
         elements = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-        aelist = AELIST(aesid, elements)
-        model.aelists[aelist_id1] = aelist
+        aelist = AELIST(aelist_id1, elements)
+        model.add_aelist(aelist)
+
+        elements = [11, 22, 33, 44, 55, 66, 77, 88, 99]
+        aelist = AELIST(aelist_id2, elements)
+        model.add_aelist(aelist)
+
         aesurf1.cross_reference(model)
         aesurf1.write_card()
         aesurf1.raw_fields()
@@ -742,6 +912,14 @@ class TestAero(unittest.TestCase):
         aesurf1.write_card()
         aesurf1.cross_reference(model)
         aesurf1.raw_fields()
+
+        aesurf2.cross_reference(model)
+        aesurf2.write_card()
+        aesurf2.raw_fields()
+        aesurf2.uncross_reference()
+        aesurf2.write_card()
+        aesurf2.cross_reference(model)
+        aesurf2.raw_fields()
 
     def test_flutter(self):
         """checks the FLUTTER/FLFACT cards"""
@@ -751,11 +929,14 @@ class TestAero(unittest.TestCase):
         method = 'PKNL'
         idensity = 76
         imach = 77
-        ireduced_freq_velocity = 78
+        ivelocity = 78
 
-        flutter1 = FLUTTER(sid, method, idensity, imach, ireduced_freq_velocity)
+        # density, mach, velocity
+        flutter1 = FLUTTER(sid, method, idensity, imach, ivelocity)
         flutter2 = FLUTTER.add_card(BDFCard(['FLUTTER', sid, method, idensity, imach,
-                                             ireduced_freq_velocity]), comment='flutter card')
+                                             ivelocity]), comment='flutter card')
+        assert flutter2.headers == ['density', 'mach', 'velocity'], flutter2.headers
+
         flutter1.validate()
         flutter1.write_card()
         flutter2.validate()
@@ -773,14 +954,50 @@ class TestAero(unittest.TestCase):
         model.flfacts[imach] = mach
 
         velocities = np.linspace(3., 4.)
-        velocity = FLFACT(ireduced_freq_velocity, velocities)
+        velocity = FLFACT(ivelocity, velocities)
         velocity.validate()
         velocity.write_card()
         assert velocity.min() == 3., velocities
         assert velocity.max() == 4., velocities
-        model.flfacts[ireduced_freq_velocity] = velocity
+        model.flfacts[ivelocity] = velocity
 
+        ikfreq = 79
+        kfreqs = np.linspace(0.1, 0.2)
+        card = ['FLFACT', ikfreq] + list(kfreqs)
+        model.add_card(card, card[0])
+        kfreq = model.FLFACT(ikfreq)
+        kfreq.validate()
+        kfreq.write_card()
+        assert kfreq.min() == 0.1, kfreqs
+        assert kfreq.max() == 0.2, kfreqs
+        model.flfacts[ikfreq] = kfreq
+
+        ikfreq2 = 80
+        card = ['FLFACT', ikfreq2, 10., 'THRU', 20., 11]
+        model.add_card(card, card[0])
+        kfreq = model.FLFACT(ikfreq2)
+        kfreq.validate()
+        kfreq.write_card()
+        assert kfreq.min() == 10., 'min=%s; card=%s factors=%s' % (kfreq.min(), card, kfreq.factors)
+        assert kfreq.max() == 20., 'max=%s; card=%s factors=%s' % (kfreq.max(), card, kfreq.factors)
+        model.flfacts[ikfreq] = kfreq
+
+        ikfreq3 = 81
+        factors = [10., 'THRU', 20., 10]
+        kfreq = FLFACT(ikfreq3, factors)
+        kfreq.validate()
+        kfreq.write_card()
+        assert kfreq.min() == 10., 'min=%s; factors=%s' % (kfreq.min(), factors)
+        assert kfreq.max() == 20., 'max=%s; factors=%s' % (kfreq.max(), factors)
+        model.flfacts[ikfreq] = kfreq
+
+        # density, mach, rfreq
+        card = ['FLUTTER', 85, 'KE', idensity, imach, ikfreq]
+        model.add_card(card, card[0])
         model.cross_reference()
+        flutter = model.Flutter(85)
+        assert flutter.headers == ['density', 'mach', 'reduced_frequency'], flutter.headers
+        flutter.write_card()
         #model.uncross_reference()
         #model.safe_cross_reference()
 
