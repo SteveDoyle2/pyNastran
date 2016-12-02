@@ -34,7 +34,7 @@ def entry_exit(func):
     return new_f
 
 class LoadMapping(object):
-    def __init__(self, aero_model, structural_model, configpath='', workpath=''):
+    def __init__(self, aero_model, structural_model, configpath, workpath):
         self.nclose_elements = 30
 
         self.configpath = configpath
@@ -341,6 +341,8 @@ class LoadMapping(object):
         log.info("---starting build_mapping_matrix---")
         #print("self.mapping_matrix = ",self.mapping_matrix)
         mapping_matrix_filename = os.path.join(self.configpath, 'mappingMatrix.out')
+        log.debug('self.configpath = %r' % self.configpath)
+        log.debug('mapping_matrix_filename = %r' % mapping_matrix_filename)
         if os.path.exists(mapping_matrix_filename):
             self.mapping_matrix = self.parse_map_file(mapping_matrix_filename)
             log.info("---finished build_mapping_matrix based on mappingMatrix.new.out---")
@@ -817,7 +819,7 @@ def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
         sys.stdout.flush()
     structural_model = StructuralModel(fem, property_regions)
 
-    mapper = LoadMapping(aero_model, structural_model, configpath=configpath, workpath=workpath)
+    mapper = LoadMapping(aero_model, structural_model, configpath, workpath)
     t1 = time()
     mapper.set_flight_condition(pInf, qInf)
     mapper.set_reference_quantities(Sref, Lref, xref)

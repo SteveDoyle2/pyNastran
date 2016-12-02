@@ -123,6 +123,15 @@ class ShellElement(Element):
         """
         return self.pid_ref.Thickness()
 
+    @property
+    def material_ids(self):
+        """
+        Returns the material
+
+        .. todo:: possibly remove this
+        """
+        return self.pid_ref.material_ids
+
     def mid(self):
         """
         Returns the material
