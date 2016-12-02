@@ -4,7 +4,7 @@ from numpy import array, cross, ndarray, isnan
 
 from pyNastran.applications.cart3d_nastran_fsi.model import Model
 from pyNastran.applications.cart3d_nastran_fsi.math_functions import (
-    Triangle_AreaCentroidNormal, list_print)
+    triangle_area_centroid_normal, list_print)
 
 from pyNastran.utils.log import get_logger
 debug = True
@@ -13,6 +13,9 @@ log = get_logger(None, 'debug' if debug else 'info')
 class AeroModel(Model):
     def __init__(self, inputs, nodes, elements, Cp):
         Model.__init__(self)
+        self.centroids = {}
+        self.areas = {}
+        self.normals = {}
 
         #Bref = 623.179569341
         #Cref = 623.179569341
@@ -26,9 +29,11 @@ class AeroModel(Model):
         self.Sref = inputs['Sref']
         self.Lref = inputs['Lref']
         self.xref = inputs['xref']
+        self.force_scale = inputs['force_scale'] # 1 for lb -> lb
+        self.moment_scale = inputs['moment_scale']  # 1/12 for in-lb to ft-lb
 
-        self._nNodes = len(nodes)
-        self._nElements = len(elements)
+        self._nnodes = len(nodes)
+        self._nelements = len(elements)
         self.nodes = nodes
         self.elements = elements
         Cp = self.prepare_Cps(Cp)  # convert nodal Cp to centroidal Cp
@@ -37,7 +42,15 @@ class AeroModel(Model):
         self.get_moments(Cp) # centroidal Cp
 
     def get_moments(self, Cp):
-        moment_center = array([self.xref, 0., 0.])
+        qinf, qinf_unit = self.qInf
+        pinf, pinf_unit = self.pInf
+        sref, _sref_unit = self.Sref
+        lref, _lref_unit = self.Lref
+        xref, _xref_unit = self.xref
+        force_scale, force_scale_unit = self.force_scale
+        moment_scale, moment_scale_unit = self.moment_scale
+
+        moment_center = array([xref, 0., 0.])
         sum_forces = array([0., 0., 0.])
         sum_moments = array([0., 0., 0.])
 
@@ -45,7 +58,7 @@ class AeroModel(Model):
             area = self.areas[key]
             centroid = self.centroids[key]
             normal = self.normals[key]
-            p = cp * self.qInf + self.pInf
+            p = cp * qinf + pinf
             F = area * normal * p  # negative sign is b/c the normals are flipped...
             r = moment_center - centroid
             if any(isnan(r)):
@@ -57,26 +70,27 @@ class AeroModel(Model):
 
             sum_forces += F
             sum_moments += cross(r, F)
-        log.info("pInf=%s [psi]; qInf= %s [psi]" % (self.pInf, self.qInf))
+        log.info("pInf=%s [%s]; qInf=%s [%s]" % (pinf, pinf_unit,
+                                                 qinf, qinf_unit))
 
-        log.info("sumForcesCFD  [lb]    = %s" % list_print(sum_forces))
-        log.info("sumMomentsCFD [ft-lb] = %s" % list_print(sum_moments/12.))
-        Cf = sum_forces  / (self.Sref * self.qInf)
-        Cm = sum_moments / (self.Sref * self.qInf * self.Lref) * 12.
+        log.info("sumForcesCFD  [%s] = %s" % (
+            list_print(sum_forces * force_scale), force_scale_unit))
+        log.info("sumMomentsCFD [%s] = %s" % (
+            list_print(sum_moments * moment_scale), moment_scale_unit))
+
+        Cf = sum_forces * force_scale / (sref * qinf)
+        Cm = sum_moments * moment_scale / (sref * qinf * lref)
         log.info("Cf = %s" % list_print(Cf))
         log.info("Cm = %s" % list_print(Cm))
-        return (sum_forces, sum_moments/12.)
+        return (sum_forces * force_scale, sum_moments * moment_scale)
 
     def prepare_centroid_area_normals(self):
-        self.centroids = {}
-        self.areas = {}
-        self.normals = {}
         for eid, element in enumerate(self.elements):
             n1, n2, n3 = element
             n1 = self.nodes[n1 - 1]
             n2 = self.nodes[n2 - 1]
             n3 = self.nodes[n3 - 1]
-            area, centroid, normal = Triangle_AreaCentroidNormal([n1, n2, n3])
+            area, centroid, normal = triangle_area_centroid_normal([n1, n2, n3])
 
             eidi = eid + 1
             if centroid is not None:
@@ -94,7 +108,7 @@ class AeroModel(Model):
         """
         #self.Cps = Cp
         #Cp = loads['Cp']
-        assert isinstance(Cp, ndarray)
+        assert isinstance(Cp, ndarray), Cp
 
         Cp_dict = {}
         for eid, element in enumerate(self.elements):
@@ -105,19 +119,21 @@ class AeroModel(Model):
         self.Cps = Cp_dict
         return Cp_dict
 
-    def nNodes(self):
-        return self._nNodes
+    @property
+    def nnodes(self):
+        return self._nnodes
 
     def Centroid(self, eid):
         return self.centroids[eid]
         #nodes = self.get_element_nodes(eid)
         #return Centroid(*nodes)
 
-    def nElements(self):
-        return self._nElements
+    @property
+    def nelements(self):
+        return self._nelements
 
     def nCps(self):
-        return self._nElements
+        return self._nelements
 
     def Node(self, nid):
         return self.nodes[nid-1]
@@ -160,16 +176,18 @@ class AeroModel(Model):
         #area, normal, centroid = Triangle_AreaNormalCentroid(nodes)
         return area, normal, centroid
 
-    def NodeIDs(self):
-        nNodes = self.nNodes()
-        return range(1, nNodes + 1)
+    #@property
+    #def node_ids(self):
+        #nnodes = self.nnodes
+        #return range(1, nnodes + 1)
 
     #def getElementIDsWithPIDs(self):
         #return self.ElementIDs()
 
-    def ElementIDs(self):
-        nElements = self.nElements()
-        return range(1, nElements + 1)
+    @property
+    def element_ids(self):
+        nelements = self.nelements
+        return range(1, nelements + 1)
 
     def Cp(self, eid):
         cp = self.Cps[eid]
@@ -194,5 +212,5 @@ class AeroModel(Model):
         Returns area, centroid, normal
         """
         nodes = self.get_element_nodes(eid)
-        (area, centroid, normal) = Triangle_AreaCentroidNormal(nodes)
+        (area, centroid, normal) = triangle_area_centroid_normal(nodes)
         return (area, centroid, normal)

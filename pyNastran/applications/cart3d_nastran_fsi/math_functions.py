@@ -206,7 +206,7 @@ def AreaNormal(nodes):
         sys.exit('check...')
     return area, normal
 
-def Triangle_AreaCentroidNormal(nodes):
+def triangle_area_centroid_normal(nodes):
     """Returns area,centroid,unitNormal"""
     (area, normal) = AreaNormal(nodes)
     n1, n2, n3 = nodes[0], nodes[1], nodes[2]
@@ -241,7 +241,7 @@ def main(): # pragma: no cover
     n = Normal(n5, n2)
     print("norm = ", n, norm(n))
 
-    area, centroid, normal = Triangle_AreaCentroidNormal([n1, n2, n3])
+    area, centroid, normal = triangle_area_centroid_normal([n1, n2, n3])
     print("area=%s centroid=%s normal=%s" % (area, centroid, normal))
 
 

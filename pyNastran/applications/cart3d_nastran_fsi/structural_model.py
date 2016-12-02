@@ -23,15 +23,16 @@ class StructuralModel(Model):
         node_ids = fem.node_ids
         element_ids = fem.element_ids
 
-        self.nNodes = len(node_ids)
-        self.nElements = len(element_ids)
+        self.nnodes = len(node_ids)
+        self.nelements = len(element_ids)
         self.pids = pids
         #self.points   = points
         #self.elements = elements
         if self.debug:
             self.log.debug("***StructuralModel.init")
 
-    def NodeIDs(self):
+    @property
+    def node_ids(self):
         return self.fem.node_ids
 
     def get_element_properties(self, eid):
@@ -40,7 +41,8 @@ class StructuralModel(Model):
         area, centroid, normal = e.AreaCentroidNormal()
         return area, centroid, normal
 
-    def ElementIDs(self):
+    @property
+    def element_ids(self):
         #(elements, eids) = getElementsWithPIDs(self, properties)
         eids = self.fem.element_ids
         return eids
@@ -98,7 +100,7 @@ class StructuralModel(Model):
         (area, centroid, normal) = e.getAreaCentroidNormal()
         return (normal, centroid)
 
-    def write_load(self, bdf, loadCase, nid, Fx, Fy, Fz, comment=''):
+    def write_load(self, bdf, load_case_id, nid, Fx, Fy, Fz, comment=''):
         """
         This function takes a:
            load case
@@ -108,7 +110,7 @@ class StructuralModel(Model):
         """
         cid = 0
         scale_factor = 1.
-        card = ['FORCE', loadCase, nid, cid, scale_factor, Fx, Fy, Fz]
+        card = ['FORCE', load_case_id, nid, cid, scale_factor, Fx, Fy, Fz]
         #comment += " card=%s" % (card)
         #out = printCard(card)[:-1]+  '   $ %s\n' % comment
         out = print_card(card, size=16)

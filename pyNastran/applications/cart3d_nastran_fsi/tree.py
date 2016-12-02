@@ -19,12 +19,12 @@ class BadTree(object):
     """
     tree_type = 'node','element'
     links the node number in the fromNodes to:
-      - list of NClose toNodes that are closest to each fromNode
+      - list of nclose toNodes that are closest to each fromNode
       - list of corresponding distances
     """
-    def __init__(self, tree_type, nClose=2):
+    def __init__(self, tree_type, nclose=2):
         self.tree = {}
-        self.nClose = nClose
+        self.nclose = nclose
         self.tree_type = tree_type
         if tree_type not in ['node', 'element']:
             # verifies you're calling the right tree
@@ -32,22 +32,22 @@ class BadTree(object):
             msg += "tree_type=%r valid='node','element'" % tree_type
             raise Exception(msg)
 
-    def reduce_to_close(self, dFT, sort_list):
-        #print("len(dFT)=%s len(sort_list)=%s" % (len(dFT), len(sort_list)))
-        nClose = min(len(sort_list), self.nClose)
-        #print("dFT      = ",dFT)
-        dFTshort = [dFT[sort_list[n]] for n in range(nClose)]
-        #print("dFTshort = ", dFTshort)
-        return dFTshort
+    def reduce_to_close(self, distances_from_to, sort_list):
+        #print("len(dFT)=%s len(sort_list)=%s" % (len(distances_from_to), len(sort_list)))
+        nclose = min(len(sort_list), self.nclose)
+        #print("dFT      = ",distances_from_to)
+        distances_from_to_short = [distances_from_to[sort_list[n]] for n in range(nclose)]
+        #print("dFTshort = ", distances_from_to_short)
+        return distances_from_to_short
 
-    def getCloseElementIDs(self, eid):
+    def get_close_element_ids(self, eid):
         assert self.tree_type == 'element'
         #print("self.tree = ", self.tree)
         close_elements = self.tree[eid]
         assert len(close_elements) > 0
         return close_elements
 
-    def getCloseNodeIDs(self, nid):
+    def get_close_node_ids(self, nid):
         assert self.tree_type == 'node'
         close_nodes = self.tree[nid]
         assert len(close_nodes) > 0
@@ -62,35 +62,35 @@ class BadTree(object):
         to_keys = to_nodes.keys()
         #n_to_nodes = len(to_keys)
 
-        nMax = len(from_keys)
+        nmax = len(from_keys)
         n = 0
 
         for from_key in from_keys:
             if n % 1000 == 0:
-                print("n/%s = %s; %.2f%%" % (n, nMax, n * 100. / nMax))
+                print("n/%s = %s; %.2f%%" % (n, nmax, n * 100. / nmax))
             #print("from_key = ",from_key)
             from_node = from_nodes[from_key] #.xyz
             #print("from_node = ",from_node)
-            dFT = []  # distances from-to
+            distances_from_to = []
             for to_key in to_keys:
                 to_node = to_nodes[to_key] #.xyz
                 dist = distance(from_node, to_node)
-                dFT.append(dist)
-                #print("dFT = ", dFT)
-            dFT = array(dFT)
+                distances_from_to.append(dist)
+                #print("distances_from_to = ", distances_from_to)
+            distances_from_to = array(distances_from_to)
 
-            #print("dFT = ",dFT)
-            sort_list = argsort(dFT)
+            #print("distances_from_to = ", distances_from_to)
+            sort_list = argsort(distances_from_to)
             #print("sort_list = ",sort_list)
 
-            dFTshort = self.reduce_to_close(dFT, sort_list)
-            nIDshort = self.reduce_to_close(to_keys, sort_list)
+            distances_from_to_short = self.reduce_to_close(distances_from_to, sort_list)
+            node_ids_short = self.reduce_to_close(to_keys, sort_list)
 
-            #print("dFTshort = ", dFTshort)
-            #print("nIDshort = ", nIDshort)
-            #print("node[%s]=%s" %(nIDshort[0] ,toNodes[nIDshort[0]]))
-            #print("node[%s]=%s" %(nIDshort[1], toNodes[nIDshort[1]]))
-            self.tree[from_key] = [nIDshort, dFTshort]
+            #print("dFTshort = ", distances_from_to_short)
+            #print("nIDshort = ", node_ids_short)
+            #print("node[%s]=%s" % (node_ids_short[0] ,toNodes[node_ids_short[0]]))
+            #print("node[%s]=%s" % (node_ids_short[1], toNodes[node_ids_short[1]]))
+            self.tree[from_key] = [node_ids_short, distances_from_to_short]
             n += 1
         print("finished constructing distance tree")
         return self.tree
@@ -110,7 +110,7 @@ def main():
         4 : n4,
         5 : n5,
     }
-    tree_obj = BadTree(tree_type='node', nClose=3)
+    tree_obj = BadTree(tree_type='node', nclose=3)
     tree = tree_obj.build_tree(nodes, nodes)
 
     for nkey, dist in tree.items():
