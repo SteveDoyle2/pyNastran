@@ -5,14 +5,16 @@ import unittest
 from six import PY2, StringIO
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, get_logger2
 from pyNastran.bdf.test.test_case_control_deck import compare_lines
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 
-log = None
+log = get_logger2(debug=None)
+
 class TestReadWrite(unittest.TestCase):
+    """various BDF I/O tests"""
 
     def test_write_1(self):
         """
@@ -25,7 +27,7 @@ class TestReadWrite(unittest.TestCase):
         model.write_bdf(os.path.join(test_path, 'test_mass1a.out'), size=8)
         model.write_bdf(os.path.join(test_path, 'test_mass2a.out'), size=8)
         msg = model.get_bdf_stats(return_type='list')
-        # print('\n'.join(msg))
+        str('\n'.join(msg))
 
         model.write_bdf(os.path.join(test_path, 'test_mass1b.out'), size=8, interspersed=False)
         model.write_bdf(os.path.join(test_path, 'test_mass2b.out'), size=8, interspersed=True)
@@ -38,11 +40,11 @@ class TestReadWrite(unittest.TestCase):
         """
         Tests punch file reading
         """
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
         bdf_name = os.path.join(test_path, 'include_dir', 'include_alt.inc')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
-        model2 = BDF(debug=False)
+        model2 = BDF(log=log, debug=False)
         #bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
         model2.read_bdf(bdf_name, xref=False, punch=True)
 
@@ -51,14 +53,14 @@ class TestReadWrite(unittest.TestCase):
         Tests various read methods using various include files
         """
         # fails correctly
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
         bdf_name = os.path.join(test_path, 'test_include.bdf')
         model.read_bdf(bdf_name, xref=True, punch=False)
         #self.assertRaises(IOError, model.read_bdf, bdf_name, xref=True, punch=False)
 
         # passes
-        full_path = os.path.join(test_path, 'include_dir')
-        model2 = BDF(debug=False)
+        #full_path = os.path.join(test_path, 'include_dir')
+        model2 = BDF(log=log, debug=False)
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
             bdf_filename = os.path.join(test_path, 'test_include.bdf')
@@ -66,7 +68,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_read_include_dir_2(self):
         full_path = os.path.join(test_path)
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
         bdf_filename = 'test_include2.bdf'
         if not os.path.exists(bdf_filename):
             bdf_filename = os.path.join(full_path, 'test_include2.bdf')
@@ -80,9 +82,7 @@ class TestReadWrite(unittest.TestCase):
         """
         There is an ENDDATA is in the baseline BDF, so None -> ENDDATA
         """
-        model = BDF(debug=False)
-        full_path = os.path.join(test_path, 'include_dir')
-        model2 = BDF(debug=False)
+        model2 = BDF(log=log, debug=False)
 
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
@@ -112,9 +112,7 @@ class TestReadWrite(unittest.TestCase):
         """
         There is no ENDDATA is in the baseline BDF, so None -> no ENDDATA
         """
-        model = BDF(debug=False)
-        full_path = os.path.join(test_path, 'include_dir')
-        model2 = BDF(debug=False)
+        model2 = BDF(log=log, debug=False)
         bdf_name = os.path.join(test_path, 'test_mass.dat')
         model2.read_bdf(bdf_name, xref=True, punch=False)
 
@@ -225,11 +223,6 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
     def test_include_03(self):
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
-
         with codec_open('a.bdf', 'w') as bdf_file:
             bdf_file.write("INCLUDE 'executive_control.inc'\n\n")
             bdf_file.write('CEND\n')
@@ -268,11 +261,6 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
     def test_include_04(self):
-        #if PY2:
-            #wb = 'wb'
-        #else:
-            #wb = 'w'
-
         with codec_open('include4.bdf', 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('$ pyNastran: dumplines=True\n')
@@ -325,7 +313,7 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 4, 'nnodes=%s' % model.nnodes)
 
         model2 = read_bdf(bdf_filename='include5.bdf', xref=True, punch=False,
-                          encoding=None)
+                          log=log, encoding=None)
         self.assertEqual(len(model2.nodes), 4)
         self.assertEqual(model2.nnodes, 4, 'nnodes=%s' % model.nnodes)
         os.remove('include5.bdf')
@@ -334,7 +322,7 @@ class TestReadWrite(unittest.TestCase):
 
 
     def test_encoding_write(self):
-        mesh = BDF(debug=False)
+        mesh = BDF(log=log, debug=False)
         mesh.add_card(['GRID', 100000, 0, 43.91715, -29., .8712984], 'GRID')
         mesh.write_bdf('out.bdf')
         lines_expected = [
@@ -358,13 +346,13 @@ class TestReadWrite(unittest.TestCase):
             bdf_file.write('BEGIN BULK\n')
             bdf_file.write("INCLUDE 'b.bdf'\n\n")
             bdf_file.write('GRID,1,,1.0\n')
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
         with self.assertRaises(IOError):
             model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
                            read_includes=True, encoding=None)
         with self.assertRaises(IOError):
             read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
-                     encoding=None)
+                     encoding=None, log=log)
         model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
                        read_includes=False, encoding=None)
         model.write_bdf('out.bdf')
@@ -373,7 +361,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_read_bad_01(self):
         """tests you can't read the same file twice"""
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
         model.active_filenames = ['fake.file']
         with self.assertRaises(IOError):
             model._open_file('fake.file')
@@ -394,14 +382,14 @@ class TestReadWrite(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             read_bdf(bdf_filename, validate=False, xref=False,
                      punch=False, encoding=None,
-                     log=None, debug=True, mode='msc')
+                     log=log, debug=True, mode='msc')
         os.remove(bdf_filename)
 
     def test_disable_cards(self):
         """tests disabling cards"""
         bdf_filename = os.path.join(root_path, '..', 'models',
                                     'solid_bending', 'solid_bending.bdf')
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
         model.disable_cards(['CTETRA'])
         model.read_bdf(bdf_filename)
         assert len(model.elements) == 0, len(model.elements)

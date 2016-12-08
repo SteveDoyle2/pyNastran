@@ -3748,10 +3748,10 @@ def _check_valid_deck(flag):
         msg = 'This is not a valid BDF (a BDF capable of running Nastran).\n\n'
         msg += 'The following sections were found:\n%s\n' % found
         msg += 'The following sections are missing:\n%s\n' % missing
-        msg += 'If you do not have an Executive Control Deck or a Case Control Deck,\n'
-        msg += '  1 . call read_bdf(...) with `punch=True`\n'
-        msg += "  2. Add '$ pyNastran : punch=True' to the top of the main file.\n"
-        msg += '  3. Name your file *.pch\n\n'
+        msg += 'If you do not have an Executive Control Deck or a Case Control Deck:\n'
+        msg += '  1.  call read_bdf(...) with `punch=True`\n'
+        msg += "  2.  Add '$ pyNastran : punch=True' to the top of the main file\n"
+        msg += '  3.  Name your file *.pch\n\n'
         msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
         msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
         raise RuntimeError(msg)
