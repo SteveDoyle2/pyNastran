@@ -3719,6 +3719,9 @@ def _lines_to_decks(lines, i, punch):
                 break
         for line in lines[i:]:
             bulk_data_lines.append(line.rstrip())
+
+        _check_valid_deck(flag)
+
     del lines
     #for line in bulk_data_lines:
         #print(line)
@@ -3728,6 +3731,30 @@ def _lines_to_decks(lines, i, punch):
     case_control_lines = [_clean_comment(line) for line in case_control_lines]
     return executive_control_lines, case_control_lines, bulk_data_lines
 
+def _check_valid_deck(flag):
+    """Crashes if the flag is set wrong"""
+    if flag != 3:
+        if flag == 1:
+            found = ' - Executive Control Deck\n'
+            missing = ' - Case Control Deck\n'
+            missing += ' - Bulk Data Deck\n'
+        elif flag == 2:
+            found = ' - Executive Control Deck\n'
+            found += ' - Case Control Deck\n'
+            missing = ' - Bulk Data Deck\n'
+        else:
+            raise RuntimeError('flag=%r is not [1, 2, 3]' % flag)
+
+        msg = 'This is not a valid BDF (a BDF capable of running Nastran).\n\n'
+        msg += 'The following sections were found:\n%s\n' % found
+        msg += 'The following sections are missing:\n%s\n' % missing
+        msg += 'If you do not have an Executive Control Deck or a Case Control Deck,\n'
+        msg += '  1 . call read_bdf(...) with `punch=True`\n'
+        msg += "  2. Add '$ pyNastran : punch=True' to the top of the main file.\n"
+        msg += '  3. Name your file *.pch\n\n'
+        msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
+        msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
+        raise RuntimeError(msg)
 
 def main():  # pragma: no cover
     """
