@@ -84,7 +84,7 @@ def list_print(lst, float_fmt='%-4.2f'):
         if len(lst) == 0:
             return '[]'
 
-        if isinstance(lst, ndarray) and lst.ndim == 2:
+        if isinstance(lst, (np.ndarray, np.matrix)) and lst.ndim == 2:
             row, col = lst.shape
             return ("["+",\n ".join(["["+",".join([float_fmt % lst[i, j]
                     for j in range(col)])+"]" for i in range(row)])+"]")
@@ -142,6 +142,12 @@ def write_class_attribute(attr, obj, nspaces=0):
         raise RuntimeError('object_type=%s is not supported; value=%s' % (object_type, obj))
     return msg
 
+def keymap(key_value):
+    """gets the first entry"""
+    key, value = key_value
+    if isinstance(key, tuple):
+        return key[0]
+    return key
 
 def write_dict(obj, nspaces):
     """writes a dict"""
@@ -151,7 +157,12 @@ def write_dict(obj, nspaces):
 
     spaces2 = (nspaces + 4) * ' '
     msg = '{\n'
-    for key, value in sorted(iteritems(obj)):
+    try:
+        sort = sorted(iteritems(obj), key=keymap)
+    except TypeError:
+        sort = iteritems(obj)
+
+    for key, value in sort:
         if isinstance(key, string_types):
             msg += '%s%r : ' % (spaces2, key)
         elif isinstance(key, tuple):
@@ -258,92 +269,3 @@ def write_array(a, nspaces=0):
     #elif len(shape) == 3:
         #return "'array(.not supported shape.)'"
     #return msg
-
-def main():
-    """the test function"""
-    from numpy import zeros
-    class C(object):
-        """dummy class"""
-        def __init__(self):
-            pass
-    class B(object):
-        """dummy class"""
-        def __init__(self, x=None, e=None):
-            self.x = 4
-            self.e = C()
-
-    class A(object):
-        """dummy class"""
-        def __init__(self, a=None, b=None, c=None, d=None):
-            self.a = a
-            self.b = b
-            self.c = c
-            self.d = {
-                'd1' : 4,
-                'd2' : [1, 2, 3],
-                'd3' : {1 : 2},
-                'd4' : B(),
-                (1, 2) : 4,
-            }
-
-    z = zeros(2, dtype='float64')
-
-    dict_a = {
-        'strString' : 'a string',
-        'strFloat' : 1.0,
-        'strInt': 2,
-        'strTuple': (1, 2),
-        'strNone' : None,
-        'strClass' : A('a', 'b', 'c'),
-        'strList' : [1, 2, 3],
-        'nullList' : [],
-        'nullArray' : np.array([]),
-        'stringArray' : np.array(['s']),
-        'stringArray2' : np.array(['a', 'b']),
-        'nullDict' : {},
-        u'unicodStr' : u'',
-        'ListOfLists' : [[[], [[]], 2, {'a':3}]],
-        1 : 1,
-        None : 4,
-        1.01 : 5,
-        (1, 2) : 6,
-        'strArray' : np.array([4, 5, 6]),
-        'strArray2' : np.zeros((2, 2)),
-        'strArray3' : np.zeros((2, 2, 2)),
-    }
-    dict_b = {
-        'string2' : 'a string',
-        'float2' : 1.0,
-        'int2': 2,
-        'dictA' : dict_a,
-    }
-
-    dict_c = {
-        'dictA' : {
-            None : 4,
-            1 : 5,
-            'strClass' : A(a='a', b='b', c='c'),
-            'strFloat' : 1.0,
-            'strInt' : 2,
-            'strNone' : None,
-            'strString' : 'a string',
-            'strTuple' : (1, 2),
-            (1, 2) : 6,
-        },
-        'float2' : 1.0,
-        'int2' : 2,
-        'string2' : 'a string',
-        'dict_b' : dict_b,
-    }
-    #assert sorted(dictB.items())==sorted(dictC.items())
-    #print(write_object_attributes('dictA', dictA))
-    nspaces = 0
-    msg = write_class_attribute('dictC', dict_c)
-    with open('junk.py', 'wb') as file_obj:
-        file_obj.write(msg)
-
-    import junk
-    #dictB2 = eval(msg)
-
-if __name__ == '__main__':  # pragma: no cover
-    main()
