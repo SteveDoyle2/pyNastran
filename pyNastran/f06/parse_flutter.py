@@ -158,8 +158,12 @@ class FlutterResponse(object):
 
             kvel = self._get_unit_factor('velocity')[0]
             results[:, :, self.ivelocity] *= kvel
+            # velocity is the target
+            self.names = ['kfreq', '1/kfreq', 'velocity', 'damping', 'freq', 'eigr', 'eigi']
 
         elif self.method == 'PKNL':
+            # velocity is the target
+            self.names = ['kfreq', '1/kfreq', 'density', 'velocity', 'damping', 'freq', 'eigr', 'eigi', 'eas', 'q', 'alt']
             self.idensity = 2
             self.imach = 3
             self.ivelocity = 4
@@ -423,42 +427,24 @@ class FlutterResponse(object):
                 fig=None,
                 xlim=None, ylim=None,
                 show=True, clear=False, legend=True,
-                png_filename=None):
+                png_filename=None, **kwargs):
         """
         Make a V-g plot
 
-        Parameters
-        ----------
-        modes : List[int] / int ndarray; (default=None -> all)
-            the modes; typically 1 to N
+        See ``plot_root_locus`` for arguments
         """
-        if modes is None:
-            modes = self.modes
-        else:
-            modes = np.asarray(modes)
-        if fig is None:
-            plt.figure(self.subcase)
-
-        self._set_xy_limits(xlim, ylim)
-        imodes = np.searchsorted(self.modes, modes)
-        symbols = self.symbols
-
         _kvelocity, velocity_units = self._get_unit_factor('velocity')
-        for i, imode, mode in zip(count(), imodes, modes):
-            vel = self.results[imode, :, self.ivelocity].ravel()
-            damping = self.results[imode, :, self.idamping].ravel()
-            plt.plot(vel, damping, symbols[i], label='Mode %i' % mode)
+        xlabel = 'Velocity [%s]' % velocity_units
+        ylabel = 'Damping'
+        ix = self.ivelocity
+        iy = self.idamping
 
-        plt.grid(True)
-        plt.xlabel('Velocity [%s]' % velocity_units)
-
-        plt.ylabel('Damping')
-
-        title = 'Subcase %i' % self.subcase
-        if png_filename:
-            title += '\n%s' % png_filename
-        plt.suptitle(title)
-        self._finalize_plot(legend, show, png_filename, clear)
+        scatter = True
+        self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
+                       modes=modes, fig=fig, xlim=xlim, ylim=ylim,
+                       show=show, clear=clear, legend=legend,
+                       png_filename=png_filename,
+                       **kwargs)
 
     @property
     def flutter_speed(self, modes=None):
@@ -508,34 +494,51 @@ class FlutterResponse(object):
                0.0 - fully transparent
                1.0 - no transparency / opaque
         """
+        xlabel = 'Eigenvalue (Real)'
+        ylabel = 'Eigenvalue (Imaginary)'
+        ix = self.ieigr
+        iy = self.ieigi
+        scatter = True
+        self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
+                       modes=modes, fig=fig, xlim=xlim, ylim=ylim,
+                       show=show, clear=clear, legend=legend,
+                       png_filename=png_filename,
+                       **kwargs)
+
+    def _plot_x_y(self, ix, iy, xlabel, ylabel, scatter, modes=None,
+                  fig=None,
+                  xlim=None, ylim=None,
+                  show=True, clear=False, legend=True,
+                  png_filename=None,
+                  **kwargs):
+        """builds the plot"""
+        self.fix()
         if kwargs is None:
             kwargs = {}
 
-        if modes is None:
-            modes = self.modes
-        else:
-            modes = np.asarray(modes)
+        modes, imodes = self._get_modes_imodes(modes)
 
         if fig is None:
             fig = plt.figure()
         axes = fig.add_subplot(111)
 
         self._set_xy_limits(xlim, ylim)
-        imodes = np.searchsorted(self.modes, modes)
         symbols = self.symbols
 
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[i]
             freq = self.results[imode, :, self.ifreq].ravel()
-            real = self.results[imode, :, self.ieigr].ravel()
-            imag = self.results[imode, :, self.ieigi].ravel()
+            real = self.results[imode, :, ix].ravel()
+            imag = self.results[imode, :, iy].ravel()
 
-            iplot = np.where(freq > 0.0)
+            iplot = np.where(freq != np.nan)
+            #iplot = np.where(freq > 0.0)
             axes.plot(real[iplot], imag[iplot], symbol, label='Mode %i' % mode, markersize=0)
 
-            s = np.linspace(.75, 50., len(real))
-            #assert symbol[2] == '-', symbol
-            axes.scatter(real[iplot], imag[iplot], s=s, color=symbol[0], marker=symbol[1])
+            if scatter:
+                s = np.linspace(.75, 50., len(real))
+                #assert symbol[2] == '-', symbol
+                axes.scatter(real[iplot], imag[iplot], s=s, color=symbol[0], marker=symbol[1])
 
         axes.grid(True)
         axes.set_xlabel('Eigenvalue (Real)')
@@ -545,7 +548,6 @@ class FlutterResponse(object):
         if png_filename:
             title += '\n%s' % png_filename
         fig.suptitle(title)
-        #self._finalize_plot(legend, show, png_filename, clear)
         if legend:
             axes.legend(**kwargs)
 
@@ -555,6 +557,84 @@ class FlutterResponse(object):
             plt.savefig(png_filename)
         if clear:
             plt.clear()
+
+    def plot_kfreq_damping(self, modes=None,
+                           fig=None,
+                           xlim=None, ylim=None,
+                           show=True, clear=False, legend=True,
+                           png_filename=None,
+                           **kwargs):
+        """
+        Plots a kfreq vs. damping curve
+
+        See ``plot_root_locus`` for arguments
+        """
+        xlabel = 'KFreq'
+        ylabel = 'Damping'
+        ix = self.ikfreq
+        iy = self.idamping
+        scatter = True
+        self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
+                       modes=modes, fig=fig, xlim=xlim, ylim=ylim,
+                       show=show,
+                       clear=clear,
+                       legend=legend,
+                       png_filename=png_filename,
+                       **kwargs)
+
+    def fix(self):
+        """attempts to fix the mode switching"""
+        print(self.names)
+
+        # results[imode, ipoint, iresult]
+        # 1. NaN all the invalid points
+        freq = self.results[:, :, self.ifreq]
+        iplot, jplot = np.where(freq == 0.0)
+        self.results[iplot, jplot, :] = np.nan
+        return
+
+        #-----------------------------------------------------------------------
+        # 2. sort the results based on velocity so we're going low to high
+        nmodes, npoints = self.results.shape[:2]
+
+        for imode in range(nmodes):
+            #print(self.results[imode, :, self.ivelocity])
+            isort = np.argsort(self.results[imode, :, self.ivelocity])
+            self.results[imode, :, :] = self.results[imode, isort, :]
+
+        #-----------------------------------------------------------------------
+        # 3. sort the results based on damping, so we're going abs(high) to low
+        #for ipoint in range(npoints):
+            #isort = np.argsort(self.results[:, ipoint, self.idamping])
+            #self.results[:, isort, :] = self.results[:, isort, :]
+
+        # 4. find the critical mode
+        # 5. ???
+
+    def _get_modes_imodes(self, modes):
+        """gets the index of the modes to plot"""
+        if modes is None:
+            modes = self.modes
+        elif isinstance(modes, slice):
+            start = modes.start
+            if modes.stop is None:
+                stop = len(self.modes) + 1
+            stop = modes.stop
+            step = modes.step
+            modes = np.unique(range(start, stop, step))
+        elif len(modes) == 0:
+            raise RuntimeError('modes = %s' % modes)
+        else:
+            modes = np.unique(modes)
+        assert 0 not in modes, modes
+
+        if modes.max() > self.modes.max():
+            imodes = np.where(modes <= self.modes.max())
+            modes = modes[imodes]
+        if len(modes) == 0:
+            raise RuntimeError('No modes to plot...')
+        imodes = np.searchsorted(self.modes, modes)
+        return modes, imodes
 
     def plot_vg_vf(self, fig=None, modes=None, show=None, png_filename=None,
                    clear=False, legend=None,
@@ -567,10 +647,7 @@ class FlutterResponse(object):
         modes : List[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
         """
-        if modes is None:
-            modes = self.modes
-        else:
-            modes = np.asarray(modes)
+        self.fix()
         if fig is None:
             fig = plt.figure() # figsize=(12,9), self.subcase
             gridspeci = gridspec.GridSpec(2, 4)
@@ -578,7 +655,7 @@ class FlutterResponse(object):
             freq_axes = fig.add_subplot(gridspeci[1, :3], sharex=damp_axes)
 
         #self._set_xy_limits(xlim, ylim)
-        imodes = np.searchsorted(self.modes, modes)
+        modes, imodes = self._get_modes_imodes(modes)
         symbols = self.symbols
 
         _kvelocity, velocity_units = self._get_unit_factor('velocity')
@@ -589,7 +666,11 @@ class FlutterResponse(object):
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
 
-            iplot = np.where(freq > 0.0)
+            #iplot = np.where(freq > 0.0)
+            #damp_axes.plot(vel, damping, symbols[i], label='Mode %i' % mode)
+            #freq_axes.plot(vel, freq, symbols[i])
+
+            iplot = np.where(freq != np.nan)
             damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
             freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
 
@@ -617,7 +698,6 @@ class FlutterResponse(object):
         damp_axes.set_title(title)
         #plt.suptitle(title)
 
-#self._finalize_plot(legend, show, png_filename, clear)
         if legend:
             damp_axes.legend(legend_items, fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2)
             #fig.subplots_adjust(hspace=0.25)
@@ -634,25 +714,10 @@ class FlutterResponse(object):
         if clear:
             plt.clear()
 
-    @staticmethod
-    def _finalize_plot(legend, show, png_filename, clear):
-        """common helper method"""
-        if legend:
-            plt.legend()
-
-        if show:
-            plt.show()
-        if png_filename:
-            plt.savefig(png_filename)
-        if clear:
-            plt.clear()
-        #return fig
-
-
 def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      modes=None,
-                     plot_vg=False, plot_vg_vf=True, plot_root_locus=True,
-                     show=True,
+                     plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
+                     plot_kfreq_damping=False, show=True,
                      xlim=None, ylim_damping=None, ylim_freq=None):
     """
     Plots a flutter (SOL 145) deck
@@ -692,6 +757,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
     log = get_logger2(log=None, debug=True, encoding='utf-8')
     flutters = {}
     iline = 0
+    modes_to_plot = modes
 
     # 1 is the default subcase number
     subcase = 1
@@ -846,23 +912,29 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                                   f06_units=f06_units, out_units=out_units)
         flutters[subcase] = flutter
 
-    make_flutter_plots(flutters, xlim, ylim_damping, ylim_freq,
-                       plot_vg, plot_vg_vf, plot_root_locus, show=show)
+    make_flutter_plots(modes_to_plot, flutters, xlim, ylim_damping, ylim_freq,
+                       plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
+                       show=show)
     return flutters
 
-def make_flutter_plots(flutters, xlim, ylim_damping, ylim_freq,
-                       plot_vg, plot_vg_vf, plot_root_locus, show=True):
+def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
+                       plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
+                       show=True):
     """actually makes the flutter plots"""
     for subcase, flutter in sorted(iteritems(flutters)):
         if plot_vg:
-            flutter.plot_vg(show=False,
+            flutter.plot_vg(modes=modes,
+                            show=False,
                             xlim=xlim, ylim=ylim_damping)
         if plot_vg_vf:
-            flutter.plot_vg_vf(show=False,
+            flutter.plot_vg_vf(modes=modes,
+                               show=False,
                                xlim=xlim,
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq)
         if plot_root_locus:
-            flutter.plot_root_locus(show=False)
+            flutter.plot_root_locus(modes=modes, show=False)
+        if plot_kfreq_damping:
+            flutter.plot_kfreq_damping(modes=modes, show=False)
     if show:
         plt.show()
 

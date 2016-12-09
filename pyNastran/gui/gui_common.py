@@ -361,7 +361,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.name = name
             #form = inputs['format'].lower()
             is_failed = self.on_load_geometry(
-                infile_name=input_filename, name=name, geometry_format=form, plot=plot)
+                infile_name=input_filename, name=name, geometry_format=form,
+                plot=plot, raise_error=False)
         self.name = 'main'
         print('keys =', self.nid_maps.keys())
 
@@ -2223,7 +2224,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if len(fmts) == 0:
             raise RuntimeError('no modules were loaded...')
 
-    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main', plot=True):
+    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
+                         plot=True, raise_error=True):
         """
         Loads a baseline geometry
 
@@ -2236,7 +2238,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         plot : bool; default=True
             Should the baseline geometry have results created and plotted/rendered?
             If you're calling the on_load_results method immediately after, set it to False
-
+        raise_error : bool; default=True
+            stop the code if True
         """
         wildcard = ''
         is_failed = False
@@ -2354,7 +2357,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 msg = traceback.format_exc()
                 self.log_error(msg)
                 #return
-                raise
+                if raise_error:
+                    raise
                 #return
             #self.vtk_panel.Update()
             self.rend.ResetCamera()

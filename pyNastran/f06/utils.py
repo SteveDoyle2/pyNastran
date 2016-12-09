@@ -1,4 +1,6 @@
+from __future__ import print_function
 import os
+import numpy as np
 from pyNastran.f06.parse_flutter import plot_flutter_f06
 
 
@@ -51,15 +53,30 @@ def cmd_line_plot_flutter():  # pragma: no cover
                 smode = mode.split(':')
                 if len(smode) == 2:
                     istart = int(smode[0])
+                    if smode[1] == '':
+                        iend = None
+                        modes2 = slice(istart, None)
+                        assert len(smodes) == 1, smodes
+                    else:
+                        iend = int(smode[1])
+                        assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
+                        modes2 += list(range(istart, iend + 1))
+                elif len(smode) == 3:
+                    istart = int(smode[0])
                     iend = int(smode[1])
-                    modes2 += list(range(istart, iend + 1))
-                elif len(smode) == 1:
-                    raise NotImplementedError('smode=%r' % smode)
+                    assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
+                    istep = int(smode[2])
+                    modes2 += list(range(istart, iend + 1, istep))
+                else:
+                    raise NotImplementedError('smode=%r; len=%s' % (smode, len(smode)))
             else:
                 imode = int(mode)
                 modes2.append(imode)
-
-    plot_flutter_f06(f06_filename, plot_root_locus=True, plot_vg_vf=True, plot_vg=False)
+        #modes = np.array(modes2, dtype='int32') - 1
+        modes = modes2
+    print('modes = %s' % modes)
+    plot_flutter_f06(f06_filename, modes=modes,
+                     plot_root_locus=True, plot_vg_vf=True, plot_vg=False)
     #plot_flutter_f06(f06_filename, plot_root_locus=False, plot_vg_vf=True)
 
 def cmd_line():  # pragma: no cover

@@ -4570,8 +4570,8 @@ class SPLINE4(Spline):
         self.melements = melements
 
     def validate(self):
-        assert method in ['IPS', 'TPS', 'FPS'], 'method = %s' % method
-        assert usage in ['FORCE', 'DISP', 'BOTH'], 'uasge = %s' % usage
+        assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
+        assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'uasge = %s' % self.usage
 
     @classmethod
     def add_card(cls, card, comment=''):
