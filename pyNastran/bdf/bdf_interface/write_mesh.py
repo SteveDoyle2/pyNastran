@@ -984,8 +984,9 @@ class WriteMesh(BDFAttributes):
                 msg.append(dvmrel.write_card(size, is_double))
             for (unused_id, dvprel) in sorted(iteritems(self.dvprels)):
                 msg.append(dvprel.write_card(size, is_double))
-            for (unused_id, dvgrid) in sorted(iteritems(self.dvgrids)):
-                msg.append(dvgrid.write_card(size, is_double))
+            for (unused_id, dvgrids) in sorted(iteritems(self.dvgrids)):
+                for dvgrid in dvgrids:
+                    msg.append(dvgrid.write_card(size, is_double))
             for (unused_id, equation) in sorted(iteritems(self.dequations)):
                 msg.append(str(equation))
 

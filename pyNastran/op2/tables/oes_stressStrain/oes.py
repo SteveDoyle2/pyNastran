@@ -184,7 +184,7 @@ class OES(OP2Common):
         #if self.element_type not in self.element_mapper:
             #return self._not_implemented_or_skip(data, ndata, self.code_information())
 
-        self._parse_stress_code()
+        self._parse_stress_code_to_stress_bits()
         self._write_debug_bits()
         if self.is_debug_file:
             self.binary_debug.write('catttt!')
@@ -192,7 +192,7 @@ class OES(OP2Common):
         #print('self.nonlinear_factor =', self.nonlinear_factor)
         #assert self.num_wide != 146, self.code_information()
 
-    def _parse_stress_code(self):
+    def _parse_stress_code_to_stress_bits(self):
         """
         s_code =  0 -> stress_bits = [0,0,0,0,0]
         s_code =  1 -> stress_bits = [0,0,0,0,1]
@@ -317,6 +317,7 @@ class OES(OP2Common):
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
 
+        self._parse_stress_code_to_stress_bits()
         self._fix_sort2(data)
 
     def _fix_sort2(self, data):
@@ -469,14 +470,14 @@ class OES(OP2Common):
 
             (3, 1, 5, b'OES1X1') : ('ctube_stress', RealRodStressArray),
             (3, 1, 5, b'OES1X') : ('ctube_stress', RealRodStressArray),
-            (3, 2, 5) : ('ctube_stress', ComplexRodStressArray),
-            (3, 3, 5) : ('ctube_stress', ComplexRodStressArray),
+            #(3, 2, 5) : ('ctube_stress', ComplexRodStressArray),
+            #(3, 3, 5) : ('ctube_stress', ComplexRodStressArray),
 
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X1') : ('conrod_stress', RealRodStressArray),
-            (10, 2, 5) : ('conrod_stress', ComplexRodStressArray),
-            (10, 3, 5) : ('conrod_stress', ComplexRodStressArray),
+            #(10, 2, 5) : ('conrod_stress', ComplexRodStressArray),
+            #(10, 3, 5) : ('conrod_stress', ComplexRodStressArray),
 
             # beams
             (2, 1, 111, b'OES1X1') : ('cbeam_stress', RealBeamStressArray),
@@ -826,13 +827,29 @@ class OES(OP2Common):
             (277, 1, 26, b'OES1X1') : ('cplsts6', 'NA'),
             (278, 1, 32, b'OES1X1') : ('cplsts8', 'NA'),
 
+            (1, 2, 5, 'OESVM1') : ('crod', 'NA'),
+            (10, 2, 5, 'OESVM1') : ('conrod', 'NA'),
+            (10, 2, 5, 'OES1X') : ('conrod', 'NA'),
+
+            (11, 2, 3, 'OESVM1') : ('celas1', 'NA'),
+            (12, 2, 3, 'OESVM1') : ('celas2', 'NA'),
+
+            (2, 2, 111, b'OESVM1') : ('cbeam', 'NA'),
+            (34, 2, 19, b'OESVM1') : ('cbar', 'NA'),
+
+            (4, 2, 5, 'OESVM1') : ('cshear', 'NA'),
+            (4, 2, 5, 'OES1X') : ('cshear', 'NA'),
+            (74, 2, 17, 'OESVM1') : ('ctria3', 'NA'),
+            (144, 2, 87, b'OESVM1') : ('cquad4', 'NA'),
+
             (95, 2, 13, b'OESVM1C') : ('cquad4', 'NA'),
             (97, 2, 13, b'OESVM1C') : ('ctria3', 'NA'),
-            (34, 2, 19, b'OESVM1') : ('cbar', 'NA'),
-            (144, 2, 87, b'OESVM1') : ('cquad4', 'NA'),
+
             (102, 2, 13, b'OESVM1') : ('cbush', 'NA'),
 
+            (39, 2, 74, 'OESVM1') : ('ctetra', 'NA'),
             (67, 2, 130, b'OESVM1') : ('chexa', 'NA'),
+            (68, 2, 102, b'OESVM1') : ('cpenta', 'NA'),
         }
 
         try:
@@ -862,7 +879,7 @@ class OES(OP2Common):
         if self.table_name in [b'OES1', b'OES1X1', b'OES1X', b'OES1C', b'OESCP', b'OESRT',
                                b'OSTR1X', b'OSTR1C',
                                b'OESTRCP', b'OESNLXR', b'OESNLXD',
-                               b'OESVM1C']:
+                               b'OESVM1', b'OSTRVM1', b'OESVM1C']:
             is_random = False
         elif self.table_name in [b'OESCRM1', b'OESCRM2']:
             assert self.table_code in [504], self.code_information()
@@ -936,6 +953,7 @@ class OES(OP2Common):
                 return ndata
             self._results._found_result(result_name)
 
+            result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
             slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 5:  # real
                 ntotal = 5 * 4
@@ -1037,6 +1055,7 @@ class OES(OP2Common):
                     #assert eid > 0, eid
                     #n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
+                raise RuntimeError(self.code_information())
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
@@ -1145,6 +1164,7 @@ class OES(OP2Common):
                         #obj.add(dt, eid, out)
                 return ndata
             elif self.format_code == 1 and self.num_wide == 67: # random
+                raise RuntimeError(self.code_information())
                 msg = self.code_information()
                 if self.is_debug_file:
                     self.binary_debug.write('skipping OES-CBEAM\n')
@@ -1218,6 +1238,7 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
+                obj = self.obj
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
@@ -1253,9 +1274,10 @@ class OES(OP2Common):
                         else:
                             etmax = complex(etmaxr, etmaxi)
                             etavg = complex(etavgr, etavgi)
-                        obj.add_new_eid_sort1(dt, eid, (etmax, etavg))
+                        obj.add_sort1(dt, eid, etmax, etavg)
                         n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
+                raise RuntimeError(self.code_information())
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
@@ -1393,6 +1415,7 @@ class OES(OP2Common):
                         obj.add_sort1(dt, eid, axial)
                         n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
+                raise RuntimeError(self.code_information())
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
@@ -1554,6 +1577,7 @@ class OES(OP2Common):
                                               s1a, s2a, s3a, s4a, axial,
                                               s1b, s2b, s3b, s4b)
             elif self.format_code == 1 and self.num_wide == 19: # random
+                raise RuntimeError(self.code_information())
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
@@ -1612,9 +1636,11 @@ class OES(OP2Common):
             numwide_real = 4 + 21 * nnodes_expected
             numwide_imag = 4 + (17 - 4) * nnodes_expected
             numwide_random = 4 + (11 - 4) * nnodes_expected
+            numwide_random2 = 18 + 14 * (nnodes_expected - 1)
             preline1 = '%s-%s' % (self.element_name, self.element_type)
             preline2 = ' ' * len(preline1)
 
+            #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
             self._data_factor = nnodes_expected
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 16 + 84 * nnodes_expected
@@ -1835,15 +1861,27 @@ class OES(OP2Common):
                             obj.add_node_sort1(dt, eid, grid, inode,
                                                ex, ey, ez, etxy, etyz, etzx)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
+                raise RuntimeError(self.code_information())
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
-            elif self.format_code == 2 and self.num_wide == 130:
-                # 130 - CHEXA-67
+            elif self.format_code == 2 and self.num_wide == numwide_random2:
+                #raise RuntimeError(self.code_information())
+                ## a = 18
+                ## b = 14
+                ## a + b * nnodes = numwide_random3
+                ## a + b * 4 = 74  # CTETRA
+                ## a + b * 6 = 102 # CPENTA
+                ## a + b * 8 = 130 # CHEXA-67
                 #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                     #self.num_wide, numwide_real, numwide_imag, numwide_random)
                 #return self._not_implemented_or_skip(data, ndata, msg)
 
+                #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random))
                 num_wide_random = 4 + nnodes_expected * (17 - 4)
+
+                #print('random2=%s' % num_wide_random)
+                #print(self.code_information())
+
                 #if self.num_wide ==
                 if self.read_mode == 1:
                     return ndata
@@ -2142,7 +2180,6 @@ class OES(OP2Common):
                         obj._add(dt, eid, cen, fd2, sx2, sy2, txy2,
                                  angle2, major2, minor2, vm2)
                         n += ntotal
-                #ass
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
                 ntotal = 60  # 4*15
                 nelements = ndata // ntotal
@@ -2216,8 +2253,14 @@ class OES(OP2Common):
                         obj.add_new_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
                         obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
                         n += ntotal
-            elif self.format_code == 1 and self.num_wide == 9: # random
-                msg = self.code_information()
+            #elif self.format_code == 1 and self.num_wide == 9: # random?
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, ndata, msg)
+            elif self.format_code == 2 and self.num_wide == 17: # random; CTRIA3
+                assert self.table_name in [b'OESVM1', b'OSTRVM1'], self.code_information()
+                #OESVM
+                #msg = self.code_information()
+                msg = '%s-%s' % (self.table_name_str, self.element_name)
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
@@ -2523,8 +2566,8 @@ class OES(OP2Common):
             elif self.format_code == 2 and self.num_wide == 87:
                 # 87 - CQUAD4-144
                 #msg = self.code_information()
-                msg = 'OES-CQUAD4-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                    self.num_wide, numwide_real, numwide_imag, numwide_random)
+                msg = '%s-CQUAD4-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
+                    self.table_name_str, self.num_wide, numwide_real, numwide_imag, numwide_random)
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
@@ -2793,7 +2836,8 @@ class OES(OP2Common):
                 raise NotImplementedError('this is a really weird case...')
             else:
                 #msg = self.code_information()
-                msg = 'OES-COMP-random-numwide=%s numwide_real=11 numwide_imag=9' % (self.num_wide)
+                msg = '%s-COMP-random-numwide=%s numwide_real=11 numwide_imag=9' % (
+                    self.table_name_str, self.num_wide)
                 return self._not_implemented_or_skip(data, ndata, msg)
 
         #=========================
@@ -2968,6 +3012,7 @@ class OES(OP2Common):
                             n += 36  # 4*8
             else:
                 msg = self.code_information()
+                raise NotImplementedError(msg)
                 return self._not_implemented_or_skip(data, ndata, msg)
         elif self.element_type == 102: # bush
             # 102-CBUSH
@@ -3088,6 +3133,7 @@ class OES(OP2Common):
                         n += ntotal
             else:
                 msg = self.code_information()
+                raise NotImplementedError(msg)
                 return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 40:  # bush
@@ -3211,6 +3257,7 @@ class OES(OP2Common):
                         obj.add_new_eid(self.element_type, dt, eid, fe, ue, ao, ae)
             else:
                 msg = self.code_information()
+                raise NotImplementedError(msg)
                 return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type in [87, 89, 92]:  # nonlinear rods
@@ -3418,8 +3465,6 @@ class OES(OP2Common):
                 raise RuntimeError(self.code_information())
 
         elif self.element_type == 94:
-            if self.read_mode == 0:
-                return ndata
             # 94-BEAMNL
             numwide_real = 51
             numwide_random = 0
@@ -3492,6 +3537,7 @@ class OES(OP2Common):
 
             elif self.format_code == 1 and self.num_wide == numwide_random:  # random
                 msg = self.code_information()
+                raise NotImplementedError(msg)
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
@@ -3520,7 +3566,8 @@ class OES(OP2Common):
 
             numwide_real = 4 + (25 - 4) * nnodes  # real???
             numwide_random = 2 + (18 - 2) * nnodes  # imag???
-            #print("format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (self.format_code, self.num_wide, numwide_real, numwide_random))
+            print("format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
+                self.format_code, self.num_wide, numwide_real, numwide_random))
 
             #numwide_real = 0
             #numwide_imag = 2 + 16 * nnodes
@@ -3535,6 +3582,8 @@ class OES(OP2Common):
                 #self.handle_results_buffer(self.OES_CQUAD4NL_90, resultName, name)
                 raise RuntimeError('OES_CQUAD4NL_90')
             elif self.format_code == 1 and self.num_wide == numwide_random:  # random
+                # 82 : CTETRA_NL (etype=85)
+                # 146 : CHEXA_NL (etype=93)
                 #raise RuntimeError(self.code_information())
             #elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_random * 4

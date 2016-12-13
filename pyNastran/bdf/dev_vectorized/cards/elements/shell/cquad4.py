@@ -1,3 +1,6 @@
+"""
+http://ssl.mit.edu/files/website/theses/SM-2011-McLinkoRyan.pdf
+"""
 from __future__ import print_function
 from six.moves import zip, range
 

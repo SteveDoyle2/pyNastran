@@ -288,8 +288,7 @@ def cmd_line_merge():  # pragma: no cover
 
     msg += "Positional Arguments:\n"
     msg += "  IN_BDF_FILENAMES   path to input BDF/DAT/NAS files\n"
-    msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-    msg += "  EQ_TOL             spherical equivalence tolerance\n"
+    #msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
     #msg += "  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
     msg += '\n'
 
@@ -316,7 +315,6 @@ def cmd_line_merge():  # pragma: no cover
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
-
     msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
 
     msg += 'Info:\n'

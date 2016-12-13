@@ -168,7 +168,7 @@ class Subcase(object):
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
                 _write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name == 'ROUGV1':
+        elif table_name in ['ROUGV1', 'ROUGV2']:
             thermal = data_code['thermal']
             if thermal == 0:
                 self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
@@ -264,7 +264,8 @@ class Subcase(object):
 
         # special tables
         elif table_name in ['RADCONS', 'RADEFFM', 'RADEATC', 'RAPEATC', 'RAQEATC', 'RADCONS',
-                            'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC',]:
+                            'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC', 'RAQCONS',
+                            'RAPCONS']:
             pass
         else:
             self._write_op2_error_msg(log, self.log, msg, data_code)

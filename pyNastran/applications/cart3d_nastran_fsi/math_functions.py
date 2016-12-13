@@ -29,13 +29,13 @@ def is_float_ranged(a, x, b):
     return True
 
 
-def printMatrix(A):
+def print_matrix(A):
     msg = ''
     for row in A:
-        msg += ListPrint(row) + '\n'
+        msg += list_print(row) + '\n'
     return msg
 
-def ListPrint(listA):
+def list_print(listA):
     if len(listA) == 0:
         return '[]'
 
@@ -206,7 +206,7 @@ def AreaNormal(nodes):
         sys.exit('check...')
     return area, normal
 
-def Triangle_AreaCentroidNormal(nodes):
+def triangle_area_centroid_normal(nodes):
     """Returns area,centroid,unitNormal"""
     (area, normal) = AreaNormal(nodes)
     n1, n2, n3 = nodes[0], nodes[1], nodes[2]
@@ -229,7 +229,7 @@ def Centroid(A, B, C):
     return centroid
 
 
-def main():
+def main(): # pragma: no cover
     n1 = array([0., 0., 0.])
     n2 = array([1., 1., 1.])
     n3 = array([1., 0., 0.])
@@ -241,9 +241,9 @@ def main():
     n = Normal(n5, n2)
     print("norm = ", n, norm(n))
 
-    area, centroid, normal = Triangle_AreaCentroidNormal([n1, n2, n3])
+    area, centroid, normal = triangle_area_centroid_normal([n1, n2, n3])
     print("area=%s centroid=%s normal=%s" % (area, centroid, normal))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     main()

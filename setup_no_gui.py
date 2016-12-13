@@ -59,6 +59,15 @@ except ImportError:
     py_packages.append('six >= 1.9.0')
 
 try:
+    import matplotlib
+    sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
+    if sver < [1, 5, 0]:
+        print("matplotlib.__version__ = %r < '1.4.0'" % six.__version__)
+        py_packages.append('matplotlib >= 1.4.0, <2')
+except ImportError:
+    py_packages.append('matplotlib >= 1.4.0, <2')
+
+try:
     import docopt
     sver = [int(val) for val in docopt.__version__.split('-')[0].split('.')]
     if sver != [0, 6, 2]:
@@ -133,14 +142,15 @@ setup(
             'test_abaqus = pyNastran.converters.dev.abaqus.test_abaqus:main',
             'test_op2  = pyNastran.op2.test.test_op2:main',
             'test_op4  = pyNastran.op4.test.test_op4:main',
-            'test_f06  = pyNastran.f06.test.test_f06:main',
+            #'test_f06  = pyNastran.f06.test.test_f06:main',
 
-            #'test_bdf2 = pyNastran.bdf.dev_vectorized.test.test_bdf:main',
-            #'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
-            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
             'format_converter = pyNastran.converters.type_converter:main',
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
+
+            'pyNastranv = pyNastran.bdf.dev_vectorized.solver.solver:main',
+            'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
+            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
         ] + py2_gui_scripts
     },
     test_suite='pyNastran.all_tests',

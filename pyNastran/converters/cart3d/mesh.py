@@ -144,8 +144,8 @@ class Cart3d_Mesher(Cart3D):
         for i in range(nlayers):
             x[i] = x0 * growth_rate ** i
 
-        print(self.nodes.shape)
-        print(self.elements.shape)
+        #print(self.nodes.shape)
+        #print(self.elements.shape)
 
         nnodes = self.nodes.shape[0]
         nelements = self.elements.shape[0]

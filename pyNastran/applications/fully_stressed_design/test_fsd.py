@@ -27,10 +27,10 @@ class TestFSD(unittest.TestCase):
         atta = None
         attb = None
         atti = []
-        model.dresps[dresp.oid] = DRESP1(oid, label, response_type,
-                                         property_type,
-                                         region,
-                                         atta, attb, atti)
+        model.dresps[oid] = DRESP1(oid, label, response_type,
+                                   property_type,
+                                   region,
+                                   atta, attb, atti)
         keywords = {
             'scr' : 'yes',
             'bat' : 'no',

@@ -15,7 +15,8 @@ class Model(object):
     def get_element_properties(self, eid):
         raise NotImplementedError('overwrite this method...')
 
-    def NodeIDs(self):
+    @property
+    def node_ids(self):
         raise NotImplementedError('overwrite this method...')
 
     def Node(self, nid):

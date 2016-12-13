@@ -239,6 +239,7 @@ class OP2_F06_Common(object):
         self.displacements_CRM = {}        # random
         self.displacements_NO = {}         # random
         self.displacements_scaled = {}    # tCode=1 thermal=8
+        self.displacements_ROUGV1 = {}
 
         #: OUP
 
@@ -259,6 +260,7 @@ class OP2_F06_Common(object):
         self.velocities_RMS = {}
         self.velocities_CRM = {}
         self.velocities_NO = {}
+        self.velocities_ROUGV1 = {}
 
         #self.velocity_scaled_response_spectra_NRL = {}
         self.velocity_scaled_response_spectra_ABS = {}
@@ -275,6 +277,7 @@ class OP2_F06_Common(object):
         self.accelerations_RMS = {}
         self.accelerations_CRM = {}
         self.accelerations_NO = {}
+        self.accelerations_ROUGV1 = {}
 
         self.acceleration_scaled_response_spectra_NRL = {}
         self.acceleration_scaled_response_spectra_ABS = {}
@@ -413,7 +416,7 @@ class OP2_F06_Common(object):
         self.mpc_forces_CRM = {}
         self.mpc_forces_NO = {}
         self.mpc_forces_RAQCONS = {}
-        #self.mpc_forces_RAQEATC = {}
+        self.mpc_forces_RAQEATC = {}
 
         # OQG - thermal forces
         self.thermal_gradient_and_flux = {}
@@ -533,6 +536,7 @@ class OP2_F06_Common(object):
             'displacements_CRM',
             'displacements_NO',
             'displacements_scaled',
+            'displacements_ROUGV1',
 
             # OUG - temperatures
             'temperatures',
@@ -552,6 +556,7 @@ class OP2_F06_Common(object):
             'velocities_RMS',
             'velocities_CRM',
             'velocities_NO',
+            'velocities_ROUGV1',
 
             # OUG - acceleration
             'accelerations',
@@ -560,15 +565,14 @@ class OP2_F06_Common(object):
             'accelerations_RMS',
             'accelerations_CRM',
             'accelerations_NO',
-
+            'accelerations_ROUGV1',
 
             # OQG - spc/mpc forces
             'spc_forces', 'spc_forces_PSD', 'spc_forces_ATO', 'spc_forces_RMS', 'spc_forces_CRM', 'spc_forces_NO',
             'spc_forces_scaled_response_spectra_NRL',
 
             'mpc_forces', 'mpc_forces_PSD', 'mpc_forces_ATO', 'mpc_forces_RMS', 'mpc_forces_CRM', 'mpc_forces_NO',
-            'mpc_forces_RAQCONS',
-            #'mpc_forces_RAQEATC',
+            'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
 
             'thermal_gradient_and_flux',
 

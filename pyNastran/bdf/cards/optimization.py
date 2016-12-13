@@ -1044,7 +1044,7 @@ class DRESP1(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by DRESP1 dresp_id=%s' % (self.type, self.dresp_id)
+        msg = ', which is required by DRESP1 dresp_id=%s' % (self.dresp_id)
         msg += '\n' + str(self)
 
         op2_results = [
@@ -3034,6 +3034,9 @@ class DVGRID(OptConstraint):
         model : BDF()
             the BDF object
         """
+        self.dvid_ref = model.desvars[self.dvid]
+        self.nid_ref = model.Node(self.nid)
+        self.cid_ref = model.Coord(self.cid)
         #self.dconstrs = [model.dconstrs[oid] for oid in self.dconstr_ids]
         #self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
         pass
@@ -3054,3 +3057,6 @@ class DVGRID(OptConstraint):
         if is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
+
+    def _verify(self, xref=True):
+        pass

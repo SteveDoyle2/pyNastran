@@ -400,6 +400,11 @@ def get_joints(model, pid_sets):
         pid_set : List[int, int, int]
             set of property ids to boolean
 
+    Returns
+    -------
+    joints : (N, ) int nodes
+        the list of joint node ids
+
     Example
     -------
     For a set of ribs, spars, and skins:

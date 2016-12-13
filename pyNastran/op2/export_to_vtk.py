@@ -70,6 +70,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
 
             'CTRIA3' : 5, # triangle
             'CQUAD4' : 9,  # quad
+            'CSHEAR' : 9,  # quad
 
             # quadratic
             'CTRIA6' : 22,  # quadratic triangle
@@ -125,7 +126,8 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
         ncquad4 = len(out['CQUAD4'])
         nctria6 = len(out['CTRIA6'])
         ncquad8 = len(out['CQUAD8'])
-        nshell = nctria3 + ncquad4 + nctria6 + ncquad8
+        ncshear = len(out['CSHEAR'])
+        nshell = nctria3 + ncquad4 + nctria6 + ncquad8 + ncshear
 
         nctetra4 = len(out['CTETRA'])
         ncpyram5 = len(out['CPYRAM'])
@@ -147,7 +149,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
             'CBAR', 'CBEAM',
             'CFAST', 'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
-            'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8',
+            'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CSHEAR',
 
             'CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA',
         ]
@@ -176,7 +178,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
         vtk_file.write('POINTS %i float\n' % nnodes)
         vtk_file.write(pack_float_2d_array(xyz_fmt, xyz_cid0))
 
-        nelements = nline + nshell + nsolid
+        nelements = n0d + nline + nshell + nsolid
         nmaterials = nelements
 
         eid_fmt = '%ii' % nelements
@@ -189,10 +191,12 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
         # so for a single CROD, it has 2 nodes and 1 extra value (to indicate it's a line)
         # for a total of 3
         nline_slots = nline * 3
-        nshell_slots = 4 * nctria3 + 5 * ncquad4 + 7 * nctria6 + 9 * ncquad8
+        nshell_slots = 4 * nctria3 + 5 * (ncquad4 + ncshear) + 7 * nctria6 + 9 * ncquad8
         nsolid_slots = 5 * nctetra4 + 6 * ncpyram5 + 7 * ncpenta6 + 9 * nchexa8
+        bdf.log.debug('nline=%s nshell=%s nsolid=%s' % (nline, nshell, nsolid))
+        assert nelements == bdf_nelements, 'nelements=%s bdf.nelements=%s card_count=\n%s' % (
+            nelements, bdf_nelements, bdf.card_count)
         nelements_slots = nline_slots + nshell_slots + nsolid_slots
-        assert nelements == bdf_nelements, 'nelements=%s bdf.nelements=%s' % (nelements, bdf_nelements)
 
         i = 0
         vtk_file.write('CELLS %i %i\n' % (nelements, nelements_slots))
@@ -210,13 +214,15 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
                 pid = elem.Pid()
                 mid = 0
             elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUADX', 'CQUADX8', 'CQUAD',
-                               'CTRIA3', 'CTRIA6', 'CTRIAX', 'CTRIAX6']:
+                               'CTRIA3', 'CTRIA6', 'CTRIAX', 'CTRIAX6', 'CSHEAR']:
                 pid = elem.Pid()
                 prop = elem.pid
                 if prop.type in ['PCOMP', 'PCOMPG']:
                     mid = prop.Mid(0)
                 elif prop.type in ['PSHELL']:
                     mid = prop.Mid1()
+                elif prop.type in ['PSHEAR']:
+                    mid = prop.Mid()
                 else:
                     raise NotImplementedError(prop)
             elif elem.type in ['CONROD']:

@@ -9,7 +9,8 @@ def get_elements_by_property_id(types_to_consider):
     return pid_to_eids
 
 def get_stress_by_property_id(op2_geom):
-
-    stress_by_property =
+    stress_by_property = defaultdict(list)
     get_elements_by_property_id()
     for pid, prop in op2_geom.properties:
+        pass
+    return stress_by_property

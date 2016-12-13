@@ -281,10 +281,17 @@ class ScalarObject(BaseScalarObject):
     #def isImaginary(self):
         #return bool(self.sort_bits[1])
 
+    @property
+    def dataframe(self):
+        """alternate way to get the dataframe"""
+        return self.data_frame
+
     def apply_data_code(self):
         if self.table_name is not None and self.table_name != self.data_code['table_name']:
             print(self.data_code)
-            raise RuntimeError('old_table_name=%r new_table_name=%r' % (self.table_name, self.data_code['table_name']))
+            msg = 'old_table_name=%r new_table_name=%r' % (
+                self.table_name, self.data_code['table_name'])
+            raise RuntimeError(msg)
         for key, value in sorted(iteritems(self.data_code)):
             if PY3 and isinstance(value, bytes):
                 print("  key=%s value=%s; value is bytes" % (key, value))
@@ -347,7 +354,8 @@ class ScalarObject(BaseScalarObject):
 
     def _set_data_members(self):
         if 'data_names' not in self.data_code:
-            msg = 'No "transient" variable was set for %s ("data_names" was not defined in self.data_code).\n' % self.table_name
+            msg = ('No "transient" variable was set for %s ("data_names" '
+                   'was not defined in self.data_code).\n' % self.table_name)
             raise NotImplementedError(msg + self.code_information())
 
         for name in self.data_code['data_names']:
@@ -394,7 +402,17 @@ class ScalarObject(BaseScalarObject):
         return msg + '\n'
 
     def recast_gridtype_as_string(self, grid_type):
-        """converts a grid_type integer to a string"""
+        """
+        converts a grid_type integer to a string
+
+        Point type (per NX 10; OUG table; p.5-663):
+        =1, GRID Point
+        =2, Scalar Point
+        =3, Extra Point
+        =4, Modal
+        =5, p-elements, 0-DOF
+        -6, p-elements, number of DOF
+        """
         if grid_type == 1:
             grid_type_str = 'G'  # GRID
         elif grid_type == 2:
@@ -492,7 +510,8 @@ class ScalarObject(BaseScalarObject):
         self.subtable_name = b'OUG1    '
         table2 = [
             28,  # 4i -> 13i
-            b'%-8s' % self.subtable_name, month, day, year - 2000, 0, 1,   # subtable,todays date 3/6/2014, 0, 1  ( year=year-2000)
+            # subtable,todays date 3/6/2014, 0, 1  ( year=year-2000)
+            b'%-8s' % self.subtable_name, month, day, year - 2000, 0, 1,
             28,
             ]
         table2_format = 'i8s6i'

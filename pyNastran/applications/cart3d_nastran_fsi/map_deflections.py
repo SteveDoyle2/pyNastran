@@ -1,17 +1,17 @@
 from __future__ import print_function
-from six import iteritems
 import os
 import sys
 import copy
 from time import time
-#from cPickle import loads,dumps
+
+from six import iteritems
 
 from numpy import argsort
 from numpy.linalg import norm
 
 #from pyNastran.applications.cart3d_nastran_fsi.delauney.premorph import runPremorph
 from pyNastran.applications.cart3d_nastran_fsi.delauney_reader import Tet4, DelauneyReader
-from pyNastran.applications.cart3d_nastran_fsi.math_functions import ListPrint
+from pyNastran.applications.cart3d_nastran_fsi.math_functions import list_print
 #from f06Reader import f06Reader
 
 from pyNastran.op2.op2 import OP2
@@ -92,7 +92,7 @@ class DeflectionMapper(object):
         log.info("starting tet = %s" % (closest_tet))
         tet_id = closest_tet.ID
         excluded = []
-        log.info("working on point = %s" % (ListPrint(m)))
+        log.info("working on point = %s" % (list_print(m)))
         counter = 0
         counterMax = 100
         broken = False
@@ -229,13 +229,13 @@ class DeflectionMapper(object):
     def distance(self, p1, p2):
         return norm(p1 - p2)
 
-    def map_deflections(self, properTets=None):
+    def map_deflections(self, proper_tets=None):
         """
         Loops thru all the aero nodes, finds the tet it's in, interpolates
         on the deflections at the nodes and maps the deflection to the aero node
         """
-        if properTets is None:
-            properTets = {}
+        if proper_tets is None:
+            proper_tets = {}
         sys.stdout.flush()
         #reader = f06Reader(self.structuralOutfile)
         #d = reader.readDeflections()
@@ -252,21 +252,21 @@ class DeflectionMapper(object):
         log.info("-" * 80)
         #print("type(aeroNodes)=%s" % type(aeroNodes))
 
-        for i, aeroNode in iteritems(aeroNodes):
-            if aeroNode[1] < 0:
-                log.info('skipping aeroNode=%s bc y<0.' % i)
+        for i, aero_node in iteritems(aeroNodes):
+            if aero_node[1] < 0:
+                log.info('skipping aero_node=%s bc y<0.' % i)
                 continue
-            log.info("aeroNode[%s]  = %s" % (i, ListPrint(aeroNode)))
+            log.info("aero_node[%s]  = %s" % (i, list_print(aero_node)))
 
-            #print("aeroNode  = ",aeroNode)
+            #print("aero_node  = ",aero_node)
             #continue
 
-            if i in properTets:
-                tet = tets[properTets[i]]
+            if i in proper_tets:
+                tet = tets[proper_tets[i]]
             else:
-                tet, ID2 = self.find_closest_tet(aeroNode, tet)
+                tet, ID2 = self.find_closest_tet(aero_node, tet)
 
-            #(isInternal, localVol) = closeTet.isInternalNode(aeroNode)
+            #(isInternal, localVol) = closeTet.isInternalNode(aero_node)
             #assert isInternal==True
             #print("isInternal?  = %s" % isInternal)
 
@@ -274,25 +274,25 @@ class DeflectionMapper(object):
             (n0, n1, n2, n3) = tet.nodes
             ID = tet.ID
             deflectionsTet = d.get_deflections(ID, n0, n1, n2, n3)
-            aeroNode2 = tet.map_deflections(deflectionsTet, aeroNode)
-            log.info("aeroNode2 = %s" % (ListPrint(aeroNode2)))
-            properTets[i] = ID
+            aeroNode2 = tet.map_deflections(deflectionsTet, aero_node)
+            log.info("aeroNode2 = %s" % (list_print(aeroNode2)))
+            proper_tets[i] = ID
             aeroNodes2.append(aeroNode2)
 
             #for tet in tets:  # should select in certain order based on centroids
-            #    if tet.isInternalNode(aeroNode):
+            #    if tet.isInternalNode(aero_node):
             #        n0,n1,n2,n3 = tet.nodes
             #
             #        deflectionsTet = [d[n0], d[n1], d[n2], d[n3]]
-            #        aeroNode2 = tet.mapDeflections(deflectionsTet, aeroNode)
-            #break # uncomment to run one aeroNode
+            #        aeroNode2 = tet.mapDeflections(deflectionsTet, aero_node)
+            #break # uncomment to run one aero_node
             log.info("-" * 80)
             sys.stdout.flush()
         #return aeroNode2
-        #for key,value in properTets.items():
-        #    print("pointID=%s  -> tetID=%s" % (key, value))
+        #for key, value in proper_tets.items():
+        #    print("point_id=%s  -> tetID=%s" % (key, value))
         sys.stdout.flush()
-        return aeroNodes2, properTets
+        return aeroNodes2, proper_tets
 
     #def writeAeroInfile(self):
         #self.aeroModel.updateNodes(nodes)
@@ -301,19 +301,18 @@ class DeflectionMapper(object):
 #------------------------------------------------------------------
 
 def load_proper_tets(properTetFilename='properTets.in'):
-    properTets = {}
+    proper_tets = {}
 
     if os.path.exists(properTetFilename):
         log.info("loading tets from %r..." % properTetFilename)
         infile = open(properTetFilename, 'r')
         lines = infile.readlines()
         for line in lines[1:]:
-            #print
-            pointID, properTet = line.strip().split()
-            properTets[int(pointID)] = int(properTet)
+            point_id, proper_tet = line.strip().split()
+            proper_tets[int(point_id)] = int(proper_tet)
     else:
         log.info("couldnt find tetFile %r..." % properTetFilename)
-    return properTets
+    return proper_tets
 
 def write_proper_tets(workpath, properTets):
     outfilename = os.path.join(workpath, 'properTets.in')

@@ -1,7 +1,7 @@
 from __future__ import print_function
 from pyNastran.applications.cart3d_nastran_fsi.model import Model
 
-from pyNastran.bdf.field_writer_8 import print_card
+from pyNastran.bdf.field_writer import print_card
 from pyNastran.utils.log import get_logger
 
 
@@ -20,18 +20,19 @@ class StructuralModel(Model):
         self.fem = fem
         #nodes = fem.getNodes()
         #elements = fem.getElements()
-        nodeIDs = fem.node_ids
-        elementIDs = fem.elementIDs()
+        node_ids = fem.node_ids
+        element_ids = fem.element_ids
 
-        self.nNodes = len(nodeIDs)
-        self.nElements = len(elementIDs)
+        self.nnodes = len(node_ids)
+        self.nelements = len(element_ids)
         self.pids = pids
         #self.points   = points
         #self.elements = elements
         if self.debug:
             self.log.debug("***StructuralModel.init")
 
-    def NodeIDs(self):
+    @property
+    def node_ids(self):
         return self.fem.node_ids
 
     def get_element_properties(self, eid):
@@ -40,9 +41,10 @@ class StructuralModel(Model):
         area, centroid, normal = e.AreaCentroidNormal()
         return area, centroid, normal
 
-    def ElementIDs(self):
+    @property
+    def element_ids(self):
         #(elements, eids) = getElementsWithPIDs(self, properties)
-        eids = self.fem.elementIDs()
+        eids = self.fem.element_ids
         return eids
 
     def get_element_node_ids(self, eid):
@@ -60,7 +62,8 @@ class StructuralModel(Model):
         return self.fem.Element(eid).type
 
     def getElementIDsWithPIDs(self):
-        return self.fem.getElementIDsWithPIDs(self.pids)
+        self.log.info('pids =%s' % self.pids)
+        return self.fem.get_element_ids_list_with_pids(self.pids)
 
     def get_element_nodes(self, eid):
         e = self.fem.Element(eid)
@@ -97,7 +100,7 @@ class StructuralModel(Model):
         (area, centroid, normal) = e.getAreaCentroidNormal()
         return (normal, centroid)
 
-    def write_load(self, bdf, loadCase, nid, Fx, Fy, Fz, comment=''):
+    def write_load(self, bdf, load_case_id, nid, Fx, Fy, Fz, comment=''):
         """
         This function takes a:
            load case
@@ -107,7 +110,7 @@ class StructuralModel(Model):
         """
         cid = 0
         scale_factor = 1.
-        card = ['FORCE', loadCase, nid, cid, scale_factor, Fx, Fy, Fz]
+        card = ['FORCE', load_case_id, nid, cid, scale_factor, Fx, Fy, Fz]
         #comment += " card=%s" % (card)
         #out = printCard(card)[:-1]+  '   $ %s\n' % comment
         out = print_card(card, size=16)

@@ -998,6 +998,14 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             raise KeyError('aefact=%s not found%s.  Allowed AEFACT=%s'
                            % (aefact, msg, np.unique(list(self.aefacts.keys()))))
 
+    def AESurf(self, aesurf_id, msg=''):
+        """gets an AESURF"""
+        try:
+            return self.aesurf[aesurf_id]
+        except KeyError:
+            raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
+                           % (aesurf_id, msg, np.unique(list(self.aesurf.keys()))))
+
     def Acsid(self, msg=''):
         """gets the aerodynamic system coordinate"""
         if self.aero is not None:

@@ -324,7 +324,10 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             msg = ''
             for i, param in enumerate(self.words):
                 if param == 's_code':
-                    s_word = get_scode_word(self.s_code, self.stress_bits)
+                    try:
+                        s_word = get_scode_word(self.s_code, self.stress_bits)
+                    except AttributeError:
+                        raise
                     self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
                     self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises()))
                     self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain()))
@@ -1081,7 +1084,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             phase = floats[:, 8:]
             rtheta = radians(phase)
             real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-            #assert mag.shape == phase.shape, 'mag.shape=%s phase.shape=%s' % (str(mag.shape), str(phase.shape))
             #abs(real_imag), angle(real_imag, deg=True)
 
             obj._times[obj.itime] = dt
@@ -1128,7 +1130,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 14)
             real = floats[:, 2:8]
             imag = floats[:, 8:]
-            #assert real.shape == imag.shape, 'real.shape=%s imag.shape=%s' % (str(real.shape), str(imag.shape))
 
             obj._times[obj.itime] = dt
             obj.data[obj.itime, itotal:itotal2, :] = real + 1.j * imag
@@ -1301,7 +1302,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #storage_obj = getattr(self, storageName)
         #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
 
-        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (self.table_name, self.isubcase, self.subtitle.strip()))
+        #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (
+            #self.table_name, self.isubcase, self.subtitle.strip()))
         self.data_code['table_name'] = self.table_name.decode(self.encoding)
         assert self.log is not None
 
@@ -1371,7 +1373,59 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.table_name, self.table_code, msg, self.code_information())
             raise NotImplementedError(msg)
 
+    def _function1(self, value):
+        """function1(value)"""
+        if value // 1000 in [2, 3, 6]:
+            return 2
+        return 1
+
+    def _function2(self, value):
+        """function2(value)"""
+        return value % 100
+
+    def _function3(self, value):
+        """function3(value)"""
+        return value % 1000
+
+    def _function4(self, value):
+        """function4(value)"""
+        return value // 10
+
+    def _function5(self, value):
+        """function5(value)"""
+        return value % 10
+
+    def _function6(self, value):
+        """weird..."""
+        if value != 8:
+            return 0
+        return 1
+
+    def _function7(self, value):
+        """function7(value)"""
+        if value in [0, 2]:
+            return 0
+        elif value in [1, 3]:
+            return 1
+        raise RuntimeError(value)
+
     def parse_approach_code(self, data):
+        """
+        Function  Formula                                                Manual
+        ========  =======                                                ======
+        1         if item_name/1000 in 2,3,6: 2; else 1                  if(item_name/1000 = 2,3,6) then return 2, else return 1
+        2         item_name % 100                                        mod(item_name,100)
+        3         item_name % 1000                                       mod(item_name,1000)
+        4         item_name // 10                                        item_name/10
+        5         item_name % 10                                         mod(item_name,10)
+        6         if item_name != 8; 0; else 1 # ???                     if iand(item_name,8)<> then set to 0, else set to 1
+        7         if item_name in [0,2]: 0; elif item_name in [1,3] 1    if item_name/1000 = 0 or 2, then set to 0; = 1 or 3, then set to 1
+
+        TCODE,1=02 means:
+          TCODE1 = 2
+          TCODE1/1000 = 0
+          TCODE = f1(TCODE1)
+        """
         (approach_code, tCode, int3, isubcase) = unpack(b(self._endian + '4i'), data[:16])
         self.approach_code = approach_code
         self.tCode = tCode
@@ -1392,11 +1446,15 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #: the type of result being processed
         self.table_code = tCode % 1000
         self.data_code['table_code'] = self.table_code
+        self.data_code['tCode'] = self.tCode
 
         #: used to create sort_bits
         self.sort_code = tCode // 1000
+        #Sort 1 - SortCode=((TCODE//1000)+2)//2
 
         self.data_code['sort_code'] = self.sort_code
+        self.sort_method = self._function1(tCode)
+        self.data_code['sort_method'] = self.sort_method
 
         #: what type of data was saved from the run; used to parse the
         #: approach_code and grid_device.  device_code defines what options
@@ -1435,6 +1493,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             self.binary_debug.write('  %-14s = %r\n' % ('  table_code', self.table_code))
             self.binary_debug.write('  %-14s = %r\n' % ('  sort_code', self.sort_code))
         self._parse_sort_code()
+        assert self.sort_code in [0, 1, 2, 3, 4, 5, 6], self.sort_code #self.code_information()
 
     def _parse_thermal_code(self):
         """
@@ -1826,7 +1885,9 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     msg += "There's probably an extra check for read_mode=1...%s" % result_name
                     self.log.error(msg)
                     raise
-                assert self.obj.table_name == self.table_name.decode('utf-8'), 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
+                if not self.obj.table_name == self.table_name.decode('utf-8'):
+                    msg = 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
+                    raise TypeError(msg)
 
                 #obj.update_data_code(self.data_code)
                 self.obj.build()

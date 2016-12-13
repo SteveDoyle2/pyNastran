@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
 import unittest
-from pyNastran.f06.f06_formatting import writeFloats8p4F
+from pyNastran.f06.f06_formatting import write_floats_8p4f
 
-class TestFormatting(unittest.TestCase):
+class TestF06Formatting(unittest.TestCase):
 
     def test_write_floats_8p4F(self):
         val = 0.0
@@ -15,7 +15,7 @@ class TestFormatting(unittest.TestCase):
         self.check_float_8p4f(val, expected)
 
         val = 1e50
-        self.assertRaises(RuntimeError, writeFloats8p4F, [val])
+        self.assertRaises(RuntimeError, write_floats_8p4f, [val])
 
         val = 89.83581
         expected = ' 89.8358'
@@ -35,7 +35,7 @@ class TestFormatting(unittest.TestCase):
 
         val = -101.23451
         expected = '-101.2345'
-        self.assertRaises(RuntimeError, writeFloats8p4F, [val])
+        self.assertRaises(RuntimeError, write_floats_8p4f, [val])
 
         val = 101.23451
         expected = '101.2345'
@@ -46,9 +46,10 @@ class TestFormatting(unittest.TestCase):
         self.check_float_8p4f(val, expected)
 
     def check_float_8p4f(self, val, expected):
-        actual, isAllZero = writeFloats8p4F([val])
+        actual = write_floats_8p4f([val])
         actuali = actual[0]
-        self.assertEqual(actuali, expected, msg='\nactual  =%r len(actual)=%i\nexpected=%r len(expected)=%i' % (actuali, len(actuali), expected, len(expected)))
+        self.assertEqual(actuali, expected, msg='\nactual  =%r len(actual)=%i\nexpected=%r len(expected)=%i' % (
+            actuali, len(actuali), expected, len(expected)))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

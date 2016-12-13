@@ -17,7 +17,7 @@ from pyNastran.utils.mathematics import (
 
 pkg_path = pyNastran.__path__[0]
 
-class A(object):
+class A1(object):
     def __init__(self):
         self.a = 5
         self._a = self.a**2
@@ -29,10 +29,10 @@ class A(object):
         return self.a
 
 
-class B(A):
+class B1(A1):
     c = 7
     def __init__(self, b):
-        A.__init__(self)
+        A1.__init__(self)
         self.b = b
         self._b = b**2
 
@@ -91,11 +91,6 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(is_binary_file(op2_filename))
         self.assertFalse(is_binary_file(bdf_filename))
 
-    #def test_obscure(self):
-        #for num in [0,1,5,53,231123, 34567523, 1024, 65367, 14321324, 73123434,
-        #            1309872418439702897245, 955785585080806958106769948497824]:
-        #    self.assertEqual(de_obscure(obscure(num)), num)
-
     def test_list_print(self):
         #self.b = B(7)
         """tests the list_print method, which is a nice way to write a 2d matrix"""
@@ -121,7 +116,7 @@ class TestUtils(unittest.TestCase):
 
     def test_object_methods_introspection(self):
         """object methods determines the public/private methods of a class"""
-        b = B(7)
+        b = B1(7)
         methods = object_methods(b)
         self.assertEqual(methods, ['getA', 'getB'])
 
@@ -137,7 +132,7 @@ class TestUtils(unittest.TestCase):
 
     def test_object_attributes_introspection(self):
         """object methods determines the public/private attributes of a class"""
-        b = B(7)
+        b = B1(7)
         attributes = object_attributes(b)
         self.assertEqual(attributes, ['a', 'b', 'c'])
 
@@ -149,7 +144,7 @@ class TestUtils(unittest.TestCase):
 
     def test_object_attributes_introspection_3(self):
         """object methods determines the public/private attributes of a class"""
-        b = B(7)
+        b = B1(7)
         attributes = object_attributes(b, "all")
         version_info = sys.version_info
         if sys.version_info < (3, 0):
@@ -171,8 +166,91 @@ class TestUtils(unittest.TestCase):
                 expected.append('__dir__')
             self.assertEqual(sorted(attributes), sorted(expected))
 
+    def test_write_class(self):
+        """tests the write_class function"""
+        from numpy import zeros
+        class C(object):
+            """dummy class"""
+            def __init__(self):
+                pass
+
+        class B(object):
+            """dummy class"""
+            def __init__(self, x=None, e=None):
+                self.x = 4
+                self.e = C()
+
+        class A(object):
+            """dummy class"""
+            def __init__(self, a=None, b=None, c=None, d=None):
+                self.a = a
+                self.b = b
+                self.c = c
+                self.d = {
+                    'd1' : 4,
+                    'd2' : [1, 2, 3],
+                    'd3' : {1 : 2},
+                    'd4' : B(),
+                    (1, 2) : 4,
+                }
+
+        z = zeros(2, dtype='float64')
+
+        dict_a = {
+            'strString' : 'a string',
+            'strFloat' : 1.0,
+            'strInt': 2,
+            'strTuple': (1, 2),
+            'strNone' : None,
+            'strClass' : A('a', 'b', 'c'),
+            'strList' : [1, 2, 3],
+            'nullList' : [],
+            #'nullArray' : np.array([]),
+            #'stringArray' : np.array(['s']),
+            #'stringArray2' : np.array(['a', 'b']),
+            'nullDict' : {},
+            u'unicodStr' : u'',
+            'ListOfLists' : [[[], [[]], 2, {'a':3}]],
+            1 : 1,
+            None : 4,
+            1.01 : 5,
+            (1, 2) : 6,
+            #'strArray' : np.array([4, 5, 6]),
+            #'strArray2' : np.zeros((2, 2)),
+            #'strArray3' : np.zeros((2, 2, 2)),
+        }
+        dict_b = {
+            'string2' : 'a string',
+            'float2' : 1.0,
+            'int2': 2,
+            'dictA' : dict_a,
+        }
+
+        dict_c = {
+            'dictA' : {
+                None : 4,
+                1 : 5,
+                'strClass' : A(a='a', b='b', c='c'),
+                'strFloat' : 1.0,
+                'strInt' : 2,
+                'strNone' : None,
+                'strString' : 'a string',
+                'strTuple' : (1, 2),
+                (1, 2) : 6,
+            },
+            'float2' : 1.0,
+            'int2' : 2,
+            'string2' : 'a string',
+            'dict_b' : dict_b,
+        }
+        #assert sorted(dictB.items())==sorted(dictC.items())
+        #print(write_object_attributes('dictA', dictA))
+        nspaces = 0
+        from pyNastran.utils.dev import write_class_attribute
+        msg = write_class_attribute('dictC', dict_c)
 
     def test_loadtxt_01(self):
+        """tests that we can reimplement lodatxt so it doesn't suck"""
         c = StringIO("1,0,2\n3,0,4")
         x1, y1 = np.loadtxt(c, delimiter=',', usecols=(0, 2), unpack=True)
         x2, y2 = loadtxt_nice(c, delimiter=',', usecols=(0, 2), unpack=True)

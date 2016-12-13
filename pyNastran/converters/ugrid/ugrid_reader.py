@@ -19,18 +19,17 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.log import get_logger
-from pyNastran.utils import print_bad_path
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
 
 def read_ugrid(ugrid_filename=None,
                encoding=None, log=None, debug=True):
     """
-    Creates the BDF object
+    Creates the UGRID object
 
     Parameters
     ----------
-    bdf_filename : str (default=None -> popup)
+    ugrid_filename : str (default=None -> popup)
         the ugrid filename
     debug : bool/None
         used to set the logger if no logger is passed in
@@ -40,35 +39,18 @@ def read_ugrid(ugrid_filename=None,
     log : logging module object / None
         if log is set, debug is ignored and uses the
         settings the logging object has
+    encoding : str; default=None
+        is this used?
 
     Returns
     -------
     model : UGRID()
         an UGRID object
-
-    .. code-block:: python
-
-       >>> model = read_ugrid()
-       >>> modelf.read_bdf(bdf_filename, xref=True)
-       #>>> g1 = bdf.Node(1)
-       #>>> print(g1.get_position())
-       #[10.0, 12.0, 42.0]
-       #>>> bdf.write_card(bdf_filename2)
-       #>>> print(bdf.card_stats())
-
-       #---BDF Statistics---
-       #SOL 101
-       #bdf.nodes = 20
-       #bdf.elements = 10
-       #etc.
-
-    .. note :: this method will change in order to return an object that
-               does not have so many methods
-    .. todo:: finish this
     """
     ugrid_model = UGRID(log=None, debug=False)
     ugrid_model.read_ugrid(ugrid_filename)
     return ugrid_model
+
 
 class UGRID(object):
     """
@@ -276,7 +258,6 @@ class UGRID(object):
         is_double : bool; default=False
             the field precision to write
         """
-        self.check_hanging_nodes()
         if encoding is None:
             encoding = sys.getdefaultencoding()
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
@@ -304,36 +285,25 @@ class UGRID(object):
             else:
                 raise RuntimeError(size)
 
-            if 1:
-                self.log.debug('writing GRID')
-                if not self.read_solids:
-                    nids_to_write = np.unique(np.hstack([self.quads.ravel(), self.tris.ravel()]))
-                    nnodes = self.nodes.shape[0]
-                    all_nids = np.arange(nnodes, dtype='int32')
-                    inid = np.searchsorted(all_nids, nids_to_write)
-                    nodes = self.nodes[inid, :]
+            self.log.debug('writing GRIDs')
+            if not self.read_solids:
+                nids_to_write = np.unique(np.hstack([self.quads.ravel(), self.tris.ravel()]))
+                nnodes = self.nodes.shape[0]
+                all_nids = np.arange(nnodes, dtype='int32')
+                inid = np.searchsorted(all_nids, nids_to_write)
+                nodes = self.nodes[inid, :]
 
-                    for i, nid in enumerate(nids_to_write):
-                        node = self.nodes[i, :]
-                        card = ['GRID', nid, None] + list(node)
-                        bdf_file.write(print_card(card))
-
-                    #nids_to_write = np.unique(np.hstack([self.quads.ravel(), self.tris.ravel()]))
-                    #for nid, node in enumerate(self.nodes):
-                        #if nid not in nids_to_write:
-                            #continue
-
-                        #node = self.nodes[nid, :]
-                        #card = ['GRID', nid + 1, None] + list(node)
-                        #bdf_file.write(print_card(card))
-                else:
-                    for i, node in enumerate(self.nodes):
-                        node = self.nodes[i, :]
-                        card = ['GRID', i + 1, None] + list(node)
-                        bdf_file.write(print_card(card))
-                self.log.debug('finished writing GRID')
+                for i, nid in enumerate(nids_to_write):
+                    node = self.nodes[i, :]
+                    card = ['GRID', nid, None] + list(node)
+                    bdf_file.write(print_card(card))
             else:
-                self.log.debug('skipping GRID')
+                self.check_hanging_nodes()
+                for i, node in enumerate(self.nodes):
+                    node = self.nodes[i, :]
+                    card = ['GRID', i + 1, None] + list(node)
+                    bdf_file.write(print_card(card))
+            self.log.debug('finished writing GRIDs')
 
             eid = 1
             pids = self.pids
@@ -487,6 +457,7 @@ class UGRID(object):
             sfmt = Struct(fmt)
             f_ugrid.write(sfmt.pack(*nodes.ravel()))
 
+            # TODO: speed up with numpy???
             if ntris:
                 # CTRIA3
                 fmt = endian + '%ii' % (ntris * 3)
@@ -981,7 +952,7 @@ class UGRID(object):
                 3 : 'penta5s',
                 4 : 'penta6s',
             }
-            print("eid_keys =", eid_keys)
+            self.log.info("eid_keys = %s" % eid_keys)
             for face, eids in iteritems(tri_face_to_eids):
                 if len(eids) == 1:
                     #if it's a boundary face, wer're fine, otherwise, error...
@@ -1113,15 +1084,14 @@ def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename=None):
     return ndarray_float, float_fmt, nfloat, endian, ugrid_filename
 
 
-def main():
+def main():  # pragma: no cover
     """Tests UGrid"""
     ugrid_filename = 'bay_steve_recon1_fixed0.b8.ugrid'
     #bdf_filename = 'bay_steve_recon1_fixed0.b8.bdf'
     foam_filename = 'bay_steve_recon1_fixed0.b8.foam'
     tag_filename = 'bay_steve.tags'
     assert os.path.exists(tag_filename)
-    ugrid_model = UGRID()
-    ugrid_model.read_ugrid(ugrid_filename)
+    ugrid_model = read_ugrid(ugrid_filename)
     #ugrid_model.write_bdf(bdf_filename)
     ugrid_model.write_foam(foam_filename, tag_filename)
 

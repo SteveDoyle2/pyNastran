@@ -436,10 +436,11 @@ class FortranFormat(object):
         """
         datai = b''
         n = 0
+        is_streaming = False
         if self.read_mode == 2:
             self.ntotal = 0
 
-            if 0:
+            if is_streaming:
                 # we stream the record because we get it in partial blocks
                 for data in self._stream_record():
                     data = datai + data
@@ -491,6 +492,8 @@ class FortranFormat(object):
                     # where each element can have a different number
                     # of layers
                     if self.obj.ntotal == self.obj.data.shape[1]:
+                        #print('resetting %r indicies; itime=%s; shape=%s' % (
+                        #    self.obj.class_name, self.obj.itime, self.obj.data.shape))
                         self.obj._reset_indices()
                         self.obj.words = self.words
                         self.obj.itime += 1
@@ -515,7 +518,7 @@ class FortranFormat(object):
 
             #n = self._skip_record()
             #n = table4_parser(datai, 300000)
-            if 0:
+            if is_streaming:
                 self.ntotal = 0
                 #n = self.n
                 n = 0

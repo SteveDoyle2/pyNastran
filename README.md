@@ -52,9 +52,16 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 # News
 
-### pyNastran v0.9 progress (11/20/2016)
+### pyNastran v0.9 progress (12/1/2016)
  - OP2
    - preliminary random results (ATO/CRM/PSD/RMS/NO)
+ - F06
+   - added a preliminary flutter (SOL 145) parser
+     - supports multiple subcases
+     - PK and PKNL methods supported
+     - `plot_Vg_Vf(...)`, `plot_Vg(...)`, `plot_root_locus(...)`
+     - input/output units
+     - mode switching not fixed yet
  - BDF
    - comments can now be created without worrying about $ signs
 

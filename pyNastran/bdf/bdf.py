@@ -992,8 +992,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             dvcrel.validate()
         for key, dscreen in sorted(iteritems(self.dscreen)):
             dscreen.validate()
-        for dvid, dvgrid in iteritems(self.dvgrids):
-            dvgrid.validate()
+        for dvid, dvgrids in iteritems(self.dvgrids):
+            for dvgrid in dvgrids:
+                dvgrid.validate()
         #------------------------------------------------
 
     def read_bdf(self, bdf_filename=None,
@@ -2519,17 +2520,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         .. warning:: doesn't support EPOINTs
         """
+        #return self.get_displacement_index_xyz_cp_cd(cid=cid, dtype=dtype)[2]
         nnodes = len(self.nodes)
         nspoints = 0
         spoints = None
+        nepoints = 0
         if self.spoints:
             spoints = self.spoints.points
             nspoints = len(spoints)
         if self.epoints is not None:
+            epoints = self.epoints.points
+            nepoints = len(epoints)
             raise NotImplementedError('EPOINTs')
 
-        assert nnodes + nspoints > 0, 'nnodes=%s nspoints=%s' % (nnodes, nspoints)
-        xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+            raise ValueError(msg)
+        xyz_cid0 = np.zeros((nnodes + nspoints + nepoints, 3), dtype=dtype)
         if cid == 0:
             if nspoints:
                 nids = self.nodes.keys()
@@ -2925,8 +2932,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             raise ValueError(msg)
 
         #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype='int32')
+        xyz_cp = np.zeros((nnodes + nspoints + nepoints, 3), dtype=dtype)
+        nid_cp_cd = np.zeros((nnodes + nspoints + nepoints, 3), dtype='int32')
         i = 0
         for nid, node in sorted(iteritems(self.nodes)):
             cd = node.Cd()
@@ -2968,7 +2975,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 continue
             nids = np.array(nids)
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
-
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform, cid=0):
@@ -3638,12 +3644,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.dvgrids)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
+        for key, cards in sorted(iteritems(self.dvgrids)):
+            for card in cards:
+                try:
+                    card._verify(xref)
+                except:
+                    print(str(card))
+                    raise
 
 
 IGNORE_COMMENTS = (
@@ -3726,6 +3733,9 @@ def _lines_to_decks(lines, i, punch):
                 break
         for line in lines[i:]:
             bulk_data_lines.append(line.rstrip())
+
+        _check_valid_deck(flag)
+
     del lines
     #for line in bulk_data_lines:
         #print(line)
@@ -3735,6 +3745,30 @@ def _lines_to_decks(lines, i, punch):
     case_control_lines = [_clean_comment(line) for line in case_control_lines]
     return executive_control_lines, case_control_lines, bulk_data_lines
 
+def _check_valid_deck(flag):
+    """Crashes if the flag is set wrong"""
+    if flag != 3:
+        if flag == 1:
+            found = ' - Executive Control Deck\n'
+            missing = ' - Case Control Deck\n'
+            missing += ' - Bulk Data Deck\n'
+        elif flag == 2:
+            found = ' - Executive Control Deck\n'
+            found += ' - Case Control Deck\n'
+            missing = ' - Bulk Data Deck\n'
+        else:
+            raise RuntimeError('flag=%r is not [1, 2, 3]' % flag)
+
+        msg = 'This is not a valid BDF (a BDF capable of running Nastran).\n\n'
+        msg += 'The following sections were found:\n%s\n' % found
+        msg += 'The following sections are missing:\n%s\n' % missing
+        msg += 'If you do not have an Executive Control Deck or a Case Control Deck:\n'
+        msg += '  1.  call read_bdf(...) with `punch=True`\n'
+        msg += "  2.  Add '$ pyNastran : punch=True' to the top of the main file\n"
+        msg += '  3.  Name your file *.pch\n\n'
+        msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
+        msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
+        raise RuntimeError(msg)
 
 def main():  # pragma: no cover
     """

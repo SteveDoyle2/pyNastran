@@ -2,7 +2,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import get_key0
+from pyNastran.f06.f06_formatting import get_key0, write_imag_floats_13e
+import numpy as np
 try:
     import pandas as pd
 except ImportError:
@@ -10,6 +11,11 @@ except ImportError:
 
 
 class ComplexShearArray(OES_Object):
+    """
+    Common class for:
+     - ComplexShearStressArray
+     - ComplexShearStrainArray
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
         self.element_node = None
@@ -42,7 +48,8 @@ class ComplexShearArray(OES_Object):
         #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = 1
@@ -50,7 +57,7 @@ class ComplexShearArray(OES_Object):
         #self.names = []
         #self.nelements //= nnodes
         self.nelements //= self.ntimes
-        self.ntotal = self.nelements * nnodes * 2
+        self.ntotal = self.nelements * nnodes# * 2
         #self.ntotal
         self.itime = 0
         self.ielement = 0
@@ -59,27 +66,26 @@ class ComplexShearArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
+        self._times = np.zeros(self.ntimes, 'float32')
         #self.ntotal = self.nelements * nnodes
 
-        self.element = zeros((self.nelements, 2), 'int32')
+        self.element = np.zeros(self.nelements, 'int32')
 
         # the number is messed up because of the offset for the element's properties
-
         if not self.nelements == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                self.ntimes, self.nelements, nnodes, self.nelements * nnodes,
+                self.ntotal)
             raise RuntimeError(msg)
 
         # [max_shear, avg_shear]
-        self.data = zeros((self.ntimes, self.ntotal, 2), 'complex64')
+        self.data = np.zeros((self.ntimes, self.ntotal, 2), 'complex64')
 
     def build_dataframe(self):
-        headers = self.get_headers()
+        headers = self.headers
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=self.headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -100,8 +106,8 @@ class ComplexShearArray(OES_Object):
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         d = t1 - t2
-                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
-                                        [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        if not np.allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
+                                           [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
                         #if not np.array_equal(t1, t2):
                             msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
                                 eid,
@@ -122,7 +128,7 @@ class ComplexShearArray(OES_Object):
     def add_sort1(self, dt, eid, max_shear, avg_shear):
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [max_shear, avg_shear]
-        self.element[self.itotal, :] = eid
+        self.element[self.itotal] = eid
         #self.ielement += 1
         self.itotal += 1
 
@@ -136,7 +142,7 @@ class ComplexShearArray(OES_Object):
 
         nelements = self.nelements
         ntimes = self.ntimes
-        nnodes = self.element_node.shape[0]
+        nnodes = self.element.shape[0]
         #ntotal = self.ntotal
         msg = []
         if self.nonlinear_factor is not None:  # transient
@@ -150,11 +156,25 @@ class ComplexShearArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
-        if header is None:
-            header = []
-        raise NotImplementedError('ComplexShearArray')
-        msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
+        """
+                C O M P L E X   F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)
+                                                          (REAL/IMAGINARY)
+
+                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======
+ ELEMENT          F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1
+         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41
+            28  0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0
+                0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0
+                       0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0
+                       0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0
+        """
+        #if header is None:
+            #header = []
+        #f.write(self.code_information())
+        #return page_num
+        msg_temp = _get_cshear_msg(is_mag_phase, is_sort1)
 
         ntimes = self.data.shape[0]
         eids = self.element
@@ -170,24 +190,31 @@ class ComplexShearArray(OES_Object):
 
                     max_shear = self.data[itime, :, 0]
                     avg_shear = self.data[itime, :, 1]
+                    assert len(eids) == len(max_shear)
+                    assert len(max_shear) > 0, max_shear
                     for eid, max_sheari, avg_sheari in zip(eids, max_shear, avg_shear):
+                        assert isinstance(eid, int), 'eid=%s type=%s' % (eid, type(eid))
                         [rmax_shear, imax_shear, ravg_shear, iavg_shear
-                         ,] = write_imag_floats_13e([max_sheari, avg_sheari], is_magnitude_phase)
+                         ,] = write_imag_floats_13e([max_sheari, avg_sheari], is_mag_phase)
 
-                        f.write('   %6s   %-13s / %-13s     %-13s / %-13s\n' % (
+                        #f.write('                      28                  0.0          /  0.0                           0.0          /  0.0\n')
+                        f.write('%24s                 %-13s / %-13s                 %-13s / %-13s\n' % (
                             eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
                     f.write(page_stamp % page_num)
                     page_num += 1
             else:
+                # TODO: write in SORT2
                 times = self._times
                 for ieid, eid in enumerate(eids):
                     max_shear = self.data[:, ieid, 0].ravel()
                     avg_shear = self.data[:, ieid, 1].ravel()
                     for itime, max_sheari, avg_sheari in zip(times, max_shear, avg_shear):
                         [rmax_shear, imax_shear, ravg_shear, iavg_shear
-                         ] = write_imag_floats_13e([max_sheari, avg_sheari], is_magnitude_phase)
+                         ] = write_imag_floats_13e([max_sheari, avg_sheari], is_mag_phase)
 
-                        f.write('   %6s   %-13s / %-13s     %-13s / %-13s\n' % (
+                        #f.write('   %6s   %-13s / %-13s     %-13s / %-13s\n' % (
+                            #eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
+                        f.write('%24s                 %-13s / %-13s                 %-13s / %-13s\n' % (
                             eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
                     f.write(page_stamp % page_num)
                     page_num += 1
@@ -195,6 +222,12 @@ class ComplexShearArray(OES_Object):
             raise NotImplementedError('ComplexShearArray-sort2')
         return page_num - 1
 
+    @property
+    def headers(self):
+        return self._get_headers()
+
+    def get_headers(self):
+        return self.headers
 
 class ComplexShearStressArray(ComplexShearArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -212,3 +245,36 @@ class ComplexShearStrainArray(ComplexShearArray, StrainObject):
 
     def _get_headers(self):
         return ['max_shear', 'avg_shear']
+
+def _get_cshear_msg(is_mag_phase, is_sort1):
+    if is_mag_phase:
+        raise NotImplementedError()
+    else:
+        out = [
+            '                         C O M P L E X   S T R E S S E S   I N   S H E A R P A N E L S   ( C S H E A R )\n'
+            '                                                          (REAL/IMAGINARY)\n'
+            ' \n'
+            '                 ELEMENT                            MAXIMUM                                       AVERAGE\n'
+            '                   ID.                               SHEAR                                         SHEAR\n'
+            #'                      28                  9.089907E+01 /  1.709346E+02                 -9.089907E+01 / -1.709346E+02\n'
+        ]
+    return out
+        #out = [
+            #'                C O M P L E X   F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)\n',
+            #'                                                          (REAL/IMAGINARY)\n',
+            #' \n',
+            #'                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======\n',
+            #' ELEMENT          F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1\n',
+            #'         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41\n',
+        #]
+        #asdf
+    #else:
+        #out = [
+            #'                C O M P L E X   F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)\n',
+            #'                                                          (REAL/IMAGINARY)\n',
+            #' \n',
+            #'                  ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======\n',
+            #' ELEMENT          F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1\n',
+            #'         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41\n',
+        #]
+    #return out
