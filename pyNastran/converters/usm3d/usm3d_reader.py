@@ -1,3 +1,13 @@
+"""
+Defines:
+  - Usm3d(log=None, debug=False)
+     - read_cogsg(cogsg_file, stop_after_header=False)
+     - read_usm3d(self, basename, dimension_flag, read_loads=True)
+     - write_usm3d(basename)
+     - read_mapbc(mapbc_filename)
+     - read_bc(self, bc_filename, stop_after_header=False, get_lbouf=False)
+     - read_flo(self, flo_filename, n=None, node_ids=None)
+"""
 from __future__ import print_function
 import os
 from struct import pack, unpack
@@ -7,11 +17,6 @@ from numpy import array, zeros, where
 
 from pyNastran.utils.log import get_logger
 
-def write_front(model):
-    pass
-
-def write_face(model):
-    pass
 
 class Usm3d(object):
     bcmap_to_bc_name = {
@@ -52,8 +57,6 @@ class Usm3d(object):
         self.precision = 'double'
         self.log = get_logger(log, 'debug' if debug else 'info')
 
-    def write_usm3d(self, basename):
-        write_usm3d_volume(self, basename)
 
     def read_mapbc(self, mapbc_filename):
         """
@@ -204,8 +207,12 @@ class Usm3d(object):
         #self.read_front(front_file)
         #self.read_face(face_file)
 
+
+    def write_usm3d(self, basename):
+        write_usm3d_volume(self, basename)
+
     def read_bc(self, bc_filename, stop_after_header=False, get_lbouf=False):
-        print("bc_filename = %r" % bc_filename)
+        self.log.info("bc_filename = %r" % bc_filename)
         with open(bc_filename, 'r') as bc_file:
             lines = bc_file.readlines()
 
@@ -243,7 +250,7 @@ class Usm3d(object):
             #self.bcs = [tris, bcs]
             return header, tris, bcs
 
-    def read_cogsg(self, cogsg_file, stop_after_header=False):
+    def read_cogsg(self, cogsg_filename, stop_after_header=False):
         """
         Reads the *.cogsg file
 
@@ -254,7 +261,7 @@ class Usm3d(object):
         tet_elements : ???
            ???
         """
-        cogsg_file = open(cogsg_file, 'rb')
+        cogsg_file = open(cogsg_filename, 'rb')
 
         # nelements * 4 * 4 + 32 ???
         dummy = cogsg_file.read(4)  # 1022848
@@ -314,8 +321,8 @@ class Usm3d(object):
             faces = None
         #----------------------------------------------------------------------
         # nodes
-        nBoundPts = nb
-        nnodes = nBoundPts
+        nbound_pts = nb
+        nnodes = nbound_pts
 
         #data_length = nnodes
         if self.precision == 'double':
@@ -326,7 +333,7 @@ class Usm3d(object):
             raise RuntimeError('precision = %r' % self.precision)
 
         skip_nodes = False
-        if skip_nodes == True:
+        if skip_nodes:
             t = cogsg_file.tell()
             cogsg_file._goto(t + data_length * 3)
             nodes = None
@@ -386,24 +393,22 @@ class Usm3d(object):
         nodes_vol = array(nodes_vol)
         nodes_vol = nodes_vol.reshape((tets, 3))
 
-    def _read_cogsg_volume(self, f):
+    def _read_cogsg_volume(self, cogsg_file):
         # volume cells
-        self.log.debug('tell volume = %s' % f.tell())
+        self.log.debug('tell volume = %s' % cogsg_file.tell())
         # surface + volume cells ???
         nelements = self.header['nElements']
         Format = '>%si' % nelements
 
         elements = zeros((nelements, 4), 'int32')
 
-        self.log.debug("fv.tell = %s" % f.tell())
+        self.log.debug("fv.tell = %s" % cogsg_file.tell())
         for i in range(4): #  tets
-            data = f.read(4 * nelements)
+            data = cogsg_file.read(4 * nelements)
             elements[:, i] = unpack(Format, data)
-            #print("elements[:, %s] =" %i, elements[:, i])
         elements -= 1
 
-        #print('tell volume2 = %s' % f.tell())
-        dummy2 = f.read(4)
+        dummy2 = cogsg_file.read(4)
         self.log.debug("dummy2 = %s %s" % (unpack('>i', dummy2), unpack('>f', dummy2)))
         dummy_int2, = unpack('>i', dummy2)
 
@@ -415,18 +420,18 @@ class Usm3d(object):
         nnodes = self.header['nPoints']
         Format = '>%sd' % nnodes
 
-        dummy3 = f.read(4)  # nnodes * 3 * 8
+        dummy3 = cogsg_file.read(4)  # nnodes * 3 * 8
         dummy3_int, = unpack('>i', dummy3)
         #assert dummy3_int == 298560
-        print("dummy3 = %i" % unpack('>i', dummy3)) #, unpack('>f', dummy3)
+        self.log.debug("dummy3 = %i" % unpack('>i', dummy3)) #, unpack('>f', dummy3)
 
         nodes = zeros((nnodes, 3), 'float64')
         for i in range(3): #  x, y, z
-            data = f.read(8 * nnodes)
+            data = cogsg_file.read(8 * nnodes)
             assert len(data) == (8 * nnodes)
             nodes[:, i] = unpack(Format, data)
 
-        dummy4 = f.read(4) # nnodes * 3 * 8
+        dummy4 = cogsg_file.read(4) # nnodes * 3 * 8
         dummy4_int, = unpack('>i', dummy4)
         #print("dummy4 = ", unpack('>i', dummy4), unpack('>f', dummy4))
 
@@ -491,8 +496,8 @@ class Usm3d(object):
                 mach = float(line)
             except:
                 raise
-                loads['Cp'] = e  # it's 0 anyways...
-                return node_id, loads
+                #loads['Cp'] = e  # it's 0 anyways...
+                #return node_id, loads
 
 
             # determine the number of variables on each line
@@ -668,6 +673,7 @@ class Usm3d(object):
 
 
 def Float(sline, n):
+    """floats a value"""
     vals = []
     for val in sline:
         try:
@@ -677,6 +683,9 @@ def Float(sline, n):
     return vals
 
 def write_usm3d_volume(model, basename):
+    """
+    writes a *.cogsg, *.front, *.face file
+    """
     cogsg_file = basename + '.cogsg'
     #face_file = basename + '.face'
     #front_file = basename + '.front'
@@ -685,7 +694,17 @@ def write_usm3d_volume(model, basename):
     #write_front(model, front_file)
     #write_face(model, face_file)
 
+
+#def write_front(model):
+    #pass
+
+#def write_face(model):
+    #pass
+
 def write_cogsg_volume(model, cogsg_file):
+    """
+    writes a *.cogsg file
+    """
     #n = 0
     self = model
     nnodes = self.nodes.shape[0]
@@ -760,7 +779,8 @@ def write_cogsg_volume(model, cogsg_file):
         outfile.write(block_size)
 
 
-def main():  # pragma: no conver
+def main():  # pragma: no cover
+    """test problem"""
     model = Usm3d()
     if 1:
         #basename = 'HSCT_inviscid'
