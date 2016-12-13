@@ -101,7 +101,8 @@ class Usm3dIO(object):
             raise RuntimeError('unsupported extension.  Use "cogsg" or "front".')
 
         read_loads = True
-        nodes, tris_tets, tris, bcs, mapbc, loads, flo_filename = model.read_usm3d(base_filename, dimension_flag, read_loads=read_loads)
+        nodes, tris_tets, tris, bcs, mapbc, loads, flo_filename = model.read_usm3d(
+            base_filename, dimension_flag, read_loads=read_loads)
         del tris_tets
         nodes = model.nodes
         tris = model.tris

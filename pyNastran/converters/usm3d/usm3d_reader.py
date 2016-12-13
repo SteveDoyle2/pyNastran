@@ -1,8 +1,10 @@
 from __future__ import print_function
-from six.moves import range
 import os
 from struct import pack, unpack
+
+from six.moves import range
 from numpy import array, zeros, where
+
 from pyNastran.utils.log import get_logger
 
 def write_front(model):
@@ -108,6 +110,34 @@ class Usm3d(object):
         return mapbc
 
     def read_usm3d(self, basename, dimension_flag, read_loads=True):
+        """
+        Parameters
+        ----------
+        basename : str
+            ???
+        dimension_flag : int
+            ???
+            2?/3
+        read_loads : bool; default=True
+            ???
+
+        Returns
+        -------
+        nodes : ???
+           ???
+        tris_tets : ???
+           ???
+        tris :
+           ???
+        bcs : ???
+           ???
+        mapbc : ???
+           ???
+        loads : ???
+            ???
+        flo_filename : ???
+           ???
+        """
         cogsg_filename = basename + '.cogsg'
         bc_filename = basename + '.bc'
         face_filename = basename + '.face'
@@ -177,7 +207,7 @@ class Usm3d(object):
     def read_bc(self, bc_filename, stop_after_header=False, get_lbouf=False):
         print("bc_filename = %r" % bc_filename)
         with open(bc_filename, 'r') as bc_file:
-            lines = f.readlines()
+            lines = bc_file.readlines()
 
         #mbouf,dum1,dum1,igrid
         header = lines[0].strip().split()
@@ -214,10 +244,20 @@ class Usm3d(object):
             return header, tris, bcs
 
     def read_cogsg(self, cogsg_file, stop_after_header=False):
-        f = open(cogsg_file, 'rb')
+        """
+        Reads the *.cogsg file
+
+        Returns
+        -------
+        nodes : (N, 3) float ndarray
+           the nodes
+        tet_elements : ???
+           ???
+        """
+        cogsg_file = open(cogsg_file, 'rb')
 
         # nelements * 4 * 4 + 32 ???
-        dummy = f.read(4)  # 1022848
+        dummy = cogsg_file.read(4)  # 1022848
         dummy_int, = unpack('>i', dummy)
         #assert dummy_int == 1022848, 'dummy_int = %s' % dummy_int
 
@@ -225,13 +265,12 @@ class Usm3d(object):
         if self.precision == 'single':
             Format = '>6if'
             nbytes = 6 * 4 + 4
-            self.log.debug("***single precision")
         elif self.precision == 'double':
             Format = '>6id'
             nbytes = 6 * 4 + 8
         else:
-            raise Exception('invalid precision format')
-        data = f.read(nbytes)
+            raise RuntimeError('invalid precision format')
+        data = cogsg_file.read(nbytes)
 
         (inew, ne, np, nb, npv, nev, tc) = unpack(Format, data)
         self.header = {
@@ -254,7 +293,8 @@ class Usm3d(object):
         #del ne, np
 
         if 1:
-            return self._read_cogsg_volume(f)
+            nodes, tets = self._read_cogsg_volume(cogsg_file)
+            return nodes, tets
         #else:
         #----------------------------------------------------------------------
         # elements
@@ -265,7 +305,7 @@ class Usm3d(object):
         if nfaces > 0:
             data_length = nnodes_per_face * nfaces
             Format = '>' + 'i' * data_length
-            data = f.read(4 * data_length)
+            data = cogsg_file.read(4 * data_length)
 
             faces = unpack(Format, data)
             faces = array(faces)
@@ -287,8 +327,8 @@ class Usm3d(object):
 
         skip_nodes = False
         if skip_nodes == True:
-            t = f.tell()
-            f._goto(t + data_length * 3)
+            t = cogsg_file.tell()
+            cogsg_file._goto(t + data_length * 3)
             nodes = None
         else:
             if self.precision == 'double':
@@ -300,13 +340,13 @@ class Usm3d(object):
             else:
                 raise RuntimeError('precision = %r' % self.precision)
 
-            data = f.read(data_length)
+            data = cogsg_file.read(data_length)
             X = unpack(Format, data)
 
-            data = f.read(data_length)
+            data = cogsg_file.read(data_length)
             Y = unpack(Format, data)
 
-            data = f.read(data_length)
+            data = cogsg_file.read(data_length)
             Z = unpack(Format, data)
 
             nodes = array([X, Y, Z])
@@ -318,7 +358,7 @@ class Usm3d(object):
             del X, Y, Z
 
 
-        f.read(nnodes * 3 * 8)  # 3 -> xyz, 8 -> double precision ???
+        cogsg_file.read(nnodes * 3 * 8)  # 3 -> xyz, 8 -> double precision ???
 
         #----------------------------------------------------------------------
         # elements
@@ -329,7 +369,7 @@ class Usm3d(object):
         if ntets:
             data_length = nnodes_per_tet * ntets
             Format = '>' + 'i' * data_length
-            data = f.read(4 * data_length)
+            data = cogsg_file.read(4 * data_length)
 
             tets = unpack(Format, data)
             tets = array(tets)
@@ -340,7 +380,7 @@ class Usm3d(object):
         nnodes = npv
 
         Format = '>%si' % nnodes
-        data = f.read(4 * nnodes)
+        data = cogsg_file.read(4 * nnodes)
 
         nodes_vol = unpack(Format, data)
         nodes_vol = array(nodes_vol)
@@ -720,7 +760,7 @@ def write_cogsg_volume(model, cogsg_file):
         outfile.write(block_size)
 
 
-def main():
+def main():  # pragma: no conver
     model = Usm3d()
     if 1:
         #basename = 'HSCT_inviscid'
