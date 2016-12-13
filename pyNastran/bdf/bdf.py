@@ -2858,14 +2858,21 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:
             return msg
 
-    def get_displacement_index_xyz_cp_cd(self, dtype='float64'):
+    def get_displacement_index_xyz_cp_cd(self, dtype='float64', sort_ids=True):
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
         Used in combination with ``OP2.transform_displacements_to_global``
 
+        Parameters
+        -----------
+        dtype : str
+            the type of xyz_cp
+        sort_ids : bool; default=True
+            sort the ids
+
         Returns
-        ----------
+        --------
         icd_transform : dict{int cd : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
@@ -2878,11 +2885,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             points in the CP coordinate system
         nid_cp_cd : (n, 3) int ndarray
             node id, CP, CD for each node
-        dtype : str
-            the type of xyz_cp
 
         Example
-        -------
+        --------
         # assume GRID 1 has a CD=10
         # assume GRID 2 has a CD=10
         # assume GRID 5 has a CD=50
@@ -2894,6 +2899,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         >>> i_transform[50]
         [2]
+
+        Note:  assumes sorted GRID & SPOINTs are sorted by ID and interspersed, but part of it requires
+               it's not interspersed
         """
         nids_cd_transform = defaultdict(list)
         nids_cp_transform = defaultdict(list)
@@ -2930,16 +2938,22 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             i += 1
         if nspoints:
             for nid in sorted(self.spoints.points):
-                nid_cp_cd[i] = nid
+                nid_cp_cd[i, 0] = nid
                 i += 1
         if nepoints:
             for nid in sorted(self.epoints.points):
-                nid_cp_cd[i] = nid
+                nid_cp_cd[i, 0] = nid
                 i += 1
+
+        if sort_ids:
+            nids = nid_cp_cd[:, 0]
+            isort = nids.argsort()
+            nid_cp_cd = nid_cp_cd[isort, :]
+            xyz_cp = xyz_cp[isort, :]
 
         icp_transform = {}
         icd_transform = {}
-        nids_all = np.array(sorted(self.point_ids))
+        nids_all = nid_cp_cd[:, 0]
         for cd, nids in sorted(iteritems(nids_cd_transform)):
             if cd in [0, -1]:
                 continue
