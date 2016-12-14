@@ -4161,7 +4161,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             try:
                 actors = self.label_actors[key]
             except KeyError:
-                msg = 'Cant find label_actors; keys=%s' % self.label_actors.keys()
+                msg = 'Cant find label_actors for key=%r; keys=%s' % (key, self.label_actors.keys())
                 self.log.error(msg)
                 continue
             for actor in actors:

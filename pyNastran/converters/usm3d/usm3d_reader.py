@@ -109,7 +109,7 @@ class Usm3d(object):
             sline = line.split()
             #self.log.info(sline)
             patch_id, bc, family, surf, surf_ids = sline[:5]
-            mapbc[int(patch_id)] = int(bc)
+            mapbc[int(patch_id)] = [int(bc), int(family), int(surf), surf_ids]
         return mapbc
 
     def read_usm3d(self, basename, dimension_flag, read_loads=True):

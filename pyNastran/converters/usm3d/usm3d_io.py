@@ -3,11 +3,14 @@ from six.moves import range
 import os
 from collections import defaultdict
 
+import numpy as np
 import vtk
 from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 from pyNastran.converters.usm3d.time_accurate_results import get_n_list
+
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class Usm3dIO(object):
@@ -201,13 +204,15 @@ class Usm3dIO(object):
 
         cases = {}
         #cases = self.result_cases
-        self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
-        self._finish_results_io(cases)
+        form, cases = self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+        self._finish_results_io2(form, cases)
 
     def clear_usm3d(self):
+        """dummy function"""
         pass
 
     def _fill_usm3d_results(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
+        """sets up usm3d results"""
         if 'Mach' in loads:
             avg_mach = loads['Mach'].mean()
             note = ':  avg(Mach)=%g' % avg_mach
@@ -220,23 +225,60 @@ class Usm3dIO(object):
         }
 
         #ID = 1
-        cases = self._fill_usm3d_case(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+        form, cases = self._fill_usm3d_case(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+        return form, cases
 
     def _fill_usm3d_case(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
+        """actually fills the sidebar"""
         self.scalarBar.VisibilityOff()
 
-        ID = 1
-        if bcs is not None:
-            cases[(ID, 'Region', 1, 'centroid', '%i')] = bcs
+        subcasemap_id = 1
+        icase = 0
+        itime = 0
+        region_res = GuiResult(subcasemap_id, 'Patch', 'Patch', 'centroid', bcs,  # patch_id
+                               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                               data_format='%i', uname='GuiResult')
+        cases[icase] = (region_res, (itime, 'Patch'))
+        form = [
+            ('Patch', icase, []),
+        ]
 
+        icase += 1
+        if bcs is not None:
+            patch_id = bcs
+
+            form += [
+                ('BC', icase, []),
+                ('Family', icase + 1, []),
+            ]
+            #cases[(subcasemap_id, 'Region', 1, 'centroid', '%i')] = bcs
+
+            bc_value = np.zeros(bcs.shape, dtype='int32')
+            family = np.zeros(bcs.shape, dtype='int32')
             mapbc_print = defaultdict(list)
-            for region, bcnum in sorted(iteritems(mapbc)):
+            for region, mapi in sorted(iteritems(mapbc)):
+                bcnum = mapi[0]
+                familyi = mapi[1]
                 mapbc_print[bcnum].append(region)
                 try:
                     name = bcmap_to_bc_name[bcnum]
                 except KeyError:
                     name = '???'
                 #self.log.info('Region=%i BC=%s name=%r' % (region, bcnum, name))
+                ipatch = np.where(patch_id == region)[0]
+                bc_value[ipatch] = bcnum
+                family[ipatch] = familyi
+
+            bc_res = GuiResult(subcasemap_id, 'BC', 'BC', 'centroid', bc_value,
+                               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                               data_format='%i', uname='GuiResult')
+            family_res = GuiResult(subcasemap_id, 'Family', 'Family', 'centroid', family,
+                                   nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                                   data_format='%i', uname='GuiResult')
+            cases[icase] = (bc_res, (itime, 'BC'))
+            cases[icase + 1] = (family_res, (itime, 'Family'))
+            icase += 2
+
 
             for bcnum, regions in sorted(iteritems(mapbc_print)):
                 try:
@@ -244,11 +286,20 @@ class Usm3dIO(object):
                 except KeyError:
                     name = '???'
                 self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
+
             self.scalarBar.VisibilityOn()
 
-        ID = 2
+        subcasemap_id = 2
         if len(loads):
             for key, load in iteritems(loads):
-                cases[(ID, key, 1, 'node', '%.3f', '')] = load
+                load_res = GuiResult(subcasemap_id, key, key, 'node', load,
+                                     nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                                     data_format='%.3f', uname='GuiResult')
+                #cases[(ID, key, 1, 'node', '%.3f', '')] = load
+                cases[icase] = (region_res, (itime, key))
+                formi = (key, icase, [])
+                form.append(formi)
+                icase += 1
+
             self.scalarBar.VisibilityOn()
-        return cases
+        return form, cases
