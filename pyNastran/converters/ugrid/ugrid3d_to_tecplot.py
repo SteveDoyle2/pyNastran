@@ -6,7 +6,7 @@ from pyNastran.converters.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
 
-def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None):
+def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None, debug=False):
     """
     Converts a UGRID to a Tecplot ASCII file.
 
@@ -22,7 +22,7 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None):
     """
     if isinstance(ugrid_filename, str):
         #assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
-        model = UGRID(log=log)
+        model = UGRID(log=log, debug=debug)
         model.read_ugrid(ugrid_filename)
     else:
         model = ugrid_filename
@@ -36,7 +36,7 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None):
     #tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
     #tecplot.results = array([], dtype='float32')
 
-def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, log=None, debug=debug):
+def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, log=None, debug=False):
     """
     Converts a UGRID to a Tecplot ASCII file.
 
