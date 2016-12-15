@@ -66,35 +66,41 @@ class TestBDF(Tester):
             assert msg4 == msg4_expected, 'test4 actual:\n%r\nexpected:\n%r\n%s' % (msg4, msg4_expected, str(sline4))
 
     def test_object_attributes_01(self):
+        """tests getting object attributes"""
         model = BDF(debug=False)
         model.object_attributes(mode='public', keys_to_skip=None)
 
     def test_object_attributes_02(self):
+        """tests getting object attributes with key skipping"""
         model = BDF(debug=False)
         keys = []
         object_attributes(model, mode='public', keys_to_skip=keys)
 
     def test_object_attributes_03(self):
+        """tests getting object attributes with a card"""
         model = BDF(debug=False)
         model.add_card(['GRID',1], 'GRID')
         grid = model.nodes[1]
         grid.object_attributes(mode='public', keys_to_skip=None)
 
     def test_object_methods_01(self):
+        """tests getting object methods using the builtin method"""
         model = BDF(debug=False)
         keys = []
         model.object_methods(mode="public", keys_to_skip=keys)
 
     def test_object_methods_02(self):
+        """tests getting object methods from the method"""
         model = BDF(debug=False)
         keys = []
         object_methods(model, mode="public", keys_to_skip=keys)
 
     def test_object_methods_03(self):
+        """tests getting object attributes with a card"""
         model = BDF(debug=False)
         model.add_card(['GRID',1], 'GRID')
         grid = model.nodes[1]
-        print(grid.object_methods(mode='public', keys_to_skip=None))
+        grid.object_methods(mode='public', keys_to_skip=None)
 
     def test_bdf_01(self):
         bdf_filename = os.path.join('solid_bending', 'solid_bending.bdf')

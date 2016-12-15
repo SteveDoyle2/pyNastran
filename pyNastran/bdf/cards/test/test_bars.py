@@ -1,16 +1,16 @@
 from __future__ import print_function
-from six.moves import zip, StringIO
 import os
 import unittest
 
 from numpy import allclose, array
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PBAR #, GRID, MAT1
+from pyNastran.bdf.bdf import BDF, BDFCard, CBAR, PBAR, PBARL, GRID, MAT1
 from pyNastran.bdf.field_writer_8 import print_card_8
 
-bdf = BDF(debug=False)
 class TestBars(unittest.TestCase):
-    def test_pbar_01(self):
+    """test CBAR/PBAR/PBARL classes"""
+    def test_pbar_1(self):
+        """tests the PBAR BDF add"""
         fields = [
             u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14,
             4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0,
@@ -20,7 +20,8 @@ class TestBars(unittest.TestCase):
         #print(card)
         card = print_card_8(fields)
         lines = card.split('\n')
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
         cardi = BDFCard(card)
         pbar = PBAR.add_card(cardi)
         self.assertEqual(pbar.A, 0.), pbar.A
@@ -30,7 +31,8 @@ class TestBars(unittest.TestCase):
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
             #pbar = PBAR(card2)
 
-    def test_pbar_02(self):
+    def test_pbar_2(self):
+        """tests the PBAR BDF add"""
         pid = 1
         mid = 2
         A = None
@@ -47,7 +49,8 @@ class TestBars(unittest.TestCase):
         ]
         card = print_card_8(fields)
         lines = card.split('\n')
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
         cardi = BDFCard(card)
 
         pbar = PBAR.add_card(cardi)
@@ -83,7 +86,8 @@ class TestBars(unittest.TestCase):
             k1, k2, i12]
         card = print_card_8(fields)
         lines = card.split('\n')
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
 
         cardi = BDFCard(card)
         pbar = PBAR.add_card(cardi)
@@ -105,7 +109,96 @@ class TestBars(unittest.TestCase):
         self.assertEqual(pbar.k1, 1e2)
         self.assertEqual(pbar.k2, 1e2)
 
-    def test_bar_mass_01(self):
+    def test_pbar_3(self):
+        """tests the PBAR validate"""
+        pid = 42
+        mid = 10
+        i1 = -1.
+        i2 = -2.
+        i12 = -3.
+        j = -4.
+        pbar = PBAR(pid, mid, A=0., i1=i1, i2=i2, i12=i12, j=j, nsm=0., c1=0., c2=0.,
+                    d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
+                    k2=1.e8, comment='cat')
+        with self.assertRaises(ValueError):
+            pbar.validate()
+
+        pbar.i1 = 1.
+        with self.assertRaises(ValueError):
+            pbar.validate()
+
+        pbar.i2 = 2.
+        with self.assertRaises(ValueError):
+            pbar.validate()
+
+        pbar.j = 4.
+        pbar.validate()
+
+    def test_pbarl_1(self):
+        """tests the PBARL"""
+        model = BDF(log=None, debug=False)
+        pid = 4
+        mid = 40
+        group = 'group'
+        Type = 'bad_type'
+        dim = 42
+        nsm = 0.5
+        pbarl = PBARL(pid, mid, group, Type, dim, nsm=nsm, comment='comment')
+        with self.assertRaises(ValueError): # Type
+            pbarl.validate()
+
+        pbarl.Type = 'TUBE'
+        with self.assertRaises(TypeError): # dim
+            pbarl.validate()
+
+        pbarl.dim = [20.]
+        with self.assertRaises(RuntimeError):
+            pbarl.validate()
+
+        pbarl.dim = [2., 1.]
+        pbarl.validate()
+        str(pbarl)
+        pbarl.write_card(size=8, is_double=False)
+        pbarl.write_card(size=16, is_double=False)
+        pbarl.write_card(size=16, is_double=True)
+        model.properties[pid] = pbarl
+
+        nid1 = 52
+        xyz1 = [0., 0., 0.]
+        model.nodes[nid1] = GRID(nid1, cp=0, xyz=xyz1)
+
+        nid2 = 53
+        xyz2 = [1., 0., 0.]
+        model.nodes[nid2] = GRID(nid2, cp=0, xyz=xyz2)
+
+        E = 30.0e7
+        G = None
+        nu = 0.3
+        mat = MAT1(mid, E, G, nu, rho=1.0)
+        model.materials[mid] = mat
+
+        eid = 42
+        x = None
+        g0 = None
+        cbar = CBAR(eid, pid, nid1, nid2, x, g0, offt='GGG',
+                    pa=0, pb=0, wa=None, wb=None, comment='')
+        cbar.validate()
+        model.elements[eid] = cbar
+
+        with self.assertRaises(AttributeError):
+            pbarl._verify()
+
+        model.validate()
+        model.cross_reference()
+        pbarl._verify()
+        assert allclose(cbar.Mass(), 9.9247779608), cbar.Mass()
+
+        mat.rho = 0.
+        assert allclose(cbar.Mass(), 0.5), cbar.Mass()
+
+
+    def test_bar_mass_1(self):
+        """tests CBAR/PBAR mass"""
         model = BDF(debug=False)
         #model.case_control_deck = CaseControlDeck(case_control_lines)
         spc = ['SPC1', 123456, 123456, 1]
@@ -139,6 +232,7 @@ class TestBars(unittest.TestCase):
         model.add_card(mat1, 'MAT1')
         model.add_card(spc, 'SPC1')
         model.add_card(force, 'FORCE')
+        model.validate()
         model.cross_reference()
 
         mass, cg, I = model.mass_properties(
