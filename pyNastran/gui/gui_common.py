@@ -4709,12 +4709,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print('geometry_properties.keys() =', self.geometry_properties.keys())
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
-        #if len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, i, result_type, vector_size, location, data_format) = key
-        #else:
-            #(subcase_id, i, result_type, vector_size, location, data_format, label2) = key
 
         data = deepcopy(self.geometry_properties)
         if not self._edit_geometry_properties_window_shown:

@@ -2,33 +2,34 @@
 from __future__ import print_function, unicode_literals
 from six import iteritems
 
-from numpy import setdiff1d, unique, array, hstack, ndarray
+from numpy import setdiff1d, unique, hstack, ndarray
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QApplication,
+        QLabel, QLineEdit, QPushButton, QWidget, QApplication,
         QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
     )
 elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QApplication,
+        QLabel, QLineEdit, QPushButton, QWidget, QApplication,
         QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
     )
 elif qt_version == 'pyside':
     from PySide import QtCore, QtGui
     from PySide.QtGui import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QApplication,
+        QLabel, QLineEdit, QPushButton, QWidget, QApplication,
         QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
     )
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
-from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
+from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
-from pyNastran.gui.menus.manage_actors import CustomQTableView, Model
+#from pyNastran.gui.menus.manage_actors import Model
+from pyNastran.gui.gui_interface.common import PyDialog
 
 
 class ColorDisplay(QWidget):
@@ -56,7 +57,7 @@ class ColorDisplay(QWidget):
         return unicode(self.color.name())
 
 
-class GroupsModify(QDialog):
+class GroupsModify(PyDialog):
     """
     +--------------------------+
     |     Groups : Modify      |
@@ -74,10 +75,11 @@ class GroupsModify(QDialog):
     """
     def __init__(self, data, win_parent=None, group_active='main'):
         self.win_parent = win_parent
-        QDialog.__init__(self, win_parent)
+        PyDialog.__init__(self, data, win_parent)
+        #QDialog.__init__(self, win_parent)
 
-        self.win_parent = win_parent
-        self.out_data = data
+        #self.win_parent = win_parent
+        #self.out_data = data
 
         #print(data)
         self.keys = [group.name for key, group in sorted(iteritems(data))]
@@ -211,35 +213,18 @@ class GroupsModify(QDialog):
             self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def set_connections(self):
-        if qt_version == 4:
-            self.connect(self.name_set, QtCore.SIGNAL('clicked()'), self.on_set_name)
-            self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
-            self.connect(self.elements_button, QtCore.SIGNAL('clicked()'), self.on_default_elements)
+        self.name_set.clicked.connect(self.on_set_name)
+        self.name_button.clicked.connect(self.on_default_name)
+        self.elements_button.clicked.connect(self.on_default_elements)
 
-            self.connect(self.add_button, QtCore.SIGNAL('clicked()'), self.on_add)
-            self.connect(self.remove_button, QtCore.SIGNAL('clicked()'), self.on_remove)
-            self.connect(self.table, QtCore.SIGNAL('itemClicked(QListWidgetItem *)'), self.on_update_active_key)
+        self.add_button.clicked.connect(self.on_add)
+        self.remove_button.clicked.connect(self.on_remove)
+        self.table.itemClicked.connect(self.on_update_active_key)
+        self.ok_button.clicked.connect(self.on_ok)
 
-            #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-            self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-            #self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-
-            self.connect(self.set_as_main_button, QtCore.SIGNAL('clicked()'), self.on_set_as_main)
-            self.connect(self.create_group_button, QtCore.SIGNAL('clicked()'), self.on_create_group)
-            self.connect(self.delete_group_button, QtCore.SIGNAL('clicked()'), self.on_delete_group)
-        else:
-            self.name_set.clicked.connect(self.on_set_name)
-            self.name_button.clicked.connect(self.on_default_name)
-            self.elements_button.clicked.connect(self.on_default_elements)
-
-            self.add_button.clicked.connect(self.on_add)
-            self.remove_button.clicked.connect(self.on_remove)
-            self.table.itemClicked.connect(self.on_update_active_key)
-            self.ok_button.clicked.connect(self.on_ok)
-
-            self.set_as_main_button.clicked.connect(self.on_set_as_main)
-            self.create_group_button.clicked.connect(self.on_create_group)
-            self.delete_group_button.clicked.connect(self.on_delete_group)
+        self.set_as_main_button.clicked.connect(self.on_set_as_main)
+        self.create_group_button.clicked.connect(self.on_create_group)
+        self.delete_group_button.clicked.connect(self.on_delete_group)
 
     def on_create_group(self):
         irow = self.nrows
@@ -338,6 +323,7 @@ class GroupsModify(QDialog):
             self.win_parent.post_group(group)
 
     def closeEvent(self, event):
+        self.out_data['close'] = True
         event.accept()
 
     def on_add(self):
@@ -390,103 +376,18 @@ class GroupsModify(QDialog):
         group = self.out_data[self.active_key]
         group.element_str = element_str
 
-    def check_patran_syntax(self, cell, pound=None):
-        text = str(cell.text())
-        try:
-            values = parse_patran_syntax(text, pound=pound)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return values, True
-        except ValueError as e:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            cell.setToolTip(str(e))
-            return None, False
-
-    def check_patran_syntax_dict(self, cell, pound=None):
-        text = str(cell.text())
-        try:
-            value = parse_patran_syntax_dict(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            cell.setToolTip('')
-            return value, True
-        except (ValueError, SyntaxError, KeyError) as e:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            cell.setToolTip(str(e))
-            return None, False
-
-    def check_float(self, cell):
-        text = cell.text()
-        try:
-            value = float(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            cell.setToolTip('')
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    def check_name(self, cell):
-        text = str(cell.text()).strip()
-        if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-        if self._default_name != text:
-            if self._default_name in self.out_data:
-                cell.setStyleSheet("QLineEdit{background: white;}")
-                return text, True
-            else:
-                cell.setStyleSheet("QLineEdit{background: red;}")
-                return None, False
-
-    def check_format(self, cell):
-        text = str(cell.text())
-
-        is_valid = True
-        if len(text) < 2:
-            is_valid = False
-        elif 's' in text.lower():
-            is_valid = False
-        elif '%' not in text[0]:
-            is_valid = False
-        elif text[-1].lower() not in ['g', 'f', 'i', 'e']:
-            is_valid = False
-
-        try:
-            text % 1
-            text % .2
-            text % 1e3
-            text % -5.
-            text % -5
-        except ValueError:
-            is_valid = False
-
-        try:
-            text % 's'
-            is_valid = False
-        except TypeError:
-            pass
-
-        if is_valid:
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
     def on_validate(self):
         name, flag0 = self.check_name(self.name_edit)
         elements, flag1 = self.check_patran_syntax(self.elements_edit,
-                                                         pound=self.elements_pound)
+                                                   pound=self.elements_pound)
         #coords_value, flag2 = self.check_patran_syntax(self.coords_edit,
-        #pound=self.coords_pound)
+                                                       #pound=self.coords_pound)
 
         if flag0 and flag1:
             self._default_name = name
             self._default_elements = self.eids
             self.out_data['clicked_ok'] = True
+            self.out_data['close'] = True
             return True
         return False
 
@@ -508,10 +409,6 @@ class GroupsModify(QDialog):
         self.out_data['close'] = True
         self.out_data['clicked_cancel'] = True
         self.close()
-
-    def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Escape:
-            self.on_cancel()
 
     def on_update_active_key(self, index):
         self.update_active_key(index)

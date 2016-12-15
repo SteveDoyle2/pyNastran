@@ -401,7 +401,8 @@ class LegendPropertiesWindow(QDialog):
         event.accept()
 
     def on_default_name(self):
-        self.name_edit.setText(str(self._default_name))
+        name = str(self._default_name)
+        self.name_edit.setText(name)
         self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_min(self):
