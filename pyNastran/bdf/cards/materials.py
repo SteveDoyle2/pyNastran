@@ -205,6 +205,8 @@ class MAT1(IsotropicMaterial):
         self.matt1 = None
         if comment:
             self.comment = comment
+        E, G, nu = self.set_E_G_nu(E, G, nu)
+
         self.mid = mid
         self.e = E
         self.g = G
@@ -221,7 +223,9 @@ class MAT1(IsotropicMaterial):
     @classmethod
     def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
-        E, G, nu = cls.set_E_G_nu(card)
+        E = double_or_blank(card, 2, 'E')
+        G = double_or_blank(card, 3, 'G')
+        nu = double_or_blank(card, 4, 'nu')
 
         rho = double_or_blank(card, 5, 'rho', 0.)
         a = double_or_blank(card, 6, 'a', 0.0)
@@ -302,16 +306,12 @@ class MAT1(IsotropicMaterial):
         return E
 
     @classmethod
-    def set_E_G_nu(cls, card):
+    def set_E_G_nu(cls, E, G, nu):
         r"""
         \f[ G = \frac{E}{2 (1+\nu)} \f]
         """
-        E = double_or_blank(card, 2, 'E')
-        G = double_or_blank(card, 3, 'G')
-        nu = double_or_blank(card, 4, 'nu')
-
         if G is None and E is None:  # no E,G
-            raise RuntimeError('G=%s E=%s cannot both be None' % (G, E))
+            raise ValueError('G=%s E=%s cannot both be None' % (G, E))
         elif E is not None and G is not None and nu is not None:
             pass
         elif E is not None and nu is not None:
@@ -328,7 +328,7 @@ class MAT1(IsotropicMaterial):
             nu = 0.0
         else:
             msg = 'G=%s E=%s nu=%s' % (G, E, nu)
-            raise RuntimeError(msg)
+            raise ValueError(msg)
         return E, G, nu
 
     def _write_calculix(self, element_set='ELSetDummyMat'):

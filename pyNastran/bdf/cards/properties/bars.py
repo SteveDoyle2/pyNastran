@@ -637,12 +637,13 @@ class PBAR(LineProperty):
         #: default=infinite; assume 1e8
         self.k2 = k2
 
+    def validate(self):
         if self.i1 < 0.:
-            raise RuntimeError('I1=%r must be greater than or equal to 0.0' % self.i1)
+            raise ValueError('I1=%r must be greater than or equal to 0.0' % self.i1)
         if self.i2 < 0.:
-            raise RuntimeError('I2=%r must be greater than or equal to 0.0' % self.i2)
+            raise ValueError('I2=%r must be greater than or equal to 0.0' % self.i2)
         if self.j < 0.:
-            raise RuntimeError('J=%r must be greater than or equal to 0.0' % self.j)
+            raise ValueError('J=%r must be greater than or equal to 0.0' % self.j)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -884,7 +885,22 @@ class PBARL(LineProperty):
         self.dim = dim
         #: non-structural mass
         self.nsm = nsm
-        self._validate_input()
+
+    def validate(self):
+        if self.Type not in self.valid_types:
+            msg = ('Invalid PBARL Type, Type=%s '
+                   'valid_types=%s' % (self.Type, self.valid_types.keys()))
+            raise ValueError(msg)
+
+        if not isinstance(self.dim, list):
+            msg = 'PBARL pid=%s; dim must be a list; type=%r' % (self.pid, type(self.dim))
+            raise TypeError(msg)
+        if len(self.dim) != self.valid_types[self.Type]:
+            msg = 'dim=%s len(dim)=%s Type=%s len(dimType)=%s' % (
+                self.dim, len(self.dim), self.Type,
+                self.valid_types[self.Type])
+            raise RuntimeError(msg)
+        assert None not in self.dim
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -925,20 +941,6 @@ class PBARL(LineProperty):
         #print("*PBARL = ",data)
         #raise NotImplementedError('not finished...')
         return PBARL(pid, mid, group, Type, dim, nsm, comment=comment)
-
-    def _validate_input(self):
-        if self.Type not in self.valid_types:
-            msg = ('Invalid PBARL Type, Type=%s '
-                   'valid_types=%s' % (self.Type, self.valid_types.keys()))
-            raise RuntimeError(msg)
-
-        if len(self.dim) != self.valid_types[self.Type]:
-            msg = 'dim=%s len(dim)=%s Type=%s len(dimType)=%s' % (
-                self.dim, len(self.dim), self.Type,
-                self.valid_types[self.Type])
-            raise RuntimeError(msg)
-
-        assert None not in self.dim
 
     def cross_reference(self, model):
         """

@@ -83,11 +83,11 @@ class SimpleLogger(object):
                 sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
             else:
                 sys.stdout.write((name + msg) if typ else msg)
-            # try:
-                # sys.stdout.write((name + msg).encode(self.encoding))# if typ else msg.encode(self.encoding))
-            # except TypeError:
-                # print(msg, type(msg))
-                # raise
+            #try:
+                #sys.stdout.write((name + msg).encode(self.encoding))# if typ else msg.encode(self.encoding))
+            #except TypeError:
+                #print(msg, type(msg))
+                #raise
         else:
             # write to the screen
             #
@@ -130,15 +130,6 @@ class SimpleLogger(object):
         self.encoding = encoding
         assert isinstance(encoding, string_types), type(encoding)
 
-    def properties(self):
-        """Return tuple: line number and filename"""
-        # jump to get out of the logger code
-        frame = sys._getframe(3)
-        active_file = os.path.basename(frame.f_globals['__file__'])
-        if active_file.endswith('.pyc'):
-            return frame.f_lineno, active_file[:-1]
-        return frame.f_lineno, active_file
-
     def debug(self, msg):
         """
         Log DEBUG message
@@ -165,7 +156,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
-        n, fn = self.properties()
+        n, fn = properties()
         self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
 
     def simple_msg(self, msg, typ=None):
@@ -244,6 +235,14 @@ class SimpleLogger(object):
         assert msg is not None, msg
         self.msg_typ('CRITICAL', msg)
 
+def properties():
+    """Return tuple: line number and filename"""
+    # jump to get out of the logger code
+    frame = sys._getframe(3)
+    active_file = os.path.basename(frame.f_globals['__file__'])
+    if active_file.endswith('.pyc'):
+        return frame.f_lineno, active_file[:-1]
+    return frame.f_lineno, active_file
 
 def get_logger(log=None, level='debug', encoding='utf-8'):
     """
