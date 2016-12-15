@@ -108,10 +108,7 @@ class MainWindow(GuiCommon2, Cart3dIO):
 
     def about_dialog(self):
         """ Display about dialog """
-        #if fmode == 1:  # PyQt
         copyright = pyNastran.__pyqt_copyright__
-        #else:
-            #copyright = pyNastran.__copyright__
 
         about = [
             'pyCart3d Qt GUI',

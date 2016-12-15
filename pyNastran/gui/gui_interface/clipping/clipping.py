@@ -18,10 +18,10 @@ elif qt_version == 'pyside':
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
-
+from pyNastran.gui.gui_interface.common import PyDialog
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
-class ClippingPropertiesWindow(QDialog):
+class ClippingPropertiesWindow(PyDialog):
     """
     +---------------------+
     | Clipping Properties |
@@ -34,15 +34,14 @@ class ClippingPropertiesWindow(QDialog):
     """
 
     def __init__(self, data, win_parent=None):
-        self.win_parent = win_parent
         #Init the base class
+        PyDialog.__init__(self, data, win_parent)
+
         self._updated_clipping = False
 
         self._default_min = data['min']
         self._default_max = data['max']
-        self.out_data = data
 
-        QDialog.__init__(self, win_parent)
         #self.setupUi(self)
         self.setWindowTitle('Clipping Properties')
         self.create_widgets()
@@ -106,14 +105,6 @@ class ClippingPropertiesWindow(QDialog):
             self.ok_button.clicked.connect(self.on_ok)
             self.cancel_button.clicked.connect(self.on_cancel)
             # closeEvent
-
-    def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Escape:
-            self.close()
-
-    def closeEvent(self, event):
-        self.out_data['close'] = True
-        event.accept()
 
     def on_default_min(self):
         self.min_edit.setText(str(self._default_min))

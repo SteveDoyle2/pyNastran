@@ -1,18 +1,22 @@
-
+from __future__ import print_function
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
+    from PyQt4 import QtCore
     from PyQt4.QtGui import QDialog
 elif qt_version == 5:
+    from PyQt5 import QtCore
     from PyQt5.QtWidgets import QDialog
 elif qt_version == 'pyside':
+    from PySide import QtCore
     from PySide.QtGui import QDialog
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
 
 class PyDialog(QDialog):
+    """common class for QDialog so value checking & escape/close code is not repeated"""
 
     def __init__(self, data, win_parent):
         QDialog.__init__(self, win_parent)
@@ -26,7 +30,37 @@ class PyDialog(QDialog):
         if event.key() == QtCore.Qt.Key_Escape:
             self.on_cancel()
 
-    def check_float(self, cell):
+    @staticmethod
+    def check_int(cell):
+        text = cell.text()
+        try:
+            value = int(text)
+            cell.setStyleSheet("QLineEdit{background: white;}")
+            return value, True
+        except ValueError:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
+    @staticmethod
+    def check_positive_int_or_blank(cell):
+        text = str(cell.text()).strip()
+        if len(text) == 0:
+            return None, True
+        try:
+            value = int(text)
+        except ValueError:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
+        if value < 1:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return value, True
+
+    @staticmethod
+    def check_float(cell):
         text = cell.text()
         try:
             value = float(text)
@@ -36,24 +70,6 @@ class PyDialog(QDialog):
         except ValueError:
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
-
-    @staticmethod
-    def check_name(cell):
-        text = str(cell.text()).strip()
-        if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-        if self._default_name != text:
-            if self._default_name in self.out_data:
-                cell.setStyleSheet("QLineEdit{background: white;}")
-                return text, True
-            else:
-                cell.setStyleSheet("QLineEdit{background: red;}")
-                return None, False
 
     @staticmethod
     def check_format(cell):
@@ -90,7 +106,6 @@ class PyDialog(QDialog):
         else:
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
-
 
     @staticmethod
     def check_patran_syntax(cell, pound=None):

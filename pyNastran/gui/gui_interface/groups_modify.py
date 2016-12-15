@@ -376,6 +376,24 @@ class GroupsModify(PyDialog):
         group = self.out_data[self.active_key]
         group.element_str = element_str
 
+    @staticmethod
+    def check_name(cell):
+        text = str(cell.text()).strip()
+        if len(text):
+            cell.setStyleSheet("QLineEdit{background: white;}")
+            return text, True
+        else:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
+        if self._default_name != text:
+            if self._default_name in self.out_data:
+                cell.setStyleSheet("QLineEdit{background: white;}")
+                return text, True
+            else:
+                cell.setStyleSheet("QLineEdit{background: red;}")
+                return None, False
+
     def on_validate(self):
         name, flag0 = self.check_name(self.name_edit)
         elements, flag1 = self.check_patran_syntax(self.elements_edit,

@@ -19,12 +19,13 @@ elif qt_version == 'pyside':
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
-
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.colormaps import colormap_keys
 
+from pyNastran.gui.gui_interface.common import PyDialog
 
-class LegendPropertiesWindow(QDialog):
+
+class LegendPropertiesWindow(PyDialog):
     """
     +-------------------+
     | Legend Properties |
@@ -50,7 +51,8 @@ class LegendPropertiesWindow(QDialog):
     """
 
     def __init__(self, data, win_parent=None):
-        self.win_parent = win_parent
+        PyDialog.__init__(self, data, win_parent)
+
         #Init the base class
         self._updated_legend = False
         self._icase = data['icase']
@@ -85,9 +87,7 @@ class LegendPropertiesWindow(QDialog):
         self._default_is_shown = data['is_shown']
 
         self._update_defaults_to_blank()
-        self.out_data = data
 
-        QDialog.__init__(self, win_parent)
         #self.setupUi(self)
         self.setWindowTitle('Legend Properties')
         self.create_widgets()
@@ -392,13 +392,6 @@ class LegendPropertiesWindow(QDialog):
             self.cancel_button.clicked.connect(self.on_cancel)
             # closeEvent???
 
-    def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Escape:
-            self.close()
-
-    def closeEvent(self, event):
-        self.out_data['close'] = True
-        event.accept()
 
     def on_default_name(self):
         name = str(self._default_name)
@@ -436,45 +429,6 @@ class LegendPropertiesWindow(QDialog):
         self.labelsize_edit.setText(str(self._default_labelsize))
         self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    @staticmethod
-    def check_float(cell):
-        text = cell.text()
-        try:
-            value = eval_float_from_string(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    @staticmethod
-    def check_int(cell):
-        text = cell.text()
-        try:
-            value = int(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    @staticmethod
-    def check_positive_int_or_blank(cell):
-        text = str(cell.text()).strip()
-        if len(text) == 0:
-            return None, True
-        try:
-            value = int(text)
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-        if value < 1:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-        cell.setStyleSheet("QLineEdit{background: white;}")
-        return value, True
 
     @staticmethod
     def check_name(cell):
@@ -496,42 +450,6 @@ class LegendPropertiesWindow(QDialog):
     def check_colormap(cell):
         text = str(cell.text()).strip()
         if text in colormap_keys:
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    @staticmethod
-    def check_format(cell):
-        text = str(cell.text())
-
-        is_valid = True
-        if len(text) < 2:
-            is_valid = False
-        elif 's' in text.lower():
-            is_valid = False
-        elif '%' not in text[0]:
-            is_valid = False
-        elif text[-1].lower() not in ['g', 'f', 'i', 'e']:
-            is_valid = False
-
-        try:
-            text % 1
-            text % .2
-            text % 1e3
-            text % -5.
-            text % -5
-        except ValueError:
-            is_valid = False
-
-        try:
-            text % 's'
-            is_valid = False
-        except TypeError:
-            pass
-
-        if is_valid:
             cell.setStyleSheet("QLineEdit{background: white;}")
             return text, True
         else:

@@ -22,8 +22,10 @@ elif qt_version == 'pyside':
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
+from pyNastran.gui.gui_interface.common import PyDialog
 
-class CameraWindow(QDialog):
+
+class CameraWindow(PyDialog):
     def __init__(self, data, win_parent=None):
         """
         +--------+
@@ -44,13 +46,11 @@ class CameraWindow(QDialog):
         |    Apply   OK  Cancel  |
         +--------+---------------+
         """
-        QDialog.__init__(self, win_parent)
-        self.win_parent = win_parent
+        PyDialog.__init__(self, data, win_parent)
         self.setWindowTitle('Camera Views')
         #self.setWindowIcon(view_icon)
 
         self._default_name = 'Camera'
-        self.out_data = data
         self.out_data['clicked_ok'] = False
 
         self.cameras = deepcopy(data['cameras'])
@@ -227,7 +227,6 @@ class CameraWindow(QDialog):
         self.out_data['clicked_ok'] = True
         self.out_data['cameras'] = self.cameras
         self.close()
-
 
     def on_ok(self):
         passed = self.on_apply()
