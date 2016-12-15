@@ -50,7 +50,8 @@ class Usm3dIO(object):
             #print("inn=%r nnew=%r" % (inn, nnew))
             flo_filename = model_name + '_%s.flo' % nnew
         else:
-            raise RuntimeError('The current file is must have the format of xxx_%%i.flo, not %r' % self.out_filename)
+            msg = 'The current file is must have the format of xxx_%%i.flo, not %r' % self.out_filename
+            raise RuntimeError(msg)
         #print("loading %r" % flo_filename)
         self.load_usm3d_results(flo_filename, dirname)
         self.out_filename = os.path.join(dirname, flo_filename)
@@ -86,7 +87,6 @@ class Usm3dIO(object):
         self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
 
     def load_usm3d_geometry(self, cogsg_filename, dirname, name='main', plot=True):
-        #print("load_usm3d_geometry...")
         skip_reading = self._remove_old_geometry(cogsg_filename)
         if skip_reading:
             return
@@ -146,6 +146,7 @@ class Usm3dIO(object):
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
+        self.eid_map = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
@@ -163,16 +164,13 @@ class Usm3dIO(object):
         nnodes = nodes.shape[0]
 
         nid = 0
-        #print("nnodes=%s" % nnodes)
         for i in range(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
 
-        #elements -= 1
         if ntris:
             for (n0, n1, n2) in tris:
                 elem = vtkTriangle()
-                #node_ids = elements[eid, :]
                 elem.GetPointIds().SetId(0, n0)
                 elem.GetPointIds().SetId(1, n1)
                 elem.GetPointIds().SetId(2, n2)
@@ -204,6 +202,7 @@ class Usm3dIO(object):
 
         cases = {}
         #cases = self.result_cases
+        self.element_ids = np.arange(1, len(tris) + 1, dtype='int32')
         form, cases = self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
         self._finish_results_io2(form, cases)
 
@@ -224,7 +223,6 @@ class Usm3dIO(object):
             2: ['Usm3d%s' % note, ''],
         }
 
-        #ID = 1
         form, cases = self._fill_usm3d_case(cases, bcs, mapbc, bcmap_to_bc_name, loads)
         return form, cases
 
@@ -235,15 +233,21 @@ class Usm3dIO(object):
         subcasemap_id = 1
         icase = 0
         itime = 0
+        eid_res = GuiResult(subcasemap_id, 'ElementID', 'ElementID', 'centroid', self.element_ids,
+                            nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                            data_format='%i', uname='GuiResult')
+
         region_res = GuiResult(subcasemap_id, 'Patch', 'Patch', 'centroid', bcs,  # patch_id
                                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                                data_format='%i', uname='GuiResult')
-        cases[icase] = (region_res, (itime, 'Patch'))
+        cases[icase] = (eid_res, (itime, 'ElementID'))
+        cases[icase + 1] = (region_res, (itime, 'Patch'))
         form = [
-            ('Patch', icase, []),
+            ('ElementID', icase, []),
+            ('Patch', icase + 1, []),
         ]
 
-        icase += 1
+        icase += 2
         if bcs is not None:
             patch_id = bcs
 
@@ -251,8 +255,6 @@ class Usm3dIO(object):
                 ('BC', icase, []),
                 ('Family', icase + 1, []),
             ]
-            #cases[(subcasemap_id, 'Region', 1, 'centroid', '%i')] = bcs
-
             bc_value = np.zeros(bcs.shape, dtype='int32')
             family = np.zeros(bcs.shape, dtype='int32')
             mapbc_print = defaultdict(list)

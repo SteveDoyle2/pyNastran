@@ -48,7 +48,7 @@ class Cart3dIO(object):
                     try:
                         delattr(self, param)
                     except AttributeError:
-                        print('param =', param, hasattr(self, param))
+                        self.log.warning('cannot delete %r; hasattr=%r' % (param, hasattr(self, param)))
 
             skip_reading = False
         #self.scalarBar.VisibilityOff()

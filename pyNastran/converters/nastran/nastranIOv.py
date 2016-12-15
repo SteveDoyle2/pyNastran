@@ -2115,7 +2115,7 @@ class NastranIO(object):
         _ctetra_faces = (
             (0, 1, 2), # (1, 2, 3),
             (0, 3, 1), # (1, 4, 2),
-            (0, 3, 2), # (1, 4, 3),
+            (0, 3, 2), # (1, 3, 4),
             (1, 3, 2), # (2, 4, 3),
         )
 
@@ -3133,9 +3133,12 @@ class NastranIO(object):
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-            eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
-                                    location='centroid', scalar=element_dim)
-            cases[icase] = (eid_dim_res, (0, 'ElementDim'))
+            is_element_dim = element_dim.max() != element_dim.min()
+            is_element_dim = True
+            if is_element_dim:
+                eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
+                                        location='centroid', scalar=element_dim)
+                cases[icase] = (eid_dim_res, (0, 'ElementDim'))
 
             is_shell = np.abs(normals).max() > 0.
             is_solid = np.abs(max_interior_angle).max() > 0.
@@ -3158,8 +3161,6 @@ class NastranIO(object):
                                           location='centroid', scalar=np.degrees(max_interior_angle))
                 dideal_theta_res = GuiResult(0, header='Delta Ideal Angle', title='Delta Ideal Angle',
                                              location='centroid', scalar=np.degrees(dideal_theta))
-                eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
-                                        location='centroid', scalar=element_dim)
 
                 skew = np.degrees(max_skew_angle)
                 skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
@@ -3169,7 +3170,8 @@ class NastranIO(object):
 
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
-                form_checks.append(('ElementDim', icase, []))
+                if is_element_dim:
+                    form_checks.append(('ElementDim', icase, []))
 
                 if self.make_nnodes_result:
                     nnodes_res = GuiResult(0, header='NNodes/Elem', title='NNodes/Elem',
@@ -3269,7 +3271,8 @@ class NastranIO(object):
                 #skew = 90. - np.degrees(max_skew_angle)
                 #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
                                      #location='centroid', scalar=skew)
-                form_checks.append(('ElementDim', icase, []))
+                if is_element_dim:
+                    form_checks.append(('ElementDim', icase, []))
                 form_checks.append(('Min Interior Angle', icase + 1, []))
                 form_checks.append(('Max Interior Angle', icase + 2, []))
                 #form_checks.append(('Max Skew Angle', icase + 2, []))

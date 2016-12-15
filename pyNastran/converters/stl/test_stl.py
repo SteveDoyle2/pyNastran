@@ -10,6 +10,7 @@ np.seterr(all='raise')
 import pyNastran
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran, stl_to_nastran_filename
+from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'converters', 'stl')

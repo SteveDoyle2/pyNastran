@@ -126,17 +126,26 @@ class Usm3d(object):
 
         Returns
         -------
-        nodes : ???
-           ???
+        nodes : (nnodes, 3) float ndarray
+           the xyz coordinates
         tris_tets : ???
            ???
-        tris :
-           ???
-        bcs : ???
-           ???
-        mapbc : ???
-           ???
-        loads : ???
+        tris : (ntri, 3) int ndarray
+           0-based node indices
+        bcs : (ntris, ) int ndarray
+           1-based patch/"property" IDs
+        mapbc : dict[patch_id] : map_line
+           patch_id : int
+           map_line : List[bc, family, surf, surf_ids]
+               bc : int
+                   boundary condition number
+               family : int
+                   family number
+               surf : int
+                   surface number
+               surf_ids : str
+                   ???
+        loads : dict[]
             ???
         flo_filename : ???
            ???
@@ -447,8 +456,8 @@ class Usm3d(object):
          - ipltqn = 1  (unformatted)
          - ipltqn = 2  (formatted) - default
 
-         Parameters
-         ----------
+        Parameters
+        ----------
         flo_filename : str
             the name of the file to read
         n : int; default=None
@@ -468,6 +477,16 @@ class Usm3d(object):
 
         Also, stupid Nastran-esque float formatting is sometimes used,
         so 5.0-100 exists, which is 5.0E-100.  We just assume it's 0.
+
+        Returns
+        -------
+        node_id : (nnodes, ) int ndarray
+            the node ids for the selected loads
+        loads : dict[result_name] : data
+            result_name : str
+                the name of the result
+            data : (nnodes, ) float ndarray
+                the data corresponding to the result_name
         """
         result_names = ['Mach', 'U', 'V', 'W', 'T', 'rho', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
 

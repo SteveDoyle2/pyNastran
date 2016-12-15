@@ -15,7 +15,7 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None):
     ugrid_filename : varies
         str : the input UGRID filename
         UGRID : the UGRID object
-    bdf_filename : str
+    tecplot_filename : str
         the output Tecplot filename
     log : logger; default=None
         a logger object
@@ -36,7 +36,20 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None):
     #tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
     #tecplot.results = array([], dtype='float32')
 
-def ugrid_to_tecplot(ugrid_model):
+def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, log=None, debug=debug):
+    """
+    Converts a UGRID to a Tecplot ASCII file.
+
+    Parameters
+    ----------
+    ugrid_filename : varies
+        str : the input UGRID filename
+        UGRID : the UGRID object
+    tecplot_filename : str
+        the output Tecplot filename
+    log : logger; default=None
+        a logger object
+    """
     nnodes = len(ugrid_model.nodes)
     nodes = zeros((nnodes, 3), dtype='float64')
     ugrid_model.check_hanging_nodes()
@@ -46,7 +59,7 @@ def ugrid_to_tecplot(ugrid_model):
     non_tets = len(ugrid_model.penta5s) + len(ugrid_model.penta6s) + len(ugrid_model.hexas)
     assert ntets + non_tets > 0, 'nsolids=%s' % (ntets + non_tets)
 
-    tecplot = Tecplot()
+    tecplot = Tecplot(log=log, debug=debug)
     tecplot.xyz = ugrid_model.nodes
 
     if ntets and non_tets == 0:
@@ -73,12 +86,18 @@ def ugrid_to_tecplot(ugrid_model):
         tecplot.hexa_elements = elements
     else:
         raise RuntimeError()
+
+    if tecplot_filename is not None:
+        tecplot.write_tecplot(tecplot_filename)
     return tecplot
 
 
-def main():
+def main(): # pragma: no cover
     import sys
-    assert len(sys.argv) == 3, 'number of arguments must be 2; ugrid_filename, tecplot_filename; nargs=%s; args=%s' % (len(sys.argv[1:]), sys.argv[1:])
+    if len(sys.argv) != 3:
+        msg = 'number of arguments must be 2; ugrid_filename, tecplot_filename; nargs=%s; args=%s' % (
+            len(sys.argv[1:]), sys.argv[1:])
+        raise RuntimeError(msg)
     ugrid_filename = sys.argv[1]
     tecplot_filename = sys.argv[2]
     ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename)
