@@ -62,14 +62,16 @@ from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
 from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
 from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
 from pyNastran.gui.gui_interface.modify_label_properties.interface import on_set_labelsize_color_menu
+from pyNastran.gui.gui_interface.groups_modify import GroupsModify, Group
 
-from pyNastran.gui.styles.zoom_style import ZoomStyle
-from pyNastran.gui.styles.probe_style import ProbeResultStyle
 
 from pyNastran.gui.menus.results_sidebar import Sidebar
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
-from pyNastran.gui.menus.groups_modify import GroupsModify, Group
+
+from pyNastran.gui.styles.zoom_style import ZoomStyle
+from pyNastran.gui.styles.probe_style import ProbeResultStyle
+
 
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
