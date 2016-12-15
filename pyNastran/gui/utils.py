@@ -311,6 +311,23 @@ def load_user_geom(fname, encoding='latin1'):
     bars = np.array(bars, dtype='int32')
     return grid_ids, xyz, bars, tris, quads
 
+import re
+
+def natural_sort(l):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    return sorted(l, key = alphanum_key)
+
+def num_sort():
+    """
+    in_values  = ['anti_main', 'main', 'Family 4', 'Family 3', 'Family 1', 'Patch 119', 'Patch 118', 'Patch 19', 'Patch 18']
+    out_values = ['anti_main', 'main', 'Family 1', 'Family 3', 'Family 4', 'Patch 118', 'Patch 119', 'Patch 18', 'Patch 19']
+
+    'Patch 19 cat 20' not handled
+    """
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+
 if __name__ == '__main__':  # pragma: no cover
     check_for_newer_version()
 

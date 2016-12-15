@@ -435,6 +435,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
                 ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.modify_group),
 
+                ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
                 #('create_list', 'Create Lists through Booleans', '', None, 'Create List', self.create_list),
 
@@ -554,10 +555,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             'back_color', 'text_color', '',
             'label_modify', 'label_clear', 'label_reset', 'picker_modify', '',
             'legend', 'geo_properties',
-            ['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2', 'anti_alias_4', 'anti_alias_8',],
+            ['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
+             'anti_alias_4', 'anti_alias_8',],
         ]
         if self.is_groups:
-            menu_view += ['modify_groups', 'create_groups_by_property_id']
+            menu_view += ['modify_groups', 'create_groups_by_property_id',
+                          'create_groups_by_visible_result']
         menu_view += [
             '', 'clipping', #'axis',
             'edges', 'edges_black',]
@@ -1944,6 +1947,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # update for indices
         i = np.searchsorted(all_eids, eids)
         self.show_ids_mask(i)
+
+    def create_groups_by_visible_result(self):
+        #self.scalar_bar.title
+
+        case_key = self.case_keys[self.icase] # int for object
+        result_name = self.result_name
+        obj, (i, name) = self.result_cases[case_key]
+        default_title = obj.get_default_title(i, name)
+
+        word = default_title
+        prefix = default_title
+        self._create_groups_by_name(word, prefix)
+        self.log_command('create_groups_by_visible_result()')
 
     def create_groups_by_property_id(self):
         self._create_groups_by_name('PropertyID', 'property')
@@ -3844,6 +3860,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.res_widget.update_methods(data2)
 
         if self.is_groups:
+            if self.element_ids is None:
+                raise RuntimeError('implement self.element_ids for this format')
             #eids = np.arange(172)
             #eids = []
             #self.hide_elements_mask(eids)
