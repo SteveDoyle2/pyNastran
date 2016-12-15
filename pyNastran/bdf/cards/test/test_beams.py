@@ -1,13 +1,13 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, StringIO
+import os
 import unittest
 from itertools import count
 
+from six.moves import zip
 from numpy import array, allclose
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, CBEAM, GRID
-
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 bdf = BDF(debug=False)
@@ -275,7 +275,8 @@ class TestBeams(unittest.TestCase):
 
             lines_actual = msg.rstrip().split('\n')
             msg_a = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
-            msg_a += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+            msg_a += 'nlines_actual=%i nlines_expected=%i' % (
+                len(lines_actual), len(lines_expected))
             self.assertEqual(len(lines_actual), len(lines_expected), msg)
             for actual, expected in zip(lines_actual, lines_expected):
                 actual = str(actual)
@@ -491,7 +492,7 @@ class TestBeams(unittest.TestCase):
         #assert allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
         #assert allclose(mass, 10.25), mass
 
-        with open('pbeam12.bdf', 'w') as f:
+        with open('pbeam12.bdf', 'w') as bdf_file:
             case_control_lines = (
                 'SOL 101\n'
                 'CEND\n'
@@ -504,12 +505,12 @@ class TestBeams(unittest.TestCase):
                 'PARAM,POST,-1\n'
                 'PARAM   POSTEXT YES\n'
             )
-            f.write(case_control_lines)
-            model.write_bdf(f, enddata=True)
+            bdf_file.write(case_control_lines)
+            model.write_bdf(bdf_file, enddata=True)
 
         model2 = BDF(debug=False)
         model2.read_bdf('pbeam12.bdf')
-        import os
+
         if not os.path.exists('pbeam12.op2') and 0:
             os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
         os.remove('pbeam12.bdf')
