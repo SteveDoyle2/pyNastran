@@ -40,8 +40,6 @@ class BEdge_IO(object):
         print("nElements = %s" % self.nElements)
         assert nelements > 0, nelements
 
-        orange = (219/255., 168/255., 13/255.)
-        red = (1., 0., 0.)
         black = (0., 0., 0.)
         self.create_alternate_vtk_grid(
             'nodes', color=black, line_width=5, opacity=1., point_size=3,
@@ -67,10 +65,7 @@ class BEdge_IO(object):
             elem.GetPointIds().SetId(0, inode)
             self.alt_grids['nodes'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        #tris = model.tris - 1
-        #quads = model.quads - 1
         bars = model.bars
-
         for eid, element in enumerate(bars):
             elem = vtk.vtkLine()
             n1, n2 = element
@@ -81,7 +76,6 @@ class BEdge_IO(object):
                 print("nodeIDs =", element)
                 print(str(element))
                 continue
-
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
         self.nElements = nelements
@@ -109,10 +103,10 @@ class BEdge_IO(object):
     def clear_bedge(self):
         pass
 
-    def _load_bedge_results(self, openfoam_filename, dirname):
-        raise NotImplementedError()
-
     def _fill_bedge_case(self, bedge_filename, cases, ID, nnodes, nelements, model):
+        """
+        creates the data for the sidebar 'form' and the result 'cases'
+        """
         base, ext = os.path.splitext(bedge_filename)
         assert ext == '.bedge', bedge_filename
 

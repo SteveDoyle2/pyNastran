@@ -15,7 +15,6 @@ from pyNastran.converters.aflr2.bedge_io import BEdge_IO
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'aflr2')
 
-import unittest
 
 class BEdge_GUI(BEdge_IO, GUIMethods):
     def __init__(self):
@@ -24,7 +23,6 @@ class BEdge_GUI(BEdge_IO, GUIMethods):
 
 
 class TestBEdgeGUI(unittest.TestCase):
-
     def test_bedge_geometry(self):
         """tests the bedge gui"""
         bedge_filename = os.path.join(model_path, 'm3.bedge')

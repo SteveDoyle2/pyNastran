@@ -27,8 +27,6 @@ class TestBEdge(unittest.TestCase):
         os.remove(bdf_filename)
 
 
-
-
 def main():  # pragma: no cover
     import time
     t0 = time.time()
