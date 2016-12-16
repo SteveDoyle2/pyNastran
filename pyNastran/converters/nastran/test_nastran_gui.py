@@ -130,11 +130,11 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_solid_shell_bar_01(self):
         bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
-
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename, None)
 
     def test_femap_rougv1_01(self):
+        """tests the exhaust manifold and it's funny eigenvectors"""
         dirname = os.path.join(model_path, 'femap_exhaust')
         bdf_filename = os.path.join(dirname, 'modal_example.bdf')
         op2_filename = os.path.join(dirname, 'modal_example.op2')
@@ -143,7 +143,14 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(op2_filename, None)
         test.load_nastran_results(op2_filename, None)
 
-def test_bottle():
+    def test_aero(self):
+        """tests the bah_plane"""
+        bdf_filename = os.path.join(model_path, 'aero', 'bah_plane', 'bah_plane.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+
+
+def test_bottle():  # pragma: no cover
     """
     Tests Nastran GUI loading
     """
