@@ -1034,7 +1034,6 @@ class NastranIO(object):
             else:
                 self.log_info("skipping %s" % element.type)
         self.alt_grids['conm2'].SetPoints(points)
-        #self.alt_grids['conm2'].Set
 
     def set_spc_grid(self, dim_max, model, nid_to_pid_map):
         #case_control = model.case_control_deck

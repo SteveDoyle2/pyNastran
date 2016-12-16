@@ -1,30 +1,50 @@
+from __future__ import print_function
 import os
 import sys
-import subprocess
 from copy import deepcopy
-from numpy import zeros, array, vstack, cross, arcsin, degrees, hstack, where, arctan2, arccos, sign, isnan, pi, allclose, radians, unique
-from numpy.linalg import norm
+from codecs import open
 
 from six.moves import range
+import numpy as np
+from numpy import (zeros, array, vstack, hstack, where,
+                   arctan2, arccos, sign, isnan, radians, unique)
+from numpy.linalg import norm
 
+from pyNastran.utils.log import get_logger2
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.field_writer_8 import print_card_8
 
+def read_bedge(bedge_filename, beta_reverse=179.7, log=None, debug=False):
+    """reads a *.bedge file"""
+    model = AFLR2(log=log, debug=debug)
+    model.read_bedge(bedge_filename, beta_reverse=beta_reverse)
+    return model
 
 class AFLR2(object):
+    """defines methods for reading interfacing with AFLR2"""
     def __init__(self, log=None, debug=False):
-        self.log = log
+        self.log = get_logger2(log=log, debug=debug)
         self.debug = debug
 
+        self.nodes = None
+        self.bars = None
+        self.curves = None
+        self.subcurves = None
+        self.grid_bc = None
+        self.grid_bcs = None
+        self.turn_angle = None
+
     def read_bedge(self, bedge_filename, beta_reverse=179.7):
+        """reads a *.bedge file"""
         base, ext = os.path.splitext(bedge_filename)
         assert ext == '.bedge', print_bad_path(bedge_filename)
-        f = open(bedge_filename, 'r')
-        data = f.read().split()
+
+        with open(bedge_filename, 'r') as bedge_file:
+            data = bedge_file.read().split()
 
         i = 0
         ncurves = int(data[i])
-        print('ncurves = %s' % ncurves)
+        self.log.debug('ncurves = %s' % ncurves)
         i += 1
 
         inode_curve_min = [None] * ncurves
@@ -37,11 +57,11 @@ class AFLR2(object):
             i += 1
         del icurve
 
-        print('nsubcurves_per_curve = %s' % nsubcurves_per_curve)
+        self.log.debug('nsubcurves_per_curve = %s' % nsubcurves_per_curve)
         nsubcurves = sum(nsubcurves_per_curve)
-        print('nsubcurves = %s' % nsubcurves)
+        self.log.debug('nsubcurves = %s' % nsubcurves)
 
-        print('data[%i] = %s; nnodes[0]\n' % (i, data[i]))
+        self.log.debug('data[%i] = %s; nnodes[0]\n' % (i, data[i]))
 
         nnodes_pack = [None] * nsubcurves
         for isubcurve in range(nsubcurves):
@@ -51,8 +71,8 @@ class AFLR2(object):
         del isubcurve
 
         nnodes = sum(nnodes_pack)
-        print('nnodes_pack = %s' % nnodes_pack)
-        print('nnodes = %s' % nnodes)
+        self.log.debug('nnodes_pack = %s' % nnodes_pack)
+        self.log.debug('nnodes = %s' % nnodes)
 
 
         inode = 0
@@ -71,22 +91,21 @@ class AFLR2(object):
             inode_curve_max[icurve] = inode # max_node_id
         inode_curve_min.append(nnodes)
         inode_curve_max.append(nnodes)
-        print("isubcurve_to_curve_map = %s" % isubcurve_to_curve_map)
-        #asdf
+        self.log.debug("isubcurve_to_curve_map = %s" % isubcurve_to_curve_map)
         del icurve, isubcurvei
 
         # grid BC
-        print('data[%i]=%s; grid_bc[0]\n' % (i, data[i]))
+        self.log.debug('data[%i]=%s; grid_bc[0]\n' % (i, data[i]))
         grid_bc = [None] * nsubcurves
         for isubcurve in range(nsubcurves):
             grid_bci = int(data[i])
             grid_bc[isubcurve] = grid_bci
             i += 1
         del isubcurve
-        print('grid_bc = %s' % grid_bc)
+        self.log.debug('grid_bc = %s' % grid_bc)
         #if grid_bc[0] in [2]:
             #raise RuntimeError('fname=%s' % bedge_filename)
-        print('data[%i] = %s; nid.x\n' % (i, data[i]))
+        self.log.debug('data[%i] = %s; nid.x\n' % (i, data[i]))
         #=============================================================
 
         nodes = zeros((nnodes, 3), dtype='float64')
@@ -100,16 +119,17 @@ class AFLR2(object):
             except IndexError:
                 nactual = len(data)
                 nexpected = istart + nnodes * 2
-                msg = 'error with data; inode=%s; len(data)=%s len(data_expected)=%s; nmissing=%s' % (
-                    inode, nactual, nexpected, nexpected - nactual)
+                msg = ('error with data; inode=%s; len(data)=%s '
+                       'len(data_expected)=%s; nmissing=%s' % (
+                           inode, nactual, nexpected, nexpected - nactual))
                 raise IndexError(msg)
             #print('node[%i] = %s' % (inode, node))
             nodes[inode, :] = node
             #assert nodes[inode, 0] == 21., node
             i += 2
-        print('node[0] = %s' % nodes[0, :])
-        print('node[%i] = %s' % (inode, node))
-        #print('nodes = %s' % nodes[:, :2])
+        self.log.debug('node[0] = %s' % nodes[0, :])
+        self.log.debug('node[%i] = %s' % (inode, node))
+        #self.log.debug('nodes = %s' % nodes[:, :2])
         del inode
 
 
@@ -117,7 +137,7 @@ class AFLR2(object):
         if len(data) != i:
             initial_normal_spacingi = data[i]
             if '*' in initial_normal_spacingi:
-                print('initial_normal_spacingi = %s' % initial_normal_spacingi)
+                self.log.debug('initial_normal_spacingi = %s' % initial_normal_spacingi)
                 nnodesi, initial_normal_spacingi = initial_normal_spacingi.split('*')
                 nnodesi = int(nnodesi)
                 initial_normal_spacing[:nnodesi] = initial_normal_spacingi
@@ -138,13 +158,13 @@ class AFLR2(object):
         curves = zeros(nelements, dtype='int32')
         subcurves = zeros(nelements, dtype='int32')
         grid_bcs = zeros(nelements, dtype='int32')
-        print('***ncurves = %s' % ncurves)
+        self.log.debug('***ncurves = %s' % ncurves)
 
         for isubcurve in range(nsubcurves):
             nnodesi = nnodes_pack[isubcurve]
             icurve = isubcurve_to_curve_map[isubcurve]
             bc = grid_bc[isubcurve]
-            print('isubcurve=%s icurve=%s grid_bc=%s' % (isubcurve, icurve, bc))
+            self.log.debug('isubcurve=%s icurve=%s grid_bc=%s' % (isubcurve, icurve, bc))
 
             curves[ielement0:ielement0+nnodesi] = icurve
             subcurves[ielement0:ielement0+nnodesi] = isubcurve
@@ -165,7 +185,8 @@ class AFLR2(object):
             inode_last = inodes[-1]
 
             icurve = isubcurve_to_curve_map[isubcurve]
-            #print('isubcurve=%s icurve=%s inode_last=%s nnodes=%s' % (isubcurve, icurve, inode_last, nnodes))
+            #print('isubcurve=%s icurve=%s inode_last=%s nnodes=%s' % (
+                #isubcurve, icurve, inode_last, nnodes))
             #print('inode_curve_max = %s' % (inode_curve_max))
             #print('inode_curve_min = %s' % (inode_curve_min))
             if inode_last + 1 == nnodes:
@@ -208,21 +229,21 @@ class AFLR2(object):
                 #print "n1b = ", n1b, len(n1b)
                 #print "n2b = ", n2b, len(n2b)
 
-                if 0:
-                    v1 = nodes[n2, :] - nodes[n1, :]
-                    v2 = nodes[n3, :] - nodes[n1, :]
+                #if 0:
+                    #v1 = nodes[n2, :] - nodes[n1, :]
+                    #v2 = nodes[n3, :] - nodes[n1, :]
 
-                    L1 = norm(v1, axis=1)
-                    L2 = norm(v2, axis=1)
+                    #L1 = norm(v1, axis=1)
+                    #L2 = norm(v2, axis=1)
 
-                    c = cross(v1, v2)
-                    cn = norm(c, axis=1)
+                    #c = cross(v1, v2)
+                    #cn = norm(c, axis=1)
 
-                    L1L2 = (L1 * L2)
-                    izero = where(L1L2 == 0.0)[0]
-                    L1L2[izero] = 1e-10
-                    sin_theta = cn / L1L2
-                    theta = degrees(arcsin(sin_theta))
+                    #L1L2 = (L1 * L2)
+                    #izero = where(L1L2 == 0.0)[0]
+                    #L1L2[izero] = 1e-10
+                    #sin_theta = cn / L1L2
+                    #theta = degrees(arcsin(sin_theta))
 
                 # convention from http://en.wikipedia.org/wiki/Triangle
                 c = norm(nodes[n2, :2] - nodes[n1, :2], axis=1) # c
@@ -230,7 +251,8 @@ class AFLR2(object):
                 b = norm(nodes[n3, :2] - nodes[n1, :2], axis=1) # b
                 assert len(a) == len(n1), 'wrong size...check axis'
 
-                beta = arccos((a**2 + c**2 - b**2)/(2 * a * c))
+                cos_inner = (a**2 + c**2 - b**2)/(2 * a * c)
+                beta = arccos(np.clip(cos_inner, -1., 1.))
                 inan = where(isnan(beta))[0]
                 beta[inan] = 0.0
                 i180 = where(abs(beta) > radians(beta_reverse))[0]
@@ -239,12 +261,12 @@ class AFLR2(object):
                 #print('beta_nonzero = %s' % beta[where(beta != 0)[0]])
                 #print('beta_nonzero deg = %s' % degrees(beta[where(beta != 0)[0]]))
 
-                if 0:
-                    for inani in inan:
-                        nids_failed = [n1[inani], n2[inani], n3[inani]]
-                        print('nodes = %s' % nids_failed)
-                        for nid in nids_failed:
-                            print('  nodes[%3i] = %s' % (nid, nodes[nid, :]))
+                #if 0:
+                    #for inani in inan:
+                        #nids_failed = [n1[inani], n2[inani], n3[inani]]
+                        #print('nodes = %s' % nids_failed)
+                        #for nid in nids_failed:
+                            #print('  nodes[%3i] = %s' % (nid, nodes[nid, :]))
 
                 centroid = (nodes[n1, :] + nodes[n2, :] + nodes[n3, :]) / 3.
                 xcentroid = centroid[:, 0]
@@ -253,16 +275,17 @@ class AFLR2(object):
                 min_xy = nodes[:, :2].min(axis=0)
                 delta_xy = 2.0 * abs(min_xy)
                 dx, dy = delta_xy
-                print('min_xy = %s' % min_xy)
+                self.log.debug('min_xy = %s' % min_xy)
                 assert len(min_xy) == 2, min_xy
 
-                theta1G = arctan2(nodes[n1, 1] + dy, nodes[n1, 0] + dx)  # y/x for node 1; find theta
-                theta2G = arctan2(nodes[n2, 1] + dy, nodes[n2, 0] + dx)  # y/x for node 2; find theta
-                theta3G = arctan2(nodes[n3, 1] + dy, nodes[n3, 0] + dx)  # y/x for node 3; find theta
-                theta12G = theta2G - theta1G
-                theta23G = theta3G - theta2G
+                # y/x for nodes 1, 2, and 3; find theta
+                theta1g = arctan2(nodes[n1, 1] + dy, nodes[n1, 0] + dx)
+                theta2g = arctan2(nodes[n2, 1] + dy, nodes[n2, 0] + dx)
+                theta3g = arctan2(nodes[n3, 1] + dy, nodes[n3, 0] + dx)
+                theta12g = theta2g - theta1g
+                theta23g = theta3g - theta2g
 
-                mag_theta = sign(theta12G - theta23G)
+                mag_theta = sign(theta12g - theta23g)
                 izero = where(beta == 0.)[0]
                 mag_theta[izero] = 0.
                 inotzero = where(beta != 0)
@@ -277,9 +300,9 @@ class AFLR2(object):
 
             #print('inodes[%i]=%s'  % (icurve, inodes))
             #print('bars[%i]=\n%s\n'  % (isubcurve, bars))
-            for bar in bars:
-                n1, n2 = bar
-                #print bar, nodes[n1, :], nodes[n2, :]
+            for bari in bars:
+                n1, n2 = bari
+                #print(bari, nodes[n1, :], nodes[n2, :])
             #print('nodes[%i]=\n%s\n'  % (isubcurve, nodes[n1a, :2]))
             inode0 += nnodesi
             #break
@@ -297,49 +320,48 @@ class AFLR2(object):
         self.subcurves = subcurves
         self.grid_bc = grid_bc
         self.grid_bcs = grid_bcs
-        print(unique(grid_bcs))
+        self.log.debug('grid_bcs = %s' % unique(grid_bcs))
         self.turn_angle = turn_angle
         sys.stdout.flush()
 
     def write_nastran(self, bdf_filename):
-        f = open(bdf_filename, 'wb')
-        f.write('CEND\n')
-        f.write('BEGIN BULK\n')
-        nid = 1
-        for x, y, z in self.nodes:
-            card = ['GRID', nid, None, x, y, z]
-            f.write(print_card_8(card))
-            nid += 1
-        f.write('ENDDATA\n')
-        f.close()
+        """converts the *.bedge to a nastran *.bdf"""
+        with open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write('CEND\n')
+            bdf_file.write('BEGIN BULK\n')
+            nid = 1
+            for x, y, z in self.nodes:
+                card = ['GRID', nid, None, x, y, z]
+                bdf_file.write(print_card_8(card))
+                nid += 1
+            bdf_file.write('ENDDATA\n')
 
     def write_fixed_points(self, fixed_points_filename):
-        f = open(fixed_points_filename, 'wb')
-        for i, node in enumerate(self.nodes):
-            x, y, z  = node
-            #print('bars = \n%s' % self.bars)
-            ix, iy = where(i == self.bars)
-            #print('ix[%s]=%s iy[%s]=%s' % (i, ix, i, iy))
-            inodes_close = self.bars[ix, _flip_value(iy)]
-            nodes_close = self.nodes[inodes_close, :]
-            #print('p=(%s,%s); close=\n%s' % (x, y, str(nodes_close)))
-            #print('p=(%s,%s); iclose=\n%s' % (x, y, str(inodes_close)))
+        """writes a *.csv file that can be read by pyNastranGUI to show the points"""
+        with open(fixed_points_filename, 'w') as point_file:
+            for i, node in enumerate(self.nodes):
+                x, y, z = node
+                #print('bars = \n%s' % self.bars)
+                ix, iy = where(i == self.bars)
+                #print('ix[%s]=%s iy[%s]=%s' % (i, ix, i, iy))
+                inodes_close = self.bars[ix, _flip_value(iy)]
+                nodes_close = self.nodes[inodes_close, :]
+                #print('p=(%s,%s); close=\n%s' % (x, y, str(nodes_close)))
+                #print('p=(%s,%s); iclose=\n%s' % (x, y, str(inodes_close)))
 
-            # (N,3) - (3,) subtraction
-            delta = nodes_close - node
-            normi = norm(delta, axis=1)
-            max_edge_length = normi.max()
-            #print(self.bars[ix])
-            #print(nodes_close)
-            #print('delta\n%s' % delta)
-            #print(normi)
-            #asdf
-            #max_edge_length = max(0.03, max_edge_length)
-            f.write('%s %s %s\n' % (x, y, max_edge_length))
-        #asdf
-        f.close()
+                # (N,3) - (3,) subtraction
+                delta = nodes_close - node
+                normi = norm(delta, axis=1)
+                max_edge_length = normi.max()
+                #print(self.bars[ix])
+                #print(nodes_close)
+                #print('delta\n%s' % delta)
+                #print(normi)
+                #max_edge_length = max(0.03, max_edge_length)
+                point_file.write('%s %s %s\n' % (x, y, max_edge_length))
 
     def merge_bedge(self, bedge, bedge_filename):
+        """merges two bedge models into a single new *.bedge file"""
         bedge = deepcopy(bedge)
 
         curve1_max = self.curves.max()
@@ -350,106 +372,113 @@ class AFLR2(object):
 
         bedge.curves += curve1_max + 1
         bedge.subcurves += subcurve1_max + 1
-        print('curve1_max=%s curve2_max=%s' % (curve1_max, curve2_max))
-        print('subcurve1_max=%s subcurve2_max=%s' % (subcurve1_max, subcurve2_max))
+        self.log.debug('curve1_max=%s curve2_max=%s' % (curve1_max, curve2_max))
+        self.log.debug('subcurve1_max=%s subcurve2_max=%s' % (subcurve1_max, subcurve2_max))
 
-        nodes     = vstack([self.nodes,     bedge.nodes])
-        grid_bc   = hstack([self.grid_bc,  bedge.grid_bc])
-        curves    = hstack([self.curves,    bedge.curves])
+        nodes = vstack([self.nodes, bedge.nodes])
+        grid_bc = hstack([self.grid_bc, bedge.grid_bc])
+        curves = hstack([self.curves, bedge.curves])
         subcurves = hstack([self.subcurves, bedge.subcurves])
-        print('ugrid_bcs = ', unique(grid_bc))
+        self.log.debug('ugrid_bcs = %s' % unique(grid_bc))
 
         export_to_bedge(bedge_filename, nodes, grid_bc, curves, subcurves, axis=2)
 
 def _flip_value(lst):
-    return [0 if val == 1 else 1
-            for val in lst
-            ]
+    """flips a 0 to 1 and vice-versa"""
+    return [
+        0 if val == 1 else 1
+        for val in lst
+    ]
 
 def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1):
     """
-    @param axis   the axis to remove (nodes in Nx3)
+    Parameters
+    ----------
+    axis : int; default=1
+        the axis to remove (nodes in Nx3)
     """
     print('bedge_filename = %s' % bedge_filename)
     if bedge_filename == 'farfield.bedge':
         print(grid_bcs)
-    f = open(bedge_filename, 'wb')
-    # ncurves
-    ucurves = unique(curves)
-    ncurves = len(ucurves)
-    f.write('%s\n' % ncurves)
 
-    # write the curves/subcurves
-    nodes_pack = []
+    with open(bedge_filename, 'w') as bedge_file:
+        # ncurves
+        ucurves = unique(curves)
+        ncurves = len(ucurves)
+        bedge_file.write('%s\n' % ncurves)
 
-    print('looping over ucurves=%s' % ucurves)
-    nsubcurves_list = []
+        # write the curves/subcurves
+        nodes_pack = []
 
-    all_usubcurves = set([])
-    for ucurve in ucurves:
-        i = where(curves == ucurve)[0]
+        print('looping over ucurves=%s' % ucurves)
+        nsubcurves_list = []
 
-        subcurvesi = subcurves[i]
-        print('ucurve=%s i=%s subcurves[i]=%s' % (ucurve, i, subcurvesi))
+        all_usubcurves = set([])
+        for ucurve in ucurves:
+            i = where(curves == ucurve)[0]
 
-        usubcurves = unique(subcurvesi)
-        nsubcurves = len(usubcurves)
-        nsubcurves_list.append(nsubcurves)
-        #f.write('  %s\n' % nsubcurves)
+            subcurvesi = subcurves[i]
+            print('ucurve=%s i=%s subcurves[i]=%s' % (ucurve, i, subcurvesi))
 
-        for usubcurve in usubcurves:
-            if usubcurve not in all_usubcurves:
-                print(all_usubcurves)
-                # stop???
+            usubcurves = unique(subcurvesi)
+            nsubcurves = len(usubcurves)
+            nsubcurves_list.append(nsubcurves)
+            #f.write('  %s\n' % nsubcurves)
 
-            all_usubcurves.add(usubcurve)
-            j = where(subcurvesi == usubcurve)[0]
-            nnodesi = len(j)
-            print('usubcurve=%s j=%s subcurves[j]=%s nnodes=%s' % (usubcurve, j, subcurvesi[j], nnodesi))
-            #f.write('%s ' % nnodesi)
-            nodes_pack.append(nnodesi)
-        #f.write('\n')
-    del nsubcurves
+            for usubcurve in usubcurves:
+                if usubcurve not in all_usubcurves:
+                    print(all_usubcurves)
+                    # stop???
 
-    for nsubcurvesi in nsubcurves_list:
-        f.write('  %s' % nsubcurvesi)
-    f.write('\n')
-    nsubcurves = len(grid_bcs)
-    print('nsubcurves = %s?' % nsubcurves)
-    assert nsubcurves < 20
-    #assert nsubcurves == len(nsubcurves_list) #  wrong check...
+                all_usubcurves.add(usubcurve)
+                j = where(subcurvesi == usubcurve)[0]
+                nnodesi = len(j)
+                print('usubcurve=%s j=%s subcurves[j]=%s nnodes=%s' % (
+                    usubcurve, j, subcurvesi[j], nnodesi))
+                #f.write('%s ' % nnodesi)
+                nodes_pack.append(nnodesi)
+            #f.write('\n')
+        del nsubcurves
 
-    for nnodes in nodes_pack:
-        f.write('  %s' % nnodes)
-    f.write('\n')
+        for nsubcurvesi in nsubcurves_list:
+            bedge_file.write('  %s' % nsubcurvesi)
+        bedge_file.write('\n')
+        nsubcurves = len(grid_bcs)
+        print('nsubcurves = %s?' % nsubcurves)
+        assert nsubcurves < 20
+        #assert nsubcurves == len(nsubcurves_list) #  wrong check...
 
-    # grid bc
-    # len(grid_bcs) == nsubcurves, not nnodes ironically enough
-    for grid_bc in grid_bcs:
-        f.write('%s ' % grid_bc)
-    f.write('\n')
+        for nnodes in nodes_pack:
+            bedge_file.write('  %s' % nnodes)
+        bedge_file.write('\n')
 
-
-    # nodes
-    #iaxis = where([0, 1, 2] != axis)[0]
-    #print(iaxis)
-    for node in nodes:
-        x, y, z = node
-        if axis == 0:
-            f.write('%s %s\n' % (y, z))
-        elif axis == 1:
-            f.write('%s %s\n' % (x, z))
-        elif axis == 2:
-            f.write('%s %s\n' % (x, y))
-        else:
-            raise RuntimeError(axis)
-    #initial_normal_spacing = '112*1.0e-3'
+        # grid bc
+        # len(grid_bcs) == nsubcurves, not nnodes ironically enough
+        for grid_bc in grid_bcs:
+            bedge_file.write('%s ' % grid_bc)
+        bedge_file.write('\n')
 
 
-def main():
+        # nodes
+        #iaxis = where([0, 1, 2] != axis)[0]
+        #print(iaxis)
+        for node in nodes:
+            x, y, z = node
+            if axis == 0:
+                bedge_file.write('%s %s\n' % (y, z))
+            elif axis == 1:
+                bedge_file.write('%s %s\n' % (x, z))
+            elif axis == 2:
+                bedge_file.write('%s %s\n' % (x, y))
+            else:
+                raise RuntimeError(axis)
+        #initial_normal_spacing = '112*1.0e-3'
+
+
+def main(): # : pragma: no conver
     bedge_filename = 'circle.bedge'
-    af = AFLR2()
-    af.read_bedge(bedge_filename)
+    model = AFLR2()
+    model.read_bedge(bedge_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__': # : pragma: no conver
     main()
