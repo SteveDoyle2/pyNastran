@@ -242,7 +242,6 @@ class OP2(object):
 
         File is positioned after the header label (at `postheaderpos`).
         """
-        print(filename)
         self._fileh = open(filename, 'rb')
         self.dbnames = []
         self.dblist = []
@@ -381,7 +380,6 @@ class OP2(object):
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
         db_binary_name = self._fileh.read(reclen)
-        # print('db_binary_name = %r' % db_binary_name)
         db_name = self._valid_name(db_binary_name)
         self._fileh.read(4)  # endrec
         self._get_key()
@@ -393,7 +391,6 @@ class OP2(object):
 
         # prevents a giant read
         assert nbytes > 0, nbytes
-        # print('bytes =', nbytes)
         trailer = struct.unpack(frm, self._fileh.read(nbytes))
         # trailer = np.fromfile(self._fileh, self._intstr, key)
         self._fileh.read(4)  # endrec
@@ -586,16 +583,16 @@ class OP2(object):
             if dbtype > 0:
                 self.skip_op2_matrix(trailer)
                 size = [trailer[2], trailer[1]]
-                s = 'Matrix {:8}'.format(name)
+                s = 'Matrix {0:8}'.format(name)
             else:
                 self.skip_op2_table()
                 size = [0, 0]
-                s = 'Table  {:8}'.format(name)
+                s = 'Table  {0:8}'.format(name)
             cur = self._fileh.tell()
-            s += (', bytes = {:10} [{:10} to {:10}]'.
+            s += (', bytes = {0:10} [{1:10} to {2:10}]'.
                   format(cur-pos-1, pos, cur))
             if size != [0, 0]:
-                s += (', {:6} x {:<}'.
+                s += (', {0:6} x {1:<}'.
                       format(size[0], size[1]))
             if name not in dbnames:
                 dbnames[name] = []
@@ -818,7 +815,7 @@ class OP2(object):
 
         """
         key = self._get_key()
-        print("{} Headers:".format(name))
+        print("{0} Headers:".format(name))
         Frm = struct.Struct(self._intstru % 3)
         eot = 0
         while not eot:
@@ -882,18 +879,18 @@ class OP2(object):
         for func, val in zip(funcs, vals):
             if 1 <= func <= 7:
                 if self.CodeFuncs[func](item_code) not in val:
-                    warnings.warn('{} value {} not acceptable; func={}; allowed={}'.
+                    warnings.warn('{0} value {1} not acceptable; func={2}; allowed={3}'.
                                   format(name, item_code, func, val),
                                   RuntimeWarning)
                     return False
             elif func > 65535:
                 if self.CodeFuncs['big'](func, item_code) not in val:
-                    warnings.warn('{} value {} not acceptable'.
+                    warnings.warn('{0} value {1} not acceptable'.
                                   format(name, item_code),
                                   RuntimeWarning)
                     return False
             else:
-                raise ValueError('Unknown function code: {}'.
+                raise ValueError('Unknown function code: {0}'.
                                  format(func))
         return True
 
@@ -1001,7 +998,8 @@ class OP2(object):
                 data = self.read_op2_record('single', V.shape[0])
                 ougv1[:, J] = data[V]
             J += 1
-            # print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(J, np.sqrt(lam[J-1])/(2*np.pi)))
+            # print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(
+            #    J, np.sqrt(lam[J-1])/(2*np.pi)))
             eot, key = self._read_op2_end_of_table()
         return {'ougv1': ougv1, 'lambda': lam, 'dof': dof}
 
@@ -2124,7 +2122,7 @@ def read_nas2cam(op2file='nas2cam', op4file=None):
         if op4names[j] != "se_start":
             raise RuntimeError("matrices are not in understandable"
                                " order.  Expected 'se_start', got "
-                               "'{}'".format(op4names[j]))
+                               "'{0}'".format(op4names[j]))
         # read all matrices for this se
         j += 1
         while 1:
@@ -2231,7 +2229,7 @@ def get_dof_descs():
     # expand and append station id for all 11 stations:
     stress2 = [i+' End-A' for i in stress2_main]
     for K in range(2, 11):
-        id_string = ' K={:2}'.format(K)
+        id_string = ' K={0:2}'.format(K)
         stress2 += [i+id_string for i in stress2_main]
     stress2 += [i+' End-B' for i in stress2_main]
     stress[2] = stress2
@@ -2249,7 +2247,7 @@ def get_dof_descs():
     # expand and append station id for all 11 stations:
     force2 = [i+' End-A' for i in force2_main]
     for K in range(2, 11):
-        id_string = ' K={:2}'.format(K)
+        id_string = ' K={0:2}'.format(K)
         force2 += [i+id_string for i in force2_main]
     force2 += [i+' End-B' for i in force2_main]
     force[2] = force2
@@ -2696,10 +2694,10 @@ def get_drm(drminfo, otm, drms, drmkeys, dr, desc):
                 if eltype in _dct:
                     otm[_desc][j] = _dct[eltype][DOF[j]-offset]
                 else:
-                    otm[_desc][j] = ('EL-{}, El. Type {:3}, '
-                                     'Code {:3}  ').format(_name,
-                                                           eltype,
-                                                           DOF[j])
+                    otm[_desc][j] = ('EL-{0}, El. Type {1:3}, '
+                                     'Code {2:3}  ').format(_name,
+                                                            eltype,
+                                                            DOF[j])
     else:
         if len(nasnm) == 3:
             matname = 'm'+nasnm+'x1'
@@ -2721,10 +2719,10 @@ def get_drm(drminfo, otm, drms, drmkeys, dr, desc):
                 if eltype in _dct:
                     otm[_desc][j] = _dct[eltype][DOF[j]-offset]
                 else:
-                    otm[_desc][j] = ('EL-{}, El. Type {:3}, '
-                                     'Code {:3}  ').format(_name,
-                                                           eltype,
-                                                           DOF[j])
+                    otm[_desc][j] = ('EL-{0}, El. Type {1:3}, '
+                                     'Code {2:3}  ').format(_name,
+                                                            eltype,
+                                                            DOF[j])
 
 
 def proccess_drm1_drm2(op2file, op4file=None, dosort=True):
@@ -2896,7 +2894,7 @@ def proccess_drm1_drm2(op2file, op4file=None, dosort=True):
         pv = np.nonzero(DR[0] == drtype)[0]
         if pv.size > 0:
             if np.any(drtype == types):
-                print('Processing "{}" requests...'.format(Vreq[drtype-1]))
+                print('Processing "{0}" requests...'.format(Vreq[drtype-1]))
                 get_drm(drm_info[drtype], otm, drms,
                         drm_keys, DR[:, pv], desc)
             else:

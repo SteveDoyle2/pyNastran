@@ -187,9 +187,11 @@ class OP2():
             def funcbig(func_code, item_code):
                 return item_code & (func_code & 65535)
 
-            self._CodeFuncs = {1: func1, 2: func2, 3: func3, 4: func4,
-                               5: func5, 6: func6, 7: func7,
-                               'big': funcbig}
+            self._CodeFuncs = {
+                1: func1, 2: func2, 3: func3, 4: func4,
+                5: func5, 6: func6, 7: func7,
+                'big': funcbig,
+            }
         return self._CodeFuncs
 
     def _op2open(self, filename):
@@ -325,8 +327,11 @@ class OP2():
         """
         Returns a valid variable name from the byte string `bstr`.
         """
-        return ''.join(chr(c) for c in bstr if (
-              47 < c < 58 or 64 < c < 91 or c == 95 or 96 < c < 123))
+        if PY2:
+            return bstr.strip()
+        else:
+            return ''.join(chr(c) for c in bstr if (
+                47 < c < 58 or 64 < c < 91 or c == 95 or 96 < c < 123))
 
     def _rdop2eot(self):
         """Read Nastran output2 end-of-table marker.
@@ -369,14 +374,18 @@ class OP2():
             return None, None, None
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
-        db_name = self._validname(self._fileh.read(reclen))
+        db_binary_name = self._fileh.read(reclen)
+        db_name = self._validname(db_binary_name)
         self._fileh.read(4)  # endrec
         self._getkey()
         key = self._getkey()
 
         self._fileh.read(4)  # reclen
         frm = self._intstru % key
-        bytes = self._ibytes*key
+        nbytes = self._ibytes * key
+
+        # prevents a giant read
+        assert nbytes > 0, nbytes
         trailer = struct.unpack(frm, self._fileh.read(bytes))
         # trailer = np.fromfile(self._fileh, self._intstr, key)
         self._fileh.read(4)  # endrec
@@ -398,11 +407,13 @@ class OP2():
         :func:`rdop2nt`.
 
         The size of the matrix is read from trailer:
-             rows = trailer[2]
-             cols = trailer[1]
+             nrows = trailer[2]
+             ncols = trailer[1]
         """
         dtype = 1
-        matrix = np.zeros((trailer[2], trailer[1]), order='F')
+        nrows = trailer[2]
+        ncols = trailer[1]
+        matrix = np.zeros((nrows, ncols), order='F')
         if self._bit64:
             intsize = 8
         else:
@@ -419,12 +430,11 @@ class OP2():
                 r = self._Str.unpack(self._fileh.read(self._ibytes))[0]-1
                 n = (reclen - intsize) // 8
                 if n < self._rowsCutoff:
-                    matrix[r:r+n,
-                           col] = struct.unpack(frm % n,
-                                                self._fileh.read(n*8))
+                    matrix[r:r+n, col] = struct.unpack(
+                        frm % n, self._fileh.read(n*8))
                 else:
-                    matrix[r:r+n, col] = np.fromfile(self._fileh,
-                                                     np.float64, n)
+                    matrix[r:r+n, col] = np.fromfile(
+                        self._fileh, np.float64, n)
                 self._fileh.read(4)  # endrec
                 key = self._getkey()
             col += 1
@@ -490,7 +500,7 @@ class OP2():
             if name is None:
                 break
             if rectype > 0:
-                print("Reading matrix {}...".format(name))
+                print("Reading matrix {0}...".format(name))
                 mats[name] = self.rdop2matrix(trailer)
             else:
                 self.skipop2table()
@@ -563,16 +573,16 @@ class OP2():
             if dbtype > 0:
                 self.skipop2matrix(trailer)
                 size = [trailer[2], trailer[1]]
-                s = 'Matrix {:8}'.format(name)
+                s = 'Matrix {0:8}'.format(name)
             else:
                 self.skipop2table()
                 size = [0, 0]
-                s = 'Table  {:8}'.format(name)
+                s = 'Table  {0:8}'.format(name)
             cur = self._fileh.tell()
-            s += (', bytes = {:10} [{:10} to {:10}]'.
+            s += (', bytes = {0:10} [{1:10} to {2:10}]'.
                   format(cur-pos-1, pos, cur))
             if size != [0, 0]:
-                s += (', {:6} x {:<}'.
+                s += (', {0:6} x {1:<}'.
                       format(size[0], size[1]))
             if name not in dbnames:
                 dbnames[name] = []
@@ -792,7 +802,7 @@ class OP2():
 
         """
         key = self._getkey()
-        print("{} Headers:".format(name))
+        print("{0} Headers:".format(name))
         Frm = struct.Struct(self._intstru % 3)
         eot = 0
         while not eot:
@@ -856,18 +866,18 @@ class OP2():
         for func, val in zip(funcs, vals):
             if 1 <= func <= 7:
                 if self.CodeFuncs[func](item_code) not in val:
-                    warnings.warn('{} value {} not acceptable'.
-                                  format(name, item_code),
+                    warnings.warn('{0} value {1} not acceptable; func={2}; allowed={3}'.
+                                  format(name, item_code, func, val),
                                   RuntimeWarning)
                     return False
             elif func > 65535:
                 if self.CodeFuncs['big'](func, item_code) not in val:
-                    warnings.warn('{} value {} not acceptable'.
+                    warnings.warn('{0} value {1} not acceptable'.
                                   format(name, item_code),
                                   RuntimeWarning)
                     return False
             else:
-                raise ValueError('Unknown function code: {}'.
+                raise ValueError('Unknown function code: {0}'.
                                  format(func))
         return True
 
@@ -932,6 +942,8 @@ class OP2():
             header = i4_Str.unpack(self._fileh.read(i4_bytes))
             # header = (ACODE, TCODE, ...)
             achk = self._check_code(header[0], [4], [[2]], 'ACODE')
+
+            # item_code, funcs, vals, name
             tchk = self._check_code(header[1], [1, 2, 7],
                                     [[1], [7], [0, 2]], 'TCODE')
             if not (achk and tchk):
@@ -969,7 +981,8 @@ class OP2():
                 data = self.rdop2record('single', V.shape[0])
                 ougv1[:, J] = data[V]
             J += 1
-            print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(J, np.sqrt(lam[J-1])/(2*np.pi)))
+            print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(
+                J, np.sqrt(lam[J-1])/(2*np.pi)))
             eot, key = self._rdop2eot()
         return {'ougv1': ougv1, 'lambda': lam, 'dof': dof}
 
@@ -1502,7 +1515,7 @@ class OP2():
         if rd != rb:
             raise RuntimeError(
                 'RDOP2USET:  BGPDTS incompatible with '
-                'EQEXINS for superelement {}.\n'
+                'EQEXINS for superelement {0}.\n'
                 '  Guess:  residual run clobbered EQEXINS\n'
                 '    Fix:  add the "fxphase0" alter to your '
                 'residual run'.format(se))
@@ -1766,12 +1779,12 @@ class OP2():
                 break
             if rectype > 0:
                 if verbose:
-                    print("Skipping matrix {}...".format(name))
+                    print("Skipping matrix {0}...".format(name))
                 self.skipop2matrix(trailer)
                 # matrix = self.rdop2matrix(trailer)
             elif len(name) > 2 and name.find('TO') == 0:
                 if verbose:
-                    print("Reading {}...".format(name))
+                    print("Reading {0}...".format(name))
                 # self.skipop2table()
                 # skip record 1
                 self.rdop2record()
@@ -1782,7 +1795,7 @@ class OP2():
                 self._rdop2eot()
             elif len(name) > 4 and name[:4] == 'XYCD':
                 if verbose:
-                    print("Reading {}...".format(name))
+                    print("Reading {0}...".format(name))
                 # record 1 contains order of request info
                 drmkeys['dr'] = self.rdop2record()
                 # record 2 contains sorted list
@@ -1790,7 +1803,7 @@ class OP2():
                 self._rdop2eot()
             else:
                 if verbose:
-                    print("Skipping table {}...".format(name))
+                    print("Skipping table {0}...".format(name))
                 self.skipop2table()
         return drmkeys
 
@@ -2093,12 +2106,12 @@ def rdnas2cam(op2file='nas2cam', op4file=None):
         if op4names[j] != "se_start":
             raise RuntimeError("matrices are not in understandable"
                                " order.  Expected 'se_start', got "
-                               "'{}'".format(op4names[j]))
+                               "'{0}'".format(op4names[j]))
         # read all matrices for this se
         j += 1
         while 1:
             name = op4names[j]
-            if name == "loop_end" or name == "se_start":
+            if name in ("loop_end", "se_start"):
                 # go on to next se or to residual
                 break
             if name not in nas:
@@ -2154,8 +2167,8 @@ def get_dof_descs():
                          ...]
     """
     #   Acceleration, Velocity, Displacement Recovery Items:
-    accedesc = ["T1", "T2", "T3",  "R1", "R2", "R3"]
-    spcfdesc = ["Fx", "Fy", "Fz",  "Mx", "My", "Mz"]
+    accedesc = ["T1", "T2", "T3", "R1", "R2", "R3"]
+    spcfdesc = ["Fx", "Fy", "Fz", "Mx", "My", "Mz"]
     stress = {}
     force = {}
 
@@ -2200,7 +2213,7 @@ def get_dof_descs():
     # expand and append station id for all 11 stations:
     stress2 = [i+' End-A' for i in stress2_main]
     for K in range(2, 11):
-        id_string = ' K={:2}'.format(K)
+        id_string = ' K={0:2}'.format(K)
         stress2 += [i+id_string for i in stress2_main]
     stress2 += [i+' End-B' for i in stress2_main]
     stress[2] = stress2
@@ -2218,7 +2231,7 @@ def get_dof_descs():
     # expand and append station id for all 11 stations:
     force2 = [i+' End-A' for i in force2_main]
     for K in range(2, 11):
-        id_string = ' K={:2}'.format(K)
+        id_string = ' K={0:2}'.format(K)
         force2 += [i+id_string for i in force2_main]
     force2 += [i+' End-B' for i in force2_main]
     force[2] = force2
@@ -2245,10 +2258,10 @@ def get_dof_descs():
                "M.S. Torsional Stress"]     # 5
     force1 = ["Axial Force",        # 2
               "Torque"]             # 3
-    stress[1] = ['CROD '+i+'  ' for i in stress1]
-    force[1] = ['CROD '+i+'  ' for i in force1]
-    stress[10] = ['CONROD '+i for i in stress1]
-    force[10] = ['CONROD '+i for i in force1]
+    stress[1] = ['CROD '+ i + '  ' for i in stress1]
+    force[1] = ['CROD '+ i + '  ' for i in force1]
+    stress[10] = ['CONROD ' + i for i in stress1]
+    force[10] = ['CONROD ' + i for i in force1]
 
     #   CELAS1, 2, 3 Recovery Items (elements 11, 12, 13):
     stress[11] = 'CELAS1 Stress'
@@ -2665,10 +2678,10 @@ def get_drm(drminfo, otm, drms, drmkeys, dr, desc):
                 if eltype in _dct:
                     otm[_desc][j] = _dct[eltype][DOF[j]-offset]
                 else:
-                    otm[_desc][j] = ('EL-{}, El. Type {:3}, '
-                                     'Code {:3}  ').format(_name,
-                                                           eltype,
-                                                           DOF[j])
+                    otm[_desc][j] = ('EL-{0}, El. Type {1:3}, '
+                                     'Code {2:3}  ').format(_name,
+                                                            eltype,
+                                                            DOF[j])
     else:
         if len(nasnm) == 3:
             matname = 'm'+nasnm+'x1'
@@ -2690,10 +2703,10 @@ def get_drm(drminfo, otm, drms, drmkeys, dr, desc):
                 if eltype in _dct:
                     otm[_desc][j] = _dct[eltype][DOF[j]-offset]
                 else:
-                    otm[_desc][j] = ('EL-{}, El. Type {:3}, '
-                                     'Code {:3}  ').format(_name,
-                                                           eltype,
-                                                           DOF[j])
+                    otm[_desc][j] = ('EL-{0}, El. Type {1:3}, '
+                                     'Code {2:3}  ').format(_name,
+                                                            eltype,
+                                                            DOF[j])
 
 
 def procdrm12(op2file, op4file=None, dosort=True):
@@ -2839,7 +2852,7 @@ def procdrm12(op2file, op4file=None, dosort=True):
         DR = np.zeros((3, N), dtype=int)  # [type; id; dof]
         R = 0  # index into DR columns
         for j in range(n):  # loop over XYPEAK cards
-            curtype = dr[r[j]+5]
+            curtype = dr[r[j] + 5]
             J = r[j] + 9  # index to first id
             while J < r[j+1]:
                 while dr[J] != -1:
@@ -2851,23 +2864,25 @@ def procdrm12(op2file, op4file=None, dosort=True):
         DR = drmkeys['drs'][1:4]  # use sorted version
 
     desc = get_dof_descs()
-    drminfo = {1: ('DTM', 'oug', 'acce'),
-               3: ('ATM', 'ougv1', 'acce'),
-               4: ('SPCF', 'oqg', 'spcf'),
-               6: ('STM', 'oes', 'stress'),
-               7: ('LTM', 'oef', 'force')}
+    drm_info = {
+        1: ('DTM', 'oug', 'acce'),
+        3: ('ATM', 'ougv1', 'acce'),
+        4: ('SPCF', 'oqg', 'spcf'),
+        6: ('STM', 'oes', 'stress'),
+        7: ('LTM', 'oef', 'force'),
+    }
     otm = {}
     types = np.array([1, 3, 4, 6, 7])
     for drtype in range(1, 13):
         pv = np.nonzero(DR[0] == drtype)[0]
         if pv.size > 0:
             if np.any(drtype == types):
-                print('Processing "{}" requests...'.
+                print('Processing "{0}" requests...'.
                       format(Vreq[drtype-1]))
                 get_drm(drminfo[drtype], otm, drms,
                         drmkeys, DR[:, pv], desc)
             else:
-                print('Skipping "{}" requests.  Needs to be added '
+                print('Skipping "{0}" requests.  Needs to be added '
                       'to procdrm12().'.format(Vreq[drtype-1]))
     return otm
 
@@ -2919,28 +2934,28 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
                 break
             if dbtype > 0:
                 if verbose:
-                    print("Reading matrix {}...".format(name))
+                    print("Reading matrix {0}...".format(name))
                 if name not in mats:
                     mats[name] = []
                 mats[name] += [o2.rdop2matrix(trailer)]
             else:
                 if name.find('BGPDT') == 0:
                     if verbose:
-                        print("Reading table {}...".format(name))
+                        print("Reading table {0}...".format(name))
                     bgpdt_rec1 = o2._rdop2bgpdt68()
                     o2.skipop2table()
                     continue
 
                 # if name.find('CSTM') == 0:
                 #     if verbose:
-                #         print("Reading table {}...".format(name))
+                #         print("Reading table {0}...".format(name))
                 #     cstm = o2._rdop2cstm68().reshape((-1, 14))
                 #     cstm = np.vstack((bc, cstm))
                 #     continue
 
                 if name.find('GEOM1') == 0:
                     if verbose:
-                        print("Reading table {}...".format(name))
+                        print("Reading table {0}...".format(name))
                     cords, sebulk, selist = o2._rdop2geom1cord2()
                     if 0 not in cords:
                         cords[0] = np.array([[0.,  1.,  0.],
@@ -2956,37 +2971,37 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
 
                 if name.find('DYNAMIC') == 0:
                     if verbose:
-                        print("Reading table {}...".format(name))
+                        print("Reading table {0}...".format(name))
                     mats['tload'] = o2.rdop2dynamics()
                     continue
 
                 if name.find('EQEXIN') == 0:
                     if verbose:
-                        print("Reading table {}...".format(name))
+                        print("Reading table {0}...".format(name))
                     eqexin1, eqexin = o2._rdop2eqexin()
                     continue
 
                 if name.find('USET') == 0:
                     if verbose:
-                        print("Reading table {}...".format(name))
+                        print("Reading table {0}...".format(name))
                     uset = o2._rdop2uset()
                     continue
 
                 if getougv1 and (name.find('OUGV1') == 0 or
                                  name.find('BOPHIG') == 0):
                     if verbose:
-                        print("Reading table {}...".format(name))
+                        print("Reading table {0}...".format(name))
                     mats['ougv1'] += [o2._rdop2ougv1(name)]
                     continue
 
                 # if name.find('OEF1X') == 0:
                 #    if verbose:
-                #        print("Reading table {}...\n".format(name))
+                #        print("Reading table {0}...\n".format(name))
                 #     mats['oef1x'] = o2._rdop2drm()
                 #     continue
 
                 if verbose:
-                    print("Skipping table {}...".format(name))
+                    print("Skipping table {0}...".format(name))
                 o2.skipop2table()
 
         (bgpdt, dof,
