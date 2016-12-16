@@ -1,7 +1,11 @@
-from __future__ import print_function, unicode_literals
+"""
+defines:
+ -
+"""
+from __future__ import print_function
 from six import iteritems, itervalues
 import numpy as np
-
+from pyNastran.bdf.bdf import PBEAM, PBEAML
 
 def convert(model, units_to, units=None):
     """
@@ -80,14 +84,20 @@ def _convert_coordinates(model, xyz_scale):
             #raise NotImplementedError(coord)
 
 def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
+    """converts the elements"""
     area_scale = xyz_scale ** 2
     moi_scale = xyz_scale ** 4
-    nsm_scale = mass_scale
+    #nsm_scale = mass_scale
+    nsm_bar_scale = mass_scale / xyz_scale
+
+    # these don't have any properties
+    skip_elements = ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM', 'CROD', 'CELAS1']
+    #skip_elements = ['CELAS2', 'CELAS4']
+
     tri_shells = ['CTRIA3', 'CTRIAX', 'CTRIAX6']
     quad_shells = ['CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADX', 'CQUADX8']
-    skip_elements = ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM', 'CROD']
-    spring_elements = ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']
-    skip_elements = ['CELAS2', 'CELAS4']
+    spring_elements = [ 'CELAS2', 'CELAS3', 'CELAS4']
+
     stiffness_scale = weight_scale / xyz_scale
     for elem in itervalues(model.elements):
         elem_type = elem.type
@@ -127,7 +137,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
 
         elif elem_type == 'CONROD':
             elem.area *= area_scale
-            elem.nsm *= nsm_scale
+            elem.nsm *= nsm_bar_scale
         elif elem_type == 'CBAR':
             # vector
             pass
@@ -135,7 +145,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             # vector
             pass
         else:
-            raise NotImplementedError(elem)
+            raise NotImplementedError('type=%r; elem:\n%s' % (elem.type, elem))
 
     for elem in itervalues(model.masses):
         elem_type = elem.type
@@ -148,10 +158,17 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             raise NotImplementedError(elem)
 
 def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
+    """converts the properties"""
     area_scale = xyz_scale ** 2
     moi_scale = xyz_scale ** 4
+    assert 679740. * moi_scale == 6.7974E-7, 679740. * moi_scale
+
+    # there are multiple nsm scales (CONM2, bar, plate)
     nsm_scale = mass_scale
+    nsm_bar_scale = mass_scale / xyz_scale
+    nsm_plate_scale = mass_scale / xyz_scale ** 2
     stiffness_scale = weight_scale / xyz_scale
+    stress_scale = weight_scale / xyz_scale ** 2
 
     skip_properties = ['PSOLID']
     for prop in itervalues(model.properties):
@@ -160,28 +177,29 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             continue
         elif prop_type == 'PELAS':
             prop.k *= stiffness_scale
+
         elif prop_type == 'PROD':
             prop.area *= area_scale
             prop.moi *= moi_scale
+
         elif prop_type == 'PBAR':
             prop.A *= area_scale
             prop.i1 *= moi_scale
             prop.i2 *= moi_scale
             prop.i12 *= moi_scale
-            prop.nsm *= mass_scale
+            prop.nsm *= nsm_bar_scale
+
         elif prop_type == 'PBARL':
             prop.dim = [d * xyz_scale for d in prop.dim]
-            prop.nsm *= mass_scale
+            prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PBEAM':
             prop.A *= area_scale
-            prop.moi *= moi_scale
             prop.i1 *= moi_scale
             prop.i2 *= moi_scale
             prop.i12 *= moi_scale
-            prop.i2 *= moi_scale
             prop.j *= moi_scale
-            prop.nsm *= mass_scale
+            prop.nsm *= nsm_bar_scale
             prop.c1 *= xyz_scale
             prop.c2 *= xyz_scale
             prop.d1 *= xyz_scale
@@ -191,42 +209,71 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             prop.f1 *= xyz_scale
             prop.f2 *= xyz_scale
 
+            prop.m1a *= xyz_scale
+            prop.m2a *= xyz_scale
+            prop.m1b *= xyz_scale
+            prop.m2b *= xyz_scale
+            prop.n1a *= xyz_scale
+            prop.n2a *= xyz_scale
+            prop.n1b *= xyz_scale
+            prop.n2b *= xyz_scale
+
+
+        elif prop_type == 'PBEAML':
+            dim2 = []
+            for dimi in prop.dim:
+                dimi2 = [dim*xyz_scale for dim in dimi]
+                dim2.append(dimi2)
+            prop.dim = dim2
+            prop.nsm = [nsm*nsm_bar_scale for nsm in prop.nsm]
+
         elif prop_type == 'PSHELL':
             prop.t *= xyz_scale
-            prop.nsm *= mass_scale
+            prop.nsm *= nsm_plate_scale
             prop.z1 *= xyz_scale
             prop.z2 *= xyz_scale
             prop.twelveIt3 /= xyz_scale ** 3
         elif prop_type in ['PCOMP', 'PCOMPG']:
             prop.thicknesses = [t * xyz_scale for t in prop.thicknesses]
-            prop.nsm *= mass_scale
+            prop.nsm *= nsm_plate_scale
             prop.z0 *= xyz_scale
+            prop.sb *= stress_scale
+        elif prop_type == 'PELAS':
+            prop.k *= stiffness_scale
         else:
             raise NotImplementedError(prop_type)
 
 def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
-    pressure_scale = weight_scale / xyz_scale ** 2
+    """converts the materials"""
     density_scale = mass_scale / xyz_scale ** 3
+    stress_scale = weight_scale / xyz_scale ** 2
     for mat in itervalues(model.materials):
         mat_type = mat.type
         if mat_type == 'MAT1':
-            mat.e *= pressure_scale
-            mat.g *= pressure_scale
+            mat.e *= stress_scale
+            mat.g *= stress_scale
             mat.rho *= density_scale
         elif mat_type == 'MAT8':
-            mat.e11 *= pressure_scale
-            mat.e22 *= pressure_scale
-            mat.g12 *= pressure_scale
-            mat.g1z *= pressure_scale
-            mat.g2z *= pressure_scale
+            mat.e11 *= stress_scale
+            mat.e22 *= stress_scale
+            mat.g12 *= stress_scale
+            mat.g1z *= stress_scale
+            mat.g2z *= stress_scale
             mat.rho *= density_scale
+            mat.Xt *= stress_scale
+            mat.Xc *= stress_scale
+            mat.Yt *= stress_scale
+            mat.Yc *= stress_scale
+            mat.S *= stress_scale
         else:
             raise NotImplementedError(mat)
 
 def _convert_loads(model, xyz_scale, weight_scale):
+    """converts the loads"""
     force_scale = weight_scale
     moment_scale = xyz_scale * weight_scale
     pressure_scale = weight_scale / xyz_scale ** 2
+    accel_scale = weight_scale / xyz_scale
     for loads in itervalues(model.loads):
         assert isinstance(loads, list), loads
         for load in loads: # list
@@ -237,6 +284,8 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 load.mag *= force_scale
             elif load_type == 'MOMENT':
                 load.mag *= moment_scale
+            elif load_type == 'GRAV':
+                load.scale *= accel_scale
             #elif load_type == 'PLOAD1':
                 #load.mag *= moment_scale
             #elif load_type == 'PLOAD2':
@@ -308,7 +357,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         flfact.factors *= density_scale
 
 def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
-    """cross references the optimization objects"""
+    """converts the optimization objects"""
     pressure_scale = weight_scale / xyz_scale ** 2
     #for key, deqatn in iteritems(model.dequations):
         #deqatn.cross_reference(model)
@@ -425,6 +474,7 @@ def get_scale_factors(units_from, units_to):
 
 
 def convert_length(length_from, length_to):
+    """determines the length scale factor"""
     xyz_scale = 1.0
     if length_from != length_to:
         if length_from == 'in':
@@ -436,8 +486,8 @@ def convert_length(length_from, length_to):
             pass
         #elif length_from == 'cm':
             #xyz_scale *= 100.0
-        #elif length_from == 'mm':
-            #xyz_scale *= 1000.0
+        elif length_from == 'mm':
+            xyz_scale /= 1000.0
         else:
             raise NotImplementedError('length from unit=%r; expected=[in, ft, m]' % length_from)
 
@@ -450,34 +500,47 @@ def convert_length(length_from, length_to):
             pass
         #elif length_to == 'cm':
             #xyz_scale /= 100.0
-        #elif length_to == 'mm':
-            #xyz_scale /= 1000.0
+        elif length_to == 'mm':
+            xyz_scale *= 1000.0
         else:
             raise NotImplementedError('length to unit=%r; expected=[in, ft, m]' % length_to)
     return xyz_scale
 
 
 def convert_mass(mass_from, mass_to):
+    """determines the mass, weight, gravity scale factor"""
     mass_scale = 1.0
     weight_scale = 1.0
     gravity_scale = 1.0
     if mass_from != mass_to:
+
+        # convert to kg
         if mass_from == 'kg':
             pass
+        elif mass_from == 'Mg': # mega-gram
+            mass_scale *= 1000.
+        elif mass_from == 'g':
+            mass_scale *= 1./1000.
         elif mass_from == 'lbm':
             mass_scale *= 0.45359237
             weight_scale *= 4.4482216152605
             gravity_scale *= 0.3048
         else:
-            raise NotImplementedError('mass from unit=%r; expected=[kg, lbm]' % mass_from)
+            raise NotImplementedError('mass from unit=%r; expected=[g, kg, Mg, lbm]' % mass_from)
 
+        # convert from kg
         if mass_to == 'kg':
             pass
+        elif mass_to == 'Mg': # mega-gram # what about weight_scale???
+            mass_scale /= 1000.
+        elif mass_to == 'g': # what about weight_scale???
+            mass_scale *= 1000.
+            #weight_scale *= 1000.
         elif mass_to == 'lbm':
             mass_scale /= 0.45359237
             weight_scale /= 4.4482216152605
             gravity_scale /= 0.3048
         else:
-            raise NotImplementedError('mass to unit=%r; expected=[kg, lbm]' % mass_to)
+            raise NotImplementedError('mass to unit=%r; expected=[g, kg, Mg, lbm]' % mass_to)
 
     return mass_scale, weight_scale, gravity_scale
