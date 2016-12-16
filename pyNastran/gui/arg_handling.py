@@ -25,6 +25,7 @@ def determine_format(input_filename, allowed_formats):
         'lawgs' : ['.wgs'],
         'shabp' : ['.mk5'],
         'usm3d' : ['.front'],  # .cogsg
+        'bedge' : ['.bedge'],
 
         # no duplicates are allowed
         #'panair' : ['.inp'],
@@ -114,7 +115,7 @@ def run_docopt():
     allowed_formats = [
         'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
         #'plot3d',
-        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus', 'usm3d',
+        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus', 'usm3d', 'bedge',
     ]
 
     if input_filenames and not input_format:

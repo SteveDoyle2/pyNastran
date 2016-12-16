@@ -114,7 +114,6 @@ except ImportError:
     #        pass
     #is_avus = False
 
-
 try:
     from pyNastran.converters.tetgen.tetgen_io import TetgenIO
     is_tetgen = True
@@ -152,6 +151,17 @@ except ImportError:
     #        pass
     #is_fast = False
 
+try:
+    from pyNastran.converters.aflr2.bedge_io import BEdge_IO
+    is_bedge = True
+except ImportError:
+    #raise
+    class BEdge_IO(object):
+        """dummy bedge gui class"""
+        def __init__(self):
+            """dummy gui init"""
+            pass
+    is_bedge = False
 
 try:
     from pyNastran.converters.ugrid.surf_io import SurfIO
