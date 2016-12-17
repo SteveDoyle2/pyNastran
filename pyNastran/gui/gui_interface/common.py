@@ -21,6 +21,7 @@ class PyDialog(QDialog):
     def __init__(self, data, win_parent):
         QDialog.__init__(self, win_parent)
         self.out_data = data
+        self.win_parent = win_parent
 
     def closeEvent(self, event):
         self.out_data['close'] = True

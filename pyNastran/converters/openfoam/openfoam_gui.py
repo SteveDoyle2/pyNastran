@@ -12,10 +12,10 @@ from pyNastran.converters.stl.stl_io import STL_IO
 from pyNastran.utils import print_bad_path
 
 
-from pyNastran.converters.openfoam.openfoamIO import OpenFoamIO
+from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
 from pyNastran.converters.ugrid.surf_io import SurfIO
 from pyNastran.converters.ugrid.ugrid_io import UGRID_IO
-from pyNastran.converters.aflr2.bedge_io import BEDGE_IO
+from pyNastran.converters.aflr2.bedge_io import BEdge_IO
 
 # kills the program when you hit Cntl+C from the command line
 import signal
@@ -31,7 +31,7 @@ except:
     icon_path = os.path.join(pkg_path, 'gui', 'icons')
 
 
-class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEDGE_IO): # NastranIO,
+class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # NastranIO,
     def __init__(self, inputs, **kwds):
         self.mesh_3d = None
 

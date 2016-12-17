@@ -11,10 +11,10 @@ import numpy as np
 #root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 from pyNastran.bdf.cards.elements.mass import CONM2
-from pyNastran.bdf.bdf_interface.dev.convert import convert
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck
+from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
@@ -31,6 +31,35 @@ np.set_printoptions(edgeitems=3, infstr='inf',
 
 
 class TestMeshUtils(unittest.TestCase):
+
+    def convert_bwb(self):
+        """converts a bwb model"""
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
+        bdf_filename_out = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes.bdf')
+        bdf_filename_out2 = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes_converted.bdf')
+        model = read_bdf(bdf_filename, validate=False)
+        model.sol = 103
+
+        lines = [
+            'ECHO = NONE',
+            'SUBCASE 1',
+            '    DISPLACEMENT(PLOT) = ALL',
+            '    MPC = 1',
+            '    SPC = 100',
+            '    SUPORT1 = 1',
+            '    METHOD = 42',
+        ]
+        card_lines = ['EIGRL', 42, None, None, 20]
+        model.add_card(card_lines, 'EIGRL')
+        model.case_control_deck = CaseControlDeck(lines)
+        model.write_bdf(bdf_filename_out)
+        units_from = ['in', 'lbm', 's']
+
+        #units_from = ['mm', 'Mg', 's']
+        units_to = ['m', 'kg', 's']
+
+        convert(model, units_to, units=units_from)
+        model.write_bdf(bdf_filename_out2)
 
     def test_quad_180_01(self):
         r"""

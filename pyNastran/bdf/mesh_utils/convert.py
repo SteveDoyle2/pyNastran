@@ -179,10 +179,14 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             if elem.x is not None:
                 # vector
                 elem.x = [x*xyz_scale for x in elem.x]
+                elem.wa *= xyz_scale
+                elem.wb *= xyz_scale
         elif elem_type == 'CBEAM':
             if elem.x is not None:
                 # vector
                 elem.x = [x*xyz_scale for x in elem.x]
+                elem.wa *= xyz_scale
+                elem.wb *= xyz_scale
         else:
             raise NotImplementedError('type=%r; elem:\n%s' % (elem.type, elem))
 
