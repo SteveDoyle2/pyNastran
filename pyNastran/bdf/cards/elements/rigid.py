@@ -570,6 +570,8 @@ class RBE2(RigidElement):
 
         #: Grid point identification numbers at which dependent
         #: degrees-of-freedom are assigned. (Integer > 0)
+        if isinstance(Gmi, int):
+            Gmi = [Gmi]
         self.Gmi = Gmi
         self._validate_input()
 
@@ -626,7 +628,7 @@ class RBE2(RigidElement):
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
         self.cm = str(self.cm)
-        assert isinstance(self.alpha, float),  'alpha=%r type=%s' % (self.alpha, type(self.alpha))
+        assert isinstance(self.alpha, float), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
     def convert_to_MPC(self, mpc_id):
         """

@@ -181,7 +181,7 @@ class CELAS2(SpringElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, k, nids, c1, c2, ge, s, comment=''):
+    def __init__(self, eid, k, nids, c1=0, c2=0, ge=0., s=0., comment=''):
         SpringElement.__init__(self)
         if comment:
             self.comment = comment

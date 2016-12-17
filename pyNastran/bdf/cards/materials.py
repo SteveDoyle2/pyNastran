@@ -1179,18 +1179,26 @@ class MAT8(OrthotropicMaterial):
         15:'Yc', 16: 'S', 17:'ge', 18:'F12', 19:'strn',
     }
 
-    def __init__(self, mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, TRef,
-                 Xt, Xc, Yt, Yc, S, ge, F12, strn, comment=''):
+    def __init__(self, mid, e11, e22, nu12, g12, g1z, g2z, rho=0.,
+                 a1=0., a2=0., TRef=0.,
+                 Xt=0., Xc=None,
+                 Yt=0., Yc=None, S=0.,
+                 ge=0., F12=0., strn=0., comment=''):
         OrthotropicMaterial.__init__(self)
         if comment:
             self.comment = comment
+        if Xc is None:
+            Xc = Xt
+        if Yc is None:
+            Yc = Yt
         self.mats8 = None
         self.matt8 = None
 
         self.mid = mid
         self.e11 = e11
         self.e22 = e22
-        # this default was tested with a complicated model (Master_model_TAXI) using NX Nastran
+        # this default was tested with a complicated model (Master_model_TAXI)
+        # using NX Nastran
         # it is not defined in the QRG, but will work
         self.nu12 = nu12
         self.g12 = g12

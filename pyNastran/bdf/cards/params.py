@@ -41,6 +41,8 @@ class PARAM(BaseCard):
         if comment:
             self.comment = comment
         self.key = key
+        if isinstance(values, (int, float, str)):
+            values = [values]
         self.values = values
 
     @classmethod

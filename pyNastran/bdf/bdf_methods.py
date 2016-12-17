@@ -111,6 +111,34 @@ class BDFMethods(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
+    def remove_unused_materials(self):
+        """
+        Removes all unused material cards
+
+        .. warning:: doesn't support many cards
+        """
+        no_materials = ['PELAS']
+        mids_used = []
+        for pid, prop in iteritems(self.properties):
+            prop = self.properties[pid]
+            if prop.type in no_materials:
+                continue
+            elif prop.type in ['PSHELL']:
+                mids_used += [mid for mid in prop.material_ids if mid is not None]
+            elif prop.type in ['PCOMP']:
+                mids_used += prop.Mids()
+
+            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PSHEAR', 'PSOLID']:
+                mids_used.append(prop.Mid())
+            else:
+                raise NotImplementedError(prop)
+
+        all_mids = set(self.materials.keys())
+        for mid in all_mids:
+            if mid not in mids_used:
+                self.log.debug('removing mid=%s' % mid)
+                del self.materials[mid]
+
     def get_area_breakdown(self, property_ids=None):
         """
         gets a breakdown of the volume by property region

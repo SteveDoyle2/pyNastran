@@ -538,7 +538,8 @@ class PCOMP(CompositeShellProperty):
 
     def __init__(self, pid,
                  mids, thicknesses, thetas, souts,
-                 nsm, sb, ft, TRef, ge, lam, z0, comment=''):
+                 nsm=0., sb=0., ft=None, TRef=0., ge=0., lam=None, z0=None,
+                 comment=''):
         CompositeShellProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -548,6 +549,9 @@ class PCOMP(CompositeShellProperty):
 
         #: Non-Structural Mass per unit Area
         self.nsm = nsm
+
+        # Allowable shear stress of the bonding material
+        # required if there is a failure theory
         self.sb = sb
 
         #: Failure Theory
@@ -559,9 +563,7 @@ class PCOMP(CompositeShellProperty):
         self.TRef = TRef
         self.ge = ge
 
-        #: symmetric flag - default = No Symmetry (NO)
-        #if lam is None:  # TODO: is NO an option?
-            #lam = 'NO'
+        #: symmetric flag - default = No Symmetry (=None)
         self.lam = lam
         self.mids = mids
         self.thicknesses = thicknesses
@@ -571,9 +573,19 @@ class PCOMP(CompositeShellProperty):
             z0 = -0.5 * self.Thickness()
         self.z0 = z0
 
+    def validate(self):
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft
-        # TODO: is NO an option?
-        assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
+
+        # 'NO' is not an option!
+        allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
+        if self.lam not in allowed_lam:
+            msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(allowed_lam))
+            raise ValueError(msg)
+
+        if self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN'] and self.sb <= 0.:
+            msg = 'PCOMP pid=%s FT=%s sb=%s; sb must be greater than 0' % (
+                self.pid, self.ft, self.sb)
+            raise ValueError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
