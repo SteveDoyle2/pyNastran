@@ -1,16 +1,18 @@
-#VTK_TRIANGLE = 5
+from __future__ import print_function
+import os
 from six import iteritems
 from six.moves import range
-import os
 from numpy import zeros, arange, mean, amax, amin, array, where, unique, cross
 from numpy.linalg import norm
 
 import vtk
+#VTK_TRIANGLE = 5
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron)
 
-from pyNastran.converters.openfoam.blockMesh import BlockMesh, Boundary
+from pyNastran.converters.openfoam.block_mesh import BlockMesh, Boundary
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.utils import print_bad_path
 
 
@@ -22,21 +24,21 @@ class OpenFoamIO(object):
         data = (
             'OpenFOAM Hex - BlockMeshDict',
             'OpenFOAM Hex (*)', self.load_openfoam_geometry_hex,
-             None, None)
+            None, None)
         return data
 
     def get_openfoam_shell_wildcard_geometry_results_functions(self):
         data = (
             'OpenFOAM Shell - BlockMeshDict',
             'OpenFOAM Shell (*)', self.load_openfoam_geometry_shell,
-             None, None)
+            None, None)
         return data
 
     def get_openfoam_faces_wildcard_geometry_results_functions(self):
         data = (
             'OpenFOAM Face - BlockMeshDict',
             'OpenFOAM Face (*)', self.load_openfoam_geometry_faces,
-             None, None)
+            None, None)
         return data
 
     def remove_old_openfoam_geometry(self, filename):
@@ -44,7 +46,7 @@ class OpenFoamIO(object):
         self.nidMap = {}
         if filename is None:
             self.scalarBar.VisibilityOff()
-            skipReading = True
+            skip_reading = True
         else:
             self.TurnTextOff()
             self.grid.Reset()
@@ -59,9 +61,9 @@ class OpenFoamIO(object):
             except:
                 print("cant delete geo")
                 pass
-            skipReading = False
+            skip_reading = False
         self.scalarBar.Modified()
-        return skipReading
+        return skip_reading
 
     def load_openfoam_geometry_hex(self, openfoam_filename, dirname, plot=True):
         self.load_openfoam_geometry(openfoam_filename, dirname, 'hex')
@@ -76,8 +78,8 @@ class OpenFoamIO(object):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self.remove_old_openfoam_geometry(openfoam_filename)
-        if skipReading:
+        skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
+        if skip_reading:
             return
         #print('self.modelType=%s' % self.modelType)
         print('mesh_3d = %s' % mesh_3d)
@@ -126,7 +128,8 @@ class OpenFoamIO(object):
 
             hexas = None
             patches = None
-            nodes, quads, names = boundary.read_openfoam(point_filename, face_filename, boundary_filename)
+            nodes, quads, names = boundary.read_openfoam(
+                point_filename, face_filename, boundary_filename)
             self.nElements = len(quads) + len(tris)
         else:
             raise RuntimeError(mesh_3d)
@@ -213,7 +216,9 @@ class OpenFoamIO(object):
                 #elem.GetPointIds().SetId(0, node_ids[0])
                 #elem.GetPointIds().SetId(1, node_ids[1])
                 #elem.GetPointIds().SetId(2, node_ids[2])
-                #self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+
+                #elem.GetCellType() = 5  # vtkTriangle
+                #self.grid.InsertNextCell(5, elem.GetPointIds())
         elif is_surface_blockmesh:
             nelements, four = quads.shape
             for eid, element in enumerate(quads):
@@ -229,7 +234,10 @@ class OpenFoamIO(object):
             nelements = quads.shape[0]
             nnames = len(names)
             normals = zeros((nelements, 3), dtype='float32')
-            assert nnames == nelements, 'nnames=%s nelements=%s names.max=%s names.min=%s' % (nnames, nelements, names.max(), names.min())
+            if nnames != nelements:
+                msg = 'nnames=%s nelements=%s names.max=%s names.min=%s' % (
+                    nnames, nelements, names.max(), names.min())
+                raise RuntimeError(msg)
             for eid, element in enumerate(elems):
                 #print('element = %s' % element)
                 ineg = where(element == -1)[0]
@@ -241,7 +249,8 @@ class OpenFoamIO(object):
                 #pid = 1
                 pid = names[eid]
                 if nnodes == 3: # triangle!
-                    f.write('CTRIA3,%i,%i,%i,%i,%i\n' % (eid+1, pid, element[0]+1, element[1]+1, element[2]+1))
+                    f.write('CTRIA3,%i,%i,%i,%i,%i\n' % (
+                        eid+1, pid, element[0]+1, element[1]+1, element[2]+1))
                     elem = vtkTriangle()
                     a = nodes[element[1], :] - nodes[element[0], :]
                     b = nodes[element[2], :] - nodes[element[0], :]
@@ -254,7 +263,8 @@ class OpenFoamIO(object):
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
                 elif nnodes == 4:
-                    f.write('CQUAD4,%i,%i,%i,%i,%i,%i\n' % (eid+1, pid, element[0]+1, element[1]+1, element[2]+1, element[3]+1))
+                    f.write('CQUAD4,%i,%i,%i,%i,%i,%i\n' % (
+                        eid+1, pid, element[0]+1, element[1]+1, element[2]+1, element[3]+1))
                     a = nodes[element[2], :] - nodes[element[0], :]
                     b = nodes[element[3], :] - nodes[element[1], :]
                     n = cross(a, b)
@@ -268,9 +278,11 @@ class OpenFoamIO(object):
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
                 else:
-                    asdf
+                    raise RuntimeError('nnodes=%s' % nnodes)
         else:
-            asdf
+            msg = 'is_surface_blockmesh=%s is_face_mesh=%s; pick one' % (
+                is_surface_blockmesh, is_face_mesh)
+            raise RuntimeError(msg)
 
         self.nElements = nelements
         self.grid.SetPoints(points)
@@ -290,7 +302,6 @@ class OpenFoamIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-
         #assert loads is not None
         #if 'Mach' in loads:
             #avgMach = mean(loads['Mach'])
@@ -298,7 +309,7 @@ class OpenFoamIO(object):
         #else:
             #note = ''
         #self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
-        self.iSubcaseNameMap = {1: ['OpenFoam BlockMeshDict', '']}
+        self.iSubcaseNameMap = {0: ['OpenFoam BlockMeshDict', '']}
         cases = {}
         ID = 1
 
@@ -313,7 +324,8 @@ class OpenFoamIO(object):
         elif mesh_3d == 'faces':
             if len(names) == nelements:
                 is_surface_blockmesh = True
-            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements, patches, names, normals, is_surface_blockmesh)
+            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements, patches,
+                                                   names, normals, is_surface_blockmesh)
         else:
             raise RuntimeError(mesh_3d)
 
@@ -324,29 +336,10 @@ class OpenFoamIO(object):
         pass
 
     def _load_openfoam_results(self, openfoam_filename, dirname):
-        model = Cart3DReader(log=self.log, debug=False)
-        #self.modelType = model.modelType
-        #(nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
+        raise NotImplementedError()
 
-        model.infilename = cart3d_filename
-        if is_binary(infilename):
-            model.infile = open(cart3d_filename, 'rb')
-            (model.nPoints, model.nElements) = self.read_header_binary()
-            points = model.read_points_binary(self.nPoints)
-            elements = model.read_elements_binary(self.nElements)
-            regions = model.read_regions_binary(self.nElements)
-            #loads = {}
-        else:
-            model.infile = open(cart3d_filename, 'r')
-            model.read_header_ascii()
-            points = model.read_points_ascii(bypass=True)
-            elements = model.read_elements_ascii(bypass=True)
-            regions = model.read_regions_ascii(bypass=True)
-            loads = model.read_results_ascii(0, model.infile, result_names=result_names)
-        self.load_cart3d_geometry(cart3d_filename, dirname)
-
-
-    def _fill_openfoam_case(self, cases, ID, nodes, nelements, patches, names, normals, is_surface_blockmesh):
+    def _fill_openfoam_case(self, cases, ID, nodes, nelements, patches, names, normals,
+                            is_surface_blockmesh):
         #result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                         #'rhoU', 'rhoV', 'rhoW', 'rhoE']
         #nelements, three = elements.shape
@@ -362,38 +355,51 @@ class OpenFoamIO(object):
 
         eids = arange(nelements) + 1
         nids = arange(0, nnodes)
-        if new:
-            cases_new = [None]
-            cases_new[0] = (ID, eids, 'ElementID', 'centroid', '%.0f')
-            cases_new[1] = (ID, nids, 'NodeID', 'node', '%.0f')
-            #cases_new[2] = (ID, regions, 'Region', 'centroid', '%.0f')
-        else:
-            cases[(ID, 0, 'ElementID', 1, 'centroid', '%.0f')] = eids
-            cases[(ID, 1, 'NodeID', 1, 'node', '%.0f')] = nids
-            icase = 2
-            if is_surface_blockmesh:
-                if patches is not None:
-                    cases[(ID, icase, 'Patch', 1, 'centroid', '%.0f')] = patches
-                    gf = ('PatchType', icase, [])
-                    geometry_form.append(gf)
-                    icase += 1
+        eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                            location='centroid', scalar=eids)
+        nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                            location='node', scalar=nids)
 
-                if names is not None:
-                    cases[(ID, icase, 'Name', 1, 'centroid', '%.0f')] = names
-                    gf = ('Names', icase, [])
-                    geometry_form.append(gf)
-                    icase += 1
-                else:
-                    asdf
+        icase = 0
+        cases[icase] = (eid_res, (0, 'ElementID'))
+        cases[icase + 1] = (nid_res, (0, 'NodeID'))
 
-            if normals is not None:
-                cases[(ID, icase, 'NormalX', 1, 'centroid', '%.0f')] = normals[:, 0]
-                cases[(ID, icase + 1, 'NormalY', 1, 'centroid', '%.0f')] = normals[:, 1]
-                cases[(ID, icase + 2, 'NormalZ', 1, 'centroid', '%.0f')] = normals[:, 2]
-                geometry_form.append( ('NormalX', icase, []) )
-                geometry_form.append( ('NormalY', icase, []) )
-                geometry_form.append( ('NormalZ', icase, []) )
-                icase += 3
+        if is_surface_blockmesh:
+            if patches is not None:
+                patch_res = GuiResult(0, header='Patch', title='Patch',
+                                      location='centroid', scalar=patches)
+                cases[icase] = (patch_res, (0, 'Patch'))
+                gf = ('PatchType', icase, [])
+                geometry_form.append(gf)
+                icase += 1
+
+            if names is not None:
+                name_res = GuiResult(0, header='Name', title='Name',
+                                     location='centroid', scalar=names)
+                cases[icase] = (name_res, (0, 'Name'))
+                gf = ('Names', icase, [])
+                geometry_form.append(gf)
+                icase += 1
+            else:
+                asdf
+
+        if normals is not None:
+            nx_res = GuiResult(0, header='NormalX', title='NormalX',
+                               location='node', data_format='%.1f',
+                               scalar=normals[:, 0])
+            ny_res = GuiResult(0, header='NormalY', title='NormalY',
+                               location='node', data_format='%.1f',
+                               scalar=normals[:, 1])
+            nz_res = GuiResult(0, header='NormalZ', title='NormalZ',
+                               location='node', data_format='%.1f',
+                               scalar=normals[:, 2])
+            geometry_form.append(('NormalX', icase, []))
+            geometry_form.append(('NormalY', icase, []))
+            geometry_form.append(('NormalZ', icase, []))
+            cases[icase] = (nx_res, (0, 'NormalX'))
+            cases[icase + 1] = (ny_res, (0, 'NormalY'))
+            cases[icase + 2] = (nz_res, (0, 'NormalZ'))
+            icase += 3
 
         form = [
             ('Geometry', None, geometry_form),

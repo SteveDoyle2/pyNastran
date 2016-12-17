@@ -29,6 +29,12 @@ def convert(model, units_to, units=None):
     xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
         units, units_to)
 
+    model.log.debug('xyz_scale = %s' % xyz_scale)
+    model.log.debug('mass_scale = %s' % mass_scale)
+    model.log.debug('time_scale = %s' % time_scale)
+    model.log.debug('weight_scale = %s' % weight_scale)
+    model.log.debug('gravity_scale = %s' % gravity_scale)
+
     if 'WTMASS' in model.params:
         param = model.params['WTMASS']
         value0 = param.values[0]
@@ -39,6 +45,8 @@ def convert(model, units_to, units=None):
 
     _convert_nodes(model, xyz_scale)
     _convert_coordinates(model, xyz_scale)
+    #_convert_coords(model, xyz_scale)
+
     _convert_elements(model, xyz_scale, mass_scale, weight_scale)
     _convert_properties(model, xyz_scale, mass_scale, weight_scale)
     #_convert_masses(model)
@@ -49,8 +57,20 @@ def convert(model, units_to, units=None):
     _convert_loads(model, xyz_scale, weight_scale)
     #_convert_sets(model)
     _convert_optimization(model, xyz_scale, mass_scale, weight_scale)
+#def _convert_coords(model, xyz_scale):
+    #for coord in model.coords:
+        #if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+            #coord.origin *= xyz_scale
+            #coord.e1 *= xyz_scale
+            #coord.e2 *= xyz_scale
+            #coord.e3 *= xyz_scale
+        #elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
+            #coord.origin *= xyz_scale
+        #else:
+            #raise NotImplementedError(coord)
 
 def _convert_nodes(model, xyz_scale):
+    """converts the nodes"""
     for node in itervalues(model.nodes):
         if node.cp_ref.type in ['CORD1R', 'CORD2R']:
             node.xyz *= xyz_scale
@@ -67,11 +87,19 @@ def _convert_coordinates(model, xyz_scale):
         #if coord.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
         #print('coord.rid =', coord.rid)
         if coord.rid == 0:
-            pass
+            coord.origin *= xyz_scale
+            coord.e1 *= xyz_scale
+            coord.e2 *= xyz_scale
+            coord.e3 *= xyz_scale
         elif coord.rid.type in ['CORD1R', 'CORD2R']:
             coord.origin *= xyz_scale
+            coord.e1 *= xyz_scale
+            coord.e2 *= xyz_scale
+            coord.e3 *= xyz_scale
         elif coord.rid.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
             coord.origin[0] *= xyz_scale
+            coord.e1 *= xyz_scale
+            raise NotImplementedError(coord)
         else:
             raise NotImplementedError(coord)
             #coord.e1 *= xyz_scale
@@ -87,8 +115,10 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     """converts the elements"""
     area_scale = xyz_scale ** 2
     moi_scale = xyz_scale ** 4
+    mass_moi_scale = mass_scale * xyz_scale ** 2
     #nsm_scale = mass_scale
     nsm_bar_scale = mass_scale / xyz_scale
+    stiffness_scale = weight_scale / xyz_scale
 
     # these don't have any properties
     skip_elements = ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM', 'CROD', 'CELAS1']
@@ -98,7 +128,14 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     quad_shells = ['CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADX', 'CQUADX8']
     spring_elements = [ 'CELAS2', 'CELAS3', 'CELAS4']
 
-    stiffness_scale = weight_scale / xyz_scale
+    model.log.debug('--Element Scales--')
+    model.log.debug('nsm_bar_scale = %g' % nsm_bar_scale)
+    model.log.debug('moi_scale = %g' % moi_scale)
+    model.log.debug('area_scale = %g' % area_scale)
+    model.log.debug('stiffness_scale = %g\n' % stiffness_scale)
+    if len(model.masses):
+        model.log.debug('mass_moi_scale = %g' % mass_moi_scale)
+
     for elem in itervalues(model.elements):
         elem_type = elem.type
         if elem_type in skip_elements:
@@ -139,11 +176,13 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             elem.area *= area_scale
             elem.nsm *= nsm_bar_scale
         elif elem_type == 'CBAR':
-            # vector
-            pass
+            if elem.x is not None:
+                # vector
+                elem.x = [x*xyz_scale for x in elem.x]
         elif elem_type == 'CBEAM':
-            # vector
-            pass
+            if elem.x is not None:
+                # vector
+                elem.x = [x*xyz_scale for x in elem.x]
         else:
             raise NotImplementedError('type=%r; elem:\n%s' % (elem.type, elem))
 
@@ -152,8 +191,8 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         if elem_type == 'CONM2':
             elem.mass *= mass_scale
             elem.X *= xyz_scale
-            elem.I = [moi * mass_scale * xyz_scale ** 2 # I = m * r^2
-                      for moi in elem.I]
+                # I = m * r^2
+            elem.I = [moi * mass_moi_scale for moi in elem.I]
         else:
             raise NotImplementedError(elem)
 
@@ -161,7 +200,6 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     """converts the properties"""
     area_scale = xyz_scale ** 2
     moi_scale = xyz_scale ** 4
-    assert 679740. * moi_scale == 6.7974E-7, 679740. * moi_scale
 
     # there are multiple nsm scales (CONM2, bar, plate)
     nsm_scale = mass_scale
@@ -169,6 +207,13 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     nsm_plate_scale = mass_scale / xyz_scale ** 2
     stiffness_scale = weight_scale / xyz_scale
     stress_scale = weight_scale / xyz_scale ** 2
+
+
+    model.log.debug('--Property Scales--')
+    model.log.debug('nsm_bar_scale = %g' % nsm_bar_scale)
+    model.log.debug('nsm_plate_scale = %g' % nsm_plate_scale)
+    model.log.debug('stiffness_scale = %g' % stiffness_scale)
+    model.log.debug('stress_scale = %g\n' % stress_scale)
 
     skip_properties = ['PSOLID']
     for prop in itervalues(model.properties):
@@ -187,6 +232,7 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             prop.i1 *= moi_scale
             prop.i2 *= moi_scale
             prop.i12 *= moi_scale
+            prop.j *= moi_scale
             prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PBARL':
@@ -247,12 +293,21 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
     """converts the materials"""
     density_scale = mass_scale / xyz_scale ** 3
     stress_scale = weight_scale / xyz_scale ** 2
+
+    model.log.debug('--Material Scales--')
+    model.log.debug('density_scale = %g' % density_scale)
+    model.log.debug('stress_scale = %g\n' % stress_scale)
+
     for mat in itervalues(model.materials):
         mat_type = mat.type
         if mat_type == 'MAT1':
             mat.e *= stress_scale
             mat.g *= stress_scale
             mat.rho *= density_scale
+            mat.St *= stress_scale
+            mat.Sc *= stress_scale
+            mat.Ss *= stress_scale
+
         elif mat_type == 'MAT8':
             mat.e11 *= stress_scale
             mat.e22 *= stress_scale
@@ -274,6 +329,15 @@ def _convert_loads(model, xyz_scale, weight_scale):
     moment_scale = xyz_scale * weight_scale
     pressure_scale = weight_scale / xyz_scale ** 2
     accel_scale = weight_scale / xyz_scale
+
+    if not model.loads:
+        return
+    model.log.debug('--Load Scales--')
+    model.log.debug('force_scale = %s' % force_scale)
+    model.log.debug('moment_scale = %s' % moment_scale)
+    model.log.debug('pressure_scale = %s' % pressure_scale)
+    model.log.debug('accel_scale = %s\n' % accel_scale)
+
     for loads in itervalues(model.loads):
         assert isinstance(loads, list), loads
         for load in loads: # list
@@ -290,8 +354,8 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 #load.mag *= moment_scale
             #elif load_type == 'PLOAD2':
                 #load.mag *= moment_scale
-            #elif load_type == 'PLOAD4':
-                #load.mag *= moment_scale
+            elif load_type == 'PLOAD4':
+                load.mag *= pressure_scale
             else:
                 raise NotImplementedError(load)
 
@@ -300,10 +364,23 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     Converts the aero cards
       - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
     """
+    if not(model.aecomps or model.aefacts or model.aeparams or model.aelinks or
+           model.aelists or model.aestats or model.aesurf or model.aesurfs or
+           model.caeros or model.paeros or model.monitor_points or model.splines or
+           model.aeros or model.trims or model.divergs):
+        return
+
     area_scale = xyz_scale ** 2
     velocity_scale = xyz_scale / time_scale
     pressure_scale = weight_scale / xyz_scale ** 2
     density_scale = weight_scale / xyz_scale ** 3
+
+    model.log.debug('--Aero Scales--')
+    model.log.debug('area_scale = %s' % area_scale)
+    model.log.debug('velocity_scale = %s' % velocity_scale)
+    model.log.debug('pressure_scale = %s' % pressure_scale)
+    model.log.debug('density_scale = %s\n' % density_scale)
+
     if model.aero:
     #if hasattr(model, 'aero'):
         #aero = model.aero
