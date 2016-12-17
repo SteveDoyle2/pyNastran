@@ -841,8 +841,8 @@ class PBEAML(IntegratedLineProperty):
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
     |        | DIMn(m) |  NSM(m) | SO(B)   |   1.0   | DIM1(B) | DIM2(B) | -etc.-  | DIMn(B) |
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
-    |        | NSM(B)  |
-    +--------+---------+
+    |        | NSM(B)  |         |         |         |         |         |         |         |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
     """
     type = 'PBEAML'
     valid_types = {
@@ -894,7 +894,7 @@ class PBEAML(IntegratedLineProperty):
     def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
-        group = string_or_blank(card, 3, 'group', 'MSCBMLO')
+        group = string_or_blank(card, 3, 'group', 'MSCBML0')
         Type = string(card, 4, 'Type')
 
         # determine the number of required dimensions on the PBEAM

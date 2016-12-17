@@ -1051,8 +1051,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.case_control_deck.solmap_to_value = self._solmap_to_value
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
+        #self._is_cards_dict = True
         if self._is_cards_dict:
             cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
+            if 0:
+                with open('dump.bdf', 'w') as bdf_file_obj:
+                    bdf_file_obj.write('\n'.join(self.executive_control_lines))
+                    bdf_file_obj.write(str(self.case_control_deck))
+                    for cardname, cards in iteritems(cards):
+                        for (comment, cardlines) in cards:
+                            #bdf_file_obj.write(comment + '\n')
+                            bdf_file_obj.write('\n'.join(cardlines) + '\n')
+                        bdf_file_obj.write('\n')
         else:
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
         self._parse_cards(cards, card_count)
