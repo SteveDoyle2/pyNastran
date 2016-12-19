@@ -3012,7 +3012,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         cid : int; default=0
             the coordinate system to get xyz in
         in_place : bool, default=False
-            If true the original op2 object is modified, otherwise a
+            If true the original xyz_cp is modified, otherwise a
             new one is created.
 
         Returns
