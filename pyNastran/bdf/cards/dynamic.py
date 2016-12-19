@@ -701,9 +701,9 @@ class NLPCI(BaseCard):
 
 class ROTORD(BaseCard):
     """
-    Define Rotor Dynamics Solution Options
-    Defines rotor dynamics solution options.
+    NX-specific card
 
+    Define Rotor Dynamics Solution Options
     +--------+--------+--------+----------+---------+--------+--------+----------+----------+
     |   1    |   2    |    3   |     4    |    5    |    6   |    7   |     8    |    9     |
     +========+========+========+==========+=========+========+========+==========+==========+

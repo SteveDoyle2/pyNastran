@@ -550,6 +550,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     #fem1.writeAsCTRIA3(out_model)
 
     fem1._get_maps()
+    fem1.remove_unused_materials()
     if xref:
         fem1.get_area_breakdown()
         fem1.get_volume_breakdown()
