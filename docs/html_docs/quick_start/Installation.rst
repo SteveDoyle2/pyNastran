@@ -21,7 +21,7 @@ Overview
 
 Download Python
 ===============
-v0.8 is tested against:
+The software is tested against:
  - Python 2.7.12 (Windows/Linux)
  - Python 3.3 (Linux)
  - Python 3.4 (Linux)
