@@ -14,6 +14,10 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 Overall Notes
 
 Added BDF
+   - added PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
+   - added CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE
+   - added POINT, PBRSECT, PBMSECT
+   - added DVGRID
    - *** SET2,PEALST,TIC,DMI,CONM1
 
 Overall OP2
@@ -46,7 +50,7 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.8.1 released 2016/9/??-----------------------
+-----------------------v0.8.1 released 2017/1/??-----------------------
 This is a bug fix release and minor new features.
 
 Done
@@ -114,6 +118,7 @@ OP2:
    - MEFF, ASSIG, ASEPS tables now skipped properly
    - eigenvector_ROUGV1 now supported
  - removed beta_transforms from gpforce
+ - random tables (e.g., PSD, ATO, RMS) for OUG-style tables
 
 Other
  - cart3d legend values are now saved

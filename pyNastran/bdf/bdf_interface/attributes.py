@@ -612,7 +612,7 @@ class BDFAttributes(object):
             'aestats' : ['AESTAT'],
             'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
             'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
-            'monitor_points' : ['MONPNT1'],
+            'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3'],
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
