@@ -2911,20 +2911,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Example
         --------
-        # assume GRID 1 has a CD=10
-        # assume GRID 2 has a CD=10
-        # assume GRID 5 has a CD=50
+        # assume GRID 1 has a CD=10, CP=0
+        # assume GRID 2 has a CD=10, CP=0
+        # assume GRID 5 has a CD=50, CP=0
         >>> model.point_ids
         [1, 2, 5]
-        >>> i_transform = model.get_displacement_index_xyz_cp_cd()
-        >>> i_transform[10]
+        >>> out = model.get_displacement_index_xyz_cp_cd()
+        >>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        >>> nid_cp_cd
+        [
+           [1, 0, 10],
+           [2, 0, 10],
+           [5, 0, 50],
+        ]
+        >>> icd_transform[10]
         [0, 1]
 
-        >>> i_transform[50]
+        >>> icd_transform[50]
         [2]
-
-        Note:  assumes sorted GRID & SPOINTs are sorted by ID and interspersed, but part of it requires
-               it's not interspersed
         """
         nids_cd_transform = defaultdict(list)
         nids_cp_transform = defaultdict(list)
@@ -2946,13 +2950,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
             raise ValueError(msg)
 
+        i = 0
         xyz_cp = np.zeros((nnodes + nspoints + nepoints, 3), dtype=dtype)
         nid_cp_cd = np.zeros((nnodes + nspoints + nepoints, 3), dtype='int32')
-        i = 0
         for nid, node in sorted(iteritems(self.nodes)):
             cd = node.Cd()
             cp = node.Cp()
-            nids_cd_transform[cp].append(nid)
+            nids_cp_transform[cp].append(nid)
             nids_cd_transform[cd].append(nid)
             nid_cp_cd[i, :] = [nid, cp, cd]
             xyz_cp[i, :] = node.xyz
@@ -2975,23 +2979,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         icp_transform = {}
         icd_transform = {}
         nids_all = nid_cp_cd[:, 0]
+
+        # get the indicies of the xyz array where the nodes that
+        # need to be transformed are
         for cd, nids in sorted(iteritems(nids_cd_transform)):
             if cd in [0, -1]:
                 continue
             nids = np.array(nids)
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
-            if cd in nids_cp_transform:
-                icp_transform[cd] = icd_transform[cd]
-        for cp, nids in sorted(iteritems(nids_cd_transform)):
+
+        for cp, nids in sorted(iteritems(nids_cp_transform)):
             if cp in [0, -1]:
                 continue
-            if cp in icd_transform:
-                continue
             nids = np.array(nids)
-            icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
+            icp_transform[cp] = np.where(np.in1d(nids_all, nids))[0]
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
-    def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform, cid=0, inplace=False):
+    def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform,
+                                   cid=0, inplace=False):
         """
         Working on faster method for calculating node locations
         Not validated...
