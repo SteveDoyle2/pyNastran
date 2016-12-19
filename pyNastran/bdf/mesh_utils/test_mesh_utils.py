@@ -100,6 +100,7 @@ class TestMeshUtils(unittest.TestCase):
         units_to = ['m', 'kg', 's']
 
         convert(model, units_to, units=units_from)
+        model.remove_unused_materials()
         model.write_bdf(bdf_filename_out2)
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
