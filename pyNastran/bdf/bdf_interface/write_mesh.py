@@ -695,7 +695,7 @@ class WriteMesh(BDFAttributes):
         """Writes the dynamic cards sorted by ID"""
         is_dynamic = (self.dareas or self.dphases or self.nlparms or self.frequencies or
                       self.methods or self.cMethods or self.tsteps or self.tstepnls or
-                      self.transfer_functions or self.delays)
+                      self.transfer_functions or self.delays or self.rotors)
         if is_dynamic:
             msg = ['$DYNAMIC\n']
             for (unused_id, method) in sorted(iteritems(self.methods)):
@@ -718,6 +718,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(freq.write_card(size, is_double))
             for (unused_id, delay) in sorted(iteritems(self.delays)):
                 msg.append(delay.write_card(size, is_double))
+            for (unused_id, rotor) in sorted(iteritems(self.rotors)):
+                msg.append(rotor.write_card(size, is_double))
 
             for (unused_id, tfs) in sorted(iteritems(self.transfer_functions)):
                 for tf in tfs:

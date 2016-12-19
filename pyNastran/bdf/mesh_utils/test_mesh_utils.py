@@ -13,7 +13,7 @@ import numpy as np
 from pyNastran.bdf.cards.elements.mass import CONM2
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, CELAS2, PARAM
+from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
 from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
@@ -74,7 +74,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
 
-    def test_convert_bwb(self):
+    def _test_convert_bwb(self):
         """converts a bwb model"""
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
         bdf_filename_out = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes.bdf')
@@ -291,11 +291,11 @@ class TestMeshUtils(unittest.TestCase):
                                   log=log, debug=False)
 
         tol = 0.2
-        node_set = [20, 3]
+        node_list = [20, 3]
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False,
+                              node_set=node_list, crash_on_collapse=False,
                               log=log, debug=False)
         model = BDF(log=log, debug=False)
         model.read_bdf(bdf_filename_out)
@@ -488,6 +488,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename_out)
 
     def test_fix_bad_quads(self):
+        """split high interior angle quads"""
         msg = [
             'SOL 101',
             'CEND',
@@ -524,6 +525,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename)
 
     def test_renumber_01(self):
+        """renumbers a deck in a couple ways"""
         log = SimpleLogger(level='warning')
         bdf_filename = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
@@ -551,6 +553,7 @@ class TestMeshUtils(unittest.TestCase):
         read_bdf(bdf_filename_out3, log=log)
 
     def test_merge_01(self):
+        """merges multiple bdfs into a single deck"""
         #log = SimpleLogger(level='info')
         bdf_filename1 = os.path.abspath(os.path.join(
             pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))

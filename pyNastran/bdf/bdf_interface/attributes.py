@@ -415,6 +415,9 @@ class BDFAttributes(object):
         #: stores DELAY
         self.delays = {}
 
+        #: stores ROTORG
+        self.rotors = {}
+
         # --------------------------- aero defaults --------------------------
         # aero cards
         #: stores CAEROx
@@ -640,6 +643,7 @@ class BDFAttributes(object):
             'tstepnls' : ['TSTEPNL'],
             'transfer_functions' : ['TF'],
             'delays' : ['DELAY'],
+            'rotors' : ['ROTORG'],
 
             'frequencies' : ['FREQ', 'FREQ1', 'FREQ2', 'FREQ4'],
 

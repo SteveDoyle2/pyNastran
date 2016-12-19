@@ -26,7 +26,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank,
+    integer, integer_or_blank, double, double_or_blank, integer_or_string,
     string_or_blank, blank, fields, components as fcomponents, components_or_blank
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -691,6 +691,110 @@ class NLPCI(BaseCard):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+class ROTORG(BaseCard):
+    """
+    Defines a dynamic transfer function of the form:
+        (B0 + B1 p + B2 *p2)*ud  sum(A0_i + A1_i*p + A2_i*p2)*ui = 0
+
+    +----+-----+-----+------+------+------+--------+----+----+
+    |  1 |  2  |  3  |   4  |   5  |   6  |    7   |  8 |  9 |
+    +====+=====+=====+======+======+======+========+====+====+
+    | ROTORG RSETID G1 G2 G3 G4 G5 G6 G7
+    ROTORG 14 101 THRU 190 BY 5
+    46 23 57 82 9 16
+    201 THRU 255
+    93 94 95 97
+    """
+    type = 'ROTORG'
+    def __init__(self, sid, nids, comment=''):
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.nids = nids
+
+    def validate(self):
+        pass
+        #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
+
+    def cross_reference(self, model):
+        pass
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nid1 = integer(card, 2, 'nid1')
+        nid2 = integer_or_string(card, 3, 'nid2')
+        if nid2 == 'THRU':
+            nid3 = integer(card, 4, 'nid3')
+            nids = [i for i in range(nid1, nid3+1)]
+        else:
+            nids = [nid1, nid2]
+            nid = integer_or_blank(card, 4, 'nid3')
+            if nid:
+                nids.append(nid)
+
+            nid = integer_or_blank(card, 5, 'nid4')
+            if nid:
+                nids.append(nid)
+
+            nid = integer_or_blank(card, 6, 'nid5')
+            if nid:
+                nids.append(nid)
+
+            nid = integer_or_blank(card, 7, 'nid6')
+            if nid:
+                nids.append(nid)
+
+            nid = integer_or_blank(card, 8, 'nid7')
+            if nid:
+                nids.append(nid)
+
+        nfields = len(card) - 9
+        nrows = nfields // 8
+        if nfields % 8 > 0:
+            nrows += 1
+
+        for irow in range(nrows):
+            j = irow * 8 + 9
+            nid1 = integer(card, j, 'grid_%i' % (irow + 1))
+            nid2 = integer_or_string(card, j+1, 'nid2')
+            if nid2 == 'THRU':
+                nid3 = integer(card, j, 'nid3')
+                nids += [i for i in range(nid1, nid3+1)]
+            else:
+                nid = integer_or_blank(card, j+2, 'nid3')
+                if nid:
+                    nids.append(nid)
+
+                nid = integer_or_blank(card, j+3, 'nid4')
+                if nid:
+                    nids.append(nid)
+
+                nid = integer_or_blank(card, j+4, 'nid5')
+                if nid:
+                    nids.append(nid)
+
+                nid = integer_or_blank(card, j+5, 'nid6')
+                if nid:
+                    nids.append(nid)
+
+                nid = integer_or_blank(card, j+6, 'nid7')
+                if nid:
+                    nids.append(nid)
+
+        return ROTORG(sid, nids, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['ROTORG', self.sid] + self.nids
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # double precision?
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

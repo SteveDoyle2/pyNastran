@@ -806,6 +806,14 @@ class AddMethods(BDFAttributes):
         self.nlparms[key] = nlparm
         self._type_to_id_map[nlparm.type].append(key)
 
+    def add_rotor(self, rotor):
+        """adds a ROTORG object"""
+        key = rotor.sid
+        assert key not in self.rotors
+        assert key > 0, 'key=%s; rotor=%s\n' % (key, rotor)
+        self.rotors[key] = rotor
+        self._type_to_id_map[rotor.type].append(key)
+
     def add_nlpci(self, nlpci):
         """adds a NLPCI object"""
         key = nlpci.nlpci_id

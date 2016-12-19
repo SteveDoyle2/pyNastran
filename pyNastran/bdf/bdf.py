@@ -73,7 +73,7 @@ from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
-    TSTEP, TSTEPNL, NLPARM, NLPCI, TF)
+    TSTEP, TSTEPNL, NLPARM, NLPCI, TF, ROTORG)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
@@ -466,6 +466,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DPHASE',  ## dphases
             'DELAY',  ## delays
             'NLPARM',  ## nlparms
+            'ROTORG', ## rotors
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
             'TSTEPNL',  ## tstepnls
@@ -788,6 +789,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             nlpci.validate()
         for key, nlparm in sorted(iteritems(self.nlparms)):
             nlparm.validate()
+        for key, rotor in sorted(iteritems(self.rotors)):
+            rotor.validate()
         for key, tstep in sorted(iteritems(self.tsteps)):
             tstep.validate()
         for key, tstepnl in sorted(iteritems(self.tstepnls)):
@@ -2122,6 +2125,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'NLPARM' : (NLPARM, self.add_nlparm),
             # BCTSET
+            'ROTORG' : (ROTORG, self.add_rotor),
         }
         self._card_parser_prepare = {
             'CORD1R' : self._prepare_cord1r,
@@ -2345,11 +2349,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_pmass(self, card, card_obj, comment=''):
         """adds a PMASS"""
-        card_instance = PMASS(card_obj, icard=0, comment=comment)
+        card_instance = PMASS.add_card(card_obj, icard=0, comment=comment)
         self.add_property_mass(card_instance)
         for (i, j) in enumerate([3, 5, 7]):
             if card_obj.field(j):
-                card_instance = PMASS(card_obj, icard=i+1, comment=comment)
+                card_instance = PMASS.add_card(card_obj, icard=i+1, comment=comment)
                 self.add_property_mass(card_instance)
 
     def _prepare_darea(self, card, card_obj, comment=''):
@@ -2718,6 +2722,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # dynamic cards
             'dareas', 'dphases', 'nlparms', 'nlpcis', 'tsteps', 'tstepnls',
+            'rotors',
 
             # direct matrix input - DMIG - dict
             'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',

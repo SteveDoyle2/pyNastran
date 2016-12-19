@@ -21,7 +21,7 @@ from copy import deepcopy
 import multiprocessing as mp
 from codecs import open
 
-from six import iteritems, string_types, PY2
+from six import iteritems, string_types, PY2, itervalues
 from six.moves import zip
 
 import numpy as np
@@ -117,19 +117,36 @@ class BDFMethods(BDFAttributes):
 
         .. warning:: doesn't support many cards
         """
-        no_materials = ['PELAS']
+        no_materials = [
+            'PELAS', 'PDAMP', 'PBUSH',
+            'PELAST', 'PDAMPT', 'PBUSHT',
+            'PGAP', 'PBUSH1D', 'PFAST', 'PVISC',
+        ]
+        prop_mid = [
+            'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PSHEAR', 'PSOLID',
+            'PROD', 'PRAC2D', 'PRAC3D', 'PLSOLID', 'PLPLANE', 'PPLANE',
+            'PTUBE',
+        ]
         mids_used = []
+        for eid, elem in iteritems(self.elements):
+            if elem.type in ['CONROD']:
+                mids_used.append(elem.Mid())
+
         for pid, prop in iteritems(self.properties):
             prop = self.properties[pid]
             if prop.type in no_materials:
                 continue
             elif prop.type in ['PSHELL']:
-                mids_used += [mid for mid in prop.material_ids if mid is not None]
-            elif prop.type in ['PCOMP']:
-                mids_used += prop.Mids()
+                mids_used.extend([mid for mid in prop.material_ids if mid is not None])
 
-            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PSHEAR', 'PSOLID']:
+            elif prop.type in prop_mid:
                 mids_used.append(prop.Mid())
+            elif prop.type in ['PCOMP', 'PCOMPG']:
+                mids_used.extend(prop.Mids())
+
+            elif prop.type == 'PBCOMP':
+                mids_used.append(prop.Mid())
+                mids_used.extend(prop.Mids())
             else:
                 raise NotImplementedError(prop)
 
@@ -138,6 +155,9 @@ class BDFMethods(BDFAttributes):
             if mid not in mids_used:
                 self.log.debug('removing mid=%s' % mid)
                 del self.materials[mid]
+
+        for dvmrel in itervalues(self.dvmrels):
+            mids_used.append(dvmrel.Mid())
 
     def get_area_breakdown(self, property_ids=None):
         """
@@ -153,8 +173,13 @@ class BDFMethods(BDFAttributes):
         #'PLSOLID',
         #'PCOMPS',
         """
-        pid_eids = self.get_element_ids_dict_with_pids(property_ids)
+        skip_props = [
+            'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
+            'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
+            'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
+            'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID']
 
+        pid_eids = self.get_element_ids_dict_with_pids(property_ids)
         pids_to_area = {}
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
@@ -167,10 +192,7 @@ class BDFMethods(BDFAttributes):
                 for eid in eids:
                     elem = self.elements[eid]
                     areas.append(elem.Area())
-            elif prop.type in ['PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
-                               'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
-                               'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
-                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',]:
+            elif prop.type in skip_props:
                 pass
             else:
                 raise NotImplementedError(prop)

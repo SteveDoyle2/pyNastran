@@ -18,8 +18,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class PointProperty(Property):
-    def __init__(self, card, data):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
 
     def cross_reference(self, model):
         pass
@@ -91,18 +91,26 @@ class PMASS(PointProperty):
         1: 'pid', 2:'mass',
     }
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
-        PointProperty.__init__(self, card, data)
+    def __init__(self, pid, mass, comment=''):
+        PointProperty.__init__(self)
+        self.pid = pid
+        self.mass = mass
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
         if comment:
             self.comment = comment
-        if card:
-            icard *= 2
-            #: Property ID
-            self.pid = integer(card, 1 + icard, 'pid')
-            self.mass = double_or_blank(card, 2 + icard, 'mass', 0.)
-        else:
-            self.pid = data[0]
-            self.mass = data[1]
+        icard *= 2
+        #: Property ID
+        pid = integer(card, 1 + icard, 'pid')
+        mass = double_or_blank(card, 2 + icard, 'mass', 0.)
+        return PMASS(pid, mass, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        mass = data[1]
+        return PMASS(pid, mass, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()

@@ -1083,6 +1083,8 @@ class DRESP1(OptConstraint):
                     self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
                 #print(msgi)
                 self.atti_ref = self.atti
+            elif self.property_type is None:
+                pass
             else:
                 msg = 'PropertyType=%r is not supported\n' % self.property_type
                 msg += str(self)
