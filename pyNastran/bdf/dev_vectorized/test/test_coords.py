@@ -1,4 +1,5 @@
 from __future__ import print_function
+import unittest
 from six.moves import StringIO
 from numpy import array, allclose
 import unittest

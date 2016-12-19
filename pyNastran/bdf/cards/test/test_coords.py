@@ -282,17 +282,17 @@ class TestCoords(unittest.TestCase):
         model = BDF(debug=False)
         cards = [
             [
-                #'$ Femap with NX Nastran Coordinate System 10 : rectangular defined in a rectangular',
+                #'$ Coordinate System 10 : rectangular defined in a rectangular',
                 'CORD2R*               10               0             10.              5.',
                 '*                     3.   10.3420201433   4.53015368961   3.81379768136*       ',
                 '*          10.7198463104   5.68767171433   3.09449287122',],
             [
-                #'$ Femap with NX Nastran Coordinate System 11 : cylindrical defined in rectangular',
+                #'$ Coordinate System 11 : cylindrical defined in rectangular',
                 'CORD2C*               11               0              7.              3.',
                 '*                     9.   7.64278760969   2.73799736977   9.71984631039*       ',
                 '*          7.75440650673   3.37968226211   8.46454486422',],
             [
-                #'$ Femap with NX Nastran Coordinate System 12 : spherical defined in rectangular',
+                #'$ Coordinate System 12 : spherical defined in rectangular',
                 'CORD2S*               12               0             12.              8.',
                 '*                     5.   12.6427876097   7.86697777844   5.75440650673*       ',
                 '*          12.6634139482   8.58906867688   4.53861076379',],
@@ -311,10 +311,24 @@ class TestCoords(unittest.TestCase):
             card = model.process_card(lines)
             model.add_card(card, card[0])
         model.cross_reference()
+
+        xyz_cid0_actual = array([
+            [30., 40., 50.],
+            [30., 40., 50.],
+            [30., 40., 50.],
+        ], dtype='float64')
         for nid in model.nodes:
             a = array([30., 40., 50.])
             b = model.Node(nid).get_position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
+            self.assertTrue(allclose(array([30., 40., 50.]),
+                                     model.Node(nid).get_position()), str(a - b))
+        xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float64')
+        array_equal(xyz_cid0_actual, xyz_cid0)
+
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        array_equal(xyz_cid0_actual, xyz_cid0_xform)
+        assert array_equal(nid_cp_cd[:, 0], array([10, 11, 12]))
 
     def test_cord2_rcs_02(self):
         """
@@ -327,17 +341,17 @@ class TestCoords(unittest.TestCase):
                 '*                     0.              0.              0.              1.*       ',
                 '*                     1.              0.              1.',],
             [
-                #'$ Femap with NX Nastran Coordinate System 20 : rectangular defined in cylindrical',
+                #'$ Coordinate System 20 : rectangular defined in cylindrical',
                 'CORD2R*               20               1              7.             20.',
                 '*                    -6.   7.07106781187   28.1301023542             -6.*       ',
                 '*          7.70710678119             20.  -5.29289321881',],
             [
-                #'$ Femap with NX Nastran Coordinate System 21 : cylindrical defined in cylindrical',
+                #'$ Coordinate System 21 : cylindrical defined in cylindrical',
                 'CORD2C*               21               1             15.            -30.',
                 '*                    12.   14.6565766735  -30.3177805524   12.9355733712*       ',
                 '*          14.6234241583  -26.4257323272   11.9304419665',],
             [
-                #'$ Femap with NX Nastran Coordinate System 22 : spherical defined in cylindrical',
+                #'$ Coordinate System 22 : spherical defined in cylindrical',
                 'CORD2S*               22               1              5.            -75.',
                 '*                    20.   5.66032384035  -82.9319986389   19.8502545865*       ',
                 '*          4.88876051026  -73.8006653677   19.0116094889',],
@@ -355,10 +369,25 @@ class TestCoords(unittest.TestCase):
             card = model.process_card(lines)
             model.add_card(card, card[0])
         model.cross_reference()
+
+        xyz_cid0_actual = array([
+            [30., 40., 50.],
+            [30., 40., 50.],
+            [30., 40., 50.],
+        ], dtype='float64')
         for nid in model.nodes:
             a = array([30., 40., 50.])
             b = model.Node(nid).get_position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
+            self.assertTrue(allclose(array([30., 40., 50.]),
+                                     model.Node(nid).get_position()), str(a - b))
+        xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float64')
+        array_equal(xyz_cid0_actual, xyz_cid0)
+
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        array_equal(xyz_cid0_actual, xyz_cid0_xform)
+        assert array_equal(nid_cp_cd[:, 0], array([20, 21, 22]))
+
 
     def test_cord2_rcs_03(self):
         """
@@ -371,17 +400,17 @@ class TestCoords(unittest.TestCase):
                 '*                     0.              0.              0.              1.*       ',
                 '*                     1.              0.              1.',],
             [
-                #'$ Femap with NX Nastran Coordinate System 30 : rectangular in spherical',
+                #'$ Coordinate System 30 : rectangular in spherical',
                 'CORD2R*               30               2             14.             30.',
                 '*                    70.    13.431863852   32.1458443949   75.2107442927*       ',
                 '*          14.4583462334   33.4569982885   68.2297989286',],
             [
-                #'$ Femap with NX Nastran Coordinate System 31 : cylindrical in spherical',
+                #'$ Coordinate System 31 : cylindrical in spherical',
                 'CORD2C*               31               2              3.             42.',
                 '*                  -173.   2.86526881213   45.5425615252   159.180363517*       ',
                 '*          3.65222385965   29.2536614627  -178.631312271',],
             [
-                #'$ Femap with NX Nastran Coordinate System 32 : spherical in spherical',
+                #'$ Coordinate System 32 : spherical in spherical',
                 'CORD2S*               32               2             22.             14.',
                 '*                    85.   22.1243073983   11.9537753718   77.9978191005*       ',
                 '*          21.0997242967   13.1806120497   88.4824763008',],
@@ -399,10 +428,24 @@ class TestCoords(unittest.TestCase):
             card = model.process_card(lines)
             model.add_card(card, card[0])
         model.cross_reference()
+
+        xyz_cid0_actual = array([
+            [30., 40., 50.],
+            [30., 40., 50.],
+            [30., 40., 50.],
+        ], dtype='float64')
         for nid in model.nodes:
             a = array([30., 40., 50.])
             b = model.Node(nid).get_position()
-            self.assertTrue(allclose(array([30., 40., 50.]), model.Node(nid).get_position()), str(a - b))
+            self.assertTrue(allclose(array([30., 40., 50.]),
+                                     model.Node(nid).get_position()), str(a - b))
+        xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float64')
+        array_equal(xyz_cid0_actual, xyz_cid0)
+
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        array_equal(xyz_cid0_actual, xyz_cid0_xform)
+        assert array_equal(nid_cp_cd[:, 0], array([30, 31, 32]))
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
@@ -497,7 +540,7 @@ class TestCoords(unittest.TestCase):
             assert allclose(n, pos), msg
 
 
-    def test_A(self):
+    def test_coord_xform_a(self):
         origin = array([0., 0., 0.])
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
@@ -523,10 +566,10 @@ class TestCoords(unittest.TestCase):
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
-        self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
+        self.assertTrue(array_equal(Fxyz_local, F)), 'expected=%s actual=%s' % (F, Fxyz_local)
+        self.assertTrue(array_equal(Mxyz_local, cross(r, F))), 'expected=%s actual=%s' % (M, Mxyz_local)
 
-    def test_B(self):
+    def test_coord_xform_b(self):
         origin = array([0., 0., 0.])
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
@@ -560,7 +603,7 @@ class TestCoords(unittest.TestCase):
         zaxis = [0., 0., 1.]
         xzplane = [1., 0., 0.]
         cid1 =CORD2R(cid=1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                     comment='')
+                     comment='cord2r')
 
         xaxis = [1., 0., 0.]
         yaxis = [0., 1., 0.]

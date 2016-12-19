@@ -154,9 +154,9 @@ def data_in_material_coord(bdf, op2, in_place=False):
         A :class:`.BDF` object that corresponds to the 'op2'.
     op2 : :class:`.OP2` object
         A :class:`.OP2` object that corresponds to the 'bdf'.
-    in_place : bool, optional
-        If true the original op2 object is modified, otherwise a new one is
-        created.
+    in_place : bool; default=False
+        If true the original op2 object is modified, otherwise a new one
+        is created.
 
     Returns
     -------

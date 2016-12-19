@@ -2517,7 +2517,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
-    def get_xyz_in_coord(self, cid=0, dtype='float32'):
+    def get_xyz_in_coord(self, cid=0, dtype='float64'):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -2525,7 +2525,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         ----------
         cid : int; default=0
             the desired coordinate system
-        dtype : str; default='float32'
+        dtype : str; default='float64'
             the data type of the xyz coordinates
 
         Returns
@@ -2888,14 +2888,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         Used in combination with ``OP2.transform_displacements_to_global``
 
         Parameters
-        -----------
+        ----------
         dtype : str
             the type of xyz_cp
         sort_ids : bool; default=True
             sort the ids
 
         Returns
-        --------
+        -------
         icd_transform : dict{int cd : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
@@ -2941,13 +2941,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if self.epoints is not None:
             epoints = self.epoints.points
             nepoints = len(epoints)
-            #raise NotImplementedError('EPOINTs')
 
         if nnodes + nspoints + nepoints == 0:
             msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
             raise ValueError(msg)
 
-        #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
         xyz_cp = np.zeros((nnodes + nspoints + nepoints, 3), dtype=dtype)
         nid_cp_cd = np.zeros((nnodes + nspoints + nepoints, 3), dtype='int32')
         i = 0
@@ -2993,22 +2991,46 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
-    def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform, cid=0):
+    def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform, cid=0, inplace=False):
         """
         Working on faster method for calculating node locations
         Not validated...
+
+        Parameters
+        ----------
+        xyz_cp : (n, 3) float ndarray
+            points in the CP coordinate system
+        icp_transform : dict{int cp : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their input (`CP`) in that
+            coordinate system.
+        cid : int; default=0
+            the coordinate system to get xyz in
+        in_place : bool, default=False
+            If true the original op2 object is modified, otherwise a
+            new one is created.
+
+        Returns
+        -------
+        xyz_cid : (n, 3) float ndarray
+            points in the CID coordinate system
         """
         coord2 = self.coords[cid]
         beta2 = coord2.beta()
 
-        xyz_cid0 = np.copy(xyz_cp)
+        if inplace:
+            xyz_cid0 = xyz_cp
+        else:
+            xyz_cid0 = np.copy(xyz_cp)
+
+        # transform the grids to the global coordinate system
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
                 continue
             coord = self.coords[cp]
             beta = coord.beta()
-            is_beta = np.abs(np.diagonal(beta)).min() == 1.
-            is_origin = np.abs(coord.origin).max() == 0.
+            is_beta = np.diagonal(beta).min() != 1.
+            is_origin = np.abs(coord.origin).max() != 0.
             xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
             if is_beta and is_origin:
                 xyz_cid0[inode, :] = np.dot(xyzi, beta) + coord.origin
@@ -3020,8 +3042,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if cid == 0:
             return xyz_cid0
 
-        is_beta = np.abs(np.diagonal(beta2)).min() == 1.
-        is_origin = np.abs(coord2.origin).max() == 0.
+        # transform the grids to the local coordinate system
+        is_beta = np.diagonal(beta2).min() != 1.
+        is_origin = np.abs(coord2.origin).max() != 0.
         if is_beta and is_origin:
             xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
         elif is_beta:
@@ -3029,6 +3052,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:
             xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
+        xyz_cid_alt = self.get_xyz_in_coord(cid=cid)
+        assert np.array_equal(xyz_cid, xyz_cid_alt, dtype=xyz_cid.dtype)
         return xyz_cid
 
     def get_displacement_index(self):
