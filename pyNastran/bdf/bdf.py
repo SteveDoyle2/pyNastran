@@ -73,7 +73,7 @@ from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
-    TSTEP, TSTEPNL, NLPARM, NLPCI, TF, ROTORG)
+    TSTEP, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
@@ -466,7 +466,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DPHASE',  ## dphases
             'DELAY',  ## delays
             'NLPARM',  ## nlparms
-            'ROTORG', ## rotors
+            'ROTORG', 'ROTORD', ## rotors
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
             'TSTEPNL',  ## tstepnls
@@ -2126,6 +2126,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'NLPARM' : (NLPARM, self.add_nlparm),
             # BCTSET
             'ROTORG' : (ROTORG, self.add_rotor),
+            'ROTORD' : (ROTORD, self.add_rotor),
         }
         self._card_parser_prepare = {
             'CORD1R' : self._prepare_cord1r,

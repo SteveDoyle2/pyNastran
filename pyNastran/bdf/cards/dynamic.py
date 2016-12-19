@@ -27,7 +27,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
-    string_or_blank, blank, fields, components as fcomponents, components_or_blank
+    string_or_blank, blank, fields, components_or_blank
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -580,7 +580,8 @@ class NLPARM(BaseCard):
         elif kmethod == 4:
             kmethod = 'SEMI'
         else:
-            raise NotImplementedError('nlparm_id=%s kmethod=%r data=%s' % (nlparm_id, kmethod, data))
+            msg = 'nlparm_id=%s kmethod=%r data=%s' % (nlparm_id, kmethod, data)
+            raise NotImplementedError(msg)
 
         if conv == 1:
             conv = 'W'
@@ -597,7 +598,8 @@ class NLPARM(BaseCard):
         elif conv == 7:
             conv = 'UPW'
         else:
-            raise NotImplementedError('nlparm_id=%s conv=%r data=%s' % (nlparm_id, conv, data))
+            msg = 'nlparm_id=%s conv=%r data=%s' % (nlparm_id, conv, data)
+            raise NotImplementedError(msg)
 
         if int_out == 0:
             int_out = 'NO'
@@ -606,7 +608,8 @@ class NLPARM(BaseCard):
         elif int_out == 2:
             int_out = 'ALL'
         else:
-            raise NotImplementedError('nlparm_id=%s int_out=%r data=%s' % (nlparm_id, int_out, data))
+            msg = 'nlparm_id=%s int_out=%r data=%s' % (nlparm_id, int_out, data)
+            raise NotImplementedError(msg)
         return NLPARM(nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv,
                       int_out, epsU, epsP, epsW, maxDiv,
                       maxQn, maxLs, fStress,
@@ -696,19 +699,189 @@ class NLPCI(BaseCard):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+class ROTORD(BaseCard):
+    """
+    Define Rotor Dynamics Solution Options
+    Defines rotor dynamics solution options.
+
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+    |   1    |   2    |    3   |     4    |    5    |    6   |    7   |     8    |    9     |
+    +========+========+========+==========+=========+========+========+==========+==========+
+    | ROTORD |  SID   | RSTART |  RSTEP   | NUMSTEP | REFSYS | CMOUT  | RUNIT    | FUNIT    |
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+    |        | ZSTEIN | ORBEPS | ROTPRT   |  SYNC   | ETYPE  | EORDER | THRSHOLD | MAXITER  |
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+    |        | RID1   | RSET1  | RSPEED1  | RCORD1  | W3_1   | W4_1   | RFORCE1  | BRGSET1  |
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+    |        | RID2   | RSET2  | RSPEED2  | RCORD2  | W3_2   | W4_2   | RFORCE2  | BRGSET2  |
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+    |        | ...    |        |          |         |        |        |          |          |
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+    |        | RIDi   | RSETi  | RSPEEDi  | RCORDi  | W3_i   | W4_i   | RFORCEi  | BRGSETi  |
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+    |        | ...    |        |          |         |        |        |          |          |
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+    |        | RID10  | RSET10 | RSPEED10 | RCORD10 | W3_10  | W4_10  | RFORCE10 | BRGSET10 |
+    +--------+--------+--------+----------+---------+--------+--------+----------+----------+
+
+    ROTORD 998 0.0 250.0 58 fix -1.0 cps
+    no
+    1 11 1 0.0 0.0 1 101
+    2 12 1 0.0 0.0 102
+    3 13 1.5 1 0.0 0.0 103
+    4 14 1.75 1 0.0 0.0 104
+    5 15 1.75 1 0.0 0.0 105
+    6 16 1 0.0 0.0 106
+    7 17 2.0 1 0.0 0.0 107
+    8 18 2.25 1 0.0 0.0 108
+    9 19 7.5 1 0.0 0.0 109
+    10 20 1 0.0 0.0 10 110
+    """
+    type = 'ROTORG'
+    def __init__(self, sid, rstart, rstep, numstep,
+                 rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
+                 refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
+                 zstein='NO', orbeps=1.e-6, roprt=0, sync=1,
+                 etype=1, eorder=1.0, threshold=0.02, maxiter=10,
+                 comment=''):
+
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.rstart = rstart
+        self.rstep = rstep
+        self.numstep = numstep
+        self.refsys = refsys
+        self.cmout = cmout
+        self.runit = runit
+        self.funit = funit
+        self.zstein = zstein
+        self.orbeps = orbeps
+        self.roprt = roprt
+        self.sync = sync
+        self.etype = etype
+        self.eorder = eorder
+        self.threshold = threshold
+        self.maxiter = maxiter
+
+        self.rids = rids
+        self.rsets = rsets
+        self.rspeeds = rspeeds
+        self.rcords = rcords
+        self.w3s = w3s
+        self.w4s = w4s
+        self.rforces = rforces
+        self.brgsets = brgsets
+
+    def validate(self):
+        pass
+        #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
+
+    def cross_reference(self, model):
+        pass
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        rstart = double(card, 2, 'rstart')
+        rstep = double(card, 3, 'rstep')
+        numstep = integer(card, 4, 'numstep')
+        refsys = string_or_blank(card, 5, 'refsys', 'ROT')
+        cmout = double_or_blank(card, 6, 'cmout', 0.0)
+        runit = string_or_blank(card, 7, 'runit', 'RPM')
+        funit = string_or_blank(card, 8, 'funit', 'RPM')
+
+        zstein = string_or_blank(card, 9, 'zstein', 'NO')
+        orbeps = double_or_blank(card, 10, 'orbeps', 1.E-6)
+        roprt = integer_or_blank(card, 11, 'roprt', 0)
+        sync = integer_or_blank(card, 12, 'sync', 1)
+        etype = integer_or_blank(card, 13, 'etype', 1)
+        eorder = double_or_blank(card, 14, 'eorder', 1.0)
+        threshold = double_or_blank(card, 15, 'threshold', 0.02)
+        maxiter = integer_or_blank(card, 16, 'maxiter', 10)
+
+        nfields = len(card) - 17
+        nrows = nfields // 8
+        if nfields % 8 > 0:
+            nrows += 1
+
+        rids = []
+        rsets = []
+        rspeeds = []
+        rcords = []
+        w3s = []
+        w4s = []
+        rforces = []
+        brgsets = []
+        for irow in range(nrows):
+            j = irow * 8 + 17
+            rid = integer(card, j, 'rid_%i' % (irow + 1))
+            rset = integer(card, j+1, 'rset_%i' % (irow + 1))
+            rspeed = double(card, j+2, 'rspeed_%i' % (irow + 1))
+            rcord = integer_or_blank(card, j+3, 'rcord_%i' % (irow + 1), 0)
+            w3 = double_or_blank(card, j+4, 'w3_%i' % (irow + 1), 0.)
+            w4 = double_or_blank(card, j+5, 'w4_%i' % (irow + 1), 0.)
+            rforce = integer_or_blank(card, j+6, 'rforce_%i' % (irow + 1), 0)
+            brgset = integer_or_blank(card, j+7, 'brgset_%i' % (irow + 1))
+            rids.append(rid)
+            rsets.append(rset)
+            rspeeds.append(rspeed)
+            rcords.append(rcord)
+            w3s.append(w3)
+            w4s.append(w4)
+            rforces.append(rforce)
+            brgsets.append(brgset)
+
+        return ROTORD(sid, rstart, rstep, numstep,
+                      rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
+
+                      refsys=refsys, cmout=cmout, runit=runit, funit=funit,
+                      zstein=zstein,
+                      orbeps=orbeps, roprt=roprt, sync=sync,
+                      etype=etype, eorder=eorder, threshold=threshold, maxiter=maxiter,
+                      comment=comment)
+
+    def raw_fields(self):
+        list_fields = [
+            'ROTORD', self.sid, self.rstart, self.rstep, self.numstep,
+            self.refsys, self.cmout, self.runit, self.funit,
+
+            self.zstein, self.orbeps, self.roprt, self.sync,
+            self.etype, self.eorder, self.threshold, self.maxiter
+        ]
+        for rid, rset, rspeed, rcord, w3, w4, rforce, brgset in zip(
+                self.rids, self.rsets, self.rspeeds, self.rcords,
+                self.w3s, self.w4s, self.rforces, self.brgsets):
+            list_fields += [rid, rset, rspeed, rcord, w3, w4, rforce, brgset]
+        #print(print_card_8(list_fields))
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # double precision?
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
 class ROTORG(BaseCard):
     """
-    Defines a dynamic transfer function of the form:
-        (B0 + B1 p + B2 *p2)*ud  sum(A0_i + A1_i*p + A2_i*p2)*ui = 0
+    Rotor Grids Selection
+    Selects the grids that define a rotor.
 
-    +----+-----+-----+------+------+------+--------+----+----+
-    |  1 |  2  |  3  |   4  |   5  |   6  |    7   |  8 |  9 |
-    +====+=====+=====+======+======+======+========+====+====+
-    | ROTORG RSETID G1 G2 G3 G4 G5 G6 G7
-    ROTORG 14 101 THRU 190 BY 5
-    46 23 57 82 9 16
-    201 THRU 255
-    93 94 95 97
+    +--------+--------+------+------+-----+----+----+----+----+
+    |    1   |    2   |   3  |   4  |  5  | 6  | 7  |  8 |  9 |
+    +========+========+======+======+=====+====+====+====+====+
+    | ROTORG | RSETID |  G1  |  G2  | G3  | G4 | G5 | G6 | G7 |
+    +--------+--------+------+------+-----+----+----+----+----+
+    | ROTORG |   14   | 101  | THRU | 190 | BY | 5  |    |    |
+    +--------+--------+------+------+-----+----+----+----+----+
+    |        |   46   | 23   |  57  | 82  | 9  | 16 |    |    |
+    +--------+--------+------+------+-----+----+----+----+----+
+    |        |   201  | THRU | 255  |     |    |    |    |    |
+    +--------+--------+------+------+-----+----+----+----+----+
+    |        |   93   | 94   |  95  | 97  |    |    |    |    |
+    +--------+--------+------+------+-----+----+----+----+----+
     """
     type = 'ROTORG'
     def __init__(self, sid, nids, comment=''):
@@ -730,9 +903,15 @@ class ROTORG(BaseCard):
         nid1 = integer(card, 2, 'nid1')
         nid2 = integer_or_string(card, 3, 'nid2')
         if nid2 == 'THRU':
-            nid3 = integer(card, 4, 'nid3')
-            nids = [i for i in range(nid1, nid3+1)]
-        else:
+            nid_thru = integer(card, 4, 'nid_thru')
+            by_flag = string_or_blank(card, 5, 'BY')
+            if by_flag == 'BY':
+                nid_by = integer(card, 6, 'nid_by')
+                nids = [i for i in range(nid1, nid_thru+1, nid_by)]
+            else:
+                assert by_flag is None, by_flag
+                nids = [i for i in range(nid1, nid_thru+1)]
+        elif isinstance(nid2, int):
             nids = [nid1, nid2]
             nid = integer_or_blank(card, 4, 'nid3')
             if nid:
@@ -753,6 +932,8 @@ class ROTORG(BaseCard):
             nid = integer_or_blank(card, 8, 'nid7')
             if nid:
                 nids.append(nid)
+        else:
+            raise NotImplementedError(nid2)
 
         nfields = len(card) - 9
         nrows = nfields // 8
@@ -764,9 +945,16 @@ class ROTORG(BaseCard):
             nid1 = integer(card, j, 'grid_%i' % (irow + 1))
             nid2 = integer_or_string(card, j+1, 'nid2')
             if nid2 == 'THRU':
-                nid3 = integer(card, j, 'nid3')
-                nids += [i for i in range(nid1, nid3+1)]
-            else:
+                nid_thru = integer(card, j+2, 'nid_thru')
+                by_flag = string_or_blank(card, j+3, 'BY')
+                if by_flag == 'BY':
+                    nid_by = integer(card, j+4, 'nid3')
+                    nids = [i for i in range(nid1, nid_thru+1, nid_by)]
+                else:
+                    assert by_flag is None, by_flag
+                    nids = [i for i in range(nid1, nid_thru+1)]
+
+            elif isinstance(nid2, int):
                 nid = integer_or_blank(card, j+2, 'nid3')
                 if nid:
                     nids.append(nid)
@@ -786,6 +974,8 @@ class ROTORG(BaseCard):
                 nid = integer_or_blank(card, j+6, 'nid7')
                 if nid:
                     nids.append(nid)
+            else:
+                raise NotImplementedError(nid2)
 
         return ROTORG(sid, nids, comment=comment)
 

@@ -522,6 +522,9 @@ class PCONEAX(Property):
             return self.mid3_ref.mid
         return self.mid3
 
+    def Mids(self):
+        return [self.Mid1(), self.Mid2(), self.Mid3()]
+
     def raw_fields(self):
         fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
                   self.Mid2(), self.i, self.Mid3(), self.t2,

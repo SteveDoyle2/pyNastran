@@ -210,6 +210,9 @@ class PCOMPS(SolidProperty):
         #print('rhot =', rhot)
         return rhot.mean()
 
+    def Mids(self):
+        return self.mids
+
     def cross_reference(self, model):
         msg = ' which is required by PSOLID pid=%s' % self.pid
         self.mids_ref = []

@@ -643,7 +643,7 @@ class BDFAttributes(object):
             'tstepnls' : ['TSTEPNL'],
             'transfer_functions' : ['TF'],
             'delays' : ['DELAY'],
-            'rotors' : ['ROTORG'],
+            'rotors' : ['ROTORG', 'ROTORD'],
 
             'frequencies' : ['FREQ', 'FREQ1', 'FREQ2', 'FREQ4'],
 

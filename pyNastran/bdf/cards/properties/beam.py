@@ -1427,6 +1427,9 @@ class PBCOMP(LineProperty):
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
+    def Mids(self):
+        return self.mids
+
     def uncross_reference(self):
         self.mid = self.Mid()
         del self.mid_ref

@@ -125,7 +125,7 @@ class BDFMethods(BDFAttributes):
         prop_mid = [
             'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PSHEAR', 'PSOLID',
             'PROD', 'PRAC2D', 'PRAC3D', 'PLSOLID', 'PLPLANE', 'PPLANE',
-            'PTUBE',
+            'PTUBE', 'PDAMP5', 'PDAMP5',
         ]
         mids_used = []
         for eid, elem in iteritems(self.elements):
@@ -138,10 +138,12 @@ class BDFMethods(BDFAttributes):
                 continue
             elif prop.type in ['PSHELL']:
                 mids_used.extend([mid for mid in prop.material_ids if mid is not None])
+            elif prop.type == 'PCONEAX':
+                mids_used.extend([mid for mid in self.Mids() if mid is not None])
 
             elif prop.type in prop_mid:
                 mids_used.append(prop.Mid())
-            elif prop.type in ['PCOMP', 'PCOMPG']:
+            elif prop.type in ['PCOMP', 'PCOMPG', 'PCOMPS']:
                 mids_used.extend(prop.Mids())
 
             elif prop.type == 'PBCOMP':
@@ -161,7 +163,7 @@ class BDFMethods(BDFAttributes):
 
     def get_area_breakdown(self, property_ids=None):
         """
-        gets a breakdown of the volume by property region
+        gets a breakdown of the area by property region
 
         TODO: What about CONRODs?
         #'PBRSECT',
@@ -177,14 +179,16 @@ class BDFMethods(BDFAttributes):
             'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
             'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
             'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
-            'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID']
+            'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
+            'PCOMPS',
+        ]
 
         pid_eids = self.get_element_ids_dict_with_pids(property_ids)
         pids_to_area = {}
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
             areas = []
-            if prop.type in ['PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG',]:
+            if prop.type in ['PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG', ]:
                 for eid in eids:
                     elem = self.elements[eid]
                     areas.append(elem.Area())
@@ -211,8 +215,6 @@ class BDFMethods(BDFAttributes):
         #'PBEAM3',
         #'PBEND',
         #'PIHEX',
-        #'PLSOLID',
-        #'PCOMPS',
         """
         pid_eids = self.get_element_ids_dict_with_pids(property_ids)
 
@@ -222,22 +224,31 @@ class BDFMethods(BDFAttributes):
             volumes = []
             if prop.type in ['PSHELL', 'PSHEAR']:
                 t = prop.t
+                areas = []
                 for eid in eids:
                     elem = self.elements[eid]
-                    volumes.append(elem.Area() * t)
+                    areas.append(elem.Area())
+                volumesi = [area * t for area in areas]
+                volumes.extend(volumesi)
             elif prop.type in ['PCOMP', 'PCOMPG',]:
+                areas = []
                 for eid in eids:
                     elem = self.elements[eid]
-                    t = prop.Thickness()
-                    volumes.append(elem.Area() * t)
+                    areas.append(elem.Area())
+                t = prop.Thickness()
+                volumesi = [area * t for area in areas]
+                volumes.extend(volumesi)
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 # what should I do here?
+                lengths = []
                 for eid in eids:
                     elem = self.elements[eid]
-                    area = prop.Area()
                     length = elem.Length()
-                    volumes.append(area * length)
-            elif prop.type in ['PSOLID']:
+                    lengths.append(length)
+                area = prop.Area()
+                volumesi = [area * length for length in lengths]
+                volumes.extend(volumesi)
+            elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID']:
                 for eid in eids:
                     elem = self.elements[eid]
                     volumes.append(elem.Volume())
@@ -263,7 +274,6 @@ class BDFMethods(BDFAttributes):
         #'PBEAM3',
         #'PBEND',
         #'PIHEX',
-        #'PLSOLID',
         #'PCOMPS',
         """
         pid_eids = self.get_element_ids_dict_with_pids(property_ids)
@@ -293,7 +303,7 @@ class BDFMethods(BDFAttributes):
                     area = prop.Area()
                     length = elem.Length()
                     masses.append(area * (rho * length + nsm))
-            elif prop.type in ['PSOLID']:
+            elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID']:
                 rho = prop.Rho()
                 for eid in eids:
                     elem = self.elements[eid]
@@ -2237,8 +2247,7 @@ class BDFMethods(BDFAttributes):
             'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',
             'AEROS', 'TRIM', 'DIVERG',
             'AERO', 'MKAERO1', 'MKAERO2', 'FLFACT', 'FLUTTER', 'GUST',
-            'AELIST', 'AESURF', 'AE'
-            'SET1',
+            'AELIST', 'AESURF', 'AESET1',
             'CONROD',
             'EIGRL', 'EIGB', 'EIGC', 'EIGR',
             'MPC', 'MPCADD', 'SPC1', 'SPCADD', 'SPCAX', 'SPCD',
