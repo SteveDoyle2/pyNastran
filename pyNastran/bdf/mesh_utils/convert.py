@@ -14,9 +14,9 @@ def convert(model, units_to, units=None):
     ----------
     xref : bool
        cross references the model (default=True)
-    units_to : dict
-        ???
-    units : dict
+    units_to : List[str]
+        [length, mass, time]
+    units : list
         overwrites model.units
     TODO: not done...
     """
@@ -64,7 +64,7 @@ def _set_wtmass(model, gravity_scale):
     if 'WTMASS' in model.params:
         param = model.params['WTMASS']
         value0 = param.values[0]
-        param.values = [value0 * gravity_scale]
+        param.values = [value0 / gravity_scale]
     else:
         card = ['PARAM', 'WTMASS', gravity_scale]
         model.add_card(card, 'PARAM')
@@ -306,6 +306,38 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
                                for ki in prop.Ki]
                 else:
                     raise NotImplementedError(var)
+        #elif prop.type == 'PCOMPS':
+            #pass
+        #elif prop.type == 'PCONEAX':
+            #pass
+        #elif prop.type == 'PBCOMP':
+            #pass
+        #elif prop.type == 'PLPLANE':
+            #pass
+        #elif prop.type == 'PPLANE':
+            #pass
+        #elif prop.type == 'PRAC2D':
+            #pass
+        #elif prop.type == 'PRAC3D':
+            #pass
+        #elif prop.type == 'PFAST':
+            #pass
+        #elif prop.type == 'PDAMP':
+            #pass
+        #elif prop.type == 'PTUBE':
+            #pass
+        #elif prop.type == 'PELAST':
+            #pass
+        #elif prop.type == 'PBUSHT':
+            #pass
+        #elif prop.type == 'PBUSH1D':
+            #pass
+        #elif prop.type == 'PDAMPT':
+            #pass
+        #elif prop.type == 'PDAMP5':
+            #pass
+        #elif prop.type == 'PSHEAR':
+            #pass
         else:
             raise NotImplementedError(prop_type)
 
@@ -313,6 +345,8 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
     """converts the materials"""
     density_scale = mass_scale / xyz_scale ** 3
     stress_scale = weight_scale / xyz_scale ** 2
+    temp_scale = 1.
+    a_scale = 1. / temp_scale # thermal expansion
 
     model.log.debug('--Material Scales--')
     model.log.debug('density_scale = %g' % density_scale)
@@ -323,10 +357,52 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
         if mat_type == 'MAT1':
             mat.e *= stress_scale
             mat.g *= stress_scale
+            mat.a *= a_scale
+            mat.TRef *= temp_scale
             mat.rho *= density_scale
             mat.St *= stress_scale
             mat.Sc *= stress_scale
             mat.Ss *= stress_scale
+
+        elif mat_type == 'MAT2':
+            mat.G11 *= stress_scale
+            mat.G12 *= stress_scale
+            mat.G13 *= stress_scale
+            mat.G22 *= stress_scale
+            mat.G23 *= stress_scale
+            mat.G33 *= stress_scale
+            mat.rho = density_scale
+            # 1/dTemp
+            mat.a1 *= a_scale
+            mat.a2 *= a_scale
+            mat.a3 *= a_scale
+            mat.TRef *= temp_scale
+            mat.St *= stress_scale
+            mat.Sc *= stress_scale
+            mat.Ss *= stress_scale
+
+        elif mat_type == 'MAT3':
+            mat.ex *= stress_scale
+            mat.eth *= stress_scale
+            mat.ez *= stress_scale
+            mat.rho *= density_scale
+            mat.gzx *= stress_scale
+            mat.ax *= a_scale
+            mat.ath *= a_scale
+            mat.az *= a_scale
+            mat.TRef *= temp_scale
+
+        #elif mat_type == 'MAT4':
+            #mat.k
+            #mat.cp
+            #mat.rho *= density_scale
+            #mat.H
+            #mat.mu
+            #mat.hgen
+            #mat.refEnthalpy
+            #mat.tch
+            #mat.tdelta
+            #mat.qlat
 
         elif mat_type == 'MAT8':
             mat.e11 *= stress_scale
@@ -335,11 +411,39 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.g1z *= stress_scale
             mat.g2z *= stress_scale
             mat.rho *= density_scale
+            mat.a1 *= a_scale
+            mat.a2 *= a_scale
             mat.Xt *= stress_scale
             mat.Xc *= stress_scale
             mat.Yt *= stress_scale
             mat.Yc *= stress_scale
             mat.S *= stress_scale
+
+        elif mat_type == 'MAT9':
+            mat.G11 *= stress_scale
+            mat.G12 *= stress_scale
+            mat.G13 *= stress_scale
+            mat.G14 *= stress_scale
+            mat.G15 *= stress_scale
+            mat.G16 *= stress_scale
+            mat.G22 *= stress_scale
+            mat.G23 *= stress_scale
+            mat.G24 *= stress_scale
+            mat.G25 *= stress_scale
+            mat.G26 *= stress_scale
+            mat.G33 *= stress_scale
+            mat.G34 *= stress_scale
+            mat.G35 *= stress_scale
+            mat.G36 *= stress_scale
+            mat.G44 *= stress_scale
+            mat.G45 *= stress_scale
+            mat.G46 *= stress_scale
+            mat.G55 *= stress_scale
+            mat.G56 *= stress_scale
+            mat.G66 *= stress_scale
+            mat.rho *= density_scale
+            mat.A *= a_scale
+            mat.TRef *= temp_scale
 
         else:
             raise NotImplementedError(mat)
@@ -371,12 +475,25 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 load.mag *= moment_scale
             elif load_type == 'GRAV':
                 load.scale *= accel_scale
-            #elif load_type == 'PLOAD1':
-                #load.mag *= moment_scale
-            #elif load_type == 'PLOAD2':
-                #load.mag *= moment_scale
+            elif load_type == 'PLOAD1':
+                # the errors should never hit
+                if load.scale in ['LE', 'LEPR']:
+                    if load.Type in ['FX', 'FY', 'FZ', 'FXE', 'FYE', 'FZE']:
+                        load.p1 *= force_scale
+                        load.p2 *= force_scale
+                    elif load.Type in ['MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']:
+                        load.p1 *= moment_scale
+                        load.p2 *= moment_scale
+                    else:
+                        raise RuntimeError(load)
+                elif load.scale in ['FR', 'RFPR']:
+                    pass
+                else:
+                    raise RuntimeError(load)
+            elif load_type == 'PLOAD2':
+                load.pressure *= pressure_scale
             elif load_type == 'PLOAD4':
-                load.mag *= pressure_scale
+                load.pressures = [pressure*pressure_scale for pressure in load.pressures]
             else:
                 raise NotImplementedError(load)
 
@@ -444,7 +561,9 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         #aesurf.cross_reference(model)
     #for aesurfs in itervalues(model.aesurfs):
         #aesurfs.cross_reference(model)
-
+    for monitor in self.monitor_points:
+        if hasattr(monitor, 'xyz'):
+            monitor.xyz *= xyz_scale
     # update only the FLFACTs corresponding to density
     flfact_ids = set([])
     for flutter in itervalues(model.flutters):
@@ -560,11 +679,15 @@ def get_scale_factors(units_from, units_to):
     assert time_from == time_to, 'units_from=%s units_to=%s time_from=%r time_to=%r' % (
         units_from, units_to, time_from, time_to)
     time_scale = 1.0
-    xyz_scale = convert_length(length_from, length_to)
+    gravity_scale = 1.0
+    xyz_scale, gravity_scale_length = convert_length(length_from, length_to)
 
-    mass_scale, weight_scale, gravity_scale = convert_mass(mass_from, mass_to)
+    mass_scale, weight_scale, gravity_scale_mass = convert_mass(mass_from, mass_to)
     weight_scale /= time_scale ** 2   # doesn't consider cm/mm
-    gravity_scale /= time_scale ** 2  # doesn't consider cm/mm
+
+    #print('gravity_scale_length=%s gravity_scale_mass=%s gravity_scale=%s' % (
+        #gravity_scale_length, gravity_scale_mass, gravity_scale))
+    gravity_scale = gravity_scale_length * gravity_scale_mass / time_scale ** 2  # doesn't consider cm/mm
     # 4.448N = 1 lbm
     # 1 slug = 14.5939 kg
     # 1g = 32.174 ft/s^2 = 386.088 = 9.80665 m/s^2
@@ -574,23 +697,31 @@ def get_scale_factors(units_from, units_to):
 def convert_length(length_from, length_to):
     """determines the length scale factor"""
     xyz_scale = 1.0
+    gravity_scale = 1.0
     if length_from != length_to:
         if length_from == 'in':
             xyz_scale *= 0.0254
+            gravity_scale /= 12.
         elif length_from == 'ft':
             xyz_scale *= 0.3048
+            # ft/s^2 are the base units for english
+
         elif length_from == 'm':
-            #xyz_scale *= 1.0
+            #xyz_scale = 1.0
+            #gravity_scale = 1.0
+            # m/s^2 are the base units for SI
             pass
         #elif length_from == 'cm':
             #xyz_scale *= 100.0
         elif length_from == 'mm':
-            xyz_scale /= 1000.0
+            xyz_scale /= 1000.
+            gravity_scale /= 1000.
         else:
             raise NotImplementedError('length from unit=%r; expected=[in, ft, m]' % length_from)
 
         if length_to == 'in':
             xyz_scale /= 0.0254
+            gravity_scale *= 12.
         elif length_to == 'ft':
             xyz_scale /= 0.3048
         elif length_to == 'm':
@@ -599,10 +730,11 @@ def convert_length(length_from, length_to):
         #elif length_to == 'cm':
             #xyz_scale /= 100.0
         elif length_to == 'mm':
-            xyz_scale *= 1000.0
+            xyz_scale *= 1000.
+            gravity_scale *= 1000.
         else:
             raise NotImplementedError('length to unit=%r; expected=[in, ft, m]' % length_to)
-    return xyz_scale
+    return xyz_scale, gravity_scale
 
 
 def convert_mass(mass_from, mass_to):
@@ -610,6 +742,9 @@ def convert_mass(mass_from, mass_to):
     mass_scale = 1.0
     weight_scale = 1.0
     gravity_scale = 1.0
+    #gravity_english = 9.80665 / .3048 #= 32.174; exact
+    gravity_english = 32.2
+
     if mass_from != mass_to:
 
         # convert to kg
@@ -617,12 +752,14 @@ def convert_mass(mass_from, mass_to):
             pass
         elif mass_from == 'Mg': # mega-gram
             mass_scale *= 1000.
+            gravity_scale *= 1000.
         elif mass_from == 'g':
             mass_scale *= 1./1000.
+            gravity_scale *= 1/1000.
         elif mass_from == 'lbm':
             mass_scale *= 0.45359237
             weight_scale *= 4.4482216152605
-            gravity_scale *= 0.3048
+            gravity_scale /= gravity_english # ft/s^2 to m/s^2
         else:
             raise NotImplementedError('mass from unit=%r; expected=[g, kg, Mg, lbm]' % mass_from)
 
@@ -631,14 +768,17 @@ def convert_mass(mass_from, mass_to):
             pass
         elif mass_to == 'Mg': # mega-gram # what about weight_scale???
             mass_scale /= 1000.
+            gravity_scale /= 1000.
         elif mass_to == 'g': # what about weight_scale???
             mass_scale *= 1000.
+            gravity_scale *= 1000.
             #weight_scale *= 1000.
         elif mass_to == 'lbm':
             mass_scale /= 0.45359237
             weight_scale /= 4.4482216152605
-            gravity_scale /= 0.3048
+            gravity_scale *= gravity_english
         else:
             raise NotImplementedError('mass to unit=%r; expected=[g, kg, Mg, lbm]' % mass_to)
+
 
     return mass_scale, weight_scale, gravity_scale

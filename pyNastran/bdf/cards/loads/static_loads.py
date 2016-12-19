@@ -2183,10 +2183,6 @@ class PLOAD2(Load):
         self.eids = self.element_ids
         del self.eids_ref
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     @property
     def element_ids(self):
         if isinstance(self.eids[0], int):
@@ -2228,14 +2224,6 @@ class PLOAD2(Load):
 
 class PLOAD4(Load):
     type = 'PLOAD4'
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
-    #def transformLoad(self):
-        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        #return self.transform_load()
 
     def __init__(self, sid, eids, pressures,
                  g1=None, g34=None, cid=0, NVector=None, sorl='SURF', ldir='NORM', comment=''):

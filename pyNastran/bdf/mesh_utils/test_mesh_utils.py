@@ -5,6 +5,7 @@ from codecs import open as codec_open
 
 from six import iteritems
 import numpy as np
+from numpy import allclose
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF
 
@@ -14,7 +15,7 @@ from pyNastran.bdf.cards.elements.mass import CONM2
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
-from pyNastran.bdf.mesh_utils.convert import convert
+from pyNastran.bdf.mesh_utils.convert import convert, get_scale_factors
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
@@ -450,6 +451,39 @@ class TestMeshUtils(unittest.TestCase):
         #print(nids)
         os.remove(bdf_filename)
         os.remove(bdf_filename_out)
+
+    def test_convert_units(self):
+        """tests various conversions"""
+        # from -> to
+        xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
+            ['in', 'lbm', 's'], ['ft', 'lbm', 's'])
+        assert xyz_scale == 1./12.
+        assert mass_scale == 1.
+        assert time_scale == 1.
+        assert weight_scale == 1., weight_scale
+        assert gravity_scale == 1./12., gravity_scale
+        wtmass = 1. / (32.2 * 12.)
+        wtmass_expected = 1. / (32.2)
+        assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass, wtmass_expected)
+
+        xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
+            ['mm', 'Mg', 's'], ['m', 'kg', 's'])
+        assert xyz_scale == 1./1000.
+        assert mass_scale == 1000.
+        assert time_scale == 1.
+        assert weight_scale == 1., weight_scale
+        assert gravity_scale == 1.
+
+        xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
+            ['ft', 'lbm', 's'], ['m', 'kg', 's'])
+        assert xyz_scale == 0.3048
+        assert mass_scale == 0.45359237, mass_scale
+        assert time_scale == 1.
+        assert allclose(weight_scale, 4.4482216526), weight_scale
+        assert allclose(gravity_scale, 1/32.2), 'gravity_scale=%s 1/expected=%s' % (gravity_scale, 1/(32.2))
+        wtmass = 1. / (32.2)
+        wtmass_expected = 1.
+        assert allclose(wtmass/gravity_scale, wtmass_expected), 'wtmass=%s wtmass_expected=%s' % (wtmass/gravity_scale, wtmass_expected)
 
     def test_convert_01(self):
         """converts the CONM2s units"""
