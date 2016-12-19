@@ -13,7 +13,7 @@ import numpy as np
 from pyNastran.bdf.cards.elements.mass import CONM2
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck
+from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, CELAS2, PARAM
 from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
@@ -29,15 +29,57 @@ np.set_printoptions(edgeitems=3, infstr='inf',
                     linewidth=75, nanstr='nan', precision=3,
                     suppress=True, threshold=1000, formatter=None)
 
-
+log = SimpleLogger(level='error')
 class TestMeshUtils(unittest.TestCase):
 
-    def convert_bwb(self):
+    def test_convert_bar(self):
+        """converts a bar model"""
+        model_path = os.path.join(pkg_path, '..', 'models', 'beam_modes')
+        bdf_filename = os.path.join(model_path, 'beam_modes.dat')
+        bdf_filename_out = os.path.join(model_path, 'beam_modes_temp.bdf')
+        bdf_filename_out2 = os.path.join(model_path, 'beam_modes_converted.bdf')
+        model = read_bdf(bdf_filename, log=log, validate=False)
+        #card_lines = ['EIGRL', 42, None, None, 20]
+        #model.add_card(card_lines, 'EIGRL')
+        #model.case_control_deck = CaseControlDeck(lines)
+        model.write_bdf(bdf_filename_out)
+        #units_from = ['in', 'lbm', 's']
+        units_from = ['mm', 'Mg', 's']
+        units_to = ['m', 'kg', 's']
+
+        convert(model, units_to, units=units_from)
+        del model.params['WTMASS']
+        model.write_bdf(bdf_filename_out2)
+        os.remove(bdf_filename_out)
+        os.remove(bdf_filename_out2)
+
+    def _test_convert_isat(self):
+        """converts a isat model"""
+        model_path = os.path.join(pkg_path, '..', 'models', 'isat')
+        bdf_filename = os.path.join(model_path, 'ISat_Dploy_Sm.dat')
+        bdf_filename_out = os.path.join(model_path, 'isat.bdf')
+        bdf_filename_out2 = os.path.join(model_path, 'isat_converted.bdf')
+        model = read_bdf(bdf_filename, log=log, validate=False)
+        #card_lines = ['EIGRL', 42, None, None, 20]
+        #model.add_card(card_lines, 'EIGRL')
+        #model.case_control_deck = CaseControlDeck(lines)
+        model.write_bdf(bdf_filename_out)
+        #units_from = ['in', 'lbm', 's']
+        units_from = ['mm', 'Mg', 's']
+        units_to = ['m', 'kg', 's']
+
+        convert(model, units_to, units=units_from)
+        del model.params['WTMASS']
+        model.write_bdf(bdf_filename_out2)
+        os.remove(bdf_filename_out)
+        os.remove(bdf_filename_out2)
+
+    def test_convert_bwb(self):
         """converts a bwb model"""
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
         bdf_filename_out = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes.bdf')
         bdf_filename_out2 = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes_converted.bdf')
-        model = read_bdf(bdf_filename, validate=False)
+        model = read_bdf(bdf_filename, log=log, validate=False)
         model.sol = 103
 
         lines = [
@@ -51,15 +93,48 @@ class TestMeshUtils(unittest.TestCase):
         ]
         card_lines = ['EIGRL', 42, None, None, 20]
         model.add_card(card_lines, 'EIGRL')
-        model.case_control_deck = CaseControlDeck(lines)
+        model.case_control_deck = CaseControlDeck(lines, log=log)
         model.write_bdf(bdf_filename_out)
         units_from = ['in', 'lbm', 's']
-
         #units_from = ['mm', 'Mg', 's']
         units_to = ['m', 'kg', 's']
 
         convert(model, units_to, units=units_from)
         model.write_bdf(bdf_filename_out2)
+        os.remove(bdf_filename_out)
+        os.remove(bdf_filename_out2)
+
+    def test_convert_sine(self):
+        """converts a bwb model"""
+        model_path = os.path.join(pkg_path, '..', 'models', 'freq_sine')
+        bdf_filename = os.path.join(model_path, 'good_sine.dat')
+        bdf_filename_out = os.path.join(model_path, 'sine_modes.bdf')
+        bdf_filename_out2 = os.path.join(model_path, 'sine_converted.bdf')
+        model = read_bdf(bdf_filename, log=log, validate=False)
+        model.sol = 103
+
+        lines = [
+            'ECHO = NONE',
+            'SUBCASE 1',
+            '    DISPLACEMENT(PLOT) = ALL',
+            #'$    SPC = 100',
+            '    METHOD = 42',
+        ]
+        card_lines = ['EIGRL', 42, None, None, 20]
+        model.add_card(card_lines, 'EIGRL')
+        model.case_control_deck = CaseControlDeck(lines, log=log)
+        model.params['GRDPNT'] = PARAM('GRDPNT', 0)
+        #del model.params['WTMASS']
+        model.write_bdf(bdf_filename_out)
+        #units_from = ['in', 'lbm', 's']
+
+        units_from = ['mm', 'Mg', 's']
+        units_to = ['m', 'kg', 's']
+
+        convert(model, units_to, units=units_from)
+        model.write_bdf(bdf_filename_out2)
+        os.remove(bdf_filename_out)
+        os.remove(bdf_filename_out2)
 
     def test_quad_180_01(self):
         r"""
@@ -94,7 +169,7 @@ class TestMeshUtils(unittest.TestCase):
         with codec_open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
-        model = read_bdf(bdf_filename, xref=True)
+        model = read_bdf(bdf_filename, log=log, xref=True)
         xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float32')
         nid_map = {}
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
@@ -134,7 +209,8 @@ class TestMeshUtils(unittest.TestCase):
         tol = 0.2
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=None, crash_on_collapse=False, debug=False)
+                              node_set=None, crash_on_collapse=False,
+                              log=log, debug=False)
 
         # model = BDF(debug=False)
         # model.read_bdf(bdf_filename_out)
@@ -178,9 +254,10 @@ class TestMeshUtils(unittest.TestCase):
         # Collapse 5/6 and 20/3; Put a 40 and 20 to test non-sequential IDs
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=None, crash_on_collapse=False, debug=False)
+                              node_set=None, crash_on_collapse=False,
+                              log=log, debug=False)
 
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
         model.read_bdf(bdf_filename_out)
 
         msg = 'nnodes=%s\n' % len(model.nodes)
@@ -195,8 +272,9 @@ class TestMeshUtils(unittest.TestCase):
         # Don't collapse anything because the tolerance is too small
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=None, crash_on_collapse=False, debug=False)
-        model = BDF(debug=False)
+                              node_set=None, crash_on_collapse=False,
+                              log=log, debug=False)
+        model = BDF(log=log, debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 6, len(model.nodes)
         os.remove(bdf_filename_out)
@@ -208,15 +286,17 @@ class TestMeshUtils(unittest.TestCase):
             # node 2 is not defined because it should be node 20
             bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                                   renumber_nodes=False, neq_max=4, xref=True,
-                                  node_set=node_set, crash_on_collapse=False, debug=False)
+                                  node_set=node_set, crash_on_collapse=False,
+                                  log=log, debug=False)
 
         tol = 0.2
         node_set = [20, 3]
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False, debug=False)
-        model = BDF(debug=False)
+                              node_set=node_set, crash_on_collapse=False,
+                              log=log, debug=False)
+        model = BDF(log=log, debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 5, len(model.nodes)
         os.remove(bdf_filename_out)
@@ -226,8 +306,9 @@ class TestMeshUtils(unittest.TestCase):
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False, debug=False)
-        model = BDF(debug=False)
+                              node_set=node_set, crash_on_collapse=False,
+                              log=log, debug=False)
+        model = BDF(log=log, debug=False)
         model.read_bdf(bdf_filename_out)
         assert len(model.nodes) == 5, len(model.nodes)
         os.remove(bdf_filename_out)
@@ -301,7 +382,8 @@ class TestMeshUtils(unittest.TestCase):
         tol = 0.01
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=None, crash_on_collapse=False, debug=False)
+                              node_set=None, crash_on_collapse=False,
+                              log=log, debug=False)
 
         model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
@@ -349,9 +431,10 @@ class TestMeshUtils(unittest.TestCase):
         # Collapse 5/6 and 20/3; Put a 40 and 20 to test non-sequential IDs
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False, debug=False)
+                              node_set=node_set, crash_on_collapse=False,
+                              log=log, debug=False)
 
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
         model.read_bdf(bdf_filename_out)
         nids = model.nodes.keys()
         assert len(model.nodes) == 6, 'nnodes=%s nodes=%s' % (len(model.nodes), nids)
@@ -369,7 +452,7 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_convert_01(self):
         """converts the CONM2s units"""
-        model = BDF()
+        model = BDF(log=log)
         eid = 1000
         nid = 100
         cid = 0
@@ -390,7 +473,6 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_convert_02(self):
         """converts a full model units"""
-        log = SimpleLogger(level='warning')
         bdf_filename = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
         bdf_filename_out = os.path.abspath(
@@ -422,7 +504,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'fix_bad_quads.bdf'
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write('\n'.join(msg))
-        model = read_bdf(bdf_filename, xref=False, debug=False)
+        model = read_bdf(bdf_filename, log=log, xref=False, debug=False)
         model.cross_reference(xref=True, xref_elements=False,
                               xref_nodes_with_elements=False,
                               xref_properties=False,
@@ -457,8 +539,8 @@ class TestMeshUtils(unittest.TestCase):
         model = read_bdf(bdf_filename, log=log)
         bdf_renumber(model, bdf_filename_out2, size=16, is_double=False,
                      starting_id_dict={
-                             'eid' : 1000, 'pid':2000, 'mid':3000,
-                             'spc_id' : 4000,},
+                         'eid' : 1000, 'pid':2000, 'mid':3000,
+                         'spc_id' : 4000,},
                      round_ids=False, cards_to_skip=None)
         bdf_renumber(bdf_filename, bdf_filename_out3, size=8,
                      is_double=False, starting_id_dict=None,
@@ -468,7 +550,7 @@ class TestMeshUtils(unittest.TestCase):
         read_bdf(bdf_filename_out3, log=log)
 
     def test_merge_01(self):
-        log = SimpleLogger(level='info')
+        #log = SimpleLogger(level='info')
         bdf_filename1 = os.path.abspath(os.path.join(
             pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
         bdf_filename2 = os.path.abspath(os.path.join(

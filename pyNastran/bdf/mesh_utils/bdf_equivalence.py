@@ -23,7 +23,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                           size=8, is_double=False,
                           remove_collapsed_elements=False,
                           avoid_collapsed_elements=False,
-                          crash_on_collapse=False, debug=True):
+                          crash_on_collapse=False, log=None, debug=True):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
@@ -63,6 +63,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         True  : only collapses that don't break 1D/2D/3D elements will be considered;
                 CELASx/CDAMP/MPC/etc. are considered
         False : element can be collapsed
+    debug : bool
+        bdf debugging
+    log : logger(); default=None
+        bdf logging
 
     Returns
     -------
@@ -93,7 +97,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
     if crash_on_collapse:
         # lazy way to make sure there aren't any collapsed nodes
-        model2 = BDF(debug=debug)
+        model2 = BDF(log=log, debug=debug)
         model2.read_bdf(bdf_filename_out)
     return model
 
