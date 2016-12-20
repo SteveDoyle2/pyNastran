@@ -55,6 +55,10 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[param.type].append(key)
 
     def add_node(self, node, allow_overwrites=False):
+        """deprecated"""
+        self.add_node_object(node, allow_overwrites)
+
+    def add_node_object(self, node, allow_overwrites=False):
         """adds a GRID card"""
         key = node.nid
         if key in self.nodes and not allow_overwrites:
@@ -394,6 +398,10 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[material.type].append(key)
 
     def add_coord(self, coord, allow_overwrites=False):
+        """deprecated"""
+        self.add_coord_object(coord, allow_overwrites)
+
+    def add_coord_object(self, coord, allow_overwrites=False):
         key = coord.cid
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
         if key in self.coords:
@@ -874,7 +882,7 @@ class AddMethods(BDFAttributes):
             self.frequencies[key] = freq
             self._type_to_id_map[freq.type].append(key)
 
-    def add_set(self, set_obj):
+    def add_set_object(self, set_obj):
         """adds an SET1/SET3 object"""
         key = set_obj.sid
         assert key >= 0

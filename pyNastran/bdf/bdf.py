@@ -1772,17 +1772,17 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
             #'=' : (Crash, None),
             '/' : (Crash, None),
             # nodes
-            'GRID' : (GRID, self.add_node),
+            'GRID' : (GRID, self.add_node_object),
             'SPOINT' : (SPOINTs, self.add_spoint_object),
             'EPOINT' : (EPOINTs, self.add_epoint_object),
             'POINT' : (POINT, self.add_point_object),
 
             'PARAM' : (PARAM, self.add_param_object),
 
-            'CORD2R' : (CORD2R, self.add_coord),
-            'CORD2C' : (CORD2C, self.add_coord),
-            'CORD2S' : (CORD2S, self.add_coord),
-            'GMCORD' : (GMCORD, self.add_coord),
+            'CORD2R' : (CORD2R, self.add_coord_object),
+            'CORD2C' : (CORD2C, self.add_coord_object),
+            'CORD2S' : (CORD2S, self.add_coord_object),
+            'GMCORD' : (GMCORD, self.add_coord_object),
 
             'PLOTEL' : (PLOTEL, self.add_plotel_object),
 
@@ -1807,7 +1807,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
             #'PBEAM3' : (PBEAM3, self.add_property_object),
 
             'CBEND' : (CBEND, self.add_element_object),
-            #'PBEND' : (PBEND, self.add_property),
+            #'PBEND' : (PBEND, self.add_property_object),
 
             'CTRIA3' : (CTRIA3, self.add_element_object),
             'CQUAD4' : (CQUAD4, self.add_element_object),
@@ -2107,8 +2107,8 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
             'USET' : (USET, self.add_uset),
             'USET1' : (USET1, self.add_uset),
 
-            'SET1' : (SET1, self.add_set),
-            'SET3' : (SET3, self.add_set),
+            'SET1' : (SET1, self.add_set_object),
+            'SET3' : (SET3, self.add_set_object),
 
             'SESET' : (SESET, self.add_seset),
 
@@ -2380,26 +2380,26 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
         class_instance = CORD1R.add_card(card_obj, comment=comment)
-        self.add_coord(class_instance)
+        self.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1R.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord(class_instance)
+            self.add_coord_object(class_instance)
 
     def _prepare_cord1c(self, card, card_obj, comment=''):
         """adds a CORD1C"""
         class_instance = CORD1C.add_card(card_obj, comment=comment)
-        self.add_coord(class_instance)
+        self.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1C.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord(class_instance)
+            self.add_coord_object(class_instance)
 
     def _prepare_cord1s(self, card, card_obj, comment=''):
         """adds a CORD1S"""
         class_instance = CORD1S.add_card(card_obj, comment=comment)
-        self.add_coord(class_instance)
+        self.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord(class_instance)
+            self.add_coord_object(class_instance)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """

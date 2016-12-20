@@ -385,13 +385,13 @@ class TestLoadSum(unittest.TestCase):
         cid = 1
         mag = 1.1
         xyz = [1., 0., 0.]
-        radial_force = FORCE(sid, node, cid, mag, xyz, comment='')
+        radial_force = FORCE(sid, node, mag, cid=cid, xyz=xyz, comment='')
         model.add_card_class(radial_force)
 
         sid = 2
         xyz = [1., 90., 0.]
         mag = 2.2
-        theta_force = FORCE(sid, node, cid, mag, xyz, comment='')
+        theta_force = FORCE(sid, node, mag, cid=cid, xyz=xyz, comment='')
         model.add_card_class(theta_force)
         model.cross_reference()
 

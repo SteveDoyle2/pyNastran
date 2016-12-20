@@ -240,7 +240,7 @@ class GEOM2(GeomCommon):
             for nid in elem.nodes:
                 if nid == -1:
                     assert nid > 0, elem
-        self.add_element(elem, allow_overwrites=True)
+        self.add_element_object(elem, allow_overwrites=True)
         #print(str(elem)[:-1])
 
 # 1-AEROQ4 (???)
@@ -760,7 +760,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CMASS1=%s\n' % str(out))
             #(eid, pid, g1, g2, c1, c2) = out
             elem = CMASS1.add_op2_data(out)
-            self.add_mass(elem)
+            self.add_mass_object(elem)
             n += 24
         self.card_count['CMASS1'] = nelements
         return n
@@ -778,7 +778,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CMASS2=%s\n' % str(out))
             #(eid, m, g1, g2, c1, c2) = out
             elem = CMASS2.add_op2_data(out)
-            self.add_mass(elem)
+            self.add_mass_object(elem)
             n += 24
         self.card_count['CMASS2'] = nelements
         return n
@@ -796,7 +796,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CMASS3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CMASS3.add_op2_data(out)
-            self.add_mass(elem)
+            self.add_mass_object(elem)
             n += 16
         self.card_count['CMASS3'] = nelements
         return n
@@ -812,7 +812,7 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             #(eid, m,s 1, s2) = out
             elem = CMASS4.add_op2_data(out)
-            self.add_mass(elem)
+            self.add_mass_object(elem)
             n += 16
         self.card_count['CMASS4'] = nelements
         return n
@@ -840,7 +840,7 @@ class GEOM2(GeomCommon):
             (eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
             elem = CONM1.add_op2_data(out)
-            self.add_mass(elem)
+            self.add_mass_object(elem)
             n += 96
         self.card_count['CONM1'] = nelements
         return n
@@ -859,7 +859,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CONM2=%s\n' % str(out))
             (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2.add_op2_data(out)
-            self.add_mass(elem)
+            self.add_mass_object(elem)
             n += ntotal
         self.card_count['CONM2'] = nelements
         return n
@@ -1462,7 +1462,7 @@ class GEOM2(GeomCommon):
         if self.is_debug_file:
             self.binary_debug.write('SPOINT=%s\n' % str(nids))
         spoint = SPOINTs.add_op2_data(list(nids))
-        self.add_spoint(spoint)
+        self.add_spoint_object(spoint)
         self.card_count['SPOINT'] = npoints
         return n
 

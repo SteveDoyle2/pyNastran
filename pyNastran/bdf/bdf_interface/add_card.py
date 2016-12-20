@@ -120,7 +120,7 @@ class AddCards(AddMethods):
             TODO: how is this used by Nastran???
         """
         grid = GRID(nid, cp=cp, xyz=xyz, cd=cd, ps=ps, seid=seid, comment=comment)
-        self.add_node(grid)
+        self.add_node_object(grid)
 
     def add_spoint(self, ids, comment=''):
         """

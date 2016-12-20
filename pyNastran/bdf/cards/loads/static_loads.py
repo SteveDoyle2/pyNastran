@@ -801,6 +801,12 @@ class FORCE(Force):
             xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
         assert self.xyz.size == 3, self.xyz.shape
+        assert isinstance(self.cid, int), self.cid
+
+    def validate(self):
+        assert isinstance(self.cid, int), self.cid
+        assert isinstance(self.mag, float), self.mag
+        assert self.xyz.size == 3, self.xyz.shape
 
     @classmethod
     def add_card(cls, card, comment=''):
