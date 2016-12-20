@@ -340,7 +340,7 @@ class GEOM4(GeomCommon):
             #edata = data[n:n + 20]
             #(sid, ID, c, xxx, dx) = unpack(b(self._endian + 'iiiif'), edata)
             #load = SPCD.add_op2_data(sid, ID, c, dx)
-            #self.add_load(load)
+            #self.add_load_object(load)
             #n += 20
         #return n
 
@@ -387,7 +387,7 @@ class GEOM4(GeomCommon):
     def _read_spcd(self, data, n):
         """common method for reading SPCDs"""
         n = self._read_dual_card(data, n, self._read_spcd_nx, self._read_spcd_msc,
-                                 'SPCD', self.add_load)
+                                 'SPCD', self.add_load_object)
         return n
 
     def _read_spcd_nx(self, data, n):

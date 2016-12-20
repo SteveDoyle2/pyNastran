@@ -39,13 +39,13 @@ class GeomCommon(object):
         msg = 'this should be overwritten; name=%s count_num=%s' % (name, count_num)
         raise NotImplementedError(msg)
 
-    def add_coord(self, coord, allow_overwrites=True):
+    def add_coord_object(self, coord, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_property(self, card, allow_overwrites=True):
+    def add_property_object(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
-    def add_constraint_SPC(self, constraint):
+    def add_constraint_spc(self, constraint):
         raise RuntimeError('this should be overwritten by the BDF class')
 
     def add_rigid_element(self, constraint):
@@ -57,7 +57,7 @@ class GeomCommon(object):
     def add_thermal_load(self, load):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_load(self, load):
+    def add_load_object(self, load):
         raise RuntimeError('this should be overwritten by the BDF class')
 
 
@@ -79,7 +79,7 @@ class GeomCommon(object):
     def add_thermal_material(self, material, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_gust(self, gust):
+    def add_gust_object(self, gust):
         raise RuntimeError('this should be overwritten by the BDF class')
 
     def add_table(self, table):

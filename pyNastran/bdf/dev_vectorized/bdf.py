@@ -1556,10 +1556,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             'PARAM' : (PARAM, self.add_param),
 
-            #'CORD2R' : (CORD2R, self.add_coord),
-            #'CORD2C' : (CORD2C, self.add_coord),
-            #'CORD2S' : (CORD2S, self.add_coord),
-            #'GMCORD' : (GMCORD, self.add_coord),
+            #'CORD2R' : (CORD2R, self.add_coord_object),
+            #'CORD2C' : (CORD2C, self.add_coord_object),
+            #'CORD2S' : (CORD2S, self.add_coord_object),
+            #'GMCORD' : (GMCORD, self.add_coord_object),
 
             'PLOTEL' : (PLOTEL, self.add_plotel),
 
@@ -1904,9 +1904,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             # BCTSET
         }
         self._card_parser_prepare = {
-            #'CORD2R' : (CORD2R, self.add_coord), # not vectorized
-            #'CORD2C' : (CORD2C, self.add_coord),
-            #'CORD2S' : (CORD2S, self.add_coord),
+            #'CORD2R' : (CORD2R, self.add_coord_object), # not vectorized
+            #'CORD2C' : (CORD2C, self.add_coord_object),
+            #'CORD2S' : (CORD2S, self.add_coord_object),
             'CORD2R' : self._prepare_cord2, # vectorized
             'CORD2C' : self._prepare_cord2,
             'CORD2S' : self._prepare_cord2,
@@ -2138,26 +2138,26 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
         class_instance = CORD1R.add_card(card_obj, comment=comment)
-        self.add_coord(class_instance)
+        self.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1R.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord(class_instance)
+            self.add_coord_object(class_instance)
 
     def _prepare_cord1c(self, card, card_obj, comment=''):
         """adds a CORD1C"""
         class_instance = CORD1C.add_card(card_obj, comment=comment)
-        self.add_coord(class_instance)
+        self.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1C.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord(class_instance)
+            self.add_coord_object(class_instance)
 
     def _prepare_cord1s(self, card, card_obj, comment=''):
         """adds a CORD1S"""
         class_instance = CORD1S.add_card(card_obj, comment=comment)
-        self.add_coord(class_instance)
+        self.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord(class_instance)
+            self.add_coord_object(class_instance)
 
     def _prepare_cord2(self, card, card_obj, comment=''):
         """adds a CORD2x"""
