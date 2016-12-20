@@ -296,14 +296,9 @@ class MPC(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        sid,
         msg = '%s has not implemented data parsing' % cls.type
         raise NotImplementedError(msg)
-        return MPC(conid, gids, constraints, enforced, comment=comment)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
+        #return MPC(conid, gids, constraints, enforced, comment=comment)
 
     @property
     def node_ids(self):
@@ -683,8 +678,8 @@ class SPCADD(ConstraintADD):
     +--------+----+----+-----+
     |    1   | 2  |  3 |  4  |
     +========+====+====+=====+
-    | SPCADD  | 2 | 1 |   3  |
-    +---------+---+---+------+
+    | SPCADD | 2  |  1 |  3  |
+    +--------+----+----+-----+
     """
     type = 'SPCADD'
 

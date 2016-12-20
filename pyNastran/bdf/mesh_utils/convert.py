@@ -45,7 +45,7 @@ def convert(model, units_to, units=None):
     _convert_materials(model, xyz_scale, mass_scale, weight_scale)
 
     _convert_aero(model, xyz_scale, time_scale, weight_scale)
-    #_convert_constraints(model)
+    _convert_constraints(model, xyz_scale)
     _convert_loads(model, xyz_scale, weight_scale)
     #_convert_sets(model)
     _convert_optimization(model, xyz_scale, mass_scale, weight_scale)
@@ -445,6 +445,19 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
         else:
             raise NotImplementedError(mat)
 
+def _convert_constraints(model, xyz_scale):
+    """converts the spc/mpcs"""
+    for spc_id, spcs in iteritems(model.spcs):
+        for spc in spcs:
+            if spc.type in ['SPCADD', 'SPC1']:
+                continue
+            elif spc.type == 'SPC':
+                spc.enforced = [enforcedi*xyz_scale for enforcedi in spc.enforced]
+            elif spc.type == 'SPCAX':
+                spc.d = spc.d * xyz_scale
+            else:
+                raise NotImplementedError(spc)
+
 def _convert_loads(model, xyz_scale, weight_scale):
     """converts the loads"""
     force_scale = weight_scale
@@ -558,7 +571,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         #aesurf.cross_reference(model)
     #for aesurfs in itervalues(model.aesurfs):
         #aesurfs.cross_reference(model)
-    for monitor in self.monitor_points:
+    for monitor in model.monitor_points:
         if hasattr(monitor, 'xyz'):
             monitor.xyz *= xyz_scale
     # update only the FLFACTs corresponding to density
