@@ -1,8 +1,8 @@
-import unittest
-
+from __future__ import print_function
 import os
-import StringIO
-#import cStringIO
+import unittest
+from six.moves import StringIO
+
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 
@@ -26,7 +26,7 @@ class TestDEQATN(unittest.TestCase):
         #with self.assertRaises(AttributeError): # TODO: fix this...
         model.add_card(card, "DEQATN", is_list=False)
         model.cross_reference()
-        s = StringIO.StringIO()
+        s = StringIO()
         with self.assertRaises(AttributeError):
             # this is a result of the previous error
             model.write_bdf(s)
@@ -48,7 +48,7 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, "DEQATN", is_list=True)
         model.cross_reference()
 
-        s = StringIO.StringIO()
+        s = StringIO()
         with self.assertRaises(AttributeError): # TODO: fix this...
             model.write_bdf(s)
         s.getvalue()
@@ -72,7 +72,7 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        s = StringIO.StringIO()
+        s = StringIO()
         model.write_bdf(s, close=False)
         s.getvalue()
         #print(s.getvalue())
@@ -97,7 +97,7 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        s = StringIO.StringIO()
+        s = StringIO()
         model.write_bdf(s, close=False)
         s.getvalue()
         s.close()
@@ -131,7 +131,7 @@ class TestDEQATN(unittest.TestCase):
         func_str += '    c = 3\n'
         func_str += '    return x + y + z + c\n'
         #func = exec(fnc_str)
-        s = StringIO.StringIO()
+        s = StringIO()
         s.write(s)
         s.close()
         exec (func_str)
@@ -159,7 +159,7 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        s = StringIO.StringIO()
+        s = StringIO()
         model.write_bdf(s, close=False)
         s.getvalue()
         s.close()
@@ -185,7 +185,7 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        s = StringIO.StringIO()
+        s = StringIO()
         model.write_bdf(s, close=False)
         s.getvalue()
         s.close()
@@ -211,7 +211,7 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        s = StringIO.StringIO()
+        s = StringIO()
         model.write_bdf(s, close=False)
         s.getvalue()
         s.close()
@@ -230,7 +230,7 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        s = StringIO.StringIO()
+        s = StringIO()
         model.write_bdf(s, close=False)
         s.getvalue()
         s.close()
