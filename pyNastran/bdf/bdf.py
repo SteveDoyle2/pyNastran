@@ -2542,7 +2542,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         nnodes = len(self.nodes)
         nspoints = 0
         nepoints = 0
-        nids = [self.node_ids]
+        nids = [list(self.node_ids)]
         if self.spoints is not None:
             spoints = self.spoints.points
             nspoints = len(spoints)
@@ -2558,7 +2558,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         npoints = nnodes + nspoints + nepoints
         if len(np.unique(nids)) != npoints:
-            msg = 'len(unique(nids))=%s npoints=%s' % (len(np.unique(nids)), npoints)
+            msg = 'len(unique(nids))=%s npoints=%s\n' % (len(np.unique(nids)), npoints)
+            msg += 'npoints = nnodes+nspoints+nepoints = %s + %s + %s\n' % (nnodes, nspoints, nepoints)
+            msg += 'nids=%s' % (nids)
             raise RuntimeError(msg)
         if npoints == 0:
             msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
