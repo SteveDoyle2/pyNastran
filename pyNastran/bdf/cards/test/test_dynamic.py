@@ -9,14 +9,13 @@ from numpy import zeros, array_equal
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
 
-comment_bad = 'this is a bad comment'
-comment_good = 'this is a good comment\n'
 class TestDEQATN(unittest.TestCase):
     """
     The cards tested are:
      * TSTEP
     """
     def test_tstep(self):
+        """tests a TSTEP card"""
         model = BDF(debug=None)
 
         sid = 42
@@ -34,6 +33,7 @@ class TestDEQATN(unittest.TestCase):
         tstep.write_card(size=16)
 
     def test_tstepnl(self):
+        """tests a TSTEPNL card"""
         model = BDF(debug=None)
         card = ['TSTEPNL', 250, 100, .01, 1, 'ADAPT', 2, 10, 'PW',
                 1.E-2, 1.E-3, 1.E-6, 2, 10, 2, .02, None,

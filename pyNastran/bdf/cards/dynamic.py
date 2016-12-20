@@ -252,11 +252,11 @@ class FREQ(BaseCard):
     Defines a set of frequencies to be used in the solution of frequency
     response problems.
 
-    +-----+-----+-----+-----+------+-----+-----+-----+-----+
-    |  1  |  2  |  3  |  4  |  5   |  6  |  7  |  8  |  9  |
-    +=====+=====+=====+=====+======+=====+=====+=====+=====+
-    |FREQ | SID | F1  | F2  | etc. |     |     |     |     |
-    +-----+-----+-----+-----+------+-----+-----+-----+-----+
+    +------+-----+-----+-----+------+-----+-----+-----+-----+
+    |  1   |  2  |  3  |  4  |  5   |  6  |  7  |  8  |  9  |
+    +======+=====+=====+=====+======+=====+=====+=====+=====+
+    | FREQ | SID | F1  | F2  | etc. |     |     |     |     |
+    +------+-----+-----+-----+------+-----+-----+-----+-----+
     """
     type = 'FREQ'
 
@@ -315,11 +315,11 @@ class FREQ1(FREQ):
     response problems by specification of a starting frequency, frequency
     increment, and the number of increments desired.
 
-    +------+-----+-----+-----+-----+-----+-----+-----+-----+
-    |  1   |  2  | 3   |  4  |  5  |  6  |  7  |  8  |  9  |
-    +======+=====+=====+=====+=====+=====+=====+=====+=====+
-    |FREQ1 | SID |  F1 | DF  | NDF |     |     |     |     |
-    +------+-----+-----+-----+-----+-----+-----+-----+-----+
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |   1   |  2  | 3   |  4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+=====+=====+=====+=====+=====+=====+
+    | FREQ1 | SID |  F1 | DF  | NDF |     |     |     |     |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
 
     .. note:: this card rewrites as a FREQ card
     """
@@ -417,11 +417,11 @@ class FREQ4(FREQ):
     frequency and the number of equally spaced excitation frequencies within
     the spread.
 
-    +------+-----+-----+-----+------+-----+-----+-----+-----+
-    |  1   |  2  | 3   |  4  |  5   |  6  |  7  |  8  |  9  |
-    +======+=====+=====+=====+======+=====+=====+=====+=====+
-    |FREQ4 | SID |  F1 | F2  | FSPD | NFM |     |     |     |
-    +------+-----+-----+-----+------+-----+-----+-----+-----+
+    +-------+-----+-----+-----+------+-----+-----+-----+-----+
+    |   1   |  2  | 3   |  4  |  5   |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+=====+======+=====+=====+=====+=====+
+    | FREQ4 | SID |  F1 | F2  | FSPD | NFM |     |     |     |
+    +-------+-----+-----+-----+------+-----+-----+-----+-----+
 
     .. note:: this card rewrites as a FREQ card
     .. todo:: not done...
@@ -1078,15 +1078,15 @@ class TSTEP(BaseCard):
     Defines time step intervals at which a solution will be generated and
     output in transient analysis.
 
-    +-------+------+-----+-----+-----+-----+-----+-----+-----+
-    |   1   |   2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
-    +-------+------+-----+-----+-----+-----+-----+-----+-----+
-    | TSTEP |  N1  | DT1 | NO1 |     |     |     |     |     |
-    +-------+------+-----+-----+-----+-----+-----+-----+-----+
-    |       |  N2  | DT2 | NO2 |     |     |     |     |     |
-    +-------+------+-----+-----+-----+-----+-----+-----+-----+
-    |       | etc. |     |     |     |     |     |     |     |
-    +-------+------+-----+-----+-----+-----+-----+-----+-----+
+    +-------+------+------+-----+-----+-----+-----+-----+-----+
+    |   1   |   2  |  3   |  4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+======+======+=====+=====+=====+=====+=====+=====+
+    | TSTEP | SID  |  N1  | DT1 | NO1 |     |     |     |     |
+    +-------+------+------+-----+-----+-----+-----+-----+-----+
+    |       |      |  N2  | DT2 | NO2 |     |     |     |     |
+    +-------+------+------+-----+-----+-----+-----+-----+-----+
+    |       |      | etc. |     |     |     |     |     |     |
+    +-------+------+------+-----+-----+-----+-----+-----+-----+
     """
     type = 'TSTEP'
 
@@ -1094,9 +1094,16 @@ class TSTEP(BaseCard):
         if comment:
             self.comment = comment
         self.sid = sid
+        #: Number of time steps of value DTi. (Integer > 1)
         self.N = N
+        #: Time increment (float)
         self.DT = DT
+        #: Skip factor for output. Every NOi-th step will be saved for output (default=1)
         self.NO = NO
+
+    def validate(self):
+        assert len(self.N) == len(self.DT), 'N=%s DT=%s' % (self.N, self.DT)
+        assert len(self.N) == len(self.NO), 'N=%s NO=%s' % (self.N, self.NO)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1140,7 +1147,7 @@ class TSTEPNL(BaseCard):
 
     +---------+--------+--------+-------+--------+--------+-------+---------+------+
     |    1    |   2    |   3    |   4   |   5    |   6    |   7   |    8    |  9   |
-    +---------+--------+--------+-------+--------+--------+-------+---------+------+
+    +=========+========+========+=======+========+========+=======+=========+======+
     | TSTEPNL |   ID   |  NDT   |  DT   |   NO   | METHOD | KSTEP | MAXITER | CONV |
     +---------+--------+--------+-------+--------+--------+-------+---------+------+
     |         |  ESPU  |  EPSP  |  EPSW | MAXDIV | MAXQN  | MAXLS | FSTRESS |      |
@@ -1149,6 +1156,7 @@ class TSTEPNL(BaseCard):
     +---------+--------+--------+-------+--------+--------+-------+---------+------+
     """
     type = 'TSTEPNL'
+    allowed_methods = ['AUTO', 'ITER', 'ADAPT', 'SEMI', 'FNT', 'PFNT']
 
     def __init__(self, sid, ndt, dt, no, method, kstep, max_iter,
                  conv, eps_u, eps_p, eps_w, max_div, max_qn, max_ls,
@@ -1187,6 +1195,12 @@ class TSTEPNL(BaseCard):
         assert self.ndt >= 3
         assert self.dt > 0.
 
+    def validate(self):
+        if self.method not in self.allowed_methods:
+            msg = 'method=%r allowed_methods=[%s]' % (
+                self.method, ', '.join(self.allowed_methods))
+            raise ValueError(msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
@@ -1200,11 +1214,12 @@ class TSTEPNL(BaseCard):
             kstep = integer_or_blank(card, 6, 'kStep', 2)
         elif method == 'ITER':
             kstep = integer_or_blank(card, 6, 'kStep', 10)
-        elif method in ['AUTO', 'TSTEP']:
+        elif method in ['AUTO', 'TSTEP', 'SEMI']:
             kstep = None
             #kstep = blank(card, 6, 'kStep') #: .. todo:: not blank
         else:
-            msg = 'invalid TSTEPNL Method.  method=%r' % (method)
+            msg = 'invalid TSTEPNL Method.  method=%r; allowed_methods=[%s]' % (
+                method, ', '.join(cls.allowed_methods))
             raise RuntimeError(msg)
         max_iter = integer_or_blank(card, 7, 'maxIter', 10)
         conv = string_or_blank(card, 8, 'conv', 'PW')

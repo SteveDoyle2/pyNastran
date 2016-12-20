@@ -279,8 +279,8 @@ class OP4():
         """
         if not (name[0].isalpha() or name[0] == '_'):
             oldname, name = name, '_'+name
-            warnings.warn('Output4 file has matrix name: {}.  '
-                          'Changing to {}.'.format(oldname, name),
+            warnings.warn('Output4 file has matrix name: {0}.  '
+                          'Changing to {1}.'.format(oldname, name),
                           RuntimeWarning)
         return name
 
@@ -717,10 +717,10 @@ class OP4():
         if bigmat:
             if rows < self._rows4bigmat:
                 rows = -rows
-        f.write('{:8}{:8}{:8}{:8}{:8s}1P,{}E{}.{}\n'.
+        f.write('{0:8}{1:8}{2:8}{3:8}{4:8s}1P,{5}E{6}.{7}\n'.
                 format(cols, rows, form, mtype, name.upper(),
                        perline, numlen, digits))
-        numform = '%{}.{}E'.format(numlen, digits)
+        numform = '%{0}.{1}E'.format(numlen, digits)
         return cols, multiplier, perline, numlen, numform
 
     def _write_ascii(self, f, name, matrix, digits):
@@ -1195,7 +1195,7 @@ class OP4():
                 mtypes.append(mtype)
             if verbose:
                 for n, s, f, m in zip(names, sizes, forms, mtypes):
-                    print('{:8}, {:6} x {:<6}, form={}, mtype={}'
+                    print('{0:8}, {1:6} x {2:<6}, form={3}, mtype={4}'
                           .format(n, s[0], s[1], f, m))
         finally:
             self._op4close()
