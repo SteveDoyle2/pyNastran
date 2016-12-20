@@ -2554,7 +2554,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if len(nids) == 1:
             nids = np.array(nids[0])
         else:
-            nids = hstack(nids)
+            nids = np.hstack(nids)
 
         npoints = nnodes + nspoints + nepoints
         if len(np.unique(nids)) != npoints:
@@ -3032,8 +3032,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 continue
             coord = self.coords[cp]
             beta = coord.beta()
-            is_beta = np.diagonal(beta).min() != 1.
-            is_origin = np.abs(coord.origin).max() != 0.
+            #is_beta = np.diagonal(beta).min() != 1.
+            #is_origin = np.abs(coord.origin).max() != 0.
             xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
             #if is_beta and is_origin:
             xyz_cid0[inode, :] = np.dot(xyzi, beta) + coord.origin
@@ -3042,19 +3042,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #else:
                 #xyz_cid0[inode, :] = xyzi + coord.origin
 
-        xyz_cid0_alt = self.get_xyz_in_coord(cid=0)
-        if not np.allclose(xyz_cid0, xyz_cid0_alt, atol=atol):
+        xyz_cid0_correct = self.get_xyz_in_coord(cid=0)
+        if not np.allclose(xyz_cid0, xyz_cid0_correct, atol=atol):
             #np.array_equal(xyz_cid, xyz_cid_alt):
             msg = ('xyz_cid0:\n%s\n'
-                   'xyz_cid0_alt:\n%s'% (xyz_cid0, xyz_cid0_alt))
+                   'xyz_cid0_correct:\n%s'% (xyz_cid0, xyz_cid0_correct))
             raise ValueError(msg)
 
         if cid == 0:
             return xyz_cid0
 
         # transform the grids to the local coordinate system
-        is_beta = np.diagonal(beta2).min() != 1.
-        is_origin = np.abs(coord2.origin).max() != 0.
+        #is_beta = np.diagonal(beta2).min() != 1.
+        #is_origin = np.abs(coord2.origin).max() != 0.
         #if is_beta and is_origin:
         xyz_cid = coord2.transform_node_to_local_array(xyz_cid0)
         #xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
@@ -3063,11 +3063,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         #else:
             #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
-        xyz_cid_alt = self.get_xyz_in_coord(cid=cid)
-        if not np.allclose(xyz_cid, xyz_cid_alt, atol=atol):
-            #np.array_equal(xyz_cid, xyz_cid_alt):
+        xyz_cid_correct = self.get_xyz_in_coord(cid=cid)
+        if not np.allclose(xyz_cid, xyz_cid_correct, atol=atol):
+            #np.array_equal(xyz_cid, xyz_cid_correct):
             msg = ('xyz_cid:\n%s\n'
-                   'xyz_cid_alt:\n%s'% (xyz_cid, xyz_cid_alt))
+                   'xyz_cid_correct:\n%s'% (xyz_cid, xyz_cid_correct))
             raise ValueError(msg)
         return xyz_cid
 

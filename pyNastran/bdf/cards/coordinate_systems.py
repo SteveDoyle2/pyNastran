@@ -534,10 +534,7 @@ class Coord(BaseCard):
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
         xyz_coord = np.dot(xyz - self.origin, beta.T)
-        print('xyz_coord =', xyz_coord)
-        print(self)
         xyz_local = self.xyz_to_coord(xyz_coord)
-        print('xyz_local =', xyz_local, '\n')
         return xyz_local
 
     def _transform_node_to_local_array(self, xyz, beta):
@@ -555,9 +552,7 @@ class Coord(BaseCard):
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
         xyz_coord = np.dot(xyz - self.origin, beta.T)
-        print('xyz_coord_array =', xyz_coord)
         xyz_local = self.xyz_to_coord_array(xyz_coord)
-        print('xyz_local_array =', xyz_local)
         return xyz_local
 
     def transform_node_to_local(self, xyz):
@@ -1000,7 +995,6 @@ class CylindricalCoord(object):
         theta = radians(p[1])
         x = R * cos(theta)
         y = R * sin(theta)
-        print('pc=%.4f %.4f %.4f' % (R, p[1], p[2]))
         return np.array([x, y, p[2]], dtype='float64')
 
     @staticmethod
@@ -1024,11 +1018,9 @@ class CylindricalCoord(object):
         """
         assert len(p.shape) == 2, p.shape
         R = p[:, 0]
-        print('R=%s' % R)
         theta = np.radians(p[:, 1])
         x = R * np.cos(theta)
         y = R * np.sin(theta)
-        print(x, y)
         out = np.array([x, y, p[:, 2]], dtype='float64').T
         return out
 
@@ -1080,7 +1072,7 @@ class CylindricalCoord(object):
         assert len(p.shape) == 2, p.shape
         x = p[:, 0]
         y = p[:, 1]
-        theta = np.degrees(np.arctan(y, x))
+        theta = np.degrees(np.arctan2(y, x))
         R = np.sqrt(x * x + y * y)
         return np.array([R, theta, p[:, 2]], dtype='float64').T
 
@@ -1640,7 +1632,6 @@ class Cord1x(Coord):
         g2 = data[2]
         g3 = data[3]
         assert len(data) == 4, 'data = %s' % (data)
-        print('cid =', cid)
         return cls(cid, g1, g2, g3, comment=comment)
 
     def to_CORD2x(self, model, rid=0):

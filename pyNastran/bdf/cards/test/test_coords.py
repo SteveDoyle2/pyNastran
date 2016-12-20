@@ -392,9 +392,9 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([20, 21, 22]))
 
-        #xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=20)
-        #xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=21)
-        #xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=22)
+        xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=20)
+        xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=21)
+        xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=22)
 
 
     def test_cord2_rcs_03(self):
@@ -455,9 +455,9 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([30, 31, 32]))
 
-        #xyz_cid_30 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=30)
-        #xyz_cid_31 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=31)
-        #xyz_cid_32 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=32)
+        xyz_cid_30 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=30)
+        xyz_cid_31 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=31)
+        xyz_cid_32 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=32)
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
@@ -614,8 +614,8 @@ class TestCoords(unittest.TestCase):
         origin = [0., 0., 0.]
         zaxis = [0., 0., 1.]
         xzplane = [1., 0., 0.]
-        cid1 =CORD2R(cid=1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                     comment='cord2r')
+        cid1 = CORD2R(cid=1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
+                      comment='cord2r')
 
         xaxis = [1., 0., 0.]
         yaxis = [0., 1., 0.]
