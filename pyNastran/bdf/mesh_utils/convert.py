@@ -38,7 +38,6 @@ def convert(model, units_to, units=None):
 
     _convert_nodes(model, xyz_scale)
     #_convert_coordinates(model, xyz_scale)
-    #_convert_coords(model, xyz_scale)
 
     _convert_elements(model, xyz_scale, mass_scale, weight_scale)
     _convert_properties(model, xyz_scale, mass_scale, weight_scale)
@@ -83,15 +82,14 @@ def _convert_coordinates(model, xyz_scale):
     for cid, coord in iteritems(model.coords):
         if cid == 0:
             continue
-        #print(coord.object_methods())
-        #print(dir(coord))
-        #if coord.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
-        #print('coord.rid =', coord.rid)
         if coord.rid == 0:
-            coord.origin *= xyz_scale
-            coord.e1 *= xyz_scale
-            coord.e2 *= xyz_scale
-            coord.e3 *= xyz_scale
+            if np.abs(coord.e1).sum() == 0.:
+                assert np.abs(coord.origin).sum() == 0., coord.origin
+            else:
+                coord.origin *= xyz_scale
+                coord.e1 *= xyz_scale
+                coord.e2 *= xyz_scale
+                coord.e3 *= xyz_scale
         elif coord.rid.type in ['CORD1R', 'CORD2R']:
             coord.origin *= xyz_scale
             coord.e1 *= xyz_scale
@@ -152,7 +150,6 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
                     elem.T1 *= xyz_scale
                     elem.T2 *= xyz_scale
                     elem.T3 *= xyz_scale
-
             # nsm
             #elem.nsm *= nsm_scale
 
@@ -196,7 +193,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         if elem_type == 'CONM2':
             elem.mass *= mass_scale
             elem.X *= xyz_scale
-                # I = m * r^2
+            # I = m * r^2
             elem.I = [moi * mass_moi_scale for moi in elem.I]
         else:
             raise NotImplementedError(elem)

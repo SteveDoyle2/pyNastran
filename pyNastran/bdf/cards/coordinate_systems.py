@@ -103,7 +103,7 @@ class Coord(BaseCard):
         #self.j = np.array([0., 1., 0.], dtype='float64')
         #self.k = np.array([0., 0., 1.], dtype='float64')
 
-        self.origin = self.e1
+        self.origin = copy.deepcopy(self.e1)
         e1 = self.e1
         e2 = self.e2
         e3 = self.e3
@@ -235,7 +235,7 @@ class Coord(BaseCard):
             assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
 
         if rid == 0:
-            self.origin = self.e1
+            self.origin = copy.deepcopy(self.e1)
             e1 = self.e1
             e2 = self.e2
             e3 = self.e3
@@ -651,7 +651,7 @@ class Coord(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def move_origin(self, xyz):
+    def move_origin(self, xyz, maintain_rid=False):
         """
         Move the coordinate system to a new origin while maintaining
         the orientation
@@ -660,20 +660,16 @@ class Coord(BaseCard):
         ----------
         xyz : the new origin point to move the coordinate to in
               the global coordinate system
+        maintain_rid : bool; default=False
+            set the rid to cid=0 if False
         """
         if self.i is None:
             self.setup()
 
         xyz = _fix_xyz_shape(xyz)
         if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-            e1 = self.rid_ref.transform_node_to_global(self.e1)
-            e2 = self.rid_ref.transform_node_to_global(self.e2)
-            e3 = self.rid_ref.transform_node_to_global(self.e3)
-            e12 = e2 - e1
-            e13 = e3 - e1
-            self.e1 = self.rid_ref.transform_node_to_local(xyz)
-            self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
-            self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
+            self.origin = xyz
+            self.update_e123(maintain_rid=maintain_rid)
         else:
             raise RuntimeError('Cannot move %s; cid=%s' % (self.type, self.cid))
         self.origin = xyz
@@ -1492,6 +1488,38 @@ class Cord2x(Coord):
         """
         self.cid = cid_map[self.cid]
         self.rid = cid_map[self.rid]
+
+    def update_e123(self, maintain_rid=False):
+        """
+        If you move the coordinate frame, e1, e2, e3 does not update.
+        This updates the coordinate system.
+
+        Parameters
+        ----------
+        maintain_rid : bool; default=False
+            set the rid to cid=0 if False
+        """
+        if maintain_rid:
+            e1 = self.rid_ref.transform_node_to_global(self.e1)
+            e2 = self.rid_ref.transform_node_to_global(self.e2)
+            e3 = self.rid_ref.transform_node_to_global(self.e3)
+            e12 = e2 - e1
+            e13 = e3 - e1
+            self.e1 = self.rid_ref.transform_node_to_local(xyz)
+            self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
+            self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
+        else:
+            self.rid = 0
+            if hasattr(self, 'rid_ref'):
+                del self.rid_ref
+            self.rid_trace = [0]
+            #beta = self.beta()
+            #self.e1 = copy.deepcopy(self.origin)
+            #self.e2 = self.origin + beta[2, :]
+            #self.e3 = self.origin + beta[0, :]
+            self.e1 = copy.deepcopy(self.origin)
+            self.e2 = self.origin + self.k
+            self.e3 = self.origin + self.i
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

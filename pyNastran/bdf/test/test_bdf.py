@@ -25,6 +25,7 @@ from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, Dupl
 from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
+from pyNastran.bdf.mesh_utils.convert import convert
 
 import pyNastran.bdf.test
 test_path = pyNastran.bdf.test.__path__[0]
@@ -551,6 +552,9 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
     fem1._get_maps()
     fem1.remove_unused_materials()
+    units_to = ['m', 'kg', 's']
+    units_from = ['m', 'kg', 's']
+    #convert(fem1, units_to, units=units_from)
     if xref:
         fem1.get_area_breakdown()
         fem1.get_volume_breakdown()
