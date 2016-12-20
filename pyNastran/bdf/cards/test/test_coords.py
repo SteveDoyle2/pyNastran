@@ -330,6 +330,10 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([10, 11, 12]))
 
+        xyz_cid_10 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=10)
+        xyz_cid_11 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=11)
+        xyz_cid_12 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=12)
+
     def test_cord2_rcs_02(self):
         """
         all points are located at <30,40,50>
@@ -387,6 +391,10 @@ class TestCoords(unittest.TestCase):
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([20, 21, 22]))
+
+        #xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=20)
+        #xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=21)
+        #xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=22)
 
 
     def test_cord2_rcs_03(self):
@@ -446,6 +454,10 @@ class TestCoords(unittest.TestCase):
         xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([30, 31, 32]))
+
+        #xyz_cid_30 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=30)
+        #xyz_cid_31 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=31)
+        #xyz_cid_32 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=32)
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']

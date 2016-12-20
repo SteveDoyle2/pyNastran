@@ -2517,7 +2517,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
-    def get_xyz_in_coord(self, cid=0, dtype='float64'):
+    def get_xyz_in_coord(self, cid=0, dtype='float64', sort_ids=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -2527,57 +2527,52 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             the desired coordinate system
         dtype : str; default='float64'
             the data type of the xyz coordinates
+        sort_ids : bool; default=True
+            sort the ids
 
         Returns
         -------
         xyz : (n, 3) ndarray
             the xyz points in the cid coordinate frame
-
-        .. warning:: doesn't support EPOINTs
         """
         #return self.get_displacement_index_xyz_cp_cd(cid=cid, dtype=dtype)[2]
         nnodes = len(self.nodes)
         nspoints = 0
-        spoints = None
         nepoints = 0
-        if self.spoints:
+        nids = [self.node_ids]
+        if self.spoints is not None:
             spoints = self.spoints.points
             nspoints = len(spoints)
+            nids.append(spoints)
         if self.epoints is not None:
             epoints = self.epoints.points
             nepoints = len(epoints)
-            raise NotImplementedError('EPOINTs')
+            nids.append(epoints)
+        if len(nids) == 1:
+            nids = np.array(nids[0])
+        else:
+            nids = hstack(nids)
 
-        if nnodes + nspoints + nepoints == 0:
+        npoints = nnodes + nspoints + nepoints
+        if len(np.unique(nids)) != npoints:
+            msg = 'len(unique(nids))=%s npoints=%s' % (len(np.unique(nids)), npoints)
+            raise RuntimeError(msg)
+        if npoints == 0:
             msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
             raise ValueError(msg)
-        xyz_cid0 = np.zeros((nnodes + nspoints + nepoints, 3), dtype=dtype)
+        xyz_cid0 = np.zeros((npoints, 3), dtype=dtype)
         if cid == 0:
-            if nspoints:
-                nids = self.nodes.keys()
-                newpoints = nids + list(spoints)
-                newpoints.sort()
-                for i, nid in enumerate(newpoints):
-                    if nid not in spoints:
-                        node = self.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position()
-            else:
-                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                    xyz = node.get_position()
-                    xyz_cid0[i, :] = xyz
+            for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                xyz = node.get_position()
+                xyz_cid0[i, :] = xyz
         else:
-            if nspoints:
-                nids = self.nodes.keys()
-                newpoints = nids + list(spoints)
-                newpoints.sort()
-                for i, nid in enumerate(newpoints):
-                    if nid not in spoints:
-                        node = self.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position_wrt(self, cid)
-            else:
-                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                    xyz = node.get_position_wrt(self, cid)
-                    xyz_cid0[i, :] = xyz
+            for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                xyz = node.get_position_wrt(self, cid)
+                xyz_cid0[i, :] = xyz
+        if sort_ids:
+            isort = nids.argsort()
+            xyz_cid0 = xyz_cid0[isort, :]
+
         return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
@@ -2996,7 +2991,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform,
-                                   cid=0, inplace=False):
+                                   cid=0, inplace=False, atol=1e-6):
         """
         Working on faster method for calculating node locations
         Not validated...
@@ -3037,12 +3032,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             is_beta = np.diagonal(beta).min() != 1.
             is_origin = np.abs(coord.origin).max() != 0.
             xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
-            if is_beta and is_origin:
-                xyz_cid0[inode, :] = np.dot(xyzi, beta) + coord.origin
-            elif is_beta:
-                xyz_cid0[inode, :] = np.dot(xyzi, beta)
-            else:
-                xyz_cid0[inode, :] = xyzi + coord.origin
+            #if is_beta and is_origin:
+            xyz_cid0[inode, :] = np.dot(xyzi, beta) + coord.origin
+            #elif is_beta:
+                #xyz_cid0[inode, :] = np.dot(xyzi, beta)
+            #else:
+                #xyz_cid0[inode, :] = xyzi + coord.origin
+
+        xyz_cid0_alt = self.get_xyz_in_coord(cid=0)
+        if not np.allclose(xyz_cid0, xyz_cid0_alt, atol=atol):
+            #np.array_equal(xyz_cid, xyz_cid_alt):
+            msg = ('xyz_cid0:\n%s\n'
+                   'xyz_cid0_alt:\n%s'% (xyz_cid0, xyz_cid0_alt))
+            raise ValueError(msg)
 
         if cid == 0:
             return xyz_cid0
@@ -3050,15 +3052,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # transform the grids to the local coordinate system
         is_beta = np.diagonal(beta2).min() != 1.
         is_origin = np.abs(coord2.origin).max() != 0.
-        if is_beta and is_origin:
-            xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
-        elif is_beta:
-            xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0, beta2.T))
-        else:
-            xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
+        #if is_beta and is_origin:
+        xyz_cid = coord2.transform_node_to_local_array(xyz_cid0)
+        #xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
+        #elif is_beta:
+            #xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0, beta2.T))
+        #else:
+            #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
         xyz_cid_alt = self.get_xyz_in_coord(cid=cid)
-        assert np.array_equal(xyz_cid, xyz_cid_alt, dtype=xyz_cid.dtype)
+        if not np.allclose(xyz_cid, xyz_cid_alt, atol=atol):
+            #np.array_equal(xyz_cid, xyz_cid_alt):
+            msg = ('xyz_cid:\n%s\n'
+                   'xyz_cid_alt:\n%s'% (xyz_cid, xyz_cid_alt))
+            raise ValueError(msg)
         return xyz_cid
 
     def get_displacement_index(self):
@@ -3069,7 +3076,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Returns
         ----------
-        i_transform : dict{int cid : (n,) int ndarray}
+        icd_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
@@ -3081,17 +3088,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # assume GRID 5 has a CD=50
         >>> model.point_ids
         [1, 2, 5]
-        >>> i_transform = model.get_displacement_index()
-        >>> i_transform[10]
+        >>> icd_transform = model.get_displacement_index()
+        >>> icd_transform[10]
         [0, 1]
 
-        >>> i_transform[50]
+        >>> icd_transform[50]
         [2]
         """
         nids_transform = defaultdict(list)
-        i_transform = {}
+        icd_transform = {}
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
-            return i_transform
+            return icd_transform
 
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
@@ -3101,8 +3108,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         nids_all = np.array(sorted(self.point_ids))
         for cid in sorted(iterkeys(nids_transform)):
             nids = np.array(nids_transform[cid])
-            i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
-        return nids_all, nids_transform, i_transform
+            icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
+        return nids_all, nids_transform, icd_transform
 
     def get_displacement_index_transforms(self):
         """
@@ -3112,7 +3119,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Returns
         ----------
-        i_transform : dict{int cid : (n,) int ndarray}
+        icd_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
@@ -3127,28 +3134,28 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # assume GRID 5 has a CD=50
         >>> model.point_ids
         [1, 2, 5]
-        >>> i_transform, beta_transforms = model.get_displacement_index_transforms()
-        >>> i_transform[10]
+        >>> icd_transform, beta_transforms = model.get_displacement_index_transforms()
+        >>> icd_transform[10]
         [0, 1]
         >>> beta_transforms[10]
         [1., 0., 0.]
         [0., 0., 1.]
         [0., 1., 0.]
 
-        >>> i_transform[50]
+        >>> icd_transform[50]
         [2]
         >>> beta_transforms[50]
         [1., 0., 0.]
         [0., 1., 0.]
         [0., 0., 1.]
         """
-        self.deprecated('i_transforms, model.get_displacement_index_transforms()',
-                        'itransforms, beta_transforms = model.get_displacement_index()', '0.9.0')
+        self.deprecated('icd_transform, model.get_displacement_index_transforms()',
+                        'icd_transform, beta_transforms = model.get_displacement_index()', '0.9.0')
         nids_transform = defaultdict(list)
-        i_transform = {}
+        icd_transform = {}
         beta_transforms = {}
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
-            return i_transform, beta_transforms
+            return icd_transform, beta_transforms
 
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
@@ -3158,9 +3165,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         nids_all = np.array(sorted(self.point_ids))
         for cid in sorted(iterkeys(nids_transform)):
             nids = np.array(nids_transform[cid])
-            i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
+            icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
             beta_transforms[cid] = self.coords[cid].beta()
-        return i_transform, beta_transforms
+        return icd_transform, beta_transforms
 
     def _get_card_name(self, lines):
         """

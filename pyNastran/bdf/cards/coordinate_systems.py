@@ -365,14 +365,7 @@ class Coord(BaseCard):
         """
         if self.cid == 0:
             return p
-
-        if not self.is_resolved:
-            if isinstance(self.rid, int) and self.rid != 0:
-                raise RuntimeError("BDF has not been cross referenced.")
-            if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-                self.rid_ref.setup()
-            else:
-                self.setup()
+        self.resolve()
 
         if self.i is None:
             msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (
@@ -383,6 +376,15 @@ class Coord(BaseCard):
         # rotate point p2 from the local frame to the global frame
         p3 = np.dot(p, matrix)
         return p3
+
+    def resolve(self):
+        if not self.is_resolved:
+            if isinstance(self.rid, int) and self.rid != 0:
+                raise RuntimeError("BDF has not been cross referenced.")
+            if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+                self.rid_ref.setup()
+            else:
+                self.setup()
 
     def transform_vector_to_global(self, p):
         """
@@ -428,15 +430,6 @@ class Coord(BaseCard):
         # rotate point p2 from the local frame to the global frame
         p3 = np.dot(p2, matrix)
         return p3
-
-    def resolve(self):
-        if not self.is_resolved:
-            if isinstance(self.rid, int) and self.rid != 0:
-                raise RuntimeError("BDF has not been cross referenced.")
-            if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-                self.rid_ref.setup()
-            else:
-                self.setup()
 
     def transform_vector_to_global_array(self, p):
         """
@@ -540,8 +533,11 @@ class Coord(BaseCard):
         """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
-        xyz_coord = np.dot(xyz - self.origin, np.transpose(beta))
+        xyz_coord = np.dot(xyz - self.origin, beta.T)
+        print('xyz_coord =', xyz_coord)
+        print(self)
         xyz_local = self.xyz_to_coord(xyz_coord)
+        print('xyz_local =', xyz_local, '\n')
         return xyz_local
 
     def _transform_node_to_local_array(self, xyz, beta):
@@ -558,8 +554,10 @@ class Coord(BaseCard):
         """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
-        xyz_coord = np.dot(xyz - self.origin, np.transpose(beta))
-        xyz_local = self.xyz_to_coord(xyz_coord)
+        xyz_coord = np.dot(xyz - self.origin, beta.T)
+        print('xyz_coord_array =', xyz_coord)
+        xyz_local = self.xyz_to_coord_array(xyz_coord)
+        print('xyz_local_array =', xyz_local)
         return xyz_local
 
     def transform_node_to_local(self, xyz):
@@ -604,7 +602,7 @@ class Coord(BaseCard):
         see transform_node_to_local, but set the origin to <0, 0, 0>
         """
         beta = self.beta()
-        xyz_coord = np.dot(xyz, np.transpose(beta))
+        xyz_coord = np.dot(xyz, beta.T)
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
@@ -1006,6 +1004,7 @@ class CylindricalCoord(object):
         theta = radians(p[1])
         x = R * cos(theta)
         y = R * sin(theta)
+        print('pc=%.4f %.4f %.4f' % (R, p[1], p[2]))
         return np.array([x, y, p[2]], dtype='float64')
 
     @staticmethod
@@ -1029,9 +1028,11 @@ class CylindricalCoord(object):
         """
         assert len(p.shape) == 2, p.shape
         R = p[:, 0]
+        print('R=%s' % R)
         theta = np.radians(p[:, 1])
         x = R * np.cos(theta)
         y = R * np.sin(theta)
+        print(x, y)
         out = np.array([x, y, p[:, 2]], dtype='float64').T
         return out
 
