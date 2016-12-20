@@ -2552,12 +2552,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             nepoints = len(epoints)
             nids.append(epoints)
         if len(nids) == 1:
-            nids = np.array(nids[0])
+            nids = np.unique(nids[0])
         else:
-            nids = np.hstack(nids)
+            nids = np.unique(np.hstack(nids))
+        self.log.debug('nids = %s' % nids)
 
         npoints = nnodes + nspoints + nepoints
-        if len(np.unique(nids)) != npoints:
+        if len(nids) != npoints:
             msg = 'len(unique(nids))=%s npoints=%s\n' % (len(np.unique(nids)), npoints)
             msg += 'npoints = nnodes+nspoints+nepoints = %s + %s + %s\n' % (nnodes, nspoints, nepoints)
             msg += 'nids=%s' % (nids)
@@ -2565,13 +2566,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if npoints == 0:
             msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
             raise ValueError(msg)
+
         xyz_cid0 = np.zeros((npoints, 3), dtype=dtype)
         if cid == 0:
-            for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+            for i, nid in enumerate(nids):
+                node = self.nodes[nid]
                 xyz = node.get_position()
                 xyz_cid0[i, :] = xyz
         else:
-            for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+            for i, nid in enumerate(nids):
+                node = self.nodes[nid]
                 xyz = node.get_position_wrt(self, cid)
                 xyz_cid0[i, :] = xyz
         if sort_ids:
@@ -2932,7 +2936,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         nids_cd_transform = defaultdict(list)
         nids_cp_transform = defaultdict(list)
-        i_transform = {}
 
         nnodes = len(self.nodes)
         nspoints = 0
@@ -2996,7 +2999,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform,
-                                   cid=0, inplace=False, atol=1e-6):
+                                   cid=0, in_place=False, atol=1e-6):
         """
         Working on faster method for calculating node locations
         Not validated...
@@ -3020,15 +3023,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         xyz_cid : (n, 3) float ndarray
             points in the CID coordinate system
         """
+        #self.log.info('transform_xycp_to_xyz_cid; cid=%s' % cid)
         coord2 = self.coords[cid]
         beta2 = coord2.beta()
 
-        if inplace:
+        assert in_place == False, 'in_place=%s' % in_place
+        if in_place:
             xyz_cid0 = xyz_cp
         else:
             xyz_cid0 = np.copy(xyz_cp)
 
         # transform the grids to the global coordinate system
+        xyz_cid0_correct = self.get_xyz_in_coord(cid=0)
+        #self.log.debug('icp_transform = %s' % icp_transform)
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
                 continue
@@ -3038,17 +3045,28 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #is_origin = np.abs(coord.origin).max() != 0.
             xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
             #if is_beta and is_origin:
-            xyz_cid0[inode, :] = np.dot(xyzi, beta) + coord.origin
+            new = np.dot(xyzi, beta) + coord.origin
+            xyz_cid0[inode, :] = new
+            if not np.array_equal(xyz_cid0_correct[inode, :], new):
+                msg = ('xyz_cid0:\n%s\n'
+                       'xyz_cid0_correct:\n%s'
+                       'inode=%s' % (xyz_cid0[inode, :], xyz_cid0_correct[inode, :],
+                                     inode))
+                raise ValueError(msg)
+
             #elif is_beta:
                 #xyz_cid0[inode, :] = np.dot(xyzi, beta)
             #else:
                 #xyz_cid0[inode, :] = xyzi + coord.origin
 
-        xyz_cid0_correct = self.get_xyz_in_coord(cid=0)
         if not np.allclose(xyz_cid0, xyz_cid0_correct, atol=atol):
             #np.array_equal(xyz_cid, xyz_cid_alt):
+            out = self.get_displacement_index_xyz_cp_cd(dtype='float64', sort_ids=True)
+            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
             msg = ('xyz_cid0:\n%s\n'
-                   'xyz_cid0_correct:\n%s'% (xyz_cid0, xyz_cid0_correct))
+                   'xyz_cid0_correct:\n%s\n'
+                   'nid_cp_cd:\n%s\n'
+                   'xyz_cp:\n%s'% (xyz_cid0, xyz_cid0_correct, nid_cp_cd, xyz_cp))
             raise ValueError(msg)
 
         if cid == 0:

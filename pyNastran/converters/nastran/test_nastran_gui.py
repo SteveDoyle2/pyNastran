@@ -3,6 +3,7 @@ import os
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.nastran.nastranIOv import NastranIO
 import pyNastran
+from pyNastran.utils.log import get_logger2
 
 class NastranGUI(NastranIO, GUIMethods):
     def __init__(self, inputs=None):
@@ -128,9 +129,10 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename, None)
 
-    def test_solid_shell_bar_01(self):
+    def test_bwb_gui(self):
         bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
         test = NastranGUI()
+        #test.log = get_logger2()
         test.load_nastran_geometry(bdf_filename, None)
 
     def test_femap_rougv1_01(self):
