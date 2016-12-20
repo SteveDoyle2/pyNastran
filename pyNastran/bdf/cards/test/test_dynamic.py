@@ -9,7 +9,7 @@ from numpy import zeros, array_equal
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
 
-class TestDEQATN(unittest.TestCase):
+class TestDynamic(unittest.TestCase):
     """
     The cards tested are:
      * TSTEP
