@@ -30,11 +30,10 @@ class PARAM(BaseCard):
 
         Parameters
         ----------
-        card : BDFCard(); default=None
-            BDFCard object
-        data : List[int/float/str]; default=None
-            list of PARAM entries not including 'PARAM';
-            intended to be used by OP2 Reader
+        key : str
+            the name of the PARAM
+        values : int/float/str/List
+            varies depending on the type of PARAM
         comment : str; default=''
             optional string
         """
@@ -47,6 +46,16 @@ class PARAM(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Creates a PARAM card.
+
+        Parameters
+        ----------
+        card : BDFCard(); default=None
+            BDFCard object
+        comment : str; default=''
+            optional string
+        """
         key = string(card, 1, 'key')
 
         n = 1
@@ -110,6 +119,17 @@ class PARAM(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Creates a PARAM card.
+
+        Parameters
+        ----------
+        data : List[int/float/str]; default=None
+            list of PARAM entries not including 'PARAM';
+            intended to be used by OP2 Reader
+        comment : str; default=''
+            optional string
+        """
         card = BDFCard(['PARAM'] + data)
         key = data[0]
         values = data[1:]

@@ -10,31 +10,36 @@ class AddMethods(BDFAttributes):
         BDFAttributes.__init__(self)
 
     def add_dmi(self, dmi, allow_overwrites=False):
+        """adds a DMI object"""
         name = dmi.name
         self.dmis[name] = dmi
         self._type_to_id_map[dmi.type].append(name)
 
     def add_dmig(self, dmig, allow_overwrites=False):
+        """adds a DMIG object"""
         name = dmig.name
         self.dmigs[name] = dmig
         self._type_to_id_map[dmig.type].append(name)
 
     def add_dmij(self, dmij, allow_overwrites=False):
+        """adds a DMIJ object"""
         name = dmij.name
         self.dmijs[name] = dmij
         self._type_to_id_map[dmij.type].append(name)
 
     def add_dmiji(self, dmiji, allow_overwrites=False):
+        """adds a DMIJI object"""
         name = dmiji.name
         self.dmijis[name] = dmiji
         self._type_to_id_map[dmiji.type].append(name)
 
     def add_dmik(self, dmik, allow_overwrites=False):
+        """adds a DMIK object"""
         name = dmik.name
         self.dmiks[name] = dmik
         self._type_to_id_map[dmik.type].append(name)
 
-    def add_param(self, param, allow_overwrites=False):
+    def add_param_object(self, param, allow_overwrites=False):
         """adds a PARAM object"""
         key = param.key
         if key in self.params and not allow_overwrites:
@@ -50,6 +55,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[param.type].append(key)
 
     def add_node(self, node, allow_overwrites=False):
+        """adds a GRID card"""
         key = node.nid
         if key in self.nodes and not allow_overwrites:
             if not node._is_same_card(self.nodes[key]):
@@ -62,7 +68,8 @@ class AddMethods(BDFAttributes):
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
 
-    def add_point(self, point, allow_overwrites=False):
+    def add_point_object(self, point, allow_overwrites=False):
+        """adds a POINT card"""
         key = point.nid
         if key in self.points and not allow_overwrites:
             if not point._is_same_card(self.points[key]):
@@ -75,19 +82,21 @@ class AddMethods(BDFAttributes):
             self.points[key] = point
             self._type_to_id_map[point.type].append(key)
 
-    def add_spoint(self, spoints):
+    def add_spoint_object(self, spoints):
+        """adds an SPOINT card"""
         if self.spoints is None:
             self.spoints = spoints
         else:
             self.spoints.add_points(spoints.points)
 
-    def add_epoint(self, epoints):
+    def add_epoint_object(self, epoints):
+        """adds an EPOINT card"""
         if self.epoints is None:
             self.epoints = epoints
         else:
             self.epoints.add_points(epoints.points)
 
-    def add_plotel(self, elem, allow_overwrites=False):
+    def add_plotel_object(self, elem, allow_overwrites=False):
         """adds an PLOTEL object"""
         key = elem.eid
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
@@ -104,6 +113,10 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[elem.type].append(key)
 
     def add_element(self, elem, allow_overwrites=False):
+        """deprecated"""
+        return self.add_element_object(elem, allow_overwrites)
+
+    def add_element_object(self, elem, allow_overwrites=False):
         key = elem.eid
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         if key in self.elements and not allow_overwrites:
@@ -153,6 +166,10 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[deqatn.type].append(key)
 
     def add_property(self, prop, allow_overwrites=False):
+        """deprecated"""
+        return self.add_property_object(prop, allow_overwrites)
+
+    def add_property_object(self, prop, allow_overwrites=False):
         """
         adds one of the following objects:
           PELAS, PBUSH, PBUSH1D, PBUSH2D, PDAMP,

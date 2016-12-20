@@ -24,6 +24,26 @@ class PROD(Property):
     type = 'PROD'
 
     def __init__(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
+        """
+        Creates a PROD card
+
+        Parameters
+        ----------
+        pid : int
+           property id
+        mid : int
+           material id
+        A : float
+           area
+        J : float; default=0.
+           polar moment of inertia
+        c : float; default=0.
+           stress factor
+        nsm : float; default=0.
+           nonstructural mass per unit length
+        comment : str
+            a comment for the card
+        """
         Property.__init__(self)
         if comment:
             self.comment = comment

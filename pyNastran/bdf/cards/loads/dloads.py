@@ -326,10 +326,6 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             del self.delay_ref
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 

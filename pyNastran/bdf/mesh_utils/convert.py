@@ -65,7 +65,7 @@ def _set_wtmass(model, gravity_scale):
         value0 = param.values[0]
         param.values = [value0 / gravity_scale]
     else:
-        card = ['PARAM', 'WTMASS', gravity_scale]
+        card = ['PARAM', 'WTMASS', 1. / gravity_scale]
         model.add_card(card, 'PARAM')
 
 def _convert_nodes(model, xyz_scale):
@@ -200,8 +200,10 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
 
 def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     """converts the properties"""
+    time_scale = 1.
     area_scale = xyz_scale ** 2
     moi_scale = xyz_scale ** 4
+    velocity_scale = xyz_scale / time_scale
 
     # there are multiple nsm scales (CONM2, bar, plate)
     nsm_bar_scale = mass_scale / xyz_scale
@@ -301,8 +303,11 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
                 if var == 'K':
                     prop.Ki = [ki*stiffness_scale if ki is not None else None
                                for ki in prop.Ki]
+                elif var == 'B':
+                    [bi*velocity_scale if bi is not None else None
+                     for bi in prop.Bi]
                 else:
-                    raise NotImplementedError(var)
+                    raise NotImplementedError(prop)
         #elif prop.type == 'PCOMPS':
             #pass
         #elif prop.type == 'PCONEAX':
@@ -460,10 +465,13 @@ def _convert_constraints(model, xyz_scale):
 
 def _convert_loads(model, xyz_scale, weight_scale):
     """converts the loads"""
+    time_scale = 1.
+    frequency_scale = 1. / time_scale
     force_scale = weight_scale
     moment_scale = xyz_scale * weight_scale
     pressure_scale = weight_scale / xyz_scale ** 2
     accel_scale = weight_scale / xyz_scale
+    velocity_scale = xyz_scale / time_scale
 
     if not model.loads:
         return
@@ -472,6 +480,31 @@ def _convert_loads(model, xyz_scale, weight_scale):
     model.log.debug('moment_scale = %s' % moment_scale)
     model.log.debug('pressure_scale = %s' % pressure_scale)
     model.log.debug('accel_scale = %s\n' % accel_scale)
+
+    for dloads in itervalues(model.dloads):
+        assert isinstance(dloads, str), dloads  # TEMP
+
+    for dloads in itervalues(model.dload_entries):
+        for dload in dloads:
+            if dload.type == 'RLOAD1':
+                #self.excite_id = excite_id
+                #self.delay = delay
+                #self.dphase = dphase
+                #self.tc = tc
+                #self.td = td
+                # { P(f) }  = {A} [ C(f) + iD(f)] * e^{  i {\theta - 2 pi f tau } }
+                if dload.Type == 'LOAD':
+                    scale = force_scale  # moment_scale???
+                elif dload.Type == 'DISP':
+                    scale = xyz_scale
+                elif dload.Type == 'VELO':
+                    scale = velocity_scale
+                elif dload.Type == 'ACCE':
+                    scale = accel_scale
+                else:
+                    raise RuntimeError(load)
+            else:
+                raise NotImplementedError(dload)
 
     for loads in itervalues(model.loads):
         assert isinstance(loads, list), loads
@@ -504,6 +537,18 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 load.pressure *= pressure_scale
             elif load_type == 'PLOAD4':
                 load.pressures = [pressure*pressure_scale for pressure in load.pressures]
+            elif load_type == 'RANDPS':
+                table = load.tid # defines G(f)
+                if table.type == 'TABRND1':
+                    table.x *= frequency_scale # freq
+                    table.y *= force_scale # G
+                #elif table.type == 'TABRNDG':
+                    #: Scale of turbulence divided by velocity (units of time; Real)
+                    #self.LU = LU
+                    #: Root-mean-square gust velocity. (Real)
+                    #table.WG *= velocity_scale
+                else:
+                    raise NotImplementedError(table)
             else:
                 raise NotImplementedError(load)
 
