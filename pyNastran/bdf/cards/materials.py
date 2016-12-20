@@ -536,7 +536,8 @@ class MAT2(AnisotropicMaterial):
     }
 
     def __init__(self, mid, G11, G12, G13, G22, G23, G33,
-                 rho, a1, a2, a3, TRef, ge, St, Sc, Ss, Mcsid, comment=''):
+                 rho, a1, a2, a3, TRef=0., ge=0.,
+                 St=None, Sc=None, Ss=None, Mcsid=None, comment=''):
         AnisotropicMaterial.__init__(self)
         self.matt2 = None
         if comment:
@@ -777,8 +778,8 @@ class MAT3(OrthotropicMaterial):
         16: 'ge',
     }
 
-    def __init__(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
-                 ax, ath, az, TRef, ge, comment=''):
+    def __init__(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
+                 ax=0., ath=0., az=0., TRef=0., ge=0., comment=''):
         OrthotropicMaterial.__init__(self)
         self.mats3 = None
         self.matt3 = None
@@ -817,8 +818,8 @@ class MAT3(OrthotropicMaterial):
         TRef = double_or_blank(card, 15, 'TRef', 0.0)
         ge = double_or_blank(card, 16, 'ge', 0.0)
         assert len(card) <= 17, 'len(MAT3 card) = %i\ncard=%s' % (len(card), card)
-        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx, ax, ath, az,
-                    TRef, ge, comment=comment)
+        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=rho, gzx=gzx,
+                    ax=ax, ath=ath, az=az, TRef=TRef, ge=ge, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -924,7 +925,8 @@ class MAT4(ThermalMaterial):
         8:'refEnthalpy', 9:'tch', 10:'tdelta', 11:'qlat',
     }
 
-    def __init__(self, mid, k, cp, rho, H, mu, hgen, refEnthalpy, tch, tdelta, qlat, comment=''):
+    def __init__(self, mid, k, cp=0.0, rho=1.0, H=None, mu=None,
+                 hgen=1.0, refEnthalpy=None, tch=None, tdelta=None, qlat=None, comment=''):
         ThermalMaterial.__init__(self)
         self.matt4 = None
         if comment:
@@ -955,8 +957,9 @@ class MAT4(ThermalMaterial):
         tdelta = double_or_blank(card, 10, 'tdelta')
         qlat = double_or_blank(card, 11, 'qlat')
         assert len(card) <= 12, 'len(MAT4 card) = %i\ncard=%s' % (len(card), card)
-        return MAT4(mid, k, cp, rho, H, mu, hgen, refEnthalpy, tch, tdelta,
-                    qlat, comment=comment)
+        return MAT4(mid, k, cp=cp, rho=rho, H=H, mu=mu, hgen=hgen,
+                    refEnthalpy=refEnthalpy, tch=tch, tdelta=tdelta,
+                    qlat=qlat, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

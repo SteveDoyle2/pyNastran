@@ -125,7 +125,7 @@ class BDFMethods(BDFAttributes):
         prop_mid = [
             'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PSHEAR', 'PSOLID',
             'PROD', 'PRAC2D', 'PRAC3D', 'PLSOLID', 'PLPLANE', 'PPLANE',
-            'PTUBE', 'PDAMP5', 'PDAMP5',
+            'PTUBE', 'PDAMP5',
         ]
         mids_used = []
         for eid, elem in iteritems(self.elements):
@@ -136,7 +136,7 @@ class BDFMethods(BDFAttributes):
             prop = self.properties[pid]
             if prop.type in no_materials:
                 continue
-            elif prop.type in ['PSHELL']:
+            elif prop.type == 'PSHELL':
                 mids_used.extend([mid for mid in prop.material_ids if mid is not None])
             elif prop.type == 'PCONEAX':
                 mids_used.extend([mid for mid in self.Mids() if mid is not None])

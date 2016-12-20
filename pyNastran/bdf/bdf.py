@@ -95,7 +95,7 @@ from pyNastran.bdf.cards.aero import (
     AESURF, AESURFS, AERO, AEROS, CSSCHD,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT1,
+    MONPNT1, MONPNT2, MONPNT3,
     FLFACT, FLUTTER, GUST, MKAERO1,
     MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
     SPLINE5, TRIM, DIVERG)
@@ -442,7 +442,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # 'CAERO5',
             'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
             'PAERO4', # 'PAERO5',
-            'MONPNT1',                                   ## monitor_points
+            'MONPNT1', 'MONPNT2', 'MONPNT3',  ## monitor_points
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'TRIM',  ## trims
@@ -832,7 +832,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             diverg.validate()
         for key, csschd in sorted(iteritems(self.csschds)):
             csschd.validate()
-        #self.monitor_points = []
+        for monitor in self.monitor_points:
+            monitor.validate()
 
         #------------------------------------------------
         if self.aero is not None:
@@ -2035,6 +2036,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'GUST' : (GUST, self.add_gust),
             'CSSCHD' : (CSSCHD, self.add_csschd),
             'MONPNT1' : (MONPNT1, self.add_monpnt),
+            'MONPNT2' : (MONPNT2, self.add_monpnt),
+            'MONPNT3' : (MONPNT3, self.add_monpnt),
 
             #'NLPARM' : (NLPARM, self.add_nlparm),
             'NLPCI' : (NLPCI, self.add_nlpci),

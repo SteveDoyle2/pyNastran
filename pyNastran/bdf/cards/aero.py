@@ -1422,17 +1422,21 @@ class CAERO1(BaseCard):
         msg = ''
         is_failed = False
         if self.nspan == 0 and self.lspan == 0:
-            msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (self.nspan, self.lspan)
+            msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (
+                self.nspan, self.lspan)
             is_failed = True
         if self.nspan != 0 and self.lspan != 0:
-            msg += 'Either NSPAN or LSPAN must 0; nspan=%r nlspan=%s\n' % (self.nspan, self.lspan)
+            msg += 'Either NSPAN or LSPAN must 0; nspan=%r nlspan=%s\n' % (
+                self.nspan, self.lspan)
             is_failed = True
 
         if self.nchord == 0 and self.lchord == 0:
-            msg += 'NCHORD or LCHORD must be greater than 0; nchord=%r lchord=%s\n' % (self.nchord, self.lchord)
+            msg += 'NCHORD or LCHORD must be greater than 0; nchord=%r lchord=%s\n' % (
+                self.nchord, self.lchord)
             is_failed = True
         if self.nchord != 0 and self.lchord != 0:
-            msg += 'Either NCHORD or LCHORD must 0; nchord=%r lchord=%s\n' % (self.nchord, self.lchord)
+            msg += 'Either NCHORD or LCHORD must 0; nchord=%r lchord=%s\n' % (
+                self.nchord, self.lchord)
             is_failed = True
         if is_failed:
             msg += str(self)
@@ -3556,15 +3560,21 @@ class MKAERO2(BaseCard):
 
 class MONPNT1(BaseCard):
     type = 'MONPNT1'
-    def __init__(self, name, label, axes, comp, cid, xyz, comment=''):
+    def __init__(self, name, label, axes, comp, xyz, cp=0, cd=None, comment=''):
+        """
+        CD - MSC specific field
+        """
         if comment:
             self.comment = comment
+        if cd is None:
+            cd = cp
         self.name = name
         self.label = label
         self.axes = axes
         self.comp = comp
-        self.cid = cid
+        self.cp = cp
         self.xyz = xyz
+        self.cd = cd
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3576,32 +3586,158 @@ class MONPNT1(BaseCard):
 
         axes = parse_components(card, 9, 'axes')
         comp = string(card, 10, 'comp')
-        cid = integer_or_blank(card, 11, 'cid', 0)
+        cp = integer_or_blank(card, 11, 'cp', 0)
         xyz = [
             double_or_blank(card, 12, 'x', default=0.0),
             double_or_blank(card, 13, 'y', default=0.0),
             double_or_blank(card, 14, 'z', default=0.0),
         ]
-        return MONPNT1(name, label, axes, comp, cid, xyz, comment=comment)
+        cd = integer_or_blank(card, 15, 'cd', cp)
+        return MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd, comment=comment)
 
     #def uncross_reference(self):
         #pass
 
     def raw_fields(self):
         list_fields = [
-            'MONPNT1', self.name, self.label.strip(), self.axes, self.comp, self.cid,
-        ] + self.xyz
+            'MONPNT1', self.name, self.label.strip(), self.axes, self.comp, self.cp,
+        ] + self.xyz + [self.cd]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        cid = self.cid
+        cp = self.cp
         x, y, z = self.xyz
+        cd = self.cd
+        if cd == cp:
+            cd = ''
         msg = 'MONPNT1 %-8s%s\n' % (self.name, self.label)
-        msg += '        %-8s%-8s%-8s%-8s%-8s%-8s\n' % (
-            self.axes, self.comp, cid,
-            print_float_8(x), print_float_8(y), print_float_8(z))
+        msg += '        %-8s%-8s%-8s%-8s%-8s%-8s%-8s\n' % (
+            self.axes, self.comp, cp,
+            print_float_8(x), print_float_8(y), print_float_8(z),
+            cd)
         #card = self.repr_fields()
         return self.comment + msg
+
+    def __repr__(self):
+        return self.write_card()
+
+class MONPNT2(BaseCard):
+    """MSC Nastran specific card"""
+    type = 'MONPNT2'
+    def __init__(self, name, label, table, Type, nddl_item, eid, comment=''):
+        if comment:
+            self.comment = comment
+        self.name = name
+        self.label = label
+        self.table = table
+        self.Type = Type
+        self.nddl_item = nddl_item
+        self.eid = eid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
+
+        label_fields = [labeli for labeli in card[2:8] if labeli is not None]
+        label = ''.join(label_fields).strip()
+        assert len(label) <= 56, label
+
+        table = string(card, 9, 'table')
+        Type = string(card, 10, 'type')
+        nddl_item = integer_or_blank(card, 11, 'nddl_item')
+        eid = integer_or_blank(card, 12, 'eid')
+        return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
+
+    #def uncross_reference(self):
+        #pass
+
+    def raw_fields(self):
+        list_fields = [
+            'MONPNT2', self.name, self.label.strip(),
+            self.table, self.Type, self.nddl_item, self.eid]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        msg = 'MONPNT3 %-8s%s\n' % (self.name, self.label)
+        msg += ('        %-8s%-8s%-8s%-8s\n' % (
+            self.table, self.Type, self.nddl_item, self.eid
+        ))
+        #card = self.repr_fields()
+        return self.comment + msg.rstrip() + '\n'
+
+    def __repr__(self):
+        return self.write_card()
+
+class MONPNT3(BaseCard):
+    """MSC Nastran specific card"""
+    type = 'MONPNT3'
+    def __init__(self, name, label, axes, grid_set, elem_set, xyz,
+                 cp=0, cd=None, xflag=None, comment=''):
+        if comment:
+            self.comment = comment
+        if cd is None:
+            cd = cp
+        self.name = name
+        self.label = label
+        self.axes = axes
+        #self.comp = comp
+        self.grid_set = grid_set
+        self.elem_set = elem_set
+        self.xyz = xyz
+        self.xflag = xflag
+        self.cp = cp
+        self.cd = cd
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
+
+        label_fields = [labeli for labeli in card[2:8] if labeli is not None]
+        label = ''.join(label_fields).strip()
+        assert len(label) <= 56, label
+
+        axes = parse_components(card, 9, 'axes')
+        grid_set = integer(card, 10, 'grid_set')
+        elem_set = integer_or_blank(card, 11, 'elem_set')
+        cp = integer_or_blank(card, 12, 'cp', 0)
+        xyz = [
+            double_or_blank(card, 13, 'x', default=0.0),
+            double_or_blank(card, 14, 'y', default=0.0),
+            double_or_blank(card, 15, 'z', default=0.0),
+        ]
+        xflag = string_or_blank(card, 16, 'xflag')
+        cd = integer_or_blank(card, 17, 'cd', cp)
+        return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
+                       cp=cp, cd=cd, xflag=xflag, comment=comment)
+
+    #def uncross_reference(self):
+        #pass
+
+    def raw_fields(self):
+        list_fields = [
+            'MONPNT3', self.name, self.label.strip(),
+            self.axes, self.grid_set, self.elem_set, self.cp] + self.xyz + [self.xflag, self.cd]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        cp = self.cp
+        cd = self.cd
+        if cp == cd:
+            cd = ''
+        xflag = self.xflag
+        if xflag is None:
+            xflag = ''
+
+        x, y, z = self.xyz
+        msg = 'MONPNT3 %-8s%s\n' % (self.name, self.label)
+        msg += ('        %-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s\n'
+                '         %-8s' % (
+            self.axes, self.grid_set, self.elem_set, cp,
+            print_float_8(x), print_float_8(y), print_float_8(z),
+            xflag, cd
+        ))
+        #card = self.repr_fields()
+        return self.comment + msg.rstrip() + '\n'
 
     def __repr__(self):
         return self.write_card()
@@ -5020,7 +5156,7 @@ class TRIM(BaseCard):
 
             ndelta = (naestats + naesurfs + naeparms) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
-                msg = '(naestats + naesurfs - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+                msg = '(naestats + naesurfs + naeparms) - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
                 msg += 'naestats=%s naesurf=%s naeparms=%s ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
                     naestats, naesurfs, naeparms, ntrim, naelinks, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
                 raise RuntimeError(msg)
