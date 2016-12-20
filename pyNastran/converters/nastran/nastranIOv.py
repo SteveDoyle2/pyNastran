@@ -385,6 +385,7 @@ class NastranIO(object):
             #self.i_transform, self.transforms = model.get_displacement_index_transforms()
             self.i_transform = model.get_displacement_index()
 
+        self._add_nastran_spoints_to_grid(model)
         #print('dt_nastran_xyz =', time.time() - t0)
         return xyz_cid0
 
@@ -1885,6 +1886,50 @@ class NastranIO(object):
                 #elem.SetRadius(sphere_size)
                 #elem.SetCenter(points.GetPoint(j))
 
+            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            j += 1
+        self.alt_grids[name].SetPoints(points)
+
+    def _add_nastran_spoints_to_grid(self, model, nid_to_pid_map=None):
+        """used to create SPOINTs"""
+        if model.spoints is None:
+            return
+        spoint_ids = list(model.spoints.points) # se t-> list
+        assert isinstance(spoint_ids, list), type(spoint_ids)
+
+        nspoints = len(spoint_ids)
+        if nspoints == 0:
+            model.log.warning('0 spoints added for %r' % name)
+            return
+        blue = (0., 0., 1.)
+        name = 'SPoints'
+        self.create_alternate_vtk_grid(
+            name, color=blue, line_width=1, opacity=1.,
+            point_size=5, representation='point', bar_scale=0., is_visible=True)
+
+        self.follower_nodes[name] = spoint_ids
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(nspoints)
+
+        j = 0
+        nid_map = self.nid_map
+        for spointi in sorted(spoint_ids):
+            try:
+                i = nid_map[spointi]
+            except KeyError:
+                model.log.warning('spointi=%s does not exist' % spointi)
+                continue
+
+            if spointi not in model.spoints.points:
+                model.log.warning('spointi=%s doesnt exist' % spointi)
+                continue
+            # point = self.grid.GetPoint(i)
+            # points.InsertPoint(j, *point)
+
+            points.InsertPoint(j, 0., 0., 0.)
+
+            elem = vtk.vtkVertex()
+            elem.GetPointIds().SetId(0, j)
             self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 1
         self.alt_grids[name].SetPoints(points)

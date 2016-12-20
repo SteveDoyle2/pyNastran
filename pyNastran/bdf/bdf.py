@@ -2542,26 +2542,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         nnodes = len(self.nodes)
         nspoints = 0
         nepoints = 0
-        nids = [list(self.node_ids)]
+        nids = list(self.node_ids)
+        all_nodes = list(self.node_ids)
         if self.spoints is not None:
-            spoints = self.spoints.points
+            spoints = list(self.spoints.points)
             nspoints = len(spoints)
-            nids.append(spoints)
+            all_nodes += spoints
         if self.epoints is not None:
-            epoints = self.epoints.points
+            epoints = list(self.epoints.points)
+            all_nodes += epoints
             nepoints = len(epoints)
-            nids.append(epoints)
-        if len(nids) == 1:
-            nids = np.unique(nids[0])
-        else:
-            nids = np.unique(np.hstack(nids))
-        self.log.debug('nids = %s' % nids)
+        #self.log.debug('all_nodes = %s' % all_nodes)
 
         npoints = nnodes + nspoints + nepoints
-        if len(nids) != npoints:
-            msg = 'len(unique(nids))=%s npoints=%s\n' % (len(np.unique(nids)), npoints)
+        if len(all_nodes) != npoints:
+            msg = 'len(unique(all_nodes))=%s npoints=%s\n' % (len(np.unique(all_nodes)), npoints)
             msg += 'npoints = nnodes+nspoints+nepoints = %s + %s + %s\n' % (nnodes, nspoints, nepoints)
-            msg += 'nids=%s' % (nids)
+            msg += 'all_nodes=%s' % (all_nodes)
             raise RuntimeError(msg)
         if npoints == 0:
             msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
@@ -2579,7 +2576,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 xyz = node.get_position_wrt(self, cid)
                 xyz_cid0[i, :] = xyz
         if sort_ids:
-            isort = nids.argsort()
+            isort = np.argsort(all_nodes)
             xyz_cid0 = xyz_cid0[isort, :]
 
         return xyz_cid0
@@ -2943,10 +2940,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         spoints = None
         epoints = None
         if self.spoints:
-            spoints = self.spoints.points
+            spoints = np.unique(list(self.spoints.points))
             nspoints = len(spoints)
         if self.epoints is not None:
-            epoints = self.epoints.points
+            epoints = np.unique(list(self.epoints.points))
             nepoints = len(epoints)
 
         if nnodes + nspoints + nepoints == 0:
@@ -2965,11 +2962,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             xyz_cp[i, :] = node.xyz
             i += 1
         if nspoints:
-            for nid in sorted(self.spoints.points):
+            for nid in sorted(spoints):
                 nid_cp_cd[i, 0] = nid
                 i += 1
         if nepoints:
-            for nid in sorted(self.epoints.points):
+            for nid in sorted(epoints):
                 nid_cp_cd[i, 0] = nid
                 i += 1
 
