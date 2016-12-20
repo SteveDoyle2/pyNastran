@@ -1,985 +1,481 @@
-# pylint: disable=R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
+"""defines various methods to add cards"""
+# pylint: disable=R0913, R0914, C0103
+from __future__ import print_function
+
+from pyNastran.bdf.bdf_interface.add_methods import AddMethods
+from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
+from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
+from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
+
+from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
+from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
+
+from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1)
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
+
+from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
+                                                CSHEAR, CTRIA3, CTRIA6, CTRIAX,
+                                                CTRIAX6, CTRIAR,
+                                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8)
+from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
+from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
+from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
+from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
+                                                 CDAMP5)
+from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
+from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
+from pyNastran.bdf.cards.elements.bars import CBAR, CBEAM3, CBEND
+from pyNastran.bdf.cards.elements.beam import CBEAM
+from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT  # PBEND
+from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
+# CMASS5
+from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
+from pyNastran.bdf.cards.properties.mass import PMASS#, NSM
+from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
+                                             MPC, MPCADD, SUPORT1, SUPORT, SESUP,
+                                             GMSPC)
+from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
+                                                    CORD2R, CORD2C, CORD2S, #CORD3G,
+                                                    GMCORD)
+from pyNastran.bdf.cards.deqatn import DEQATN
+from pyNastran.bdf.cards.dynamic import (
+    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
+    TSTEP, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD)
+from pyNastran.bdf.cards.loads.loads import (
+    LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
+from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
+from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
+                                                    FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
+                                                    GMLOAD)
+
+from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
+                                           MAT8, MAT9, MAT10, MAT11,
+                                           MATHE, MATHP, CREEP, EQUIV)
+from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
+
+from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT
+from pyNastran.bdf.cards.aero import (
+    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
+    AESURF, AESURFS, AERO, AEROS, CSSCHD,
+    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    MONPNT1, MONPNT2, MONPNT3,
+    FLFACT, FLUTTER, GUST, MKAERO1,
+    MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
+    SPLINE5, TRIM, DIVERG)
+from pyNastran.bdf.cards.optimization import (
+    DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
+    DRESP1, DRESP2, DRESP3,
+    DVCREL1, DVCREL2,
+    DVMREL1, DVMREL2,
+    DVPREL1, DVPREL2,
+    DVGRID)
+from pyNastran.bdf.cards.bdf_sets import (
+    ASET, BSET, CSET, QSET, USET,
+    ASET1, BSET1, CSET1, QSET1, USET1,
+    SET1, SET3, #RADSET,
+    SEBSET, SECSET, SEQSET, # SEUSET
+    SEBSET1, SECSET1, SEQSET1, # SEUSET1
+    SESET, #SEQSEP
+)
+from pyNastran.bdf.cards.params import PARAM
+from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
+from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL
+from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
+                                                 PHBDY, CONV, CONVM, RADM, RADBC)
+from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
+                                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, #TIC,
+                                            DTABLE)
+from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 
 
-class AddMethods(BDFAttributes):
-    """defines methods to add card objects to the BDF"""
+class AddCards(AddMethods):
+    """defines the add_cardname functions that use the object inits"""
     def __init__(self):
-        BDFAttributes.__init__(self)
+        AddMethods.__init__(self)
 
-    def add_dmi(self, dmi, allow_overwrites=False):
-        """adds a DMI object"""
-        name = dmi.name
-        self.dmis[name] = dmi
-        self._type_to_id_map[dmi.type].append(name)
-
-    def add_dmig(self, dmig, allow_overwrites=False):
-        """adds a DMIG object"""
-        name = dmig.name
-        self.dmigs[name] = dmig
-        self._type_to_id_map[dmig.type].append(name)
-
-    def add_dmij(self, dmij, allow_overwrites=False):
-        """adds a DMIJ object"""
-        name = dmij.name
-        self.dmijs[name] = dmij
-        self._type_to_id_map[dmij.type].append(name)
-
-    def add_dmiji(self, dmiji, allow_overwrites=False):
-        """adds a DMIJI object"""
-        name = dmiji.name
-        self.dmijis[name] = dmiji
-        self._type_to_id_map[dmiji.type].append(name)
-
-    def add_dmik(self, dmik, allow_overwrites=False):
-        """adds a DMIK object"""
-        name = dmik.name
-        self.dmiks[name] = dmik
-        self._type_to_id_map[dmik.type].append(name)
-
-    def add_param_object(self, param, allow_overwrites=False):
-        """adds a PARAM object"""
-        key = param.key
-        if key in self.params and not allow_overwrites:
-            if not param._is_same_card(self.params[key]):
-                #if param.key in self.params:
-                    #msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
-                    #raise KeyError(msg)
-                self.log.warning('key=%s param=%s old_param=%s' %
-                                 (key, param, self.params[key]))
-                self.params[key] = param
-        else:
-            self.params[key] = param
-            self._type_to_id_map[param.type].append(key)
-
-    def add_node(self, node, allow_overwrites=False):
-        """adds a GRID card"""
-        key = node.nid
-        if key in self.nodes and not allow_overwrites:
-            if not node._is_same_card(self.nodes[key]):
-                assert node.nid not in self.nodes, 'nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, self.nodes[key], node)
-            else:
-                #print('GRID was duplicated...nid=%s; node=\n%s' % (key, node))
-                pass
-        else:
-            assert key > 0, 'nid=%s node=%s' % (key, node)
-            self.nodes[key] = node
-            self._type_to_id_map[node.type].append(key)
-
-    def add_point_object(self, point, allow_overwrites=False):
-        """adds a POINT card"""
-        key = point.nid
-        if key in self.points and not allow_overwrites:
-            if not point._is_same_card(self.points[key]):
-                assert point.nid not in self.points, 'nid=%s\nold_point=\n%snew_point=\n%s' % (point.nid, self.points[key], point)
-            else:
-                #print('POINT was duplicated...nid=%s; point=\n%s' % (key, point))
-                pass
-        else:
-            assert key > 0, 'nid=%s point=%s' % (key, point)
-            self.points[key] = point
-            self._type_to_id_map[point.type].append(key)
-
-    def add_spoint_object(self, spoints):
-        """adds an SPOINT card"""
-        if self.spoints is None:
-            self.spoints = spoints
-        else:
-            self.spoints.add_points(spoints.points)
-
-    def add_epoint_object(self, epoints):
-        """adds an EPOINT card"""
-        if self.epoints is None:
-            self.epoints = epoints
-        else:
-            self.epoints.add_points(epoints.points)
-
-    def add_plotel_object(self, elem, allow_overwrites=False):
-        """adds an PLOTEL object"""
-        key = elem.eid
-        assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
-        if not allow_overwrites:
-            if key in self.elements:
-                if elem._is_same_card(self.elements[key]):
-                    self._duplicate_elements.append(elem)
-                    if self._stop_on_duplicate_error:
-                        self.pop_parse_errors()
-            elif key in self.plotels:
-                if not elem._is_same_card(self.plotels[key]):
-                    assert elem.eid not in self.plotels, 'eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, self.plotels[elem.eid], elem)
-        self.plotels[key] = elem
-        self._type_to_id_map[elem.type].append(key)
-
-    def add_element(self, elem, allow_overwrites=False):
-        """deprecated"""
-        return self.add_element_object(elem, allow_overwrites)
-
-    def add_element_object(self, elem, allow_overwrites=False):
-        key = elem.eid
-        assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
-        if key in self.elements and not allow_overwrites:
-            if not elem._is_same_card(self.elements[key]):
-                self._duplicate_elements.append(elem)
-                if self._stop_on_duplicate_error:
-                    self.pop_parse_errors()
-        else:
-            self.elements[key] = elem
-            self._type_to_id_map[elem.type].append(key)
-
-    def add_mass(self, mass, allow_overwrites=False):
-        key = mass.eid
-        assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
-        if key in self.masses and not allow_overwrites:
-            if not mass._is_same_card(self.masses[key]):
-                self._duplicate_masses.append(mass)
-        else:
-            self.masses[key] = mass
-            self._type_to_id_map[mass.type].append(key)
-
-    def add_damper(self, elem, allow_overwrites=False):
-        """.. warning:: can dampers have the same ID as a standard element?"""
-        return self.add_element(elem, allow_overwrites)
-
-    def add_rigid_element(self, elem, allow_overwrites=False):
-        key = elem.eid
-        assert key > 0, 'eid=%s elem=%s' % (key, elem)
-        if key in self.rigid_elements and not allow_overwrites:
-            assert elem.eid not in self.rigid_elements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.rigid_elements[elem.eid], elem)
-        self.rigid_elements[key] = elem
-        self._type_to_id_map[elem.type].append(key)
-
-    def add_thermal_element(self, elem):
-        """same as add_element at the moment..."""
-        self.add_element(elem)
-
-    def add_deqatn(self, deqatn, allow_overwrites=False):
-        """adds an DEQATN object"""
-        key = deqatn.equation_id
-        assert key > 0, 'ID=%s deqatn\n%s' % (key, deqatn)
-        if key in self.dequations and not allow_overwrites:
-            if not deqatn.write_card() == self.dequations[key].write_card():
-                assert key not in self.dequations, 'id=%s old_eq=\n%snew_eq=\n%s' % (
-                    key, self.dequations[key], deqatn)
-        self.dequations[key] = deqatn
-        self._type_to_id_map[deqatn.type].append(key)
-
-    def add_property(self, prop, allow_overwrites=False):
-        """deprecated"""
-        return self.add_property_object(prop, allow_overwrites)
-
-    def add_property_object(self, prop, allow_overwrites=False):
+    def add_grid(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0, comment=''):
         """
-        adds one of the following objects:
-          PELAS, PBUSH, PBUSH1D, PBUSH2D, PDAMP,
-          PROD, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
-          PSHELL, PCOMP, PCOMPG,
-          PSOLID, PLSOLID
+        Creates the GRID card in a functional way
+
+        Parameters
+        ----------
+        nid : int
+            node id
+        cp : int; default=0
+            the xyz coordinate frame
+        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
+            the xyz/r-theta-z/rho-theta-phi values
+        cd : int; default=0
+            the analysis coordinate frame
+        ps : str; default=''
+            Additional SPCs in the analysis coordinate frame (e.g. '123').
+            This corresponds to DOF set ``SG``.
+        seid : int; default=0
+            superelement id
+            TODO: how is this used by Nastran???
         """
-        key = prop.pid
-        assert key > 0, 'pid=%s prop=%s' % (key, prop)
-        if key in self.properties and not allow_overwrites:
-            if not prop._is_same_card(self.properties[key]):
-                self._duplicate_properties.append(prop)
-                if self._stop_on_duplicate_error:
-                    self.pop_parse_errors()
-        else:
-            self.properties[key] = prop
-            self._type_to_id_map[prop.type].append(key)
+        grid = GRID(nid, cp=cp, xyz=xyz, cd=cd, ps=ps, seid=seid, comment=comment)
+        self.add_node(grid)
 
-    def add_property_mass(self, prop, allow_overwrites=False):
-        """adds an PMASS object"""
-        key = prop.pid
-        if key in self.properties_mass and not allow_overwrites:
-            if not prop._is_same_card(self.properties_mass[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties_mass[key],prop))
-                assert key not in self.properties_mass, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.properties_mass[key], prop)
-        else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
-            self.properties_mass[key] = prop
-            self._type_to_id_map[prop.type].append(key)
-
-    def add_dtable(self, dtable, allow_overwrites=False):
-        """adds an DTABLE object"""
-        if self.dtable is not None:
-            if not dtable._is_same_card(self.dtable):
-                raise RuntimeError('DTABLE cannot be overwritten\nold:\n%s\nnew:\n%s',
-                                   self.dtable, dtable)
-        else:
-            self.dtable = dtable
-            #self._type_to_id_map[dtable.type].append(1)
-
-    def add_bcrpara(self, card, allow_overwrites=False):
-        """adds an BCRPARA object"""
-        key = card.crid
-        self.bcrparas[key] = card
-        self._type_to_id_map[card.type].append(key)
-
-    def add_bctadd(self, card, allow_overwrites=False):
-        """adds an BCTADD object"""
-        key = card.csid
-        self.bctadds[key] = card
-        self._type_to_id_map[card.type].append(key)
-
-    def add_bctpara(self, card, allow_overwrites=False):
-        """adds an BCTPARA object"""
-        key = card.csid
-        self.bctparas[key] = card
-        self._type_to_id_map[card.type].append(key)
-
-    def add_bctset(self, card, allow_overwrites=False):
-        """adds an BCTSET object"""
-        key = card.csid
-        self.bctsets[key] = card
-        self._type_to_id_map[card.type].append(key)
-
-    def add_bsurf(self, card, allow_overwrites=False):
-        """adds an BSURF object"""
-        key = card.sid
-        self.bsurf[key] = card
-        self._type_to_id_map[card.type].append(key)
-
-    def add_bsurfs(self, card, allow_overwrites=False):
-        """adds an BSURFS object"""
-        key = card.id
-        self.bsurfs[key] = card
-        self._type_to_id_map[card.type].append(key)
-
-    def add_delay(self, delay, allow_overwrites=False):
-        """adds an DELAY object"""
-        key = delay.sid
-        assert key > 0, 'sid=%s delay=%s' % (key, delay)
-        if key in self.delays:
-            self.delays[key].add(delay)
-        else:
-            self.delays[key] = delay
-            self._type_to_id_map[delay.type].append(key)
-
-    def add_tempd(self, tempd, allow_overwrites=False):
-        """adds an TEMPD object"""
-        key = tempd.sid
-        if key in self.tempds and not allow_overwrites:
-            if not tempd._is_same_card(self.tempds[key]):
-                assert key not in self.tempds, 'TEMPD.sid=%s old=\n%snew=\n%s' % (
-                    key, self.tempds[key], tempd)
-        else:
-            assert key > 0, 'sid=%s tempd=%s' % (key, tempd)
-            self.tempds[key] = tempd
-            self._type_to_id_map[tempd.type].append(key)
-
-    def add_pbusht(self, prop, allow_overwrites=False):
-        """adds an PBUSHT object"""
-        key = prop.pid
-        if key in self.pbusht and not allow_overwrites:
-            if not prop._is_same_card(self.pbusht[key]):
-                assert key not in self.pbusht, 'PBUSHT.pid=%s old=\n%snew=\n%s' % (
-                    key, self.pbusht[key], prop)
-        else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
-            self.pbusht[key] = prop
-            self._type_to_id_map[prop.type].append(key)
-
-    def add_pdampt(self, prop, allow_overwrites=False):
-        """adds an PDAMPT object"""
-        key = prop.pid
-        if key in self.pdampt and not allow_overwrites:
-            if not prop._is_same_card(self.pdampt[key]):
-                assert key not in self.pdampt, 'PDAMPT.pid=%s old=\n%snew=\n%s' % (
-                    key, self.pdampt[key], prop)
-        else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
-            self.pdampt[key] = prop
-            self._type_to_id_map[prop.type].append(key)
-
-    def add_pelast(self, prop, allow_overwrites=False):
-        """adds an PELAST object"""
-        key = prop.pid
-        assert key > 0, 'pid=%s prop=%s' % (key, prop)
-        if key in self.pelast and not allow_overwrites:
-            if not prop._is_same_card(self.pelast[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key],prop))
-                assert key not in self.pelast, 'PELAST.pid=%s old=\n%snew=\n%s' % (
-                    key, self.pelast[key], prop)
-        else:
-            self.pelast[key] = prop
-            self._type_to_id_map[prop.type].append(key)
-
-    def add_TF(self, tf, allow_overwrites=False):
-        """adds an TF (transfer function) object"""
-        key = tf.sid
-        assert key > 0, 'sid=%s tf=%s' % (key, tf)
-        if key in self.transfer_functions:
-            self.transfer_functions[key].append(tf)
-        else:
-            self.transfer_functions[key] = [tf]
-            self._type_to_id_map[tf.type].append(key)
-
-    def add_structural_material(self, material, allow_overwrites=False):
-        """adds an MAT1, MAT2, MAT8 object"""
-        key = material.mid
-        assert key > 0, 'mid=%s material=\n%s' % (key, material)
-        if key in self.materials and not allow_overwrites:
-            if not material._is_same_card(self.materials[key]):
-                self._duplicate_materials.append(material)
-        else:
-            self.materials[key] = material
-            self._type_to_id_map[material.type].append(key)
-
-    def add_thermal_material(self, material, allow_overwrites=False):
-        """adds an MAT4, MAT5 object"""
-        key = material.mid
-        assert key > 0, 'mid=%s material=\n%s' % (key, material)
-        if key in self.thermal_materials and not allow_overwrites:
-            if not material._is_same_card(self.thermal_materials[key]):
-                self._duplicate_thermal_materials.append(material)
-        else:
-            self.thermal_materials[key] = material
-            self._type_to_id_map[material.type].append(key)
-
-    def add_hyperelastic_material(self, material, allow_overwrites=False):
-        """adds an MATHP, MATHE object"""
-        key = material.mid
-        assert key > 0, 'mid=%s material=\n%s' % (key, material)
-        if key in self.hyperelastic_materials and not allow_overwrites:
-            if not material._is_same_card(self.hyperelastic_materials[key]):
-                assert key not in self.hyperelastic_materials, 'mid=%s\nold=\n%snew=\n%s' % (key, self.hyperelastic_materials[key], material)
-        else:
-            self.hyperelastic_materials[key] = material
-            self._type_to_id_map[material.type].append(key)
-
-    def add_material_dependence(self, material, allow_overwrites=False):
+    def add_spoint(self, ids, comment=''):
         """
-        adds the following objects:
-            MATS1, MATS3, MATS8,
-            MATT1, MATT2, MATT3,
-            MATT4, MATT5, MATT8, MATT9
+        Creates the SPOINTs card that contains many SPOINTs
+
+        Parameters
+        ----------
+        ids : List[int]
+            SPOINT ids
+        comment : str
+            a comment for the card
         """
-        Type = material.type
-        key = material.mid
-        mapper = {
-            'MATS1' : self.MATS1,
-            'MATS3' : self.MATS3,
-            'MATS8' : self.MATS8,
+        spoint = SPOINTs(ids, comment=comment)
+        self.add_spoint_object(spoint)
 
-            'MATT1' : self.MATT1,
-            'MATT2' : self.MATT2,
-            'MATT3' : self.MATT3,
-            'MATT4' : self.MATT4,
-            'MATT5' : self.MATT5,
-            'MATT8' : self.MATT8,
-            'MATT9' : self.MATT9,
-        }
-        slot = mapper[Type]
-        if key in slot and not allow_overwrites:
-            if not material._is_same_card(slot[key]):
-                assert key not in slot, 'dMATx.mid=%s Type=%r\nold=\n%snew=\n%s' % (key, Type, slot[key], material)
-        else:
-            assert key > 0, 'mid=%s material=\n%s' % (key, material)
-            slot[key] = material
-            self._type_to_id_map[material.type].append(key)
-
-    def add_creep_material(self, material, allow_overwrites=False):
+    def add_epoint(self, ids, comment=''):
         """
-        .. note:: May be removed in the future.  Are CREEP cards materials?
-                  They have an MID, but reference structural materials.
+        Creates the EPOINTs card that contains many EPOINTs
+
+        Parameters
+        ----------
+        ids : List[int]
+            EPOINT ids
+        comment : str
+            a comment for the card
         """
-        key = material.mid
-        if key in self.thermal_materials and not allow_overwrites:
-            if not material._is_same_card(self.creep_materials[key]):
-                assert key not in self.creep_materials, 'Material.mid=%s\nold=\n%snew=\n%s' % (key, self.creep_materials[key], material)
-        else:
-            assert key > 0, 'mid=%s material=\n%s' % (key, material)
-            self.creep_materials[key] = material
-            self._type_to_id_map[material.type].append(key)
-
-    def add_coord(self, coord, allow_overwrites=False):
-        key = coord.cid
-        assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
-        if key in self.coords:
-            #if not allow_overwrites:
-            if not coord._is_same_card(self.coords[key]):
-                self._duplicate_coords.append(coord)
-        else:
-            self.coords[key] = coord
-            self._type_to_id_map[coord.type].append(key)
-
-    def add_load(self, load):
-        key = load.sid
-        if key in self.loads:
-            self.loads[key].append(load)
-        else:
-            self.loads[key] = [load]
-            self._type_to_id_map[load.type].append(key)
-
-    def add_dload(self, load):
-        key = load.sid
-        if key in self.dloads:
-            self.dloads[key].append(load)
-        else:
-            self.dloads[key] = [load]
-            self._type_to_id_map[load.type].append(key)
-
-    def add_dload_entry(self, load):
-        key = load.sid
-        if key in self.dload_entries:
-            self.dload_entries[key].append(load)
-        else:
-            self.dload_entries[key] = [load]
-            self._type_to_id_map[load.type].append(key)
-
-    def add_LSEQ(self, load):
-        key = load.sid
-        if key in self.loads:
-            self.loads[key].append(load)
-        else:
-            self.loads[key] = [load]
-            self._type_to_id_map[load.type].append(key)
-
-    def add_thermal_load(self, load):  # same function at the moment...
-        key = load.sid
-        assert key > 0, 'key=%s; load=%s\n' % (key, load)
-        if key in self.loads:
-            self.loads[key].append(load)
-        else:
-            self.loads[key] = [load]
-            self._type_to_id_map[load.type].append(key)
-
-    def add_PHBDY(self, prop):
-        key = prop.pid
-        if key in self.phbdys:
-            if not prop._is_same_card(self.phbdys[key]):
-                assert key not in self.phbdys, 'PHBDY.pid=%s\nold=\n%snew=\n%s' % (
-                    key, self.phbdys[key], prop)
-        else:
-            assert key > 0, 'pid=%s prop=\n%s' % (key, prop)
-            self.phbdys[key] = prop
-            self._type_to_id_map[prop.type].append(key)
-
-    def add_convection_property(self, prop):
-        key = prop.pconid
-        assert key > 0, key
-        assert key not in self.convection_properties, key
-        self.convection_properties[key] = prop
-        self._type_to_id_map[prop.type].append(key)
-
-    def add_thermal_bc(self, bc, key):
-        assert key > 0
-        if key in self.bcs:
-            self.bcs[key].append(bc)
-        else:
-            self.bcs[key] = [bc]
-            self._type_to_id_map[bc.type].append(key)
-
-    #def add_constraint_mpcadd(self, constraint):
-        #raise RuntimeError('is this used?')
-        #key = constraint.conid
-        #if key in self.mpcadds:
-            #raise RuntimeError('must have unique MPCADD IDs')
-        #self.mpcadds[key] = constraint
-        #self._type_to_id_map[constraint.type].append(key)
-
-    def add_constraint_mpc(self, constraint):
-        key = constraint.conid
-        if key in self.mpcs:
-            self.mpcs[key].append(constraint)
-        else:
-            self.mpcs[key] = [constraint]
-            self._type_to_id_map[constraint.type].append(key)
-
-    #def add_constraint_spcadd(self, constraint):
-        #raise RuntimeError('is this used?')
-        #key = constraint.conid
-        #if key in self.spcadds:
-            #raise RuntimeError('must have unique SPCADD IDs')
-        #self.spcadds[key] = constraint
-        #self._type_to_id_map[constraint.type].append(key)
-
-    def add_constraint_spc(self, constraint):
-        key = constraint.conid
-        if key in self.spcs:
-            self.spcs[key].append(constraint)
-        else:
-            self.spcs[key] = [constraint]
-            self._type_to_id_map[constraint.type].append(key)
-
-    def add_constraint(self, constraint):
-        key = constraint.conid
-        if key in self.spcs:
-            self.spcs[key].append(constraint)
-        else:
-            self.spcs[key] = [constraint]
-            self._type_to_id_map[constraint.type].append(key)
-
-    def add_sesuport(self, se_suport):
-        self._type_to_id_map[se_suport.type].append(len(self.se_suport))
-        self.se_suport.append(se_suport)
-
-    def add_suport(self, suport):
-        self._type_to_id_map[suport.type].append(len(self.suport))
-        self.suport.append(suport)
-
-    def add_suport1(self, suport1):
-        key = suport1.conid
-        if key in self.suport1:
-            self.suport1[key].add_suport1_to_set(suport1)
-        else:
-            assert suport1.conid > 0
-            self.suport1[key] = suport1
-            self._type_to_id_map[suport1.type].append(key)
-
-    def add_darea(self, darea, allow_overwrites=False):
-        key = (darea.sid, darea.p, darea.c)
-        if key in self.dareas and not allow_overwrites:
-            if not darea._is_same_card(self.dareas[key]):
-                assert key not in self.dareas, '\ndarea=\n%s oldDArea=\n%s' % (darea, self.dareas[key])
-        else:
-            assert darea.sid > 0
-            self.dareas[key] = darea
-            self._type_to_id_map[darea.type].append(key)
-
-    def add_dphase(self, dphase, allow_overwrites=False):
-        #key = (dphase.sid, dphase.phase_leads, dphase.components)
-        key = dphase.sid
-        if key in self.dphases and not allow_overwrites:
-            if not dphase._is_same_card(self.dphases[key]):
-                assert key not in self.dphases, '\ndphase=\n%s old_DPHASE=\n%s' % (
-                    dphase, self.dphases[key])
-        else:
-            assert dphase.sid > 0
-            self.dphases[key] = dphase
-            self._type_to_id_map[dphase.type].append(key)
-
-    def add_aero(self, aero):
-        """adds an AERO object"""
-        # only one AERO card allowed
-        assert self.aero is None, '\naero=\n%s old=\n%s' % (aero, self.aero)
-        self.aero = aero
-        #self._type_to_id_map[aero.type].append(key)
-
-    def add_aeros(self, aeros):
-        """adds an AEROS object"""
-        # only one AEROS card allowed
-        assert self.aeros is None, '\naeros=\n%s old=\n%s' % (aeros, self.aeros)
-        self.aeros = aeros
-        #self._type_to_id_map[aeros.type].append(key)
-
-    def add_aefact(self, aefact, allow_overwrites=False):
-        """adds an AEFACT object"""
-        key = aefact.sid
-        if key in self.aefacts and not allow_overwrites:
-            if not aefact._is_same_card(self.aefacts[key]):
-                assert key not in self.aefacts, 'AEFACT.sid=%s\nold=\n%snew=\n%s' % (key, self.aefacts[key], aefact)
-        else:
-            assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
-            self.aefacts[key] = aefact
-            self._type_to_id_map[aefact.type].append(key)
-
-    def add_aelist(self, aelist):
-        """adds an AELIST object"""
-        key = aelist.sid
-        assert key not in self.aelists, 'AELIST.sid=%s\nold=\n%snew=\n%s' % (key, self.aelists[key], aelist)
-        assert key >= 0
-        self.aelists[key] = aelist
-        self._type_to_id_map[aelist.type].append(key)
-
-    def add_aelink(self, aelink):
-        """adds an AELINK object"""
-        key = aelink.id
-        assert key >= 0
-        if key not in self.aelinks:
-            self.aelinks[key] = []
-        self.aelinks[key].append(aelink)
-        self._type_to_id_map[aelink.type].append(key)
-        #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
-
-    def add_aecomp(self, aecomp):
-        """adds an AECOMP object"""
-        key = aecomp.name
-        assert key not in self.aecomps, '\naecomp=\n%s oldAECOMP=\n%s' % (aecomp, self.aecomps[key])
-        self.aecomps[key] = aecomp
-        self._type_to_id_map[aecomp.type].append(key)
-
-    def add_aeparm(self, aeparam):
-        """adds an AEPARM object"""
-        key = aeparam.id
-        assert key not in self.aeparams, '\naeparam=\n%s oldAEPARM=\n%s' % (aeparam, self.aeparams[key])
-        assert key >= 0
-        self.aeparams[key] = aeparam
-        self._type_to_id_map[aeparam.type].append(key)
-
-    def add_aestat(self, aestat):
-        """adds an AESTAT object"""
-        key = aestat.id
-        assert key not in self.aestats, '\naestat=\n%s old=\n%s' % (
-            aestat, self.aestats[key])
-        assert key >= 0
-        self.aestats[key] = aestat
-        self._type_to_id_map[aestat.type].append(key)
-
-    def add_aesurf(self, aesurf):
-        """adds an AESURF object"""
-        key = aesurf.aesid
-        assert key not in self.aesurf, '\naesurf=\n%s old=\n%s' % (
-            aesurf, self.aesurf[key])
-        assert key >= 0
-        self.aesurf[key] = aesurf
-        self._type_to_id_map[aesurf.type].append(key)
-
-    def add_aesurfs(self, aesurfs):
-        """adds an AESURFS object"""
-        key = aesurfs.aesid
-        assert key not in self.aesurf, '\naesurfs=\n%s old=\n%s' % (
-            aesurfs, self.aesurfs[key])
-        assert key >= 0
-        self.aesurfs[key] = aesurfs
-        self._type_to_id_map[aesurfs.type].append(key)
-
-    def add_csschd(self, csschd):
-        """adds an CSSCHD object"""
-        key = csschd.sid
-        assert key not in self.csschds, '\nCSSCHD=\n%s old=\n%s' % (csschd, self.csschds[key])
-        assert key >= 0
-        self.csschds[key] = csschd
-        self._type_to_id_map[csschd.type].append(key)
-
-    def add_caero(self, caero):
-        """adds an CAERO1/CAERO2/CAERO3/CAERO4/CAERO5 object"""
-        key = caero.eid
-        assert key not in self.caeros, '\ncaero=\n|%s| old_caero=\n|%s|' % (
-            caero, self.caeros[key])
-        assert key > 0
-        self.caeros[key] = caero
-        self._type_to_id_map[caero.type].append(key)
-
-    def add_paero(self, paero):
-        key = paero.pid
-        assert key not in self.paeros, '\npaero=\n|%s| old_paero=\n|%s|' % (
-            paero, self.paeros[key])
-        assert key > 0, 'paero.pid = %r' % (key)
-        self.paeros[key] = paero
-        self._type_to_id_map[paero.type].append(key)
-
-    def add_monpnt(self, monitor_point):
-        """adds an MONPNT object"""
-        key = monitor_point.name
-        assert key not in self.monitor_points, '\nmonitor_point=\n%soldMNTPNT=\n%s' % (
-            monitor_point, self.monitor_points[key])
-        self.monitor_points.append(monitor_point)
-        self._type_to_id_map[monitor_point.type].append(len(self.monitor_points) - 1)
-
-    def add_spline(self, spline):
-        """adds an SPLINE1/SPLINE2/SPLINE3/SPLINE4/SPLINE5 object"""
-        assert spline.eid not in self.splines
-        assert spline.eid > 0
-        key = spline.eid
-        self.splines[key] = spline
-        self._type_to_id_map[spline.type].append(key)
-
-    def add_gust(self, gust):
-        """adds an GUST object"""
-        key = gust.sid
-        assert key not in self.gusts
-        assert key > 0
-        self.gusts[key] = gust
-        self._type_to_id_map[gust.type].append(key)
-
-    def add_trim(self, trim, allow_overwrites=False):
-        """adds an TRIM object"""
-        key = trim.sid
-        if not allow_overwrites:
-            assert key not in self.trims, 'TRIM=%s  old=\n%snew=\n%s' % (key, self.trims[key], trim)
-        assert key > 0, 'key=%r trim=\n%s' % (key, trim)
-        self.trims[key] = trim
-        self._type_to_id_map[trim.type].append(key)
-
-    def add_diverg(self, diverg, allow_overwrites=False):
-        """adds an DIVERG object"""
-        key = diverg.sid
-        if not allow_overwrites:
-            assert key not in self.divergs, 'DIVERG=%s  old=\n%snew=\n%s' % (key, self.divergs[key], diverg)
-        assert key > 0, 'key=%r diverg=\n%s' % (key, diverg)
-        self.divergs[key] = diverg
-        self._type_to_id_map[diverg.type].append(key)
-
-    def add_flutter(self, flutter):
-        """adds an FLUTTER object"""
-        key = flutter.sid
-        assert key not in self.flutters, 'FLUTTER=%s old=\n%snew=\n%s' % (key, self.flutters[key], flutter)
-        assert key > 0
-        self.flutters[key] = flutter
-        self._type_to_id_map[flutter.type].append(key)
-
-    def add_flfact(self, flfact):
-        """adds an FLFACT object"""
-        key = flfact.sid
-        #assert key not in self.flfacts
-        assert key > 0
-        self.flfacts[key] = flfact  # set id...
-        self._type_to_id_map[flfact.type].append(key)
-
-    def add_dconstr(self, dconstr):
-        """adds a DCONSTR object"""
-        #key = (dconstr.oid, dconstr.rid)
-        key = dconstr.oid
-        #assert key not in self.dconstrs, 'key=%r DCONSTR/DCONADD=\n%s' % (key, dconstr)
-        assert dconstr.oid > 0
-        #assert dconstr.dresp_id > 0
-        if key in self.dconstrs:
-            self.dconstrs[key].append(dconstr)
-        else:
-            self.dconstrs[key] = [dconstr]
-        self._type_to_id_map[dconstr.type].append(key)
-
-    #def add_DCONADD(self, dconadd, allow_overwrites=False):
-        #key = dconadd.oid
-        #if key in self.dconstrs and not allow_overwrites:
-            #if not dconadd._is_same_card(self.dconstrs[key]):
-                #assert key not in self.dconstrs, 'DCONADD=%s old=\n%snew=\n%s' % (
-                    #key, self.dconstrs[key], dconadd)
-        #else:
-            #assert key > 0, 'dcid=%s dconadd=%s' % (key, dconadd)
-            #self.dconstrs[key] = dconadd
-            #self._type_to_id_map[dconadd.type].append(key)
-
-    def add_desvar(self, desvar):
-        """adds a DESVAR object"""
-        key = desvar.desvar_id
-        assert key not in self.desvars, 'DESVAR=%s old=\n%snew=\n%s' % (
-            key, self.desvars[key], desvar)
-        assert key > 0
-        self.desvars[key] = desvar
-        self._type_to_id_map[desvar.type].append(key)
-
-    def add_ddval(self, ddval):
-        """adds a DDVAL object"""
-        key = ddval.oid
-        assert key not in self.ddvals, 'DDVAL=%s old=\n%snew=\n%s' % (
-            key, self.ddvals[key], ddval)
-        assert key > 0
-        self.ddvals[key] = ddval
-        self._type_to_id_map[ddval.type].append(key)
-
-    def add_dlink(self, dlink):
-        """adds a DLINK object"""
-        key = dlink.oid
-        assert key not in self.dlinks, 'DLINK=%s old=\n%snew=\n%s' % (
-            key, self.dlinks[key], dlink)
-        assert key > 0
-        self.dlinks[key] = dlink
-        self._type_to_id_map[dlink.type].append(key)
-
-    def add_dresp(self, dresp):
-        """adds a DRESP1/DRESP2/DRESP3 object"""
-        key = dresp.dresp_id
-        assert key not in self.dresps, 'DRESPx=%s old=\n%snew=\n%s' % (
-                    key, self.dresps[key], dresp)
-        assert key > 0
-        self.dresps[key] = dresp
-        self._type_to_id_map[dresp.type].append(key)
-
-    def add_dvcrel(self, dvcrel):
-        """adds a DVCREL1/DVCREL2 object"""
-        key = dvcrel.oid
-        assert key not in self.dvprels, 'DVCRELx=%s old\n%snew=\n%s' % (
-                    key, self.dvcrels[key], dvcrel)
-        assert key > 0
-        self.dvcrels[key] = dvcrel
-        self._type_to_id_map[dvcrel.type].append(key)
-
-    def add_dvmrel(self, dvmrel):
-        """adds a DVMREL1/DVMREL2 object"""
-        key = dvmrel.oid
-        assert key not in self.dvmrels, 'DVMRELx=%s old=\n%snew=\n%s' % (
-                    key, self.dvmrels[key], dvmrel)
-        assert key not in self.dvmrels
-        assert key > 0
-        self.dvmrels[key] = dvmrel
-        self._type_to_id_map[dvmrel.type].append(key)
-
-    def add_dvprel(self, dvprel):
-        """adds a DVPREL1/DVPREL2 object"""
-        key = dvprel.oid
-        assert key not in self.dvprels, 'DVPRELx=%s old\n%snew=\n%s' % (
-                    key, self.dvprels[key], dvprel)
-        assert key > 0
-        self.dvprels[key] = dvprel
-        self._type_to_id_map[dvprel.type].append(key)
-
-    def add_dvgrid(self, dvgrid):
-        """adds a DVGRID object"""
-        key = dvgrid.dvid
-        assert key > 0
-        if key not in self.dvgrids:
-            self.dvgrids[key] = []
-            self._type_to_id_map[dvgrid.type].append(key)
-        self.dvgrids[key].append(dvgrid)
-
-    def add_nlparm(self, nlparm):
-        """adds a NLPARM object"""
-        key = nlparm.nlparm_id
-        assert key not in self.nlparms
-        assert key > 0, 'key=%s; nlparm=%s\n' % (key, nlparm)
-        self.nlparms[key] = nlparm
-        self._type_to_id_map[nlparm.type].append(key)
-
-    def add_rotor(self, rotor):
-        """adds a ROTORG object"""
-        key = rotor.sid
-        assert key not in self.rotors
-        assert key > 0, 'key=%s; rotor=%s\n' % (key, rotor)
-        self.rotors[key] = rotor
-        self._type_to_id_map[rotor.type].append(key)
-
-    def add_nlpci(self, nlpci):
-        """adds a NLPCI object"""
-        key = nlpci.nlpci_id
-        assert key not in self.nlpcis
-        assert key > 0
-        self.nlpcis[key] = nlpci
-        self._type_to_id_map[nlpci.type].append(key)
-
-    def add_tstep(self, tstep, allow_overwrites=False):
-        """adds a TSTEP object"""
-        key = tstep.sid
-        if key in self.tsteps and not allow_overwrites:
-            if not tstep._is_same_card(self.tsteps[key]):
-                assert key not in self.tsteps, 'TSTEP=%s\nold=\n%snew=\n%s' % (key, self.tsteps[key], tstep)
-        else:
-            assert key > 0, 'sid=%s tstep=\n%s' % (key, tstep)
-            self.tsteps[key] = tstep
-            self._type_to_id_map[tstep.type].append(key)
-
-    def add_tstepnl(self, tstepnl, allow_overwrites=False):
-        """adds a TSTEPNL object"""
-        key = tstepnl.sid
-        if key in self.tstepnls and not allow_overwrites:
-            if not tstepnl._is_same_card(self.tstepnls[key]):
-                assert key not in self.tstepnls, 'TSTEPNL=%s\nold=\n%snew=\n%s' % (key, self.tstepnls[key], tstepnl)
-        else:
-            assert key > 0, 'sid=%s tstepnl=\n%s' % (key, tstepnl)
-            self.tstepnls[key] = tstepnl
-            self._type_to_id_map[tstepnl.type].append(key)
-
-    def add_freq(self, freq):
-        key = freq.sid
-        assert key > 0
-        if key in self.frequencies:
-            self.frequencies[key].add_frequency_object(freq)
-        else:
-            self.frequencies[key] = freq
-            self._type_to_id_map[freq.type].append(key)
-
-    def add_set(self, set_obj):
-        """adds an SET1/SET3 object"""
-        key = set_obj.sid
-        assert key >= 0
-        if key in self.sets:
-            self.sets[key].add_set(set_obj)
-        else:
-            self.sets[key] = set_obj
-            self._type_to_id_map[set_obj.type].append(key)
-
-    def add_aset(self, set_obj):
-        """adds an ASET/ASET1 object"""
-        self.asets.append(set_obj)
-
-    def add_bset(self, set_obj):
-        """adds an BSET/BSET1 object"""
-        self.bsets.append(set_obj)
-
-    def add_cset(self, set_obj):
-        """adds an CSET/USET1 object"""
-        self.csets.append(set_obj)
-
-    def add_qset(self, set_obj):
-        """adds an QSET/QSET1 object"""
-        self.qsets.append(set_obj)
-
-    def add_uset(self, set_obj):
-        """adds an USET/USET1 object"""
-        key = set_obj.name
-        if key in self.usets:
-            self.usets[key].append(set_obj)
-        else:
-            self.usets[key] = [set_obj]
-
-    def add_sebset(self, set_obj):
-        """adds an SEBSET/SEBSET1 object"""
-        self.se_bsets.append(set_obj)
-
-    def add_secset(self, set_obj):
-        """adds an SECSET/SECSTE1 object"""
-        self.se_csets.append(set_obj)
-
-    def add_seqset(self, set_obj):
-        """adds an SEQSET/SEQSET1 object"""
-        self.se_qsets.append(set_obj)
-
-    def add_seuset(self, set_obj):
-        """adds an SEUSET/SEUSET1 object"""
-        key = set_obj.name
-        if key in self.se_usets:
-            self.se_usets[key].append(set_obj)
-        else:
-            self.se_usets[key] = [set_obj]
-
-    def add_seset(self, set_obj):
-        """adds an SESET object"""
-        key = set_obj.seid
-        assert key >= 0
-        if key in self.se_sets:
-            old_set = self.se_sets[key]
-            set_obj.add_seset(old_set)
-        self.se_sets[key] = set_obj
-        self._type_to_id_map[set_obj.type].append(key)
-
-    def add_table(self, table):
-        key = table.tid
-        assert key not in self.tables, '\nTable=\n%s oldTable=\n%s' % (
-            table, self.tables[key])
-        assert key > 0
-        self.tables[key] = table
-        self._type_to_id_map[table.type].append(key)
-
-    def add_table_sdamping(self, table):
-        key = table.tid
-        assert key not in self.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
-            table, self.tables_sdamping[key])
-        assert key > 0
-        self.tables_sdamping[key] = table
-        self._type_to_id_map[table.type].append(key)
-
-    def add_random_table(self, table):
-        key = table.tid
-        assert key not in self.random_tables, '\nTable=\n%s old=\n%s' % (
-            table, self.random_tables[key])
-        assert key > 0
-        self.random_tables[key] = table
-        self._type_to_id_map[table.type].append(key)
-
-    def add_method(self, method, allow_overwrites=False):
-        """adds a EIGR/EIGRL object"""
-        key = method.sid
-        if key in self.methods and not allow_overwrites:
-            if not method._is_same_card(self.methods[key]):
-                assert key not in self.methods, 'sid=%s\nold_method=\n%snew_method=\n%s' % (key, self.methods[key], method)
-        else:
-            assert key > 0, 'sid=%s method=\n%s' % (key, method)
-            self.methods[key] = method
-            self._type_to_id_map[method.type].append(key)
-
-    def add_cmethod(self, method, allow_overwrites=False):
-        """adds a EIGB/EIGC object"""
-        key = method.sid
-        if key in self.cMethods and not allow_overwrites:
-            if not method._is_same_card(self.cMethods[key]):
-                assert key not in self.cMethods, 'sid=%s\nold_cmethod=\n%snew_cmethod=\n%s' % (key, self.cMethods[key], method)
-        else:
-            assert key > 0, 'sid=%s cMethod=\n%s' % (key, method)
-            self.cMethods[key] = method
-            self._type_to_id_map[method.type].append(key)
-
-    def add_mkaero(self, mkaero):
-        """adds an MKAERO1/MKAERO2 object"""
-        self.mkaeros.append(mkaero)
+        epoint = EPOINTs(ids, comment=comment)
+        self.add_epoint_object(epoint)
+
+    def add_point(self, nid, cp, xyz, comment=''):
+        """
+        Creates the POINT card
+        """
+        point = POINT(nid, cp, xyz, comment=comment)
+        self.add_point_object(point)
+
+    def add_param(self, key, values, comment=''):
+        """
+        Creates a PARAM card.
+
+        Parameters
+        ----------
+        key : str
+            the name of the PARAM
+        values : int/float/str/List
+            varies depending on the type of PARAM
+        comment : str; default=''
+            optional string
+        """
+        param = PARAM(key, values, comment=comment)
+        self.add_param_object(param)
+
+    def add_conm2(self, eid, nid, cid, mass, X=None, I=None, comment=''):
+        """
+        Creates a CONM2 card
+
+        Parameters
+        ----------
+        eid : int
+           element ID
+        nid : int
+           node ID
+        mass : float
+           the mass of the CONM2
+        cid : int; default=0
+           coordinate frame of the offset (-1=absolute coordinates)
+        X : (3, ) List[float]; default=None -> [0., 0., 0.]
+            xyz offset vector relative to nid
+        I : (6, ) List[float]; default=None -> [0., 0., 0., 0., 0., 0.]
+            mass moment of inertia matrix about the CG
+            I11, I21, I22, I31, I32, I33 = I
+        """
+        mass = CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
+        self.add_mass_object(mass)
+
+    def add_pelas(self, pid, k, ge, s, comment=''):
+        prop = PELAS(pid, k, ge, s, comment=comment)
+        self.add_property_object(prop)
+
+    def add_celas1(self, eid, pid, nids, c1, c2, comment=''):
+        elem = CELAS1(eid, pid, nids, c1, c2, comment=comment)
+        self.add_element_object(elem)
+
+    def add_celas2(self, eid, k, nids, c1=0, c2=0, ge=0., s=0., comment=''):
+        elem = CELAS2(eid, k, nids, c1=c1, c2=c2, ge=ge, s=s, comment=comment)
+        self.add_element_object(elem)
+
+    def add_celas3(self, eid, pid, s1, s2, comment=''):
+        elem = CELAS3(eid, pid, s1, s2, comment=comment)
+        self.add_element_object(elem)
+
+    def add_celas4(self, eid, k, s1, s2, comment=''):
+        elem = CELAS4(eid, k, s1, s2, comment=comment)
+        self.add_element_object(elem)
+
+    def add_conrod(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+        elem = CONROD(eid, mid, nids, A, j=j, c=c, nsm=nsm, comment=comment)
+        self.add_element_object(elem)
+
+    def add_crod(self, eid, pid, nids, comment=''):
+        elem = CROD(eid, pid, nids, comment=comment)
+        self.add_element_object(elem)
+
+    def add_prod(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
+        """
+        Creates a PROD card
+
+        Parameters
+        ----------
+        pid : int
+           property id
+        mid : int
+           material id
+        A : float
+           area
+        J : float; default=0.
+           polar moment of inertia
+        c : float; default=0.
+           stress factor
+        nsm : float; default=0.
+           nonstructural mass per unit length
+        comment : str
+            a comment for the card
+        """
+        prop = PROD(pid, mid, A, j=j, c=c, nsm=nsm, comment=comment)
+        self.add_property_object(prop)
+
+    #def add_ctube(self):
+    #def add_ptube(self):
+
+    def add_cbar(self, eid, pid, ga, gb, x, g0, offt='GGG', pa=0, pb=0,
+                 wa=None, wb=None, comment=''):
+        elem = CBAR(eid, pid, ga, gb, x, g0, offt=offt, pa=pa, pb=pb,
+                    wa=wa, wb=wb, comment=comment)
+        self.add_element_object(elem)
+
+    def add_pbar(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
+                 c1=0., c2=0., d1=0., d2=0., e1=0., e2=0.,
+                 f1=0., f2=0., k1=1.e8, k2=1.e8, comment=''):
+        prop = PBAR(pid, mid, A=A, i1=i1, i2=i2, i12=i12, j=j, nsm=nsm,
+                    c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
+                    f1=f1, f2=f2, k1=k1, k2=k2,
+                    comment=comment)
+        self.add_property_object(prop)
+
+    def add_pbarl(self, pid, mid, group, Type, dim, nsm=0., comment=''):
+        prop = PBARL(pid, mid, group, Type, dim, nsm=nsm, comment=comment)
+        self.add_property_object(prop)
+
+    def add_cbeam(self, eid, pid, ga, gb, x, g0, is_offt, offt, bit, pa, pb, wa,
+                  wb, sa, sb, comment=''):
+        elem = CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit, pa, pb, wa,
+                     wb, sa, sb, comment=comment)
+        self.add_element_object(elem)
+
+    def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                  c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, s1, s2,
+                  nsia, nsib, cwa, cwb, m1a, m2a, m1b,
+                  m2b, n1a, n2a, n1b, n2b, comment=''):
+        prop = PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm, c1, c2, d1,
+                     d2, e1, e2, f1, f2, k1, k2, s1, s2,
+                     nsia, nsib, cwa, cwb, m1a, m2a, m1b,
+                     m2b, n1a, n2a, n1b, n2b, comment=comment)
+        self.add_property_object(prop)
+
+    def add_pbeaml(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
+        prop = PBEAML(pid, mid, group, Type, xxb, so, dims, nsm, comment=comment)
+        self.add_property_object(prop)
+
+    def add_ctria3(self, eid, pid, nids, zOffset, thetaMcid=0.0, TFlag=0,
+                   T1=1.0, T2=1.0, T3=1.0, comment=''):
+        elem = CTRIA3(eid, pid, nids, zOffset, thetaMcid=thetaMcid, TFlag=TFlag,
+                      T1=T1, T2=T2, T3=T3, comment=comment)
+        self.add_element_object(elem)
+
+    def add_cquad4(self, eid, pid, nids, thetaMcid=0.0, zOffset=0., TFlag=0,
+                   T1=1.0, T2=1.0, T3=1.0, T4=1.0,
+                   comment=''):
+        elem = CQUAD4(eid, pid, nids, thetaMcid=thetaMcid, zOffset=zOffset, TFlag=TFlag,
+                      T1=T1, T2=T2, T3=T3, T4=T4,
+                      comment=comment)
+        self.add_element_object(elem)
+
+    def add_pshell(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
+                   mid3=None, tst=0.833333, nsm=0.0,
+                   z1=None, z2=None, mid4=None,
+                   comment=''):
+        prop = PSHELL(pid, mid1=mid1, t=t, mid2=mid2, twelveIt3=twelveIt3,
+                      mid3=mid3, tst=tst, nsm=nsm,
+                      z1=z1, z2=z2, mid4=mid4,
+                      comment=comment)
+        self.add_property_object(prop)
+
+    def add_ctetra(self, eid, pid, nids, comment=''):
+        elem = CTETRA(eid, pid, nids, comment=comment)
+        self.add_element_object(elem)
+
+    def add_cpenta(self, eid, pid, nids, comment=''):
+        elem = CPENTA(eid, pid, nids, comment=comment)
+        self.add_element_object(elem)
+
+    def add_chexa(self, eid, pid, nids, comment=''):
+        elem = CHEXA(eid, pid, nids, comment=comment)
+        self.add_element_object(elem)
+
+    def add_pyram(self, eid, pid, nids, comment=''):
+        elem = CPYRAM(eid, pid, nids, comment=comment)
+        self.add_element_object(elem)
+
+    def add_psolid(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
+                   fctn='SMECH', comment=''):
+        prop = PSOLID(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
+                      fctn=fctn, comment=comment)
+        self.add_property_object(prop)
+
+    def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, TRef=0.0, ge=0.0, St=0.0,
+                 Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
+        mat = MAT1(mid, E, G, nu, rho=rho, a=a, TRef=TRef, ge=ge, St=St,
+                   Sc=Sc, Ss=Ss, Mcsid=Mcsid, comment=comment)
+        self.add_structural_material(mat)
+
+    def add_load(self, sid, scale, scale_factors, load_ids, comment=''):
+        load = LOAD(sid, scale, scale_factors, load_ids, comment=comment)
+        self.add_load_object(load)
+
+    def add_force(self, sid, node, mag, cid=0, xyz=None, comment=''):
+        """
+        Creates a FORCE card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        cid : int; default=0
+            the coordinate system for the load
+        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
+            the load direction in the cid frame
+        """
+        load = FORCE(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
+        self.add_load_object(load)
+
+    def add_moment(self, sid, node, cid, mag, xyz, comment=''):
+        """
+        Creates a MOMENT card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        cid : int; default=0
+            the coordinate system for the load
+        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
+            the load direction in the cid frame
+        """
+        load = MOMENT(sid, node, cid, mag, xyz, comment=comment)
+        self.add_load_object(load)
+
+    def add_grav(self, sid, scale, N, cid=0, mb=0, comment=''):
+        load = GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
+        self.add_load_object(load)
+
+    def add_pload(self, sid, p, nodes, comment=''):
+        load = PLOAD(sid, p, nodes, comment=comment)
+        self.add_load_object(load)
+
+    def add_pload1(self, sid, eid, Type, scale, x1, p1, x2, p2, comment=''):
+        load = PLOAD1(sid, eid, Type, scale, x1, p1, x2, p2, comment=comment)
+        self.add_load_object(load)
+
+    def add_pload2(self, sid, pressure, eids, comment=''):
+        load = PLOAD2(sid, pressure, eids, comment=comment)
+        self.add_load_object(load)
+
+    def add_pload4(self, sid, eids, pressures, g1=None, g34=None, cid=0,
+                   NVector=None, sorl='SURF', ldir='NORM', comment=''):
+        """
+        Creates a PLOAD4 card
+
+        Parameters
+        ----------
+        sid : int
+            the load id
+        eids : List[int, ...]
+            shells : the range of element ids; must be sequential
+            solids : must be length 1
+        pressures : List[float, float, float, float]
+            tri : must be length 4 (the last value should be the same as the 0th value)
+            quad : must be length 4
+        g1 : int/None
+            only used for solid elements
+        g34 : int / None
+            only used for solid elements
+        cid : int; default=0
+            the coordinate system for ???
+        NVector : (3, ) float ndarray
+           the local pressure vector
+        sorl : str; default='SURF'
+           ???
+        ldir : str; default='NORM'
+           ???
+
+        TODO: fix the way "pressures" works
+        """
+        load = PLOAD4(sid, eids, pressures, g1=g1, g34=g34, cid=cid,
+                      NVector=NVector, sorl=sorl,
+                      ldir=ldir, comment=comment)
+        self.add_load_object(load)
+
+    def add_spc(self, conid, gids, constraints, enforced, comment=''):
+        spc = SPC(conid, gids, constraints, enforced, comment='')
+        self.add_constraint_spc(spc)
+
+    def add_spc1(self, conid, constraints, nodes, comment=''):
+        spc = SPC1(conid, constraints, nodes, comment=comment)
+        self.add_constraint_spc(spc)
+
+    def add_spcadd(self, conid, sets, comment=''):
+        spcadd = SPCADD(conid, sets, comment=comment)
+        self.add_constraint_spc(spcadd)
+
+    def add_mpc(self, conid, gids, constraints, enforced, comment=''):
+        mpc = MPC(conid, gids, constraints, enforced, comment=comment)
+        self.add_constraint_mpc(mpc)
+
+    def add_mpcadd(self, conid, sets, comment=''):
+        mpcadd = MPCADD(conid, sets, comment=comment)
+        self.add_constraint_mpc(mpcadd)
+
+    def add_aeros(self, cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0,
+                  comment=''):
+        aeros = AEROS(cref, bref, sref, acsid=acsid, rcsid=rcsid, sym_xz=sym_xz, sym_xy=sym_xy,
+                      comment=comment)
+        self.add_aeros_object(aeros)
+
+    def add_trim(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
+        trim = TRIM(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
+        self.add_trim_object(trim)
+
+    def add_mkaero1(self, machs, reduced_freqs, comment=''):
+        mkaero = MKAERO1(machs, reduced_freqs, comment=comment)
+        self.add_mkaero_object(mkaero)
+
+    def add_mkaero2(self, machs, reduced_freqs, comment=''):
+        mkaero = MKAERO2(machs, reduced_freqs, comment=comment)
+        self.add_mkaero_object(mkaero)
+
+    def add_gust(self, sid, dload, wg, x0, V, comment=''):
+        gust = GUST(sid, dload, wg, x0, V, comment=comment)
+        self.add_gust_object(gust)
+

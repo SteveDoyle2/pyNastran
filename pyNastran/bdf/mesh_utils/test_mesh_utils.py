@@ -498,7 +498,7 @@ class TestMeshUtils(unittest.TestCase):
         I33 = 4.99e7
         I13 = I12 = I23 = 0.
         I = I11, I12, I22, I13, I23, I33
-        elem = CONM2(eid, nid, cid, mass, X, I, comment='')
+        elem = CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment='')
         model.masses[eid] = elem
 
         units_to = ['in', 'lbm', 's']

@@ -775,6 +775,19 @@ class CONM1(PointMassElement):
 
 
 class CONM2(PointMassElement):
+    """
+    +-------+--------+-------+-------+---------+------+------+------+-----+
+    |   1   |    2   |    3  |   4   |    5    |  6   |  7   |   8  |  9  |
+    +=======+========+=======+=======+=========+======+======+======+=====+
+    | CONM2 |   EID  |  NID  |  CID  |  MASS   |  X1  |  X2  |  X3  |     |
+    +-------+--------+-------+-------+---------+------+------+------+-----+
+    |       |   I11  |  I21  |  I22  |   I31   |  I32 |  I33 |      |     |
+    +-------+--------+-------+-------+---------+------+------+------+-----+
+
+    +-------+--------+-------+-------+---------+
+    | CONM2 | 501274 | 11064 |       | 132.274 |
+    +-------+--------+-------+-------+---------+
+    """
     type = 'CONM2'
     _field_map = {
         1: 'eid', 2:'nid', 3:'cid', 4:'mass',
@@ -802,35 +815,25 @@ class CONM2(PointMassElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, nid, cid, mass, X=None, I=None, comment=''):
+    def __init__(self, eid, nid, mass, cid=0, X=None, I=None, comment=''):
         """
+        Creates a CONM2 card
+
         Parameters
         ----------
         eid : int
            element ID
         nid : int
            node ID
-        cid : int
-           coordinate frame of the offset (-1=absolute coordinates)
         mass : float
            the mass of the CONM2
+        cid : int; default=0
+           coordinate frame of the offset (-1=absolute coordinates)
         X : (3, ) List[float]; default=None -> [0., 0., 0.]
             xyz offset vector relative to nid
         I : (6, ) List[float]; default=None -> [0., 0., 0., 0., 0., 0.]
             mass moment of inertia matrix about the CG
             I11, I21, I22, I31, I32, I33 = I
-
-        +-------+--------+-------+-------+---------+------+------+------+-----+
-        |   1   |    2   |    3  |   4   |    5    |  6   |  7   |   8  |  9  |
-        +=======+========+=======+=======+=========+======+======+======+=====+
-        | CONM2 |   EID  |  NID  |  CID  |  MASS   |  X1  |  X2  |  X3  |     |
-        +-------+--------+-------+-------+---------+------+------+------+-----+
-        |       |   I11  |  I21  |  I22  |   I31   |  I32 |  I33 |      |     |
-        +-------+--------+-------+-------+---------+------+------+------+-----+
-
-        +-------+--------+-------+-------+---------+
-        | CONM2 | 501274 | 11064 |       | 132.274 |
-        +-------+--------+-------+-------+---------+
         """
         PointMassElement.__init__(self)
         if comment:
@@ -866,7 +869,15 @@ class CONM2(PointMassElement):
         #: I11, I21, I22, I31, I32, I33 = I
         self.I = np.asarray(I)
 
+    def validate(self):
+        assert isinstance(self.cid, int), self.cid
+        assert isinstance(self.mass, float), self.mass
         assert self.mass >= 0., 'mass=%s' % self.mass
+
+        assert isinstance(self.X, np.ndarray), self.X
+        assert isinstance(self.I, np.ndarray), self.I
+        assert len(self.X) == 3, self.X
+        assert len(self.I) == 6, self.I
 
         I11, I12, I22, I13, I23, I33 = self.I
         I = np.array([
@@ -902,9 +913,8 @@ class CONM2(PointMassElement):
             double_or_blank(card, 13, 'I32', 0.0),
             double_or_blank(card, 14, 'I33', 0.0)
         ]
-
         assert len(card) <= 15, 'len(CONM2 card) = %i\ncard=%s' % (len(card), card)
-        return CONM2(eid, nid, cid, mass, X, I, comment=comment)
+        return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -914,7 +924,7 @@ class CONM2(PointMassElement):
         mass = data[3]
         X = data[4:7]
         I = data[7:]
-        return CONM2(eid, nid, cid, mass, X, I, comment=comment)
+        return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     def _verify(self, xref=False):
         eid = self.Eid()

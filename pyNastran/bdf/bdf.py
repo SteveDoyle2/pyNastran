@@ -127,7 +127,7 @@ from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, 
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_methods import BDFMethods
 from pyNastran.bdf.bdf_interface.get_card import GetMethods
-from pyNastran.bdf.bdf_interface.add_card import AddMethods
+from pyNastran.bdf.bdf_interface.add_card import AddCards
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
@@ -244,7 +244,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     return model
 
 
-class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
+class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
@@ -1918,11 +1918,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self.add_creep_material),
 
-            'CONM1' : (CONM1, self.add_mass),
-            'CONM2' : (CONM2, self.add_mass),
-            'CMASS1' : (CMASS1, self.add_mass),
-            'CMASS2' : (CMASS2, self.add_mass),
-            'CMASS3' : (CMASS3, self.add_mass),
+            'CONM1' : (CONM1, self.add_mass_object),
+            'CONM2' : (CONM2, self.add_mass_object),
+            'CMASS1' : (CMASS1, self.add_mass_object),
+            'CMASS2' : (CMASS2, self.add_mass_object),
+            'CMASS3' : (CMASS3, self.add_mass_object),
             ## CMASS4 - added later because documentation is wrong
 
             'MPC' : (MPC, self.add_constraint_mpc),
@@ -1938,33 +1938,33 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
             'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
 
-            'FORCE' : (FORCE, self.add_load),
-            'FORCE1' : (FORCE1, self.add_load),
-            'FORCE2' : (FORCE2, self.add_load),
-            'MOMENT' : (MOMENT, self.add_load),
-            'MOMENT1' : (MOMENT1, self.add_load),
-            'MOMENT2' : (MOMENT2, self.add_load),
+            'FORCE' : (FORCE, self.add_load_object),
+            'FORCE1' : (FORCE1, self.add_load_object),
+            'FORCE2' : (FORCE2, self.add_load_object),
+            'MOMENT' : (MOMENT, self.add_load_object),
+            'MOMENT1' : (MOMENT1, self.add_load_object),
+            'MOMENT2' : (MOMENT2, self.add_load_object),
 
-            'LSEQ' : (LSEQ, self.add_LSEQ),
-            'LOAD' : (LOAD, self.add_load),
-            'LOADCYN' : (LOADCYN, self.add_load),
-            'GRAV' : (GRAV, self.add_load),
-            'ACCEL' : (ACCEL, self.add_load),
-            'ACCEL1' : (ACCEL1, self.add_load),
-            'PLOAD' : (PLOAD, self.add_load),
-            'PLOAD1' : (PLOAD1, self.add_load),
-            'PLOAD2' : (PLOAD2, self.add_load),
-            'PLOAD4' : (PLOAD4, self.add_load),
-            'PLOADX1' : (PLOADX1, self.add_load),
-            'RFORCE' : (RFORCE, self.add_load),
-            'RFORCE1' : (RFORCE1, self.add_load),
-            'SLOAD' : (SLOAD, self.add_load),
-            'RANDPS' : (RANDPS, self.add_load),
-            'GMLOAD' : (GMLOAD, self.add_load),
-            'SPCD' : (SPCD, self.add_load),  # enforced displacement
-            'QVOL' : (QVOL, self.add_load),  # thermal
+            'LSEQ' : (LSEQ, self.add_lseq_object),
+            'LOAD' : (LOAD, self.add_load_object),
+            'LOADCYN' : (LOADCYN, self.add_load_object),
+            'GRAV' : (GRAV, self.add_load_object),
+            'ACCEL' : (ACCEL, self.add_load_object),
+            'ACCEL1' : (ACCEL1, self.add_load_object),
+            'PLOAD' : (PLOAD, self.add_load_object),
+            'PLOAD1' : (PLOAD1, self.add_load_object),
+            'PLOAD2' : (PLOAD2, self.add_load_object),
+            'PLOAD4' : (PLOAD4, self.add_load_object),
+            'PLOADX1' : (PLOADX1, self.add_load_object),
+            'RFORCE' : (RFORCE, self.add_load_object),
+            'RFORCE1' : (RFORCE1, self.add_load_object),
+            'SLOAD' : (SLOAD, self.add_load_object),
+            'RANDPS' : (RANDPS, self.add_load_object),
+            'GMLOAD' : (GMLOAD, self.add_load_object),
+            'SPCD' : (SPCD, self.add_load_object),  # enforced displacement
+            'QVOL' : (QVOL, self.add_load_object),  # thermal
 
-            'DLOAD' : (DLOAD, self.add_dload),
+            'DLOAD' : (DLOAD, self.add_dload_object),
             'ACSRCE' : (ACSRCE, self.add_dload_entry),
             'TLOAD1' : (TLOAD1, self.add_dload_entry),
             'TLOAD2' : (TLOAD2, self.add_dload_entry),
@@ -1994,50 +1994,50 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PCONVM' : (PCONVM, self.add_convection_property),
 
             # aero
-            'AECOMP' : (AECOMP, self.add_aecomp),
-            'AEFACT' : (AEFACT, self.add_aefact),
-            'AELINK' : (AELINK, self.add_aelink),
-            'AELIST' : (AELIST, self.add_aelist),
-            'AEPARM' : (AEPARM, self.add_aeparm),
-            'AESTAT' : (AESTAT, self.add_aestat),
-            'AESURF' : (AESURF, self.add_aesurf),
-            'AESURFS' : (AESURFS, self.add_aesurfs),
+            'AECOMP' : (AECOMP, self.add_aecomp_object),
+            'AEFACT' : (AEFACT, self.add_aefact_object),
+            'AELINK' : (AELINK, self.add_aelink_object),
+            'AELIST' : (AELIST, self.add_aelist_object),
+            'AEPARM' : (AEPARM, self.add_aeparm_object),
+            'AESTAT' : (AESTAT, self.add_aestat_object),
+            'AESURF' : (AESURF, self.add_aesurf_object),
+            'AESURFS' : (AESURFS, self.add_aesurfs_object),
 
-            'CAERO1' : (CAERO1, self.add_caero),
-            'CAERO2' : (CAERO2, self.add_caero),
-            'CAERO3' : (CAERO3, self.add_caero),
-            'CAERO4' : (CAERO4, self.add_caero),
-            'CAERO5' : (CAERO5, self.add_caero),
+            'CAERO1' : (CAERO1, self.add_caero_object),
+            'CAERO2' : (CAERO2, self.add_caero_object),
+            'CAERO3' : (CAERO3, self.add_caero_object),
+            'CAERO4' : (CAERO4, self.add_caero_object),
+            'CAERO5' : (CAERO5, self.add_caero_object),
 
-            'PAERO1' : (PAERO1, self.add_paero),
-            'PAERO2' : (PAERO2, self.add_paero),
-            'PAERO3' : (PAERO3, self.add_paero),
-            'PAERO4' : (PAERO4, self.add_paero),
-            'PAERO5' : (PAERO5, self.add_paero),
+            'PAERO1' : (PAERO1, self.add_paero_object),
+            'PAERO2' : (PAERO2, self.add_paero_object),
+            'PAERO3' : (PAERO3, self.add_paero_object),
+            'PAERO4' : (PAERO4, self.add_paero_object),
+            'PAERO5' : (PAERO5, self.add_paero_object),
 
-            'SPLINE1' : (SPLINE1, self.add_spline),
-            'SPLINE2' : (SPLINE2, self.add_spline),
-            'SPLINE3' : (SPLINE3, self.add_spline),
-            'SPLINE4' : (SPLINE4, self.add_spline),
-            'SPLINE5' : (SPLINE5, self.add_spline),
+            'SPLINE1' : (SPLINE1, self.add_spline_object),
+            'SPLINE2' : (SPLINE2, self.add_spline_object),
+            'SPLINE3' : (SPLINE3, self.add_spline_object),
+            'SPLINE4' : (SPLINE4, self.add_spline_object),
+            'SPLINE5' : (SPLINE5, self.add_spline_object),
 
             # SOL 144
-            'AEROS' : (AEROS, self.add_aeros),
-            'TRIM' : (TRIM, self.add_trim),
-            'DIVERG' : (DIVERG, self.add_diverg),
+            'AEROS' : (AEROS, self.add_aeros_object),
+            'TRIM' : (TRIM, self.add_trim_object),
+            'DIVERG' : (DIVERG, self.add_diverg_object),
 
             # SOL 145
-            'AERO' : (AERO, self.add_aero),
-            'FLUTTER' : (FLUTTER, self.add_flutter),
-            'FLFACT' : (FLFACT, self.add_flfact),
-            'MKAERO1' : (MKAERO1, self.add_mkaero),
-            'MKAERO2' : (MKAERO2, self.add_mkaero),
+            'AERO' : (AERO, self.add_aero_object),
+            'FLUTTER' : (FLUTTER, self.add_flutter_object),
+            'FLFACT' : (FLFACT, self.add_flfact_object),
+            'MKAERO1' : (MKAERO1, self.add_mkaero_object),
+            'MKAERO2' : (MKAERO2, self.add_mkaero_object),
 
-            'GUST' : (GUST, self.add_gust),
-            'CSSCHD' : (CSSCHD, self.add_csschd),
-            'MONPNT1' : (MONPNT1, self.add_monpnt),
-            'MONPNT2' : (MONPNT2, self.add_monpnt),
-            'MONPNT3' : (MONPNT3, self.add_monpnt),
+            'GUST' : (GUST, self.add_gust_object),
+            'CSSCHD' : (CSSCHD, self.add_csschd_object),
+            'MONPNT1' : (MONPNT1, self.add_monpnt_object),
+            'MONPNT2' : (MONPNT2, self.add_monpnt_object),
+            'MONPNT3' : (MONPNT3, self.add_monpnt_object),
 
             #'NLPARM' : (NLPARM, self.add_nlparm),
             'NLPCI' : (NLPCI, self.add_nlpci),

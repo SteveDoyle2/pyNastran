@@ -44,22 +44,6 @@ class LOAD(LoadCombination):
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
 
-    #def getLoadIDs(self):
-        #self.deprecated('getLoadIDs()', 'get_load_ids()', '0.8')
-        #return self.get_load_ids()
-
-    #def getReducedLoads(self):
-        #self.deprecated('self.getReducedLoads()', 'self.get_reduced_loads()', '0.8')
-        #return self.get_reduced_loads()
-
-    #def organizeLoads(self, model):
-        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        #return self.organize_loads(model)
-
-    #def getLoadTypes(self):
-        #self.deprecated('getLoadTypes()', 'get_load_types()', '0.8')
-        #return self.get_load_types()
-
     def get_load_ids(self):
         """
         .. note:: requires a cross referenced load
@@ -316,7 +300,7 @@ class GRAV(BaseCard):
     """
     type = 'GRAV'
 
-    def __init__(self, sid, cid, scale, N, mb, comment=''):
+    def __init__(self, sid, scale, N, cid=0, mb=0, comment=''):
         if comment:
             self.comment = comment
 
@@ -353,7 +337,7 @@ class GRAV(BaseCard):
                    double_or_blank(card, 6, 'N3', 0.0)])
         mb = integer_or_blank(card, 7, 'mb', 0)
         assert len(card) <= 8, 'len(GRAV card) = %i\ncard=%s' % (len(card), card)
-        return GRAV(sid, cid, scale, N, mb, comment=comment)
+        return GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -364,18 +348,10 @@ class GRAV(BaseCard):
         mb = data[6]
         scale = 1.
         assert len(data) == 7
-        return GRAV(sid, cid, scale, N, mb, comment=comment)
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
+        return GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
 
     def get_loads(self):
         return [self]
-
-    #def organizeLoads(self, model):
-        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        #return self.organize_loads(model)
 
     def organize_loads(self, model):
         types_found = [self.type]
@@ -388,19 +364,10 @@ class GRAV(BaseCard):
                 force_constraints, moment_constraints,
                 gravity_load)
 
-    #def transformLoad(self):
-        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        #return self.transform_load()
-
     def transform_load(self):
         g = self.GravityVector()
         g2 = self.cid_ref.transform_node_to_global(g)
         return g2
-
-    #write_code_aster_load(self,mag):
-        #p = self.GravityVector()
-        #msg = 'GRAV([%s,%s,%s])' %(p)
-        #return msg
 
     def cross_reference(self, model):
         """
@@ -520,11 +487,6 @@ class ACCEL(BaseCard):
             i += 2
         return ACCEL(sid, cid, N, direction, locs, vals, comment=comment)
 
-    #def get_reduced_loads(self):
-        #scale_factors = [1.]
-        #loads = self.F()
-        #return(scale_factors, loads)
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -554,10 +516,6 @@ class ACCEL(BaseCard):
         if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid_ref.cid
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -660,10 +618,6 @@ class ACCEL1(BaseCard):
         assert 0 not in node_ids, 'node_ids = %s' % (node_ids)
         return node_ids
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 
@@ -707,20 +661,11 @@ class Force(Load):
                 msg += 'card =\n%s' % str(self)
                 raise FloatingPointError(msg)
 
-
-    #def transformLoad(self):
-        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        #return self.transform_load()
-
     def transform_load(self):
         xyz = self.cid_ref.transform_node_to_global(self.xyz)
         if self.mag > 0.:
             return (True, self.node, self.mag * xyz)  # load
         return (False, self.node, xyz)  # enforced displacement
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -728,18 +673,10 @@ class Force(Load):
     def F(self):
         return self.xyz * self.mag
 
-    #def getReducedLoads(self):
-        #self.deprecated('getReducedLoads()', 'get_reduced_loads', '0.8')
-        #return self.get_reduced_loads()
-
     def get_reduced_loads(self):
         scale_factors = [1.]
         loads = self.F()
         return(scale_factors, loads)
-
-    #def organizeLoads(self, model):
-        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        #return self.organize_loads(model)
 
     def organize_loads(self, model):
         (scale_factors, force_loads) = self.get_reduced_loads()
@@ -775,14 +712,10 @@ class Moment(Load):
         scale up the magnitude of the vector
         """
         if self.mag != 0.0:  # enforced displacement
-            normXYZ = norm(self.xyz)
-            #mag = self.mag*normXYZ
-            self.mag *= normXYZ
-            self.xyz /= normXYZ
-
-    #def transformLoad(self):
-        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        #return self.transform_load()
+            norm_xyz = norm(self.xyz)
+            #mag = self.mag*norm_xyz
+            self.mag *= norm_xyz
+            self.xyz /= norm_xyz
 
     def transform_load(self):
         #print("self.xyz = ",self.xyz)
@@ -792,16 +725,8 @@ class Moment(Load):
             return (True, self.node, self.mag * xyz)  # load
         return (False, self.node, xyz)  # enforced displacement
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
-
-    #def getReducedLoads(self):
-        #self.deprecated('getReducedLoads()', 'get_reduced_loads()', '0.8')
-        #self.get_reduced_loads()
 
     def get_reduced_loads(self):
         scale_factors = [1.]
@@ -809,10 +734,6 @@ class Moment(Load):
             self.node: self.M()
         }
         return(scale_factors, loads)
-
-    #def organizeLoads(self, model):
-        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        #return self.organize_loads(model)
 
     def organize_loads(self, model):
         (scale_factors, moment_loads) = self.get_reduced_loads()
@@ -839,19 +760,35 @@ class Moment(Load):
 
 
 class FORCE(Force):
+    """
+    +-------+-----+------+-------+------+------+------+------+
+    |   1   |  2  |  3   |   4   |  5   |  6   |   7  |   8  |
+    +=======+=====+======+=======+======+======+======+======+
+    | FORCE | SID | NODE | CID   | MAG  |  FX  |  FY  |  FZ  |
+    +-------+-----+------+-------+------+------+------+------+
+
+    +-------+-----+------+-------+------+------+------+------+
+    | FORCE |  3  |  1   |       | 100. |  0.  |  0.  |  1.  |
+    +-------+-----+------+-------+------+------+------+------+
+    """
     type = 'FORCE'
 
-    def __init__(self, sid, node, cid, mag, xyz, comment=''):
+    def __init__(self, sid, node, mag, cid=0, xyz=None, comment=''):
         """
-        +-------+-----+------+-------+------+------+------+------+
-        |   1   |  2  |  3   |   4   |  5   |  6   |   7  |   8  |
-        +-------+-----+------+-------+------+------+------+------+
-        | FORCE | SID | NODE | CID   | MAG  |  FX  |  FY  |  FZ  |
-        +-------+-----+------+-------+------+------+------+------+
+        Creates a FORCE card
 
-        +-------+-----+------+-------+------+------+------+------+
-        | FORCE |  3  |  1   |       | 100. |  0.  |  0.  |  1.  |
-        +-------+-----+------+-------+------+------+------+------+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        cid : int; default=0
+            the coordinate system for the load
+        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
+            the load direction in the cid frame
         """
         Force.__init__(self)
         if comment:
@@ -860,7 +797,10 @@ class FORCE(Force):
         self.node = node
         self.cid = cid
         self.mag = mag
-        self.xyz = xyz
+        if xyz is None:
+            xyz = [0., 0., 0.]
+        self.xyz = np.asarray(xyz, dtype='float64')
+        assert self.xyz.size == 3, self.xyz.shape
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -872,7 +812,7 @@ class FORCE(Force):
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(FORCE card) = %i\ncard=%s' % (len(card), card)
-        return FORCE(sid, node, cid, mag, xyz, comment=comment)
+        return FORCE(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -881,8 +821,7 @@ class FORCE(Force):
         cid = data[2]
         mag = data[3]
         xyz = array(data[4:7])
-        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-        return FORCE(sid, node, cid, mag, xyz, comment=comment)
+        return FORCE(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
 
     @property
     def node_id(self):
@@ -1225,10 +1164,6 @@ class FORCE2(Force):
             return self.node
         return self.node.nid
 
-    #def NodeID(self):
-        #self.deprecated('node_id', 'NodeID()', '0.8')
-        #return self.node_id
-
     def G1(self):
         if isinstance(self.g1, integer_types):
             return self.g1
@@ -1271,18 +1206,34 @@ class FORCE2(Force):
 
 
 class MOMENT(Moment):
+    """
+    Defines a static concentrated moment at a grid point by specifying a
+    scale factor and a vector that determines the direction.::
+
+    +--------+-----+---+-----+-----+-----+-----+-----+
+    | MOMENT | SID | G | CID |  M  |  N1 |  N2 |  N3 |
+    +--------+-----+---+-----+-----+-----+-----+-----+
+    | MOMENT |  2  | 5 |  6  | 2.9 | 0.0 | 1.0 | 0.0 |
+    +--------+-----+---+-----+-----+-----+-----+-----+
+    """
     type = 'MOMENT'
 
-    def __init__(self, sid, node, cid, mag, xyz, comment=''):
+    def __init__(self, sid, node, mag, cid=0, xyz=None, comment=''):
         """
-        Defines a static concentrated moment at a grid point by specifying a
-        scale factor and a vector that determines the direction.::
+        Creates a MOMENT card
 
-        +--------+-----+---+-----+-----+-----+-----+-----+
-        | MOMENT | SID | G | CID |  M  |  N1 |  N2 |  N3 |
-        +--------+-----+---+-----+-----+-----+-----+-----+
-        | MOMENT |  2  | 5 |  6  | 2.9 | 0.0 | 1.0 | 0.0 |
-        +--------+-----+---+-----+-----+-----+-----+-----+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        cid : int; default=0
+            the coordinate system for the load
+        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
+            the load direction in the cid frame
         """
         Moment.__init__(self)
         if comment:
@@ -1291,7 +1242,10 @@ class MOMENT(Moment):
         self.node = node
         self.cid = cid
         self.mag = mag
-        self.xyz = xyz
+        if xyz is None:
+            xyz = [0., 0., 0.]
+        self.xyz = np.asarray(xyz, dtype='float64')
+        assert self.xyz.size == 3, self.xyz.shape
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1304,8 +1258,7 @@ class MOMENT(Moment):
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(MOMENT card) = %i\ncard=%s' % (len(card), card)
-        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-        return MOMENT(sid, node, cid, mag, xyz, comment=comment)
+        return MOMENT(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1314,8 +1267,7 @@ class MOMENT(Moment):
         cid = data[2]
         mag = data[3]
         xyz = data[4:7]
-        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-        return MOMENT(sid, node, cid, mag, xyz, comment=comment)
+        return MOMENT(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -1843,10 +1795,6 @@ class PLOAD(Load):
     def uncross_reference(self):
         pass
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 
@@ -1948,9 +1896,6 @@ class PLOAD1(Load):
         self.eid = self.Eid()
         del self.eid_ref
 
-    #def transformLoad(self):
-        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
-
     def transform_load(self):
         p1 = self.eid_ref.ga_ref.get_position()
         p2 = self.eid_ref.gb_ref.get_position()
@@ -1971,10 +1916,6 @@ class PLOAD1(Load):
         #(g2, matrix) = self.cid.transformToGlobal(A)
         #return (g2)
 
-    #def getReducedLoads(self):
-        #self.deprecated('getReducedLoads()', 'get_reduced_loads()', '0.8')
-        #return self.get_reduced_loads()
-
     def get_reduced_loads(self):
         """
         Get all load objects in a simplified form, which means all
@@ -1986,10 +1927,6 @@ class PLOAD1(Load):
         scale_factors = [1.0]
         loads = [self]
         return scale_factors, loads
-
-    #def organizeLoads(self, model):
-        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        #return self.organize_loads(model)
 
     def organize_loads(self, model):
         """
@@ -2102,10 +2039,6 @@ class PLOAD1(Load):
                 raise NotImplementedError(msg)
         return (types_found, force_loads, moment_loads, force_constraints,
                 moment_constraints, gravity_loads)
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -2228,6 +2161,8 @@ class PLOAD4(Load):
     def __init__(self, sid, eids, pressures,
                  g1=None, g34=None, cid=0, NVector=None, sorl='SURF', ldir='NORM', comment=''):
         """
+        Creates a PLOAD4 card
+
         Parameters
         ----------
         sid : int
@@ -2238,9 +2173,9 @@ class PLOAD4(Load):
         pressures : List[float, float, float, float]
             tri : must be length 4 (the last value should be the same as the 0th value)
             quad : must be length 4
-        G1 : int/None
+        g1 : int/None
             only used for solid elements
-        G34 : int / None
+        g34 : int / None
             only used for solid elements
         cid : int; default=0
             the coordinate system for ???
@@ -2614,10 +2549,6 @@ class PLOADX1(Load):
         if isinstance(self.gb, (integer_types)):
             return self.gb
         return self.gb_ref.nid
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         return [self]
