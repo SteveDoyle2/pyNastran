@@ -1258,8 +1258,12 @@ class CSSCHD(Aero):
         self.lschd = lschd
 
     def validate(self):
-        assert self.lalpha is None or isinstance(self.lalpha, integer_types), 'lalpha=%r' % self.lalpha
-        assert self.lmach is None or isinstance(self.lmach, integer_types), 'lmach=%r' % self.lmach
+        if not(self.lalpha is None or isinstance(self.lalpha, integer_types)):
+            raise TypeError('lalpha=%r must be an int or None' % self.lalpha)
+
+        if not(self.lmach is None or isinstance(self.lmach, integer_types)):
+            raise TypeError('lmach=%r must be an int or None' % self.lmach)
+
         if self.lalpha is None and self.lmach is None:
             msg = ('CSSCHD sid=%s; lalpha and lmach are both None'
                    ' (one must be an integer (AEFACT)\n%s' % (self.sid, str(self)))
@@ -1601,7 +1605,10 @@ class CAERO1(BaseCard):
             lspan = span.sid
         elif isinstance(span, float):
             nspan = int(math.ceil(dspan / span))
-            assert nspan > 0, 'y41=%s y32=%s; dspan=%s span=%s nspan=%s' % (y41, y32, dspan, span, nspan)
+            if nspan <= 0:
+                msg = 'y41=%s y32=%s; dspan=%s span=%s nspan=%s; nspan must be greater than 0' % (
+                    y41, y32, dspan, span, nspan)
+                raise ValueError(msg)
         else:
             raise TypeError(span)
 
@@ -1611,7 +1618,10 @@ class CAERO1(BaseCard):
             lchord = chord.sid
         elif isinstance(chord, float):
             nchord = int(math.ceil(dx / chord))
-            assert nchord > 0, 'x12=%s x43=%s; dx=%s chord=%s nchord=%s' % (x12, x43, dx, chord, nchord)
+            if nchord <= 0:
+                msg = 'x12=%s x43=%s; dx=%s chord=%s nchord=%s; nchord must be greater than 0' % (
+                    x12, x43, dx, chord, nchord)
+                raise ValueError(msg)
         else:
             raise TypeError(chord)
 
@@ -2206,7 +2216,10 @@ class CAERO2(BaseCard):
 
         #Rs = []
         assert len(radii) == (nx + 1), 'len(radii)=%s nx=%s' % (len(radii), nx)
-        assert len(xstation) == (nx + 1), 'len(xstation)=%s nx=%s\nxstation=%s\n%s' % (len(xstation), nx, xstation, str(self))
+        if len(xstation) != (nx + 1):
+            msg = 'len(xstation)=%s nx=%s\nxstation=%s\n%s' % (
+                len(xstation), nx, xstation, str(self))
+            raise RuntimeError(msg)
 
         xs = []
         ys = []
@@ -2329,8 +2342,8 @@ class CAERO2(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         nint = set_blank_if_default(self.nint, 0)
         lsb = set_blank_if_default(self.lsb, 0)
-        list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
-                        self.lsb, self.lint, self.igid, ] + list(self.p1) +
+        list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, nint,
+                        lsb, self.lint, self.igid, ] + list(self.p1) +
                        [self.x12])
         return list_fields
 
@@ -3591,7 +3604,10 @@ class MKAERO2(BaseCard):
         self.reduced_freqs = reduced_freqs
 
     def validate(self):
-        assert len(self.machs) == len(self.reduced_freqs), 'len(machs)=%s len(rfreqs)=%s' % (len(self.machs), len(self.reduced_freqs))
+        if len(self.machs) != len(self.reduced_freqs):
+            msg = 'len(machs)=%s len(rfreqs)=%s; should be the same' % (
+                len(self.machs), len(self.reduced_freqs))
+            raise ValueError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3820,10 +3836,10 @@ class MONPNT3(BaseCard):
         msg = 'MONPNT3 %-8s%s\n' % (self.name, self.label)
         msg += ('        %-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s\n'
                 '         %-8s' % (
-            self.axes, self.grid_set, self.elem_set, cp,
-            print_float_8(x), print_float_8(y), print_float_8(z),
-            xflag, cd
-        ))
+                    self.axes, self.grid_set, self.elem_set, cp,
+                    print_float_8(x), print_float_8(y), print_float_8(z),
+                    xflag, cd
+                ))
         #card = self.repr_fields()
         return self.comment + msg.rstrip() + '\n'
 
@@ -5184,7 +5200,9 @@ class TRIM(BaseCard):
                         for ci in cs:
                             #print('  nid=%s C=%s' % (nid, ci))
                             dof = (nid, ci)
-                            assert dof not in suport_dofs, 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                            if dof in suport_dofs:
+                                msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                                raise RuntimeError(msg)
                             suport_dofs.add(dof)
                             nsuport_dofs += 1
 
