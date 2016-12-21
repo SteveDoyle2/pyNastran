@@ -1449,3 +1449,89 @@ class AddCards(AddMethods):
         monitor_point = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                                 cp=cp, cd=cd, xflag=xflag, comment=comment)
         self.add_monpnt_object(monitor_point)
+
+    def add_bsurfs(self, id, eids, g1s, g2s, g3s, comment=''):
+        bsurfs = BSURFS(id, eids, g1s, g2s, g3s, comment=comment)
+        self.add_bsurfs_object(bsurfs)
+
+    def add_bsurf(self, sid, eids, comment=''):
+        bsurf = BSURF(sid, eids, comment=comment)
+        self.add_bsurf_object(bsurf)
+
+    def add_bctset(self, csid, sids, tids, frictions, min_distances,
+                   max_distances, comment='', sol=101):
+        bctset = BCTSET(csid, sids, tids, frictions, min_distances,
+                        max_distances, comment=comment, sol=sol)
+        self.add_bctset_object(bctset)
+
+    def add_bctadd(self, csid, S, comment=''):
+        bctadd = BCTADD(csid, S, comment=comment)
+        self.add_bctadd_object(bctadd)
+
+    def add_bctpara(self, csid, params, comment=''):
+        bctpara = BCTPARA(csid, params, comment=comment)
+        self.add_bctpara_object(bctpara)
+
+    def add_bcrpara(self, crid, surf, offset, Type='FLEX', mgp=0, comment=''):
+        bcrpara = BCRPARA(crid, surf, offset, Type=Type, mgp=mgp, comment=comment)
+        self.add_bcrpara_object(bcrpara)
+
+    def add_tstep(self, sid, N, DT, NO, comment=''):
+        tstep = TSTEP(sid, N, DT, NO, comment=comment)
+        self.add_tstep_object(tstep)
+
+    def add_tstepnl(self, sid, ndt, dt, no, method, kstep, max_iter, conv,
+                    eps_u, eps_p, eps_w,
+                    max_div, max_qn, max_ls,
+                    fstress, max_bisect,
+                    adjust, mstep, rb, max_r,
+                    utol, rtol_b, min_iter,
+                    comment=''):
+        tstepnl = TSTEPNL(sid, ndt, dt, no, method, kstep, max_iter, conv,
+                          eps_u, eps_p, eps_w, max_div, max_qn, max_ls,
+                          fstress, max_bisect, adjust, mstep, rb, max_r,
+                          utol, rtol_b, min_iter, comment=comment)
+        self.add_tstepnl_object(tstepnl)
+
+    def add_nlparm(self, nlparm_id, ninc=10, dt=0.0, kMethod='AUTO', kStep=5,
+                   maxIter=25, conv='PW', intOut='NO', epsU=0.01,
+                   epsP=0.01, epsW=0.01, maxDiv=3, maxQn=None, maxLs=4,
+                   fStress=0.2, lsTol=0.5, maxBisect=5, maxR=20., rTolB=20., comment=''):
+        nlparm = NLPARM(nlparm_id, ninc=ninc, dt=dt, kMethod=kMethod, kStep=kStep,
+                        maxIter=maxIter, conv=conv, intOut=intOut, epsU=epsU,
+                        epsP=epsP, epsW=epsW, maxDiv=maxDiv, maxQn=maxQn,
+                        maxLs=maxLs, fStress=fStress, lsTol=lsTol,
+                        maxBisect=maxBisect, maxR=maxR, rTolB=rTolB, comment=comment)
+        self.add_nlparm_object(nlparm)
+
+    def add_nlpci(self, nlpci_id, Type, minalr, maxalr, scale, desiter, mxinc, comment=''):
+        nlpci = NLPCI(nlpci_id, Type, minalr, maxalr, scale, desiter, mxinc, comment=comment)
+        self.add_nlpci_object(nlpci)
+
+    def add_delay(self, sid, nodes, components, delays, comment=''):
+        delay = DELAY(sid, nodes, components, delays, comment=comment)
+        self.add_delay_object(delay)
+
+    def add_dphase(self, sid, nodes, components, phase_leads, comment=''):
+        dphase = DPHASE(sid, nodes, components, phase_leads, comment=comment)
+        self.add_dphase_object(dphase)
+
+    #def add_randps(self, sid, j, k, x=0., y=0., tid=0, comment=''):
+        #randps = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
+
+    def add_rotorg(self, sid, nids, comment=''):
+        rotor = ROTORG(sid, nids, comment=comment)
+        self.add_rotor_object(rotor)
+
+    def add_rotord(self, sid, rstart, rstep, numstep, rids, rsets, rspeeds,
+                   rcords, w3s, w4s, rforces,
+                   brgsets, refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
+                   zstein='NO', orbeps=1.e-6, roprt=0, sync=1, etype=1,
+                   eorder=1.0, threshold=0.02, maxiter=10, comment=''):
+        rotor = ROTORD(sid, rstart, rstep, numstep, rids, rsets, rspeeds,
+                       rcords, w3s, w4s, rforces,
+                       brgsets, refsys=refsys, cmout=cmout,
+                       runit=runit, funit=funit, zstein=zstein, orbeps=orbeps,
+                       roprt=roprt, sync=sync, etype=etype, eorder=eorder,
+                       threshold=threshold, maxiter=maxiter, comment=comment)
+        self.add_rotor_object(rotor)

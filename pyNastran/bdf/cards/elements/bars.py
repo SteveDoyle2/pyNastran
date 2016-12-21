@@ -278,6 +278,8 @@ class CBAR(LineElement):
         self.offt = offt
         self.pa = pa
         self.pb = pb
+        self.wa = wa
+        self.wb = wb
         self._validate_input()
 
     def _validate_input(self):
