@@ -75,7 +75,7 @@ GEOM_TABLES = [
 
     # other
     b'CONTACT', b'VIEWTB',
-    b'KDICT', b'PERF',
+    b'KDICT',
 
     # aero?
     b'MONITOR',
@@ -392,6 +392,9 @@ MSC_MATRIX_TABLES = [
     b'XDICTX', b'XG', b'XGG', b'XH', b'XINIT', b'XJJ', b'XO', b'XORTH', b'XP',
     b'XPP', b'SOLVIT', b'XSF', b'XSS', b'XZ', b'YACCE', b'YPF', b'YPO', b'YPT',
     b'YS', b'YS0', b'YSD', b'YVELO', b'Z1ZX', b'ZZX',
+
+    # not sure - per BAH_Plane_cont_gust.f06 (MONITOR point deck)
+    b'PMRF', b'PERF', b'PFRF', b'PGRF', b'AFRF', b'AGRF', b'MP3F',
 ]
 AUTODESK_MATRIX_TABLES = [
     b'BELM', b'KELM', b'MELM',
@@ -1526,7 +1529,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_pcompts()
             elif table_name == b'FOL':
                 self._read_fol()
-            elif table_name in [b'SDF', b'PMRF']:  #, 'PERF'
+            elif table_name in [b'SDF']:
                 self._read_sdf()
             elif table_name in [b'IBULK', b'CDDATA']:
                 self._read_ibulk()
@@ -2081,25 +2084,32 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_subtables()
 
     def _read_fol(self):
+        """frequency list"""
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
-
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        if len(data) == 12:
+        ndata = len(data)
+        if ndata == 12:
             subtable_name, double = unpack(b(self._endian + '8sf'), data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %f]\n'  % (subtable_name, double))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         else:
-            strings, ints, floats = self.show_data(data)
-            msg = 'len(data) = %i\n' % len(data)
-            msg += 'strings  = %r\n' % strings
-            msg += 'ints     = %r\n' % str(ints)
-            msg += 'floats   = %r' % str(floats)
-            raise NotImplementedError(msg)
+            subtable_name_raw, = unpack(b(self._endian + '8s'), data[:8])
+            subtable_name = subtable_name_raw.strip()
+            assert subtable_name == b'FOL', 'subtable_name=%r' % subtable_name
+
+            nfloats = (ndata - 8) // 4
+            assert nfloats * 4 == (ndata - 8)
+            if self.is_debug_file:
+                fmt = b(self._endian + '%sf' % nfloats)
+                freqs = list(unpack(fmt, data[8:]))
+                self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write('  freqs = %s' % freqs)
         self._read_subtables()
 
     def _read_gpl(self):
