@@ -260,8 +260,8 @@ class ASET(ABCQSet):
     """
     type = 'ASET'
 
-    def __init__(self, IDs, components, comment=''):
-        ABCQSet.__init__(self, IDs, components, comment)
+    def __init__(self, ids, components, comment=''):
+        ABCQSet.__init__(self, ids, components, comment)
 
 class BSET(ABCQSet):
     """
@@ -276,8 +276,8 @@ class BSET(ABCQSet):
     """
     type = 'BSET'
 
-    def __init__(self, IDs, components, comment=''):
-        ABCQSet.__init__(self, IDs, components, comment)
+    def __init__(self, ids, components, comment=''):
+        ABCQSet.__init__(self, ids, components, comment)
 
 
 class CSET(ABCQSet):
@@ -293,8 +293,8 @@ class CSET(ABCQSet):
     """
     type = 'CSET'
 
-    def __init__(self, IDs, components, comment=''):
-        ABCQSet.__init__(self, IDs, components, comment)
+    def __init__(self, ids, components, comment=''):
+        ABCQSet.__init__(self, ids, components, comment)
 
 
 class QSET(ABCQSet):
@@ -310,8 +310,8 @@ class QSET(ABCQSet):
     """
     type = 'QSET'
 
-    def __init__(self, IDs, components, comment=''):
-        ABCQSet.__init__(self, IDs, components, comment)
+    def __init__(self, ids, components, comment=''):
+        ABCQSet.__init__(self, ids, components, comment)
 
 
 class ABQSet1(Set):
@@ -507,15 +507,15 @@ class ASET1(ABQSet1):
     """
     type = 'ASET1'
 
-    def __init__(self, components, IDs, comment=''):
-        ABQSet1.__init__(self, components, IDs, comment)
+    def __init__(self, components, ids, comment=''):
+        ABQSet1.__init__(self, components, ids, comment)
 
 
 class BSET1(ABQSet1):
     type = 'BSET1'
 
-    def __init__(self, components, IDs, comment=''):
-        ABQSet1.__init__(self, components, IDs, comment)
+    def __init__(self, components, ids, comment=''):
+        ABQSet1.__init__(self, components, ids, comment)
 
 
 class CSET1(Set):
@@ -597,8 +597,8 @@ class QSET1(ABQSet1):
     """
     type = 'QSET1'
 
-    def __init__(self, components, IDs, comment=''):
-        ABQSet1.__init__(self, components, IDs, comment)
+    def __init__(self, components, ids, comment=''):
+        ABQSet1.__init__(self, components, ids, comment)
 
 
 class SET1(Set):

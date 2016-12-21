@@ -80,7 +80,7 @@ class DYNAMICS(GeomCommon):
             out = unpack('iiff', edata)
             #(sid,p,c,a) = out
             darea = DAREA.add_op2_data(data=out)
-            self.add_darea(darea)
+            self.add_darea_object(darea)
             n += ntotal
         return n
 
@@ -124,7 +124,7 @@ class DYNAMICS(GeomCommon):
             method = method.strip().decode('latin1')
             norm = norm.strip().decode('latin1')
             eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
-            self.add_method(eigb)
+            self.add_method_object(eigb)
             n += ntotal
         return n
 
@@ -273,7 +273,7 @@ class DYNAMICS(GeomCommon):
             tf = TF(sid, nid, component, b0, b1, b2, nids, components, a)
             #if self.is_debug_file:
                 #self.binary_debug.write('%s\n' % str(tf))
-            self.add_TF(tf)
+            self.add_tf_object(tf)
             self._increase_card_count('TF')
             n = n3
         return n

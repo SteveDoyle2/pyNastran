@@ -74,7 +74,7 @@ class TestRods(unittest.TestCase):
         card = model.process_card(lines)
         cardi = BDFCard(card)
         conrod = CONROD.add_card(cardi)
-        model.add_element(conrod)
+        model.add_element_object(conrod)
         card = model.elements[eid]
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids # probably wrong
@@ -83,7 +83,7 @@ class TestRods(unittest.TestCase):
         card = model.process_card(lines)
         cardi = BDFCard(card)
         crod = CROD.add_card(cardi)
-        model.add_element(crod)
+        model.add_element_object(crod)
         card = model.elements[eid+1]
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids # probably wrong
@@ -92,7 +92,7 @@ class TestRods(unittest.TestCase):
         card = model.process_card(lines)
         cardi = BDFCard(card)
         ctube = CTUBE.add_card(cardi)
-        model.add_element(ctube)
+        model.add_element_object(ctube)
         card = model.elements[eid+2]
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids # probably wrong
@@ -101,7 +101,7 @@ class TestRods(unittest.TestCase):
         card = model.process_card(lines)
         cardi = BDFCard(card)
         prod = PROD.add_card(cardi)
-        model.add_property(prod)
+        model.add_property_object(prod)
 
         #self.pid = integer(card, 1, 'pid')
         #self.mid = integer(card, 2, 'mid')
@@ -116,25 +116,25 @@ class TestRods(unittest.TestCase):
         card = model.process_card(lines)
         cardi = BDFCard(card)
         ptube = PTUBE.add_card(cardi)
-        model.add_property(ptube)
+        model.add_property_object(ptube)
 
         lines = ['mat1,%i, %.2e, %.2e, %f, %f' % (mid, E, G, nu, rho)]
         card = model.process_card(lines)
         cardi = BDFCard(card)
         card = MAT1.add_card(cardi)
-        model.add_structural_material(card)
+        model.add_structural_material_object(card)
 
         lines = ['grid,%i, %i, %f, %f, %f' % (nid1, 0, xyz1[0], xyz1[1], xyz1[2])]
         card = model.process_card(lines)
         cardi = BDFCard(card)
         card = GRID.add_card(cardi)
-        model.add_node(card)
+        model.add_node_object(card)
 
         lines = ['grid,%i, %i, %f, %f, %f' % (nid2, 0, xyz2[0], xyz2[1], xyz2[2])]
         card = model.process_card(lines)
         cardi = BDFCard(card)
         card = GRID.add_card(cardi)
-        model.add_node(card)
+        model.add_node_object(card)
 
         model.cross_reference()
         mass = L * (rho * A + nsm)

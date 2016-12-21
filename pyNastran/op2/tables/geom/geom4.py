@@ -104,11 +104,11 @@ class GEOM4(GeomCommon):
 
     def _read_aset(self, data, n):
         """ASET(5561,76,215) - Record 1"""
-        return self._read_xset(data, n, 'ASET', ASET, self.add_aset)
+        return self._read_xset(data, n, 'ASET', ASET, self.add_aset_object)
 
     def _read_qset(self, data, n):
         """QSET(610, 6, 316) - Record 21"""
-        return self._read_xset(data, n, 'QSET', QSET, self.add_qset)
+        return self._read_xset(data, n, 'QSET', QSET, self.add_qset_object)
 
     def _read_xset(self, data, n, card_name, cls, add_method):
         """common method for ASET, QSET"""
@@ -133,7 +133,7 @@ class GEOM4(GeomCommon):
         """ASET1(5571,77,216) - Record 22"""
         #self.log.debug('skipping ASET1 in GEOM4\n')
         #return len(data)
-        return self._read_xset1(data, n, 'ASET1', ASET1, self.add_aset)
+        return self._read_xset1(data, n, 'ASET1', ASET1, self.add_aset_object)
 
     def _read_xset1(self, data, n, card_name, cls, add_method, debug=False):
         """common method for ASET1, QSET1"""
@@ -220,7 +220,6 @@ class GEOM4(GeomCommon):
             #assert -1 not in mpc, mpc
 
         #MPC.add_op2_data(data)
-        #aaa
 
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
@@ -236,7 +235,7 @@ class GEOM4(GeomCommon):
         """QSET1(610,6,316) - Record 22"""
         #self.log.debug('skipping QSET1 in GEOM4\n')
         #return len(data)
-        return self._read_xset1(data, n, 'QSET1', QSET1, self.add_qset)
+        return self._read_xset1(data, n, 'QSET1', QSET1, self.add_qset_object)
 
     def _read_rbar(self, data, n):
         """RBAR(6601,66,292) - Record 22"""
@@ -264,7 +263,7 @@ class GEOM4(GeomCommon):
             #Gm = list(unpack(iformat, edata))
             #alpha, = unpack(b(self._endian + 'f'), data[-4:])
         #elem = RBE2.add_op2_data([eid, gn, cm, Gm, alpha])
-        #self.add_rigid_element(elem)
+        #self.add_rigid_element_object(elem)
         #data = data[-1:]
 
     def _read_rbe3(self, data, n):
@@ -309,7 +308,7 @@ class GEOM4(GeomCommon):
         """SEQSET1(1210,12,322) - Record 41"""
         #self.log.debug('skipping SEQSET1 in GEOM4\n')
         #return len(data)
-        return self._read_xset1(data, n, 'SEQSET1', SEQSET1, self.add_seqset, debug=True)
+        return self._read_xset1(data, n, 'SEQSET1', SEQSET1, self.add_seqset_object, debug=True)
 
 # SESUP
 # SEUSET
@@ -328,7 +327,7 @@ class GEOM4(GeomCommon):
             if self.is_debug_file:
                 self.log.debug('SPC sid=%s id=%s c=%s dx=%s' % (sid, ID, c, dx))
             constraint = SPC.add_op2_data([sid, ID, c, dx])
-            self.add_constraint_spc(constraint)
+            self.add_constraint_spc_object(constraint)
             n += 16
         return n
 
@@ -375,7 +374,7 @@ class GEOM4(GeomCommon):
             self.log.debug('   nids=%s\n' % str(nids[1:]))
             nentries += 1
             constraint = SPC1.add_op2_data([sid, g, nids])
-            self.add_constraint_spc(constraint)
+            self.add_constraint_spc_object(constraint)
         self.card_count['SPC1'] = nentries
         return n
 
@@ -474,7 +473,7 @@ class GEOM4(GeomCommon):
                 self.binary_debug.write('  SUPORT=%s\n' % str(out))
                 #self.log.info(out)
             suport = SUPORT.add_op2_data(out)
-            self.add_suport(suport) # extracts [sid, c]
+            self.add_suport_object(suport) # extracts [sid, c]
             n += 8
         return n
 

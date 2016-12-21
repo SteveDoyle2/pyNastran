@@ -396,7 +396,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  QBDY1=%s\n' % str(out))
             (sid, q0, eid) = out
             load = QBDY1.add_op2_data(out)
-            self.add_thermal_load(load)
+            self.add_thermal_load_object(load)
             n += 12
         self.card_count['QBDY1'] = nentries
         return n
@@ -414,7 +414,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  QBDY2=%s\n' % str(out))
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
             load = QBDY2.add_op2_data(out)
-            self.add_thermal_load(load)
+            self.add_thermal_load_object(load)
             n += 40
         self.card_count['QBDY2'] = nentries
         return n
@@ -430,7 +430,7 @@ class GEOM3(GeomCommon):
             out = unpack('ifii', edata)
             (sid, q0, cntrlnd, eid) = out
             load = QBDY3.add_op2_data(out)
-            self.add_thermal_load(load)
+            self.add_thermal_load_object(load)
             n += 16
         self.card_count['QBDY3'] = nentries
         return n
@@ -450,7 +450,7 @@ class GEOM3(GeomCommon):
             (sid, g, T) = out
             if g < 10000000:
                 load = TEMP.add_op2_data(out)
-                self.add_thermal_load(load)
+                self.add_thermal_load_object(load)
             else:
                 self.log.debug('TEMP = %s' % (out))
             n += 12

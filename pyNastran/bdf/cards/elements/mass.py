@@ -552,6 +552,20 @@ class CMASS4(PointMassElement):
 
 
 class CONM1(PointMassElement):
+    """
+    Concentrated Mass Element Connection, General Form
+    Defines a 6 x 6 symmetric mass matrix at a geometric grid point
+
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |    1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +========+=====+=====+=====+=====+=====+=====+=====+=====+
+    |  CONM1 | EID | G   | CID | M11 | M21 | M22 | M31 | M32 |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |        | M33 | M41 | M42 | M43 | M44 | M51 | M52 | M53 |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |        | M54 | M55 | M61 | M62 | M63 | M64 | M65 | M66 |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    """
     type = 'CONM1'
     _field_map = {
         1: 'eid', 2:'nid', 3:'cid',
@@ -603,19 +617,20 @@ class CONM1(PointMassElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, nid, cid, mass_matrix, comment=''):
+    def __init__(self, eid, nid, mass_matrix, cid=0, comment=''):
         """
-        Concentrated Mass Element Connection, General Form
-        Defines a 6 x 6 symmetric mass matrix at a geometric grid point
+        Creates a CONM1 card
 
-        +--------+-----+-----+-----+-----+-----+-----+-----+-----+
-        |  CONM1 | EID | G   | CID | M11 | M21 | M22 | M31 | M32 |
-        +--------+-----+-----+-----+-----+-----+-----+-----+-----+
-        |        | M33 | M41 | M42 | M43 | M44 | M51 | M52 | M53 |
-        +--------+-----+-----+-----+-----+-----+-----+-----+-----+
-        |        | M54 | M55 | M61 | M62 | M63 | M64 | M65 | M66 |
-        +--------+-----+-----+-----+-----+-----+-----+-----+-----+
-
+        Parameters
+        ----------
+        eid : int
+            element id
+        nid : int
+            the node to put the mass matrix
+        mass_matrix : (6, 6) float ndarray
+            the 6x6 mass matrix, M
+        cid : int; default=0
+            the coordinate system for the mass matrix
         ::
 
           [M] = [M11 M21 M31 M41 M51 M61]
@@ -662,7 +677,7 @@ class CONM1(PointMassElement):
         m[5, 4] = double_or_blank(card, 23, 'M65', 0.)
         m[5, 5] = double_or_blank(card, 24, 'M66', 0.)
         assert len(card) <= 25, 'len(CONM1 card) = %i\ncard=%s' % (len(card), card)
-        return CONM1(eid, nid, cid, m, comment=comment)
+        return CONM1(eid, nid, m, cid=cid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -693,7 +708,7 @@ class CONM1(PointMassElement):
         m[5, 3] = m6d  # M64
         m[5, 4] = m6e  # M65
         m[5, 5] = m6f  # M66
-        return CONM1(eid, nid, cid, m, comment=comment)
+        return CONM1(eid, nid, m, cid=cid, comment=comment)
 
     def _verify(self, xref=False):
         eid = self.Eid()

@@ -203,6 +203,13 @@ class CROD(RodElement):
 
 
 class CTUBE(RodElement):
+    """
+    +-------+-----+-----+----+----+
+    |   1   |  2  |  3  |  4 |  5 |
+    +=======+=====+=====+====+====+
+    | CTUBE | EID | PID | N1 | N2 |
+    +-------+-----+-----+----+----+
+    """
     type = 'CTUBE'
     _field_map = {
         1: 'eid', 2:'pid',
@@ -217,13 +224,6 @@ class CTUBE(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, comment=''):
-        """
-        +-------+-----+-----+----+----+
-        |   1   |  2  |  3  |  4 |  5 |
-        +=======+=====+=====+====+====+
-        | CTUBE | EID | PID | N1 | N2 |
-        +-------+-----+-----+----+----+
-        """
         RodElement.__init__(self)
         if comment:
             self.comment = comment

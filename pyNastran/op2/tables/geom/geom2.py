@@ -663,7 +663,7 @@ class GEOM2(GeomCommon):
             #self.log.debug('  CHBDYE=%s' % str(out))
             data_in = [eid, eid2, side, iviewf, iviewb, radmidf, radmidb]
             elem = CHBDYE.add_op2_data(data_in)
-            self.add_thermal_element(elem)
+            self.add_thermal_element_object(elem)
             n += ntotal
         self.card_count['CHBDYE'] = nelements
         return n
@@ -686,7 +686,7 @@ class GEOM2(GeomCommon):
             data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                        g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG.add_op2_data(data_in)
-            self.add_thermal_element(elem)
+            self.add_thermal_element_object(elem)
             n += ntotal
         self.card_count['CHBDYG'] = nelements
         return n
@@ -709,7 +709,7 @@ class GEOM2(GeomCommon):
             data_in = [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
                        dislin, ce, e1, e2, e3]
             elem = CHBDYP.add_op2_data(data_in)
-            self.add_thermal_element(elem)
+            self.add_thermal_element_object(elem)
             n += ntotal
         self.card_count['CHBDYP'] = nelements
         return n
@@ -902,7 +902,7 @@ class GEOM2(GeomCommon):
 
         nelements = len(elements)
         for elem in elements:
-            self.add_thermal_BC(elem, elem.eid)
+            self.add_thermal_bc_object(elem, elem.eid)
 
         self.card_count['CONV'] = nelements
         return n
@@ -1004,10 +1004,10 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
-            (eid, pconID, flmnd, cntrlnd, ta1, ta2) = out
+            (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
             assert eid > 0, out  # TODO: I'm not sure that this really has 7 fields...
             mdot = 0.
-            data_in = [eid, pconID, flmnd, cntrlnd, ta1, ta2, mdot]
+            data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
             self.add_thermal_BC(elem, elem.eid)
             n += ntotal
