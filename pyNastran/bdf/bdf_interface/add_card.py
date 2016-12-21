@@ -124,6 +124,10 @@ class AddCards(AddMethods):
         grid = GRID(nid, cp=cp, xyz=xyz, cd=cd, ps=ps, seid=seid, comment=comment)
         self.add_node_object(grid)
 
+    def add_grdset(self, cp, cd, ps, seid, comment):
+        grdset = GRDSET(cp, cd, ps, seid, comment=comment)
+        self.gridSet = grdset
+
     def add_spoint(self, ids, comment=''):
         """
         Creates the SPOINTs card that contains many SPOINTs
@@ -259,6 +263,10 @@ class AddCards(AddMethods):
         mass = CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
         self.add_mass_object(mass)
 
+    def add_pmass(self, pid, mass, comment=''):
+        prop = PMASS(pid, mass, comment=comment)
+        self.add_property_mass_object(prop)
+
     def add_cmass1(self, eid, pid, g1, c1, g2, c2, comment=''):
         mass = CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
         self.add_mass_object(mass)
@@ -325,6 +333,66 @@ class AddCards(AddMethods):
 
     def add_pdamp5(self, pid, mid, b, comment=''):
         prop = PDAMP5(pid, mid, b, comment=comment)
+        self.add_property_object(prop)
+
+    def add_cvisc(self, eid, pid, nids, comment=''):
+        elem = CVISC(eid, pid, nids, comment=comment)
+        self.add_element_object(elem)
+
+    def add_pvisc(self, pid, ce, cr, comment=''):
+        prop = PVISC(pid, ce, cr, comment=comment)
+        self.add_property_object(prop)
+
+    def add_cgap(self, eid, pid, ga, gb, x, g0, cid, comment=''):
+        elem = CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
+        self.add_element_object(elem)
+
+    def add_pgap(self, pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
+                 comment=''):
+        prop = PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
+                    comment=comment)
+        self.add_property_object(prop)
+
+    def add_cfast(self, eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
+                  comment=''):
+        elem = CFAST(eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
+                     comment=comment)
+        self.add_element_object(elem)
+
+    def add_pfast(self, pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass,
+                  ge, comment=''):
+        prop = PFAST(pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass,
+                     ge, comment=comment)
+        self.add_property_object(prop)
+
+    def add_cbush(self, eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=''):
+        elem = CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
+        self.add_element_object(elem)
+
+    def add_pbush(self, pid, k, b, ge, rcv, comment=''):
+        prop = PBUSH(pid, k, b, ge, rcv, comment=comment)
+        self.add_property_object(prop)
+
+    def add_cbush1d(self, eid, pid, ga, gb, cid, comment=''):
+        elem = CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+        self.add_element_object(elem)
+
+    def add_cbush2d(self, eid, pid, ga, gb, cid, plane, sptid, comment=''):
+        elem = CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+        self.add_element_object(elem)
+
+    def add_pbush1d(self, pid, k, c, m, sa, se, optional_vars, comment=''):
+        prop = PBUSH1D(pid, k, c, m, sa, se, optional_vars, comment=comment)
+        self.add_property_object(prop)
+
+    def add_pbusht(self, pid, k_tables, b_tables, ge_tables, kn_tables,
+                   comment=''):
+        prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
+                      comment=comment)
+        self.add_property_object(prop)
+
+    def add_pelast(self, pid, tkid, tgeid, tknid, comment=''):
+        prop = PELAST(pid, tkid, tgeid, tknid, comment=comment)
         self.add_property_object(prop)
 
     def add_conrod(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
@@ -454,6 +522,47 @@ class AddCards(AddMethods):
                       comment=comment)
         self.add_property_object(prop)
 
+    def add_pcomp(self, pid, mids, thicknesses, thetas, souts, nsm=0., sb=0.,
+                  ft=None, TRef=0., ge=0., lam=None,
+                  z0=None, comment=''):
+        prop = PCOMP(pid, mids, thicknesses, thetas, souts, nsm=nsm, sb=sb,
+                     ft=ft, TRef=TRef, ge=ge, lam=lam,
+                     z0=z0, comment=comment)
+        self.add_property_object(prop)
+
+    def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas, souts,
+                   nsm, sb, ft, TRef, ge, lam, z0,
+                   comment=''):
+        prop = PCOMPG(pid, global_ply_ids, mids, thicknesses, thetas, souts,
+                      nsm, sb, ft, TRef, ge, lam, z0,
+                      comment=comment)
+        self.add_property_object(prop)
+
+    def add_pcomps(self, pid, cordm, psdir, sb, nb, tref, ge, global_ply_ids,
+                   mids, thicknesses, thetas,
+                   failure_theories,
+                   interlaminar_failure_theories,
+                   souts, comment=''):
+        prop = PCOMPS(pid, cordm, psdir, sb, nb, tref, ge, global_ply_ids,
+                      mids, thicknesses, thetas,
+                      failure_theories,
+                      interlaminar_failure_theories,
+                      souts, comment=comment)
+        self.add_property_object(prop)
+
+    def add_plplane(self, pid, mid, cid=0, stress_strain_output_location='GRID',
+                    comment=''):
+        prop = PLPLANE(pid, mid, cid=cid,
+                       stress_strain_output_location=stress_strain_output_location,
+                       comment=comment)
+        self.add_property_object(prop)
+
+    def add_pplane(self, pid, mid, t=0., nsm=0., formulation_option=0,
+                   comment=''):
+        prop = PPLANE(pid, mid, t=t, nsm=nsm, formulation_option=formulation_option,
+                      comment=comment)
+        self.add_property_object(prop)
+
     def add_ctetra(self, eid, pid, nids, comment=''):
         elem = CTETRA(eid, pid, nids, comment=comment)
         self.add_element_object(elem)
@@ -484,6 +593,62 @@ class AddCards(AddMethods):
                  Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
         mat = MAT1(mid, E, G, nu, rho=rho, a=a, TRef=TRef, ge=ge, St=St,
                    Sc=Sc, Ss=Ss, Mcsid=Mcsid, comment=comment)
+        self.add_structural_material_object(mat)
+
+    def add_mat2(self, mid, G11, G12, G13, G22, G23, G33, rho, a1, a2, a3,
+                 TRef=0., ge=0., St=None, Sc=None,
+                 Ss=None, Mcsid=None, comment=''):
+        mat = MAT2(mid, G11, G12, G13, G22, G23, G33, rho, a1, a2, a3,
+                   TRef=TRef, ge=ge, St=St, Sc=Sc,
+                   Ss=Ss, Mcsid=Mcsid, comment=comment)
+        self.add_structural_material_object(mat)
+
+    def add_mat3(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
+                 ax=0., ath=0., az=0., TRef=0., ge=0.,
+                 comment=''):
+        mat = MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=rho, gzx=gzx,
+                   ax=ax, ath=ath, az=az, TRef=TRef, ge=ge,
+                   comment=comment)
+        self.add_structural_material_object(mat)
+
+    def add_mat4(self, mid, k, cp=0.0, rho=1.0, H=None, mu=None, hgen=1.0,
+                 refEnthalpy=None, tch=None, tdelta=None,
+                 qlat=None, comment=''):
+        mat = MAT4(mid, k, cp=cp, rho=rho, H=H, mu=mu, hgen=hgen,
+                   refEnthalpy=refEnthalpy, tch=tch, tdelta=tdelta,
+                   qlat=qlat, comment=comment)
+        self.add_thermal_material_object(mat)
+
+    def add_mat5(self, mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0., cp=0.,
+                 rho=1., hgen=1., comment=''):
+        mat = MAT5(mid, kxx=kxx, kxy=kxy, kxz=kxz, kyy=kyy, kyz=kyz, kzz=kzz, cp=cp,
+                   rho=rho, hgen=hgen, comment=comment)
+        self.add_thermal_material_object(mat)
+
+    def add_mat8(self, mid, e11, e22, nu12, g12, g1z, g2z, rho=0., a1=0., a2=0.,
+                 TRef=0., Xt=0., Xc=None, Yt=0., Yc=None,
+                 S=0., ge=0., F12=0., strn=0., comment=''):
+        mat = MAT8(mid, e11, e22, nu12, g12, g1z, g2z, rho=rho, a1=a1, a2=a2,
+                   TRef=TRef, Xt=Xt, Xc=Xc, Yt=Yt, Yc=Yc,
+                   S=S, ge=ge, F12=F12, strn=strn, comment=comment)
+        self.add_structural_material_object(mat)
+
+    def add_mat9(self, mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25, G26,
+                 G33, G34, G35, G36, G44, G45, G46, G55,
+                 G56, G66, rho, A, TRef, ge, comment=''):
+        mat = MAT9(mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25, G26,
+                   G33, G34, G35, G36, G44, G45, G46, G55,
+                   G56, G66, rho, A, TRef, ge, comment=comment)
+        self.add_structural_material_object(mat)
+
+    def add_mat10(self, mid, bulk, rho, c, ge, comment=''):
+        mat = MAT10(mid, bulk, rho, c, ge, comment=comment)
+        self.add_structural_material_object(mat)
+
+    def add_mat11(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
+                  a1, a2, a3, TRef, ge, comment=''):
+        mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
+                    a1, a2, a3, TRef, ge, comment=comment)
         self.add_structural_material_object(mat)
 
     def add_load(self, sid, scale, scale_factors, load_ids, comment=''):
@@ -612,6 +777,10 @@ class AddCards(AddMethods):
     def add_spc1(self, conid, constraints, nodes, comment=''):
         spc = SPC1(conid, constraints, nodes, comment=comment)
         self.add_constraint_spc_object(spc)
+
+    def add_spcd(self, sid, gids, constraints, enforced, comment=''):
+        spc = SPCD(sid, gids, constraints, enforced, comment=comment)
+        self.add_load_object(spc)
 
     def add_spcadd(self, conid, sets, comment=''):
         spcadd = SPCADD(conid, sets, comment=comment)
@@ -1055,3 +1224,46 @@ class AddCards(AddMethods):
                          dvids, labels, validate=validate, comment=comment)
         self.add_dvmrel_object(dvmrel)
 
+    def add_dvgrid(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
+        dvgrid = DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
+        self.add_dvgrid_object(dvgrid)
+
+    def add_ddval(self, oid, ddvals, comment=''):
+        ddval = DDVAL(oid, ddvals, comment=comment)
+        self.add_ddval_object(ddval)
+
+    def add_dlink(self, oid, ddvid, c0, cmult, IDv, Ci, comment=''):
+        dlink = DLINK(oid, ddvid, c0, cmult, IDv, Ci, comment=comment)
+        self.add_dlink_object(dlink)
+
+    def add_dconstr(self, oid, dresp_id, lid=1.e20, uid=1.e20, lowfq=0.,
+                    highfq=1.e20, comment=''):
+        dconstr = DCONSTR(oid, dresp_id, lid=lid, uid=uid, lowfq=lowfq,
+                          highfq=highfq, comment=comment)
+        self.add_dconstr_object(dconstr)
+
+    def add_dconadd(self, oid, dconstrs, comment=''):
+        dconadd = DCONADD(oid, dconstrs, comment=comment)
+        self.add_dconstr_object(dconadd)
+
+    def add_doptprm(self, params, comment=''):
+        doptprm = DOPTPRM(params, comment=comment)
+        self.add_doptprm_object(doptprm)
+
+    def add_monpnt1(self, name, label, axes, comp, xyz, cp=0, cd=None,
+                    comment=''):
+        monitor_point = MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd,
+                                comment=comment)
+        self.add_monpnt_object(monitor_point)
+
+    def add_monpnt2(self, name, label, table, Type, nddl_item, eid,
+                    comment=''):
+        monitor_point = MONPNT2(name, label, table, Type, nddl_item, eid,
+                                comment=comment)
+        self.add_monpnt_object(monitor_point)
+
+    def add_monpnt3(self, name, label, axes, grid_set, elem_set, xyz,
+                    cp=0, cd=None, xflag=None, comment=''):
+        monitor_point = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
+                                cp=cp, cd=cd, xflag=xflag, comment=comment)
+        self.add_monpnt_object(monitor_point)
