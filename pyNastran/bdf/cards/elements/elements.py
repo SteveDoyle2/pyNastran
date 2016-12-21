@@ -481,20 +481,21 @@ class CRAC3D(CrackElement):
 
 
 class PLOTEL(BaseCard):
+    """
+    Defines a 1D dummy element used for plotting.
+
+    +--------+-----+-----+-----+
+    |   1    |  2  |  3  |  4  |
+    +========+=====+=====+=====+
+    | PLOTEL | EID | G1  | G2  |
+    +--------+-----+-----+-----+
+    """
     type = 'PLOTEL'
     _field_map = {
         1: 'eid', 3:'g1', 4:'g2',
     }
 
     def __init__(self, eid, nodes, comment=''):
-        """
-        Defines a 1D dummy element used for plotting.
-        +--------+-----+-----+-----+
-        |   1    |  2  |  3  |  4  |
-        +========+=====+=====+=====+
-        | PLOTEL | EID | G1  | G2  |
-        +--------+-----+-----+-----+
-        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment

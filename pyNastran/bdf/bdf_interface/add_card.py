@@ -193,10 +193,9 @@ class AddCards(AddMethods):
         coord = CORD1S(cid, g1, g2, g3, comment=comment)
         self.add_coord_object(coord)
 
-
     def add_param(self, key, values, comment=''):
         """
-        Creates a PARAM card.
+        Creates a PARAM card
 
         Parameters
         ----------
@@ -421,7 +420,7 @@ class AddCards(AddMethods):
            stress factor
         nsm : float; default=0.
            nonstructural mass per unit length
-        comment : str
+        comment : str; default=''
             a comment for the card
         """
         prop = PROD(pid, mid, A, j=j, c=c, nsm=nsm, comment=comment)
@@ -671,6 +670,8 @@ class AddCards(AddMethods):
             the coordinate system for the load
         xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
             the load direction in the cid frame
+        comment : str; default=''
+            a comment for the card
         """
         load = FORCE(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
         self.add_load_object(load)
@@ -699,6 +700,8 @@ class AddCards(AddMethods):
             the coordinate system for the load
         xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
             the load direction in the cid frame
+        comment : str; default=''
+            a comment for the card
         """
         load = MOMENT(sid, node, cid, mag, xyz, comment=comment)
         self.add_load_object(load)
@@ -762,6 +765,8 @@ class AddCards(AddMethods):
            ???
         ldir : str; default='NORM'
            ???
+        comment : str; default=''
+            a comment for the card
 
         TODO: fix the way "pressures" works
         """
@@ -804,12 +809,54 @@ class AddCards(AddMethods):
 
     def add_aeros(self, cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0,
                   comment=''):
+        """
+        Creates an AEROS card
+
+        Parameters
+        ----------
+        cref : float
+            the aerodynamic chord
+        bref : float
+            the wing span
+        sref : float
+            the wing area
+        acsid : int; default=0
+            aerodyanmic coordinate system
+        rcsid : int; default=0
+            coordinate system for rigid body motions
+        sym_xz : int; default=0
+            xz symmetry flag (+1=symmetry; -1=antisymmetric)
+        sym_xy : int; default=0
+            xy symmetry flag (+1=symmetry; -1=antisymmetric)
+        comment : str; default=''
+            a comment for the card
+        """
         aeros = AEROS(cref, bref, sref, acsid=acsid, rcsid=rcsid,
                       sym_xz=sym_xz, sym_xy=sym_xy, comment=comment)
         self.add_aeros_object(aeros)
 
     def add_aero(self, velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0,
                  comment=''):
+        """
+        Creates an AERO card
+
+        Parameters
+        ----------
+        velocity : float
+            the airspeed
+        cref : float
+            the aerodynamic chord
+        rho_ref : float
+            FLFACT density scaling factor
+        acsid : int; default=0
+            aerodyanmic coordinate system
+        sym_xz : int; default=0
+            xz symmetry flag (+1=symmetry; -1=antisymmetric)
+        sym_xy : int; default=0
+            xy symmetry flag (+1=symmetry; -1=antisymmetric)
+        comment : str; default=''
+            a comment for the card
+        """
         aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy,
                     comment=comment)
         self.add_aero_object(aero)
@@ -1057,6 +1104,52 @@ class AddCards(AddMethods):
                    pulim=np.pi/2., hmllim=None,
                    hmulim=None, tqllim=None,
                    tqulim=None, comment=''):
+        """
+        Creates an AESURF card
+
+        Parameters
+        ----------
+        aesid : int
+            controller number
+        label : str
+            controller name
+        cid1 : int
+            coordinate system id for primary control surface
+        alid1 : int
+            AELIST id for primary control surface
+        cid2 : int; default=None
+            coordinate system id for secondary control surface
+        alid2 : int; default=None
+            AELIST id for secondary control surface
+        eff : float; default=1.0
+            Control surface effectiveness
+        ldw : str; default='LDW'
+            Linear downwash flag;  ['LDW', 'NODLW']
+        crefc : float; default=1.0
+            reference chord for the control surface
+        crefs : float; default=1.0
+            reference area for the control surface
+        pllim : float; default=-pi/2
+            Lower deflection limits for the control surface in radians
+        pulim : float; default=pi/2
+            Upper deflection limits for the control surface in radians
+        hmllim : float; default=None
+            Lower hinge moment limits for the control surface in
+            force-length units
+        hmulim : float; default=None
+            Upper hinge moment limits for the control surface in
+            force-length units
+        tqllim : int; default=None
+            Set identification numbers of TABLEDi entries that provide the
+            lower deflection limits for the control surface as a function
+            of the dynamic pressure
+        tqulim : int; default=None
+            Set identification numbers of TABLEDi entries that provide the
+            upper deflection limits for the control surface as a function
+            of the dynamic pressure
+        comment : str; default=''
+            a comment for the card
+        """
         aesurf = AESURF(aesid, label, cid1, alid1, cid2=cid2, alid2=alid2,
                         eff=eff, ldw=ldw, crefc=crefc,
                         crefs=crefs, pllim=pllim,

@@ -41,7 +41,7 @@ class PROD(Property):
            stress factor
         nsm : float; default=0.
            nonstructural mass per unit length
-        comment : str
+        comment : str; default=''
             a comment for the card
         """
         Property.__init__(self)

@@ -536,6 +536,52 @@ class AESURF(BaseCard):
                  crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
                  hmllim=None, hmulim=None, tqllim=None, tqulim=None,
                  comment=''):
+        """
+        Creates an AESURF card
+
+        Parameters
+        ----------
+        aesid : int
+            controller number
+        label : str
+            controller name
+        cid1 : int
+            coordinate system id for primary control surface
+        alid1 : int
+            AELIST id for primary control surface
+        cid2 : int; default=None
+            coordinate system id for secondary control surface
+        alid2 : int; default=None
+            AELIST id for secondary control surface
+        eff : float; default=1.0
+            Control surface effectiveness
+        ldw : str; default='LDW'
+            Linear downwash flag;  ['LDW', 'NODLW']
+        crefc : float; default=1.0
+            reference chord for the control surface
+        crefs : float; default=1.0
+            reference area for the control surface
+        pllim : float; default=-pi/2
+            Lower deflection limits for the control surface in radians
+        pulim : float; default=pi/2
+            Upper deflection limits for the control surface in radians
+        hmllim : float; default=None
+            Lower hinge moment limits for the control surface in
+            force-length units
+        hmulim : float; default=None
+            Upper hinge moment limits for the control surface in
+            force-length units
+        tqllim : int; default=None
+            Set identification numbers of TABLEDi entries that provide the
+            lower deflection limits for the control surface as a function
+            of the dynamic pressure
+        tqulim : int; default=None
+            Set identification numbers of TABLEDi entries that provide the
+            upper deflection limits for the control surface as a function
+            of the dynamic pressure
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Controller identification number
@@ -851,6 +897,26 @@ class AERO(Aero):
     }
 
     def __init__(self, velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0, comment=''):
+        """
+        Creates an AERO card
+
+        Parameters
+        ----------
+        velocity : float
+            the airspeed
+        cref : float
+            the aerodynamic chord
+        rho_ref : float
+            FLFACT density scaling factor
+        acsid : int; default=0
+            aerodyanmic coordinate system
+        sym_xz : int; default=0
+            xz symmetry flag (+1=symmetry; -1=antisymmetric)
+        sym_xy : int; default=0
+            xy symmetry flag (+1=symmetry; -1=antisymmetric)
+        comment : str; default=''
+            a comment for the card
+        """
         Aero.__init__(self)
         if comment:
             self.comment = comment
@@ -1005,6 +1071,28 @@ class AEROS(Aero):
     }
 
     def __init__(self, cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment=''):
+        """
+        Creates an AEROS card
+
+        Parameters
+        ----------
+        cref : float
+            the aerodynamic chord
+        bref : float
+            the wing span
+        sref : float
+            the wing area
+        acsid : int; default=0
+            aerodyanmic coordinate system
+        rcsid : int; default=0
+            coordinate system for rigid body motions
+        sym_xz : int; default=0
+            xz symmetry flag (+1=symmetry; -1=antisymmetric)
+        sym_xy : int; default=0
+            xy symmetry flag (+1=symmetry; -1=antisymmetric)
+        comment : str; default=''
+            a comment for the card
+        """
         Aero.__init__(self)
         if comment:
             self.comment = comment
