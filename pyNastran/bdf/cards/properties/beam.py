@@ -38,16 +38,93 @@ class PBEAM(IntegratedLineProperty):
 
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
                  c1, c2, d1, d2, e1, e2, f1, f2,
-                 k1, k2, s1, s2, nsia, nsib, cwa, cwb,
-                 m1a, m2a, m1b, m2b,
-                 n1a, n2a, n1b, n2b,
+                 k1=1., k2=1., s1=0., s2=0.,
+                 nsia=0., nsib=None, cwa=0., cwb=None,
+                 m1a=0., m2a=None, m1b=0., m2b=None,
+                 n1a=0., n2a=None, n1b=0., n2b=None,
                  comment=''):
         """
         .. todo:: fix 0th entry of self.so, self.xxb
+
+        Creates a PBEAM card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        xxb : List[float]
+            The percentage locations along the beam [0., ..., 1.]
+        so : List[str]
+            YES, YESA, NO
+        area : List[float]
+            area
+        i1, i2, i12, j : List[float]
+            moments of inertia
+        nsm
+        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
+           the y/z locations of the stress recovery points
+           c1 - point C.y
+           c2 - point C.z
+
+        k1 : float; default=1.
+            Shear stiffness factor K in K*A*G for plane 1.
+        k2 : float; default=1.
+            Shear stiffness factor K in K*A*G for plane 2.
+        s1 : float; default=0.
+            Shear relief coefficient due to taper for plane 1.
+        s2 : float; default=0.
+            Shear relief coefficient due to taper for plane 2.
+        nsia : float; default=0.
+            non structural mass moment of inertia per unit length
+            about nsm center of gravity at Point A.
+        nsib : float; default=nsia
+            non structural mass moment of inertia per unit length
+            about nsm center of gravity at Point B.
+        cwa : float; default=0.
+            warping coefficient for end A.
+        cwb : float; default=cwa
+            warping coefficient for end B.
+        m1a : float; default=0.
+            y coordinate of center of gravity of
+            nonstructural mass for end A.
+        m2a : float; default=m2a
+            z coordinate of center of gravity of
+            nonstructural mass for end A.
+        m1b : float; default=0.
+            y coordinate of center of gravity of
+            nonstructural mass for end B.
+        m2b : float; default=m2b
+            z coordinate of center of gravity of
+            nonstructural mass for end B.
+        n1a : float; default=0.
+            y coordinate of neutral axis for end A.
+        n2a : float; default=n1a
+            z coordinate of neutral axis for end A.
+        n1b : float; default=0.
+            y coordinate of neutral axis for end B.
+        n2b : float; default=n1b
+            z coordinate of neutral axis for end B.
         """
         IntegratedLineProperty.__init__(self)
         if comment:
             self.comment = comment
+        if nsib is None:
+            nsib = nsia
+        if cwb is None:
+            cwb = cwa
+
+        if m2a is None:
+            m2a = m1a
+        if m2b is None:
+            m2b = m1b
+
+        if n2a is None:
+            n2a = n1a
+        if n2b is None:
+            n2b = n1b
+
         #: Property ID
         self.pid = pid
         #: Material ID

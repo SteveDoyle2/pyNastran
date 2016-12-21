@@ -431,7 +431,27 @@ class AddCards(AddMethods):
         self.add_element_object(elem)
 
     def add_ptube(self, pid, mid, OD1, t, nsm, OD2, comment=''):
-        prop = PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
+        """
+        Adds a PTUBE card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        OD1 : float
+            outer diameter at End A
+        t : float; default=None -> OD1/2.
+            thickness
+        nsm : float; default=0.
+            non-structural mass per unit length
+        OD2 : float; default=None -> OD1
+            outer diameter at End B
+        comment : str; default=''
+            a comment for the card
+        """
+        prop = PTUBE(pid, mid, OD1, t=t, nsm=nsm, OD2=OD2, comment=comment)
         self.add_property_object(prop)
 
     def add_cbar(self, eid, pid, ga, gb, x, g0, offt='GGG', pa=0, pb=0,
@@ -445,28 +465,96 @@ class AddCards(AddMethods):
                  f1=0., f2=0., k1=1.e8, k2=1.e8, comment=''):
         prop = PBAR(pid, mid, A=A, i1=i1, i2=i2, i12=i12, j=j, nsm=nsm,
                     c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
-                    f1=f1, f2=f2, k1=k1, k2=k2,
-                    comment=comment)
+                    f1=f1, f2=f2, k1=k1, k2=k2, comment=comment)
         self.add_property_object(prop)
 
     def add_pbarl(self, pid, mid, group, Type, dim, nsm=0., comment=''):
         prop = PBARL(pid, mid, group, Type, dim, nsm=nsm, comment=comment)
         self.add_property_object(prop)
 
-    def add_cbeam(self, eid, pid, ga, gb, x, g0, is_offt, offt, bit, pa, pb, wa,
-                  wb, sa, sb, comment=''):
-        elem = CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit, pa, pb, wa,
-                     wb, sa, sb, comment=comment)
+    def add_cbeam(self, eid, pid, ga, gb, x, g0, is_offt, offt, bit,
+                  pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
+        elem = CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
+                     pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
         self.add_element_object(elem)
 
     def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                  c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, s1, s2,
-                  nsia, nsib, cwa, cwb, m1a, m2a, m1b,
-                  m2b, n1a, n2a, n1b, n2b, comment=''):
-        prop = PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm, c1, c2, d1,
-                     d2, e1, e2, f1, f2, k1, k2, s1, s2,
-                     nsia, nsib, cwa, cwb, m1a, m2a, m1b,
-                     m2b, n1a, n2a, n1b, n2b, comment=comment)
+                  c1, c2, d1, d2, e1, e2, f1, f2,
+                  k1=1., k2=1., s1=0., s2=0.,
+                  nsia=0., nsib=None, cwa=0., cwb=None,
+                  m1a=0., m2a=None, m1b=0., m2b=None,
+                  n1a=0., n2a=None, n1b=0., n2b=None,
+                  comment=''):
+        """
+        .. todo:: fix 0th entry of self.so, self.xxb
+
+        Creates a PBEAM card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        xxb : List[float]
+            The percentage locations along the beam [0., ..., 1.]
+        so : List[str]
+            YES, YESA, NO
+        area : List[float]
+            area
+        i1, i2, i12, j : List[float]
+            moments of inertia
+        nsm
+        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
+           the y/z locations of the stress recovery points
+           c1 - point C.y
+           c2 - point C.z
+
+        k1 : float; default=1.
+            Shear stiffness factor K in K*A*G for plane 1.
+        k2 : float; default=1.
+            Shear stiffness factor K in K*A*G for plane 2.
+        s1 : float; default=0.
+            Shear relief coefficient due to taper for plane 1.
+        s2 : float; default=0.
+            Shear relief coefficient due to taper for plane 2.
+        nsia : float; default=0.
+            non structural mass moment of inertia per unit length
+            about nsm center of gravity at Point A.
+        nsib : float; default=nsia
+            non structural mass moment of inertia per unit length
+            about nsm center of gravity at Point B.
+        cwa : float; default=0.
+            warping coefficient for end A.
+        cwb : float; default=cwa
+            warping coefficient for end B.
+        m1a : float; default=0.
+            y coordinate of center of gravity of
+            nonstructural mass for end A.
+        m2a : float; default=m2a
+            z coordinate of center of gravity of
+            nonstructural mass for end A.
+        m1b : float; default=0.
+            y coordinate of center of gravity of
+            nonstructural mass for end B.
+        m2b : float; default=m2b
+            z coordinate of center of gravity of
+            nonstructural mass for end B.
+        n1a : float; default=0.
+            y coordinate of neutral axis for end A.
+        n2a : float; default=n1a
+            z coordinate of neutral axis for end A.
+        n1b : float; default=0.
+            y coordinate of neutral axis for end B.
+        n2b : float; default=n1b
+            z coordinate of neutral axis for end B.
+        """
+        prop = PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                     c1, c2, d1, d2, e1, e2, f1, f2,
+                     k1=k1, k2=k2, s1=s1, s2=s2,
+                     nsia=nsia, nsib=nsib, cwa=cwa, cwb=cwb,
+                     m1a=m1a, m2a=m2a, m1b=m1b,
+                     m2b=m2b, n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b, comment=comment)
         self.add_property_object(prop)
 
     def add_pbeaml(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
@@ -481,30 +569,31 @@ class AddCards(AddMethods):
         prop = PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
         self.add_property_object(prop)
 
-    def add_ctria3(self, eid, pid, nids, zOffset, thetaMcid=0.0, TFlag=0,
+    def add_ctria3(self, eid, pid, nids, zoffset, theta_mcid=0.0, TFlag=0,
                    T1=1.0, T2=1.0, T3=1.0, comment=''):
-        elem = CTRIA3(eid, pid, nids, zOffset, thetaMcid=thetaMcid, TFlag=TFlag,
+        elem = CTRIA3(eid, pid, nids, zoffset, theta_mcid=theta_mcid, TFlag=TFlag,
                       T1=T1, T2=T2, T3=T3, comment=comment)
         self.add_element_object(elem)
 
-    def add_cquad4(self, eid, pid, nids, thetaMcid=0.0, zOffset=0., TFlag=0,
+    def add_cquad4(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
                    T1=1.0, T2=1.0, T3=1.0, T4=1.0,
                    comment=''):
-        elem = CQUAD4(eid, pid, nids, thetaMcid=thetaMcid, zOffset=zOffset, TFlag=TFlag,
+        elem = CQUAD4(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset, TFlag=TFlag,
                       T1=T1, T2=T2, T3=T3, T4=T4,
                       comment=comment)
         self.add_element_object(elem)
 
-    def add_ctria6(self, eid, pid, nids, theta_mcid, zOffset, TFlag, T1, T2, T3,
-                   comment=''):
-        elem = CTRIA6(eid, pid, nids, theta_mcid, zOffset, TFlag, T1, T2, T3,
-                      comment=comment)
+    def add_ctria6(self, eid, pid, nids, theta_mcid=0., zoffset=0., TFlag=0,
+                   T1=None, T2=None, T3=None, comment=''):
+        elem = CTRIA6(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
         self.add_element_object(elem)
 
-    def add_cquad8(self, eid, pid, nids, T1, T2, T3, T4, thetaMcid, zOffset,
-                   TFlag, comment=''):
-        elem = CQUAD8(eid, pid, nids, T1, T2, T3, T4, thetaMcid, zOffset,
-                      TFlag, comment=comment)
+    def add_cquad8(self, eid, pid, nids, T1=None, T2=None, T3=None, T4=None,
+                   theta_mcid=0., zoffset=0., TFlag=0, comment=''):
+        elem = CQUAD8(eid, pid, nids,
+                      T1=T1, T2=T2, T3=T3, T4=T4,
+                      theta_mcid=theta_mcid, zoffset=zoffset, TFlag=TFlag, comment=comment)
         self.add_element_object(elem)
 
     def add_cquad(self, eid, pid, nids, comment=''):

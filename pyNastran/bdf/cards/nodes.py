@@ -868,6 +868,8 @@ class GRID(BaseCard):
         seid : int; default=0
             superelement id
             TODO: how is this used by Nastran???
+        comment : str; default=''
+            a comment for the card
         """
         #Node.__init__(self)
         if comment:

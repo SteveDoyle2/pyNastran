@@ -75,10 +75,19 @@ class CBEAM(CBAR):
                     raise KeyError(msg)
 
     def __init__(self, eid, pid, ga, gb, x, g0, is_offt, offt, bit,
-                 pa, pb, wa, wb, sa, sb, comment=''):
+                 pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
         LineElement.__init__(self)
         if comment:
             self.comment = comment
+        if wa is None:
+            wa = np.zeros(3, dtype='float64')
+        else:
+            wa = np.asarray(wa)
+        if wb is None:
+            wb = np.zeros(3, dtype='float64')
+        else:
+            wb = np.asarray(wb)
+
         self.eid = eid
         self.pid = pid
         self.ga = ga
@@ -120,7 +129,7 @@ class CBEAM(CBAR):
         sb = integer_or_blank(card, 18, 'sb', 0)
         assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
         return CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
-                     pa, pb, wa, wb, sa, sb, comment=comment)
+                     pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, f, comment=''):

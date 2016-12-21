@@ -260,6 +260,15 @@ class CBAR(LineElement):
         LineElement.__init__(self)
         if comment:
             self.comment = comment
+        if wa is None:
+            wa = np.zeros(3, dtype='float64')
+        else:
+            wa = np.asarray(wa)
+        if wb is None:
+            wb = np.zeros(3, dtype='float64')
+        else:
+            wb = np.asarray(wb)
+
         self.eid = eid
         self.pid = pid
         self.x = x
@@ -269,14 +278,6 @@ class CBAR(LineElement):
         self.offt = offt
         self.pa = pa
         self.pb = pb
-        if wa is None:
-            self.wa = np.zeros(3, dtype='float64')
-        else:
-            self.wa = np.asarray(wa)
-        if wb is None:
-            self.wb = np.zeros(3, dtype='float64')
-        else:
-            self.wb = np.asarray(wb)
         self._validate_input()
 
     def _validate_input(self):

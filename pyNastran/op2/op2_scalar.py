@@ -2119,7 +2119,31 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_subtables()
 
     def _read_fol(self):
-        """frequency list"""
+        """
+        Frequency response frequency output list
+
+        +------+---------+-------+-----------------+
+        | Word |  Name   | Type  |   Description   |
+        +======+=========+=======+=================+
+        |  1   | NAME(2) | CHAR4 | Data block name |
+        +------+---------+-------+-----------------+
+        |  3   |  FREQ   |  RS   |   Frequency     |
+        +------+---------+-------+-----------------+
+        | Word 3 repeats until End of Record       |
+        +------------------------------------------+
+
+        +------+----------+------+-----------------------------+
+        | Word |  Name    | Type |   Description               |
+        +======+==========+======+=============================+
+        |  1   |  WORD1   |  I   | Number of frequencies       |
+        +------+----------+------+-----------------------------+
+        |  2   |  WORD2   |  I   | Frequency set record number |
+        +------+----------+------+-----------------------------+
+        |  3   |  WORD3   |  I   | Number of loads             |
+        +------+----------+------+-----------------------------+
+        |  4   | UNDEF(3) | None | Not used                    |
+        +------+----------+------+-----------------------------+
+        """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -2127,24 +2151,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         ndata = len(data)
-        if ndata == 12:
-            subtable_name, double = unpack(b(self._endian + '8sf'), data)
-            if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %f]\n'  % (subtable_name, double))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-        else:
-            subtable_name_raw, = unpack(b(self._endian + '8s'), data[:8])
-            subtable_name = subtable_name_raw.strip()
-            assert subtable_name == b'FOL', 'subtable_name=%r' % subtable_name
+        subtable_name_raw, = unpack(b(self._endian + '8s'), data[:8])
+        subtable_name = subtable_name_raw.strip()
+        assert subtable_name == b'FOL', 'subtable_name=%r' % subtable_name
 
-            nfloats = (ndata - 8) // 4
-            assert nfloats * 4 == (ndata - 8)
-            if self.is_debug_file:
-                fmt = b(self._endian + '%sf' % nfloats)
-                freqs = list(unpack(fmt, data[8:]))
-                self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-                self.binary_debug.write('  freqs = %s' % freqs)
+        nfloats = (ndata - 8) // 4
+        assert nfloats * 4 == (ndata - 8)
+        if self.is_debug_file:
+            fmt = b(self._endian + '%sf' % nfloats)
+            freqs = list(unpack(fmt, data[8:]))
+            self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
+            self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+            self.binary_debug.write('  freqs = %s' % freqs)
         self._read_subtables()
 
     def _read_gpl(self):
