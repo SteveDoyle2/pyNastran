@@ -1714,7 +1714,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         |  4   | Complex, double precision |
         +------+---------------------------+
         """
-        if self.read_mode == 1:
+        # if we skip on read_mode=1, we don't get debugging
+        # if we just use read_mode=2, some tests fail
+        #
+        #if self.read_mode == 1:
+        if self.read_mode == 2 and not self.debug_file:
             return self._skip_matrix()
 
         allowed_forms = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 13, 15]
