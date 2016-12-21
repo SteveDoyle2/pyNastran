@@ -918,7 +918,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'EDTS' : [self._table_passer, self._table_passer],
 
             b'FOL' : [self._table_passer, self._table_passer],
-            b'MONITOR' : [self._table_passer, self._table_passer],  # monitor points
+            b'MONITOR' : [self._read_monitor_3, self._read_monitor_4],  # monitor points
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
@@ -1061,6 +1061,27 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """testing function"""
         if ndata > 0:
             raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, ndata))
+
+    def _read_monitor_3(self, data, ndata):
+        """reads MONITOR subtable 3"""
+        self.log.info('MONITOR 3; ndata=%s' % ndata)
+        return ndata
+
+    def _read_monitor_4(self, data, ndata):
+        """reads MONITOR subtable 4"""
+        if self.read_mode == 2:
+            self.log.info('MONITOR 4; ndata=%s' % ndata)
+            assert ndata == 108, ndata
+            n = 8 + 56 + 20 + 12 + 12
+            aero, name, comps, a, b, c, d, coeff, e, f, g = unpack('8s 56s 5i 12s 3i', data[:n])
+            print('aero=%r' % aero)
+            print('name=%r' % name)
+            print('comps, a, b, c, d = (%s, %s, %s, %s, %s)' % (comps, a, b, c, d))
+            print('coeff=%r' % coeff)
+            print('e, f, g = (%s, %s, %s)' % (e, f, g))
+            #if data[n:]:
+                #self.show_data(data[n:], types='ifs', endian=None)
+        return ndata
 
     def _table_passer(self, data, ndata):
         """auto-table skipper"""
@@ -1693,7 +1714,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         |  4   | Complex, double precision |
         +------+---------------------------+
         """
-        if self.read_mode == 2:
+        if self.read_mode == 1:
             return self._skip_matrix()
 
         allowed_forms = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 13, 15]
@@ -1705,7 +1726,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         # old-bad
         #matrix_num, form, mrows, ncols, tout, nvalues, g = unpack(self._endian + '7i', data)
 
-        #           good   good   good  goood ????    ???
+        #           good   good   good  good  ???    ???
         matrix_num, ncols, mrows, form, tout, nvalues, g = unpack(self._endian + '7i', data)
 
 
@@ -1742,7 +1763,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             dtype = 'complex128'
         else:
             #raise RuntimeError('tout = %s' % tout)
-            dtype = '????'
+            dtype = '???'
             self.log.warning('unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
                 matrix_num, form, mrows, ncols, tout, nvalues, g))
 
@@ -1788,7 +1809,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 while nvalues >= 0:
                     nvalues = self.get_marker1(rewind=False)
                     fmt, nfloats, nterms = self._get_matrix_row_fmt_nterms_nfloats(nvalues, tout)
-                    GCj += [jj] * nterms
+                    GCjj = [jj] * nterms
+                    GCj += GCjj
 
                     #-----------
                     data = self.read_block()
@@ -1798,9 +1820,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     ii = out[0]
                     values = out[1:]
 
-                    GCi += list(range(ii, ii + nterms))
+                    GCii = list(range(ii, ii + nterms))
+                    GCi += GCii
                     reals += values
                     nvalues = self.get_marker1(rewind=True)
+                    if self.debug_file:
+                        self.binary_debug.write('  GCi = %s\n' % GCii)
+                        self.binary_debug.write('  GCj = %s\n' % GCjj)
+                        self.binary_debug.write('  reals/imags = %s\n' % str(values))
                 assert len(GCi) == len(GCj), 'nGCi=%s nGCj=%s' % (len(GCi), len(GCj))
                 if tout in [1, 2]:
                     assert len(GCi) == len(reals), 'tout=%s nGCi=%s nReals=%s' % (tout, len(GCi), len(reals))
@@ -1823,7 +1850,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 try:
                     # we subtract 1 to the indicides to account for Fortran
                     #    huh??? we dont...
-                    if dtype == '????':
+                    if dtype == '???':
                         matrix = None
                         self.log.warning('what is the dtype?')
                     elif tout in [1, 2]:
@@ -1837,6 +1864,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         nvalues_matrix = real_array.shape[0] // 2
                         real_complex = real_array.reshape((nvalues_matrix, 2))
                         real_imag = real_complex[:, 0] + real_complex[:, 1]*1j
+                        if self.binary_debug:
+                            #self.binary_debug.write('reals = %s' % real_complex[:, 0])
+                            #self.binary_debug.write('imags = %s' % real_complex[:, 1])
+                            self.binary_debug.write('real_imag = %s' % real_imag)
                         matrix = coo_matrix((real_imag, (GCi, GCj)),
                                             shape=(mrows, ncols), dtype=dtype)
                         msg = 'created %s...verify the complex matrix' % self.table_name
@@ -1848,7 +1879,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self.log.warning('shape=(%s, %s)' % (mrows, ncols))
                     self.log.warning('cant make a coo/sparse matrix...trying dense')
 
-                    if dtype == '????':
+                    if dtype == '???':
                         matrix = None
                         self.log.warning('what is the dtype?')
                     else:
