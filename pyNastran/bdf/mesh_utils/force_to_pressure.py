@@ -83,7 +83,7 @@ def force_to_pressure(bdf_filename, bdf_filename_out=None):
                             g1=None, g34=None, cid=0, NVector=None,
                             sorl='SURF', ldir='NORM', comment='')
             #pressure_file.write(pload4.write_card(size=8, is_double=False))
-            model.add_load_object(pload4)
+            model._add_load_object(pload4)
 
     if bdf_filename_out:
         model.write_bdf(bdf_filename_out)

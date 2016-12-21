@@ -409,7 +409,7 @@ class SPOINTs(XPoints):
         ----------
         ids : List[int]
             SPOINT ids
-        comment : str
+        comment : str; default=''
             a comment for the card
         """
         XPoints.__init__(self, ids, comment=comment)
@@ -446,7 +446,7 @@ class EPOINTs(XPoints):
         ----------
         ids : List[int]
             EPOINT ids
-        comment : str
+        comment : str; default=''
             a comment for the card
         """
         XPoints.__init__(self, ids, comment=comment)
@@ -1366,9 +1366,22 @@ class POINT(BaseCard):
     def __init__(self, nid, cp, xyz, comment=''):
         """
         Creates the POINT card
+
+        Parameters
+        ----------
+        nid : int
+            node id
+        cp : int
+            coordinate system for the xyz location
+        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
+            the xyz/r-theta-z/rho-theta-phi values
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
+        if xyz is None:
+            xyz = [0., 0., 0.]
         #Node.__init__(self)
 
         #: Node ID
@@ -1378,12 +1391,13 @@ class POINT(BaseCard):
         self.cp = cp
 
         #: node location in local frame
-        self.xyz = xyz
+        self.xyz = np.asarray(xyz, dtype='float64')
+        assert self.xyz.size == 3, self.xyz.shape
 
     def validate(self):
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
-        assert len(xyz) == 3
+        assert len(self.xyz) == 3
 
     @classmethod
     def add_card(cls, card, comment=''):

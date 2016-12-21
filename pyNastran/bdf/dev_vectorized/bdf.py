@@ -183,7 +183,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
             #'add_constraint_MPC', 'add_constraint_MPCADD',
             #'add_constraint_SPC', 'add_constraint_SPCADD',
             #'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper',
-            #'add_dload', 'add_dload_entry', 'add_element', 'add_hyperelastic_material',
+            #'add_dload', '_add_dload_entry', 'add_element', 'add_hyperelastic_material',
             #'add_load', 'add_mass', 'add_material_dependence', 'add_method', 'add_node',
             #'add_plotel', 'add_property', 'add_property_mass', 'add_random_table',
             #'add_rigid_element', 'add_structural_material', 'add_suport', 'add_suport1',
@@ -1556,10 +1556,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             'PARAM' : (PARAM, self.add_param),
 
-            #'CORD2R' : (CORD2R, self.add_coord_object),
-            #'CORD2C' : (CORD2C, self.add_coord_object),
-            #'CORD2S' : (CORD2S, self.add_coord_object),
-            #'GMCORD' : (GMCORD, self.add_coord_object),
+            #'CORD2R' : (CORD2R, self._add_coord_object),
+            #'CORD2C' : (CORD2C, self._add_coord_object),
+            #'CORD2S' : (CORD2S, self._add_coord_object),
+            #'GMCORD' : (GMCORD, self._add_coord_object),
 
             'PLOTEL' : (PLOTEL, self.add_plotel),
 
@@ -1742,11 +1742,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'QVOL' : (QVOL, self.add_load),  # thermal
 
             #'DLOAD' : (DLOAD, self.add_dload),
-            #'ACSRCE' : (ACSRCE, self.add_dload_entry),
-            #'TLOAD1' : (TLOAD1, self.add_dload_entry),
-            #'TLOAD2' : (TLOAD2, self.add_dload_entry),
-            #'RLOAD1' : (RLOAD1, self.add_dload_entry),
-            #'RLOAD2' : (RLOAD2, self.add_dload_entry),
+            #'ACSRCE' : (ACSRCE, self._add_dload_entry),
+            #'TLOAD1' : (TLOAD1, self._add_dload_entry),
+            #'TLOAD2' : (TLOAD2, self._add_dload_entry),
+            #'RLOAD1' : (RLOAD1, self._add_dload_entry),
+            #'RLOAD2' : (RLOAD2, self._add_dload_entry),
 
             #'FREQ' : (FREQ, self.add_FREQ),
             #'FREQ1' : (FREQ1, self.add_FREQ),
@@ -1904,9 +1904,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             # BCTSET
         }
         self._card_parser_prepare = {
-            #'CORD2R' : (CORD2R, self.add_coord_object), # not vectorized
-            #'CORD2C' : (CORD2C, self.add_coord_object),
-            #'CORD2S' : (CORD2S, self.add_coord_object),
+            #'CORD2R' : (CORD2R, self._add_coord_object), # not vectorized
+            #'CORD2C' : (CORD2C, self._add_coord_object),
+            #'CORD2S' : (CORD2S, self._add_coord_object),
             'CORD2R' : self._prepare_cord2, # vectorized
             'CORD2C' : self._prepare_cord2,
             'CORD2S' : self._prepare_cord2,
@@ -2138,26 +2138,26 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
         class_instance = CORD1R.add_card(card_obj, comment=comment)
-        self.add_coord_object(class_instance)
+        self._add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1R.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord_object(class_instance)
+            self._add_coord_object(class_instance)
 
     def _prepare_cord1c(self, card, card_obj, comment=''):
         """adds a CORD1C"""
         class_instance = CORD1C.add_card(card_obj, comment=comment)
-        self.add_coord_object(class_instance)
+        self._add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1C.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord_object(class_instance)
+            self._add_coord_object(class_instance)
 
     def _prepare_cord1s(self, card, card_obj, comment=''):
         """adds a CORD1S"""
         class_instance = CORD1S.add_card(card_obj, comment=comment)
-        self.add_coord_object(class_instance)
+        self._add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
-            self.add_coord_object(class_instance)
+            self._add_coord_object(class_instance)
 
     def _prepare_cord2(self, card, card_obj, comment=''):
         """adds a CORD2x"""

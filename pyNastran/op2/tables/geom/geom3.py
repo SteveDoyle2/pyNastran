@@ -85,7 +85,7 @@ class GEOM3(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  FORCE=%s\n' % str(out))
             load = FORCE(sid, g, f, cid=cid, xyz=np.array([n1, n2, n3]))
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 28
         self.card_count['FORCE'] = nentries
         return n
@@ -104,7 +104,7 @@ class GEOM3(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  FORCE1=%s\n' % str(out))
             load = FORCE1.add_op2_data([sid, g, f, n1, n2])
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 20
         self.card_count['FORCE1'] = nentries
         return n
@@ -122,7 +122,7 @@ class GEOM3(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  FORCE2=%s\n' % str(out))
             load = FORCE2.add_op2_data([sid, g, f, n1, n2, n3, n4])
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 28
         self.card_count['FORCE2'] = nentries
         return n
@@ -141,7 +141,7 @@ class GEOM3(GeomCommon):
             out = s.unpack(edata)
             (sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV.add_op2_data(out)
-            self.add_load_object(grav)
+            self._add_load_object(grav)
             n += 28
         self.card_count['GRAV'] = nentries
         return n
@@ -182,7 +182,7 @@ class GEOM3(GeomCommon):
 
             data_in = [sid, s, Si, L1]
             load = LOAD(sid, s, Si, L1)
-            self.add_load_object(load)
+            self._add_load_object(load)
             count += 1
             if count > 1000:
                 raise RuntimeError('Iteration limit...probably have a bug.')
@@ -208,7 +208,7 @@ class GEOM3(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  LSEQ=%s\n' % str(out))
             load = LSEQ.add_op2_data(out)
-            self.add_lseq_object(load)
+            self._add_lseq_object(load)
             n += ntotal
         self.card_count['LSEQ'] = nentries
         return n
@@ -227,7 +227,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  MOMENT=%s\n' % str(out))
             (sid, g, cid, m, n1, n2, n3) = out
             load = MOMENT.add_op2_data(out)
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 28
         self.card_count['MOMENT'] = nentries
         return n
@@ -245,7 +245,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  MOMENT1=%s\n' % str(out))
             (sid, g, m, n1, n2) = out
             load = MOMENT1.add_op2_data(out)
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 20
         self.card_count['MOMENT1'] = nentries
         return n
@@ -264,7 +264,7 @@ class GEOM3(GeomCommon):
             (sid, g, m, n1, n2, n3, n4) = out
 
             load = MOMENT2.add_op2_data(out)
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 28
         self.card_count['MOMENT2'] = nentries
         return n
@@ -283,7 +283,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  PLOAD=%s\n' % str(out))
             (sid, pressure, n1, n2, n3, n4) = out
             load = PLOAD.add_op2_data(out)
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 24
         self.card_count['PLOAD1'] = nentries
         return n
@@ -303,7 +303,7 @@ class GEOM3(GeomCommon):
             (sid, eid, Type, scale, x1, p1, x2, p2) = out
             #print("PLOAD1 = ", out)
             load = PLOAD1.add_op2_data(out)
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 32
         self.card_count['PLOAD1'] = nentries
         return n
@@ -321,7 +321,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  PLOAD2=%s\n' % str(out))
             (sid, p, eid) = out
             load = PLOAD2.add_op2_data(out)
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 12
         self.card_count['PLOAD2'] = nentries
         return n
@@ -339,7 +339,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  PLOAD3=%s\n' % str(out))
             (sid, p, eid, n1, n2) = out
             load = PLOAD3.add_op2_data(out)  # undefined
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 20
         self.card_count['PLOAD3'] = nentries
         return n
@@ -369,7 +369,7 @@ class GEOM3(GeomCommon):
             load = PLOAD4.add_op2_data(
                 [sid, eid, [p1, p2, p3, p4], g1, g34,
                  cid, [n1, n2, n3], sdrlA, sdrlB, ldirA, ldirB])
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += 48
         self.card_count['PLOAD4'] = nentries
         return n
@@ -396,7 +396,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  QBDY1=%s\n' % str(out))
             (sid, q0, eid) = out
             load = QBDY1.add_op2_data(out)
-            self.add_thermal_load_object(load)
+            self._add_thermal_load_object(load)
             n += 12
         self.card_count['QBDY1'] = nentries
         return n
@@ -414,7 +414,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  QBDY2=%s\n' % str(out))
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
             load = QBDY2.add_op2_data(out)
-            self.add_thermal_load_object(load)
+            self._add_thermal_load_object(load)
             n += 40
         self.card_count['QBDY2'] = nentries
         return n
@@ -430,7 +430,7 @@ class GEOM3(GeomCommon):
             out = unpack('ifii', edata)
             (sid, q0, cntrlnd, eid) = out
             load = QBDY3.add_op2_data(out)
-            self.add_thermal_load_object(load)
+            self._add_thermal_load_object(load)
             n += 16
         self.card_count['QBDY3'] = nentries
         return n
@@ -450,7 +450,7 @@ class GEOM3(GeomCommon):
             (sid, g, T) = out
             if g < 10000000:
                 load = TEMP.add_op2_data(out)
-                self.add_thermal_load_object(load)
+                self._add_thermal_load_object(load)
             else:
                 self.log.debug('TEMP = %s' % (out))
             n += 12
@@ -497,7 +497,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  SLOAD=%s\n' % str(out))
             #(sid, nid, scale_factor) = out
             load = SLOAD.add_op2_data(out)
-            self.add_load_object(load)
+            self._add_load_object(load)
             n += ntotal
         self.card_count['SLOAD'] = nentries
         return n

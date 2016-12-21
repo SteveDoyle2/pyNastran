@@ -529,11 +529,11 @@ class TestAero(unittest.TestCase):
         grid13 = GRID(nid=13, cp=0, xyz=[13., 0., 0.], cd=0, ps='', seid=0, comment='')
 
         model = BDF(log=None)
-        model.add_coord_object(coord)
-        model.add_caero_object(caero2)
-        model.add_set_object(set_obj)
-        model.add_node_object(grid7)
-        model.add_node_object(grid13)
+        model._add_coord_object(coord)
+        model._add_caero_object(caero2)
+        model._add_set_object(set_obj)
+        model._add_node_object(grid7)
+        model._add_node_object(grid13)
 
         eid = 5
         caero = 8
@@ -773,7 +773,7 @@ class TestAero(unittest.TestCase):
         caero4b.raw_fields()
 
         model = BDF()
-        model.add_paero_object(paero4)
+        model._add_paero_object(paero4)
 
         caero4b.cross_reference(model)
         caero4b.write_card()
@@ -828,7 +828,7 @@ class TestAero(unittest.TestCase):
                         comment='msg')
 
         model = BDF()
-        model.add_paero_object(paero5)
+        model._add_paero_object(paero5)
         caero5.cross_reference(model)
         npoints, nelements = caero5.get_npanel_points_elements()
         points, elements = caero5.panel_points_elements()
@@ -894,16 +894,16 @@ class TestAero(unittest.TestCase):
         log = SimpleLogger(level='warning')
 
         model = BDF()
-        model.add_coord_object(coord)
-        model.add_aesurf_object(aesurf1)
+        model._add_coord_object(coord)
+        model._add_aesurf_object(aesurf1)
 
         elements = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         aelist = AELIST(aelist_id1, elements)
-        model.add_aelist_object(aelist)
+        model._add_aelist_object(aelist)
 
         elements = [11, 22, 33, 44, 55, 66, 77, 88, 99]
         aelist = AELIST(aelist_id2, elements)
-        model.add_aelist_object(aelist)
+        model._add_aelist_object(aelist)
 
         aesurf1.cross_reference(model)
         aesurf1.write_card()
@@ -1152,11 +1152,11 @@ class TestAero(unittest.TestCase):
         aefact_delta = AEFACT(aefact_sid, Di)
 
         model = BDF()
-        model.add_aesurf_object(aesurf)
-        model.add_aefact_object(aefact_elev)
-        model.add_aefact_object(aefact_alpha)
-        model.add_aefact_object(aefact_mach)
-        model.add_aefact_object(aefact_delta)
+        model._add_aesurf_object(aesurf)
+        model._add_aefact_object(aefact_elev)
+        model._add_aefact_object(aefact_alpha)
+        model._add_aefact_object(aefact_mach)
+        model._add_aefact_object(aefact_delta)
 
         csshcd1.cross_reference(model)
         csshcd1.write_card()

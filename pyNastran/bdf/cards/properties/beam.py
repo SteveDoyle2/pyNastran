@@ -106,6 +106,8 @@ class PBEAM(IntegratedLineProperty):
             y coordinate of neutral axis for end B.
         n2b : float; default=n1b
             z coordinate of neutral axis for end B.
+        comment : str; default=''
+            a comment for the card
         """
         IntegratedLineProperty.__init__(self)
         if comment:
