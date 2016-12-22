@@ -2824,7 +2824,7 @@ class Matrix(object):
         self.data = None
 
     def write(self, f06, print_full=True):
-        f06.write('name=%r; type=%s; dtype=%s\n' % (self.name, type(self.data), self.data.dtype))
+        f06.write(str(self) + '\n')
 
         matrix = self.data
         if isinstance(matrix, coo_matrix):
@@ -2840,8 +2840,9 @@ class Matrix(object):
         f06.write('\n\n')
 
     def __repr__(self):
-        msg = 'Matrix:\n'
-        msg += '  name = %r\n' % name
+        class_name = str(type(self.data)).replace('<class ', '').replace('>', '')
+        msg = 'Matrix[%r]; shape=%s; type=%s; dtype=%s' % (
+            self.name, str(self.data.shape), class_name, self.data.dtype)
         return msg
 
 

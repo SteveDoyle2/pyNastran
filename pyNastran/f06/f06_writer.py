@@ -422,6 +422,7 @@ class F06Writer(OP2_F06_Common):
 
     def write_matrices(self, f06):
         for name, matrix in iteritems(self.matrices):
+            print(matrix)
             matrix.write(f06)
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
