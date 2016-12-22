@@ -7,8 +7,9 @@ from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
+from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
-                                                CQUADR, CQUAD8, CQUAD, CQUADX,
+                                                CQUADR, CQUAD8, CQUAD,
                                                 CSHEAR)
 from pyNastran.bdf.cards.elements.rods import CROD, CTUBE, CONROD
 from pyNastran.bdf.cards.elements.bars import CBAR
@@ -1009,7 +1010,7 @@ class GEOM2(GeomCommon):
             mdot = 0.
             data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
-            self.add_thermal_BC(elem, elem.eid)
+            self._add_thermal_bc_object(elem, elem.eid)
             n += ntotal
         self.card_count['CONVM'] = nelements
         return n
@@ -1094,7 +1095,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
             print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
                   'tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
-                eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
+                      eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
             #data_init = [eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4]
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
             elem = element.add_op2_data(data)

@@ -515,10 +515,12 @@ class BDFAttributes(object):
                 'CFAST',
 
                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
-                'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-                'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+                'CTRIA3', 'CTRIA6', 'CTRIAR',
+                'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
                 'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
                 'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
+                'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
+                'CQUADX', 'CQUADX4', 'CQUADX8',
 
                 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1',
                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',

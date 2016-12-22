@@ -45,10 +45,12 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1)
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 
-from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
-                                                CSHEAR, CTRIA3, CTRIA6, CTRIAX,
-                                                CTRIAX6, CTRIAR,
-                                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8)
+from pyNastran.bdf.cards.elements.axisymmetric_shells import (
+    CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
+from pyNastran.bdf.cards.elements.shell import (
+    CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
+    CTRIA3, CTRIA6, CTRIAR,
+    CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
@@ -346,10 +348,11 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
             'CFAST',
 
             'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
-            'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-            'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+            'CTRIA3', 'CTRIA6', 'CTRIAR',
+            'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
             'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
             #'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
+            'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
             'CIHEX1',
@@ -1814,9 +1817,13 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
             'CQUAD' : (CQUAD, self._add_element_object),
             'CQUAD8' : (CQUAD8, self._add_element_object),
             'CQUADX' : (CQUADX, self._add_element_object),
+            'CQUADX4' : (CQUADX4, self._add_element_object),
+            'CQUADX8' : (CQUADX8, self._add_element_object),
             'CQUADR' : (CQUADR, self._add_element_object),
             'CTRIA6' : (CTRIA6, self._add_element_object),
             'CTRIAR' : (CTRIAR, self._add_element_object),
+            'CTRAX3' : (CTRAX3, self._add_element_object),
+            #'CTRAX6' : (CTRAX6, self._add_element_object),
             'CTRIAX' : (CTRIAX, self._add_element_object),
             'CTRIAX6' : (CTRIAX6, self._add_element_object),
             'PCOMP' : (PCOMP, self._add_property_object),

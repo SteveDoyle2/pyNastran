@@ -13,6 +13,8 @@ class RealAccelerationArray(RealTableArray):
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         if self.table_name in ['OUGV1', 'OUGV2']:
             pass
+        elif self.table_name in ['ROUGV1', 'ROUGV2']:
+            words += ['                                                (RELATIVE TO ENFORCED MOTION INPUT)']
         elif self.table_name in ['OUGPSD1', 'OUGPSD2', 'OAGPSD1', 'OAGPSD2']:
             words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
         elif self.table_name in ['OUGRMS1', 'OUGRMS2', 'OAGRMS1', 'OAGRMS2']:

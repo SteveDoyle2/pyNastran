@@ -54,8 +54,10 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CQUAD4, CQUAD8, CQUADR, CSHEAR,
-                               CTRIA3, CTRIA6, CTRIAR, CTRIAX6,
+                               CTRIA3, CTRIA6, CTRIAR,
                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
+                               CTRAX3, CTRAX6, CTRIAX, CTRIAX6,
+                               CQUADX, CQUADX4, CQUADX8,
                                CONM2,
                                LOAD)
 
@@ -2241,7 +2243,7 @@ class NastranIO(object):
             areai = 0.
             area_ratioi = 1.
             taper_ratioi = 0.
-            if isinstance(element, (CTRIA3, CTRIAR, CPLSTN3)):
+            if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
                     material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
@@ -2316,7 +2318,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element, (CTRIA6, CPLSTN6)):
+            elif isinstance(element, (CTRIA6, CTRIAX6, CPLSTN6)):
                 if isinstance(element, CTRIA6):
                     material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 node_ids = element.node_ids
@@ -2368,7 +2370,7 @@ class NastranIO(object):
                 #elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4)):
+            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
                     material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 #print('eid=%s theta=%s' % (eid, material_coord[i]))
@@ -2493,7 +2495,7 @@ class NastranIO(object):
                     warp2 = np.dot(n2a, n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
                     max_warp = max(np.arccos(warp1), np.arccos(warp2))
 
-            elif isinstance(element, (CQUAD8, CPLSTN8)):
+            elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
                     material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 node_ids = element.node_ids
@@ -3088,6 +3090,8 @@ class NastranIO(object):
                         z0 = 0.
                     elif pid_type == 'PSHEAR':
                         z0 = 0.
+                    elif pid_type in ['PSOLID', 'PLSOLID']:
+                        z0 = 0.
                     else:
                         raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
 
@@ -3108,19 +3112,34 @@ class NastranIO(object):
                         elif element.type == 'CQUAD':
                             z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                             nnodesi = 9
+                        elif element.type == 'CTRAX3':
+                            nnodesi = 3
+                            z0 = 0.
+                        elif element.type == 'CTRAX6':
+                            nnodesi = 6
+                            z0 = 0.
+                        elif element.type == 'CQUADX4':
+                            nnodesi = 4
+                            z0 = 0.
+                        elif element.type == 'CQUADX8':
+                            nnodesi = 8
+                            z0 = 0.
+                        elif element.type == 'CQUADX':
+                            nnodesi = 9
+                            z0 = 0.
                         else:
                             raise NotImplementedError(element.type)
                     else:
-                        if element.type in ['CTRIA3', 'CTRIAR', 'CTRIAX', 'CPLSTN3']:
+                        if element.type in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CTRIAX', 'CPLSTN3']:
                             nnodesi = 3
-                        elif element.type in ['CTRIA6', 'CTRIAX6', 'CPLSTN6']:
+                        elif element.type in ['CTRIA6', 'CTRIAX6', 'CPLSTN6', 'CTRAX6']:
                             nnodesi = 6
 
-                        elif element.type in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR']:
+                        elif element.type in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR', 'CQUADX4']:
                             nnodesi = 4
-                        elif element.type in ['CQUAD8', 'CPLSTN8']:
+                        elif element.type in ['CQUAD8', 'CPLSTN8', 'CQUADX8']:
                             nnodesi = 8
-                        elif element.type == 'CQUAD':
+                        elif element.type == ['CQUAD', 'CQUADX']:
                             nnodesi = 9
                         else:
                             raise NotImplementedError(element.type)

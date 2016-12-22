@@ -245,7 +245,8 @@ class GEOM1(GeomCommon):
             (nid, cp, x1, x2, x3, cd, ps, seid) = out
             if self.is_debug_file:
                 self.binary_debug.write('  GRID=%s\n' % str(out))
-            if cd >= 0 and nid < 10000000:
+            if nid < 10000000:
+                # cd can be < 0
                 if ps == 0:
                     ps = ''
                 node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
@@ -259,7 +260,7 @@ class GEOM1(GeomCommon):
                 self.log.debug('*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s '
                                'seid=%s' % (nid, cp, x1, x2, x3, cd, ps, seid))
                 node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
-                self.reject_cards.append(str(node))
+                self.rejects.append(str(node))
             n += ntotal
         return n
 

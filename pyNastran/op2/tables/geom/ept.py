@@ -410,6 +410,10 @@ class EPT(GeomCommon):
 
             assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
                 pid, nlayers, z0, nsm, sb, ft, Tref, ge)
+
+            if self.is_debug_file:
+                self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
+                pid, nlayers, z0, nsm, sb, ft, Tref, ge))
             for ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+16])
                 mids.append(mid)
@@ -417,7 +421,8 @@ class EPT(GeomCommon):
                 thetas.append(theta)
                 souts.append(sout)
                 if self.is_debug_file:
-                    self.binary_debug.write('  mid=%s t=%s theta=%s sout=%s' % (mid, t, theta, sout))
+                    self.binary_debug.write('      mid=%s t=%s theta=%s sout=%s\n' % (
+                        mid, t, theta, sout))
                 n += 16
 
             data_in = [

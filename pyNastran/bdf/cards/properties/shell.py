@@ -582,10 +582,11 @@ class PCOMP(CompositeShellProperty):
             msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(allowed_lam))
             raise ValueError(msg)
 
-        if self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN'] and self.sb <= 0.:
-            msg = 'PCOMP pid=%s FT=%s sb=%s; sb must be greater than 0' % (
-                self.pid, self.ft, self.sb)
-            raise ValueError(msg)
+        # this is a loose requirement
+        #if self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN'] and self.sb <= 0.:
+            #msg = 'PCOMP pid=%s FT=%s sb=%s; sb must be greater than 0' % (
+                #self.pid, self.ft, self.sb)
+            #raise ValueError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):

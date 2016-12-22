@@ -490,7 +490,7 @@ class GEOM4(GeomCommon):
                 assert out[i+1] == -1, out
                 suporti = SUPORT1.add_op2_data(suport)
                 #self.log.info(suporti)
-                self.add_suport(suporti) # extracts [sid, nid, c]
+                self._add_suport_object(suporti) # extracts [sid, nid, c]
                 nsuports += 1
                 if self.is_debug_file:
                     self.binary_debug.write('  SUPORT1=%s\n' % str(suport))
