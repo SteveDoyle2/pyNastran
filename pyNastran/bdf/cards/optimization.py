@@ -173,6 +173,9 @@ class DCONSTR(OptConstraint):
     """
     type = 'DCONSTR'
     def __init__(self, oid, dresp_id, lid=1.e20, uid=1.e20, lowfq=0., highfq=1.e20, comment=''):
+        """
+
+        """
         if comment:
             self.comment = comment
         self.oid = oid

@@ -26,7 +26,7 @@ class PARAM(BaseCard):
 
     def __init__(self, key, values, comment=''):
         """
-        Creates a PARAM card.
+        Creates a PARAM card
 
         Parameters
         ----------

@@ -1242,6 +1242,8 @@ class MOMENT(Moment):
             the coordinate system for the load
         xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
             the load direction in the cid frame
+        comment : str; default=''
+            a comment for the card
         """
         Moment.__init__(self)
         if comment:
@@ -2193,6 +2195,8 @@ class PLOAD4(Load):
            ???
         ldir : str; default='NORM'
            ???
+        comment : str; default=''
+            a comment for the card
 
         TODO: fix the way "pressures" works
         """
