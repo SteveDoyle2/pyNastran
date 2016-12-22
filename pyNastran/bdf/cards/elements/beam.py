@@ -13,7 +13,10 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 class CBEAM(CBAR):
     """
+
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
+    +=======+=====+=====+=====+=====+=====+=====+=====+==========+
     | CBEAM | EID | PID | GA  | GB  | X1  | X2  | X3  | OFFT/BIT |
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
     |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
@@ -24,6 +27,8 @@ class CBEAM(CBAR):
     or
 
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
+    +=======+=====+=====+=====+=====+=====+=====+=====+==========+
     | CBEAM | EID | PID | GA  | GB  | G0  |     |     | OFFT/BIT |
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
     |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
@@ -31,6 +36,7 @@ class CBEAM(CBAR):
     |       | SA  | SB  |     |     |     |     |     |          |
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
 
+    offt/bit are MSC specific fields
     """
     type = 'CBEAM'
     _field_map = {
@@ -74,8 +80,49 @@ class CBEAM(CBAR):
                         n, value, self.type)
                     raise KeyError(msg)
 
-    def __init__(self, eid, pid, ga, gb, x, g0, is_offt, offt, bit,
+    def __init__(self, eid, pid, ga, gb, x, g0, offt, bit,
                  pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
+        """
+        Adds a CBEAM card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        ga / gb : int
+            grid point at End A/B
+        x : List[float, float, float]
+            Components of orientation vector, from GA, in the displacement
+            coordinate system at GA (default), or in the basic coordinate system
+        g0 : int
+            Alternate method to supply the orientation vector using grid
+            point G0. Direction of is from GA to G0. is then transferred
+            to End A
+        offt : str; default='GGG'
+            Offset vector interpretation flag
+            None : bit is active
+        bit : float; default=None
+            Built-in twist of the cross-sectional axes about the beam axis
+            at end B relative to end A.
+            For beam p-elements ONLY!
+            None : offt is active
+        pa / pb : int; default=0
+            Pin Flag at End A/B.  Releases the specified DOFs
+        wa / wb : List[float, float, float]
+            Components of offset vectors from the grid points to the end
+            points of the axis of the shear center
+        sa / sb : int; default=0
+            Scalar or grid point identification numbers for the ends A and B,
+            respectively. The degrees-of-freedom at these points are the
+            warping variables . SA and SB cannot be specified for
+            beam p-elements
+        comment : str; default=''
+            a comment for the card
+
+        offt/bit are MSC specific fields
+        """
         LineElement.__init__(self)
         if comment:
             self.comment = comment
@@ -94,7 +141,6 @@ class CBEAM(CBAR):
         self.gb = gb
         self.x = x
         self.g0 = g0
-        self.is_offt = is_offt
         self.offt = offt
         self.bit = bit
         self.pa = pa
@@ -113,7 +159,7 @@ class CBEAM(CBAR):
         gb = integer(card, 4, 'gb')
 
         x, g0 = cls._init_x_g0(card, eid)
-        is_offt, offt, bit = cls._init_offt_bit(card, eid)# offt doesn't exist in NX nastran
+        offt, bit = cls._init_offt_bit(card, eid)# offt doesn't exist in NX nastran
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
 
@@ -128,7 +174,7 @@ class CBEAM(CBAR):
         sa = integer_or_blank(card, 17, 'sa', 0)
         sb = integer_or_blank(card, 18, 'sb', 0)
         assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
-        return CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
+        return CBEAM(eid, pid, ga, gb, x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
     @classmethod
@@ -176,7 +222,6 @@ class CBEAM(CBAR):
         sa = main[4]
         sb = main[5]
 
-        is_offt = True  #: .. todo:: is this correct???
         #offt = str(data[6]) # GGG
         bit = None # ????
         offt = 'GGG'  #: .. todo:: is this correct???
@@ -186,8 +231,8 @@ class CBEAM(CBAR):
 
         wa = np.array([main[8], main[9], main[10]], 'float64')
         wb = np.array([main[11], main[12], main[13]], 'float64')
-        return CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
-                     pa, pb, wa, wb, sa, sb, comment=comment)
+        return CBEAM(eid, pid, ga, gb, x, g0, offt, bit,
+                     pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
     def _validate_input(self):
         if self.g0 in [self.ga, self.gb]:
@@ -204,15 +249,12 @@ class CBEAM(CBAR):
         """
         field8 = integer_double_string_or_blank(card, 8, 'field8')
         if isinstance(field8, float):
-            is_offt = False
             offt = None
             bit = field8
         elif field8 is None:
-            is_offt = True
             offt = 'GGG'  # default
             bit = None
         elif isinstance(field8, string_types):
-            is_offt = True
             bit = None
             offt = field8
             msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
@@ -223,7 +265,7 @@ class CBEAM(CBAR):
             msg = ('field8 on %s card is not a string(offt) or bit '
                    '(float)...field8=%s\n' % (cls.type, field8))
             raise RuntimeError("Card Instantiation: %s" % msg)
-        return is_offt, offt, bit
+        return offt, bit
 
     def Mid(self):
         if isinstance(self.pid, integer_types):
@@ -243,12 +285,25 @@ class CBEAM(CBAR):
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.Nsm()
 
+    @property
+    def is_offt(self):
+        """is the offt flag active?"""
+        if isinstance(self.offt, str):
+            return True
+        assert isinstance(self.bit, float), 'bit=%s type=%s' % (self.bit, type(self.bit))
+        return False
+
+    @property
+    def is_bit(self):
+        """is the bit flag active?"""
+        return not self.is_offt
+
     def get_offt_bit_defaults(self):
         """
         offt doesn't exist in NX nastran
         """
         if self.is_offt:
-            field8 = field8 = set_blank_if_default(self.offt, 'GGG')
+            field8 = set_blank_if_default(self.offt, 'GGG')
         else:
             field8 = set_blank_if_default(self.bit, 0.0)
         return field8

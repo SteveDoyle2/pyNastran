@@ -62,50 +62,32 @@ class PBEAM(IntegratedLineProperty):
             area
         i1, i2, i12, j : List[float]
             moments of inertia
-        nsm
+        nsm : List[float]
+            nonstructural mass per unit length
         c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
            the y/z locations of the stress recovery points
            c1 - point C.y
            c2 - point C.z
 
-        k1 : float; default=1.
-            Shear stiffness factor K in K*A*G for plane 1.
-        k2 : float; default=1.
-            Shear stiffness factor K in K*A*G for plane 2.
-        s1 : float; default=0.
-            Shear relief coefficient due to taper for plane 1.
-        s2 : float; default=0.
-            Shear relief coefficient due to taper for plane 2.
-        nsia : float; default=0.
+        k1 / k2 : float; default=1.
+            Shear stiffness factor K in K*A*G for plane 1/2.
+        s1 / s2 : float; default=0.
+            Shear relief coefficient due to taper for plane 1/2.
+        nsia / nsia : float; default=0. / nsia
             non structural mass moment of inertia per unit length
-            about nsm center of gravity at Point A.
-        nsib : float; default=nsia
-            non structural mass moment of inertia per unit length
-            about nsm center of gravity at Point B.
-        cwa : float; default=0.
-            warping coefficient for end A.
-        cwb : float; default=cwa
-            warping coefficient for end B.
-        m1a : float; default=0.
-            y coordinate of center of gravity of
+            about nsm center of gravity at Point A/B.
+        cwa / cwb : float; default=0. / cwa
+            warping coefficient for end A/B.
+        m1a / m2a : float; default=0. / m1a
+            y/z coordinate of center of gravity of
             nonstructural mass for end A.
-        m2a : float; default=m2a
-            z coordinate of center of gravity of
-            nonstructural mass for end A.
-        m1b : float; default=0.
-            y coordinate of center of gravity of
+        m1b / m2b : float; default=0. / m1b
+            y/z coordinate of center of gravity of
             nonstructural mass for end B.
-        m2b : float; default=m2b
-            z coordinate of center of gravity of
-            nonstructural mass for end B.
-        n1a : float; default=0.
-            y coordinate of neutral axis for end A.
-        n2a : float; default=n1a
-            z coordinate of neutral axis for end A.
-        n1b : float; default=0.
-            y coordinate of neutral axis for end B.
-        n2b : float; default=n1b
-            z coordinate of neutral axis for end B.
+        n1a / n2a : float; default=0. / n1a
+            y/z coordinate of neutral axis for end A.
+        n1b / n2b : float; default=0. / n1b
+            y/z coordinate of neutral axis for end B.
         comment : str; default=''
             a comment for the card
         """

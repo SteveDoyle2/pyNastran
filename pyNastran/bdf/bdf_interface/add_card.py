@@ -262,9 +262,9 @@ class AddCards(AddMethods):
         Parameters
         ----------
         eid : int
-           element ID
+           element id
         nid : int
-           node ID
+           node id
         mass : float
            the mass of the CONM2
         cid : int; default=0
@@ -474,6 +474,34 @@ class AddCards(AddMethods):
 
     def add_cbar(self, eid, pid, ga, gb, x, g0, offt='GGG', pa=0, pb=0,
                  wa=None, wb=None, comment=''):
+        """
+        Adds a CBAR card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        ga / gb : int
+            grid point at End A/B
+        x : List[float, float, float]
+            Components of orientation vector, from GA, in the displacement
+            coordinate system at GA (default), or in the basic coordinate system
+        g0 : int
+            Alternate method to supply the orientation vector using grid
+            point G0. Direction of is from GA to G0. is then transferred
+            to End A
+        offt : str; default='GGG'
+            Offset vector interpretation flag
+        pa / pb : int; default=0
+            Pin Flag at End A/B.  Releases the specified DOFs
+        wa / wb : List[float, float, float]
+            Components of offset vectors from the grid points to the end
+            points of the axis of the shear center
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CBAR(eid, pid, ga, gb, x, g0, offt=offt, pa=pa, pb=pb,
                     wa=wa, wb=wb, comment=comment)
         self._add_element_object(elem)
@@ -490,9 +518,50 @@ class AddCards(AddMethods):
         prop = PBARL(pid, mid, group, Type, dim, nsm=nsm, comment=comment)
         self._add_property_object(prop)
 
-    def add_cbeam(self, eid, pid, ga, gb, x, g0, is_offt, offt, bit,
+    def add_cbeam(self, eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
                   pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
-        elem = CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
+        """
+        Adds a CBEAM card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        ga / gb : int
+            grid point at End A/B
+        x : List[float, float, float]
+            Components of orientation vector, from GA, in the displacement
+            coordinate system at GA (default), or in the basic coordinate system
+        g0 : int
+            Alternate method to supply the orientation vector using grid
+            point G0. Direction of is from GA to G0. is then transferred
+            to End A
+        offt : str; default='GGG'
+            Offset vector interpretation flag
+            None : bit is active
+        bit : float; default=None
+            Built-in twist of the cross-sectional axes about the beam axis
+            at end B relative to end A.
+            For beam p-elements ONLY!
+            None : offt is active
+        pa / pb : int; default=0
+            Pin Flag at End A/B.  Releases the specified DOFs
+        wa / wb : List[float, float, float]
+            Components of offset vectors from the grid points to the end
+            points of the axis of the shear center
+        sa / sb : int; default=0
+            Scalar or grid point identification numbers for the ends A and B,
+            respectively. The degrees-of-freedom at these points are the
+            warping variables . SA and SB cannot be specified for
+            beam p-elements
+        comment : str; default=''
+            a comment for the card
+
+        offt/bit are MSC specific fields
+        """
+        elem = CBEAM(eid, pid, ga, gb, x, g0, offt=offt, bit=bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
         self._add_element_object(elem)
 
@@ -522,50 +591,32 @@ class AddCards(AddMethods):
             area
         i1, i2, i12, j : List[float]
             moments of inertia
-        nsm
+        nsm : List[float]
+            nonstructural mass per unit length
         c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
            the y/z locations of the stress recovery points
            c1 - point C.y
            c2 - point C.z
 
-        k1 : float; default=1.
-            Shear stiffness factor K in K*A*G for plane 1.
-        k2 : float; default=1.
-            Shear stiffness factor K in K*A*G for plane 2.
-        s1 : float; default=0.
-            Shear relief coefficient due to taper for plane 1.
-        s2 : float; default=0.
-            Shear relief coefficient due to taper for plane 2.
-        nsia : float; default=0.
+        k1 / k2 : float; default=1.
+            Shear stiffness factor K in K*A*G for plane 1/2.
+        s1 / s2 : float; default=0.
+            Shear relief coefficient due to taper for plane 1/2.
+        nsia / nsia : float; default=0. / nsia
             non structural mass moment of inertia per unit length
-            about nsm center of gravity at Point A.
-        nsib : float; default=nsia
-            non structural mass moment of inertia per unit length
-            about nsm center of gravity at Point B.
-        cwa : float; default=0.
-            warping coefficient for end A.
-        cwb : float; default=cwa
-            warping coefficient for end B.
-        m1a : float; default=0.
-            y coordinate of center of gravity of
+            about nsm center of gravity at Point A/B.
+        cwa / cwb : float; default=0. / cwa
+            warping coefficient for end A/B.
+        m1a / m2a : float; default=0. / m1a
+            y/z coordinate of center of gravity of
             nonstructural mass for end A.
-        m2a : float; default=m2a
-            z coordinate of center of gravity of
-            nonstructural mass for end A.
-        m1b : float; default=0.
-            y coordinate of center of gravity of
+        m1b / m2b : float; default=0. / m1b
+            y/z coordinate of center of gravity of
             nonstructural mass for end B.
-        m2b : float; default=m2b
-            z coordinate of center of gravity of
-            nonstructural mass for end B.
-        n1a : float; default=0.
-            y coordinate of neutral axis for end A.
-        n2a : float; default=n1a
-            z coordinate of neutral axis for end A.
-        n1b : float; default=0.
-            y coordinate of neutral axis for end B.
-        n2b : float; default=n1b
-            z coordinate of neutral axis for end B.
+        n1a / n2a : float; default=0. / n1a
+            y/z coordinate of neutral axis for end A.
+        n1b / n2b : float; default=0. / n1b
+            y/z coordinate of neutral axis for end B.
         comment : str; default=''
             a comment for the card
         """
@@ -1274,6 +1325,23 @@ class AddCards(AddMethods):
     def add_aeparm(self, id, label, units, comment=''):
         aeparm = AEPARM(id, label, units, comment=comment)
         self._add_aeparm_object(aeparm)
+
+    def add_dtable(self, default_values, comment=''):
+        """
+        Creates a DTABLE card
+
+        Parameters
+        ----------
+        default_values : dict
+            key : str
+                the parameter name
+            value : float
+                the value
+        comment : str; default=''
+            a comment for the card
+        """
+        dtable = DTABLE(default_values, comment=comment)
+        self._add_dtable_object(dtable)
 
     def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)

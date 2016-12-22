@@ -71,6 +71,19 @@ class Table(BaseCard):
 class DTABLE(BaseCard):
     type = 'DTABLE'
     def __init__(self, default_values, comment=''):
+        """
+        Creates a DTABLE card
+
+        Parameters
+        ----------
+        default_values : dict
+            key : str
+                the parameter name
+            value : float
+                the value
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.default_values = default_values

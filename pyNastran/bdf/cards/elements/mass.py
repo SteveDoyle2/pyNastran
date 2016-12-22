@@ -840,9 +840,9 @@ class CONM2(PointMassElement):
         Parameters
         ----------
         eid : int
-           element ID
+           element id
         nid : int
-           node ID
+           node id
         mass : float
            the mass of the CONM2
         cid : int; default=0
