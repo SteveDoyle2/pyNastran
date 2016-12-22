@@ -272,7 +272,7 @@ class RBAR(RigidElement):
 class RBAR1(RigidElement):
     type = 'RBAR1'
 
-    def __init__(self, eid, ga, gb, cb, alpha, comment=''):
+    def __init__(self, eid, ga, gb, cb, alpha=0., comment=''):
         """
         +-------+-----+----+----+-----+-------+
         |   1   |  2  |  3 |  4 |  5  |   6   |
@@ -299,7 +299,7 @@ class RBAR1(RigidElement):
         cb = components_or_blank(card, 4, 'cb')
         alpha = double_or_blank(card, 5, 'alpha', 0.0)
         assert len(card) <= 6, 'len(RBAR1 card) = %i\ncard=%s' % (len(card), card)
-        return RBAR1(eid, ga, gb, cb, alpha, comment=comment)
+        return RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -308,7 +308,7 @@ class RBAR1(RigidElement):
         gb = data[2]
         cb = data[3]
         alpha = data[4]
-        return RBAR1(eid, ga, gb, cb, alpha, comment=comment)
+        return RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -367,9 +367,46 @@ class RBAR1(RigidElement):
 
 
 class RBE1(RigidElement):  # maybe not done, needs testing
+    """
+    +------+-----+-----+-----+-------+-----+-----+-----+
+    |   1  |  2  |  3  |  4  |   5   |  6  |  7  |  8  |
+    +======+=====+=====+=====+=======+=====+=====+=====+
+    | RBE1 | EID | GN1 | CN1 |  GN2  | CN2 | GN3 | CN3 |
+    +------+-----+-----+-----+-------+-----+-----+-----+
+    |      |     | GN4 | CN4 | GN5 |  CN5  | GN6 | CN6 |
+    +------+-----+-----+-----+-------+-----+-----+-----+
+    |      | UM  | GM1 | CM1 |  GM2  | CM2 | GM3 | CM3 |
+    +------+-----+-----+-----+-------+-----+-----+-----+
+    |      | GM4 | CM4 | etc | ALPHA |     |     |     |
+    +------+-----+-----+-----+-------+-----+-----+-----+
+
+    +------+-----+-----+-----+-------+-----+-----+-----+
+    | RBE1 | 59  | 59  | 123 |  60   | 456 |     |     |
+    +------+-----+-----+-----+-------+-----+-----+-----+
+    |      | UM  | 61  | 246 |       |     |     |     |
+    +------+-----+-----+-----+-------+-----+-----+-----+
+    """
     type = 'RBE1'
 
-    def __init__(self, eid, Gni, Cni, Gmi, Cmi, alpha, comment=''):
+    def __init__(self, eid, Gni, Cni, Gmi, Cmi, alpha=0., comment=''):
+        """
+        Creates an RBE1 element
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        Gni : List[int]
+            independent node ids
+        Cni : List[str]
+            the independent components (e.g., '123456')
+        Gmi : List[int]
+            dependent node ids
+        Cmi : List[str]
+            the dependent components (e.g., '123456')
+        alpha : float; default=0.
+            Thermal expansion coefficient
+        """
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
@@ -433,7 +470,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             else:
                 assert cmi is None
             i += 2
-        return RBE1(eid, Gni, Cni, Gmi, Cmi, alpha, comment=comment)
+        return RBE1(eid, Gni, Cni, Gmi, Cmi, alpha=alpha, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -519,6 +556,15 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
 
 class RBE2(RigidElement):
+    """
+    +-------+-----+-----+-----+------+-------+-----+-----+-----+
+    |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
+    +=======+=====+=====+=====+======+=======+=====+=====+=====+
+    |  RBE2 | EID | GN  | CM  | GM1  |  GM2  | GM3 | GM4 | GM5 |
+    +-------+-----+-----+-----+------+-------+-----+-----+-----+
+    |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
+    +-------+-----+-----+-----+------+-------+-----+-----+-----+
+    """
     type = 'RBE2'
     _field_map = {1: 'eid', 2:'gn', 3:'cm'}
 
@@ -542,15 +588,6 @@ class RBE2(RigidElement):
         return value
 
     def __init__(self, eid, gn, cm, Gmi, alpha=0.0, comment=''):
-        """
-        +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
-        +=======+=====+=====+=====+======+=======+=====+=====+=====+
-        |  RBE2 | EID | GN  | CM  | GM1  |  GM2  | GM3 | GM4 | GM5 |
-        +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
-        +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        """
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
@@ -761,35 +798,38 @@ class RBE2(RigidElement):
 class RBE3(RigidElement):
     """
     .. todo:: not done, needs testing badly
+
+    +------+---------+---------+---------+------+--------+--------+------+--------+
+    |   1  |    2    |    3    |    4    |  5   |    6   |    7   |   8  |    9   |
+    +======+=========+=========+=========+======+========+========+======+========+
+    | RBE3 |   EID   |         | REFGRID | REFC |  WT1   |   C1   | G1,1 |  G1,2  |
+    +------+---------+---------+---------+------+--------+--------+------+--------+
+    |      |   G1,3  |   WT2   |   C2    | G2,1 |  G2,2  | -etc.- | WT3  |   C3   |
+    +------+---------+---------+---------+------+--------+--------+------+--------+
+    |      |   G3,1  |   G3,2  | -etc.-  | WT4  |  C4    |  G4,1  | G4,2 | -etc.- |
+    +------+---------+---------+---------+------+--------+--------+------+--------+
+    |      |   'UM'  |   GM1   |   CM1   | GM2  |  CM2   |  GM3   | CM3  |        |
+    +------+---------+---------+---------+------+--------+--------+------+--------+
+    |      |   GM4   |   CM4   |   GM5   | CM5  | -etc.- |        |      |        |
+    +------+---------+---------+---------+------+--------+--------+------+--------+
+    |      | 'ALPHA' |   ALPHA |         |      |        |        |      |        |
+    +------+---------+---------+---------+------+--------+--------+------+--------+
     """
     type = 'RBE3'
 
     def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
                  Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
-        eid
-        refgrid - dependent
+        eid : int
+            element id
+        refgrid : int
+            dependent node
         refc - independent
         GiJs - independent
         Gmi - dependent
         Cmi - dependent
-        alpha
-
-        +------+---------+---------+---------+------+--------+--------+------+--------+
-        |   1  |    2    |    3    |    4    |  5   |    6   |    7   |   8  |    9   |
-        +======+=========+=========+=========+======+========+========+======+========+
-        | RBE3 |   EID   |         | REFGRID | REFC |  WT1   |   C1   | G1,1 |  G1,2  |
-        +------+---------+---------+---------+------+--------+--------+------+--------+
-        |      |   G1,3  |   WT2   |   C2    | G2,1 |  G2,2  | -etc.- | WT3  |   C3   |
-        +------+---------+---------+---------+------+--------+--------+------+--------+
-        |      |   G3,1  |   G3,2  | -etc.-  | WT4  |  C4    |  G4,1  | G4,2 | -etc.- |
-        +------+---------+---------+---------+------+--------+--------+------+--------+
-        |      |   'UM'  |   GM1   |   CM1   | GM2  |  CM2   |  GM3   | CM3  |        |
-        +------+---------+---------+---------+------+--------+--------+------+--------+
-        |      |   GM4   |   CM4   |   GM5   | CM5  | -etc.- |        |      |        |
-        +------+---------+---------+---------+------+--------+--------+------+--------+
-        |      | 'ALPHA' |   ALPHA |         |      |        |        |      |        |
-        +------+---------+---------+---------+------+--------+--------+------+--------+
+        alpha : float
+            ???
         """
         RigidElement.__init__(self)
         if comment:

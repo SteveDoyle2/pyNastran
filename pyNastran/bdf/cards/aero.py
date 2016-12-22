@@ -72,6 +72,8 @@ class AECOMP(BaseCard):
 
     def __init__(self, name, list_type, lists, comment=''):
         """
+        Creates an AECOMP card
+
         Parameters
         ----------
         name : str
@@ -85,6 +87,8 @@ class AECOMP(BaseCard):
             The identification number of either SET1, AELIST or CAEROi
             entries that define the set of grid points that comprise
             the component
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -330,7 +334,6 @@ class AELIST(BaseCard):
 
     Remarks
     -------
-
     1. These entries are referenced by the AESURF entry.
     2. When the THRU option is used, all intermediate grid points must exist.
        The word THRU may not appear in field 3 or 9 (2 or 9 for continuations).
@@ -467,6 +470,18 @@ class AESTAT(BaseCard):
         1: 'id', 2:'label',
     }
     def __init__(self, id, label, comment=''):
+        """
+        Creates an AESTAT card, which is a variable to be used in a TRIM analysis
+
+        Parameters
+        ----------
+        id : int
+            unique id
+        label : str
+            name for the id
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.id = id
@@ -561,24 +576,15 @@ class AESURF(BaseCard):
             reference chord for the control surface
         crefs : float; default=1.0
             reference area for the control surface
-        pllim : float; default=-pi/2
-            Lower deflection limits for the control surface in radians
-        pulim : float; default=pi/2
-            Upper deflection limits for the control surface in radians
-        hmllim : float; default=None
-            Lower hinge moment limits for the control surface in
+        pllim / pulim : float; default=-pi/2 / pi/2
+            Lower/Upper deflection limits for the control surface in radians
+        hmllim / hmulim : float; default=None
+            Lower/Upper hinge moment limits for the control surface in
             force-length units
-        hmulim : float; default=None
-            Upper hinge moment limits for the control surface in
-            force-length units
-        tqllim : int; default=None
+        tqllim / tqulim : int; default=None
             Set identification numbers of TABLEDi entries that provide the
-            lower deflection limits for the control surface as a function
-            of the dynamic pressure
-        tqulim : int; default=None
-            Set identification numbers of TABLEDi entries that provide the
-            upper deflection limits for the control surface as a function
-            of the dynamic pressure
+            lower/upper deflection limits for the control surface as a
+            function of the dynamic pressure
         comment : str; default=''
             a comment for the card
         """
@@ -2998,6 +3004,16 @@ class DIVERG(BaseCard):
     """
     type = 'DIVERG'
     def __init__(self, sid, nroots, machs, comment=''):
+        """
+        Attributes
+        ----------
+        sid : int
+            The name
+        nroots : int
+            the number of roots
+        machs : List[float]
+            list of Mach numbers
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -3060,6 +3076,29 @@ class FLFACT(BaseCard):
     type = 'FLFACT'
 
     def __init__(self, sid, factors, comment=''):
+        """
+        Creates an FLFACT card
+
+        Parameters
+        ----------
+        sid : int
+            the id of a density, reduced_frequency, mach, or velocity table
+            the FLUTTER card defines the meaning
+        factors : varies
+            values : List[float, ..., float]
+                list of factors
+            List[f1, THRU, fnf, nf, fmid]
+                f1 : float
+                    first value
+                THRU : str
+                    the word THRU
+                nf : float
+                    second value
+                fmid : float; default=(f1 + fnf) / 2.
+                    the mid point to bias the array
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -3306,7 +3345,6 @@ class FLUTTER(BaseCard):
                        imethod, nvalue, omax,
                        epsilon, comment=comment)
 
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -3381,9 +3419,9 @@ class FLUTTER(BaseCard):
         return list_fields
 
     #def repr_fields(self):
-        #(imethod, nValue) = self._reprNValueOMax()
+        #(imethod, nvalue) = self._reprNValueOMax()
         #list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
-        #          self.get_rfreq_vel(), imethod, nValue, self.epsilon]
+        #          self.get_rfreq_vel(), imethod, nvalue, self.epsilon]
         #return list_fields
 
     def write_card(self, size=8, is_double=False):

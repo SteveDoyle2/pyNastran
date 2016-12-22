@@ -489,8 +489,8 @@ class GEOM4(GeomCommon):
             if out[i] == -1:
                 assert out[i+1] == -1, out
                 suporti = SUPORT1.add_op2_data(suport)
+                #self.log.info(suporti)
                 self.add_suport(suporti) # extracts [sid, nid, c]
-                #print(suporti)
                 nsuports += 1
                 if self.is_debug_file:
                     self.binary_debug.write('  SUPORT1=%s\n' % str(suport))
@@ -504,8 +504,11 @@ class GEOM4(GeomCommon):
 
         if self.is_debug_file:
             self.binary_debug.write('  SUPORT1=%s\n' % str(suport))
+
+        #self.log.info('suporti = %s' % suport)
         suporti = SUPORT1.add_op2_data(suport)
-        self.add_suport(suporti) # extracts [sid, nid, c]
+        #self.log.info('suporti = %s' % suporti)
+        self._add_suport_object(suporti) # extracts [sid, nid, c]
         nsuports += 1
         self.card_count['SUPOT1'] = nsuports
 

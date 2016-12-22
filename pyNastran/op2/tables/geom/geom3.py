@@ -470,7 +470,7 @@ class GEOM3(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  TEMPD=%s\n' % str(out))
             (sid, T) = out
-            load = TEMPD(None, 0, out)
+            load = TEMPD.add_op2_data(out)
             #self.add_thermal_load(load)
             n += ntotal
         self.card_count['TEMPD'] = nentries

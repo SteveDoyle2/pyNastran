@@ -816,6 +816,17 @@ class AddCards(AddMethods):
         prop = PLSOLID(pid, mid, stress_strain=stress_strain, ge=ge, comment=comment)
         self._add_property_object(prop)
 
+    def add_cihex1(self, eid, pid, nids, comment=''):
+        """see CHEXA"""
+        elem = CIHEX1(eid, pid, nids, comment=comment)
+
+    def add_pihex(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
+                  fctn='SMECH', comment=''):
+        """see PSOLID"""
+        prop = PIHEX(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
+                     fctn=fctn, comment=comment)
+        self._add_property_object(prop)
+
     def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, TRef=0.0, ge=0.0, St=0.0,
                  Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
         mat = MAT1(mid, E, G, nu, rho=rho, a=a, TRef=TRef, ge=ge, St=St,
@@ -878,9 +889,54 @@ class AddCards(AddMethods):
                     a1, a2, a3, TRef, ge, comment=comment)
         self._add_structural_material_object(mat)
 
+    def add_mats1(self, mid, tid, Type, h, hr, yf, limit1, limit2, comment=''):
+        mat = MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
+        self._add_material_dependence_object(mat)
+
+    def add_matt1(self, mid, E_table, G_table, nu_table, rho_table, A_table,
+                  ge_table, st_table, sc_table, ss_table,
+                  comment=''):
+        mat = MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
+                    ge_table, st_table, sc_table, ss_table,
+                    comment=comment)
+        self._add_material_dependence_object(mat)
+
+    def add_matt2(self, mid, G11_table, G12_table, G13_table, G22_table,
+                  G23_table, G33_table, rho_table,
+                  A1_table, A2_table, A3_table, ge_table,
+                  st_table, sc_table, ss_table,
+                  comment=''):
+        mat = MATT2(mid, G11_table, G12_table, G13_table, G22_table,
+                    G23_table, G33_table, rho_table,
+                    A1_table, A2_table, A3_table, ge_table,
+                    st_table, sc_table, ss_table,
+                    comment=comment)
+        self._add_material_dependence_object(mat)
+
+    def add_matt4(self, mid, k_table, cp_table, H_table, mu_table, Hgen_table,
+                  comment=''):
+        mat = MATT4(mid, k_table, cp_table, H_table, mu_table, Hgen_table,
+                    comment=comment)
+        self._add_material_dependence_object(mat)
+
+    def add_matt5(self, mid, kxx_table, kxy_table, kxz_table, kyy_table,
+                  kyz_table, kzz_table, cp_table,
+                  hgen_table, comment=''):
+        mat = MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
+                    kyz_table, kzz_table, cp_table,
+                    hgen_table, comment=comment)
+        self._add_material_dependence_object(mat)
     def add_load(self, sid, scale, scale_factors, load_ids, comment=''):
         load = LOAD(sid, scale, scale_factors, load_ids, comment=comment)
         self._add_load_object(load)
+
+    def add_lseq(self, sid, excite_id, lid, tid, comment=''):
+        load = LSEQ(sid, excite_id, lid, tid, comment=comment)
+        self._add_lseq_object(load)
+
+    def add_dload(self):
+        load = DLOAD(sid, scale, scale_factors, load_ids, comment='')
+        self._add_dload_object(load)
 
     def add_force(self, sid, node, mag, cid=0, xyz=None, comment=''):
         """
@@ -1293,14 +1349,68 @@ class AddCards(AddMethods):
         self._add_flutter_object(flutter)
 
     def add_flfact(self, sid, factors, comment=''):
+        """
+        Creates an FLFACT card
+
+        Parameters
+        ----------
+        sid : int
+            the id of a density, reduced_frequency, mach, or velocity table
+            the FLUTTER card defines the meaning
+        factors : varies
+            values : List[float, ..., float]
+                list of factors
+            List[f1, THRU, fnf, nf, fmid]
+                f1 : float
+                    first value
+                THRU : str
+                    the word THRU
+                nf : float
+                    second value
+                fmid : float; default=(f1 + fnf) / 2.
+                    the mid point to bias the array
+        comment : str; default=''
+            a comment for the card
+        """
         flfact = FLFACT(sid, factors, comment=comment)
         self._add_flfact_object(flfact)
 
     def add_aecomp(self, name, list_type, lists, comment=''):
+        """
+        Creates an AECOMP card
+
+        Parameters
+        ----------
+        name : str
+            the name of the component
+        list_type : str
+            One of CAERO, AELIST or CMPID for aerodynamic components and
+            SET1 for structural components. Aerodynamic components are
+            defined on the aerodynamic ks-set mesh while the structural
+            components are defined on the g-set mesh.
+        lists : List[int, int, ...]
+            The identification number of either SET1, AELIST or CAEROi
+            entries that define the set of grid points that comprise
+            the component
+        comment : str; default=''
+            a comment for the card
+        """
         aecomp = AECOMP(name, list_type, lists, comment=comment)
         self._add_aecomp_object(aecomp)
 
     def add_aestat(self, id, label, comment=''):
+        """
+        Creates an AESTAT card, which is a variable to be used in a TRIM analysis
+
+        Parameters
+        ----------
+        id : int
+            unique id
+        label : str
+            name for the id
+        comment : str; default=''
+            a comment for the card
+        """
         aestat = AESTAT(id, label, comment=comment)
         self._add_aestat_object(aestat)
 
@@ -1357,24 +1467,15 @@ class AddCards(AddMethods):
             reference chord for the control surface
         crefs : float; default=1.0
             reference area for the control surface
-        pllim : float; default=-pi/2
-            Lower deflection limits for the control surface in radians
-        pulim : float; default=pi/2
-            Upper deflection limits for the control surface in radians
-        hmllim : float; default=None
-            Lower hinge moment limits for the control surface in
+        pllim / pulim : float; default=-pi/2 / pi/2
+            Lower/Upper deflection limits for the control surface in radians
+        hmllim / hmulim : float; default=None
+            Lower/Upper hinge moment limits for the control surface in
             force-length units
-        hmulim : float; default=None
-            Upper hinge moment limits for the control surface in
-            force-length units
-        tqllim : int; default=None
+        tqllim / tqulim : int; default=None
             Set identification numbers of TABLEDi entries that provide the
-            lower deflection limits for the control surface as a function
-            of the dynamic pressure
-        tqulim : int; default=None
-            Set identification numbers of TABLEDi entries that provide the
-            upper deflection limits for the control surface as a function
-            of the dynamic pressure
+            lower/upper deflection limits for the control surface as a
+            function of the dynamic pressure
         comment : str; default=''
             a comment for the card
         """
@@ -1451,6 +1552,18 @@ class AddCards(AddMethods):
         table = TABLEST(tid, x, y, comment=comment)
         self._add_table_object(table)
 
+    def add_tabrnd1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+        table = TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        self._add_random_table_object(table)
+
+    def add_tabrndg(self, tid, Type, LU, WG, comment=''):
+        table = TABRNDG(tid, Type, LU, WG, comment=comment)
+        self._add_random_table_object(table)
+
+    def add_tabdmp1(self, tid, Type, x, y, comment=''):
+        table = TABDMP1(tid, Type, x, y, comment=comment)
+        self._add_table_sdamping_object(table)
+
     def add_freq(self, sid, freqs, comment=''):
         freq = FREQ(sid, freqs, comment=comment)
         self._add_freq_object(freq)
@@ -1471,8 +1584,26 @@ class AddCards(AddMethods):
         elem = RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
         self._add_rigid_element_object(elem)
 
-    def add_rbe1(self, eid, Gni, Cni, Gmi, Cmi, alpha, comment=''):
-        elem = RBE1(eid, Gni, Cni, Gmi, Cmi, alpha, comment=comment)
+    def add_rbe1(self, eid, Gni, Cni, Gmi, Cmi, alpha=0., comment=''):
+        """
+        Creates an RBE1 element
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        Gni : List[int]
+            independent node ids
+        Cni : List[str]
+            the independent components (e.g., '123456')
+        Gmi : List[int]
+            dependent node ids
+        Cmi : List[str]
+            the dependent components (e.g., '123456')
+        alpha : float; default=0.
+            Thermal expansion coefficient
+        """
+        elem = RBE1(eid, Gni, Cni, Gmi, Cmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
 
     def add_rbe2(self, eid, gn, cm, Gmi, alpha=0.0, comment=''):
@@ -1489,8 +1620,8 @@ class AddCards(AddMethods):
         elem = RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
 
-    def add_rbar1(self, eid, ga, gb, cb, alpha, comment=''):
-        elem = RBAR1(eid, ga, gb, cb, alpha, comment=comment)
+    def add_rbar1(self, eid, ga, gb, cb, alpha=0., comment=''):
+        elem = RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
 
     def add_rspline(self, eid, nids, components, diameter_ratio=0.1, comment=''):
@@ -1500,6 +1631,10 @@ class AddCards(AddMethods):
     def add_tf(self, sid, nid0, c, b0, b1, b2, nids, components, a, comment=''):
         tf = TF(sid, nid0, c, b0, b1, b2, nids, components, a, comment=comment)
         self._add_tf_object(tf)
+
+    def add_deqatn(self, name, equation_id, eqs, comment=''):
+        deqatn = DEQATN(name, equation_id, eqs, comment=comment)
+        self._add_deqatn_object(deqatn)
 
     def add_desvar(self, desvar_id, label, xinit, xlb, xub, delx=None,
                    ddval=None, comment=''):
@@ -1691,3 +1826,31 @@ class AddCards(AddMethods):
                        roprt=roprt, sync=sync, etype=etype, eorder=eorder,
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_rotor_object(rotor)
+
+    def add_temp(self, sid, temperatures, comment=''):
+        temp = TEMP(sid, temperatures, comment=comment)
+        self._add_thermal_load_object(temp)
+
+    def add_tempd(self, sid, temperature, comment=''):
+        tempd = TEMPD(sid, temperature, comment=comment)
+        self._add_tempd_object(tempd)
+
+    def add_qhbdy(self, sid, flag, Q0, af, grids, comment=''):
+        load = QHBDY(sid, flag, Q0, af, grids, comment='')
+        self._add_thermal_load_object(load)
+
+    def add_qbdy1(self, sid, qFlux, eids, comment=''):
+        load = QBDY1(sid, qFlux, eids, comment=comment)
+        self._add_thermal_load_object(load)
+
+    def add_qbdy2(self, sid, eid, qfluxs, comment=''):
+        load = QBDY2(sid, eid, qfluxs, comment=comment)
+        self._add_thermal_load_object(load)
+
+    def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment=''):
+        load = QBDY3(sid, Q0, cntrlnd, eids, comment=comment)
+        self._add_thermal_load_object(load)
+
+    def add_phbdy(self, pid, af, d1, d2, comment=''):
+        prop = PHBDY(pid, af, d1, d2, comment=comment)
+        self._add_phbdy_object(prop)
