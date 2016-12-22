@@ -576,26 +576,51 @@ class IntegratedLineProperty(LineProperty):
 
 
 class PBAR(LineProperty):
+    """
+    .. todo::
+        support solution 600 default
+        do a check for mid -> MAT1      for structural
+        do a check for mid -> MAT4/MAT5 for thermal
+
+    +------+-----+-----+-----+----+----+----+-----+-----+
+    |   1  |  2  |  3  |  4  |  5 |  6 |  7 |  8  |  9  |
+    +======+=====+=====+=====+====+====+====+=====+=====+
+    | PBAR | PID | MID |  A  | I1 | I2 | J  | NSM |     |
+    +------+-----+-----+-----+----+----+----+-----+-----+
+    |      | C1  | C2  | D1  | D2 | E1 | E2 | F1  | F2  |
+    +------+-----+-----+-----+----+----+----+-----+-----+
+    |      | K1  | K2  | I12 |    |    |    |     |     |
+    +------+-----+-----+-----+----+----+----+-----+-----+
+    """
     type = 'PBAR'
 
     def __init__(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
                  c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
                  k1=1.e8, k2=1.e8, comment=''):
         """
-        .. todo::
-            support solution 600 default
-            do a check for mid -> MAT1      for structural
-            do a check for mid -> MAT4/MAT5 for thermal
+        Creates a PBAR card
 
-        +------+-----+-----+-----+----+----+----+-----+-----+
-        |   1  |  2  |  3  |  4  |  5 |  6 |  7 |  8  |  9  |
-        +======+=====+=====+=====+====+====+====+=====+=====+
-        | PBAR | PID | MID |  A  | I1 | I2 | J  | NSM |     |
-        +------+-----+-----+-----+----+----+----+-----+-----+
-        |      | C1  | C2  | D1  | D2 | E1 | E2 | F1  | F2  |
-        +------+-----+-----+-----+----+----+----+-----+-----+
-        |      | K1  | K2  | I12 |    |    |    |     |     |
-        +------+-----+-----+-----+----+----+----+-----+-----+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        area : float
+            area
+        i1, i2, i12, j : float
+            moments of inertia
+        nsm : float; default=0.
+            nonstructural mass per unit length
+        c1/c2, d1/d2, e1/e2, f1/f2 : float
+           the y/z locations of the stress recovery points
+           c1 - point C.y
+           c2 - point C.z
+
+        k1 / k2 : float; default=1.e8
+            Shear stiffness factor K in K*A*G for plane 1/2.
+        comment : str; default=''
+            a comment for the card
         """
         LineProperty.__init__(self)
         if comment:
@@ -910,12 +935,9 @@ class PBARL(LineProperty):
         Type = string(card, 4, 'Type')
 
         ndim = cls.valid_types[Type]
-        #j = 9 + ndim + 1
 
         dim = []
-        #dim_old = None  ## TODO: is there a default?
         for i in range(ndim):
-            #dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
             dimi = double(card, 9 + i, 'dim%i' % (i + 1))
             dim.append(dimi)
 
@@ -1483,31 +1505,55 @@ class PBRSECT(LineProperty):
 class PBEAM3(LineProperty):  # not done, cleanup
     type = 'PBEAM3'
 
-    def __init__(self):
+    def __init__(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
+                 cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., comment=''):
         LineProperty.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self.comment = comment
-        self.pid = integer(card, 1, 'pid')
-        self.mid = integer(card, 2, 'mid')
+        self.pid = pid
+        self.mid = mid
 
-        self.A = double(card, 3, 'A')
-        self.iz = double(card, 4, 'Iz')
-        self.iy = double(card, 5, 'Iy')
-        self.iyz = double_or_blank(card, 6, 'Iyz', 0.0)
-        self.j = double_or_blank(card, 7, 'J', self.iy + self.iz)
-        self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
+        self.A = A
+        self.iz = iz
+        self.iy = iy
+        self.iyz = iyz
+        self.j = j
+        self.nsm = nsm
 
-        self.cy = double(card, 9, 'cy')
-        self.cz = double(card, 10, 'cz')
-        self.dy = double(card, 11, 'dy')
-        self.dz = double(card, 12, 'dz')
-        self.ey = double(card, 13, 'ey')
-        self.dz = double(card, 14, 'ez')
-        self.fy = double(card, 15, 'fy')
-        self.fz = double(card, 16, 'fz')
+        self.cy = cy
+        self.cz = cz
+        self.dy = dy
+        self.dz = dz
+        self.ey = ey
+        self.ez = ez
+        self.fy = fy
+        self.fz = fz
+
+    def add_card(self, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+
+        A = double(card, 3, 'A')
+        iz = double(card, 4, 'Iz')
+        iy = double(card, 5, 'Iy')
+        iyz = double_or_blank(card, 6, 'Iyz', 0.0)
+        j = double_or_blank(card, 7, 'J', self.iy + self.iz)
+        nsm = double_or_blank(card, 8, 'nsm', 0.0)
+
+        cy = double(card, 9, 'cy')
+        cz = double(card, 10, 'cz')
+
+        dy = double(card, 11, 'dy')
+        dz = double(card, 12, 'dz')
+
+        ey = double(card, 13, 'ey')
+        ez = double(card, 14, 'ez')
+
+        fy = double(card, 15, 'fy')
+        fz = double(card, 16, 'fz')
         # more...
+        return PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=nsm,
+                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz, comment=comment)
 
     def add_op2_data(self, data, comment=''):
         if comment:

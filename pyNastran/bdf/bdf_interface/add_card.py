@@ -445,6 +445,20 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
 
     def add_ctube(self, eid, pid, nids, comment=''):
+        """
+        Creates a CTUBE card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id
+        nids : List[int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CTUBE(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
 
@@ -509,6 +523,31 @@ class AddCards(AddMethods):
     def add_pbar(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
                  c1=0., c2=0., d1=0., d2=0., e1=0., e2=0.,
                  f1=0., f2=0., k1=1.e8, k2=1.e8, comment=''):
+        """
+        Creates a PBAR card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        area : float
+            area
+        i1, i2, i12, j : float
+            moments of inertia
+        nsm : float; default=0.
+            nonstructural mass per unit length
+        c1/c2, d1/d2, e1/e2, f1/f2 : float
+           the y/z locations of the stress recovery points
+           c1 - point C.y
+           c2 - point C.z
+
+        k1 / k2 : float; default=1.e8
+            Shear stiffness factor K in K*A*G for plane 1/2.
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PBAR(pid, mid, A=A, i1=i1, i2=i2, i12=i12, j=j, nsm=nsm,
                     c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
                     f1=f1, f2=f2, k1=k1, k2=k2, comment=comment)
@@ -740,6 +779,35 @@ class AddCards(AddMethods):
 
     def add_psolid(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                    fctn='SMECH', comment=''):
+        """
+        Creates a PSOLID card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        cordm : int; default=0
+            material coordinate system
+        integ : int; default=None
+            None-varies depending on element type
+            0, 'BUBBLE'
+            1, 'GAUSS'
+            2, 'TWO'
+            3, 'THREE'
+            REDUCED
+            FULL
+        stress : int/str; default=None
+            None/GRID, 1-GAUSS
+        isop : int/str; default=None
+            0-REDUCED
+            1-FULL
+        fctn : str; default='SMECH'
+            PFLUID/SMECH
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PSOLID(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
                       fctn=fctn, comment=comment)
         self._add_property_object(prop)

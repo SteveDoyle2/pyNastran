@@ -223,7 +223,7 @@ class CBEAM(CBAR):
         sb = main[5]
 
         #offt = str(data[6]) # GGG
-        bit = None # ????
+        bit = None # ???
         offt = 'GGG'  #: .. todo:: is this correct???
 
         pa = main[6]
