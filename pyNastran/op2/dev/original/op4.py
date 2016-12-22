@@ -18,7 +18,7 @@ import sys
 import warnings
 
 
-class OP4():
+class OP4(object):
     """
     Class for reading/writing Nastran output4 (.op4) files.
 

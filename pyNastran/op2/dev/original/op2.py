@@ -125,7 +125,7 @@ def expanddof(ids, pvgrids):
     return np.vstack((expids[V], dof[V])).T
 
 
-class OP2():
+class OP2(object):
     """Class for reading Nastran op2 files and nas2cam data files."""
 
     def __init__(self, filename=None):
