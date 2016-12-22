@@ -2223,7 +2223,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         assert nfloats * 4 == (ndata - 8)
         fmt = b(self._endian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
-        self.frequencies = freqs
+        self._frequencies = freqs
         if self.is_debug_file:
             self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
             self.binary_debug.write('  subtable_name=%r\n' % subtable_name)

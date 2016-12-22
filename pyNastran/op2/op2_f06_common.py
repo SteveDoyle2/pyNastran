@@ -227,7 +227,10 @@ class OP2_F06_Common(object):
         #:   PARAM   GRDPNT    0  (required for F06/OP2)
         #:   PARAM   POSTEXT YES  (required for OP2)
         self.grid_point_weight = GridPointWeight()
-        self.frequencies = None
+
+        #: self.frequencies already exists as a BDF object
+        #: but we need this for the FOL frequencies for the MONPNT1 and MONPNT3
+        self._frequencies = None
 
         #: ESE
         self.eigenvalues = {}

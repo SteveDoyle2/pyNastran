@@ -499,7 +499,7 @@ class OP2(OP2_Scalar):
 
     def create_objects_from_matrices(self):
         if 'MP3F' in self.matrices:
-            self.monitor3 = MONPNT3(self.frequencies, self.matrices['MP3F'])
+            self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
 
         # these are totally wrong...it doesn't go by component; it goes by inertial, external, flexibility, etc.
         if 'PERF' in self.matrices:
@@ -507,7 +507,7 @@ class OP2(OP2_Scalar):
             #self.monitor1 = MONPNT1(self.frequencies, self.matrices, ['PMRF', 'AFRF', 'PFRF', 'PGRF', 'AGRF', 'PERF', ])
 
             #                                                           :)       ?       :)      :)2     ?       ?
-            self.monitor1 = MONPNT1(self.frequencies, self.matrices, ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
+            self.monitor1 = MONPNT1(self._frequencies, self.matrices, ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
     def finalize(self):
         result_types = self.get_table_types()
