@@ -19,7 +19,7 @@ class GEOM1(GeomCommon):
                 #return False
         #return True
 
-    def add_node_object(self, node, allow_overwrites=False):
+    def _add_node_object(self, node, allow_overwrites=False):
         """GRDSET creates duplicate nodes...what about duplicate nodes?"""
         key = node.nid
         assert key > 0, 'nid=%s node=%s' % (key, node)
@@ -105,7 +105,7 @@ class GEOM1(GeomCommon):
                 self.binary_debug.write('  CORD1C=%s\n' % str(out))
             data_in = [cid, g1, g2, g3]
             coord = CORD1C.add_op2_data(data_in)
-            self.add_coord_object(coord)
+            self._add_coord_object(coord)
             n += 24
         self._increase_card_count('CORD1C', nentries)
         return n
@@ -126,7 +126,7 @@ class GEOM1(GeomCommon):
             assert one2 == 1, one2
             data_in = [cid, g1, g2, g3]
             coord = CORD1R.add_op2_data(data_in)
-            self.add_coord_object(coord)
+            self._add_coord_object(coord)
             n += 24
         self._increase_card_count('CORD1R', nentries)
         return n
@@ -147,7 +147,7 @@ class GEOM1(GeomCommon):
             assert one == 1, one
             data_in = [cid, g1, g2, g3]
             coord = CORD1S.add_op2_data(data_in)
-            self.add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=True)
             n += 24
         self._increase_card_count('CORD1S', nentries)
         return n
@@ -168,7 +168,7 @@ class GEOM1(GeomCommon):
             coord = CORD2C.add_op2_data(data_in)
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2C=%s\n' % str(out))
-            self.add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=True)
             n += 52
         self._increase_card_count('CORD2C', nentries)
         return n
@@ -190,7 +190,7 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2R=%s\n' % data_in)
             coord = CORD2R.add_op2_data(data_in)
-            self.add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=True)
             n += 52
         self._increase_card_count('CORD2R', nentries)
         return n
@@ -209,7 +209,7 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2S=%s\n' % str(out))
             coord = CORD2S.add_op2_data(data_in)
-            self.add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=True)
             n += 52
         self._increase_card_count('CORD2S', nentries)
         return n
@@ -228,7 +228,7 @@ class GEOM1(GeomCommon):
             coord = CORD3G.add_op2_data(out)
             if self.is_debug_file:
                 self.binary_debug.write('  CORD3G=%s\n' % str(out))
-            self.add_coord_object(coord, allow_overwrites=True)
+            self._add_coord_object(coord, allow_overwrites=True)
             n += 16
         self._increase_card_count('CORD3G', nentries)
         return n

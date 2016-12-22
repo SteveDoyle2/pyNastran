@@ -271,6 +271,35 @@ class PSOLID(SolidProperty):
 
     def __init__(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                  fctn='SMECH', comment=''):
+        """
+        Creates a PSOLID card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        cordm : int; default=0
+            material coordinate system
+        integ : int; default=None
+            None-varies depending on element type
+            0, 'BUBBLE'
+            1, 'GAUSS'
+            2, 'TWO'
+            3, 'THREE'
+            REDUCED
+            FULL
+        stress : int/str; default=None
+            None/GRID, 1-GAUSS
+        isop : int/str; default=None
+            0-REDUCED
+            1-FULL
+        fctn : str; default='SMECH'
+            PFLUID/SMECH
+        comment : str; default=''
+            a comment for the card
+        """
         SolidProperty.__init__(self)
         if comment:
             self.comment = comment

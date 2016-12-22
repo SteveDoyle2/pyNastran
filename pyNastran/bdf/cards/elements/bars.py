@@ -257,9 +257,46 @@ class CBAR(LineElement):
     def __init__(self, eid, pid, ga, gb,
                  x, g0, offt='GGG',
                  pa=0, pb=0, wa=None, wb=None, comment=''):
+        """
+        Adds a CBAR card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        ga / gb : int
+            grid point at End A/B
+        x : List[float, float, float]
+            Components of orientation vector, from GA, in the displacement
+            coordinate system at GA (default), or in the basic coordinate system
+        g0 : int
+            Alternate method to supply the orientation vector using grid
+            point G0. Direction of is from GA to G0. is then transferred
+            to End A
+        offt : str; default='GGG'
+            Offset vector interpretation flag
+        pa / pb : int; default=0
+            Pin Flag at End A/B.  Releases the specified DOFs
+        wa / wb : List[float, float, float]
+            Components of offset vectors from the grid points to the end
+            points of the axis of the shear center
+        comment : str; default=''
+            a comment for the card
+        """
         LineElement.__init__(self)
         if comment:
             self.comment = comment
+        if wa is None:
+            wa = np.zeros(3, dtype='float64')
+        else:
+            wa = np.asarray(wa)
+        if wb is None:
+            wb = np.zeros(3, dtype='float64')
+        else:
+            wb = np.asarray(wb)
+
         self.eid = eid
         self.pid = pid
         self.x = x
@@ -269,14 +306,8 @@ class CBAR(LineElement):
         self.offt = offt
         self.pa = pa
         self.pb = pb
-        if wa is None:
-            self.wa = np.zeros(3, dtype='float64')
-        else:
-            self.wa = np.asarray(wa)
-        if wb is None:
-            self.wb = np.zeros(3, dtype='float64')
-        else:
-            self.wb = np.asarray(wb)
+        self.wa = wa
+        self.wb = wb
         self._validate_input()
 
     def _validate_input(self):

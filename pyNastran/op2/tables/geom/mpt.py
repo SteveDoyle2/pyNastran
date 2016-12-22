@@ -62,7 +62,7 @@ class MPT(GeomCommon):
     def add_op2_material(self, mat):
         if mat.mid > 100000000:
             raise RuntimeError('bad parsing...')
-        self.add_structural_material_object(mat, allow_overwrites=True)
+        self._add_structural_material_object(mat, allow_overwrites=True)
         #print(str(mat)[:-1])
 
     def _read_creep(self, data, n):
@@ -77,7 +77,7 @@ class MPT(GeomCommon):
             (mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
              Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
             mat = CREEP.add_op2_data(out)
-            self.add_creep_material_object(mat, allow_overwrites=True)
+            self._add_creep_material_object(mat, allow_overwrites=True)
             n += 64
         self.card_count['CREEP'] = nmaterials
         return n
@@ -149,7 +149,7 @@ class MPT(GeomCommon):
             out = s.unpack(data[n:n+44])
             (mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
             mat = MAT4.add_op2_data(out)
-            self.add_thermal_material_object(mat, allow_overwrites=True)
+            self._add_thermal_material_object(mat, allow_overwrites=True)
             n += 44
         self.card_count['MAT4'] = nmaterials
         return n
@@ -164,7 +164,7 @@ class MPT(GeomCommon):
             out = s.unpack(data[n:n+40])
             (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
             mat = MAT5.add_op2_data(out)
-            self.add_thermal_material_object(mat, allow_overwrites=True)
+            self._add_thermal_material_object(mat, allow_overwrites=True)
             n += 40
         self.card_count['MAT5'] = nmaterials
         return n
@@ -315,7 +315,7 @@ class MPT(GeomCommon):
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
             data_in = [mid, tid, Type, h, yf, hr, limit1, limit2]
             mat = MATS1.add_op2_data(data_in)
-            self.add_material_dependence_object(mat, allow_overwrites=True)
+            self._add_material_dependence_object(mat, allow_overwrites=True)
         self.card_count['MATS1'] = nmaterials
         return n
 
@@ -391,7 +391,7 @@ class MPT(GeomCommon):
                 n += nstr_per_pack
 
                 mat = RADM.add_op2_data(pack)
-                self.add_thermal_bc_object(mat, mat.radmid)
+                self._add_thermal_bc_object(mat, mat.radmid)
                 nmaterials += 1
 
         self.card_count['RADM'] = nmaterials
@@ -412,7 +412,7 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
-            self.add_nlparm_object(NLPARM.add_op2_data(out))
+            self._add_nlparm_object(NLPARM.add_op2_data(out))
             n += ntotal
         self.card_count['NLPARM'] = nentries
         return n
@@ -435,7 +435,7 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
-            self.add_tstepnl_object(TSTEPNL.add_op2_data(out))
+            self._add_tstepnl_object(TSTEPNL.add_op2_data(out))
             n += ntotal
         self.card_count['TSTEPNL'] = nentries
         return n

@@ -41,7 +41,7 @@ class DIT(GeomCommon):
             out = unpack('ii3f', edata)
             # (sid, dload, wg, x0, V) = out
             gust = GUST.add_op2_data(out)
-            self.add_gust_object(gust)
+            self._add_gust_object(gust)
             n += 20
         return n
 
@@ -81,7 +81,7 @@ class DIT(GeomCommon):
 
             data_in += [x, y]
             table = cls.add_op2_data(out)
-            self.add_table_object(table)
+            self._add_table_object(table)
         return n
 
     def _read_tabled2(self, data, n):
@@ -112,7 +112,7 @@ class DIT(GeomCommon):
                     data_in += [x, y]
             data_in += [x, y]
             table = cls.add_op2_data(out)
-            self.add_table_object(table)
+            self._add_table_object(table)
         return len(data)
 
     def _read_tabled3(self, data, n):
@@ -143,7 +143,7 @@ class DIT(GeomCommon):
                     data_in += [x, y]
             data_in += [x, y]
             table = cls.add_op2_data(out)
-            self.add_table_object(table)
+            self._add_table_object(table)
         return len(data)
 
 #TABLEDR

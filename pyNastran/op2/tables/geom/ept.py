@@ -95,13 +95,13 @@ class EPT(GeomCommon):
     def _add_op2_property(self, prop):
         if prop.pid > 100000000:
             raise RuntimeError('bad parsing...%s' % str(prop))
-        self.add_property_object(prop, allow_overwrites=True)
+        self._add_property_object(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
     def _add_pconv(self, prop):
         if prop.pconid > 100000000:
             raise RuntimeError('bad parsing...%s' % str(prop))
-        self.add_convection_property_object(prop)
+        self._add_convection_property_object(prop)
 
 # HGSUPPR
 
@@ -617,7 +617,7 @@ class EPT(GeomCommon):
                 self.binary_debug.write('  PHBDY=%s\n' % str(out))
             #(pid, af, d1, d2) = out
             prop = PHBDY.add_op2_data(out)
-            self.add_phbdy_object(prop)
+            self._add_phbdy_object(prop)
             n += 16
         self.card_count['PHBDY'] = nproperties
         return n

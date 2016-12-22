@@ -224,6 +224,20 @@ class CTUBE(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CTUBE card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id
+        nids : List[int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+        """
         RodElement.__init__(self)
         if comment:
             self.comment = comment

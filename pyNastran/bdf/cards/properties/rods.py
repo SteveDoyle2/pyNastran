@@ -159,10 +159,34 @@ class PROD(Property):
 class PTUBE(Property):
     type = 'PTUBE'
 
-    def __init__(self, pid, mid, OD1, t, nsm, OD2, comment=''):
+    def __init__(self, pid, mid, OD1, t=None, nsm=0., OD2=None, comment=''):
+        """
+        Adds a PTUBE card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        OD1 : float
+            outer diameter at End A
+        t : float; default=None -> OD1/2.
+            thickness
+        nsm : float; default=0.
+            non-structural mass per unit length
+        OD2 : float; default=None -> OD1
+            outer diameter at End B
+        comment : str; default=''
+            a comment for the card
+        """
         Property.__init__(self)
         if comment:
             self.comment = comment
+        if t is None:
+            t = OD1 / 2.
+        if OD2 is None:
+            OD2 = OD1
         self.pid = pid
         self.mid = mid
         self.OD1 = OD1
@@ -175,9 +199,7 @@ class PTUBE(Property):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')
-        t = double_or_blank(card, 4, 't')
-        if t is None:
-            t = OD1 / 2.
+        t = double_or_blank(card, 4, 't', OD1/2.)
         nsm = double_or_blank(card, 5, 'nsm', 0.0)
         OD2 = double_or_blank(card, 6, 'OD2', OD1)
         assert len(card) <= 7, 'len(PTUBE card) = %i\ncard=%s' % (len(card), card)

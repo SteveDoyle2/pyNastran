@@ -35,7 +35,7 @@ class PARAM(BaseCard):
         values : int/float/str/List
             varies depending on the type of PARAM
         comment : str; default=''
-            optional string
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -54,7 +54,7 @@ class PARAM(BaseCard):
         card : BDFCard(); default=None
             BDFCard object
         comment : str; default=''
-            optional string
+            a comment for the card
         """
         key = string(card, 1, 'key')
 

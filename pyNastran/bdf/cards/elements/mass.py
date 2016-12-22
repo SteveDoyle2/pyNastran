@@ -631,6 +631,9 @@ class CONM1(PointMassElement):
             the 6x6 mass matrix, M
         cid : int; default=0
             the coordinate system for the mass matrix
+        comment : str; default=''
+            a comment for the card
+
         ::
 
           [M] = [M11 M21 M31 M41 M51 M61]
@@ -837,9 +840,9 @@ class CONM2(PointMassElement):
         Parameters
         ----------
         eid : int
-           element ID
+           element id
         nid : int
-           node ID
+           node id
         mass : float
            the mass of the CONM2
         cid : int; default=0
@@ -849,6 +852,8 @@ class CONM2(PointMassElement):
         I : (6, ) List[float]; default=None -> [0., 0., 0., 0., 0., 0.]
             mass moment of inertia matrix about the CG
             I11, I21, I22, I31, I32, I33 = I
+        comment : str; default=''
+            a comment for the card
         """
         PointMassElement.__init__(self)
         if comment:
