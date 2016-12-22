@@ -415,15 +415,24 @@ class F06Writer(OP2_F06_Common):
                                       is_mag_phase=is_mag_phase, is_sort1=is_sort1,
                                       quiet=quiet, repr_check=repr_check)
         #self._write_f06_time_based(f06, page_stamp)
-        self.write_matrices(f06)
+        self.write_matrices(f06, page_stamp, self.page_num)
         f06.write(make_end(end_flag, self.end_options))
         if close:
             f06.close()
 
-    def write_matrices(self, f06):
+    def write_matrices(self, f06, page_stamp, page_num):
+        if hasattr(self, 'monitor1'):
+            page_num = self.monitor1.write(f06, page_stamp=page_stamp, page_num=page_num)
+            print('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
         for name, matrix in iteritems(self.matrices):
-            print(matrix)
-            matrix.write(f06)
+            if name == 'MP3F':
+                page_num = self.monitor3.write(f06, page_stamp=page_stamp, page_num=page_num)
+                print('MONPNT3 from MP3F')
+            elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
+                pass
+            else:
+                print(matrix)
+                matrix.write(f06)
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
                                  is_mag_phase=False, is_sort1=True, quiet=False,

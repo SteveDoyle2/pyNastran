@@ -227,6 +227,7 @@ class OP2_F06_Common(object):
         #:   PARAM   GRDPNT    0  (required for F06/OP2)
         #:   PARAM   POSTEXT YES  (required for OP2)
         self.grid_point_weight = GridPointWeight()
+        self.frequencies = None
 
         #: ESE
         self.eigenvalues = {}
