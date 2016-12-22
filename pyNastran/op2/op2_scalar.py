@@ -78,7 +78,7 @@ GEOM_TABLES = [
     b'KDICT',
 
     # aero?
-    b'MONITOR',
+    #b'MONITOR',
 ]
 
 NX_RESULT_TABLES = [
@@ -603,7 +603,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RESOES1': [self._table_passer, self._table_passer],
             b'RESEF1' : [self._table_passer, self._table_passer],
             b'DESCYC' : [self._table_passer, self._table_passer],
-            b'AEMONPT' : [self._read_aemonpt_3, self._read_aemonpt_4],
+            #b'AEMONPT' : [self._read_aemonpt_3, self._read_aemonpt_4],
             #=======================
             # OEF
             # element forces
@@ -918,7 +918,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'EDTS' : [self._table_passer, self._table_passer],
 
             b'FOL' : [self._table_passer, self._table_passer],
-            b'MONITOR' : [self._read_monitor_3, self._read_monitor_4],  # monitor points
+            #b'MONITOR' : [self._read_monitor_3, self._read_monitor_4],  # monitor points
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
@@ -1005,6 +1005,32 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         }
         return table_mapper
 
+    def _not_available(self, data, ndata):
+        """testing function"""
+        if ndata > 0:
+            raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, ndata))
+
+    #def _read_monitor_3(self, data, ndata):
+        #"""reads MONITOR subtable 3"""
+        #self.log.info('MONITOR 3; ndata=%s' % ndata)
+        #return ndata
+
+    #def _read_monitor_4(self, data, ndata):
+        #"""reads MONITOR subtable 4"""
+        #if self.read_mode == 2:
+            #self.log.info('MONITOR 4; ndata=%s' % ndata)
+            #assert ndata == 108, ndata
+            #n = 8 + 56 + 20 + 12 + 12
+            #aero, name, comps, a, b, c, d, coeff, e, f, g = unpack('8s 56s 5i 12s 3i', data[:n])
+            #print('aero=%r' % aero)
+            #print('name=%r' % name)
+            #print('comps, a, b, c, d = (%s, %s, %s, %s, %s)' % (comps, a, b, c, d))
+            #print('coeff=%r' % coeff)
+            #print('e, f, g = (%s, %s, %s)' % (e, f, g))
+            ##if data[n:]:
+                ##self.show_data(data[n:], types='ifs', endian=None)
+        #return ndata
+
     def _read_aemonpt_3(self, data, ndata):
         sys.exit(self.code_information())
 
@@ -1044,9 +1070,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         # self.show_data(data, types='ifs', endian=None)
         print('--------------------------------')
 
-
-
-
         # markers = self.get_nmarkers(1, rewind=True)
         # if self.is_debug_file:
             # self.binary_debug.write('---marker0 = %s---\n' % markers)
@@ -1057,31 +1080,131 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return ndata
         #bbbb
 
-    def _not_available(self, data, ndata):
-        """testing function"""
-        if ndata > 0:
-            raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, ndata))
+    def _read_aemonpt(self):
+        """reads the AEMONPT table"""
+        #self.log.debug("table_name = %r" % self.table_name)
+        table_name = self._read_table_name(rewind=False)
 
-    def _read_monitor_3(self, data, ndata):
-        """reads MONITOR subtable 3"""
-        self.log.info('MONITOR 3; ndata=%s' % ndata)
-        return ndata
-
-    def _read_monitor_4(self, data, ndata):
-        """reads MONITOR subtable 4"""
+        #print('-----------------------')
+        #print('record 1')
+        self.read_markers([-1])
+        data = self._read_record()
+        #self.show_data(data)
         if self.read_mode == 2:
-            self.log.info('MONITOR 4; ndata=%s' % ndata)
+            a, b, c, d, e, f, g = unpack(b'%s7i'% self._endian, data)
+            assert a == 101, a
+            assert b == 1, b
+            assert c == 27, c
+            assert d == 1, d
+            assert e == 6, e
+            assert f == 0, f
+            assert g == 0, g
+        #print('-----------------------')
+        #print('record 2')
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        #if self.read_mode == 2:
+        word, = unpack(b'%s8s' % self._endian, data)
+        assert word == b'AECFMON ', word
+        #self.show_data(data)
+        #print('-----------------------')
+        #print('record 3')
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        #self.show_data(data)
+
+        if self.read_mode == 2:
+            ndata = len(data)
             assert ndata == 108, ndata
             n = 8 + 56 + 20 + 12 + 12
-            aero, name, comps, a, b, c, d, coeff, e, f, g = unpack('8s 56s 5i 12s 3i', data[:n])
+            aero, name, comps, a, b, c, d, coeff, e, f, g = unpack(b'8s 56s 5i 12s 3i', data[:n])
+            print('aero=%r' % aero)
+            print('name=%r' % name)
+            print('comps, a, b, c, d = (%s, %s, %s, %s, %s)' % (comps, a, b, c, d))
+            print('coeff=%r' % coeff)
+            print('e, f, g = (%s, %s, %s)' % (e, f, g)) # (1, 2, 0)
+            assert a == 2, a
+            assert b == 0, b
+            assert c == 0, c
+            assert d == 0, d
+            assert e == 1, e
+            assert f == 2, f
+            assert g == 0, g
+
+        #print('-----------------------')
+        #print('record 4')
+        self.read_markers([-4, 1, 0])
+        #data = self._read_record()
+        #self.show_data(data)
+        self.read_markers([0])
+
+        #print('-----------------------')
+        #print('end')
+        #self.show(200)
+        #aaa
+
+    def _read_monitor(self):
+        """reads the MONITOR table"""
+        self.log.debug("table_name = %r" % self.table_name)
+        table_name = self._read_table_name(rewind=False)
+
+        #print('-----------------------')
+        #print('record 1')
+        self.read_markers([-1])
+        data = self._read_record()
+        #self.show_data(data)
+        if self.read_mode == 2:
+            a, b, c, d, e, f, g = unpack(b'%s7i'% self._endian, data)
+            assert a == 101, a
+            assert b == 1, b
+            assert c == 27, c
+            assert d == 0, d
+            assert e == 6, e
+            assert f == 0, f
+            assert g == 0, g
+        #print('-----------------------')
+        #print('record 2')
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        if self.read_mode == 2:
+            word, = unpack(b'%s8s' % self._endian, data)
+            assert word == b'STCFMON ', word
+        #self.show_data(data)
+        #print('-----------------------')
+        #print('record 3')
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        #self.show_data(data)
+
+        if self.read_mode == 2:
+            ndata = len(data)
+            assert ndata == 108, ndata
+            n = 8 + 56 + 20 + 12 + 12
+            aero, name, comps, a, b, c, d, coeff, e, f, g = unpack(b'8s 56s 5i 12s 3i', data[:n])
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps, a, b, c, d = (%s, %s, %s, %s, %s)' % (comps, a, b, c, d))
             print('coeff=%r' % coeff)
             print('e, f, g = (%s, %s, %s)' % (e, f, g))
-            #if data[n:]:
-                #self.show_data(data[n:], types='ifs', endian=None)
-        return ndata
+            assert a == 2, a
+            assert b == 0, b
+            assert c == 0, c
+            assert d == 0, d
+            assert e == 1, e
+            assert f == 2, f
+            assert g == 0, g
+
+        #print('-----------------------')
+        #print('record 4')
+        self.read_markers([-4, 1, 0])
+        #data = self._read_record()
+        #self.show_data(data)
+        self.read_markers([0])
+
+        #print('-----------------------')
+        #print('end')
+        #self.show(200)
+        #aaa
 
     def _table_passer(self, data, ndata):
         """auto-table skipper"""
@@ -1548,6 +1671,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_tol()
             elif table_name == b'PCOMPTS': # blade
                 self._read_pcompts()
+            elif table_name == b'MONITOR':
+                self._read_monitor()
+            elif table_name == b'AEMONPT':
+                self._read_aemonpt()
             elif table_name == b'FOL':
                 self._read_fol()
             elif table_name in [b'SDF']:
@@ -2695,6 +2822,27 @@ class Matrix(object):
     def __init__(self, name):
         self.name = name
         self.data = None
+
+    def write(self, f06, print_full=True):
+        f06.write('name=%r; type=%s; dtype=%s\n' % (self.name, type(self.data), self.data.dtype))
+
+        matrix = self.data
+        if isinstance(matrix, coo_matrix):
+            from pyNastran.utils import object_attributes
+            if print_full:
+                for row, col, value in zip(matrix.row, matrix.col, matrix.data):
+                    f06.write("(%i, %i) %s\n" % (row, col, value))
+            else:
+                f06.write(str(matrix))
+        else:
+            f06.write(str(matrix))
+            print('WARNING: matrix type=%s does not support writing' % type(matrix))
+        f06.write('\n\n')
+
+    def __repr__(self):
+        msg = 'Matrix:\n'
+        msg += '  name = %r\n' % name
+        return msg
 
 
 def main():  # pragma: no cover
