@@ -1,7 +1,7 @@
 from __future__ import print_function
 import vtk
 
-class vtkTimerCallback():
+class vtkTimerCallback(object):
     def __init__(self):
         self.timer_count = 0
 
