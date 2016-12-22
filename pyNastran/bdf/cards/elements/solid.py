@@ -253,7 +253,7 @@ class CHEXA8(SolidElement):
     """
     type = 'CHEXA'
     aster_type = 'HEXA8'
-    calculixType = 'C3D8'
+    calculix_type = 'C3D8'
 
     def write_card(self, size=8, is_double=False):
         data = [self.eid, self.Pid()] + self.node_ids
@@ -440,7 +440,7 @@ class CHEXA20(SolidElement):
     """
     type = 'CHEXA'
     aster_type = 'HEXA20'
-    calculixType = 'C3D20'
+    calculix_type = 'C3D20'
 
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
@@ -630,7 +630,7 @@ class CPENTA6(SolidElement):
     """
     type = 'CPENTA'
     aster_type = 'PENTA6'
-    calculixType = 'C3D6'
+    calculix_type = 'C3D6'
 
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
@@ -955,7 +955,7 @@ class CPENTA15(SolidElement):
     """
     type = 'CPENTA'
     aster_type = 'PENTA15'
-    calculixType = 'C3D15'
+    calculix_type = 'C3D15'
 
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
@@ -1123,7 +1123,7 @@ class CPYRAM5(SolidElement):
     """
     type = 'CPYRAM'
     #aster_type = 'CPYRAM5'
-    #calculixType = 'C3D5'
+    #calculix_type = 'C3D5'
 
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
@@ -1256,7 +1256,7 @@ class CPYRAM13(SolidElement):
     """
     type = 'CPYRAM'
     #aster_type = 'CPYRAM13'
-    #calculixType = 'C3D13'
+    #calculix_type = 'C3D13'
 
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
@@ -1406,7 +1406,7 @@ class CTETRA4(SolidElement):
     """
     type = 'CTETRA'
     aster_type = 'TETRA4'
-    calculixType = 'C3D4'
+    calculix_type = 'C3D4'
 
     @property
     def faces(self):
@@ -1641,7 +1641,7 @@ class CTETRA10(SolidElement):
     """
     type = 'CTETRA'
     aster_type = 'TETRA10'
-    calculixType = 'C3D10'
+    calculix_type = 'C3D10'
 
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids

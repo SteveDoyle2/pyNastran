@@ -1,8 +1,10 @@
 from __future__ import print_function
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard
-from pyNastran.bdf.cards.elements.solid import CPENTA15
+from pyNastran.bdf.bdf import BDF, BDFCard, GRID, CTETRA, CPENTA, CHEXA
+from pyNastran.bdf.cards.elements.solid import (
+    CTETRA4, CHEXA8, CPENTA6,
+    CTETRA10, CHEXA20, CPENTA15)
 
 bdf = BDF(debug=False)
 
@@ -246,6 +248,72 @@ class TestSolids(unittest.TestCase):
         mat = model.Material(mid)
         mat.E()
 
+    def test_solids_ctetra(self):
+        """tests a CTETRA4"""
+        eid = 10
+        pid = 20
+        mid = 30
+        E = 3.e7
+        G = None
+        nu = 0.3
+        model = BDF()
+        model.add_grid(11, xyz=[0., 0., 0.])
+        model.add_grid(12, xyz=[1., 0., 0.])
+        model.add_grid(13, xyz=[1., 1., 0.])
+        model.add_grid(15, xyz=[0., 2., 0.])
+        model.add_psolid(pid, mid)
+        model.add_mat1(mid, E, G, nu)
+        nids = [11, 12, 13, 15]
+        model.add_ctetra(eid, pid, nids, comment='ctetra')
+        model.validate()
+        model.cross_reference()
+
+    def test_solids_cpenta(self):
+        """tests a CPENTA6"""
+        model = BDF()
+        eid = 10
+        pid = 20
+        mid = 30
+        E = 3.e7
+        G = None
+        nu = 0.3
+        model.add_grid(21, xyz=[0., 0., 0.])
+        model.add_grid(22, xyz=[1., 0., 0.])
+        model.add_grid(23, xyz=[1., 1., 0.])
+        model.add_grid(24, xyz=[0., 0., 2.])
+        model.add_grid(25, xyz=[1., 0., 2.])
+        model.add_grid(26, xyz=[1., 1., 2.])
+        model.add_psolid(pid, mid)
+        model.add_mat1(mid, E, G, nu)
+        nids = [21, 22, 23, 24, 25, 26]
+        model.add_cpenta(eid, pid, nids, comment='cpenta')
+        model.validate()
+        model.cross_reference()
+
+    def test_solids_chexa(self):
+        """tests a CHEXA8"""
+        model = BDF()
+        eid = 10
+        pid = 20
+        mid = 30
+        E = 3.e7
+        G = None
+        nu = 0.3
+        model.add_grid(11, xyz=[0., 0., 0.])
+        model.add_grid(12, xyz=[1., 0., 0.])
+        model.add_grid(13, xyz=[1., 1., 0.])
+        model.add_grid(14, xyz=[0., 1., 0.])
+
+        model.add_grid(15, xyz=[0., 0., 2.])
+        model.add_grid(16, xyz=[1., 0., 2.])
+        model.add_grid(17, xyz=[1., 1., 2.])
+        model.add_grid(18, xyz=[0., 1., 2.])
+        model.add_psolid(pid, mid)
+        model.add_mat1(mid, E, G, nu)
+        nids = [11, 12, 13, 14, 15, 16, 17, 18]
+        model.add_chexa(eid, pid, nids, comment='chexa')
+        model.validate()
+        model.cross_reference()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

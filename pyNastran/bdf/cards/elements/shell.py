@@ -290,7 +290,7 @@ class CTRIA3(TriShell):
     """
     type = 'CTRIA3'
     aster_type = 'TRIA3'
-    calculixType = 'S3'
+    calculix_type = 'S3'
     _field_map = {
         1: 'eid', 2:'pid', 6:'thetaMcid', 7:'zOffset', 10:'TFlag',
         11:'T1', 12:'T2', 13:'T3'}
@@ -651,7 +651,7 @@ class CPLSTN3(TriShell):
 class CTRIA6(TriShell):
     type = 'CTRIA6'
     aster_type = 'TRIA6'
-    calculixType = 'S6'
+    calculix_type = 'S6'
 
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0., TFlag=0,
                  T1=None, T2=None, T3=None, comment=''):
@@ -1173,7 +1173,7 @@ class QuadShell(ShellElement):
 
 class CSHEAR(QuadShell):
     type = 'CSHEAR'
-    calculixType = 'S4'
+    calculix_type = 'S4'
     def __init__(self, eid, pid, nids, comment=''):
         QuadShell.__init__(self)
         if comment:
@@ -1362,7 +1362,7 @@ class CQUAD4(QuadShell):
     """
     type = 'CQUAD4'
     aster_type = 'QUAD4 # CQUAD4'
-    calculixType = 'S4'
+    calculix_type = 'S4'
     _field_map = {1: 'eid', 2:'pid', 7:'thetaMcid', 8:'zOffset',
                   10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
 
@@ -2367,7 +2367,7 @@ class CPLSTN8(QuadShell):
 
 class CQUADR(QuadShell):
     type = 'CQUADR'
-    #calculixType = 'CAX8'
+    #calculix_type = 'CAX8'
 
     def __init__(self, eid, pid, nids, theta_mcid, zoffset, TFlag,
                  T1, T2, T3, T4, comment=''):

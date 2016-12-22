@@ -312,7 +312,7 @@ class CTRIAX(TriShell):
     Theta/Mcid is MSC only!
     """
     type = 'CTRIAX'
-    calculixType = 'CAX6'
+    calculix_type = 'CAX6'
     def __init__(self, eid, pid, nids, theta_mcid, comment=''):
         TriShell.__init__(self)
         if comment:
@@ -458,7 +458,7 @@ class CTRIAX6(TriShell):
       1----2----3
     """
     type = 'CTRIAX6'
-    #calculixType = 'CAX6'
+    #calculix_type = 'CAX6'
     def __init__(self, eid, mid, nids, theta, comment=''):
         TriShell.__init__(self)
         if comment:
@@ -640,7 +640,7 @@ class CQUADX(QuadShell):
     Theta/Mcid is MSC only!
     """
     type = 'CQUADX'
-    calculixType = 'CAX8'
+    calculix_type = 'CAX8'
 
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         QuadShell.__init__(self)

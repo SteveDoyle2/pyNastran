@@ -12,7 +12,11 @@ from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1)
+from pyNastran.bdf.cards.elements.solid import (
+    CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1,
+    CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
+    CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
+)
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
@@ -764,15 +768,27 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
 
     def add_ctetra(self, eid, pid, nids, comment=''):
-        elem = CTETRA(eid, pid, nids, comment=comment)
+        #elem = CTETRA(eid, pid, nids, comment=comment)
+        if len(nids) == 4:
+            return CTETRA4(eid, pid, nids, comment=comment)
+        else:
+            elem = CTETRA10(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
 
     def add_cpenta(self, eid, pid, nids, comment=''):
-        elem = CPENTA(eid, pid, nids, comment=comment)
+        #elem = CPENTA(eid, pid, nids, comment=comment)
+        if len(nids) == 6:
+            elem = CPENTA6(eid, pid, nids, comment=comment)
+        else:
+            elem = CPENTA15(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
 
     def add_chexa(self, eid, pid, nids, comment=''):
-        elem = CHEXA(eid, pid, nids, comment=comment)
+        #elem = CHEXA(eid, pid, nids, comment=comment)
+        if len(nids) == 8:
+            elem = CHEXA8(eid, pid, nids, comment=comment)
+        else:
+            elem = CHEXA20(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
 
     def add_pyram(self, eid, pid, nids, comment=''):
