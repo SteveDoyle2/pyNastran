@@ -1060,7 +1060,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _not_available(self, data, ndata):
         """testing function"""
         if ndata > 0:
-            raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, ndata))
+            msg = 'this should never be called...table_name=%r len(data)=%s' % (
+                self.table_name, ndata)
+            raise RuntimeError(msg)
 
     def _read_monitor_3(self, data, ndata):
         """reads MONITOR subtable 3"""

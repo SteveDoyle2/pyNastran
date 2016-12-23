@@ -11,6 +11,7 @@ bdf = BDF(debug=False)
 class TestSolids(unittest.TestCase):
 
     def test_cpenta_01(self):
+        """tests a cpenta15"""
         lines = [
             'CPENTA,85,22,201,202,203,205,206,207,+PN2',
             '+PN2,209,210,217,  ,  ,  ,213,214,',
@@ -19,13 +20,17 @@ class TestSolids(unittest.TestCase):
         card = bdf.process_card(lines)
         card = BDFCard(card)
 
-        size = 8
-        card = CPENTA15.add_card(card)
-        card.write_card(size, 'dummy')
+        solid = CPENTA15.add_card(card, comment='cpenta15')
+        solid.write_card(size=8, is_double=False)
+        solid.write_card(size=16, is_double=False)
+        solid.raw_fields()
+
         node_ids = card.node_ids
         assert node_ids == [201, 202, 203, 205, 206, 207,
                             209, 210, 217, None, None, None, 213, 214, 218], node_ids
-        card.raw_fields()
+        nids = [201, 202, 203, 205, 206, 207,
+                209, 210, 217, None, None, None, 213, 214, 218]
+        solid2 = CPENTA.add_card(card, comment)
 
     def test_cpenta_01b(self):
         pass
@@ -85,29 +90,15 @@ class TestSolids(unittest.TestCase):
         nsm = 0.
         V = 1. / 3.
         rho = 0.1
-        self.check_solid(model, eid, 'CTETRA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
+        check_solid(model, eid, 'CTETRA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
 
         eid = 9
         V = 1.0
-        self.check_solid(model, eid, 'CPENTA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
+        check_solid(model, eid, 'CPENTA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
 
         eid = 7
         V = 2.0
-        self.check_solid(model, eid, 'CHEXA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
-
-    def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, V):
-        mass = rho * V
-        element = model.elements[eid]
-        element.node_ids
-        assert pid in model.properties, 'pid is missing for\n%s' % str(element)
-        self.assertEqual(element.type, etype)
-        self.assertEqual(element.Eid(), eid)
-        self.assertEqual(element.pid.type, ptype)
-        self.assertEqual(element.Pid(), pid)
-        self.assertEqual(element.pid.mid.type, mtype)
-        self.assertEqual(element.Mid(), mid)
-        self.assertEqual(element.Volume(), V)
-        self.assertEqual(element.Mass(), mass)
+        check_solid(model, eid, 'CHEXA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
 
     def test_solid_02(self):
         mid = 2
@@ -151,15 +142,15 @@ class TestSolids(unittest.TestCase):
         eid = 8
         nsm = 0.
         V = 1. / 3.
-        self.check_solid(model, eid, 'CTETRA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
+        check_solid(model, eid, 'CTETRA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
 
         eid = 9
         V = 1.0
-        self.check_solid(model, eid, 'CPENTA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
+        check_solid(model, eid, 'CPENTA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
 
         eid = 7
         V = 2.0
-        self.check_solid(model, eid, 'CHEXA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
+        check_solid(model, eid, 'CHEXA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
 
     def test_solid_03(self):
         """checks linear static solid material"""
@@ -314,6 +305,22 @@ class TestSolids(unittest.TestCase):
         model.add_chexa(eid, pid, nids, comment='chexa')
         model.validate()
         model.cross_reference()
+
+    def check_solid(model, eid, etype, pid, ptype, mid, mtype, nsm, rho, V):
+        """checks that various solid methods work"""
+        mass = rho * V
+        element = model.elements[eid]
+        element.node_ids
+        assert pid in model.properties, 'pid is missing for\n%s' % str(element)
+        self.assertEqual(element.type, etype)
+        self.assertEqual(element.Eid(), eid)
+        self.assertEqual(element.pid.type, ptype)
+        self.assertEqual(element.Pid(), pid)
+        self.assertEqual(element.pid.mid.type, mtype)
+        self.assertEqual(element.Mid(), mid)
+        self.assertEqual(element.Volume(), V)
+        self.assertEqual(element.Mass(), mass)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
