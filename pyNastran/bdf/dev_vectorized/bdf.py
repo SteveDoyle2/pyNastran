@@ -2524,7 +2524,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # These are ignored because they're lists
         ignored_types = set([
             'spoints', 'spointi',  # singleton
-            'gridSet',  # singleton
+            'grdset',  # singleton
 
             'spcs', 'spcadds',
 

@@ -245,7 +245,7 @@ class BDFAttributes(object):
         self.spoints = None
         self.epoints = None
         #: stores GRIDSET card
-        self.gridSet = None
+        self.grdset = None
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
@@ -500,7 +500,7 @@ class BDFAttributes(object):
             'params' : ['PARAM'],
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points' : ['POINT'],
-            'gridSet' : ['GRDSET'],
+            'grdset' : ['GRDSET'],
             #'POINT', 'POINTAX', 'RINGAX',
 
             # CMASS4 lies in the QRG

@@ -494,84 +494,84 @@ class NLPARM(BaseCard):
     """
     type = 'NLPARM'
 
-    def __init__(self, nlparm_id, ninc=10, dt=0.0, kMethod='AUTO', kStep=5,
-                 maxIter=25, conv='PW', intOut='NO',
-                 epsU=0.01, epsP=0.01, epsW=0.01, maxDiv=3, maxQn=None, maxLs=4,
-                 fStress=0.2, lsTol=0.5, maxBisect=5, maxR=20., rTolB=20., comment=''):
+    def __init__(self, nlparm_id, ninc=10, dt=0.0, kmethod='AUTO', kstep=5,
+                 max_iter=25, conv='PW', int_out='NO',
+                 eps_u=0.01, eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None, max_ls=4,
+                 fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment=''):
         if comment:
             self.comment = comment
         self.nlparm_id = nlparm_id
         self.ninc = ninc
         self.dt = dt
-        self.kMethod = kMethod
-        self.kStep = kStep
-        self.maxIter = maxIter
+        self.kmethod = kmethod
+        self.kstep = kstep
+        self.max_iter = max_iter
         self.conv = conv
-        self.intOut = intOut
+        self.int_out = int_out
 
         # line 2
-        self.epsP = epsP
-        self.epsU = epsU
-        self.epsW = epsW
-        self.maxDiv = maxDiv
-        self.maxQn = maxQn
-        self.maxLs = maxLs
-        self.fStress = fStress
-        self.lsTol = lsTol
+        self.eps_p = eps_p
+        self.eps_u = eps_u
+        self.eps_w = eps_w
+        self.max_div = max_div
+        self.max_qn = max_qn
+        self.max_ls = max_ls
+        self.fstress = fstress
+        self.ls_tol = ls_tol
 
         # line 3
-        self.maxBisect = maxBisect
-        self.maxR = maxR
-        self.rTolB = rTolB
+        self.max_bisect = max_bisect
+        self.max_r = max_r
+        self.rtol_b = rtol_b
 
-        if self.maxQn is None:
-            if kMethod == 'PFNT':
-                self.maxQn = 0
+        if self.max_qn is None:
+            if kmethod == 'PFNT':
+                self.max_qn = 0
             else:
-                self.maxQn = maxIter
+                self.max_qn = max_iter
 
     @classmethod
     def add_card(cls, card, comment=''):
         nlparm_id = integer(card, 1, 'nlparm_id')
         ninc = integer_or_blank(card, 2, 'ninc', 10)
         dt = double_or_blank(card, 3, 'dt', 0.0)
-        kmethod = string_or_blank(card, 4, 'kMethod', 'AUTO')
-        kStep = integer_or_blank(card, 5, 'kStep', 5)
-        maxIter = integer_or_blank(card, 6, 'maxIter', 25)
+        kmethod = string_or_blank(card, 4, 'kmethod', 'AUTO')
+        kstep = integer_or_blank(card, 5, 'kstep', 5)
+        max_iter = integer_or_blank(card, 6, 'max_iter', 25)
         conv = string_or_blank(card, 7, 'conv', 'PW')
         int_out = string_or_blank(card, 8, 'intOut', 'NO')
 
         # line 2
-        epsU = double_or_blank(card, 9, 'epsU', 0.01)
-        epsP = double_or_blank(card, 10, 'epsP', 0.01)
-        epsW = double_or_blank(card, 11, 'epsW', 0.01)
-        maxDiv = integer_or_blank(card, 12, 'maxDiv', 3)
+        eps_u = double_or_blank(card, 9, 'eps_u', 0.01)
+        eps_p = double_or_blank(card, 10, 'eps_p', 0.01)
+        eps_w = double_or_blank(card, 11, 'eps_w', 0.01)
+        max_div = integer_or_blank(card, 12, 'max_div', 3)
 
         if kmethod == 'PFNT':
-            maxQn = integer_or_blank(card, 13, 'maxQn', 0)
+            max_qn = integer_or_blank(card, 13, 'max_qn', 0)
         else:
-            maxQn = integer_or_blank(card, 13, 'maxQn', maxIter)
+            max_qn = integer_or_blank(card, 13, 'max_qn', max_iter)
 
-        maxLs = integer_or_blank(card, 14, 'maxLs', 4)
-        fStress = double_or_blank(card, 15, 'fStress', 0.2)
-        lsTol = double_or_blank(card, 16, 'lsTol', 0.5)
+        max_ls = integer_or_blank(card, 14, 'max_ls', 4)
+        fstress = double_or_blank(card, 15, 'fstress', 0.2)
+        ls_tol = double_or_blank(card, 16, 'ls_tol', 0.5)
 
         # line 3
-        maxBisect = integer_or_blank(card, 17, '', 5)
-        maxR = double_or_blank(card, 21, 'maxR', 20.)
-        rTolB = double_or_blank(card, 23, 'rTolB', 20.)
+        max_bisect = integer_or_blank(card, 17, 'max_bisect', 5)
+        max_r = double_or_blank(card, 21, 'max_r', 20.)
+        rtol_b = double_or_blank(card, 23, 'rtol_b', 20.)
         assert len(card) <= 24, 'len(NLPARM card) = %i\ncard=%s' % (len(card), card)
-        return NLPARM(nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv,
-                      int_out, epsU, epsP, epsW, maxDiv,
-                      maxQn, maxLs, fStress,
-                      lsTol, maxBisect, maxR,
-                      rTolB, comment=comment)
+        return NLPARM(nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv,
+                      int_out, eps_u, eps_p, eps_w, max_div,
+                      max_qn, max_ls, fstress,
+                      ls_tol, max_bisect, max_r,
+                      rtol_b, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        (nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv, int_out, epsU, epsP,
-         epsW, maxDiv, maxQn, maxLs, fStress, lsTol, maxBisect, maxR,
-         rTolB) = data
+        (nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv, int_out, eps_u, eps_p,
+         eps_w, max_div, max_qn, max_ls, fstress, ls_tol, max_bisect, max_r,
+         rtol_b) = data
 
         if kmethod == 1:
             kmethod = 'AUTO'
@@ -610,44 +610,44 @@ class NLPARM(BaseCard):
         else:
             msg = 'nlparm_id=%s int_out=%r data=%s' % (nlparm_id, int_out, data)
             raise NotImplementedError(msg)
-        return NLPARM(nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv,
-                      int_out, epsU, epsP, epsW, maxDiv,
-                      maxQn, maxLs, fStress,
-                      lsTol, maxBisect, maxR,
-                      rTolB, comment=comment)
+        return NLPARM(nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv,
+                      int_out, eps_u, eps_p, eps_w, max_div,
+                      max_qn, max_ls, fstress,
+                      ls_tol, max_bisect, max_r,
+                      rtol_b, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['NLPARM', self.nlparm_id, self.ninc, self.dt, self.kMethod,
-                       self.kStep, self.maxIter, self.conv, self.intOut, self.epsU,
-                       self.epsP, self.epsW, self.maxDiv, self.maxQn, self.maxLs,
-                       self.fStress, self.lsTol, self.maxBisect, None, None, None,
-                       self.maxR, None, self.rTolB]
+        list_fields = ['NLPARM', self.nlparm_id, self.ninc, self.dt, self.kmethod,
+                       self.kstep, self.max_iter, self.conv, self.int_out, self.eps_u,
+                       self.eps_p, self.eps_w, self.max_div, self.max_qn, self.max_ls,
+                       self.fstress, self.ls_tol, self.max_bisect, None, None, None,
+                       self.max_r, None, self.rtol_b]
         return list_fields
 
     def repr_fields(self):
         ninc = set_blank_if_default(self.ninc, 10)
         dt = set_blank_if_default(self.dt, 0.0)
-        kMethod = set_blank_if_default(self.kMethod, 'AUTO')
-        kStep = set_blank_if_default(self.kStep, 5)
-        maxIter = set_blank_if_default(self.maxIter, 25)
+        kmethod = set_blank_if_default(self.kmethod, 'AUTO')
+        kstep = set_blank_if_default(self.kstep, 5)
+        max_iter = set_blank_if_default(self.max_iter, 25)
         conv = set_blank_if_default(self.conv, 'PW')
-        intOut = set_blank_if_default(self.intOut, 'NO')
-        epsU = set_blank_if_default(self.epsU, 0.01)
-        epsP = set_blank_if_default(self.epsP, 0.01)
-        epsW = set_blank_if_default(self.epsW, 0.01)
-        maxDiv = set_blank_if_default(self.maxDiv, 3)
-        maxQn = set_blank_if_default(self.maxQn, self.maxIter)
-        maxLs = set_blank_if_default(self.maxLs, 4)
-        fStress = set_blank_if_default(self.fStress, 0.2)
-        lsTol = set_blank_if_default(self.lsTol, 0.5)
-        maxBisect = set_blank_if_default(self.maxBisect, 5)
-        maxR = set_blank_if_default(self.maxR, 20.)
-        rTolB = set_blank_if_default(self.rTolB, 20.)
+        int_out = set_blank_if_default(self.int_out, 'NO')
+        eps_u = set_blank_if_default(self.eps_u, 0.01)
+        eps_p = set_blank_if_default(self.eps_p, 0.01)
+        eps_w = set_blank_if_default(self.eps_w, 0.01)
+        max_div = set_blank_if_default(self.max_div, 3)
+        max_qn = set_blank_if_default(self.max_qn, self.max_iter)
+        max_ls = set_blank_if_default(self.max_ls, 4)
+        fstress = set_blank_if_default(self.fstress, 0.2)
+        ls_tol = set_blank_if_default(self.ls_tol, 0.5)
+        max_bisect = set_blank_if_default(self.max_bisect, 5)
+        max_r = set_blank_if_default(self.max_r, 20.)
+        rtol_b = set_blank_if_default(self.rtol_b, 20.)
 
-        list_fields = ['NLPARM', self.nlparm_id, ninc, dt, kMethod, kStep, maxIter,
-                       conv, intOut, epsU, epsP, epsW, maxDiv, maxQn, maxLs,
-                       fStress, lsTol, maxBisect, None, None, None, maxR, None,
-                       rTolB]
+        list_fields = ['NLPARM', self.nlparm_id, ninc, dt, kmethod, kstep, max_iter,
+                       conv, int_out, eps_u, eps_p, eps_w, max_div, max_qn, max_ls,
+                       fstress, ls_tol, max_bisect, None, None, None, max_r, None,
+                       rtol_b]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -660,8 +660,8 @@ class NLPARM(BaseCard):
 class NLPCI(BaseCard):
     type = 'NLPCI'
 
-    def __init__(self, nlpci_id, Type, minalr, maxalr, scale, desiter, mxinc,
-                 comment=''):
+    def __init__(self, nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
+                 scale=0., desiter=12, mxinc=20, comment=''):
         if comment:
             self.comment = comment
         self.nlpci_id = nlpci_id
@@ -682,7 +682,8 @@ class NLPCI(BaseCard):
         blank(card, 6, 'blank')
         desiter = integer_or_blank(card, 7, 'desiter', 12)
         mxinc = integer_or_blank(card, 8, 'mxinc', 20)
-        return NLPCI(nlpci_id, Type, minalr, maxalr, scale, desiter, mxinc, comment=comment)
+        return NLPCI(nlpci_id, Type=Type, minalr=minalr, maxalr=maxalr,
+                     scale=scale, desiter=desiter, mxinc=mxinc, comment=comment)
 
     def raw_fields(self):
         list_fields = ['NLPCI', self.nlpci_id, self.Type, self.minalr,
@@ -1158,10 +1159,52 @@ class TSTEPNL(BaseCard):
     type = 'TSTEPNL'
     allowed_methods = ['AUTO', 'ITER', 'ADAPT', 'SEMI', 'FNT', 'PFNT']
 
-    def __init__(self, sid, ndt, dt, no, method, kstep, max_iter,
-                 conv, eps_u, eps_p, eps_w, max_div, max_qn, max_ls,
-                 fstress, max_bisect, adjust, mstep, rb, max_r, utol, rtol_b,
-                 min_iter, comment=''):
+    def __init__(self, sid, ndt, dt, no, method='ADAPT', kstep=None,
+                 max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,
+                 eps_w=1.e-6, max_div=2, max_qn=10, max_ls=2,
+                 fstress=0.2, max_bisect=5, adjust=5, mstep=None,
+                 rb=0.6, max_r=32., utol=0.1, rtol_b=20.,
+                 min_iter=None, comment=''):
+        """
+        sid : int
+            ???
+        ndt : ???
+            ???
+        dt : ???
+            ???
+        no : ???
+            ???
+        eps_u : float; default=1.e-2
+            ???
+        eps_p : float; default=1.e-3
+            ???
+        eps_w : float; default=1.e-6
+            ???
+        max_div : int; default=2
+            ???
+        max_qn : int; default=10
+            ???
+        max_ls : int; default=2
+            ???
+        fstress : float; default=0.2
+            ???
+        max_bisect : int; default=5
+            ???
+        adjust : int; default=5
+            ???
+        mstep : int; default=None
+            ???
+        rb : float; default=0.6
+            ???
+        max_r = float; default=32.
+            ???
+        utol = float; default=0.1
+            ???
+        rtol_b = float; default=20.
+            ???
+        min_iter : int; default=None
+            not listed in all QRGs
+        """
         if comment:
             self.comment = comment
 

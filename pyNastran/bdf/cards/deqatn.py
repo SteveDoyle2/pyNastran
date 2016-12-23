@@ -65,6 +65,7 @@ class DEQATN(BaseCard):  # needs work...
         self.name = name
         self.equation_id = equation_id
         self.eqs = eqs
+        self.func_str = ''
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -135,14 +136,26 @@ class DEQATN(BaseCard):  # needs work...
         _raw_eqs = deepcopy(eqs)  # TODO: temporary
         assert len(eqs) > 0, eqs
         #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(eqID))
-        #_setup_equation()
         return DEQATN(name, equation_id, eqs, comment=comment)
 
     def _setup_equation(self):
+        """
+        creates an executable equation object from self.eqs
+
+        x = 10.
+        >>> deqatn.func(x)
+        42.0
+
+        >>> deqatn.func_str
+        def stress(x):
+            x = float(x)
+            return x + 32.
+        """
         default_values = {}
         if self.dtable is not None:
             self.dtable_ref.default_values = {}
         func_name, nargs, func_str = fortran_to_python(self.eqs, default_values)
+        self.func_str = func_str
         self.func_name = func_name
         #print('**************', func_str)
         exec_(func_str)
@@ -162,7 +175,7 @@ class DEQATN(BaseCard):  # needs work...
         model : BDF()
             the BDF object
         """
-        # TODO: get deafults from DTABLE
+        # TODO: get defaults from DTABLE
         # TODO: get limits from DCONSTR
         self.dtable = model.dtable
         self.dtable_ref = self.dtable

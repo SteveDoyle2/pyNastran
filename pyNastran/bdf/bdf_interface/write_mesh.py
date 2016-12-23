@@ -849,8 +849,8 @@ class WriteMesh(BDFAttributes):
         if self.nodes:
             msg = []
             msg.append('$NODES\n')
-            if self.gridSet:
-                msg.append(self.gridSet.print_card(size))
+            if self.grdset:
+                msg.append(self.grdset.print_card(size))
 
             if self.is_long_ids:
                 for (unused_nid, node) in sorted(iteritems(self.nodes)):
@@ -882,16 +882,16 @@ class WriteMesh(BDFAttributes):
 
         #if associated_nodes:
             #msg += ['$ASSOCIATED NODES\n']
-            #if self.gridSet:
-                #msg.append(self.gridSet.write_card(size, is_double))
+            #if self.grdset:
+                #msg.append(self.grdset.write_card(size, is_double))
             ## TODO: this really shouldn't be a dictionary...???
             #for key, node in sorted(iteritems(associated_nodes)):
                 #msg.append(node.write_card(size, is_double))
 
         #if unassociated_nodes:
             #msg.append('$UNASSOCIATED NODES\n')
-            #if self.gridSet and not associated_nodes:
-                #msg.append(self.gridSet.write_card(size, is_double))
+            #if self.grdset and not associated_nodes:
+                #msg.append(self.grdset.write_card(size, is_double))
             #for key, node in sorted(iteritems(unassociated_nodes)):
                 #if key in self.nodes:
                     #msg.append(node.write_card(size, is_double))
@@ -930,8 +930,8 @@ class WriteMesh(BDFAttributes):
         if self.nodes:
             msg = []
             msg.append('$NODES\n')
-            if self.gridSet:
-                msg.append(self.gridSet.print_card(size))
+            if self.grdset:
+                msg.append(self.grdset.print_card(size))
 
             nid_offset = max(self.nodes.keys())
             if self.is_long_ids:

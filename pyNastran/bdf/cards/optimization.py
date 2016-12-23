@@ -172,7 +172,8 @@ class DCONSTR(OptConstraint):
     +---------+------+-----+------------+------------+-------+--------+
     """
     type = 'DCONSTR'
-    def __init__(self, oid, dresp_id, lid=1.e20, uid=1.e20, lowfq=0., highfq=1.e20, comment=''):
+    def __init__(self, oid, dresp_id, lid=-1.e20, uid=1.e20,
+                 lowfq=0., highfq=1.e20, comment=''):
         """
 
         """
@@ -293,7 +294,8 @@ class DESVAR(OptConstraint):
     | DESVAR | OID | LABEL | XINIT | XLB | XUB | DELXV | DDVAL |
     +--------+-----+-------+-------+-----+-----+-------+-------+
     """
-    def __init__(self, desvar_id, label, xinit, xlb, xub, delx=None, ddval=None, comment=''):
+    def __init__(self, desvar_id, label, xinit, xlb=-1e20, xub=1e20,
+                 delx=1e20, ddval=None, comment=''):
         if comment:
             self.comment = comment
         self.desvar_id = desvar_id
@@ -322,7 +324,8 @@ class DESVAR(OptConstraint):
         delx = double_or_blank(card, 6, 'delx', 1e20)
         ddval = integer_or_blank(card, 7, 'ddval')
         assert len(card) <= 8, 'len(DESVAR card) = %i\ncard=%s' % (len(card), card)
-        return DESVAR(desvar_id, label, xinit, xlb, xub, delx, ddval, comment=comment)
+        return DESVAR(desvar_id, label, xinit, xlb=xlb, xub=xub,
+                      delx=delx, ddval=ddval, comment=comment)
 
     def OptID(self):
         return self.DesvarID()
@@ -508,7 +511,7 @@ class DOPTPRM(OptConstraint):
 class DLINK(OptConstraint):
     type = 'DLINK'
 
-    def __init__(self, oid, ddvid, c0, cmult, IDv, Ci, comment=''):
+    def __init__(self, oid, ddvid, IDv, Ci, c0=0., cmult=1., comment=''):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables.
@@ -548,7 +551,7 @@ class DLINK(OptConstraint):
             ci = double(card, j + 1, 'Ci' + str(i))
             idvs.append(idv)
             Ci.append(ci)
-        return DLINK(oid, ddvid, c0, cmult, idvs, Ci, comment=comment)
+        return DLINK(oid, ddvid, idvs, Ci, c0=c0, cmult=cmult, comment=comment)
 
     def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
@@ -949,6 +952,8 @@ class DRESP1(OptConstraint):
         # PSHELL, PCOMP, PBAR, etc.
         self.property_type = property_type
         self.region = region
+        if isinstance(atti, int):
+            atti = [atti]
         assert isinstance(atti, list), 'atti=%s type=%s' % (atti, type(atti))
 
         if validate:
@@ -2190,8 +2195,8 @@ class DVCREL2(OptConstraint):
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
 
-    def __init__(self, oid, Type, mid, mp_name, mp_min, mp_max,
-                 dvids, coeffs, c0=0., validate=False, comment=''):
+    def __init__(self, oid, Type, mid, mp_name, dvids, coeffs,
+                 mp_min=None, mp_max=1e20, c0=0., validate=False, comment=''):
         """
         Design Variable to Material Relation
         Defines the relation between a material property and design variables.
@@ -2206,6 +2211,11 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         """
         if comment:
             self.comment = comment
+        if isinstance(dvids, int):
+            dvids = [dvids]
+        if isinstance(coeffs, float):
+            coeffs = [coeffs]
+
         self.oid = oid
         self.Type = Type
         self.mid = mid
@@ -2250,8 +2260,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVMREL1...')
-        return DVMREL1(oid, Type, mid, mp_name, mp_min, mp_max,
-                       dvids, coeffs, c0=c0, comment=comment)
+        return DVMREL1(oid, Type, mid, mp_name, dvids, coeffs,
+                       mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2319,8 +2329,8 @@ class DVMREL2(OptConstraint):
     type = 'DVMREL2'
 
     allowed_materials = ['MAT1', 'MAT2']
-    def __init__(self, oid, Type, mid, mp_name, mp_min, mp_max, deqation,
-                 dvids, labels, validate=False, comment=''):
+    def __init__(self, oid, Type, mid, mp_name, deqation, dvids, labels,
+                 mp_min=None, mp_max=1e20, validate=False, comment=''):
         """
         +---------+--------+--------+-------+---------+-------+-------+-------+-------+
         |    1    |    2   |   3    |   4   |     5   |   6   |   7   |   8   |   9   |
@@ -2338,6 +2348,16 @@ class DVMREL2(OptConstraint):
         """
         if comment:
             self.comment = comment
+        if dvids is None:
+            dvids = []
+        elif isinstance(dvids, int):
+            dvids = [dvids]
+
+        if labels is None:
+            labels = []
+        elif isinstance(labels, str):
+            labels = [labels]
+
         #: Unique identification number
         self.oid = oid
 
@@ -2414,8 +2434,8 @@ class DVMREL2(OptConstraint):
                 if label:
                     assert label is not 'DTABLE'
                     labels.append(label)
-        return DVMREL2(oid, Type, mid, mp_name, mp_min, mp_max, dequation, dvids,
-                       labels, comment=comment)
+        return DVMREL2(oid, Type, mid, mp_name, dequation, dvids, labels,
+                       mp_min=mp_min, mp_max=mp_max, comment=comment)
 
     def OptID(self):
         return self.oid
@@ -2544,6 +2564,21 @@ def break_word_by_trailing_integer(pname_fid):
 
 
 class DVPREL1(OptConstraint):  # similar to DVMREL1
+    """
+    +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+    |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  | 9 |
+    +=========+========+========+========+===========+=======+========+=====+===+
+    | DVPREL1 |   ID   |  TYPE  |  PID   | PNAME/FID | PMIN  |  PMAX  |  C0 |   |
+    +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+    |         | DVID1  | COEF1  | DVID2  |   COEF2   | DVID3 | -etc.- |     |   |
+    +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+
+    +---------+--------+--------+--------+-----+
+    | DVPREL1 | 200000 | PCOMP  | 2000   |  T2 |
+    +---------+--------+--------+--------+-----+
+    |         | 200000 |   1.0  |        |     |
+    +---------+--------+--------+--------+-----+
+    """
     type = 'DVPREL1'
 
     allowed_properties = [
@@ -2565,25 +2600,43 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
-    def __init__(self, oid, Type, pid, pname_fid, p_min, p_max, dvids, coeffs, c0=0.0,
-                 validate=False, comment=''):
+    def __init__(self, oid, Type, pid, pname_fid, dvids, coeffs,
+                 p_min=None, p_max=1e20, c0=0.0, validate=False, comment=''):
         """
-        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
-        |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  | 9 |
-        +=========+========+========+========+===========+=======+========+=====+===+
-        | DVPREL1 |   ID   |  TYPE  |  PID   | PNAME/FID | PMIN  |  PMAX  |  C0 |   |
-        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
-        |         | DVID1  | COEF1  | DVID2  |   COEF2   | DVID3 | -etc.- |     |   |
-        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+        Creates a DVPREL1 card
 
-        +---------+--------+--------+--------+-----+
-        | DVPREL1 | 200000 | PCOMP  | 2000   |  T2 |
-        +---------+--------+--------+--------+-----+
-        |         | 200000 |   1.0  |        |     |
-        +---------+--------+--------+--------+-----+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        Type : str
+            property card name (e.g., PSHELL)
+        pid : int
+            property id
+        pname_fid : str/int
+            optimization parameter as a pname (property name; T) or field number (fid)
+        dvids : List[int]
+            DESVAR ids
+        coeffs : List[float]
+            scale factors for DESVAR ids
+        p_min : float; default=None
+            minimum property value
+        p_max : float; default=1e20
+            maximum property value
+        c0 : float; default=0.
+            offset factor for the variable
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
+        if isinstance(dvids, int):
+            dvids = [dvids]
+        if isinstance(coeffs, float):
+            coeffs = [coeffs]
+
         self.oid = oid
 
         # property type (e.g. PSHELL/PCOMP)
@@ -2651,7 +2704,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVPREL1...')
-        return DVPREL1(oid, Type, pid, pname_fid, p_min, p_max, dvids, coeffs, c0=c0,
+        return DVPREL1(oid, Type, pid, pname_fid, dvids, coeffs,
+                       p_min=p_min, p_max=p_max, c0=c0,
                        comment=comment)
 
     def _verify(self, xref):
@@ -2747,6 +2801,21 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
 
 class DVPREL2(OptConstraint):
+    """
+    +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+    |    1     |    2   |   3    |   4   |     5     |   6   |   7   |   8   |   9   |
+    +==========+========+========+=======+===========+=======+=======+=======+=======+
+    | DVPREL2  | ID     | TYPE   | PID   | PNAME/FID | PMIN  | PMAX  | EQID  |       |
+    +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+    |          | DESVAR | DVID1  | DVID2 |   DVID3   | DVID4 | DVID5 | DVID6 | DVID7 |
+    +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+    |          |        | DVID8  | etc.  |           |       |       |       |       |
+    +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+    |          | DTABLE | LABL1  | LABL2 |   LABL3   | LABL4 | LABL5 | LABL6 | LABL7 |
+    +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+    |          |        | LABL8  | etc.  |           |       |       |       |       |
+    +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+    """
     type = 'DVPREL2'
 
     allowed_properties = [
@@ -2766,25 +2835,50 @@ class DVPREL2(OptConstraint):
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
-    def __init__(self, oid, Type, pid, pname_fid, p_min, p_max, deqation,
-                 dvids, labels, validate=False, comment=''):
+    def __init__(self, oid, Type, pid, pname_fid, deqation,
+                 dvids=None, labels=None, p_min=None, p_max=1e20,
+                 validate=False, comment=''):
         """
-        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-        |    1     |    2   |   3    |   4   |     5     |   6   |   7   |   8   |   9   |
-        +==========+========+========+=======+===========+=======+=======+=======+=======+
-        | DVPREL2  | ID     | TYPE   | PID   | PNAME/FID | PMIN  | PMAX  | EQID  |       |
-        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-        |          | DESVAR | DVID1  | DVID2 | DVID3     | DVID4 | DVID5 | DVID6 | DVID7 |
-        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-        |          | DVID8  | -etc.- |       |           |       |       |       |       |
-        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-        |          | DTABLE | LABL1  | LABL2 | LABL3     | LABL4 | LABL5 | LABL6 | LABL7 |
-        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-        |          | LABL8  | -etc.- |       |           |       |       |       |       |
-        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+        Creates a DVPREL2 card
+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        Type : str
+            property card name (e.g., PSHELL)
+        pid : int
+            property id
+        pname_fid : str/int
+            optimization parameter as a pname (property name; T) or field number (fid)
+        deqation : int
+            DEQATN id
+        dvids : List[int]; default=None
+            DESVAR ids
+        labels : List[str]; default=None
+            DTABLE names
+        p_min : float; default=None
+            minimum property value
+        p_max : float; default=1e20
+            maximum property value
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+
+        .. note:: either dvids or labels is required
         """
         if comment:
             self.comment = comment
+        if dvids is None:
+            dvids = []
+        elif isinstance(dvids, int):
+            dvids = [dvids]
+
+        if labels is None:
+            labels = []
+        elif isinstance(labels, str):
+            labels = [labels]
         #: Unique identification number
         self.oid = oid
 
@@ -2817,13 +2911,16 @@ class DVPREL2(OptConstraint):
         validate_dvprel(Type, pname_fid, validate)
         #print(self)
 
+    def validate(self):
+        assert len(self.dvids) > 0 or len(self.labels) > 0
+
     @classmethod
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')
         pname_fid = integer_or_string(card, 4, 'pName_FID')
-        p_min = double_or_blank(card, 5, 'pMin')
+        p_min = double_or_blank(card, 5, 'pMin', None)
         p_max = double_or_blank(card, 6, 'pMax', 1e20)
         dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
 
@@ -2867,8 +2964,8 @@ class DVPREL2(OptConstraint):
                 if label:
                     assert label is not 'DTABLE'
                     labels.append(label)
-        return DVPREL2(oid, Type, pid, pname_fid, p_min, p_max, dequation, dvids,
-                       labels, comment=comment)
+        return DVPREL2(oid, Type, pid, pname_fid, dequation, dvids, labels,
+                       p_min=p_min, p_max=p_max, comment=comment)
 
     def OptID(self):
         return self.oid

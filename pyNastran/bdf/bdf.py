@@ -2222,7 +2222,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
 
     def _prepare_grdset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
-        self.gridSet = GRDSET.add_card(card_obj, comment=comment)
+        self.grdset = GRDSET.add_card(card_obj, comment=comment)
 
     def _prepare_cdamp4(self, card, card_obj, comment=''):
         """adds a CDAMP4"""
@@ -2763,7 +2763,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
         # These are ignored because they're lists
         ignored_types = set([
             'spoints', 'spointi',  # singleton
-            'gridSet',  # singleton
+            'grdset',  # singleton
 
             'spcs', 'spcadds',
 

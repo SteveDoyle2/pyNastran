@@ -131,10 +131,12 @@ class AddCards(AddMethods):
         """
         grid = GRID(nid, cp=cp, xyz=xyz, cd=cd, ps=ps, seid=seid, comment=comment)
         self._add_node_object(grid)
+        return grid
 
     def add_grdset(self, cp, cd, ps, seid, comment):
         grdset = GRDSET(cp, cd, ps, seid, comment=comment)
-        self.gridSet = grdset
+        self.grdset = grdset
+        return grdset
 
     def add_spoint(self, ids, comment=''):
         """
@@ -149,6 +151,7 @@ class AddCards(AddMethods):
         """
         spoint = SPOINTs(ids, comment=comment)
         self._add_spoint_object(spoint)
+        return spoint
 
     def add_epoint(self, ids, comment=''):
         """
@@ -163,6 +166,7 @@ class AddCards(AddMethods):
         """
         epoint = EPOINTs(ids, comment=comment)
         self._add_epoint_object(epoint)
+        return epoint
 
     def add_point(self, nid, cp, xyz, comment=''):
         """
@@ -181,36 +185,43 @@ class AddCards(AddMethods):
         """
         point = POINT(nid, cp, xyz, comment=comment)
         self._add_point_object(point)
+        return point
 
     def add_cord2r(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
                    comment=''):
         coord = CORD2R(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
                        comment=comment)
         self._add_coord_object(coord)
+        return coord
 
     def add_cord2c(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
                    comment=''):
         coord = CORD2C(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
                        comment=comment)
         self._add_coord_object(coord)
+        return coord
 
     def add_cord2s(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
                    comment=''):
         coord = CORD2S(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
                        comment=comment)
         self._add_coord_object(coord)
+        return coord
 
     def add_cord1r(self, cid, g1, g2, g3, comment=''):
         coord = CORD1R(cid, g1, g2, g3, comment=comment)
         self._add_coord_object(coord)
+        return coord
 
     def add_cord1c(self, cid, g1, g2, g3, comment=''):
         coord = CORD1C(cid, g1, g2, g3, comment=comment)
         self._add_coord_object(coord)
+        return coord
 
     def add_cord1s(self, cid, g1, g2, g3, comment=''):
         coord = CORD1S(cid, g1, g2, g3, comment=comment)
         self._add_coord_object(coord)
+        return coord
 
     def add_param(self, key, values, comment=''):
         """
@@ -227,10 +238,12 @@ class AddCards(AddMethods):
         """
         param = PARAM(key, values, comment=comment)
         self._add_param_object(param)
+        return param
 
     def add_plotel(self, eid, nodes, comment=''):
         elem = PLOTEL(eid, nodes, comment=comment)
         self._add_plotel_object(elem)
+        return elem
 
     def add_conm1(self, eid, nid, mass_matrix, cid=0, comment=''):
         """
@@ -260,6 +273,7 @@ class AddCards(AddMethods):
         """
         mass = CONM1(eid, nid, mass_matrix, cid=cid, comment=comment)
         self._add_mass_object(mass)
+        return mass
 
     def add_conm2(self, eid, nid, cid, mass, X=None, I=None, comment=''):
         """
@@ -285,146 +299,180 @@ class AddCards(AddMethods):
         """
         mass = CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
         self._add_mass_object(mass)
+        return mass
 
     def add_pmass(self, pid, mass, comment=''):
         prop = PMASS(pid, mass, comment=comment)
         self._add_property_mass_object(prop)
+        return prop
 
     def add_cmass1(self, eid, pid, g1, c1, g2, c2, comment=''):
         mass = CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
         self._add_mass_object(mass)
+        return mass
 
     def add_cmass2(self, eid, mass, g1, c1, g2, c2, comment=''):
         mass = CMASS2(eid, mass, g1, c1, g2, c2, comment=comment)
         self._add_mass_object(mass)
+        return mass
 
     def add_cmass3(self, eid, pid, s1, s2, comment=''):
         mass = CMASS3(eid, pid, s1, s2, comment=comment)
         self._add_mass_object(mass)
+        return mass
 
     def add_cmass4(self, eid, mass, s1, s2=0, comment=''):
         mass = CMASS4(eid, mass, s1, s2=s2, comment=comment)
         self._add_mass_object(mass)
+        return mass
 
     def add_pelas(self, pid, k, ge, s, comment=''):
         prop = PELAS(pid, k, ge, s, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_celas1(self, eid, pid, nids, c1, c2, comment=''):
         elem = CELAS1(eid, pid, nids, c1, c2, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_celas2(self, eid, k, nids, c1=0, c2=0, ge=0., s=0., comment=''):
         elem = CELAS2(eid, k, nids, c1=c1, c2=c2, ge=ge, s=s, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_celas3(self, eid, pid, s1, s2, comment=''):
         elem = CELAS3(eid, pid, s1, s2, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_celas4(self, eid, k, s1, s2, comment=''):
         elem = CELAS4(eid, k, s1, s2, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cdamp1(self, eid, pid, nids, c1, c2, comment=''):
         elem = CDAMP1(eid, pid, nids, c1, c2, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cdamp2(self, eid, b, nids, c1, c2, comment=''):
         elem = CDAMP2(eid, b, nids, c1, c2, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cdamp3(self, eid, pid, nids, comment=''):
         elem = CDAMP3(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cdamp4(self, eid, b, nids, comment=''):
         elem = CDAMP4(eid, b, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cdamp5(self, eid, pid, nids, comment=''):
         elem = CDAMP5(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pdamp(self, pid, b, comment=''):
         prop = PDAMP(pid, b, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pdampt(self, pid, tbid, comment=''):
         prop = PDAMPT(pid, tbid, comment=comment)
         self._add_pdampt_object(prop)
+        return prop
 
     def add_pdamp5(self, pid, mid, b, comment=''):
         prop = PDAMP5(pid, mid, b, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_cvisc(self, eid, pid, nids, comment=''):
         elem = CVISC(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pvisc(self, pid, ce, cr, comment=''):
         prop = PVISC(pid, ce, cr, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_cgap(self, eid, pid, ga, gb, x, g0, cid, comment=''):
         elem = CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pgap(self, pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                  comment=''):
         prop = PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_cfast(self, eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
                   comment=''):
         elem = CFAST(eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
                      comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pfast(self, pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass,
                   ge, comment=''):
         prop = PFAST(pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass,
                      ge, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_cbush(self, eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=''):
         elem = CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pbush(self, pid, k, b, ge, rcv, comment=''):
         prop = PBUSH(pid, k, b, ge, rcv, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_cbush1d(self, eid, pid, ga, gb, cid, comment=''):
         elem = CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cbush2d(self, eid, pid, ga, gb, cid, plane, sptid, comment=''):
         elem = CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pbush1d(self, pid, k, c, m, sa, se, optional_vars, comment=''):
         prop = PBUSH1D(pid, k, c, m, sa, se, optional_vars, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pbusht(self, pid, k_tables, b_tables, ge_tables, kn_tables,
                    comment=''):
         prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
                       comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pelast(self, pid, tkid, tgeid, tknid, comment=''):
         prop = PELAST(pid, tkid, tgeid, tknid, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_conrod(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
         elem = CONROD(eid, mid, nids, A, j=j, c=c, nsm=nsm, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_crod(self, eid, pid, nids, comment=''):
         elem = CROD(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_prod(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
         """
@@ -449,6 +497,7 @@ class AddCards(AddMethods):
         """
         prop = PROD(pid, mid, A, j=j, c=c, nsm=nsm, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_ctube(self, eid, pid, nids, comment=''):
         """
@@ -467,6 +516,7 @@ class AddCards(AddMethods):
         """
         elem = CTUBE(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_ptube(self, pid, mid, OD1, t, nsm, OD2, comment=''):
         """
@@ -491,6 +541,7 @@ class AddCards(AddMethods):
         """
         prop = PTUBE(pid, mid, OD1, t=t, nsm=nsm, OD2=OD2, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_cbar(self, eid, pid, ga, gb, x, g0, offt='GGG', pa=0, pb=0,
                  wa=None, wb=None, comment=''):
@@ -525,6 +576,7 @@ class AddCards(AddMethods):
         elem = CBAR(eid, pid, ga, gb, x, g0, offt=offt, pa=pa, pb=pb,
                     wa=wa, wb=wb, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pbar(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
                  c1=0., c2=0., d1=0., d2=0., e1=0., e2=0.,
@@ -558,10 +610,12 @@ class AddCards(AddMethods):
                     c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
                     f1=f1, f2=f2, k1=k1, k2=k2, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pbarl(self, pid, mid, group, Type, dim, nsm=0., comment=''):
         prop = PBARL(pid, mid, group, Type, dim, nsm=nsm, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_cbeam(self, eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
                   pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
@@ -609,6 +663,7 @@ class AddCards(AddMethods):
         elem = CBEAM(eid, pid, ga, gb, x, g0, offt=offt, bit=bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
                   c1, c2, d1, d2, e1, e2, f1, f2,
@@ -672,24 +727,29 @@ class AddCards(AddMethods):
                      m1a=m1a, m2a=m2a, m1b=m1b,
                      m2b=m2b, n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pbeaml(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
         prop = PBEAML(pid, mid, group, Type, xxb, so, dims, nsm, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_cshear(self, eid, pid, nids, comment=''):
         elem = CSHEAR(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pshear(self, pid, t, mid, nsm, f1, f2, comment=''):
         prop = PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
         self._add_property_object(prop)
+        return prop
 
-    def add_ctria3(self, eid, pid, nids, zoffset, theta_mcid=0.0, TFlag=0,
+    def add_ctria3(self, eid, pid, nids, zoffset=0., theta_mcid=0.0, TFlag=0,
                    T1=1.0, T2=1.0, T3=1.0, comment=''):
-        elem = CTRIA3(eid, pid, nids, zoffset, theta_mcid=theta_mcid, TFlag=TFlag,
-                      T1=T1, T2=T2, T3=T3, comment=comment)
+        elem = CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cquad4(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
                    T1=1.0, T2=1.0, T3=1.0, T4=1.0,
@@ -698,12 +758,14 @@ class AddCards(AddMethods):
                       T1=T1, T2=T2, T3=T3, T4=T4,
                       comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_ctria6(self, eid, pid, nids, theta_mcid=0., zoffset=0., TFlag=0,
                    T1=None, T2=None, T3=None, comment=''):
         elem = CTRIA6(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cquad8(self, eid, pid, nids, T1=None, T2=None, T3=None, T4=None,
                    theta_mcid=0., zoffset=0., TFlag=0, comment=''):
@@ -711,10 +773,12 @@ class AddCards(AddMethods):
                       T1=T1, T2=T2, T3=T3, T4=T4,
                       theta_mcid=theta_mcid, zoffset=zoffset, TFlag=TFlag, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_cquad(self, eid, pid, nids, comment=''):
         elem = CQUAD(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pshell(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
                    mid3=None, tst=0.833333, nsm=0.0,
@@ -725,6 +789,7 @@ class AddCards(AddMethods):
                       z1=z1, z2=z2, mid4=mid4,
                       comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pcomp(self, pid, mids, thicknesses, thetas, souts, nsm=0., sb=0.,
                   ft=None, TRef=0., ge=0., lam=None,
@@ -733,6 +798,7 @@ class AddCards(AddMethods):
                      ft=ft, TRef=TRef, ge=ge, lam=lam,
                      z0=z0, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas, souts,
                    nsm, sb, ft, TRef, ge, lam, z0,
@@ -741,6 +807,7 @@ class AddCards(AddMethods):
                       nsm, sb, ft, TRef, ge, lam, z0,
                       comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pcomps(self, pid, cordm, psdir, sb, nb, tref, ge, global_ply_ids,
                    mids, thicknesses, thetas,
@@ -753,6 +820,7 @@ class AddCards(AddMethods):
                       interlaminar_failure_theories,
                       souts, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_plplane(self, pid, mid, cid=0, stress_strain_output_location='GRID',
                     comment=''):
@@ -760,12 +828,14 @@ class AddCards(AddMethods):
                        stress_strain_output_location=stress_strain_output_location,
                        comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_pplane(self, pid, mid, t=0., nsm=0., formulation_option=0,
                    comment=''):
         prop = PPLANE(pid, mid, t=t, nsm=nsm, formulation_option=formulation_option,
                       comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_ctetra(self, eid, pid, nids, comment=''):
         #elem = CTETRA(eid, pid, nids, comment=comment)
@@ -774,6 +844,16 @@ class AddCards(AddMethods):
         else:
             elem = CTETRA10(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
+
+    def add_cpyram(self, eid, pid, nids, comment=''):
+        #elem = CPYRAM(eid, pid, nids, comment=comment)
+        if len(nids) == 5:
+            elem = CPYRAM5(eid, pid, nids, comment=comment)
+        else:
+            elem = CPYRAM13(eid, pid, nids, comment=comment)
+        self._add_element_object(elem)
+        return elem
 
     def add_cpenta(self, eid, pid, nids, comment=''):
         #elem = CPENTA(eid, pid, nids, comment=comment)
@@ -782,6 +862,7 @@ class AddCards(AddMethods):
         else:
             elem = CPENTA15(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_chexa(self, eid, pid, nids, comment=''):
         #elem = CHEXA(eid, pid, nids, comment=comment)
@@ -790,10 +871,12 @@ class AddCards(AddMethods):
         else:
             elem = CHEXA20(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_pyram(self, eid, pid, nids, comment=''):
         elem = CPYRAM(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
+        return elem
 
     def add_psolid(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                    fctn='SMECH', comment=''):
@@ -829,14 +912,53 @@ class AddCards(AddMethods):
         prop = PSOLID(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
                       fctn=fctn, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_plsolid(self, pid, mid, stress_strain='GRID', ge=0., comment=''):
         prop = PLSOLID(pid, mid, stress_strain=stress_strain, ge=ge, comment=comment)
         self._add_property_object(prop)
+        return prop
+
+    def add_ctrax3(self, eid, pid, nids, theta=0., comment=''):
+        elem = CTRAX3(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_ctrax6(self, eid, pid, nids, theta=0., comment=''):
+        elem = CTRAX6(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_ctriax(self, eid, pid, nids, theta_mcid=0., comment=''):
+        elem = CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_ctriax6(self, eid, mid, nids, theta=0., comment=''):
+        elem = CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cquadx(self, eid, pid, nids, theta_mcid=0., comment=''):
+        elem = CQUADX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cquadx4(self, eid, pid, nids, theta=0., comment=''):
+        elem = CQUADX4(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cquadx8(self, eid, pid, nids, theta=0., comment=''):
+        elem = CQUADX8(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
 
     def add_cihex1(self, eid, pid, nids, comment=''):
         """see CHEXA"""
         elem = CIHEX1(eid, pid, nids, comment=comment)
+        self._add_element_object(elem)
+        return elem
 
     def add_pihex(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                   fctn='SMECH', comment=''):
@@ -844,12 +966,14 @@ class AddCards(AddMethods):
         prop = PIHEX(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
                      fctn=fctn, comment=comment)
         self._add_property_object(prop)
+        return prop
 
     def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, TRef=0.0, ge=0.0, St=0.0,
                  Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
         mat = MAT1(mid, E, G, nu, rho=rho, a=a, TRef=TRef, ge=ge, St=St,
                    Sc=Sc, Ss=Ss, Mcsid=Mcsid, comment=comment)
         self._add_structural_material_object(mat)
+        return mat
 
     def add_mat2(self, mid, G11, G12, G13, G22, G23, G33, rho, a1, a2, a3,
                  TRef=0., ge=0., St=None, Sc=None,
@@ -858,6 +982,7 @@ class AddCards(AddMethods):
                    TRef=TRef, ge=ge, St=St, Sc=Sc,
                    Ss=Ss, Mcsid=Mcsid, comment=comment)
         self._add_structural_material_object(mat)
+        return mat
 
     def add_mat3(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
                  ax=0., ath=0., az=0., TRef=0., ge=0.,
@@ -866,6 +991,7 @@ class AddCards(AddMethods):
                    ax=ax, ath=ath, az=az, TRef=TRef, ge=ge,
                    comment=comment)
         self._add_structural_material_object(mat)
+        return mat
 
     def add_mat4(self, mid, k, cp=0.0, rho=1.0, H=None, mu=None, hgen=1.0,
                  refEnthalpy=None, tch=None, tdelta=None,
@@ -874,6 +1000,7 @@ class AddCards(AddMethods):
                    refEnthalpy=refEnthalpy, tch=tch, tdelta=tdelta,
                    qlat=qlat, comment=comment)
         self._add_thermal_material_object(mat)
+        return mat
 
     def add_mat5(self, mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0., cp=0.,
                  rho=1., hgen=1., comment=''):
@@ -888,6 +1015,7 @@ class AddCards(AddMethods):
                    TRef=TRef, Xt=Xt, Xc=Xc, Yt=Yt, Yc=Yc,
                    S=S, ge=ge, F12=F12, strn=strn, comment=comment)
         self._add_structural_material_object(mat)
+        return mat
 
     def add_mat9(self, mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25, G26,
                  G33, G34, G35, G36, G44, G45, G46, G55,
@@ -896,20 +1024,24 @@ class AddCards(AddMethods):
                    G33, G34, G35, G36, G44, G45, G46, G55,
                    G56, G66, rho, A, TRef, ge, comment=comment)
         self._add_structural_material_object(mat)
+        return mat
 
     def add_mat10(self, mid, bulk, rho, c, ge, comment=''):
         mat = MAT10(mid, bulk, rho, c, ge, comment=comment)
         self._add_structural_material_object(mat)
+        return mat
 
     def add_mat11(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
                   a1, a2, a3, TRef, ge, comment=''):
         mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
                     a1, a2, a3, TRef, ge, comment=comment)
         self._add_structural_material_object(mat)
+        return mat
 
     def add_mats1(self, mid, tid, Type, h, hr, yf, limit1, limit2, comment=''):
         mat = MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
         self._add_material_dependence_object(mat)
+        return mat
 
     def add_matt1(self, mid, E_table, G_table, nu_table, rho_table, A_table,
                   ge_table, st_table, sc_table, ss_table,
@@ -918,6 +1050,7 @@ class AddCards(AddMethods):
                     ge_table, st_table, sc_table, ss_table,
                     comment=comment)
         self._add_material_dependence_object(mat)
+        return mat
 
     def add_matt2(self, mid, G11_table, G12_table, G13_table, G22_table,
                   G23_table, G33_table, rho_table,
@@ -930,12 +1063,14 @@ class AddCards(AddMethods):
                     st_table, sc_table, ss_table,
                     comment=comment)
         self._add_material_dependence_object(mat)
+        return mat
 
     def add_matt4(self, mid, k_table, cp_table, H_table, mu_table, Hgen_table,
                   comment=''):
         mat = MATT4(mid, k_table, cp_table, H_table, mu_table, Hgen_table,
                     comment=comment)
         self._add_material_dependence_object(mat)
+        return mat
 
     def add_matt5(self, mid, kxx_table, kxy_table, kxz_table, kyy_table,
                   kyz_table, kzz_table, cp_table,
@@ -944,17 +1079,22 @@ class AddCards(AddMethods):
                     kyz_table, kzz_table, cp_table,
                     hgen_table, comment=comment)
         self._add_material_dependence_object(mat)
+        return mat
+
     def add_load(self, sid, scale, scale_factors, load_ids, comment=''):
         load = LOAD(sid, scale, scale_factors, load_ids, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_lseq(self, sid, excite_id, lid, tid, comment=''):
         load = LSEQ(sid, excite_id, lid, tid, comment=comment)
         self._add_lseq_object(load)
+        return load
 
-    def add_dload(self):
-        load = DLOAD(sid, scale, scale_factors, load_ids, comment='')
+    def add_dload(self, sid, scale, scale_factors, load_ids, comment):
+        load = DLOAD(sid, scale, scale_factors, load_ids, comment=comment)
         self._add_dload_object(load)
+        return load
 
     def add_force(self, sid, node, mag, cid=0, xyz=None, comment=''):
         """
@@ -977,14 +1117,17 @@ class AddCards(AddMethods):
         """
         load = FORCE(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_force1(self, sid, node, mag, g1, g2, comment=''):
         load = FORCE1(sid, node, mag, g1, g2, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_force2(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         load = FORCE2(sid, node, mag, g1, g2, g3, g4, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_moment(self, sid, node, cid, mag, xyz, comment=''):
         """
@@ -1007,22 +1150,27 @@ class AddCards(AddMethods):
         """
         load = MOMENT(sid, node, cid, mag, xyz, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_moment1(self, sid, node, mag, g1, g2, comment=''):
         load = MOMENT1(sid, node, mag, g1, g2, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_moment2(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         load = MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz=None, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_accel(self, sid, cid, N, direction, locs, vals, comment=''):
         load = ACCEL(sid, cid, N, direction, locs, vals, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_accel1(self, sid, cid, scale, N, nodes, comment=''):
         load = ACCEL1(sid, cid, scale, N, nodes, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_grav(self, sid, scale, N, cid=0, mb=0, comment=''):
         load = GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
@@ -1031,14 +1179,17 @@ class AddCards(AddMethods):
     def add_pload(self, sid, p, nodes, comment=''):
         load = PLOAD(sid, p, nodes, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_pload1(self, sid, eid, Type, scale, x1, p1, x2, p2, comment=''):
         load = PLOAD1(sid, eid, Type, scale, x1, p1, x2, p2, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_pload2(self, sid, pressure, eids, comment=''):
         load = PLOAD2(sid, pressure, eids, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_pload4(self, sid, eids, pressures, g1=None, g34=None, cid=0,
                    NVector=None, sorl='SURF', ldir='NORM', comment=''):
@@ -1076,38 +1227,47 @@ class AddCards(AddMethods):
                       NVector=NVector, sorl=sorl,
                       ldir=ldir, comment=comment)
         self._add_load_object(load)
+        return load
 
     def add_spc(self, conid, gids, constraints, enforced, comment=''):
         spc = SPC(conid, gids, constraints, enforced, comment=comment)
         self._add_constraint_spc_object(spc)
+        return spc
 
     def add_spc1(self, conid, constraints, nodes, comment=''):
         spc = SPC1(conid, constraints, nodes, comment=comment)
         self._add_constraint_spc_object(spc)
+        return spc
 
     def add_spcd(self, sid, gids, constraints, enforced, comment=''):
         spc = SPCD(sid, gids, constraints, enforced, comment=comment)
         self._add_load_object(spc)
+        return spc
 
     def add_spcadd(self, conid, sets, comment=''):
         spcadd = SPCADD(conid, sets, comment=comment)
         self._add_constraint_spc_object(spcadd)
+        return spcadd
 
     def add_mpc(self, conid, gids, constraints, enforced, comment=''):
         mpc = MPC(conid, gids, constraints, enforced, comment=comment)
         self._add_constraint_mpc_object(mpc)
+        return mpc
 
     def add_mpcadd(self, conid, sets, comment=''):
         mpcadd = MPCADD(conid, sets, comment=comment)
         self._add_constraint_mpc_object(mpcadd)
+        return mpcadd
 
     def add_suport(self, ids, Cs, comment=''):
         suport = SUPORT(ids, Cs, comment=comment)
         self._add_suport_object(suport)
+        return suport
 
     def add_suport1(self, conid, ids, Cs, comment=''):
         suport1 = SUPORT1(conid, ids, Cs, comment=comment)
         self._add_suport1_object(suport1)
+        return suport1
 
     def add_aeros(self, cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0,
                   comment=''):
@@ -1136,6 +1296,7 @@ class AddCards(AddMethods):
         aeros = AEROS(cref, bref, sref, acsid=acsid, rcsid=rcsid,
                       sym_xz=sym_xz, sym_xy=sym_xy, comment=comment)
         self._add_aeros_object(aeros)
+        return aeros
 
     def add_aero(self, velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0,
                  comment=''):
@@ -1162,62 +1323,73 @@ class AddCards(AddMethods):
         aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy,
                     comment=comment)
         self._add_aero_object(aero)
+        return aero
 
     def add_caero1(self, eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
                    x12, p4, x43, comment=''):
         caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
                        x12, p4, x43, comment=comment)
         self._add_caero_object(caero)
+        return caero
 
     def add_caero2(self, eid, pid, igid, p1, x12, cp=0, nsb=0, nint=0, lsb=0,
                    lint=0, comment=''):
         caero = CAERO2(eid, pid, igid, p1, x12, cp=cp, nsb=nsb, nint=nint, lsb=lsb,
                        lint=lint, comment=comment)
         self._add_caero_object(caero)
+        return caero
 
     def add_caero3(self, eid, pid, cp, list_w, list_c1, list_c2, p1, x12, p4,
                    x43, comment=''):
         caero = CAERO3(eid, pid, cp, list_w, list_c1, list_c2, p1, x12, p4,
                        x43, comment=comment)
         self._add_caero_object(caero)
+        return caero
 
     def add_caero4(self, eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
                    comment=''):
         caero = CAERO4(eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
                        comment=comment)
         self._add_caero_object(caero)
+        return caero
 
     def add_caero5(self, eid, pid, p1, x12, p4, x43, cp=0, nspan=0, lspan=0,
                    ntheory=0, nthick=0, comment=''):
         caero = CAERO5(eid, pid, p1, x12, p4, x43, cp=cp, nspan=nspan, lspan=lspan,
                        ntheory=ntheory, nthick=nthick, comment=comment)
         self._add_caero_object(caero)
+        return caero
 
     def add_paero1(self, pid, Bi=None, comment=''):
         paero = PAERO1(pid, Bi=Bi, comment=comment)
         self._add_paero_object(paero)
+        return paero
 
     def add_paero2(self, pid, orient, width, AR, lrsb, lrib, lth1, lth2, thi,
                    thn, comment=''):
         paero = PAERO2(pid, orient, width, AR, lrsb, lrib, lth1, lth2, thi,
                        thn, comment=comment)
         self._add_paero_object(paero)
+        return paero
 
     def add_paero3(self, pid, nbox, ncontrol_surfaces, x, y, comment=''):
         paero = PAERO3(pid, nbox, ncontrol_surfaces, x, y, comment=comment)
         self._add_paero_object(paero)
+        return paero
 
     def add_paero4(self, pid, docs, caocs, gapocs, cla=0, lcla=0,
                    circ=0, lcirc=0, comment=''):
         paero = PAERO4(pid, docs, caocs, gapocs, cla=cla, lcla=lcla,
                        circ=circ, lcirc=lcirc, comment=comment)
         self._add_paero_object(paero)
+        return paero
 
     def add_paero5(self, pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0,
                    ntaus=0, ltaus=0, comment=''):
         paero = PAERO5(pid, caoci, nalpha=nalpha, lalpha=lalpha, nxis=nxis, lxis=lxis,
                        ntaus=ntaus, ltaus=ltaus, comment=comment)
         self._add_paero_object(paero)
+        return paero
 
     def add_spline1(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
                     usage='BOTH', nelements=10,
@@ -1226,12 +1398,14 @@ class AddCards(AddMethods):
                          usage=usage, nelements=nelements, melements=melements,
                          comment=comment)
         self._add_spline_object(spline)
+        return spline
 
     def add_spline2(self, eid, caero, id1, id2, setg, dz, dtor, cid, dthx,
                     dthy, usage, comment=''):
         spline = SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid, dthx,
                          dthy, usage, comment=comment)
         self._add_spline_object(spline)
+        return spline
 
     def add_spline3(self, eid, caero, box_id, components, nids,
                     displacement_components,
@@ -1241,50 +1415,60 @@ class AddCards(AddMethods):
                          coeffs, usage=usage,
                          comment=comment)
         self._add_spline_object(spline)
+        return spline
 
     def add_spline4(self, eid, caero, aelist, setg, dz, method, usage,
                     nelements, melements, comment=''):
         spline = SPLINE4(eid, caero, aelist, setg, dz, method, usage,
                          nelements, melements, comment=comment)
         self._add_spline_object(spline)
+        return spline
 
     def add_spline5(self, eid, caero, aelist, setg, dz, dtor, cid, thx, thy,
                     usage, method, ftype, rcore, comment=''):
         spline = SPLINE5(eid, caero, aelist, setg, dz, dtor, cid, thx, thy,
                          usage, method, ftype, rcore, comment=comment)
         self._add_spline_object(spline)
+        return spline
 
     def add_trim(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
         trim = TRIM(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
         self._add_trim_object(trim)
+        return trim
 
     def add_mkaero1(self, machs, reduced_freqs, comment=''):
         mkaero = MKAERO1(machs, reduced_freqs, comment=comment)
         self._add_mkaero_object(mkaero)
+        return mkaero
 
     def add_mkaero2(self, machs, reduced_freqs, comment=''):
         mkaero = MKAERO2(machs, reduced_freqs, comment=comment)
         self._add_mkaero_object(mkaero)
+        return mkaero
 
     def add_gust(self, sid, dload, wg, x0, V, comment=''):
         gust = GUST(sid, dload, wg, x0, V, comment=comment)
         self._add_gust_object(gust)
+        return gust
 
     def add_eigr(self, sid, method, f1, f2, ne, nd, norm, G, C, comment=''):
         method = EIGR(sid, method, f1, f2, ne, nd, norm, G, C, comment=comment)
         self._add_method_object(method)
+        return method
 
     def add_eigrl(self, sid, v1, v2, nd, msglvl, maxset, shfscl, norm, options,
                   values, comment=''):
         method = EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl, norm, options,
                        values, comment=comment)
         self._add_method_object(method)
+        return method
 
     def add_eigb(self, sid, method, L1, L2, nep, ndp, ndn, norm, G, C,
                  comment=''):
         method = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C,
                       comment=comment)
         self._add_method_object(method)
+        return method
 
     def add_eigc(self, sid, method, norm, G, C, E, ndo, mblkszs=None,
                  iblkszs=None, ksteps=None,
@@ -1303,58 +1487,72 @@ class AddCards(AddMethods):
                       shift_i1=shift_i1, isrr_flag=isrr_flag,
                       nd1=nd1, comment=comment)
         self._add_cmethod_object(method)
+        return method
 
     def add_eigp(self, sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=''):
         method = EIGP(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=comment)
         self._add_cmethod_object(method)
+        return method
 
     def add_set1(self, sid, ids, is_skin=False, comment=''):
         set_obj = SET1(sid, ids, is_skin=is_skin, comment=comment)
         self._add_set_object(set_obj)
+        return set_obj
 
     def add_set3(self, sid, desc, ids, comment=''):
         set_obj = SET3(sid, desc, ids, comment=comment)
         self._add_set_object(set_obj)
+        return set_obj
 
     def add_aset(self, ids, components, comment=''):
         aset = ASET(ids, components, comment=comment)
         self._add_aset_object(aset)
+        return aset
 
     def add_aset1(self, components, ids, comment=''):
         aset = ASET1(components, ids, comment=comment)
         self._add_aset_object(aset)
+        return aset
 
     def add_bset(self, ids, components, comment=''):
         bset = BSET(ids, components, comment=comment)
         self._add_bset_object(bset)
+        return bset
 
     def add_bset1(self, components, ids, comment=''):
         bset = BSET1(components, ids, comment=comment)
         self._add_bset_object(bset)
+        return bset
 
     def add_cset(self, ids, components, comment=''):
         cset = CSET(ids, components, comment=comment)
         self._add_cset_object(cset)
+        return cset
 
     def add_cset1(self, ids, components, comment=''):
         cset = CSET1(ids, components, comment=comment)
         self._add_cset_object(cset)
+        return cset
 
     def add_qset(self, ids, components, comment=''):
         qset = QSET(ids, components, comment=comment)
         self._add_qset_object(qset)
+        return qset
 
     def add_qset1(self, components, ids, comment=''):
         qset = QSET1(components, ids, comment=comment)
         self._add_qset_object(qset)
+        return qset
 
     def add_uset(self, name, components, ids, comment=''):
         uset = USET(name, components, ids, comment=comment)
         self._add_uset_object(uset)
+        return uset
 
     def add_uset1(self, name, components, ids, comment=''):
         uset = USET1(name, components, ids, comment=comment)
         self._add_uset_object(uset)
+        return uset
 
     def add_flutter(self, sid, method, density, mach, reduced_freq_velocity,
                     imethod='L', nvalue=None,
@@ -1365,6 +1563,7 @@ class AddCards(AddMethods):
                           omax=omax, epsilon=epsilon,
                           comment=comment)
         self._add_flutter_object(flutter)
+        return flutter
 
     def add_flfact(self, sid, factors, comment=''):
         """
@@ -1392,6 +1591,7 @@ class AddCards(AddMethods):
         """
         flfact = FLFACT(sid, factors, comment=comment)
         self._add_flfact_object(flfact)
+        return flfact
 
     def add_aecomp(self, name, list_type, lists, comment=''):
         """
@@ -1415,6 +1615,7 @@ class AddCards(AddMethods):
         """
         aecomp = AECOMP(name, list_type, lists, comment=comment)
         self._add_aecomp_object(aecomp)
+        return aecomp
 
     def add_aestat(self, id, label, comment=''):
         """
@@ -1435,24 +1636,29 @@ class AddCards(AddMethods):
     def add_aelink(self, id, label, independent_labels, Cis, comment=''):
         aelink = AELINK(id, label, independent_labels, Cis, comment=comment)
         self._add_aelink_object(aelink)
+        return aelink
 
     def add_aelist(self, sid, elements, comment):
         aelist = AELIST(sid, elements, comment=comment)
         self._add_aelist_object(aelist)
+        return aelist
 
     def add_aefact(self, sid, Di, comment=''):
         aefact = AEFACT(sid, Di, comment=comment)
         self._add_aefact_object(aefact)
+        return aefact
 
     def add_diverg(self, sid, nroots, machs, comment=''):
         diverg = DIVERG(sid, nroots, machs, comment=comment)
         self._add_diverg_object(diverg)
+        return diverg
 
     def add_csschd(self, sid, aesid, lschd, lalpha=None, lmach=None,
                    comment=''):
         csschd = CSSCHD(sid, aesid, lschd, lalpha=lalpha, lmach=lmach,
                         comment=comment)
         self._add_csschd_object(csschd)
+        return csschd
 
     def add_aesurf(self, aesid, label, cid1, alid1, cid2=None, alid2=None,
                    eff=1.0, ldw='LDW', crefc=1.0,
@@ -1504,14 +1710,17 @@ class AddCards(AddMethods):
                         hmulim=hmulim, tqllim=tqllim,
                         tqulim=tqulim, comment=comment)
         self._add_aesurf_object(aesurf)
+        return aesurf
 
     def add_aesurfs(self, aesid, label, list1, list2, comment=''):
         aesurfs = AESURFS(aesid, label, list1, list2, comment=comment)
         self._add_aesurfs_object(aesurfs)
+        return aesurfs
 
     def add_aeparm(self, id, label, units, comment=''):
         aeparm = AEPARM(id, label, units, comment=comment)
         self._add_aeparm_object(aeparm)
+        return aeparm
 
     def add_dtable(self, default_values, comment=''):
         """
@@ -1529,78 +1738,97 @@ class AddCards(AddMethods):
         """
         dtable = DTABLE(default_values, comment=comment)
         self._add_dtable_object(dtable)
+        return dtable
 
     def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tabled2(self, tid, x1, x, y, comment=''):
         table = TABLED2(tid, x1, x, y, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tabled3(self, tid, x1, x2, x, y, comment=''):
         table = TABLED3(tid, x1, x2, x, y, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tabled4(self, tid, x1, x2, x3, x4, a, comment=''):
         table = TABLED4(tid, x1, x2, x3, x4, a, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tablem1(self, tid, x, y, comment=''):
         table = TABLEM1(tid, x, y, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tablem2(self, tid, x1, x, y, comment=''):
         table = TABLEM2(tid, x1, x, y, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tablem3(self, tid, x1, x2, x, y, comment=''):
         table = TABLEM3(tid, x1, x2, x, y, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tablem4(self, tid, x1, x2, x3, x4, a, comment=''):
         table = TABLEM4(tid, x1, x2, x3, x4, a, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tables1(self, tid, Type, x, y, comment=''):
         table = TABLES1(tid, Type, x, y, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tablest(self, tid, x, y, comment=''):
         table = TABLEST(tid, x, y, comment=comment)
         self._add_table_object(table)
+        return table
 
     def add_tabrnd1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         table = TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
         self._add_random_table_object(table)
+        return table
 
     def add_tabrndg(self, tid, Type, LU, WG, comment=''):
         table = TABRNDG(tid, Type, LU, WG, comment=comment)
         self._add_random_table_object(table)
+        return table
 
     def add_tabdmp1(self, tid, Type, x, y, comment=''):
         table = TABDMP1(tid, Type, x, y, comment=comment)
         self._add_table_sdamping_object(table)
+        return table
 
     def add_freq(self, sid, freqs, comment=''):
         freq = FREQ(sid, freqs, comment=comment)
         self._add_freq_object(freq)
+        return freq
 
     def add_freq1(self, sid, f1, df, ndf, comment=''):
         freq = FREQ1(sid, f1, df, ndf, comment=comment)
         self._add_freq_object(freq)
+        return freq
 
     def add_freq2(self, sid, f1, f2, ndf=1, comment=''):
         freq = FREQ2(sid, f1, f2, ndf=ndf, comment=comment)
         self._add_freq_object(freq)
+        return freq
 
     def add_freq4(self, sid, f1, f2, fspread, nfm, comment=''):
         freq = FREQ4(sid, f1, f2, fspread, nfm, comment=comment)
         self._add_freq_object(freq)
+        return freq
 
     def add_rrod(self, eid, ga, gb, cma, cmb, alpha, comment=''):
         elem = RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
         self._add_rigid_element_object(elem)
+        return elem
 
     def add_rbe1(self, eid, Gni, Cni, Gmi, Cmi, alpha=0., comment=''):
         """
@@ -1623,207 +1851,309 @@ class AddCards(AddMethods):
         """
         elem = RBE1(eid, Gni, Cni, Gmi, Cmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
+        return elem
 
     def add_rbe2(self, eid, gn, cm, Gmi, alpha=0.0, comment=''):
         elem = RBE2(eid, gn, cm, Gmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
+        return elem
 
     def add_rbe3(self, eid, refgrid, refc, weights, comps, Gijs, Gmi=None,
                  Cmi=None, alpha=0.0, comment=''):
         elem = RBE3(eid, refgrid, refc, weights, comps, Gijs, Gmi=Gmi,
                     Cmi=Cmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
+        return elem
 
     def add_rbar(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
         elem = RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
+        return elem
 
     def add_rbar1(self, eid, ga, gb, cb, alpha=0., comment=''):
         elem = RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
+        return elem
 
     def add_rspline(self, eid, nids, components, diameter_ratio=0.1, comment=''):
         elem = RSPLINE(eid, nids, components, diameter_ratio=diameter_ratio, comment=comment)
         self._add_rigid_element_object(elem)
+        return elem
 
     def add_tf(self, sid, nid0, c, b0, b1, b2, nids, components, a, comment=''):
         tf = TF(sid, nid0, c, b0, b1, b2, nids, components, a, comment=comment)
         self._add_tf_object(tf)
+        return tf
 
     def add_deqatn(self, name, equation_id, eqs, comment=''):
         deqatn = DEQATN(name, equation_id, eqs, comment=comment)
         self._add_deqatn_object(deqatn)
+        return deqatn
 
-    def add_desvar(self, desvar_id, label, xinit, xlb, xub, delx=None,
-                   ddval=None, comment=''):
+    def add_desvar(self, desvar_id, label, xinit, xlb=-1e20, xub=1e20,
+                   delx=1e20, ddval=None, comment=''):
         desvar = DESVAR(desvar_id, label, xinit, xlb, xub, delx=delx,
                         ddval=ddval, comment=comment)
         self._add_desvar_object(desvar)
+        return desvar
 
     def add_dresp1(self, dresp_id, label, response_type, property_type, region,
                    atta, attb, atti, validate=True, comment=''):
         dresp = DRESP1(dresp_id, label, response_type, property_type, region,
                        atta, attb, atti, validate=validate, comment=comment)
         self._add_dresp_object(dresp)
+        return dresp
 
     def add_dresp2(self, dresp_id, label, dequation, region, method, c1, c2, c3,
                    params, comment=''):
         dresp = DRESP2(dresp_id, label, dequation, region, method, c1, c2, c3,
                        params, comment=comment)
         self._add_dresp_object(dresp)
+        return dresp
 
     def add_dresp3(self, dresp_id, label, group, Type, region, params,
                    comment=''):
         dresp = DRESP3(dresp_id, label, group, Type, region, params,
                        comment=comment)
         self._add_dresp_object(dresp)
+        return dresp
 
     def add_dvcrel1(self, oid, Type, eid, cp_name, cp_min, cp_max, dvids,
                     coeffs, c0=0., validate=True, comment=''):
         dvcrel = DVCREL1(oid, Type, eid, cp_name, cp_min, cp_max, dvids,
                          coeffs, c0=c0, validate=validate, comment=comment)
         self._add_dvcrel_object(dvcrel)
+        return dvcrel
 
     def add_dvcrel2(self, oid, Type, eid, cp_name, cp_min, cp_max, deqation,
-                    dvids, labels,
-                    validate=False, comment=''):
+                    dvids, labels, validate=True, comment=''):
         dvcrel = DVCREL2(oid, Type, eid, cp_name, cp_min, cp_max, deqation,
                          dvids, labels, validate=validate, comment=comment)
         self._add_dvcrel_object(dvcrel)
+        return dvcrel
 
-    def add_dvprel1(self, oid, Type, pid, pname_fid, p_min, p_max, dvids,
-                    coeffs, c0=0.0, validate=False, comment=''):
-        dvprel = DVPREL1(oid, Type, pid, pname_fid, p_min, p_max, dvids,
-                         coeffs, c0=c0, validate=validate, comment=comment)
+    def add_dvprel1(self, oid, Type, pid, pname_fid, dvids, coeffs,
+                    p_min=None, p_max=1e20, c0=0.0, validate=True, comment=''):
+        """
+        Creates a DVPREL1 card
+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        Type : str
+            property card name (e.g., PSHELL)
+        pid : int
+            property id
+        pname_fid : str/int
+            optimization parameter as a pname (property name; T) or field number (fid)
+        dvids : List[int]
+            DESVAR ids
+        coeffs : List[float]
+            scale factors for DESVAR ids
+        p_min : float; default=None
+            minimum property value
+        p_max : float; default=1e20
+            maximum property value
+        c0 : float; default=0.
+            offset factor for the variable
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+        """
+        dvprel = DVPREL1(oid, Type, pid, pname_fid, dvids, coeffs,
+                         p_min=p_min, p_max=p_max,
+                         c0=c0, validate=validate, comment=comment)
         self._add_dvprel_object(dvprel)
+        return dvprel
 
-    def add_dvprel2(self, oid, Type, pid, pname_fid, p_min, p_max, deqation,
-                    dvids, labels, validate=True, comment=''):
-        dvprel = DVPREL2(oid, Type, pid, pname_fid, p_min, p_max, deqation,
-                         dvids, labels, validate=validate, comment=comment)
+    def add_dvprel2(self, oid, Type, pid, pname_fid, deqation,
+                    dvids=None, labels=None, p_min=None, p_max=1e20,
+                    validate=True, comment=''):
+        """
+        Creates a DVPREL2 card
+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        Type : str
+            property card name (e.g., PSHELL)
+        pid : int
+            property id
+        pname_fid : str/int
+            optimization parameter as a pname (property name; T) or field number (fid)
+        deqation : int
+            DEQATN id
+        dvids : List[int]; default=None
+            DESVAR ids
+        labels : List[str]; default=None
+            DTABLE names
+        p_min : float; default=None
+            minimum property value
+        p_max : float; default=1e20
+            maximum property value
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+
+        .. note:: either dvids or labels is required
+        """
+        dvprel = DVPREL2(oid, Type, pid, pname_fid, deqation, dvids, labels,
+                         p_min=p_min, p_max=p_max, validate=validate, comment=comment)
         self._add_dvprel_object(dvprel)
+        return dvprel
 
-    def add_dvmrel1(self, oid, Type, mid, mp_name, mp_min, mp_max, dvids,
-                    coeffs, c0=0., validate=True, comment=''):
-        dvmrel = DVMREL1(oid, Type, mid, mp_name, mp_min, mp_max, dvids,
-                         coeffs, c0=c0, validate=validate, comment=comment)
+    def add_dvmrel1(self, oid, Type, mid, mp_name, dvids, coeffs,
+                    mp_min=None, mp_max=1e20, c0=0., validate=True, comment=''):
+        dvmrel = DVMREL1(oid, Type, mid, mp_name, dvids, coeffs,
+                         mp_min, mp_max, c0=c0, validate=validate, comment=comment)
         self._add_dvmrel_object(dvmrel)
+        return dvmrel
 
-    def add_dvmrel2(self, oid, Type, mid, mp_name, mp_min, mp_max, deqation,
-                    dvids, labels, validate=True, comment=''):
-        dvmrel = DVMREL2(oid, Type, mid, mp_name, mp_min, mp_max, deqation,
-                         dvids, labels, validate=validate, comment=comment)
+    def add_dvmrel2(self, oid, Type, mid, mp_name, deqation, dvids, labels,
+                    mp_min=None, mp_max=1e20, validate=True, comment=''):
+        dvmrel = DVMREL2(oid, Type, mid, mp_name, deqation, dvids, labels,
+                         mp_min=mp_min, mp_max=mp_max,
+                         validate=validate, comment=comment)
         self._add_dvmrel_object(dvmrel)
+        return dvmrel
 
     def add_dvgrid(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
         dvgrid = DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
         self._add_dvgrid_object(dvgrid)
+        return dvgrid
 
     def add_ddval(self, oid, ddvals, comment=''):
         ddval = DDVAL(oid, ddvals, comment=comment)
         self._add_ddval_object(ddval)
+        return ddval
 
-    def add_dlink(self, oid, ddvid, c0, cmult, IDv, Ci, comment=''):
-        dlink = DLINK(oid, ddvid, c0, cmult, IDv, Ci, comment=comment)
+    def add_dlink(self, oid, ddvid, IDv, Ci, c0=0., cmult=1., comment=''):
+        dlink = DLINK(oid, ddvid, IDv, Ci, c0=c0, cmult=cmult, comment=comment)
         self._add_dlink_object(dlink)
+        return dlink
 
-    def add_dconstr(self, oid, dresp_id, lid=1.e20, uid=1.e20, lowfq=0.,
+    def add_dconstr(self, oid, dresp_id, lid=-1.e20, uid=1.e20, lowfq=0.,
                     highfq=1.e20, comment=''):
         dconstr = DCONSTR(oid, dresp_id, lid=lid, uid=uid, lowfq=lowfq,
                           highfq=highfq, comment=comment)
         self._add_dconstr_object(dconstr)
+        return dconstr
 
     def add_dconadd(self, oid, dconstrs, comment=''):
         dconadd = DCONADD(oid, dconstrs, comment=comment)
         self._add_dconstr_object(dconadd)
+        return dconadd
 
     def add_doptprm(self, params, comment=''):
         doptprm = DOPTPRM(params, comment=comment)
         self._add_doptprm_object(doptprm)
+        return doptprm
 
     def add_monpnt1(self, name, label, axes, comp, xyz, cp=0, cd=None,
                     comment=''):
         monitor_point = MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd,
                                 comment=comment)
         self._add_monpnt_object(monitor_point)
+        return monitor_point
 
     def add_monpnt2(self, name, label, table, Type, nddl_item, eid,
                     comment=''):
         monitor_point = MONPNT2(name, label, table, Type, nddl_item, eid,
                                 comment=comment)
         self._add_monpnt_object(monitor_point)
+        return monitor_point
 
     def add_monpnt3(self, name, label, axes, grid_set, elem_set, xyz,
                     cp=0, cd=None, xflag=None, comment=''):
         monitor_point = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                                 cp=cp, cd=cd, xflag=xflag, comment=comment)
         self._add_monpnt_object(monitor_point)
+        return monitor_point
 
     def add_bsurfs(self, id, eids, g1s, g2s, g3s, comment=''):
         bsurfs = BSURFS(id, eids, g1s, g2s, g3s, comment=comment)
         self._add_bsurfs_object(bsurfs)
+        return bsurfs
 
     def add_bsurf(self, sid, eids, comment=''):
         bsurf = BSURF(sid, eids, comment=comment)
         self._add_bsurf_object(bsurf)
+        return bsurf
 
     def add_bctset(self, csid, sids, tids, frictions, min_distances,
                    max_distances, comment='', sol=101):
         bctset = BCTSET(csid, sids, tids, frictions, min_distances,
                         max_distances, comment=comment, sol=sol)
         self._add_bctset_object(bctset)
+        return bctset
 
     def add_bctadd(self, csid, S, comment=''):
         bctadd = BCTADD(csid, S, comment=comment)
         self._add_bctadd_object(bctadd)
+        return bctadd
 
     def add_bctpara(self, csid, params, comment=''):
         bctpara = BCTPARA(csid, params, comment=comment)
         self._add_bctpara_object(bctpara)
+        return bctpara
 
     def add_bcrpara(self, crid, surf, offset, Type='FLEX', mgp=0, comment=''):
         bcrpara = BCRPARA(crid, surf, offset, Type=Type, mgp=mgp, comment=comment)
         self._add_bcrpara_object(bcrpara)
+        return bcrpara
 
     def add_tstep(self, sid, N, DT, NO, comment=''):
         tstep = TSTEP(sid, N, DT, NO, comment=comment)
         self._add_tstep_object(tstep)
+        return tstep
 
-    def add_tstepnl(self, sid, ndt, dt, no, method, kstep, max_iter, conv,
-                    eps_u, eps_p, eps_w,
-                    max_div, max_qn, max_ls,
-                    fstress, max_bisect,
-                    adjust, mstep, rb, max_r,
-                    utol, rtol_b, min_iter,
-                    comment=''):
-        tstepnl = TSTEPNL(sid, ndt, dt, no, method, kstep, max_iter, conv,
-                          eps_u, eps_p, eps_w, max_div, max_qn, max_ls,
-                          fstress, max_bisect, adjust, mstep, rb, max_r,
-                          utol, rtol_b, min_iter, comment=comment)
+    def add_tstepnl(self, sid, ndt, dt, no, method='ADAPT', kstep=None,
+                    max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,
+                    eps_w=1.e-6, max_div=2, max_qn=10, max_ls=2,
+                    fstress=0.2, max_bisect=5, adjust=5, mstep=None,
+                    rb=0.6, max_r=32., utol=0.1, rtol_b=20.,
+                    min_iter=None, comment=''):
+        tstepnl = TSTEPNL(sid, ndt, dt, no, method=method, kstep=kstep,
+                          max_iter=max_iter, conv=conv, eps_u=eps_u, eps_p=eps_p,
+                          eps_w=eps_w, max_div=max_div, max_qn=max_qn, max_ls=max_ls,
+                          fstress=fstress, max_bisect=max_bisect, adjust=adjust,
+                          mstep=mstep, rb=rb, max_r=max_r, utol=utol, rtol_b=rtol_b,
+                          min_iter=min_iter, comment=comment)
         self._add_tstepnl_object(tstepnl)
+        return tstepnl
 
-    def add_nlparm(self, nlparm_id, ninc=10, dt=0.0, kMethod='AUTO', kStep=5,
-                   maxIter=25, conv='PW', intOut='NO', epsU=0.01,
-                   epsP=0.01, epsW=0.01, maxDiv=3, maxQn=None, maxLs=4,
-                   fStress=0.2, lsTol=0.5, maxBisect=5, maxR=20., rTolB=20., comment=''):
-        nlparm = NLPARM(nlparm_id, ninc=ninc, dt=dt, kMethod=kMethod, kStep=kStep,
-                        maxIter=maxIter, conv=conv, intOut=intOut, epsU=epsU,
-                        epsP=epsP, epsW=epsW, maxDiv=maxDiv, maxQn=maxQn,
-                        maxLs=maxLs, fStress=fStress, lsTol=lsTol,
-                        maxBisect=maxBisect, maxR=maxR, rTolB=rTolB, comment=comment)
+    def add_nlparm(self, nlparm_id, ninc=10, dt=0.0, kmethod='AUTO', kstep=5,
+                   max_iter=25, conv='PW', int_out='NO', eps_u=0.01,
+                   eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None, max_ls=4,
+                   fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment=''):
+        nlparm = NLPARM(nlparm_id, ninc=ninc, dt=dt, kmethod=kmethod, kstep=kstep,
+                        max_iter=max_iter, conv=conv, int_out=int_out, eps_u=eps_u,
+                        eps_p=eps_p, eps_w=eps_w, max_div=max_div, max_qn=max_qn,
+                        max_ls=max_ls, fstress=fstress, ls_tol=ls_tol,
+                        max_bisect=max_bisect, max_r=max_r, rtol_b=rtol_b, comment=comment)
         self._add_nlparm_object(nlparm)
+        return nlparm
 
-    def add_nlpci(self, nlpci_id, Type, minalr, maxalr, scale, desiter, mxinc, comment=''):
-        nlpci = NLPCI(nlpci_id, Type, minalr, maxalr, scale, desiter, mxinc, comment=comment)
+    def add_nlpci(self, nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
+                 scale=0., desiter=12, mxinc=20, comment=''):
+        nlpci = NLPCI(nlpci_id, Type=Type, minalr=minalr, maxalr=maxalr,
+                      scale=scale, desiter=desiter, mxinc=mxinc, comment=comment)
         self._add_nlpci_object(nlpci)
+        return nlpci
 
     def add_delay(self, sid, nodes, components, delays, comment=''):
         delay = DELAY(sid, nodes, components, delays, comment=comment)
         self._add_delay_object(delay)
+        return delay
 
     def add_dphase(self, sid, nodes, components, phase_leads, comment=''):
         dphase = DPHASE(sid, nodes, components, phase_leads, comment=comment)
         self._add_dphase_object(dphase)
+        return dphase
 
     #def add_randps(self, sid, j, k, x=0., y=0., tid=0, comment=''):
         #randps = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
@@ -1831,6 +2161,7 @@ class AddCards(AddMethods):
     def add_rotorg(self, sid, nids, comment=''):
         rotor = ROTORG(sid, nids, comment=comment)
         self._add_rotor_object(rotor)
+        return rotor
 
     def add_rotord(self, sid, rstart, rstep, numstep, rids, rsets, rspeeds,
                    rcords, w3s, w4s, rforces,
@@ -1844,31 +2175,44 @@ class AddCards(AddMethods):
                        roprt=roprt, sync=sync, etype=etype, eorder=eorder,
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_rotor_object(rotor)
+        return rotor
 
     def add_temp(self, sid, temperatures, comment=''):
         temp = TEMP(sid, temperatures, comment=comment)
         self._add_thermal_load_object(temp)
+        return temp
+
+    #def add_tempp1(self):
+        #temp = TEMPP1()
+        #self._add_thermal_load_object(temp)
+        #return temp
 
     def add_tempd(self, sid, temperature, comment=''):
         tempd = TEMPD(sid, temperature, comment=comment)
         self._add_tempd_object(tempd)
+        return tempd
 
     def add_qhbdy(self, sid, flag, Q0, af, grids, comment=''):
-        load = QHBDY(sid, flag, Q0, af, grids, comment='')
+        load = QHBDY(sid, flag, Q0, af, grids, comment=comment)
         self._add_thermal_load_object(load)
+        return load
 
     def add_qbdy1(self, sid, qFlux, eids, comment=''):
         load = QBDY1(sid, qFlux, eids, comment=comment)
         self._add_thermal_load_object(load)
+        return load
 
     def add_qbdy2(self, sid, eid, qfluxs, comment=''):
         load = QBDY2(sid, eid, qfluxs, comment=comment)
         self._add_thermal_load_object(load)
+        return load
 
     def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment=''):
         load = QBDY3(sid, Q0, cntrlnd, eids, comment=comment)
         self._add_thermal_load_object(load)
+        return load
 
     def add_phbdy(self, pid, af, d1, d2, comment=''):
         prop = PHBDY(pid, af, d1, d2, comment=comment)
         self._add_phbdy_object(prop)
+        return prop

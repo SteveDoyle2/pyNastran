@@ -342,8 +342,8 @@ def _write_nodes(self, outfile, size, is_double):
     if self.nodes:
         msg = []
         msg.append('$NODES\n')
-        if self.gridSet:
-            msg.append(self.gridSet.print_card(size))
+        if self.grdset:
+            msg.append(self.grdset.print_card(size))
         for (nid, node) in sorted(iteritems(self.nodes)):
             if nid not in self.remove_nodes:
                 msg.append(node.write_card(size, is_double))

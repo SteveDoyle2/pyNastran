@@ -305,7 +305,7 @@ class CTRIA3(TriShell):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, zoffset,
+    def __init__(self, eid, pid, nids, zoffset=0.,
                  theta_mcid=0.0, TFlag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
         TriShell.__init__(self)
         if comment:
@@ -344,8 +344,8 @@ class CTRIA3(TriShell):
             T2 = 1.0
         if T3 == -1.0:
             T3 = 1.0
-        return CTRIA3(eid, pid, nids, zoffset, theta_mcid,
-                      TFlag, T1, T2, T3, comment=comment)
+        return CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -377,8 +377,8 @@ class CTRIA3(TriShell):
             T1 = 1.0
             T2 = 1.0
             T3 = 1.0
-        return CTRIA3(eid, pid, nids, zoffset, theta_mcid,
-                      TFlag, T1, T2, T3, comment=comment)
+        return CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     def cross_reference(self, model):
         """

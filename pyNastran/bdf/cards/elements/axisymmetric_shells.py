@@ -313,7 +313,7 @@ class CTRIAX(TriShell):
     """
     type = 'CTRIAX'
     calculix_type = 'CAX6'
-    def __init__(self, eid, pid, nids, theta_mcid, comment=''):
+    def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         TriShell.__init__(self)
         if comment:
             self.comment = comment
@@ -343,7 +343,7 @@ class CTRIAX(TriShell):
             ]
         theta_mcid = integer_double_or_blank(card, 9, 'theta_mcsid', 0.0)
         assert len(card) <= 10, 'len(CTRIAX card) = %i\ncard=%s' % (len(card), card)
-        return CTRIAX(eid, pid, nids, theta_mcid, comment=comment)
+        return CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -485,7 +485,6 @@ class CTRIAX6(TriShell):
             integer(card, 7, 'n5'),
             integer_or_blank(card, 8, 'n6'),
         ]
-
         theta = double_or_blank(card, 9, 'theta', 0.0)
         assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
         return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
