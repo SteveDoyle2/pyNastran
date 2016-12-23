@@ -1,7 +1,7 @@
 # coding: utf-8
 """
 This file defines:
-  - WriteMesh
+  - WriteMeshes
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -9,7 +9,6 @@ import sys
 from codecs import open
 from six import PY2, iteritems
 
-#from pyNastran.utils import is_file_obj
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -17,7 +16,14 @@ from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 
 
 class WriteMeshes(WriteMesh):
+    """
+    Defines methods for writing cards
+
+    Major methods:
+      - model.write_bdf_symmetric(...)
+    """
     def __init__(self):
+        """creates methods for writing cards"""
         WriteMesh.__init__(self)
 
     def write_bdf_symmetric(self, out_filename=None, encoding=None,
