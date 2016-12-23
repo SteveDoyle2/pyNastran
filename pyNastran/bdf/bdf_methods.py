@@ -111,56 +111,6 @@ class BDFMethods(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
-    def remove_unused_materials(self):
-        """
-        Removes all unused material cards
-
-        .. warning:: doesn't support many cards
-        """
-        no_materials = [
-            'PELAS', 'PDAMP', 'PBUSH',
-            'PELAST', 'PDAMPT', 'PBUSHT',
-            'PGAP', 'PBUSH1D', 'PFAST', 'PVISC',
-        ]
-        prop_mid = [
-            'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PSHEAR', 'PSOLID',
-            'PROD', 'PRAC2D', 'PRAC3D', 'PLSOLID', 'PLPLANE', 'PPLANE',
-            'PTUBE', 'PDAMP5',
-        ]
-        mids_used = []
-        for eid, elem in iteritems(self.elements):
-            if elem.type in ['CONROD']:
-                mids_used.append(elem.Mid())
-
-        for pid, prop in iteritems(self.properties):
-            prop = self.properties[pid]
-            if prop.type in no_materials:
-                continue
-            elif prop.type == 'PSHELL':
-                mids_used.extend([mid for mid in prop.material_ids if mid is not None])
-            elif prop.type == 'PCONEAX':
-                mids_used.extend([mid for mid in self.Mids() if mid is not None])
-
-            elif prop.type in prop_mid:
-                mids_used.append(prop.Mid())
-            elif prop.type in ['PCOMP', 'PCOMPG', 'PCOMPS']:
-                mids_used.extend(prop.Mids())
-
-            elif prop.type == 'PBCOMP':
-                mids_used.append(prop.Mid())
-                mids_used.extend(prop.Mids())
-            else:
-                raise NotImplementedError(prop)
-
-        all_mids = set(self.materials.keys())
-        for mid in all_mids:
-            if mid not in mids_used:
-                self.log.debug('removing mid=%s' % mid)
-                del self.materials[mid]
-
-        for dvmrel in itervalues(self.dvmrels):
-            mids_used.append(dvmrel.Mid())
-
     def get_area_breakdown(self, property_ids=None):
         """
         gets a breakdown of the area by property region
@@ -172,7 +122,6 @@ class BDFMethods(BDFAttributes):
         #'PBEAM3',
         #'PBEND',
         #'PIHEX',
-        #'PLSOLID',
         #'PCOMPS',
         """
         skip_props = [
@@ -2222,68 +2171,4 @@ class BDFMethods(BDFAttributes):
         #if 0:
             #model = self.__class__.__init__()
             #model.read_bdf(skin_filename)
-
-    def remove_unassociated_properties(self, model, reset_type_to_slot_map=True):
-        """remove_unassociated_properties"""
-        pids_used = set()
-        #elem_types = ['']
-        card_types = list(model.card_count.keys())
-        card_map = model.get_card_ids_by_card_types(card_types=card_types,
-                                                    reset_type_to_slot_map=reset_type_to_slot_map,
-                                                    stop_on_missing_card=True)
-        skip_cards = [
-            'GRID', 'PARAM',
-            'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-            'CORD2R', 'CORD2C', 'CORD2S', 'CORD1R', 'CORD1C', 'CORD1S',
-
-            'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PROD', 'PELAS', 'PBUSH',
-            'PBUSH1D', 'PBUSH2D', 'PSOLID', 'PRAC2D', 'PRAC3D',
-
-            'CONM2',
-            'RBE2', 'RBE3', 'RSPLINE',
-
-            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
-            'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
-            'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',
-            'AEROS', 'TRIM', 'DIVERG',
-            'AERO', 'MKAERO1', 'MKAERO2', 'FLFACT', 'FLUTTER', 'GUST',
-            'AELIST', 'AESURF', 'AESET1',
-            'CONROD',
-            'EIGRL', 'EIGB', 'EIGC', 'EIGR',
-            'MPC', 'MPCADD', 'SPC1', 'SPCADD', 'SPCAX', 'SPCD',
-            'PLOAD4',
-            'DCONSTR', 'DESVAR',
-            'ENDDATA',
-        ]
-        for card_type, ids in iteritems(card_map):
-            if card_type in ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA']:
-                for eid in ids:
-                    elem = model.elements[eid]
-                    pids_used.add(elem.Pid())
-            elif card_type in ['CTRIA3', 'CQUAD4', 'CBAR', 'CBEAM', 'CROD']:
-                for eid in ids:
-                    elem = model.elements[eid]
-                    pids_used.add(elem.Pid())
-            elif card_type in skip_cards:
-                pass
-            elif card_type == 'DRESP1':
-                for dresp_id in ids:
-                    dresp = model.dresps[dresp_id]
-                    if dresp.property_type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PROD']:
-                        pids_used.update(dresp.atti_values())
-                    elif dresp.property_type is None:
-                        pass
-                    else:
-                        raise NotImplementedError(dresp)
-            elif card_type == 'DVPREL1':
-                for dvprel_id in ids:
-                    dvprel = model.dvprels[dvprel_id]
-                    if dvprel.Type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PROD']:
-                        pids_used.add(dvprel.Pid())
-            else:
-                raise NotImplementedError(card_type)
-        all_pids = model.properties.keys()
-        pids_to_remove = np.setdiff1d(all_pids, pids_used)
-        for pid in pids_to_remove:
-            del model.properties
 

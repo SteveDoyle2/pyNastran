@@ -5,7 +5,7 @@ Defines:
 """
 
 import numpy as np
-#from pyNastran.bdf.bdf_interface.dev_utils import remove_unassociated_nodes
+#from pyNastran.bdf.mesh_utils.remove_unused import remove_unassociated_nodes
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 from pyNastran.converters.cart3d.cart3d import Cart3D
 

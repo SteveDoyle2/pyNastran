@@ -6,7 +6,7 @@ Defines:
 
 from numpy import unique
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdf_interface.dev_utils import remove_unassociated_nodes
+from pyNastran.bdf.mesh_utils.remove_unused import remove_unassociated_nodes
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 

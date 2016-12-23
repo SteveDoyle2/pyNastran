@@ -1,8 +1,18 @@
+"""
+defines some half-implemented functions with significant restrictions
+ - find_closest_nodes(...)
+ - create_spar_cap(...)
+ - split_model_by_material_id(...)
+ - extract_surface_patches(...)
+ - get_joints(...)
+ - cut_model(...)
+ - get_free_edges(...)
+"""
 from __future__ import print_function
 from collections import defaultdict
 from functools import reduce
 
-from six import iteritems, itervalues, string_types
+from six import iteritems, string_types
 from six.moves import zip, range
 
 
@@ -15,57 +25,8 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.nodes import GRID
 from pyNastran.bdf.cards.elements.shell import CQUAD4
 from pyNastran.bdf.cards.elements.rigid import RBE3
-from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.bdf_equivalence import (
     _get_tree, _eq_nodes_setup, _eq_nodes_build_tree, _eq_nodes_find_pairs)
-
-
-def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False,
-                              size=8, is_double=False):
-    """
-    Removes nodes from a model that are not referenced.
-
-    Parameters
-    ----------
-    bdf_filename : str
-        the path to the bdf input file
-    bdf_filename_out : str
-        the path to the bdf output file
-    renumber : bool
-        should the model be renumbered
-    size : int; {8, 16}; default=8
-        the bdf write precision
-    is_double : bool; default=False
-        the field precision to write
-
-    .. warning only considers elements
-    .. renumber=False is not supported
-    """
-    model = BDF(debug=False)
-    model.read_bdf(bdf_filename, xref=True)
-
-    nids_used = set([])
-    for element in itervalues(model.elements):
-        nids_used.update(element.node_ids)
-    #for element in itervalues(model.masses):
-        #nids_used.update(element.node_ids)
-    all_nids = set(model.nodes.keys())
-
-    nodes_to_remove = all_nids - nids_used
-    for nid in nodes_to_remove:
-        del model.nodes[nid]
-
-    if renumber:
-        starting_id_dict = {
-            'nid' : 1,
-            'eid' : 1,
-            'pid' : 1,
-            'mid' : 1,
-        }
-        bdf_renumber(model, bdf_filename_out, size=size, is_double=is_double,
-                     starting_id_dict=starting_id_dict)
-    else:
-        model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
 
 
 def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4):
@@ -377,8 +338,8 @@ def get_free_edges(bdf_filename, eids=None, maps=None):
     free_edges = []
     if maps is None:
         maps = model._get_maps(eids, map_names=None,
-                              consider_0d=False, consider_0d_rigid=False,
-                              consider_1d=False, consider_2d=True, consider_3d=False)
+                               consider_0d=False, consider_0d_rigid=False,
+                               consider_1d=False, consider_2d=True, consider_3d=False)
     edge_to_eid_map = maps[0]
     for edge, eids in iteritems(edge_to_eid_map):
         if len(eids) == 2:
@@ -490,11 +451,11 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     edge_to_eid_map = out_map[0]
 
     eid_to_eid_map = defaultdict(set)
-    if 1:
-        for edge, eids in iteritems(edge_to_eid_map):
-            for eid_a in eids:
-                for eid_b in eids:
-                    eid_to_eid_map[eid_a].add(eid_b)
+    #if 1:
+    for edge, eids in iteritems(edge_to_eid_map):
+        for eid_a in eids:
+            for eid_b in eids:
+                eid_to_eid_map[eid_a].add(eid_b)
     # else:
         # for edge, eids in iteritems(edge_to_eid_map):
             # for eid_a in eids:
