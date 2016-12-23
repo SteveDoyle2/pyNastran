@@ -131,7 +131,7 @@ from pyNastran.bdf.bdf_methods import BDFMethods
 from pyNastran.bdf.bdf_interface.get_card import GetMethods
 from pyNastran.bdf.bdf_interface.add_card import AddCards
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
+from pyNastran.bdf.bdf_interface.mirror_mesh import WriteMeshes
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
 from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
 
@@ -246,7 +246,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     return model
 
 
-class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
+class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
@@ -305,7 +305,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMesh, XrefMesh):
         GetMethods.__init__(self)
         AddCards.__init__(self)
         BDFMethods.__init__(self)
-        WriteMesh.__init__(self)
+        WriteMeshes.__init__(self)
         XrefMesh.__init__(self)
 
         #: useful in debugging errors in input
