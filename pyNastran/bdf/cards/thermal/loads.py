@@ -624,6 +624,25 @@ class TEMP(ThermalLoad):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+
+class TEMPP1(BaseCard):
+    type = 'TEMPP1'
+    def __init__(self, sid, eid, tbar, tprime, t_stress, comment=''):
+        self.comment = comment
+        self.sid = sid
+        self.eid = eid
+        self.tbar = tbar
+        self.t_stress = t_stress
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid, eid, t, tprime, ts1, ts2 = data
+        return TEMPP1(sid, eid, t, tprime, [ts1, ts2])
+
+    def write_card(self, size=8, is_double=False):
+        list_fields = ['TEMPP1', self.sid, self.eid, self.tbar] + self.t_stress
+        return print_card_8(list_fields)
+
 # Loads
 #-------------------------------------------------------
 # Default Loads

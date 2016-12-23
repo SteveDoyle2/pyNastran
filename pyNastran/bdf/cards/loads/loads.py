@@ -612,8 +612,11 @@ class SLOAD(Load):
 class RFORCE(Load):
     type = 'RFORCE'
 
-    def __init__(self, sid, nid, cid, scale, r1, r2, r3, method, racc,
-                 mb, idrf, comment=''):
+    def __init__(self, sid, nid, cid, scale, r1, r2, r3, method=1, racc=0.,
+                 mb=0, idrf=0, comment=''):
+        """
+        idrf doesn't exist in MSC 2005r2; exists in MSC 2016
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -627,6 +630,9 @@ class RFORCE(Load):
         self.racc = racc
         self.mb = mb
         self.idrf = idrf
+
+    def validate(self):
+        assert self.method in [1, 2], self.method
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -645,13 +651,12 @@ class RFORCE(Load):
         return RFORCE(sid, nid, cid, scale, r1, r2, r3, method, racc, mb,
                       idrf, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(self, data, comment=''):
-        #self.sid = data[0]
-        #print("RFORCE = %s" % data)
-        #raise NotImplementedError(data)
-        #return RFORCE(sid, nid, cid, scale, r1, r2, r3, method, racc, mb,
-                      #idrf, comment=comment)
+    @classmethod
+    def add_op2_data(self, data, comment=''):
+        sid, nid, cid, a, r1, r2, r3, method, racc, mb = data
+        scale = 1.0
+        return RFORCE(sid, nid, cid, scale, r1, r2, r3, method=method, racc=racc, mb=mb,
+                      idrf=0, comment=comment)
 
     def cross_reference(self, model):
         """

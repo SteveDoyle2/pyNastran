@@ -379,7 +379,7 @@ class OUG(OP2Common):
                 msg = 'displacements; table_name=%s' % self.table_name
                 raise NotImplementedError(msg)
 
-        elif self.table_name in [b'TOUGV1']:
+        elif self.table_name in [b'TOUGV1', b'TOUGV2']:
             result_name = 'temperatures'
             assert self.thermal == 1, self.code_information()
         else:
@@ -404,7 +404,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [b'OUGV1', b'OUGV2'], self.table_name
+            assert self.table_name in [b'OUGV1', b'OUGV2', b'TOUGV1', b'TOUGV2'], self.table_name
             n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                                    RealTemperatureArray, None,
                                                    'node', random_code=self.random_code,
@@ -415,7 +415,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [''], self.table_name
+            assert self.table_name in [b'OUPV1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code)

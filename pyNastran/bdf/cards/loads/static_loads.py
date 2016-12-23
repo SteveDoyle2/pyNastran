@@ -2513,12 +2513,10 @@ class PLOADX1(Load):
         assert len(card) <= 8, 'len(PLOADX1 card) = %i\ncard=%s' % (len(card), card)
         return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #sid = data[0]
-        #print("PLOADX1 = %s" % data)
-        #raise NotImplementedError(data)
-        #return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid, eid, pa, pb, ga, gb, theta = data
+        return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
 
     def cross_reference(self, model):
         """

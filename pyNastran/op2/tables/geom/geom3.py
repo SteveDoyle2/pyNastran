@@ -8,10 +8,12 @@ from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, GRAV,
     MOMENT, MOMENT1, MOMENT2,
     LOAD, PLOAD, PLOAD1, PLOAD2,  #PLOAD3,
-    PLOAD4)  # PLOAD3,
-from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD #, DAREA, RANDPS, RFORCE, RFORCE1, LOADCYN
-from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
+    PLOAD4, PLOADX1)  # PLOAD3,
+from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS, RFORCE1, LOADCYN
+from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+from pyNastran.bdf.field_writer_8 import print_card_8
+
 
 class GEOM3(GeomCommon):
     """defines methods for reading op2 loads"""
@@ -376,10 +378,19 @@ class GEOM3(GeomCommon):
 
 # PLOADX - obsolete
     def _read_ploadx1(self, data, n):
-        self.log.debug('skipping PLOADX1 in GEOM3\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PLOADX1 in GEOM3\n')
-        return len(data)
+        ntotal = 28  # 7*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct('2i2f iif')
+        for i in range(nentries):
+            edata = data[n:n + 28]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PLOADX1=%s\n' % str(out))
+            load = PLOADX1.add_op2_data(out)
+            self._add_load_object(load)
+            n += 28
+        self.card_count['PLOADX1'] = nentries
+        return n
 
 # PRESAX
 
@@ -484,7 +495,21 @@ class GEOM3(GeomCommon):
         self.log.debug('skipping RFORCE in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping RFORCE in GEOM3\n')
-        return len(data)
+
+        ntotal =  40  # 10*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(b(self._endian + '3i 4f ifi'))
+        for i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  RFORCE=%s\n' % str(out))
+            #(sid, nid, scale_factor) = out
+            load = RFORCE.add_op2_data(out)
+            self._add_load_object(load)
+            n += ntotal
+        self.card_count['RFORCE'] = nentries
+        return n
 
     def _read_sload(self, data, n):
         ntotal =  12  # 3*4
@@ -509,10 +534,20 @@ class GEOM3(GeomCommon):
 # TEMP1C
 
     def _read_tempp1(self, data, n):
-        self.log.debug('skipping TEMPP1 in GEOM3\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping TEMPP1 in GEOM3\n')
-        return len(data)
+        ntotal =  24  # 6*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(b(self._endian + '2i 4f'))
+        for i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  TEMPP1=%s\n' % str(out))
+            #(sid, nid, scale_factor) = out
+            load = TEMPP1.add_op2_data(out)
+            self._add_load_object(load)
+            n += ntotal
+        self.card_count['TEMPP1'] = nentries
+        return n
 
     def _read_tempp2(self, data, n):
         self.log.debug('skipping TEMPP2 in GEOM3\n')

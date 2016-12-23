@@ -7,7 +7,7 @@ from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX
+from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
                                                 CQUADR, CQUAD8, CQUAD,
                                                 CSHEAR)
@@ -1359,10 +1359,19 @@ class GEOM2(GeomCommon):
 # CTRIAX - 100
 
     def _read_ctriax6(self, data, n):  # 101
-        self.log.debug('skipping CTRIAX6 in GEOM2\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CTRIAX6 in GEOM2\n')
-        return len(data)
+        ntotal = 44  # 11*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct('8i f ii')
+        for i in range(nentries):
+            edata = data[n:n + 44]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIAX6=%s\n' % str(out))
+            elem = CTRIAX6.add_op2_data(out)
+            self.add_op2_element(elem)
+            n += 44
+        self.card_count['CTRIAX6'] = nentries
+        return n
 
 # CTRIX3FD - 102
 # CTRIX6FD - 103

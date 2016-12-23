@@ -459,7 +459,7 @@ class CTRIAX6(TriShell):
     """
     type = 'CTRIAX6'
     #calculix_type = 'CAX6'
-    def __init__(self, eid, mid, nids, theta, comment=''):
+    def __init__(self, eid, mid, nids, theta=0., comment=''):
         TriShell.__init__(self)
         if comment:
             self.comment = comment
@@ -488,7 +488,13 @@ class CTRIAX6(TriShell):
 
         theta = double_or_blank(card, 9, 'theta', 0.0)
         assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
-        return CTRIAX6(eid, mid, nids, theta, comment=comment)
+        return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid, mid, n1, n2, n3, n4, n5, n6, theta, undef1, undef2 = data
+        nids = [n1, n2, n3, n4, n5, n6]
+        return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
 
     def cross_reference(self, model):
         """

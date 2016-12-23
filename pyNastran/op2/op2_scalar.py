@@ -78,7 +78,7 @@ GEOM_TABLES = [
     b'KDICT',
 
     # aero?
-    b'MONITOR',
+    #b'MONITOR',
 ]
 
 NX_RESULT_TABLES = [
@@ -603,7 +603,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'RESOES1': [self._table_passer, self._table_passer],
             b'RESEF1' : [self._table_passer, self._table_passer],
             b'DESCYC' : [self._table_passer, self._table_passer],
-            b'AEMONPT' : [self._read_aemonpt_3, self._read_aemonpt_4],
+            #b'AEMONPT' : [self._read_aemonpt_3, self._read_aemonpt_4],
             #=======================
             # OEF
             # element forces
@@ -918,7 +918,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'EDTS' : [self._table_passer, self._table_passer],
 
             b'FOL' : [self._table_passer, self._table_passer],
-            b'MONITOR' : [self._read_monitor_3, self._read_monitor_4],  # monitor points
+            #b'MONITOR' : [self._read_monitor_3, self._read_monitor_4],  # monitor points
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
@@ -1005,85 +1005,143 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         }
         return table_mapper
 
-    def _read_aemonpt_3(self, data, ndata):
-        sys.exit(self.code_information())
-
-    def _read_aemonpt_4(self, data, ndata):
-        # self.table_name = self._read_table_name(rewind=False)
-        # self.log.debug('table_name = %r' % self.table_name)
-        # if self.is_debug_file:
-            # self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
-
-        if self.read_mode == 1:
-            return ndata
-        print('name, label =(%r,%r)' % unpack(b'8s56s', data[:64]))
-        print('name2=%r' % unpack(b'12s', data[84:96]))
-        self.show_data(data[64:84], types='if', endian=None)
-        self.show_data(data[96:], types='if', endian=None)
-        #self.show_data(data[ni:], types='ifs', endian=None)
-        print('--------------------------------')
-
-        return ndata
-        for i in [-4, -5, -6, -7, -8]:
-            self.read_markers([i, 1, 0])
-            # if self.is_debug_file:
-                # self.binary_debug.write('---markers = [-1]---\n')
-            data = self._read_record()
-
-            sname = data[:64]
-            print('name, label = (%r,%r)' % unpack(b'8s56s', data[:64]))
-            print('name2=%r' % unpack(b'12s', data[84:96]))
-            self.show_data(data[64:84], types='if', endian=None)
-            self.show_data(data[96:], types='if', endian=None)
-            #self.show_data(data[ni:], types='ifs', endian=None)
-            print('--------------------------------')
-
-
-        self.read_markers([-9, 1, 0])
-        # data = self._read_record()
-        # self.show_data(data, types='ifs', endian=None)
-        print('--------------------------------')
-
-
-
-
-        # markers = self.get_nmarkers(1, rewind=True)
-        # if self.is_debug_file:
-            # self.binary_debug.write('---marker0 = %s---\n' % markers)
-        # self.read_markers([-2, 1, 0])
-        #data = self._read_record()
-
-        self.show_ndata(100, types='ifs')
-        return ndata
-        #bbbb
-
     def _not_available(self, data, ndata):
         """testing function"""
         if ndata > 0:
-            msg = 'this should never be called...table_name=%r len(data)=%s' % (
-                self.table_name, ndata)
-            raise RuntimeError(msg)
+            raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, ndata))
 
-    def _read_monitor_3(self, data, ndata):
-        """reads MONITOR subtable 3"""
-        self.log.info('MONITOR 3; ndata=%s' % ndata)
-        return ndata
+    def _read_aemonpt(self):
+        """reads the AEMONPT table"""
+        #self.log.debug("table_name = %r" % self.table_name)
+        table_name = self._read_table_name(rewind=False)
 
-    def _read_monitor_4(self, data, ndata):
-        """reads MONITOR subtable 4"""
+        #print('-----------------------')
+        #print('record 1')
+        self.read_markers([-1])
+        data = self._read_record()
+        #self.show_data(data)
         if self.read_mode == 2:
-            self.log.info('MONITOR 4; ndata=%s' % ndata)
+            a, bi, c, d, e, f, g = unpack(b('%s7i'% self._endian), data)
+            assert a == 101, a
+            assert bi == 1, bi
+            assert c == 27, c
+            assert d == 1, d
+            assert e == 6, e
+            assert f == 0, f
+            assert g == 0, g
+        #print('-----------------------')
+        #print('record 2')
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        #if self.read_mode == 2:
+        word, = unpack(b('%s8s' % self._endian), data)
+        assert word == b'AECFMON ', word
+        #self.show_data(data)
+        #print('-----------------------')
+        #print('record 3')
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        #self.show_data(data)
+
+        if self.read_mode == 2:
+            ndata = len(data)
             assert ndata == 108, ndata
             n = 8 + 56 + 20 + 12 + 12
-            aero, name, comps, a, b, c, d, coeff, e, f, g = unpack('8s 56s 5i 12s 3i', data[:n])
+            aero, name, comps, cp, bi, c, d, coeff, word, e, f, g = unpack(b('8s 56s 5i 4s 8s 3i'), data[:n])
             print('aero=%r' % aero)
             print('name=%r' % name)
-            print('comps, a, b, c, d = (%s, %s, %s, %s, %s)' % (comps, a, b, c, d))
+            print('comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
             print('coeff=%r' % coeff)
-            print('e, f, g = (%s, %s, %s)' % (e, f, g))
-            #if data[n:]:
-                #self.show_data(data[n:], types='ifs', endian=None)
-        return ndata
+            print('word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g)) # (1, 2, 0)
+            assert cp == 2, cp
+            assert bi == 0, bi
+            assert c == 0, c
+            assert d == 0, d
+            assert e == 1, e
+            assert f == 2, f
+            assert g == 0, g
+
+        #print('-----------------------')
+        #print('record 4')
+        self.read_markers([-4, 1, 0])
+        #data = self._read_record()
+        #self.show_data(data)
+        self.read_markers([0])
+
+        #print('-----------------------')
+        #print('end')
+        #self.show(200)
+        #aaa
+
+    def _read_monitor(self):
+        """reads the MONITOR table"""
+        self.log.debug("table_name = %r" % self.table_name)
+        table_name = self._read_table_name(rewind=False)
+
+        #print('-----------------------')
+        #print('record 1')
+        self.read_markers([-1])
+        data = self._read_record()
+        #self.show_data(data)
+        if self.read_mode == 2:
+            a, bi, c, d, e, f, g = unpack(b('%s7i' % self._endian), data)
+            assert a == 101, a
+            assert bi == 1, bi
+            assert c == 27, c
+            assert d == 0, d
+            assert e == 6, e
+            assert f == 0, f
+            assert g == 0, g
+        #print('-----------------------')
+        #print('record 2')
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        if self.read_mode == 2:
+            word, = unpack(b('%s8s' % self._endian), data)
+            assert word == b'STCFMON ', word
+        #self.show_data(data)
+        #print('-----------------------')
+        #print('record 3')
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        #self.show_data(data)
+
+        if self.read_mode == 2:
+            ndata = len(data)
+            assert ndata == 108, ndata
+            n = 8 + 56 + 20 + 12 + 12
+            aero, name, comps, cp, x, y, z, coeff, word, column, cd, ind_dof = unpack(b'8s 56s 2i 3f 4s 8s 3i', data[:n])
+            print('aero=%r' % aero)
+            print('name=%r' % name)
+            print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
+            print('coeff=%r' % coeff)
+            print('word=%r (column, cd, ind_dof)=(%s, %s, %s)' % (word, column, cd, ind_dof))
+            assert cp == 2, cp
+            assert x == 0.0, x
+            assert y == 0.0, y
+            assert d == 0.0, z
+            assert column == 1, column
+            assert cd == 2, cd
+            assert ind_dof == 0, ind_dof
+            self.monitor_data = [{
+                'name' : name,
+                'cp' : cp,
+                'cd' : cd,
+                'xyz' : [x,y,z],
+                'comps' : comps,
+            }]
+
+        #print('-----------------------')
+        #print('record 4')
+        self.read_markers([-4, 1, 0])
+        #data = self._read_record()
+        #self.show_data(data)
+        self.read_markers([0])
+
+        #print('-----------------------')
+        #print('end')
+        #self.show(200)
+        #aaa
 
     def _table_passer(self, data, ndata):
         """auto-table skipper"""
@@ -1550,6 +1608,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_tol()
             elif table_name == b'PCOMPTS': # blade
                 self._read_pcompts()
+            elif table_name == b'MONITOR':
+                self._read_monitor()
+            elif table_name == b'AEMONPT':
+                self._read_aemonpt()
             elif table_name == b'FOL':
                 self._read_fol()
             elif table_name in [b'SDF']:
@@ -2159,9 +2221,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         nfloats = (ndata - 8) // 4
         assert nfloats * 4 == (ndata - 8)
+        fmt = b(self._endian + '%sf' % nfloats)
+        freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
+        self._frequencies = freqs
         if self.is_debug_file:
-            fmt = b(self._endian + '%sf' % nfloats)
-            freqs = list(unpack(fmt, data[8:]))
             self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
             self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self.binary_debug.write('  freqs = %s' % freqs)
@@ -2697,6 +2760,28 @@ class Matrix(object):
     def __init__(self, name):
         self.name = name
         self.data = None
+
+    def write(self, f06, print_full=True):
+        f06.write(str(self) + '\n')
+
+        matrix = self.data
+        if isinstance(matrix, coo_matrix):
+            from pyNastran.utils import object_attributes
+            if print_full:
+                for row, col, value in zip(matrix.row, matrix.col, matrix.data):
+                    f06.write("(%i, %i) %s\n" % (row, col, value))
+            else:
+                f06.write(str(matrix))
+        else:
+            f06.write(str(matrix))
+            print('WARNING: matrix type=%s does not support writing' % type(matrix))
+        f06.write('\n\n')
+
+    def __repr__(self):
+        class_name = str(type(self.data)).replace('<class ', '').replace('>', '')
+        msg = 'Matrix[%r]; shape=%s; type=%s; dtype=%s' % (
+            self.name, str(self.data.shape), class_name, self.data.dtype)
+        return msg
 
 
 def main():  # pragma: no cover
