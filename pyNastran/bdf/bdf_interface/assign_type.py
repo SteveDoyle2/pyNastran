@@ -167,7 +167,7 @@ def integer_double_string_or_blank(card, ifield, fieldname, default=None):
     svalue = svalue.strip().upper()
     if svalue:
         # integer/float/string
-        if '.' in svalue:
+        if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
             # float
             value = double(card, ifield, fieldname)
         elif svalue.isdigit():
@@ -271,7 +271,7 @@ def integer_or_blank(card, ifield, fieldname, default=None):
     elif isinstance(svalue, string_types):
         if len(svalue) == 0:
             return default
-        elif '.' in svalue:
+        elif '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -438,7 +438,7 @@ def double_or_string(card, ifield, fieldname):
     elif isinstance(svalue, string_types):
         svalue = svalue.strip().upper()
 
-    if '.' in svalue:
+    if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
         # float
         try:
             return double(card, ifield, fieldname)
@@ -496,7 +496,7 @@ def double_string_or_blank(card, ifield, fieldname, default=None):
                'card=%s' % (fieldname, svalue, ifield, dtype, card))
         raise SyntaxError(msg)
 
-    if '.' in svalue:
+    if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
         try:
             return double(card, ifield, fieldname)
         except:
@@ -548,7 +548,7 @@ def integer_or_double(card, ifield, fieldname):
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or float (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-    if '.' in svalue:
+    if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
         # float/exponent
         try:
             value = double(card, ifield, fieldname)
@@ -758,7 +758,7 @@ def integer_double_or_string(card, ifield, fieldname):
 
     svalue = str(svalue.strip())
     if svalue:  # integer/float/string
-        if '.' in svalue:
+        if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
             # float
             value = double(card, ifield, fieldname)
         elif svalue.isdigit():

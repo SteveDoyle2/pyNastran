@@ -319,6 +319,39 @@ class CHEXA8(SolidElement):
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
+    @property
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
+        .. old_warning:: higher order element ids not verified with ANSYS.
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        faces = {}
+        nodes = self.node_ids
+        node_ids = nodes
+        nnodes = len(nodes)
+        faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
+        faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]
+        faces[3] = [nodes[1], nodes[2], nodes[6], nodes[5]]
+        faces[4] = [nodes[2], nodes[3], nodes[7], nodes[6]]
+        faces[5] = [nodes[3], nodes[0], nodes[4], nodes[7]]
+        faces[6] = [nodes[4], nodes[5], nodes[6], nodes[7]]
+        return faces
+
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
@@ -523,6 +556,40 @@ class CHEXA20(SolidElement):
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
+    @property
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
+        .. old_warning:: higher order element ids not verified with ANSYS.
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        faces = {}
+        nodes = self.node_ids
+        node_ids = nodes
+        nnodes = len(nodes)
+        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20 = node_ids
+        faces[1] = [n1, n2, n3, n4, n9, n10, n11, n12]
+        faces[2] = [n1, n2, n6, n5, n9, n18, n13, n17]
+        faces[3] = [n2, n3, n7, n6, n10, n19, n14, n18]
+        faces[4] = [n3, n4, n8, n7, n11, n10, n15, n19]
+        faces[5] = [n4, n1, n5, n8, n12, n17, n16, n20]
+        faces[6] = [n5, n6, n7, n8, n13, n14, n15, n16]
+        return faces
+
     def get_edge_ids(self):
         """
         Return the edge IDs
@@ -694,6 +761,38 @@ class CPENTA6(SolidElement):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
+
+    @property
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
+        .. old_warning:: higher order element ids not verified with ANSYS.
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        faces = {}
+        nodes = self.node_ids
+        node_ids = nodes
+        nnodes = len(nodes)
+        faces[1] = [nodes[0], nodes[1], nodes[2]]
+        faces[2] = [nodes[3], nodes[4], nodes[5]]
+        faces[3] = [nodes[0], nodes[1], nodes[4], nodes[3]]
+        faces[4] = [nodes[1], nodes[2], nodes[5], nodes[4]]
+        faces[5] = [nodes[2], nodes[0], nodes[3], nodes[5]]
+        return faces
 
     def get_edge_ids(self):
         """
@@ -1036,6 +1135,39 @@ class CPENTA15(SolidElement):
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
+    @property
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
+        .. old_warning:: higher order element ids not verified with ANSYS.
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        faces = {}
+        nodes = self.node_ids
+        node_ids = nodes
+        nnodes = len(nodes)
+        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = node_ids
+        faces[1] = [n1, n2, n3, n7, n8, n9]
+        faces[2] = [n4, n5, n6, n10, n11, n12]
+        faces[3] = [n1, n2, n5, n4, n7, n14, n10, n13]
+        faces[4] = [n2, n3, n6, n5, n8, n15, n11, n14]
+        faces[5] = [n3, n1, n4, n6, n9, n13, n12, n15]
+        return faces
+
     def get_face(self, nid, nid_opposite):
         nids = self.node_ids[:6]
         return cpenta_face(nid_opposite, nid, nids)
@@ -1182,6 +1314,38 @@ class CPYRAM5(SolidElement):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
+
+    @property
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
+        .. old_warning:: higher order element ids not verified with ANSYS.
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        faces = {}
+        nodes = self.node_ids
+        node_ids = nodes
+        nnodes = len(nodes)
+        faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
+        faces[2] = [nodes[0], nodes[1], nodes[4]]
+        faces[3] = [nodes[1], nodes[2], nodes[4]]
+        faces[4] = [nodes[2], nodes[3], nodes[4]]
+        faces[5] = [nodes[3], nodes[0], nodes[4]]
+        return faces
 
     def get_edge_ids(self):
         """
@@ -1330,6 +1494,35 @@ class CPYRAM13(SolidElement):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
+
+    @property
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
+        .. old_warning:: higher order element ids not verified with ANSYS.
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13 = node_ids
+        faces[1] = [n1, n2, n3, n4, n6, n7, n8, n9]
+        faces[2] = [n1, n2, n5, n6, n11, n10]
+        faces[3] = [n2, n3, n5, n7, n12, n11]
+        faces[4] = [n3, n4, n5, n8, n13, n12]
+        faces[5] = [n4, n1, n5, n9, n10, n13]
+        return faces
 
     def get_edge_ids(self):
         """
@@ -1715,6 +1908,38 @@ class CTETRA10(SolidElement):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
+
+    @property
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        Returns
+        -------
+        faces : Dict[int] = [face1, face2, ...]
+            key = face number
+            value = a list of nodes (integer pointers) as the values.
+
+        .. note::  The order of the nodes are consistent with normals that point outwards
+                   The face numbering is meaningless
+
+        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
+        .. old_warning:: higher order element ids not verified with ANSYS.
+
+        Example
+        =======
+        >>> print element.faces
+        """
+        faces = {}
+        nodes = self.node_ids
+        node_ids = nodes
+        nnodes = len(nodes)
+        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = node_ids
+        faces[1] = [n1, n2, n3, n5, n6, n7]  #More?
+        faces[2] = [n1, n2, n4, n5, n9, n8]
+        faces[3] = [n2, n3, n4, n6, n10, n9]
+        faces[4] = [n3, n1, n4, n7, n8, n10]
+        return faces
 
     def get_edge_ids(self):
         """

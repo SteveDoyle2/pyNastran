@@ -53,8 +53,8 @@ class CQUAD8(ShellElement):
             double_or_blank(card, 13, 'T3', 1.0),
             double_or_blank(card, 14, 'T4', 1.0), ]
 
-        #self.thetaMcid[i] = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
-        self.zoffset[i] = double_or_blank(card, 16, 'zOffset', 0.0)
+        #self.theta_mcid[i] = integer_double_or_blank(card, 15, 'theta_mcid', 0.0)
+        self.zoffset[i] = double_or_blank(card, 16, 'zoffset', 0.0)
         self.t_flag[i] = integer_or_blank(card, 17, 'TFlag', 0)
         self.i += 1
 

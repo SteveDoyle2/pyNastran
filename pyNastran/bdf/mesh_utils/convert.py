@@ -144,7 +144,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             elem.k *= stiffness_scale
         elif elem_type in tri_shells:
             # thickness
-            elem.zOffset *= xyz_scale
+            elem.zoffset *= xyz_scale
             if elem.TFlag == 0:
                 if elem.T1 is not None:
                     elem.T1 *= xyz_scale
@@ -160,7 +160,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             # TFlag=0
             # TFlag=1 - thicknesses are relative (Ti default=1.0)
             #
-            elem.zOffset *= xyz_scale
+            elem.zoffset *= xyz_scale
             if elem.TFlag == 0:
                 if elem.T1 is not None:
                     elem.T1 *= xyz_scale

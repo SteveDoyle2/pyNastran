@@ -96,6 +96,9 @@ class TestAssignType(ExtendedTestCase):
         with self.assertRaises(SyntaxError):
             double(BDFCard(['1']), 0, 'field')
 
+        self.assertEqual(1.e-9, double(BDFCard(['1-9']), 0, 'field'))
+        self.assertEqual(1.e+9, double(BDFCard(['1+9']), 0, 'field'))
+
         # float
         self.check_double(double)
 
@@ -232,6 +235,9 @@ class TestAssignType(ExtendedTestCase):
         val = method(BDFCard(['1-3']), 0, 'field')
         self.assertEqual(1.e-3, val)
 
+        self.assertEqual(1.e-9, method(BDFCard(['1-9']), 0, 'field'))
+        self.assertEqual(1.e+9, method(BDFCard(['1+9']), 0, 'field'))
+
     def test_double_or_blank(self):
         """
         value = double_or_blank(card, n, fieldname, default=None)
@@ -260,6 +266,8 @@ class TestAssignType(ExtendedTestCase):
         # out of range
         with self.assertRaises(SyntaxError):
             double_or_string(BDFCard([1.]), 1, 'field')
+        self.assertEqual(1.e-9, double_or_string(BDFCard(['1-9']), 0, 'field'))
+        self.assertEqual(1.e+9, double_or_string(BDFCard(['1+9']), 0, 'field'))
 
     def test_double_string_or_blank(self):
         # out of range
@@ -268,11 +276,15 @@ class TestAssignType(ExtendedTestCase):
         self.assertEqual(1., double_string_or_blank(BDFCard(['1.']), 0, 'field'))
         self.assertEqual('CAT', double_string_or_blank(BDFCard(['CAT']), 0, 'field'))
         self.assertEqual(None, double_string_or_blank(BDFCard([None]), 0, 'field'))
+        self.assertEqual(1.e-9, double_string_or_blank(BDFCard(['1-9']), 0, 'field'))
+        self.assertEqual(1.e+9, double_string_or_blank(BDFCard(['1+9']), 0, 'field'))
 
     def test_integer_or_double(self):
         # out of range
         with self.assertRaises(SyntaxError):
             integer_or_double(BDFCard([1.]), 1, 'field')
+        self.assertEqual(1.e-9, integer_or_double(BDFCard(['1-9']), 0, 'field'))
+        self.assertEqual(1.e+9, integer_or_double(BDFCard(['1+9']), 0, 'field'))
 
     def test_integer_or_string(self):
         # out of range
@@ -288,6 +300,8 @@ class TestAssignType(ExtendedTestCase):
 
         # float
         self.check_double(integer_double_or_blank)
+        self.assertEqual(1.e-9, integer_double_or_blank(BDFCard(['1-9']), 0, 'field'))
+        self.assertEqual(1.e+9, integer_double_or_blank(BDFCard(['1+9']), 0, 'field'))
 
         # error - string
         with self.assertRaises(SyntaxError):
@@ -300,6 +314,8 @@ class TestAssignType(ExtendedTestCase):
         # blank
         double_or_blank(BDFCard(['   ']), 0, 'field')
         double_or_blank(BDFCard([None]), 0, 'field')
+        self.assertEqual(1.e-9, double_or_blank(BDFCard(['1-9']), 0, 'field'))
+        self.assertEqual(1.e+9, double_or_blank(BDFCard(['1+9']), 0, 'field'))
 
         #card    = [1,    2.0, '3.0', '4.', 'C',        None, None,          '', None, 'cat']
         #exact   = [1,    2.0,  3.0,   4.0, SyntaxError,None, 2.0,  SyntaxError, 1.0, SyntaxError]

@@ -292,7 +292,7 @@ class CTRIA3(TriShell):
     aster_type = 'TRIA3'
     calculix_type = 'S3'
     _field_map = {
-        1: 'eid', 2:'pid', 6:'thetaMcid', 7:'zOffset', 10:'TFlag',
+        1: 'eid', 2:'pid', 6:'theta_mcid', 7:'zoffset', 10:'TFlag',
         11:'T1', 12:'T2', 13:'T3'}
 
     def _update_field_helper(self, n, value):
@@ -314,8 +314,8 @@ class CTRIA3(TriShell):
         self.pid = pid
         assert len(nids) == 3, nids
         self.prepare_node_ids(nids)
-        self.zOffset = zoffset
-        self.thetaMcid = theta_mcid
+        self.zoffset = zoffset
+        self.theta_mcid = theta_mcid
         self.TFlag = TFlag
         self.T1 = T1
         self.T2 = T2
@@ -400,6 +400,27 @@ class CTRIA3(TriShell):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
+    @property
+    def zOffset(self):
+        """deprecated"""
+        return self.zoffset
+
+    @property
+    def thetaMcid(self):
+        """deprecated"""
+        return self.theta_mcid
+
+
+    @zOffset.setter
+    def zOffset(self, zoffset):
+        """deprecated"""
+        self.zoffset = zoffset
+
+    @thetaMcid.setter
+    def thetaMcid(self, theta_mcid):
+        """deprecated"""
+        self.theta_mcid = theta_mcid
+
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
@@ -455,18 +476,14 @@ class CTRIA3(TriShell):
         self.nodes = [n1, n3, n2]
 
     def _get_repr_defaults(self):
-        zoffset = set_blank_if_default(self.zOffset, 0.0)
+        zoffset = set_blank_if_default(self.zoffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
-        theta_mcid = set_blank_if_default(self.thetaMcid, 0.0)
+        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
         return theta_mcid, zoffset, TFlag, T1, T2, T3
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -474,7 +491,7 @@ class CTRIA3(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, None] +
+                       [self.theta_mcid, self.zoffset, None] +
                        [None, self.TFlag, self.T1, self.T2, self.T3])
         return list_fields
 
@@ -485,9 +502,9 @@ class CTRIA3(TriShell):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        zoffset = set_blank_if_default(self.zOffset, 0.0)
+        zoffset = set_blank_if_default(self.zoffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
-        theta_mcid = set_blank_if_default(self.thetaMcid, 0.0)
+        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -660,8 +677,8 @@ class CTRIA6(TriShell):
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.thetaMcid = theta_mcid
-        self.zOffset = zoffset
+        self.theta_mcid = theta_mcid
+        self.zoffset = zoffset
         self.TFlag = TFlag
         self.T1 = T1
         self.T2 = T2
@@ -742,6 +759,27 @@ class CTRIA6(TriShell):
         self.nodes = self.node_ids
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
+
+    @property
+    def zOffset(self):
+        """deprecated"""
+        return self.zoffset
+
+    @property
+    def thetaMcid(self):
+        """deprecated"""
+        return self.theta_mcid
+
+
+    @zOffset.setter
+    def zOffset(self, zoffset):
+        """deprecated"""
+        self.zoffset = zoffset
+
+    @thetaMcid.setter
+    def thetaMcid(self, theta_mcid):
+        """deprecated"""
+        self.theta_mcid = theta_mcid
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -830,10 +868,10 @@ class CTRIA6(TriShell):
         self.nodes = [n1, n3, n2, n6, n5, n4]
 
     def _get_repr_defaults(self):
-        zoffset = set_blank_if_default(self.zOffset, 0.0)
+        zoffset = set_blank_if_default(self.zoffset, 0.0)
         assert isinstance(self.TFlag, int), self.TFlag
         TFlag = set_blank_if_default(self.TFlag, 0)
-        theta_mcid = set_blank_if_default(self.thetaMcid, 0.0)
+        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -846,7 +884,7 @@ class CTRIA6(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset,
+                       [self.theta_mcid, self.zoffset,
                         self.T1, self.T2, self.T3, self.TFlag,])
         return list_fields
 
@@ -879,8 +917,8 @@ class CTRIAR(TriShell):
         #: Property ID
         self.pid = pid
 
-        self.thetaMcid = theta_mcid
-        self.zOffset = zoffset
+        self.theta_mcid = theta_mcid
+        self.zoffset = zoffset
         self.TFlag = TFlag
         self.T1 = T1
         self.T2 = T2
@@ -935,23 +973,26 @@ class CTRIAR(TriShell):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    #def _verify(self, xref=False):
-        #eid = self.Eid()
-        #pid = self.Pid()
-        #nids = self.node_ids
+    @property
+    def zOffset(self):
+        """deprecated"""
+        return self.zoffset
 
-        #assert isinstance(eid, integer_types)
-        #assert isinstance(pid, integer_types)
-        #for i,nid in enumerate(nids):
-            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
+    @property
+    def thetaMcid(self):
+        """deprecated"""
+        return self.theta_mcid
 
-        #if xref:
-            #assert self.pid_ref.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
-            #t = self.Thickness()
-            #a,c,n = self.AreaCentroidNormal()
-            #for i in range(3):
-                #assert isinstance(c[i], float)
-                #assert isinstance(n[i], float)
+
+    @zOffset.setter
+    def zOffset(self, zoffset):
+        """deprecated"""
+        self.zoffset = zoffset
+
+    @thetaMcid.setter
+    def thetaMcid(self, theta_mcid):
+        """deprecated"""
+        self.theta_mcid = theta_mcid
 
     def Thickness(self):
         """
@@ -972,14 +1013,33 @@ class CTRIAR(TriShell):
         self.nodes = [n1, n3, n2]
 
     def _get_repr_defaults(self):
-        zoffset = set_blank_if_default(self.zOffset, 0.0)
+        zoffset = set_blank_if_default(self.zoffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
-        theta_mcid = set_blank_if_default(self.thetaMcid, 0.0)
+        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
         return (theta_mcid, zoffset, TFlag, T1, T2, T3)
+
+
+    #def _verify(self, xref=False):
+        #eid = self.Eid()
+        #pid = self.Pid()
+        #nids = self.node_ids
+
+        #assert isinstance(eid, integer_types)
+        #assert isinstance(pid, integer_types)
+        #for i,nid in enumerate(nids):
+            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        #if xref:
+            #assert self.pid_ref.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            #t = self.Thickness()
+            #a,c,n = self.AreaCentroidNormal()
+            #for i in range(3):
+                #assert isinstance(c[i], float)
+                #assert isinstance(n[i], float)
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1005,17 +1065,13 @@ class CTRIAR(TriShell):
             mass = self.Mass()
             assert isinstance(mass, float), 'mass=%r' % mass
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = (['CTRIAR', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, self.TFlag,
+                       [self.theta_mcid, self.zoffset, self.TFlag,
                         self.T1, self.T2, self.T3])
         return list_fields
 
@@ -1157,7 +1213,7 @@ class QuadShell(ShellElement):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
-        theta_mcid = set_blank_if_default(self.thetaMcid, 0.0)
+        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1363,7 +1419,7 @@ class CQUAD4(QuadShell):
     type = 'CQUAD4'
     aster_type = 'QUAD4 # CQUAD4'
     calculix_type = 'S4'
-    _field_map = {1: 'eid', 2:'pid', 7:'thetaMcid', 8:'zOffset',
+    _field_map = {1: 'eid', 2:'pid', 7:'theta_mcid', 8:'zoffset',
                   10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
 
     def _update_field_helper(self, n, value):
@@ -1389,8 +1445,8 @@ class CQUAD4(QuadShell):
         self.pid = pid
         assert len(nids) == 4, nids
         self.prepare_node_ids(nids)
-        self.zOffset = zoffset
-        self.thetaMcid = theta_mcid
+        self.zoffset = zoffset
+        self.theta_mcid = theta_mcid
         self.TFlag = TFlag
         self.T1 = T1
         self.T2 = T2
@@ -1433,7 +1489,7 @@ class CQUAD4(QuadShell):
                 integer(card, 5, 'n3'),
                 integer(card, 6, 'n4')]
         if len(card) > 6:
-            theta_mcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
+            theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
             zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
             blank(card, 9, 'blank')
             TFlag = integer_or_blank(card, 10, 'TFlag', 0)
@@ -1468,6 +1524,26 @@ class CQUAD4(QuadShell):
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
+    @property
+    def zOffset(self):
+        """deprecated"""
+        return self.zoffset
+
+    @property
+    def thetaMcid(self):
+        """deprecated"""
+        return self.theta_mcid
+
+    @zOffset.setter
+    def zOffset(self, zoffset):
+        """deprecated"""
+        self.zoffset = zoffset
+
+    @thetaMcid.setter
+    def thetaMcid(self, theta_mcid):
+        """deprecated"""
+        self.theta_mcid = theta_mcid
+
     def material_coordinate_system(self, normal=None, xyz1234=None):
         if normal is None:
             normal = self.Normal() # k = kmat
@@ -1488,15 +1564,15 @@ class CQUAD4(QuadShell):
             xyz4 = xyz1234[:, 3]
         centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
 
-        if self.thetaMcid is None:
-            raise NotImplementedError('thetaMcid=%r' % self.thetaMcid)
-        if isinstance(self.thetaMcid, integer_types):
-            i = self.thetaMcid_ref.i
+        if self.theta_mcid is None:
+            raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
+        if isinstance(self.theta_mcid, integer_types):
+            i = self.theta_mcid_ref.i
             jmat = np.cross(normal, i) # k x i
             jmat /= np.linalg.norm(jmat)
             imat = np.cross(jmat, normal)
-        elif isinstance(self.thetaMcid, float):
-            raise NotImplementedError('thetaMcid=%r' % self.thetaMcid)
+        elif isinstance(self.theta_mcid, float):
+            raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
         return centroid, imat, jmat, normal
 
     #def x(self, eta, xi, xs):
@@ -1809,10 +1885,6 @@ class CQUAD4(QuadShell):
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=False)
@@ -1822,39 +1894,39 @@ class CQUAD4(QuadShell):
         triangle - 012
         triangle - 023
         """
-        zoffset = set_blank_if_default(self.zOffset, 0.0)
+        zoffset = set_blank_if_default(self.zoffset, 0.0)
         nodes1 = [self.nodes[0], self.nodes[1], self.nodes[2]]
         nodes2 = [self.nodes[0], self.nodes[2], self.nodes[3]]
         fields1 = ['CTRIA3', self.eid, self.Pid()] + nodes1 + [
-            self.thetaMcid, zoffset]
+            self.theta_mcid, zoffset]
         fields2 = ['CTRIA3', newID, self.Pid()] + nodes2 + [
-            self.thetaMcid, zoffset]
+            self.theta_mcid, zoffset]
         return self.print_card(fields1) + self.print_card(fields2)
 
     def raw_fields(self):
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1, self.T2,
+                       [self.theta_mcid, self.zoffset, None, self.TFlag, self.T1, self.T2,
                         self.T3, self.T4])
         return list_fields
 
     def repr_fields(self):
-        (thetaMcid, zoffset, TFlag, T1, T2, T3, T4) = self._get_repr_defaults()
+        (theta_mcid, zoffset, TFlag, T1, T2, T3, T4) = self._get_repr_defaults()
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.node_ids +
-                       [thetaMcid, zoffset, None, TFlag, T1, T2, T3, T4])
+                       [theta_mcid, zoffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
 
-        row2_data = [self.thetaMcid, self.zOffset,
+        row2_data = [self.theta_mcid, self.zoffset,
                      self.TFlag, self.T1, self.T2, self.T3, self.T4]
         if row2_data == [0.0, 0.0, 0, 1.0, 1.0, 1.0, 1.0]:
             data = [self.eid, self.Pid()] + nodes
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
             return self.comment + msg
         else:
-            theta_mcid = set_blank_if_default(self.thetaMcid, 0.0)
-            zoffset = set_blank_if_default(self.zOffset, 0.0)
+            theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
+            zoffset = set_blank_if_default(self.zoffset, 0.0)
             TFlag = set_blank_if_default(self.TFlag, 0)
             T1 = set_blank_if_default(self.T1, 1.0)
             T2 = set_blank_if_default(self.T2, 1.0)
@@ -1926,7 +1998,7 @@ class CPLSTN4(QuadShell):
                 integer(card, 5, 'n3'),
                 integer(card, 6, 'n4')]
 
-        theta = double_or_blank(card, 7, 'thetaMcid', 0.0)
+        theta = double_or_blank(card, 7, 'theta', 0.0)
         assert len(card) <= 8, 'len(CPLSTN4 card) = %i\ncard=%s' % (len(card), card)
         return CPLSTN4(eid, pid, nids, theta, comment=comment)
 
@@ -2378,8 +2450,8 @@ class CQUADR(QuadShell):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.thetaMcid = theta_mcid
-        self.zOffset = zoffset
+        self.theta_mcid = theta_mcid
+        self.zoffset = zoffset
         self.TFlag = TFlag
         self.T1 = T1
         self.T2 = T2
@@ -2453,6 +2525,33 @@ class CQUADR(QuadShell):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
+    @property
+    def zOffset(self):
+        """deprecated"""
+        return self.zoffset
+
+    @property
+    def thetaMcid(self):
+        """deprecated"""
+        return self.theta_mcid
+
+
+    @zOffset.setter
+    def zOffset(self, zoffset):
+        """deprecated"""
+        self.zoffset = zoffset
+
+    @thetaMcid.setter
+    def thetaMcid(self, theta_mcid):
+        """deprecated"""
+        self.theta_mcid = theta_mcid
+
+    def Thickness(self):
+        """
+        Returns the thickness
+        """
+        return self.pid_ref.Thickness()
+
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
@@ -2507,14 +2606,14 @@ class CQUADR(QuadShell):
 
     def raw_fields(self):
         list_fields = (['CQUADR', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1,
+                       [self.theta_mcid, self.zoffset, None, self.TFlag, self.T1,
                         self.T2, self.T3, self.T4])
         return list_fields
 
     def repr_fields(self):
-        (thetaMcid, zoffset, TFlag, T1, T2, T3, T4) = self._get_repr_defaults()
+        (theta_mcid, zoffset, TFlag, T1, T2, T3, T4) = self._get_repr_defaults()
         list_fields = (['CQUADR', self.eid, self.Pid()] + self.node_ids +
-                       [thetaMcid, zoffset, None, TFlag, T1, T2, T3, T4])
+                       [theta_mcid, zoffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2682,9 +2781,9 @@ class CPLSTS3(TriShell):
         self.nodes = [n1, n3, n2]
 
     def _get_repr_defaults(self):
-        zoffset = set_blank_if_default(self.zOffset, 0.0)
+        zoffset = set_blank_if_default(self.zoffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
-        theta_mcid = set_blank_if_default(self.thetaMcid, 0.0)
+        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -2697,7 +2796,7 @@ class CPLSTS3(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, None] +
+                       [self.theta_mcid, self.zoffset, None] +
                        [None, self.TFlag, self.T1, self.T2, self.T3])
         return list_fields
 
@@ -2793,10 +2892,6 @@ class CQUAD(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
         assert len(self.nodes) == 9
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -2934,6 +3029,26 @@ class CQUAD8(QuadShell):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
+    @property
+    def zOffset(self):
+        """deprecated"""
+        return self.zoffset
+
+    @property
+    def thetaMcid(self):
+        """deprecated"""
+        return self.theta_mcid
+
+    @zOffset.setter
+    def zOffset(self, zoffset):
+        """deprecated"""
+        self.zoffset = zoffset
+
+    @thetaMcid.setter
+    def thetaMcid(self, theta_mcid):
+        """deprecated"""
+        self.theta_mcid = theta_mcid
+
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
@@ -3022,17 +3137,13 @@ class CQUAD8(QuadShell):
         area = 0.5 * norm(cross(a, b))
         return area
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CQUAD8', self.eid, self.Pid()] + self.node_ids + [
-            self.T1, self.T2, self.T3, self.T4, self.thetaMcid, self.zOffset,
+            self.T1, self.T2, self.T3, self.T4, self.thetaMcid, self.zoffset,
             self.TFlag]
         return list_fields
 

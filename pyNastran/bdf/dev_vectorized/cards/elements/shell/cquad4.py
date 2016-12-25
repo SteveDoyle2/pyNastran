@@ -63,8 +63,8 @@ class CQUAD4(ShellElement):
             self.mcid[i] = theta_mcid
 
 
-        #self.thetaMcid =
-        #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
+        #self.theta_mcid =
+        #self.zoffset = double_or_blank(card, 7, 'zoffset', 0.0)
         #blank(card, 8, 'blank')
         #blank(card, 9, 'blank')
 

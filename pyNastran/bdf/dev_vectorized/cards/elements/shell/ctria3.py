@@ -41,8 +41,8 @@ class CTRIA3(ShellElement):
                 integer(card, 4, 'n2'),
                 integer(card, 5, 'n3')]
 
-        #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
-        #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
+        #self.theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', 0.0)
+        #self.zoffset = double_or_blank(card, 7, 'zoffset', 0.0)
         blank(card, 8, 'blank')
         blank(card, 9, 'blank')
 

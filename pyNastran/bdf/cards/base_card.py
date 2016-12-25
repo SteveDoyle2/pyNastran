@@ -462,7 +462,10 @@ class Element(BaseCard):
         >>> print element.faces
         """
         faces = {}
-        nodes = self.node_ids
+        try:
+            nodes = self.node_ids
+        except AttributeError:
+            return None
         node_ids = nodes
         nnodes = len(nodes)
         if self.type.startswith('CQUAD'): # CQUADx
@@ -473,53 +476,6 @@ class Element(BaseCard):
             # both sides
             faces[1] = [nodes[0], nodes[1], nodes[2]]  # CTRIA6?
             faces[2] = [nodes[1], nodes[0], nodes[2]]
-        elif nnodes == 8: # CHEXA
-            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
-            faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]
-            faces[3] = [nodes[1], nodes[2], nodes[6], nodes[5]]
-            faces[4] = [nodes[2], nodes[3], nodes[7], nodes[6]]
-            faces[5] = [nodes[3], nodes[0], nodes[4], nodes[7]]
-            faces[6] = [nodes[4], nodes[5], nodes[6], nodes[7]]
-        elif nnodes == 6:  # CPENTA
-            faces[1] = [nodes[0], nodes[1], nodes[2]]
-            faces[2] = [nodes[3], nodes[4], nodes[5]]
-            faces[3] = [nodes[0], nodes[1], nodes[4], nodes[3]]
-            faces[4] = [nodes[1], nodes[2], nodes[5], nodes[4]]
-            faces[5] = [nodes[2], nodes[0], nodes[3], nodes[5]]
-        elif nnodes == 5:  # PYRAMID
-            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
-            faces[2] = [nodes[0], nodes[1], nodes[4]]
-            faces[3] = [nodes[1], nodes[2], nodes[4]]
-            faces[4] = [nodes[2], nodes[3], nodes[4]]
-            faces[5] = [nodes[3], nodes[0], nodes[4]]
-        elif nnodes == 10: # CTETRA10
-            n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = node_ids
-            faces[1] = [n1, n2, n3, n5, n6, n7]  #More?
-            faces[2] = [n1, n2, n4, n5, n9, n8]
-            faces[3] = [n2, n3, n4, n6, n10, n9]
-            faces[4] = [n3, n1, n4, n7, n8, n10]
-        elif nnodes == 20: # CHEXA20 / SOLID186
-            n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20 = node_ids
-            faces[1] = [n1, n2, n3, n4, n9, n10, n11, n12]
-            faces[2] = [n1, n2, n6, n5, n9, n18, n13, n17]
-            faces[3] = [n2, n3, n7, n6, n10, n19, n14, n18]
-            faces[4] = [n3, n4, n8, n7, n11, n10, n15, n19]
-            faces[5] = [n4, n1, n5, n8, n12, n17, n16, n20]
-            faces[6] = [n5, n6, n7, n8, n13, n14, n15, n16]
-        elif nnodes == 15:  # CPENTA15
-            n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = node_ids
-            faces[1] = [n1, n2, n3, n7, n8, n9]
-            faces[2] = [n4, n5, n6, n10, n11, n12]
-            faces[3] = [n1, n2, n5, n4, n7, n14, n10, n13]
-            faces[4] = [n2, n3, n6, n5, n8, n15, n11, n14]
-            faces[5] = [n3, n1, n4, n6, n9, n13, n12, n15]
-        elif nnodes == 13:  # PYRAMID
-            n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13 = node_ids
-            faces[1] = [n1, n2, n3, n4, n6, n7, n8, n9]
-            faces[2] = [n1, n2, n5, n6, n11, n10]
-            faces[3] = [n2, n3, n5, n7, n12, n11]
-            faces[4] = [n3, n4, n5, n8, n13, n12]
-            faces[5] = [n4, n1, n5, n9, n10, n13]
         else:
             faces = None
         return faces

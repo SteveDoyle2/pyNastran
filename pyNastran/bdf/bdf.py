@@ -3295,33 +3295,37 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
                 j = i + 1
                 line_base = line.split('$')[0]
                 include_lines = [line_base.strip()]
-                # print('----------------------')
-
-                line_base = line_base[8:].strip()
-                if line_base.startswith("'") and line_base.endswith("'"):
+                if "'" not in line_base:
                     pass
                 else:
-                    while not line.split('$')[0].endswith("'") and j < nlines:
-                        #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
-                        try:
-                            line = lines[j].split('$')[0].strip()
-                        except IndexError:
-                            #print('bdf_filename=%r' % bdf_filename)
-                            crash_name = 'pyNastran_crash.bdf'
-                            self._dump_file(crash_name, lines, i+1)
-                            msg = 'There was an invalid filename found while parsing (index).\n'
-                            msg += 'Check the end of %r\n' % crash_name
-                            msg += 'bdf_filename2 = %r' % bdf_filename
-                            raise IndexError(msg)
-                         #print('endswith_quote=%s; %r' % (
-                             #line.split('$')[0].strip().endswith(""), line.strip()))
-                        include_lines.append(line.strip())
-                        j += 1
-                    #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                    # print('----------------------')
 
-                    #print('*** %s' % line)
-                    #bdf_filename2 = line[7:].strip(" '")
-                    #include_lines = [line] + lines[i+1:j]
+                    line_base = line_base[8:].strip()
+                    if line_base.startswith("'") and line_base.endswith("'"):
+                        pass
+                    else:
+                        while not line.split('$')[0].endswith("'") and j < nlines:
+                            #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                            try:
+                                line = lines[j].split('$')[0].strip()
+                            except IndexError:
+                                #print('bdf_filename=%r' % bdf_filename)
+                                crash_name = 'pyNastran_crash.bdf'
+                                self._dump_file(crash_name, lines, i+1)
+                                msg = 'There was an invalid filename found while parsing (index).\n'
+                                msg += 'Check the end of %r\n' % crash_name
+                                msg += 'bdf_filename2 = %r\n' % bdf_filename
+                                msg += 'include_lines = %s' % include_lines
+                                raise IndexError(msg)
+                             #print('endswith_quote=%s; %r' % (
+                                 #line.split('$')[0].strip().endswith(""), line.strip()))
+                            include_lines.append(line.strip())
+                            j += 1
+                        #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+
+                        #print('*** %s' % line)
+                        #bdf_filename2 = line[7:].strip(" '")
+                        #include_lines = [line] + lines[i+1:j]
                 #print(include_lines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
                 if self.read_includes:
@@ -3341,7 +3345,15 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
 
                     with self._open_file(bdf_filename2, basename=False) as bdf_file:
                         #print('bdf_file.name = %s' % bdf_file.name)
-                        lines2 = bdf_file.readlines()
+                        try:
+                            lines2 = bdf_file.readlines()
+                        except UnicodeDecodeError:
+                            msg = 'Invalid Encoding: encoding=%r.  Fix it by:\n' % self._encoding
+                            msg += '  1.  try a different encoding (e.g., latin1)\n'
+                            msg += "  2.  call read_bdf(...) with `encoding`'\n"
+                            msg += ("  3.  Add '$ pyNastran : encoding=latin1"
+                                    ' (or other encoding) to the top of the main file\n')
+                            raise RuntimeError(msg)
 
                     #print('lines2 = %s' % lines2)
                     nlines += len(lines2)

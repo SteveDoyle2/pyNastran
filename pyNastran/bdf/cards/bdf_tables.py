@@ -36,6 +36,27 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
     integer_or_blank, double, components, string, string_or_blank,
     double_or_string)
 
+def make_xy(table_id, table_type, xy):
+    try:
+        xy = np.array(xy, dtype='float64')
+    except ValueError:
+        msg = 'cannot parse %s table_id=%r\n' % (table_type, table_id)
+        for xi, yi in xy:
+            try:
+                xi2 = float(xi)
+            except ValueError:
+                xi2 = '*' + xi
+            try:
+                yi2 = float(yi)
+            except ValueError:
+                yi2 = '*' + yi
+
+            msg += '  %s %s\n' % (xi2, yi2)
+        raise ValueError(msg)
+    x = xy[:, 0]
+    y = xy[:, 1]
+    return x, y
+
 class Table(BaseCard):
     def __init__(self):
         pass
@@ -175,9 +196,7 @@ class TABLED1(Table):
                 continue
             xy.append([xi, yi])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABLED1', xy)
         return TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod
@@ -281,9 +300,7 @@ class TABLED2(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABLED2', xy)
         return TABLED2(tid, x1, x, y, comment=comment)
 
     @classmethod
@@ -343,9 +360,7 @@ class TABLED3(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABLED3', xy)
         return TABLED3(tid, x1, x2, x, y, comment=comment)
 
     @classmethod
@@ -485,9 +500,7 @@ class TABDMP1(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
 
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABDMP1', xy)
         return TABDMP1(tid, Type, x, y, comment=comment)
 
     @classmethod
@@ -542,9 +555,7 @@ class TABLEM1(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABLEM1', xy)
         return TABLEM1(tid, x, y, comment=comment)
 
     @classmethod
@@ -598,9 +609,7 @@ class TABLEM2(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABLEM2', xy)
         return TABLEM2(tid, x1, x, y, comment=comment)
 
     @classmethod
@@ -660,9 +669,7 @@ class TABLEM3(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABLEM3', xy)
         return TABLEM3(tid, x1, x2, x, y, comment=comment)
 
     @classmethod
@@ -778,9 +785,7 @@ class TABLES1(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABLES1', xy)
         return TABLES1(tid, Type, x, y, comment=comment)
 
     @classmethod
@@ -835,9 +840,7 @@ class TABLEST(Table):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABLEST', xy)
         return TABLEST(tid, x, y, comment=comment)
 
     @classmethod
@@ -906,9 +909,7 @@ class TABRND1(RandomTable):
                 continue
             xy.append([x, y])
         string(card, nfields, 'ENDT')
-        xy = np.array(xy, dtype='float64')
-        x = xy[:, 0]
-        y = xy[:, 1]
+        x, y = make_xy(tid, 'TABRND1', xy)
         return TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod

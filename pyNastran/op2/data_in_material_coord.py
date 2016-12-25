@@ -89,15 +89,15 @@ def get_eids_from_op2_vector(vector):
 
 
 def is_mcid(elem):
-    thetaMcid = getattr(elem, 'thetaMcid', None)
-    if isinstance(thetaMcid, integer_types):
+    theta_mcid = getattr(elem, 'theta_mcid', None)
+    if isinstance(theta_mcid, integer_types):
         return True
     else:
         return False
 
 
 def check_theta(elem):
-    theta = getattr(elem, 'thetaMcid', None)
+    theta = getattr(elem, 'theta_mcid', None)
     if theta is None:
         return 0.
     elif isinstance(theta, float):
@@ -214,7 +214,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
             g3 = corner[:, 2, :]
             g4 = corner[:, 3, :]
             normals = np.array([e.Normal() for e in quadelems])
-            csysi = np.array([bdf.coords[e.thetaMcid].i for e in quadelems])
+            csysi = np.array([bdf.coords[e.theta_mcid].i for e in quadelems])
             imat = calc_imat(normals, csysi)
             tmp = thetarad[mcid]
             tmp[thisquad] = angle2vec(g2 - g1, imat)
@@ -239,7 +239,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
             g2 = corner[:, 1, :]
             g3 = corner[:, 2, :]
             normals = np.array([e.Normal() for e in triaelems])
-            csysi = np.array([bdf.coords[e.thetaMcid].i for e in triaelems])
+            csysi = np.array([bdf.coords[e.theta_mcid].i for e in triaelems])
             imat = calc_imat(normals, csysi)
             tmp = thetarad[mcid]
             tmp[thistria] = angle2vec(g2 - g1, imat)

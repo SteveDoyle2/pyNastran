@@ -2245,7 +2245,7 @@ class NastranIO(object):
             taper_ratioi = 0.
             if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
-                    material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
+                    material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
                 elem = vtkTriangle()
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2320,7 +2320,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, (CTRIA6, CTRIAX6, CPLSTN6)):
                 if isinstance(element, CTRIA6):
-                    material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
+                    material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
                 node_ids = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = node_ids[:3]
@@ -2339,7 +2339,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIAX6):
-                material_coord[i] = element.thetaMcid
+                material_coord[i] = element.theta_mcid
                 # midside nodes are required, nodes out of order
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2372,7 +2372,7 @@ class NastranIO(object):
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
-                    material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
+                    material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
                 #print('eid=%s theta=%s' % (eid, material_coord[i]))
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2497,7 +2497,7 @@ class NastranIO(object):
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
-                    material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
+                    material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
