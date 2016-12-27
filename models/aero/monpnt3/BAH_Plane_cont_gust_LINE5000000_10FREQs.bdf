@@ -1,0 +1,150 @@
+ASSIGN OUTPUT2='Monitor_Points_data.op2' UNIT=99 STATUS=NEW
+ID BAH WING
+SOL 146
+TIME 100
+CEND
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+TITLE = BAH WING
+SUBTITLE = FLUTTER ANALYSIS
+LABEL = PK METHOD
+ECHO = SORT
+$
+SPC = 101
+METHOD = 401
+GUST = 3002
+DLOAD = 3002
+RANDOM = 1031 $ EMPIRICAL PSDF TABULATED
+FREQ = 40
+$
+$OUTPUT
+MONITOR = ALL
+LINE = 5000000
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ BULK DATA SECTION
+BEGIN BULK
+$
+$ WING STRUCTURAL DEFINITION
+INCLUDE 'bah_Pstructure.dat'
+$
+$ CONSTRAINT SET
+SPC1,101,1246,1
+$
+$AERODYNAMIC DEFINITION
+INCLUDE 'bah_Paero.dat'
+$
+$ STRUCTURE-AERODYNAMIC CONNECTION
+INCLUDE 'bah_Pinterface.dat'
+$
+$
+$ MODAL ANALYSIS
+EIGR,401,LAN, , , ,8
+$
+$FLUTTER ANALYSIS
+MKAERO1,0., , , , , , , ,+MK100
++MK100,0.001,0.05,0.10,0.20,0.50,1.0,1.2,1.5
+MKAERO1,0., , , , , , , ,+MK101
++MK101,2.0,3.0,4.0,5.0,6.0,7.0,10.
+$
+FLUTTER, 501, PK, 1, 2, 3, ,
+FLFACT, 1, 1. $density
+FLFACT, 2, 0. $mach
+$velocities
+FLFACT, 3, 30., THRU, 450., 30
+$
+$ STRUCTURAL DAMPING
+TABDMP1,2001, , , , , , , ,+TAB100
++TAB100,0.,0.01,100.,0.005,ENDT
+$
+$* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+$
+$ * * DYNAMIC LOAD AND RESPONSE DATA * *
+$
+$ GUST DEFINES A STATIONARY VERTICAL GUST. LISTED ARE T/RLOAD ENTRY
+$ ID, RATIO OF GUST VEL/VEHICLE VEL, LOCATION OF THE GUST WITH RESPECT
+$ TO THE ORIGIN OF THE AERO COORDINATE SYSTEM AND VEHICLE VELOCITY.
+$
+$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-
+$       SID     DLOAD   WG      X0      V
+GUST    3002    3002    1.1962-4 0.     200.
+$
+$ RLOAD1 DEFINES A FREQUENCY DEPENDENT DYNAMIC LOAD. LISTED ARE
+$ THE ID, DAREA ID, DELAY ID, DPHASE ID AND TABLEDI ENTRIES
+$
+$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-
+$       SID     L       M       N       TC      TD
+RLOAD1  3002    3003                    3004
+$
+$ DAREA DEFINES THE DOF WHERE THE LOAD IS APPLIED AND A SCALE FACTOR.
+$
+$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-
+$       SID     P       C       A
+DAREA   3003    1       1       1.
+$
+$ TABLED1 DEFINES A TABULAR FUNCTION OF A FREQUENCY-DEPENDENT LOAD.
+$
+$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-
+$       SID
+TABLED1 3004                                                            +T1004
+$       X1      Y1      X2      Y2      ETC.
++T1004  0.      1.      10.     1.      ENDT
+$
+$ RANDPS DEFINES POWER SPECTRAL DENISITY FACTORS FOR RANDOM
+$ ANALYSIS. LISTED ARE EXCITED AND APPLIED LOAD SET IDS AND
+$ THEIR SCALE FACTORS.
+$
+$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-
+$       SID     J       K       X       Y       TID
+RANDPS  1031    1       1       1.0     0.0     1032
+$
+$ TABRND1 IS THE POWER SPECTRAL DENSITY TABLE.
+$
+$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-
+TABRND1 1032                                                            +001
++001    0.00    2.8708+0 0.25   1.2641+0 0.50   4.7188-1 0.75   2.3080-1+002
++002    1.00    1.3456-1 1.25   8.7595-2 1.50   6.1402-2 1.75   4.5369-2+003
++003    2.00    3.4865-2 2.25   2.7618-2 2.50   2.2412-2 2.75   1.8547-2+004
++004    3.00    1.5601-2 3.25   1.3304-2 3.50   1.1478-2 3.75   1.0004-2+005
++005    4.00    8.7964-3 4.25   7.7947-3 4.50   6.9547-3 4.75   6.2434-3+006
++006    5.00    5.6359-3 5.25   5.1128-3 5.50   4.6593-3 5.75   4.2636-3+007
++007    6.00    3.9162-3 6.25   3.6095-3 6.50   3.3375-3 6.75   3.0951-3+008
++008    7.00    2.8782-3 7.25   2.6833-3 7.50   2.5076-3 7.75   2.3485-3+009
++009    8.00    2.2042-3 8.25   2.0727-3 8.50   1.9526-3 8.75   1.8427-3+010
++010    9.00    1.7418-3 9.25   1.6490-3 9.50   1.5634-3 9.75   1.4843-3+011
++011    10.00   1.4440-3 ENDT
+$
+$
+$
+$ FREQUENCIES USED TO TRANSFORM
+FREQ1,40,0.,1.0,10
+$
+$ TIME STEP FOR RESPONSE OUTPUT
+$TSTEP,41,500,0.02
+$*************************************************************
+$ NUMBER OF MODES TO BE USED
+PARAM,LMODES,10
+$
+$ OUTPUT OF AERODYNAMIC DISPLACEMENTS
+PARAM,OPPHIPA,1
+$
+$ Hag
+PARAM,GUSTAERO,-1 
+$
+$ DINAMIC PRESSURE
+PARAM, Q, 24.5E+3
+$
+$ OP2 creation
+$2345678$2345678$2345678
+PARAM   POST    -2
+$
+$ OUTPUTS THE MONITOR POINTS RESULTS IN THE OP2
+PARAM   MPTUNIT 99
+$
+$ MONITOR POINT
+$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-
+MONPNT3 M3_B    Node 2 and element 102
+        123456  4002    5002    0       1.      0.      0.
+$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-$-+-+-+-
+SET1    4002    2
+SET1    5002    102
+$
+ENDDATA
