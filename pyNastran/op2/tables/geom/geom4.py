@@ -350,8 +350,10 @@ class GEOM4(GeomCommon):
         SPC1(5481,58,12) - Record 45
 
         odd case = (
+            # sid, comp, thru_flag
             12, 12345, 0, 110039, 110040, 110041, 110042, 110043, 110044, 110045,
                           110046, 110047, 110048, 110049, -1,
+            # sid, comp, thru_flag, ???
             12, 12345, 0, -1)
         """
         nentries = 0
