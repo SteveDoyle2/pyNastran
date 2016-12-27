@@ -835,7 +835,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         elif analysis in ['MODE', 'MODES']:
             sol = 103
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis == 'BUCK':
+        elif analysis in ['BUCK', 'BUCKLING']:
             sol = 105
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
         elif analysis == 'DFREQ':

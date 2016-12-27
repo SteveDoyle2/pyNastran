@@ -1,4 +1,4 @@
-#pylint: disable=C0301,C0111,C0103,W0613
+#pylint: disable=C0111,C0103,W0613
 from __future__ import print_function
 from struct import unpack, Struct
 from six import b
@@ -75,7 +75,7 @@ class GEOM4(GeomCommon):
             (5491, 59, 13): ['SPCADD', self._read_spcadd],       # record 46 - not done
             (5601, 56, 14): ['SUPORT', self._read_suport],       # record 59 - not done
             (10100, 101, 472): ['SUPORT1', self._read_suport1],  # record 60 - not done
-            (2010, 20, 193) : ['USET', self._read_uset],         # Record 62 -- USET(2010,20,193)
+            (2010, 20, 193) : ['USET', self._read_uset],         # Record 62
 
             (1310, 13, 247): ['RELEASE', self._read_fake],       # record
             (6210, 62, 344): ['SPCOFF1', self._read_fake],    # record
@@ -346,50 +346,52 @@ class GEOM4(GeomCommon):
         #return n
 
     def _read_spc1(self, data, n):
-        """SPC1(5481,58,12) - Record 45"""
+        """
+        SPC1(5481,58,12) - Record 45
+
+        odd case = (
+            12, 12345, 0, 110039, 110040, 110041, 110042, 110043, 110044, 110045,
+                          110046, 110047, 110048, 110049, -1,
+            12, 12345, 0, -1)
+        """
         nentries = 0
         nints = (len(data) - n) // 4
         idata = unpack('%s%ii' % (self._endian, nints), data[n:])
-
+        #print(idata)
         i = 0
         nidata = len(idata)
         while i < nidata:
-            print('i=%s nidata=%s' % (i, nidata))
             sid, comp, thru_flag = idata[i:i+3]
-            print('sid=%s comp=%s thru_flag=%s' % (sid, comp, thru_flag))
             i += 3
             if thru_flag == 0:  # repeat 4 to end
-                print('  idata =', idata[i:])
                 nid = idata[i]
                 nids = [nid]
                 i += 1
+                if i == nidata:
+                    break
                 while idata[i] != -1:
                     nid = idata[i]
                     nids.append(nid)
                     i += 1
                 i += 1
-                print('  nids =', nids)
-                #print(spc[3:])
-                #nids = spc[3:-1]
             elif thru_flag == 1:
-                print('  idata =', idata[i:])
                 n1, n2 = idata[i:i+2]
                 nids = list(range(n1, n2+1))
                 i += 2
-                print('  nids =', nids)
             else:
                 raise NotImplementedError('SPC1; thru_flag=%s' % thru_flag)
 
             if self.is_debug_file:
-                self.binary_debug.write('SPC1: sid=%s comp=%s thru_flag=%s' % (sid, comp, thru_flag))
+                self.binary_debug.write('SPC1: sid=%s comp=%s thru_flag=%s' % (
+                    sid, comp, thru_flag))
                 self.binary_debug.write('   nids=%s\n' % str(nids))
+            #print('SPC1: sid=%s comp=%s thru_flag=%s' % (
+            #    sid, comp, thru_flag))
+            #print('   nids=%s\n' % str(nids))
             in_data = [sid, comp, nids]
 
-            print('   nids=%s\n' % str(nids))
             constraint = SPC1.add_op2_data(in_data)
             self._add_constraint_spc_object(constraint)
-
-            print('----------')
         self.card_count['SPC1'] = nentries
         return len(data)
 
@@ -550,41 +552,3 @@ class GEOM4(GeomCommon):
     def _read_uset1(self, data, n):
         """USET1(2110,21,194) - Record 65"""
         return self._read_xset1(data, n, 'USET1', USET1, self._add_uset_object)
-
-def break_on_minus_1(data):
-    """
-    data = [
-        1, 123456, 0, 31, 35, 39, 43, 47, 48, 53, 63, 64, 69, 70, 71, 72, -1,
-        3, 456, 1, 1, 72
-    ]
-    data_out = break_on_minus_1(data)
-    >>> data_out
-    [
-        [1, 123456, 0, 31, 35, 39, 43, 47, 48, 53, 63, 64, 69, 70, 71, 72, -1,],
-        [3, 456, 1, 1, 72],
-    ]
-
-    """
-    data_out = []
-    data = list(data)
-    #data = []
-    #print('data =', data)
-    i1 = data.index(-1)
-    i0 = 0
-    while i1 > 0:
-        new = data[i0:i1+1]
-        print(new)
-        data_out.append(new)
-        next_data = data[i1+1:]
-        #print('next_data =', next_data)
-        if len(next_data) == 0:
-            break
-
-        try:
-            i1 = next_data.index(-1)
-        except ValueError:
-            data_out.append(next_data)
-            break
-        #print('i1 =', i1)
-    #print('index =', i)
-    return data_out
