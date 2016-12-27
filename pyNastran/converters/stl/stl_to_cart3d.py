@@ -1,5 +1,8 @@
 from __future__ import print_function
+
 from six import string_types
+import numpy as np
+
 from pyNastran.converters.stl.stl import STL, read_stl
 from pyNastran.converters.cart3d.cart3d import Cart3D
 
@@ -39,6 +42,8 @@ def stl_to_cart3d(stl_filename, cart3d_filename=None, log=None, debug=False,
     cart3d = Cart3D(log=log, debug=debug)
     cart3d.nodes = stl.nodes + 1
     cart3d.elements = stl.elements + 1
+    nelements = len(stl.elements)
+    cart3d.regions = np.zeros(nelements, dtype='int32')
     if cart3d_filename:
-        cart3d.write_cart3d(Cart3D, is_binary=is_binary, float_fmt=float_fmt)
+        cart3d.write_cart3d(cart3d_filename, is_binary=is_binary, float_fmt=float_fmt)
     return cart3d
