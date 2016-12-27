@@ -12,6 +12,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types, PY3
 from six.moves import zip, range
+import numpy as np
 
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -505,10 +506,6 @@ class SPCD(Load):
         self.gids = self.node_ids
         del self.gids_ref
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 
@@ -594,10 +591,6 @@ class SLOAD(Load):
         if isinstance(node, integer_types):
             return node
         return node.nid
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         """
@@ -954,10 +947,6 @@ class RANDPS(RandomLoad):
         self.tid = self.Tid()
         if self.tid is not None:
             del self.tid_ref
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         return [self]

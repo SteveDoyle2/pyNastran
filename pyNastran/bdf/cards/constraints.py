@@ -383,6 +383,8 @@ class SPC(Constraint):
     velocity/acceleration (dynamic analysis).
 
      +-----+-----+----+----+------+----+----+----+
+     |  1  |  2  |  3 |  4 |   5  |  6 |  7 |  8 |
+     +=====+=====+====+====+======+====+====+====+
      | SPC | SID | G1 | C1 |  D1  | G2 | C2 | D2 |
      +-----+-----+----+----+------+----+----+----+
      | SPC |  2  | 32 | 3  | -2.6 |  5 |    |    |
@@ -438,13 +440,6 @@ class SPC(Constraint):
             #raise RuntimeError('SPC; constraints=%s data=%s' % (constraints, data))
         #assert 0 < constraints[0] > 1000, data
         return SPC(conid, gids, constraints, enforced, comment=comment)
-
-    #def get_node_dofs(self, model):
-        #pass
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -632,7 +627,9 @@ class SPC1(Constraint):
     def add_op2_data(cls, data, comment=''):
         conid = data[0]
         constraints = data[1]
-        nodes = data[2:]
+        nodes = data[2]
+        if nodes[-1] == -1:
+            nodes = nodes[:-1]
         assert conid > 0, data
         for nid in nodes:
             assert nid > 0, data
@@ -699,6 +696,12 @@ class SPCADD(ConstraintADD):
     def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'conid')
         sets = card.fields(2)
+        return SPCADD(conid, sets, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        conid = data[0]
+        sets = list(data[1:-1])
         return SPCADD(conid, sets, comment=comment)
 
     def organize_constraints(self, model):

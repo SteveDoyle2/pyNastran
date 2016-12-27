@@ -132,6 +132,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_05(self):
+        bdf = BDF(debug=False)
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
             '     ,  , ,2.0,-4.0',
@@ -194,6 +195,7 @@ class TestBeams(unittest.TestCase):
         self.assertEqual(cbeam.J(), 3.14)
 
     def test_pbeam_06(self):
+        bdf = BDF(debug=False)
         lines = [
             'PBEAM   1       1       1.      60.     1.                              PBEAM1',
             '+BEAM1  5.              -5.                                             PBEAM2',
@@ -218,6 +220,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_07(self):
+        bdf = BDF(debug=False)
         lines = [
             'PBEAM   100     100     1.00    10.     1.0                             +Z1',
             '+Z1     NO      1.0                                                     +Z4',
@@ -241,6 +244,7 @@ class TestBeams(unittest.TestCase):
                 #self.assertEqual(actual, expected, msg)
 
     def test_pbeam_08(self):
+        bdf = BDF(debug=False)
         lines = [
             'PBEAM*   4570049         4570010        .12             2.56-4          *    HRY',
             '*    HRY.005625                         8.889-4         6.4444-7        *    HRZ',
@@ -270,25 +274,25 @@ class TestBeams(unittest.TestCase):
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
 
-        if 1:
-            fields = card2.raw_fields()
-            msg = print_card_8(fields)
-            size = 16
-            msg = card2.write_card(size, 'dummy')
+        fields = card2.raw_fields()
+        msg = print_card_8(fields)
+        size = 16
+        msg = card2.write_card(size, 'dummy')
 
-            lines_actual = msg.rstrip().split('\n')
-            msg_a = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
-            msg_a += 'nlines_actual=%i nlines_expected=%i' % (
-                len(lines_actual), len(lines_expected))
-            self.assertEqual(len(lines_actual), len(lines_expected), msg)
-            for actual, expected in zip(lines_actual, lines_expected):
-                actual = str(actual)
-                expected = str(expected)
-                msg = msg_a + '\nactual   = %r\n' % actual
-                msg += 'expected = %r' % expected
-                self.assertEqual(actual, expected, msg)
+        lines_actual = msg.rstrip().split('\n')
+        msg_a = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
+        msg_a += 'nlines_actual=%i nlines_expected=%i' % (
+            len(lines_actual), len(lines_expected))
+        self.assertEqual(len(lines_actual), len(lines_expected), msg)
+        for actual, expected in zip(lines_actual, lines_expected):
+            actual = str(actual)
+            expected = str(expected)
+            msg = msg_a + '\nactual   = %r\n' % actual
+            msg += 'expected = %r' % expected
+            self.assertEqual(actual, expected, msg)
 
     def test_pbeam_09(self):
+        bdf = BDF(debug=False)
         fields = [
             u'PBEAM', 4570049, 4570010, 0.12, 0.000256, 0.005625, None, 0.0008889, 6.4444e-07,
             -0.04, -0.75, 0.04, -0.75, 0.04, 0.75, -0.04, 0.75,

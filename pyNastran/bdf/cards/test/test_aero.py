@@ -10,7 +10,7 @@ import pyNastran
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID
 from pyNastran.bdf.cards.aero import (
-    FLFACT, AEFACT, AEPARM, AERO, AEROS,
+    FLFACT, AEFACT, AEPARM, AERO, AEROS, AESTAT,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     AELIST, FLUTTER, TRIM, CSSCHD, MKAERO1, MKAERO2, GUST, AESURF, AESURFS,
@@ -44,6 +44,7 @@ class TestAero(unittest.TestCase):
     """
 
     def test_aestat_1(self):
+        bdf = BDF(debug=False)
         lines = ['AESTAT  502     PITCH']
         card = bdf.process_card(lines)
         card = BDFCard(card)

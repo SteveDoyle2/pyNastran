@@ -4,15 +4,16 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-#from pyNastran.bdf.cards.constraints import SPC,SPCADD
 #from pyNastran.bdf.cards.elements.rigid import RBE2
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, ASET1, QSET, QSET1, USET, USET1, SEQSET1 # SEQSET
 )
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.bdf.cards.constraints import SUPORT1, SUPORT, SPC, SPC1#, MPC
-    #SPCADD, SPCAX, MPCADD, SESUP, GMSPC
+from pyNastran.bdf.cards.constraints import (
+    SUPORT1, SUPORT, SPC, SPC1, SPCADD,
+    #MPC, SPCAX, MPCADD, SESUP, GMSPC
+)
 
 class GEOM4(GeomCommon):
     """defines methods for reading op2 constraints"""
@@ -114,20 +115,20 @@ class GEOM4(GeomCommon):
         """common method for ASET, QSET"""
         self.log.debug('skipping %s in GEOM4\n' % card_name)
         return len(data)
-        s = Struct(b(self._endian + '2i'))
-        ntotal = 8
-        nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
-            edata = data[n:n + ntotal]
-            out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
-            #(id, component) = out
-            elem = cls.add_op2_data(out)
-            self.add_method(elem)
-            n += ntotal
-            self._increase_card_count(card_name, 1)
-        return n
+        #s = Struct(b(self._endian + '2i'))
+        #ntotal = 8
+        #nelements = (len(data) - n) // ntotal
+        #for i in range(nelements):
+            #edata = data[n:n + ntotal]
+            #out = s.unpack(edata)
+            #if self.is_debug_file:
+                #self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
+            ##(id, component) = out
+            #elem = cls.add_op2_data(out)
+            #self.add_method(elem)
+            #n += ntotal
+            #self._increase_card_count(card_name, 1)
+        #return n
 
     def _read_aset1(self, data, n):
         """ASET1(5571,77,216) - Record 22"""
@@ -224,6 +225,7 @@ class GEOM4(GeomCommon):
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
         self.log.debug('skipping MPCADD in GEOM4\n')
+        #mpcadd
         return len(data)
 
     def _read_omit1(self, data, n):
@@ -345,43 +347,67 @@ class GEOM4(GeomCommon):
 
     def _read_spc1(self, data, n):
         """SPC1(5481,58,12) - Record 45"""
-        n2 = n
-        #nentries = (len(data) - n - 12) // 4  # 5*4
         nentries = 0
-        while n2 < n:
-            edata = data[n:n+12]
-            n += 12
-            out = unpack('4i', edata)
-            (sid, g, thru_flag, n1) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  SPC1=%s\n' % str(out))
-            edata = data[n:n + 12]
+        nints = (len(data) - n) // 4
+        idata = unpack('%s%ii' % (self._endian, nints), data[n:])
 
-            nids = [n1]
+        i = 0
+        nidata = len(idata)
+        while i < nidata:
+            print('i=%s nidata=%s' % (i, nidata))
+            sid, comp, thru_flag = idata[i:i+3]
+            print('sid=%s comp=%s thru_flag=%s' % (sid, comp, thru_flag))
+            i += 3
             if thru_flag == 0:  # repeat 4 to end
-                nnodes = (len(data) - n) // 4
-                nodes = unpack(b(self._endian + '%ii' % nnodes), data[n:])
-                nids += list(nodes)
-                n += 4 * nentries
+                print('  idata =', idata[i:])
+                nid = idata[i]
+                nids = [nid]
+                i += 1
+                while idata[i] != -1:
+                    nid = idata[i]
+                    nids.append(nid)
+                    i += 1
+                i += 1
+                print('  nids =', nids)
+                #print(spc[3:])
+                #nids = spc[3:-1]
             elif thru_flag == 1:
-                n2 = self.struct_i.unpack(data[n:n+4])
-                n += 4
-                nids.append(n2)
+                print('  idata =', idata[i:])
+                n1, n2 = idata[i:i+2]
+                nids = list(range(n1, n2+1))
+                i += 2
+                print('  nids =', nids)
             else:
                 raise NotImplementedError('SPC1; thru_flag=%s' % thru_flag)
+
             if self.is_debug_file:
-                self.binary_debug.write('   nids=%s\n' % str(nids[1:]))
-            self.log.debug('   nids=%s\n' % str(nids[1:]))
-            nentries += 1
-            constraint = SPC1.add_op2_data([sid, g, nids])
+                self.binary_debug.write('SPC1: sid=%s comp=%s thru_flag=%s' % (sid, comp, thru_flag))
+                self.binary_debug.write('   nids=%s\n' % str(nids))
+            in_data = [sid, comp, nids]
+
+            print('   nids=%s\n' % str(nids))
+            constraint = SPC1.add_op2_data(in_data)
             self._add_constraint_spc_object(constraint)
+
+            print('----------')
         self.card_count['SPC1'] = nentries
-        return n
+        return len(data)
 
     def _read_spcadd(self, data, n):
         """SPCADD(5491,59,13) - Record 46"""
-        self.log.debug('skipping SPCADD in GEOM4\n')
-        return len(data)
+        nentries = (len(data) - n) // 4
+        datai = unpack('%s%si' % (self._endian, nentries), data[n:])
+        if self.is_debug_file:
+            self.binary_debug.write('  SPCADD - %s' % str(datai))
+        #spcadd_id = datai[0]
+        #values = list(datai[1:-1])
+        assert datai[-1] == -1, datai
+        #print('spcadd_id=%s values=%s' % (spcadd_id, values))
+
+        constraint = SPCADD.add_op2_data(datai)
+        self._add_constraint_spc_object(constraint)
+        self._increase_card_count('SPCADD', count_num=1)
+        return n
 
     def _read_spcd(self, data, n):
         """common method for reading SPCDs"""
@@ -447,7 +473,7 @@ class GEOM4(GeomCommon):
         self.log.debug('skipping SPCE in GEOM4\n')
         return len(data)
 
-    def _readSPCEB(self, data, n):
+    def _read_spceb(self, data, n):
         self.log.debug('skipping SPCEB in GEOM4\n')
         return len(data)
 
@@ -519,8 +545,46 @@ class GEOM4(GeomCommon):
 
     def _read_uset(self, data, n):
         """USET(2010,20,193) - Record 63"""
-        return self._read_xset(data, n, 'USET', USET, self.add_uset)
+        return self._read_xset(data, n, 'USET', USET, self._add_uset_object)
 
     def _read_uset1(self, data, n):
         """USET1(2110,21,194) - Record 65"""
-        return self._read_xset1(data, n, 'USET1', USET1, self.add_uset)
+        return self._read_xset1(data, n, 'USET1', USET1, self._add_uset_object)
+
+def break_on_minus_1(data):
+    """
+    data = [
+        1, 123456, 0, 31, 35, 39, 43, 47, 48, 53, 63, 64, 69, 70, 71, 72, -1,
+        3, 456, 1, 1, 72
+    ]
+    data_out = break_on_minus_1(data)
+    >>> data_out
+    [
+        [1, 123456, 0, 31, 35, 39, 43, 47, 48, 53, 63, 64, 69, 70, 71, 72, -1,],
+        [3, 456, 1, 1, 72],
+    ]
+
+    """
+    data_out = []
+    data = list(data)
+    #data = []
+    #print('data =', data)
+    i1 = data.index(-1)
+    i0 = 0
+    while i1 > 0:
+        new = data[i0:i1+1]
+        print(new)
+        data_out.append(new)
+        next_data = data[i1+1:]
+        #print('next_data =', next_data)
+        if len(next_data) == 0:
+            break
+
+        try:
+            i1 = next_data.index(-1)
+        except ValueError:
+            data_out.append(next_data)
+            break
+        #print('i1 =', i1)
+    #print('index =', i)
+    return data_out
