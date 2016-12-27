@@ -940,6 +940,28 @@ class DRESP1(OptConstraint):
         attb = layer
         atti = [pid]
         DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        Example 3 (???)
+        ---------------
+        dresp_id = 105
+        label = 'resp3'
+        response_type = 'DISP'
+        #atta = ???
+        #region = ???
+        #attb = ???
+        atti = [nid]
+        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        Example 4 (???)
+        ---------------
+        dresp_id = 105
+        label = 'resp3'
+        response_type = 'ELEM'
+        #atta = ???
+        #region = ???
+        #attb = ???
+        atti = [eid???]
+        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         if comment:
             self.comment = comment
@@ -1211,8 +1233,8 @@ class DRESP1(OptConstraint):
 class DRESP2(OptConstraint):
     type = 'DRESP2'
 
-    def __init__(self, dresp_id, label, dequation, region, method,
-                 c1, c2, c3, params, comment=''):
+    def __init__(self, dresp_id, label, dequation, region, params,
+                 method='MIN', c1=100., c2=0.005, c3=None, comment=''):
         """
         Design Sensitivity Equation Response Quantities
         Defines equation responses that are used in the design, either as
@@ -1241,7 +1263,7 @@ class DRESP2(OptConstraint):
         method = string_or_blank(card, 5, 'method', 'MIN')
         c1 = double_or_blank(card, 6, 'c1', 100.)
         c2 = double_or_blank(card, 7, 'c2', 0.005)
-        c3 = double_or_blank(card, 8, 'c3') #: .. todo:: or blank?
+        c3 = double_or_blank(card, 8, 'c3', None) #: .. todo:: or blank?
 
         fields = [interpret_value(field) for field in card[9:]]
         key = None  # dummy key
@@ -1285,8 +1307,8 @@ class DRESP2(OptConstraint):
         #print("--DRESP2 Params--")
         #for key, value_list in sorted(iteritems(params)):
             #print("  key=%s value_list=%s" %(key, value_list))
-        return DRESP2(dresp_id, label, dequation, region, method,
-                      c1, c2, c3, params, comment=comment)
+        return DRESP2(dresp_id, label, dequation, region, params,
+                      method, c1, c2, c3, comment=comment)
 
     def OptID(self):
         return self.DRespID()
@@ -1908,7 +1930,8 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             the BDF object
         """
         msg = ', which is required by DVCREL1 name=%r' % self.type
-        if self.Type in ['CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CELAS2', 'CELAS4']:
+        if self.Type in ['CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CELAS2', 'CELAS4',
+                         'CDAMP2', 'CGAP']:
             self.eid = model.Element(self.eid, msg=msg)
         elif self.Type in ['CONM1', 'CONM2', 'CMASS2', 'CMASS4']:
             self.eid = model.masses[self.eid]
@@ -2335,7 +2358,7 @@ class DVMREL2(OptConstraint):
         +---------+--------+--------+-------+---------+-------+-------+-------+-------+
         |    1    |    2   |   3    |   4   |     5   |   6   |   7   |   8   |   9   |
         +=========+========+========+=======+=========+=======+=======+=======+=======+
-        | DVMREL2 | ID     | TYPE   |  MID  | MPNAME  | MPMIN | MPMAX | EQID  |       |
+        | DVMREL2 |   ID   | TYPE   |  MID  | MPNAME  | MPMIN | MPMAX | EQID  |       |
         +---------+--------+--------+-------+---------+-------+-------+-------+-------+
         |         | DESVAR | DVID1  | DVID2 | DVID3   | DVID4 | DVID5 | DVID6 | DVID7 |
         +---------+--------+--------+-------+---------+-------+-------+-------+-------+
@@ -2451,6 +2474,8 @@ class DVMREL2(OptConstraint):
             #pid = self.pid_ref.eid
         #elif self.Type in self.allowed_properties_mass:
             #pid = self.pid_ref.pid
+        elif self.Type in self.allowed_materials:
+            mid = self.mid_ref.mid
         else:
             raise NotImplementedError('Type=%r is not supported' % self.Type)
         #return mid
@@ -2740,6 +2765,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             #self.pid = model.masses[self.pid]
         elif self.Type in self.allowed_properties_mass:
             self.pid = model.properties_mass[self.pid]
+        elif self.Type == 'PBUSHT':
+            self.pid = model.pbusht[self.pid]
+        elif self.Type == 'PELAST':
+            self.pid = model.pelast[self.pid]
         else:
             raise NotImplementedError('Type=%r is not supported' % self.Type)
         self.pid_ref = self.pid
@@ -2763,6 +2792,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         #elif self.Type in self.allowed_masses:
             #pid = self.pid_ref.eid
         elif self.Type in self.allowed_properties_mass:
+            pid = self.pid_ref.pid
+        elif self.Type in ['PBUSHT', 'PELAST']:
             pid = self.pid_ref.pid
         else:
             raise NotImplementedError('Type=%r is not supported' % self.Type)

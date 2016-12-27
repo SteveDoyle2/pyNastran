@@ -1096,6 +1096,24 @@ class AddCards(AddMethods):
         self._add_dload_object(load)
         return load
 
+    def add_darea(self, sid, p, c, scale, comment=''):
+        """
+        Creates a DAREA card
+
+        Parameters
+        ----------
+        sid : int
+            darea id
+        Pi : int
+            GRID, EPOINT, SPOINT id
+        c : str
+            Component number. (0-6; 0-EPOINT/SPOINT; 1-6 GRID)
+        scale : float
+            Scale (area) factor
+        """
+        darea = DAREA(sid, p, c, scale, comment=comment)
+        self._add_darea_object(darea)
+
     def add_force(self, sid, node, mag, cid=0, xyz=None, comment=''):
         """
         Creates a FORCE card

@@ -4,7 +4,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_or_double, integer_double_or_blank,
     string, string_or_blank, double_or_string, double_string_or_blank,
     integer_or_string, integer_string_or_blank, integer_double_or_string,
-    blank, components, components_or_blank, _get_dtype, interpret_value)
+    blank, components, components_or_blank, integer_double_string_or_blank,
+    _get_dtype, interpret_value)
 
 class ExtendedTestCase(unittest.TestCase):
 
@@ -359,6 +360,7 @@ class TestAssignType(ExtendedTestCase):
 
         # string
         self.assertEqual('LOAD', integer_double_or_string(BDFCard(['load']), 0, 'field'))
+        self.assertEqual('MN-MM', integer_double_string_or_blank(BDFCard(['MN-MM']), 0, 'field'))
 
     def test_components(self):
         # single ints

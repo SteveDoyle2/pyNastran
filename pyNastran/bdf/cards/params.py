@@ -5,8 +5,9 @@ from six import string_types
 from six.moves import zip
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.bdf_interface.assign_type import (integer_or_blank,
-    double_or_blank, string, string_or_blank, integer_double_string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer_or_blank, double_or_blank, string, string_or_blank,
+    integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -20,7 +21,9 @@ class PARAM(BaseCard):
             try:
                 self.values[n - 2] = value
             except IndexError:
-                raise IndexError('Field %r=%r is an invalid %s entry for key=%r.' % (n, value, self.type, self.key.upper()))
+                msg = 'Field %r=%r is an invalid %s entry for key=%r.' % (
+                    n, value, self.type, self.key.upper())
+                raise IndexError(msg)
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
@@ -88,12 +91,14 @@ class PARAM(BaseCard):
             value2 = double_or_blank(card, 3, 'value2', 0.0)
             n = 2
         elif key in ['CB1', 'CB2', 'CK1', 'CK2', 'CK3', 'CK41', 'CK42',
-                          'CM1', 'CM2', 'CP1', 'CP2']:
+                     'CM1', 'CM2', 'CP1', 'CP2']:
             value1 = double_or_blank(card, 2, 'value1', 1.0)
             value2 = double_or_blank(card, 3, 'value2', 0.0)
             n = 2
         elif key == 'POST':
             value = integer_or_blank(card, 2, 'value', 1)
+        elif key == 'UNITSYS':
+            value = string(card, 2, 'value')
         else:
             value1 = integer_double_string_or_blank(card, 2, 'value1')
             value2 = integer_double_string_or_blank(card, 3, 'value2')
@@ -133,7 +138,7 @@ class PARAM(BaseCard):
         card = BDFCard(['PARAM'] + data)
         key = data[0]
         values = data[1:]
-        return PARAM(key, value, comment=comment)
+        return PARAM(key, values, comment=comment)
 
     def update_values(self, value1=None, value2=None):
         """

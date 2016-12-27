@@ -169,7 +169,10 @@ def integer_double_string_or_blank(card, ifield, fieldname, default=None):
         # integer/float/string
         if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
             # float
-            value = double(card, ifield, fieldname)
+            try:
+                value = double(card, ifield, fieldname)
+            except SyntaxError:
+                value = interpret_value(card[ifield], card)
         elif svalue.isdigit():
             # int
             try:

@@ -949,8 +949,10 @@ class ROTORG(BaseCard):
         for irow in range(nrows):
             j = irow * 8 + 9
             nid1 = integer(card, j, 'grid_%i' % (irow + 1))
-            nid2 = integer_or_string(card, j+1, 'nid2')
-            if nid2 == 'THRU':
+            nid2 = integer_string_or_blank(card, j+1, 'nid2')
+            if nid2 is None:
+                pass
+            elif nid2 == 'THRU':
                 nid_thru = integer(card, j+2, 'nid_thru')
                 by_flag = string_or_blank(card, j+3, 'BY')
                 if by_flag == 'BY':

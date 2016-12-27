@@ -20,7 +20,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank, string, string_or_blank,
-    blank, integer_or_double)
+    blank, integer_or_double, integer_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -1591,94 +1591,194 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
 
 class PBEND(LineProperty):
+    """
+    MSC/NX Option A
+
+    | PBEND | PID  |  MID  | A   | I1 | I2 |   J    | RB | THETAB |
+    |       |  C1  |  C2   | D1  | D2 | E1 |   E2   | F1 |   F2   |
+    |       |  K1  |  K2   | NSM | RC | ZC | DELTAN |    |        |
+
+    MSC Option B
+
+    | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+    |       |      |       | NSM | RC | ZC |        |    |        |
+
+    NX Option B
+
+    | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+    |       | SACL | ALPHA | NSM | RC | ZC | FLANGE |    |        |
+    |       |  KX  |  KY   | KZ  |    | SY |   SZ   |    |        |
+    """
     type = 'PBEND'
 
-    def __init__(self, card=None, data=None, comment=''):
-        LineProperty.__init__(self, card, data)
+    def __init__(self, pid, mid, beam_type, A, i1, i2, j,
+                 c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                 nsm, rc, zc, delta_n, fsi, rm, t, p,
+                 rb, theta_b, comment=''):
+        LineProperty.__init__(self)
         if comment:
             self.comment = comment
-        if card:
-            self.pid = integer(card, 1, 'pid')
-            self.mid = integer(card, 2, 'mid')
+        self.pid = pid
+        self.mid = mid
+        self.beam_type = beam_type
+        self.A = A
+        self.i1 = i1
+        self.i2 = i2
+        self.j = j
+        self.c1 = c1
+        self.c2 = c2
+        self.d1 = d1
+        self.d2 = d2
+        self.e1 = e1
+        self.e2 = e2
+        self.f1 = f1
+        self.f2 = f2
+        self.k1 = k1
+        self.k2 = k2
+        self.nsm = nsm
+        self.rc = rc
+        self.zc = zc
+        self.delta_n = delta_n
+        self.fsi = fsi
+        self.rm = rm
+        self.t = t
+        self.p = p
+        self.rb = rb
+        self.theta_b = theta_b
 
-            value3 = integer_or_double(card, 3, 'A_FSI')
-            if isinstance(value3, float):
-                self.beamType = 1
-                #: Area of the beam cross section
-                self.A = double(card, 3, 'A')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
 
-                #: Area moments of inertia in planes 1 and 2.
-                self.i1 = double(card, 4, 'I1')
-                self.i2 = double(card, 5, 'I2')
+        value3 = integer_or_double(card, 3, 'A_FSI')
+        # MSC/NX option A
+        A = None
+        i1 = None
+        i2 = None
+        j = None
+        c1 = None
+        c2 = None
+        d1 = None
+        d2 = None
+        e1 = None
+        e2 = None
+        f1 = None
+        f2 = None
+        k1 = None
+        k2 = None
+        delta_n = None
 
-                #: Torsional stiffness :math:`J`
-                self.j = double(card, 6, 'J')
+        # MSC option B
+        rm = None
+        t = None
+        p = None
 
-                # line2
-                #: The r,z locations from the geometric centroid for stress
-                #: data recovery.
-                self.c1 = double(card, 9, 'c1')
-                self.c2 = double(card, 10, 'c2')
-                self.d1 = double(card, 11, 'd1')
-                self.d2 = double(card, 12, 'd2')
-                self.e1 = double(card, 13, 'e1')
-                self.e2 = double(card, 14, 'e2')
-                self.f1 = double(card, 15, 'f1')
-                self.f2 = double(card, 16, 'f2')
+        # NX option B
+        sacl = None
+        alpha = None
+        flange = None
+        kx = None
+        ky = None
+        kz = None
+        sy = None
+        sz = None
+        if isinstance(value3, float):
+            fsi = 0
+            beam_type = 1
+            #: Area of the beam cross section
+            A = double(card, 3, 'A')
 
-                # line 3
-                #: Shear stiffness factor K in K*A*G for plane 1.
-                self.k1 = double(card, 17, 'k1')
-                #: Shear stiffness factor K in K*A*G for plane 2.
-                self.k2 = double(card, 18, 'k2')
+            #: Area moments of inertia in planes 1 and 2.
+            i1 = double(card, 4, 'I1')
+            i2 = double(card, 5, 'I2')
 
-                #: Nonstructural mass per unit length.
-                self.nsm = double(card, 19, 'nsm')
+            #: Torsional stiffness :math:`J`
+            j = double(card, 6, 'J')
 
-                #: Radial offset of the geometric centroid from points GA and GB.
-                self.rc = double(card, 20, 'rc')
+            # line2
+            #: The r,z locations from the geometric centroid for stress
+            #: data recovery.
+            c1 = double_or_blank(card, 9, 'c1', 0.)
+            c2 = double_or_blank(card, 10, 'c2', 0.)
+            d1 = double_or_blank(card, 11, 'd1', 0.)
+            d2 = double_or_blank(card, 12, 'd2', 0.)
+            e1 = double_or_blank(card, 13, 'e1', 0.)
+            e2 = double_or_blank(card, 14, 'e2', 0.)
+            f1 = double_or_blank(card, 15, 'f1', 0.)
+            f2 = double_or_blank(card, 16, 'f2', 0.)
 
-                #: Offset of the geometric centroid in a direction perpendicular
-                #: to the plane of points GA and GB and vector v
-                self.zc = double(card, 21, 'zc')
+            # line 3
+            #: Shear stiffness factor K in K*A*G for plane 1.
+            k1 = double_or_blank(card, 17, 'k1')
+            #: Shear stiffness factor K in K*A*G for plane 2.
+            k2 = double_or_blank(card, 18, 'k2')
 
-                #: Radial offset of the neutral axis from the geometric
-                #: centroid, positive is toward the center of curvature
-                self.deltaN = double(card, 22, 'deltaN')
+            #: Nonstructural mass per unit length.
+            nsm = double_or_blank(card, 19, 'nsm', 0.)
 
-            elif isinstance(value3, integer_types):  # alternate form
-                self.beamType = 2
-                #: Flag selecting the flexibility and stress intensification
-                #: factors. See Remark 3. (Integer = 1, 2, or 3)
-                self.fsi = integer(card, 3, 'fsi')
-                assert self.fsi in [1, 2, 3]
+            #: Radial offset of the geometric centroid from points GA and GB.
+            rc = double_or_blank(card, 20, 'rc', 0.)
 
+            #: Offset of the geometric centroid in a direction perpendicular
+            #: to the plane of points GA and GB and vector v
+            zc = double_or_blank(card, 21, 'zc', 0.)
+
+            #: Radial offset of the neutral axis from the geometric
+            #: centroid, positive is toward the center of curvature
+            delta_n = double_or_blank(card, 22, 'delta_n', 0.)
+
+        elif isinstance(value3, integer_types):  # alternate form
+            beam_type = 2
+            #: Flag selecting the flexibility and stress intensification
+            #: factors. See Remark 3. (Integer = 1, 2, or 3)
+            fsi = integer(card, 3, 'fsi')
+            if fsi in [1, 2, 3]:
+                # assuming MSC
                 #: Mean cross-sectional radius of the curved pipe
-                self.rm = double(card, 4, 'rm')
+                rm = double(card, 4, 'rm')
 
                 #: Wall thickness of the curved pipe
-                self.t = double(card, 5, 't')
+                t = double(card, 5, 't')
 
                 #: Internal pressure
-                self.p = double(card, 6, 'p')
+                p = double(card, 6, 'p')
 
                 # line3
                 # Non-structural mass :math:`nsm`
-                self.nsm = double(card, 11, 'nsm')
-                self.rc = double(card, 12, 'rc')
-                self.zc = double(card, 13, 'zc')
+                nsm = double_or_blank(card, 11, 'nsm', 0.)
+                rc = double_or_blank(card, 12, 'rc', 0.)
+                zc = double_or_blank(card, 13, 'zc', 0.)
+            elif fsi in [4, 5, 6]:
+                # Non-structural mass :math:`nsm`
+                nsm = double_or_blank(card, 11, 'nsm', 0.)
+                rc = double_or_blank(card, 12, 'rc', 0.)
+                zc = double_or_blank(card, 13, 'zc', 0.)
+
+                sacl = double_or_blank(card, 9, 'sacl')
+                alpha = double_or_blank(card, 10, 'alpha', 0.)
+                flange = integer_or_blank(card, 15, 'flange', 0)
+                kx = double_or_blank(card, 18, 'kx', 1.0)
+                ky = double_or_blank(card, 19, 'ky', 1.0)
+                kz = double_or_blank(card, 20, 'kz', 1.0)
+                sy = double_or_blank(card, 22, 'sy', 1.0)
+                sz = double_or_blank(card, 23, 'sz', 1.0)
             else:
-                raise RuntimeError('Area/FSI on CBEND must be defined...')
-
-            #: Bend radius of the line of centroids
-            self.rb = double_or_blank(card, 7, 'rb')
-
-            #: Arc angle :math:`\theta_B` of element  (optional)
-            self.thetab = double_or_blank(card, 8, 'thetab')
-            assert len(card) <= 23, 'len(PBEND card) = %i\ncard=%s' % (len(card), card)
-
+                assert fsi in [1, 2, 3, 4, 5, 6], 'pid=%s fsi=%s\ncard:%s' % (pid, fsi, card)
         else:
-            raise NotImplementedError(data)
+            raise RuntimeError('Area/FSI on CBEND must be defined...')
+        assert fsi in [0, 1, 2, 3, 4, 5, 6], 'pid=%s fsi=%s\ncard:%s' % (pid, fsi, card)
+
+        #: Bend radius of the line of centroids
+        rb = double_or_blank(card, 7, 'rb')
+
+        #: Arc angle :math:`\theta_B` of element  (optional)
+        theta_b = double_or_blank(card, 8, 'thetab')
+        assert len(card) <= 23, 'len(PBEND card) = %i\ncard=%s' % (len(card), card)
+        return PBEND(pid, mid, beam_type, A, i1, i2, j, c1, c2, d1, d2,
+                     e1, e2, f1, f2, k1, k2, nsm,
+                     rc, zc, delta_n, fsi, rm, t,
+                     p, rb, theta_b, comment=comment)
 
     #def Nsm(self):
         #""".. warning:: nsm field not supported fully on PBEND card"""
@@ -1702,18 +1802,21 @@ class PBEND(LineProperty):
         self.mid = self.Mid()
         del self.mid_ref
 
+    def raw_fields(self):
+        return self.repr_fields()
+
     def repr_fields(self):
         list_fields = ['PBEND', self.pid, self.Mid(), ]  # other
-        if self.beamType == 1:
+        if self.beam_type == 1:
             list_fields += [self.A, self.i1, self.i2, self.j, self.rb,
-                            self.thetab, self.c1, self.c2, self.d1, self.d2,
+                            self.theta_b, self.c1, self.c2, self.d1, self.d2,
                             self.e1, self.e2, self.f1, self.f2, self.k1, self.k2,
-                            self.nsm, self.rc, self.zc, self.deltaN]
-        elif self.beamType == 2:
+                            self.nsm, self.rc, self.zc, self.delta_n]
+        elif self.beam_type == 2:
             list_fields += [self.fsi, self.rm, self.t, self.p, self.rb,
-                            self.thetab, None, None, self.nsm, self.rc, self.zc]
+                            self.theta_b, None, None, self.nsm, self.rc, self.zc]
         else:
-            raise ValueError('only beamType=1 and 2 supported')
+            raise ValueError('only beam_type=1 and 2 supported')
         return list_fields
 
     def write_card(self, size=8, is_double=False):

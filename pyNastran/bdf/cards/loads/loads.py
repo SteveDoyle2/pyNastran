@@ -349,6 +349,20 @@ class DAREA(BaseCard):
     type = 'DAREA'
 
     def __init__(self, sid, p, c, scale, comment=''):
+        """
+        Creates a DAREA card
+
+        Parameters
+        ----------
+        sid : int
+            darea id
+        Pi : int
+            GRID, EPOINT, SPOINT id
+        c : str
+            Component number. (0-6; 0-EPOINT/SPOINT; 1-6 GRID)
+        scale : float
+            Scale (area) factor
+        """
         self.sid = sid
         self.p = p
         self.c = c
@@ -684,25 +698,25 @@ class RFORCE(Load):
             del self.nid_ref
         del self.cid_ref
 
-    def Nid(self):
+    @property
+    def node_id(self):
         if isinstance(self.nid, integer_types):
             return self.nid
         return self.nid_ref.nid
+
+    def Nid(self):
+        return self.node_id
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid_ref.cid
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['RFORCE', self.sid, self.Nid(), self.Cid(), self.scale,
+        list_fields = ['RFORCE', self.sid, self.node_id, self.Cid(), self.scale,
                        self.r1, self.r2, self.r3, self.method, self.racc,
                        self.mb, self.idrf]
         return list_fields
@@ -712,7 +726,7 @@ class RFORCE(Load):
         racc = set_blank_if_default(self.racc, 0.)
         mb = set_blank_if_default(self.mb, 0)
         idrf = set_blank_if_default(self.idrf, 0)
-        list_fields = ['RFORCE', self.sid, self.Nid(), self.Cid(), self.scale,
+        list_fields = ['RFORCE', self.sid, self.node_id, self.Cid(), self.scale,
                        self.r1, self.r2, self.r3, self.method, racc,
                        mb, idrf]
         return list_fields
@@ -834,16 +848,20 @@ class RFORCE1(Load):
         return self.cross_reference(model)
 
     def uncross_reference(self):
-        self.nid = self.Nid()
+        self.nid = self.node_id
         self.cid = self.Cid()
         if self.nid != 0:
             del self.nid_ref
         del self.cid_ref
 
-    def Nid(self):
+    @property
+    def node_id(self):
         if isinstance(self.nid, integer_types):
             return self.nid
         return self.nid_ref.nid
+
+    def Nid(self):
+        return self.node_id
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -851,7 +869,7 @@ class RFORCE1(Load):
         return self.cid_ref.cid
 
     def raw_fields(self):
-        list_fields = ['RFORCE1', self.sid, self.Nid(), self.Cid(), self.scale,
+        list_fields = ['RFORCE1', self.sid, self.node_id, self.Cid(), self.scale,
                        self.r1, self.r2, self.r3, self.method, self.racc,
                        self.mb, self.group_id]
         return list_fields

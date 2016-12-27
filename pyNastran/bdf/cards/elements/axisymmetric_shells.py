@@ -70,7 +70,7 @@ class CTRAX3(TriShell):
             integer_or_blank(card, 5, 'n3'),
             ]
         theta = integer_double_or_blank(card, 6, 'theta', 0.0)
-        assert len(card) <= 6, 'len(CTRAX3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, 'len(CTRAX3 card) = %i\ncard=%s' % (len(card), card)
         return CTRAX3(eid, pid, nids, theta=theta, comment=comment)
 
     def _verify(self, xref=True):
@@ -896,7 +896,7 @@ class CQUADX8(QuadShell):
             integer_or_blank(card, 10, 'n8'),
         ]
         theta = integer_double_or_blank(card, 11, 'theta', 0.)
-        assert len(card) <= 11, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, 'len(CQUADX8 card) = %i\ncard=%s' % (len(card), card)
         return CQUADX8(eid, pid, nids, theta=theta, comment=comment)
 
     def cross_reference(self, model):

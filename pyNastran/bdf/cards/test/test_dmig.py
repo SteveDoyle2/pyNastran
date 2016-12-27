@@ -4,8 +4,9 @@ import unittest
 import os
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, DMIG, read_bdf
+from pyNastran.bdf.bdf import DMI, DMIG
 
-from numpy import array, array_equal, sqrt, sin, cos, radians
+from numpy import array, array_equal, sin, cos, radians
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -66,14 +67,14 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['IMAG'].get_matrix(is_sparse=False)
 
-        IMAG_actual, rows_reversed, cols_reversed = out
+        imag_actual, rows_reversed, cols_reversed = out
         #print "---IMAG_actual---\n", IMAG_actual
-        IMAG_expected_real = [
+        imag_expected_real = [
             [1.0, 0.5, 0.25],
             [0.0, 2.0, 0.75],
             [0.0, 0.0, 3.0],
         ]
-        IMAG_expected_imag = [
+        imag_expected_imag = [
             [1.1, 0.51, 0.251],
             [0.0, 2.1, 0.751],
             [0.0, 0.0, 3.1],
@@ -82,8 +83,8 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
-        IMAG_expected = array(IMAG_expected_real) + array(IMAG_expected_imag)*1j
-        self.assertTrue(array_equal(IMAG_expected, IMAG_actual))
+        imag_expected = array(imag_expected_real) + array(imag_expected_imag)*1j
+        self.assertTrue(array_equal(imag_expected, imag_actual))
         a_matrix.get_matrix()
 
     def test_dmig_4(self):
@@ -92,14 +93,14 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['IMAGS'].get_matrix(is_sparse=False)
-        IMAGS_actual, rows_reversed, cols_reversed = out
-        #print "---IMAGS_actual---\n", IMAGS_actual
-        IMAGS_expected_real = [
+        imags_actual, rows_reversed, cols_reversed = out
+        #print("---imag_actual---\n", imag_actual)
+        imags_expected_real = [
             [1.0, 0.5, 0.25],
             [0.5, 2.0, 0.75],
             [0.25, 0.75, 3.0],
         ]
-        IMAGS_expected_imag = [
+        imags_expected_imag = [
             [1.1, 0.51, 0.251],
             [0.51, 2.1, 0.751],
             [0.251, 0.751, 3.1],
@@ -108,11 +109,11 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
-        IMAGS_expected = array(IMAGS_expected_real) + array(IMAGS_expected_imag)*1j
-        msg = '\n%s_actual\n%s\n\n----' % ('IMAGS', IMAGS_actual)
-        msg += '\n%s_expected\n%s\n----' % ('IMAGS', IMAGS_expected)
-        msg += '\n%s_delta\n%s\n----' % ('IMAGS', IMAGS_actual-IMAGS_expected)
-        self.assertTrue(array_equal(IMAGS_expected, IMAGS_actual), msg)
+        imags_expected = array(imags_expected_real) + array(imags_expected_imag)*1j
+        msg = '\n%s_actual\n%s\n\n----' % ('IMAGS', imags_actual)
+        msg += '\n%s_expected\n%s\n----' % ('IMAGS', imags_expected)
+        msg += '\n%s_delta\n%s\n----' % ('IMAGS', imags_actual-imags_expected)
+        self.assertTrue(array_equal(imags_expected, imags_actual), msg)
         a_matrix.get_matrix()
 
     def test_dmig_5(self):
@@ -121,8 +122,8 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['POLE'].get_matrix(is_sparse=False)
 
-        POLE_actual, rows_reversed, cols_reversed = out
-        #print "---POLE_actual---\n", POLE_actual
+        pole_actual, rows_reversed, cols_reversed = out
+        #print("---pole_actual---\n", pole_actual)
         mag_expected = array([
             [1.0, 4.0, 5.0],
             [0.0, 2.0, 6.0],
@@ -135,12 +136,12 @@ class TestDMIG(unittest.TestCase):
 
         A_expected = mag_expected * cos(radians(45))
         B_expected = mag_expected * sin(radians(45))
-        POLE_expected = A_expected + B_expected * 1j
+        pole_expected = A_expected + B_expected * 1j
 
-        msg = '\n%s_actual\n%s\n\n----' % ('POLE', POLE_actual)
-        msg += '\n%s_expected\n%s\n----' % ('POLE', POLE_expected)
-        msg += '\n%s_delta\n%s\n----' % ('POLE', POLE_actual-POLE_expected)
-        self.assertTrue(array_equal(POLE_expected, POLE_actual), msg)
+        msg = '\n%s_actual\n%s\n\n----' % ('POLE', pole_actual)
+        msg += '\n%s_expected\n%s\n----' % ('POLE', pole_expected)
+        msg += '\n%s_delta\n%s\n----' % ('POLE', pole_actual-pole_expected)
+        self.assertTrue(array_equal(pole_expected, pole_actual), msg)
         a_matrix.get_matrix()
 
     def test_dmig_06(self):
@@ -150,7 +151,7 @@ class TestDMIG(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = DMIG(card)
+        card = DMIG.add_card(card)
         card.write_card(size, 'dummy')
         #card.rawFields()
 
@@ -239,7 +240,19 @@ class TestDMIG(unittest.TestCase):
         assert list(sorted(vax_dict_col)) == list(sorted(vax_dict_col_expected)), 'vax_dict_col=%s vax_dict_col_expected=%s' % (vax_dict_col, vax_dict_col_expected)
         assert list(sorted(vax_dict_row)) == list(sorted(vax_dict_row_expected)), 'vax_dict_row=%s vax_dict_row_expected=%s' % (vax_dict_row, vax_dict_row_expected)
 
+
     def test_dmi_01(self):
+        lines = ['DMI,Q,0,6,1,0,,4,4']
+        model = BDF(debug=False)
+        card = model.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = DMI.add_card(card)
+        card.write_card(size, 'dummy')
+        #card.rawFields()
+
+    def test_dmi_02(self):
         data = """
 DMI         W2GJ       0       2       1       0            1200       1
 DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382

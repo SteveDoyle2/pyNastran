@@ -23,56 +23,57 @@ class NastranMatrix(BaseCard):
     """
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, name, ifo, tin, tout, polar, ncols,
+                 GCj, GCi, Real, Complex, comment=''):
         if comment:
             self.comment = comment
-        #self.ifo = ifo
-        #self.tin = tin
-        #self.tout = tout
-        #self.polar = polar
-        #self.ncols = ncols
-        #self.GCj = GCj
-        #self.GCi = GCi
-        #self.Real = Real
-        #if self.is_complex:
-            #self.Complex = []
-
-    #def add_card_init(self, card, data, comment=''):
-        if card is not None:
-            self.name = string(card, 1, 'name')
-            #zero
-
-            #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
-            self.ifo = integer(card, 3, 'ifo')
-            #: 1-Real, Single Precision; 2=Real,Double Precision;
-            #  3=Complex, Single; 4=Complex, Double
-            self.tin = integer(card, 4, 'tin')
-            #: 0-Set by cell precision
-            self.tout = integer_or_blank(card, 5, 'tout', 0)
-
-            #: Input format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
-            #: Integer > 0 indicates amplitude, phase format.)
-            self.polar = integer_or_blank(card, 6, 'polar', 0)
-            if self.ifo == 1: # square
-                self.ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % (self.ifo))
-            elif self.ifo == 6: # symmetric
-                self.ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % (self.ifo))
-            elif self.ifo in [2, 9]: # rectangular
-                self.ncols = integer(card, 8, 'ifo=%s; ncol' % (self.ifo))
-            else:
-                # technically right, but nulling this will fix bad decks
-                #self.ncols = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
-                raise NotImplementedError('self.ifo=%s is not supported' % self.ifo)
-        else:
-            raise NotImplementedError(data)
-
-        self.GCj = []
-        self.GCi = []
-        self.Real = []
+        self.name = name
+        self.ifo = ifo
+        self.tin = tin
+        self.tout = tout
+        self.polar = polar
+        self.ncols = ncols
+        self.GCj = GCj
+        self.GCi = GCi
+        self.Real = Real
         if self.is_complex:
-            self.Complex = []
-        assert isinstance(self.ifo, integer_types), 'ifo=%r type=%s' % (self.ifo, type(self.ifo))
-        assert not isinstance(self.ifo, bool), 'ifo=%r type=%s' % (self.ifo, type(self.ifo))
+            self.Complex = Complex
+        assert isinstance(ifo, integer_types), 'ifo=%r type=%s' % (ifo, type(ifo))
+        assert not isinstance(ifo, bool), 'ifo=%r type=%s' % (ifo, type(ifo))
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
+        #zero
+
+        #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
+        ifo = integer(card, 3, 'ifo')
+        #: 1-Real, Single Precision; 2=Real,Double Precision;
+        #  3=Complex, Single; 4=Complex, Double
+        tin = integer(card, 4, 'tin')
+        #: 0-Set by cell precision
+        tout = integer_or_blank(card, 5, 'tout', 0)
+
+        #: Input format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
+        #: Integer > 0 indicates amplitude, phase format.)
+        polar = integer_or_blank(card, 6, 'polar', 0)
+        if ifo == 1: # square
+            ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % (ifo))
+        elif ifo == 6: # symmetric
+            ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % (ifo))
+        elif ifo in [2, 9]: # rectangular
+            ncols = integer(card, 8, 'ifo=%s; ncol' % (ifo))
+        else:
+            # technically right, but nulling this will fix bad decks
+            #self.ncols = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
+            raise NotImplementedError('ifo=%s is not supported' % ifo)
+
+        GCj = []
+        GCi = []
+        Real = []
+        Complex = []
+        return cls(name, ifo, tin, tout, polar, ncols,
+                   GCj, GCi, Real, Complex, comment=comment)
 
     @property
     def matrix_type(self):
@@ -131,10 +132,10 @@ class NastranMatrix(BaseCard):
         comm = 'K_Mtx=ASSE_MATRICE(MATR_ELEM=ElMtx_K,NUME_DDL=%s,);'
         return comm
 
-    def _add_column_uaccel(self, card=None, data=None, comment=''):
+    def _add_column_uaccel(self, comment=''):
         raise NotImplementedError('UACCEL')
 
-    def _add_column(self, card=None, data=None, comment=''):
+    def _add_column(self, card, comment=''):
         if comment:
             if hasattr(self, '_comment'):
                 self.comment += comment
@@ -143,7 +144,7 @@ class NastranMatrix(BaseCard):
 
         name = string(card, 1, 'name')
         if name == 'UACCEL':
-            return  self._add_column_uaccel(card=None, data=None)
+            return  self._add_column_uaccel()
 
         Gj = integer(card, 2, 'Gj')
         # Cj = integer(card, 3, 'Cj')
@@ -732,7 +733,7 @@ class DMIG_UACCEL(BaseCard):
     def add_card(cls, card, comment=''):
         tin = integer(card, 4, 'tin')
         ncol = integer_or_blank(card, 8, 'ncol')
-        return DMIG_UACCEL(tin, ncol)
+        return DMIG_UACCEL(tin, ncol, comment=comment)
 
     def _add_column(self, card, comment=''):
         load_seq = integer(card, 2, 'load_seq')
@@ -797,26 +798,22 @@ class DMIG(NastranMatrix):
     The matrix is defined by a single header entry and one or more column
     entries. A column entry is required for each column with nonzero elements.
 
-    +--------+-------+-------+-----+-----+------+-------+----+------+
-    |   1    |   2   |   3   |  4  |  5  |   6  |   7   | 8  |  9   |
-    +========+=======+=======+=====+=====+======+=======+====+======+
-    | DMIG   |  NAME |   0   | IFO | TIN | TOUT | POLAR |    | NCOL |
-    +--------+-------+-------+-----+-----+------+-------+----+------+
-    | DMIG   |  NAME |   GJ  |  CJ |     | G1   |  C1   | A1 |  B1  |
-    +--------+-------+-------+-----+-----+------+-------+----+------+
-    |        |  G2   |   C2  | A2  |  B2 |      |       |    |      |
-    +--------+-------+-------+-----+-----+------+-------+----+------+
+    +------+------+----+-----+-----+------+-------+----+------+
+    |   1  |  2   | 3  |  4  |  5  |   6  |   7   | 8  |  9   |
+    +======+======+====+=====+=====+======+=======+====+======+
+    | DMIG | NAME | 0  | IFO | TIN | TOUT | POLAR |    | NCOL |
+    +------+------+----+-----+-----+------+-------+----+------+
+    | DMIG | NAME | GJ | CJ  |     |  G1  |  C1   | A1 |  B1  |
+    +------+------+----+-----+-----+------+-------+----+------+
+    |      |  G2  | C2 | A2  |  B2 |      |       |    |      |
+    +------+------+----+-----+-----+------+-------+----+------+
     """
     type = 'DMIG'
 
-    def __init__(self, card=None, data=None, comment=''):
-        NastranMatrix.__init__(self, card, data)
-        if comment:
-            self.comment = comment
-        if card:
-            assert len(card) <= 9, 'len(DMIG card) = %i\ncard=%s' % (len(card), card)
-        else:
-            raise NotImplementedError(data)
+    def __init__(self, name, ifo, tin, tout, polar, ncols,
+                 GCj, GCi, Real, Complex, comment=''):
+        NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
+                               GCj, GCi, Real, Complex, comment=comment)
 
 
 class DMIJ(NastranMatrix):
@@ -833,14 +830,10 @@ class DMIJ(NastranMatrix):
     """
     type = 'DMIJ'
 
-    def __init__(self, card=None, data=None, comment=''):
-        NastranMatrix.__init__(self, card, data)
-        if comment:
-            self.comment = comment
-        if card:
-            assert len(card) <= 9, 'len(DMIJ card) = %i\ncard=%s' % (len(card), card)
-        else:
-            raise NotImplementedError(data)
+    def __init__(self, name, ifo, tin, tout, polar, ncols,
+                 GCj, GCi, Real, Complex, comment=''):
+        NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
+                               GCj, GCi, Real, Complex, comment=comment)
 
 
 class DMIJI(NastranMatrix):
@@ -856,14 +849,10 @@ class DMIJI(NastranMatrix):
     """
     type = 'DMIJI'
 
-    def __init__(self, card=None, data=None, comment=''):
-        NastranMatrix.__init__(self, card, data)
-        if comment:
-            self.comment = comment
-        if card:
-            assert len(card) <= 9, 'len(DMIJI card) = %i\ncard=%s' % (len(card), card)
-        else:
-            raise NotImplementedError(data)
+    def __init__(self, name, ifo, tin, tout, polar, ncols,
+                 GCj, GCi, Real, Complex, comment=''):
+        NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
+                               GCj, GCi, Real, Complex, comment=comment)
 
 
 class DMIK(NastranMatrix):
@@ -877,62 +866,72 @@ class DMIK(NastranMatrix):
     """
     type = 'DMIK'
 
-    def __init__(self, card=None, data=None, comment=''):
-        NastranMatrix.__init__(self, card, data)
-        if comment:
-            self.comment = comment
-        if card:
-            assert len(card) <= 9, 'len(DMIK card) = %i\ncard=%s' % (len(card), card)
-        else:
-            raise NotImplementedError(data)
+    def __init__(self, name, ifo, tin, tout, polar, ncols,
+                 GCj, GCi, Real, Complex, comment=''):
+        NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
+                               GCj, GCi, Real, Complex, comment=comment)
 
 
 class DMI(NastranMatrix):
     type = 'DMI'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, name, form, tin, tout, nrows, ncols,
+                 GCj, GCi, Real, Complex, comment=''):
         """
-        +--------+-------+-------+------+---------+----------+-----------+-----------+------+
-        |   1    |   2   |   3   |   4  |    5    |    6     |     7     | 8         |  9   |
-        +========+=======+=======+======+=========+==========+===========+===========+======+
-        | DMI    |  NAME |   0   | FORM |   TIN   |   TOUT   |           |     M     |  N   |
-        +--------+-------+-------+------+---------+----------+-----------+-----------+------+
-        | DMI    |  NAME |   J   |  I1  | A(I1,J) |  A(I1,J) | A(I1+1,J) | A(I1+2,J) | etc. |
-        +--------+-------+-------+------+---------+----------+-----------+-----------+------+
-        |        |  I2   |  etc. |      |         |          |           |           |      |
-        +--------+-------+-------+------+---------+----------+-----------+-----------+------+
+        +------+-------+------+------+---------+----------+-----------+-----------+------+
+        |  1   |   2   |  3   |   4  |    5    |    6     |     7     | 8         |  9   |
+        +======+=======+======+======+=========+==========+===========+===========+======+
+        | DMI  |  NAME |  0   | FORM |   TIN   |   TOUT   |           |     M     |  N   |
+        +------+-------+------+------+---------+----------+-----------+-----------+------+
+        | DMI  |  NAME |  J   |  I1  | A(I1,J) |  A(I1,J) | A(I1+1,J) | A(I1+2,J) | etc. |
+        +------+-------+------+------+---------+----------+-----------+-----------+------+
+        |      |  I2   | etc. |      |         |          |           |           |      |
+        +------+-------+------+------+---------+----------+-----------+-----------+------+
         """
+        #NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
+                               #GCj, GCi, Real, Complex, comment='')
         if comment:
             self.comment = comment
-        if card:
-            self.name = string(card, 1, 'name')
-            #zero
-
-            #: Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
-            #: 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
-            #: 6=Symmetric; 8=Identity (m=nRows, n=m)
-            self.form = integer(card, 3, 'form')
-
-            #: 1-Real, Single Precision; 2=Real,Double Precision;
-            #: 3=Complex, Single; 4=Complex, Double
-            self.tin = integer(card, 4, 'tin')
-
-            #: 0-Set by cell precision
-            self.tout = integer_or_blank(card, 5, 'tout', 0)
-
-            self.nrows = integer(card, 7, 'nrows')
-            self.ncols = integer(card, 8, 'ncols')
-
-            assert len(card) == 9, 'len(DMI card) = %i\ncard=%s' % (len(card), card)
-        else:
-            raise NotImplementedError(data)
-
-        self.GCj = []
-        self.GCi = []
-        self.Real = []
-
+        self.name = name
+        self.form = form
+        self.tin = tin
+        self.tout = tout
+        self.nrows = nrows
+        self.ncols = ncols
+        self.GCi = GCi
+        self.GCj = GCj
+        self.Real = Real
         if self.is_complex:
-            self.Complex = []
+            self.Complex = Complex
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
+        #zero
+
+        #: Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
+        #: 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
+        #: 6=Symmetric; 8=Identity (m=nRows, n=m)
+        form = integer(card, 3, 'form')
+
+        #: 1-Real, Single Precision; 2=Real,Double Precision;
+        #: 3=Complex, Single; 4=Complex, Double
+        tin = integer(card, 4, 'tin')
+
+        #: 0-Set by cell precision
+        tout = integer_or_blank(card, 5, 'tout', 0)
+
+        nrows = integer(card, 7, 'nrows')
+        ncols = integer(card, 8, 'ncols')
+
+        assert len(card) == 9, 'len(DMI card) = %i\ncard=%s' % (len(card), card)
+
+        GCj = []
+        GCi = []
+        Real = []
+        Complex = []
+        return DMI(name, form, tin, tout, nrows, ncols,
+                   GCj, GCi, Real, Complex, comment=comment)
 
     def finalize(self):
         self.GCi = np.asarray(self.GCi)
@@ -975,15 +974,17 @@ class DMI(NastranMatrix):
             #raise NotImplementedError('form=%r nrows=%s ncols=%s' % (self.form, self.nrows, self.ncols))
         #return ifo
 
-    def _add_column(self, card=None, data=None, comment=''):
+    def _add_column(self, card, comment=''):
         """
         .. todo:: support comment
         """
-        if not self.is_complex:  # real
+        if self.is_complex:
+            return self._read_complex(card)
+        else:
             return self._read_real(card)
-        raise NotImplementedError('complex DMI')
 
     def _read_real(self, card):
+        """reads a real DMI column"""
         # column number
         j = integer(card, 2, 'icol')
 
@@ -1010,8 +1011,8 @@ class DMI(NastranMatrix):
                         i1 += 1
                     else:
                         real_value = self.Real[-1]
-                        endI = fields[i + 1]
-                        for ii in range(i1, endI + 1):
+                        end_i = fields[i + 1]
+                        for ii in range(i1, end_i + 1):
                             #print('adding j=%s i1=%s val=%s' % (j, ii, real_value))
                             self.GCj.append(j)
                             self.GCi.append(ii)
@@ -1019,35 +1020,37 @@ class DMI(NastranMatrix):
                         i += 1
                         is_done_reading_floats = True
 
-    #def _read_complex(self, card):
+    def _read_complex(self, card):
+        """reads a complex DMI column"""
         #msg = 'complex matrices not supported in the DMI reader...'
         #raise NotImplementedError(msg)
-        ## column number
-        #j = integer(card, 2, 'icol')
-
-        ## counter
-        #i = 0
-        #fields = [interpret_value(field) for field in card[3:]]
-
-        ## Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
-        #while i < len(fields):
-            #i1 = fields[i]
-            #i += 1
-            #isDoneReadingFloats = False
-            #while not isDoneReadingFloats and i < len(fields):
-                ##print("i=%s len(fields)=%s" %(i, len(fields)))
-                #realValue = fields[i]
-                #if isinstance(floatValue, integer_types):
-                    #isDoneReadingFloats = True
-                #elif isinstance(realValue, float):
-                    #complexValue = fields[i + 1]
-                    #self.GCj.append(j)
-                    #self.GCi.append(i1)
-                    #self.Real.append(realValue)
-                    #self.Complex.append(complexValue)
-                    #i += 2
-                #else:
-                      #raise NotImplementedError()
+        # column number
+        j = integer(card, 2, 'icol')
+        # counter
+        i = 0
+        fields = [interpret_value(field) for field in card[3:]]
+        # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
+        while i < len(fields):
+            i1 = fields[i]
+            assert isinstance(i1, int), card
+            i += 1
+            is_done_reading_floats = False
+            while not is_done_reading_floats and i < len(fields):
+                value = fields[i]
+                #print("i=%s len(fields)=%s value=%s" % (
+                    #i, len(fields), value))
+                if isinstance(value, integer_types):
+                    is_done_reading_floats = True
+                elif isinstance(value, float):
+                    complex_value = fields[i + 1]
+                    assert isinstance(complex_value, float), card
+                    self.GCj.append(j)
+                    self.GCi.append(i1)
+                    self.Real.append(value)
+                    self.Complex.append(complex_value)
+                    i += 2
+                else:
+                    raise NotImplementedError()
 
     def rename(self, new_name):
         self.name = new_name
@@ -1121,15 +1124,23 @@ class DMI(NastranMatrix):
 
             # will always write the first one
             gci_last = -1
-            for gci, real, complexi in zip(gcis[isort], reals[isort], complexs[isort]):
-                if gci != gci_last + 1:
-                    pass
-                else:
-                    list_fields.append(gci)
-                list_fields.append(real)
-                list_fields.append(complexi)
-                gci_last = gci
-            msg += func(list_fields)
+            #print('gcis=%s \nreals=%s \ncomplexs=%s' % (
+                #gcis[isort], reals[isort], complexs[isort]))
+            if max(gcis) == min(gcis):
+                list_fields += [gcis[0]]
+                for reali, complexi in zip(reals, complexs):
+                    list_fields.extend([reali, complexi])
+                msg += func(list_fields)
+            else:
+                for gci, real, complexi in zip(gcis[isort], reals[isort], complexs[isort]):
+                    if gci != gci_last + 1:
+                        pass
+                    else:
+                        list_fields.append(gci)
+                    list_fields.append(real)
+                    list_fields.append(complexi)
+                    gci_last = gci
+                msg += func(list_fields)
         return msg
 
     def write_card_16(self):

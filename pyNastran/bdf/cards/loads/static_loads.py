@@ -1221,6 +1221,8 @@ class MOMENT(Moment):
     scale factor and a vector that determines the direction.::
 
     +--------+-----+---+-----+-----+-----+-----+-----+
+    |   1    |  2  | 3 |  4  |  5  |  6  |  7  |  8  |
+    +========+=====+===+=====+=====+=====+=====+=====+
     | MOMENT | SID | G | CID |  M  |  N1 |  N2 |  N3 |
     +--------+-----+---+-----+-----+-----+-----+-----+
     | MOMENT |  2  | 5 |  6  | 2.9 | 0.0 | 1.0 | 0.0 |
@@ -2490,6 +2492,9 @@ class PLOAD4(Load):
 
 
 class PLOADX1(Load):
+    """
+    cid
+    """
     type = 'PLOADX1'
 
     def __init__(self, sid, eid, pa, pb, ga, gb, theta=0., comment=''):
@@ -2537,6 +2542,10 @@ class PLOADX1(Load):
         self.eid_ref = self.eid
         self.ga_ref = self.ga
         self.gb_ref = self.gb
+
+    @property
+    def nodes(self):
+        return [self.ga, self.gb]
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)

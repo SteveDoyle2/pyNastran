@@ -102,7 +102,7 @@ class CFAST(Element):
 
     @property
     def nodes(self):
-        return [self.ga, self.gb]
+        return [self.gs, self.ga, self.gb]
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -136,7 +136,7 @@ class CFAST(Element):
 
     @property
     def node_ids(self):
-        return [self.Ga(), self.Gb()]
+        return [self.Gs(), self.Ga(), self.Gb()]
 
     def repr_fields(self):
         return self.raw_fields()

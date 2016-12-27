@@ -10,7 +10,21 @@ from pyNastran.bdf.cards.bdf_sets import (
 )
 
 class TestSets(unittest.TestCase):
+
     def test_set1_01(self):
+        lines = ['SET1,    1100,    100,     101']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = SET1.add_card(card)
+        card.write_card(size, 'dummy')
+        card.raw_fields()
+
+        card2 = SET1(1100, [100, 101], is_skin=False, comment='')
+        card2.write_card(size, 'dummy')
+
+    def test_set1_02(self):
         """checks the SET1 card"""
         fields_blocks = [
             'SET1',
@@ -39,7 +53,7 @@ class TestSets(unittest.TestCase):
         self.assertEqual('SET1           a      1.       3       1       2       3       5       4\n'
                          '               6\n', msg3)
 
-    def test_set1_02(self):
+    def test_set1_03(self):
         """checks the SET1 card"""
         sid = 10
         ids = [1, 2, 3, 4, 5]

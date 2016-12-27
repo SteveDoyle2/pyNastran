@@ -61,7 +61,7 @@ from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
 from pyNastran.bdf.cards.elements.bars import CBAR, CBEAM3, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
-from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT  # PBEND
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
@@ -370,7 +370,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
             'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5',
-            'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', # 'PBEND',
+            'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
             'PBEAML', 'PBMSECT', # not fully supported
             # 'PBEAM3',
 
@@ -1072,6 +1072,8 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
                         bdf_file_obj.write('\n')
         else:
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
+            #for card in cards:
+                #print(card)
         self._parse_cards(cards, card_count)
 
         if self.values_to_skip:
@@ -1810,7 +1812,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
             #'PBEAM3' : (PBEAM3, self._add_property_object),
 
             'CBEND' : (CBEND, self._add_element_object),
-            #'PBEND' : (PBEND, self._add_property_object),
+            'PBEND' : (PBEND, self._add_property_object),
 
             'CTRIA3' : (CTRIA3, self._add_element_object),
             'CQUAD4' : (CQUAD4, self._add_element_object),
@@ -2285,7 +2287,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
         else:
             field2 = integer_or_string(card_obj, 2, 'flag')
             if field2 == 0:
-                card = DMIG(card_obj, comment=comment)
+                card = DMIG.add_card(card_obj, comment=comment)
                 self._add_dmig_object(card)
             else:
                 self._dmig_temp[name].append((card_obj, comment))
@@ -2295,7 +2297,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
         #elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:
-            add_method(class_obj(card_obj, comment=comment))
+            add_method(class_obj.add_card(card_obj, comment=comment))
         else:
             name = string(card_obj, 1, 'name')
             self._dmig_temp[name].append((card_obj, comment))

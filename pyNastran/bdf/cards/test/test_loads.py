@@ -7,7 +7,6 @@ set_printoptions(suppress=True, precision=3)
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4
-from pyNastran.bdf.bdf import SET1, AESTAT, DMI, DMIG
 from pyNastran.op2.op2 import OP2
 
 bdf = BDF(debug=False)
@@ -452,7 +451,7 @@ class TestLoads(unittest.TestCase):
             load = model_b.loads[loadcase_id][0]
             elem = load.eid
 
-            msg = '%s%s\n' % (elem.nodes[0], elem.nodes[1])
+            #msg = '%s%s\n' % (elem.nodes[0], elem.nodes[1])
 
             f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
@@ -492,38 +491,6 @@ class TestLoads(unittest.TestCase):
         if fail:
             raise RuntimeError('incorrect loads')
 
-    def test_aestat_01(self):
-        lines = ['AESTAT  502     PITCH']
-        card = bdf.process_card(lines)
-        card = BDFCard(card)
-
-        size = 8
-        card = AESTAT.add_card(card)
-        card.write_card(size, 'dummy')
-        card.raw_fields()
-
-    def test_dmi_01(self):
-        lines = ['DMI,Q,0,6,1,0,,4,4']
-        card = bdf.process_card(lines)
-        card = BDFCard(card)
-
-        size = 8
-        card = DMI(card)
-        card.write_card(size, 'dummy')
-        #card.rawFields()
-
-    def test_set1_01(self):
-        lines = ['SET1,    1100,    100,     101']
-        card = bdf.process_card(lines)
-        card = BDFCard(card)
-
-        size = 8
-        card = SET1.add_card(card)
-        card.write_card(size, 'dummy')
-        card.raw_fields()
-
-        card2 = SET1(1100, [100, 101], is_skin=False, comment='')
-        card2.write_card(size, 'dummy')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

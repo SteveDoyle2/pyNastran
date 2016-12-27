@@ -1865,7 +1865,7 @@ class MATHE(HyperelasticMaterial):
     type = 'MATHE'
 
     def __init__(self, mid, model, bulk, rho, texp,
-                 mus, alphas, betas, comment=''):
+                 mus, alphas, betas, mooney, sussbat, comment=''):
         HyperelasticMaterial.__init__(self)
         if comment:
             self.comment = comment
@@ -1879,6 +1879,12 @@ class MATHE(HyperelasticMaterial):
         self.mus = mus
         self.alphas = alphas
         self.betas = betas # not used for ogden
+
+        # MOONEY
+        self.mooney = mooney
+
+        # SUSSBAT
+        self.sussbat = sussbat
 
     def validate(self):
         assert self.model in ['MOONEY', 'OGDEN', 'FOAM', 'ABOYCE', 'SUSSBAT'], 'model=%r' % self.model
@@ -1899,24 +1905,49 @@ class MATHE(HyperelasticMaterial):
         mus = []
         alphas = []
         betas = [] # unused for ogden
-        for iline in range(nlines):
-            ilinei = iline + 1
-            ifield = 8 + iline * 8
 
-            if model in ['OGDEN', 'FOAM']:
+        mooney = []
+        sussbat = []
+        if model in ['OGDEN', 'FOAM']:
+            for iline in range(nlines):
+                ilinei = iline + 1
+                ifield = 8 + iline * 8
+
                 mu = double_or_blank(card, ifield, 'mu%i' % ilinei, 0.)
                 alpha = double_or_blank(card, ifield + 1, 'alpha%i' % ilinei, 0.)
                 beta = double_or_blank(card, ifield + 2, 'beta%i' % ilinei, 0.)
                 mus.append(mu)
                 alphas.append(alpha)
                 betas.append(beta)
-            else:
-                raise NotImplementedError(model)
-        #print('nfields =', nfields)
+            #print('nfields =', nfields)
+        elif model == 'MOONEY':
+            c10 = double(card, 9, 'c10')
+            c01 = double(card, 10, 'c01')
+
+            c20 = double(card, 17, 'c20')
+            c11 = double(card, 18, 'c11')
+            c02 = double(card, 19, 'c02')
+
+            c30 = double(card, 25, 'c30')
+            c21 = double(card, 26, 'c21')
+            c12 = double(card, 27, 'c12')
+            c03 = double(card, 28, 'c03')
+            mooney = [
+                c10, c01,
+                c20, c11, c02,
+                c30, c21, c12, c03,
+            ]
+        elif model == 'SUSSBAT':
+            tab1 = integer(card, 9, 'tab1')
+            sstype = string_or_blank(card, 10, 'sstype', 'ENG')
+            relerr = double_or_blank(card, 11, 'relerr', 0.01)
+            sussbat = [tab1, sstype, relerr]
+        else:
+            raise NotImplementedError(model)
 
         #assert len(card) <= 10, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
         return MATHE(mid, model, bulk, rho, texp,
-                     mus, alphas, betas,
+                     mus, alphas, betas, mooney, sussbat,
                      comment=comment)
 
     def raw_fields(self):
@@ -1992,8 +2023,20 @@ class MATHE(HyperelasticMaterial):
                     list_fields[-5] = mu
                     list_fields[-4] = alpha
                     list_fields[-3] = beta
-        else:
-            raise NotImplementedError(self.model)
+        elif self.model == 'MOONEY':
+            (
+                c10, c01,
+                c20, c11, c02,
+                c30, c21, c12, c03
+            ) = self.mooney
+            list_fields += [
+                c10, c01, None, None, None, None, None, None,
+                c20, c11, c02, None, None, None, None, None,
+                c30, c21, c12, c03
+            ]
+        elif self.model == 'SUSSBAT':
+            (tab1, sstype, relerr) = self.sussbat
+            list_fields += [tab1, sstype, relerr]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

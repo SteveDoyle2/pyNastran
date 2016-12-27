@@ -7,10 +7,9 @@ from itertools import count
 from six.moves import zip
 from numpy import array, allclose
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, CBEAM, GRID
+from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM
 from pyNastran.bdf.field_writer_8 import print_card_8
 
-bdf = BDF(debug=False)
 class TestBeams(unittest.TestCase):
     def test_pbeam_01(self):
         lines = [
@@ -21,6 +20,7 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,1.1,    ,2.1,,0.21',
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
+        bdf = BDF(debug=False)
         card = bdf.process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
@@ -51,6 +51,7 @@ class TestBeams(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
     def test_pbeam_02(self):
+        bdf = BDF(debug=False)
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
             '     ,  , ,2.0,-4.0',
@@ -84,6 +85,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_03(self):
+        bdf = BDF(debug=False)
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
             '     ,  , ,2.0,-4.0',
@@ -109,6 +111,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_04(self):
+        bdf = BDF(debug=False)
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
             '     ,  , ,2.0,-4.0',

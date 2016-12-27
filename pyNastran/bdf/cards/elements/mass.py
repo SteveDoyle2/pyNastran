@@ -172,10 +172,6 @@ class CMASS1(PointMassElement):
         c = (p1 + p2) / f
         return c
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         g1 = self.G1()
@@ -211,12 +207,14 @@ class CMASS2(PointMassElement):
     Defines a scalar mass element without reference to a property entry.
 
     +--------+-----+-----+----+----+----+----+
-    | CMASS2 |  M  | PID | G1 | C1 | G2 | C2 |
+    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |
+    +========+=====+=====+====+====+====+====+
+    | CMASS2 | EID |  M  | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
     type = 'CMASS2'
     _field_map = {
-        1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
+        1: 'eid', 2:'mass', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
     }
 
     def __init__(self, eid, mass, g1, c1, g2, c2, comment=''):

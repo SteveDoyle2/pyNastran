@@ -340,16 +340,15 @@ class CHEXA8(SolidElement):
         =======
         >>> print element.faces
         """
-        faces = {}
         nodes = self.node_ids
-        node_ids = nodes
-        nnodes = len(nodes)
-        faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
-        faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]
-        faces[3] = [nodes[1], nodes[2], nodes[6], nodes[5]]
-        faces[4] = [nodes[2], nodes[3], nodes[7], nodes[6]]
-        faces[5] = [nodes[3], nodes[0], nodes[4], nodes[7]]
-        faces[6] = [nodes[4], nodes[5], nodes[6], nodes[7]]
+        faces = {
+            1 : [nodes[0], nodes[1], nodes[2], nodes[3]],
+            2 : [nodes[0], nodes[1], nodes[5], nodes[4]],
+            3 : [nodes[1], nodes[2], nodes[6], nodes[5]],
+            4 : [nodes[2], nodes[3], nodes[7], nodes[6]],
+            5 : [nodes[3], nodes[0], nodes[4], nodes[7]],
+            6 : [nodes[4], nodes[5], nodes[6], nodes[7]],
+        }
         return faces
 
     def _verify(self, xref=False):
@@ -577,17 +576,15 @@ class CHEXA20(SolidElement):
         =======
         >>> print element.faces
         """
-        faces = {}
-        nodes = self.node_ids
-        node_ids = nodes
-        nnodes = len(nodes)
-        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20 = node_ids
-        faces[1] = [n1, n2, n3, n4, n9, n10, n11, n12]
-        faces[2] = [n1, n2, n6, n5, n9, n18, n13, n17]
-        faces[3] = [n2, n3, n7, n6, n10, n19, n14, n18]
-        faces[4] = [n3, n4, n8, n7, n11, n10, n15, n19]
-        faces[5] = [n4, n1, n5, n8, n12, n17, n16, n20]
-        faces[6] = [n5, n6, n7, n8, n13, n14, n15, n16]
+        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20 = self.node_ids
+        faces = {
+            1 : [n1, n2, n3, n4, n9, n10, n11, n12],
+            2 : [n1, n2, n6, n5, n9, n18, n13, n17],
+            3 : [n2, n3, n7, n6, n10, n19, n14, n18],
+            4 : [n3, n4, n8, n7, n11, n10, n15, n19],
+            5 : [n4, n1, n5, n8, n12, n17, n16, n20],
+            6 : [n5, n6, n7, n8, n13, n14, n15, n16],
+        }
         return faces
 
     def get_edge_ids(self):
@@ -783,15 +780,14 @@ class CPENTA6(SolidElement):
         =======
         >>> print element.faces
         """
-        faces = {}
         nodes = self.node_ids
-        node_ids = nodes
-        nnodes = len(nodes)
-        faces[1] = [nodes[0], nodes[1], nodes[2]]
-        faces[2] = [nodes[3], nodes[4], nodes[5]]
-        faces[3] = [nodes[0], nodes[1], nodes[4], nodes[3]]
-        faces[4] = [nodes[1], nodes[2], nodes[5], nodes[4]]
-        faces[5] = [nodes[2], nodes[0], nodes[3], nodes[5]]
+        faces = {
+            1 : [nodes[0], nodes[1], nodes[2]],
+            2 : [nodes[3], nodes[4], nodes[5]],
+            3 : [nodes[0], nodes[1], nodes[4], nodes[3]],
+            4 : [nodes[1], nodes[2], nodes[5], nodes[4]],
+            5 : [nodes[2], nodes[0], nodes[3], nodes[5]],
+        }
         return faces
 
     def get_edge_ids(self):
@@ -1156,16 +1152,14 @@ class CPENTA15(SolidElement):
         =======
         >>> print element.faces
         """
-        faces = {}
-        nodes = self.node_ids
-        node_ids = nodes
-        nnodes = len(nodes)
-        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = node_ids
-        faces[1] = [n1, n2, n3, n7, n8, n9]
-        faces[2] = [n4, n5, n6, n10, n11, n12]
-        faces[3] = [n1, n2, n5, n4, n7, n14, n10, n13]
-        faces[4] = [n2, n3, n6, n5, n8, n15, n11, n14]
-        faces[5] = [n3, n1, n4, n6, n9, n13, n12, n15]
+        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = self.node_ids
+        faces = {
+            1 : [n1, n2, n3, n7, n8, n9],
+            2 : [n4, n5, n6, n10, n11, n12],
+            3 : [n1, n2, n5, n4, n7, n14, n10, n13],
+            4 : [n2, n3, n6, n5, n8, n15, n11, n14],
+            5 : [n3, n1, n4, n6, n9, n13, n12, n15],
+        }
         return faces
 
     def get_face(self, nid, nid_opposite):
@@ -1336,15 +1330,14 @@ class CPYRAM5(SolidElement):
         =======
         >>> print element.faces
         """
-        faces = {}
         nodes = self.node_ids
-        node_ids = nodes
-        nnodes = len(nodes)
-        faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
-        faces[2] = [nodes[0], nodes[1], nodes[4]]
-        faces[3] = [nodes[1], nodes[2], nodes[4]]
-        faces[4] = [nodes[2], nodes[3], nodes[4]]
-        faces[5] = [nodes[3], nodes[0], nodes[4]]
+        faces = {
+            1 : [nodes[0], nodes[1], nodes[2], nodes[3]],
+            2 : [nodes[0], nodes[1], nodes[4]],
+            3 : [nodes[1], nodes[2], nodes[4]],
+            4 : [nodes[2], nodes[3], nodes[4]],
+            5 : [nodes[3], nodes[0], nodes[4]],
+        }
         return faces
 
     def get_edge_ids(self):
@@ -1516,12 +1509,15 @@ class CPYRAM13(SolidElement):
         =======
         >>> print element.faces
         """
+        node_ids = self.node_ids
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13 = node_ids
-        faces[1] = [n1, n2, n3, n4, n6, n7, n8, n9]
-        faces[2] = [n1, n2, n5, n6, n11, n10]
-        faces[3] = [n2, n3, n5, n7, n12, n11]
-        faces[4] = [n3, n4, n5, n8, n13, n12]
-        faces[5] = [n4, n1, n5, n9, n10, n13]
+        faces = {
+            1 : [n1, n2, n3, n4, n6, n7, n8, n9],
+            2 : [n1, n2, n5, n6, n11, n10],
+            3 : [n2, n3, n5, n7, n12, n11],
+            4 : [n3, n4, n5, n8, n13, n12],
+            5 : [n4, n1, n5, n9, n10, n13],
+        }
         return faces
 
     def get_edge_ids(self):
@@ -1930,15 +1926,13 @@ class CTETRA10(SolidElement):
         =======
         >>> print element.faces
         """
-        faces = {}
-        nodes = self.node_ids
-        node_ids = nodes
-        nnodes = len(nodes)
-        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = node_ids
-        faces[1] = [n1, n2, n3, n5, n6, n7]  #More?
-        faces[2] = [n1, n2, n4, n5, n9, n8]
-        faces[3] = [n2, n3, n4, n6, n10, n9]
-        faces[4] = [n3, n1, n4, n7, n8, n10]
+        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = self.node_ids
+        faces = {
+            1 : [n1, n2, n3, n5, n6, n7],  #More?
+            2 : [n1, n2, n4, n5, n9, n8],
+            3 : [n2, n3, n4, n6, n10, n9],
+            4 : [n3, n1, n4, n7, n8, n10],
+        }
         return faces
 
     def get_edge_ids(self):

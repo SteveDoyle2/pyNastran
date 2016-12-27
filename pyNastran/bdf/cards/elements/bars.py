@@ -826,6 +826,17 @@ class CBEND(LineElement):
         assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
         return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
 
+    def getX_G0_defaults(self):
+        if self.g0 is not None:
+            return (self.g0, None, None)
+        else:
+            #print('x =', self.x)
+            #print('g0 =', self.g0)
+            #x1 = set_blank_if_default(self.x[0], 0.0)
+            #x2 = set_blank_if_default(self.x[1], 0.0)
+            #x3 = set_blank_if_default(self.x[2], 0.0)
+            return list(self.x)
+
     #def add_op2_data(self, data, comment=''):
         #if comment:
             # self.comment = comment
@@ -906,15 +917,6 @@ class CBEND(LineElement):
     def _verify(self, xref):
         edges = self.get_edge_ids()
 
-    def raw_fields(self):
-        (x1, x2, x3) = self.getX_G0_defaults()
-        list_fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
-                       x1, x2, x3, self.geom]
-        return list_fields
-
-    def repr_fields(self):
-        return self.raw_fields()
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -939,6 +941,15 @@ class CBEND(LineElement):
         self.gb = node_ids[1]
         self.pid = self.Pid()
         del self.ga_ref, self.gb_ref, self.pid_ref
+
+    def raw_fields(self):
+        (x1, x2, x3) = self.getX_G0_defaults()
+        list_fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
+                       x1, x2, x3, self.geom]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

@@ -42,6 +42,17 @@ class TestAero(unittest.TestCase):
      * PAERO1 / PAERO2 / PAERO3
      * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
     """
+
+    def test_aestat_1(self):
+        lines = ['AESTAT  502     PITCH']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = AESTAT.add_card(card)
+        card.write_card(size, 'dummy')
+        card.raw_fields()
+
     def test_aecomp_1(self):
         """checks the AECOMP card"""
         #sid = 10

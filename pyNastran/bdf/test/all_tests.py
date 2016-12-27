@@ -6,16 +6,18 @@ from pyNastran.bdf.test.bdf_unit_tests import TestBDF, TestBaseCard
 from pyNastran.bdf.test.test_case_control_deck import CaseControlTest
 
 from pyNastran.bdf.cards.test.all_tests import *
-from pyNastran.bdf.bdf_interface.test.test_dev_utils import DevUtils
 from pyNastran.bdf.mesh_utils.test_mesh_utils import TestMeshUtils
 from pyNastran.bdf.mesh_utils.test_convert import TestConvert
 
 # unit
 from pyNastran.bdf.test.unit.test_mass import TestMass
-from pyNastran.bdf.test.unit.test_assign_type import TestAssignType
 from pyNastran.bdf.test.unit.test_read_write import TestReadWrite
 from pyNastran.bdf.test.unit.test_sum_loads import TestLoadSum
 from pyNastran.bdf.test.test_openmdao import TestOpenMDAO
+
+# bdf_interface
+from pyNastran.bdf.bdf_interface.test.test_assign_type import TestAssignType
+from pyNastran.bdf.bdf_interface.test.test_dev_utils import DevUtils
 
 
 if __name__ == "__main__":  # pragma: no cover

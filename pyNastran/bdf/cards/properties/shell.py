@@ -1002,7 +1002,8 @@ class PLPLANE(ShellProperty):
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
         cid = integer_or_blank(card, 3, 'cid', 0)
         stress_strain_output_location = string_or_blank(card, 4, 'str', 'GRID')
-        return PLPLANE(pid, mid, cid, stress_strain_output_location,
+        return PLPLANE(pid, mid, cid=cid,
+                       stress_strain_output_location=stress_strain_output_location,
                        comment=comment)
 
     def cross_reference(self, model):
@@ -1054,7 +1055,7 @@ class PLPLANE(ShellProperty):
         return self.comment + print_card_8(card)
 
 class PPLANE(ShellProperty):
-    type = 'PLPLANE'
+    type = 'PPLANE'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'formulation_option'}
 
     def __init__(self, pid, mid, t=0., nsm=0., formulation_option=0, comment=''):

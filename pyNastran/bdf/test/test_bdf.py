@@ -549,11 +549,11 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     else:
         msg = "mesh_form=%r; allowedForms=['combined','separate']" % mesh_form
         raise NotImplementedError(msg)
-    #fem1.writeAsCTRIA3(out_model)
+    #fem1.write_as_ctria3(out_model)
 
     fem1._get_maps()
     #remove_unused_materials(fem1)
-    remove_unused(fem1)
+    #remove_unused(fem1)
     units_to = ['m', 'kg', 's']
     units_from = ['m', 'kg', 's']
     #convert(fem1, units_to, units=units_from)
@@ -832,7 +832,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         if analysis == 'STATICS':
             sol = 101
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis == 'MODES':
+        elif analysis in ['MODE', 'MODES']:
             sol = 103
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
         elif analysis == 'BUCK':
@@ -847,7 +847,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         elif analysis == 'MTRAN':
             sol = 112
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis in ['SAERO', 'DIVERGE']:
+        elif analysis in ['SAERO', 'DIVERG', 'DIVERGE']:
             sol = 144
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
         elif analysis == 'FLUTTER':
@@ -915,7 +915,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
         assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
-                       112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
+                       112, 144, 145, 146, 187], 'sol=%s METHOD\n%s' % (sol, subcase)
 
     if 'CMETHOD' in subcase:
         cmethod_id = subcase.get_parameter('CMETHOD')[0]
@@ -926,7 +926,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
-        assert sol in [110], 'sol=%s CMETHOD' % sol
+        assert sol in [110], 'sol=%s CMETHOD\n%s' % (sol, subcase)
 
     if 'RMETHOD' in subcase:
         rmethod_id = subcase.get_parameter('RMETHOD')[0]
@@ -938,12 +938,12 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             #method_ids = list(fem2.methods.keys())
             #raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
-        assert sol in [111], 'sol=%s RMETHOD' % sol
+        assert sol in [111], 'sol=%s RMETHOD\n%s' % (sol, subcase)
 
     if 'FMETHOD' in subcase:
         method_id = subcase.get_parameter('FMETHOD')[0]
         method = fem2.flutters[method_id]
-        assert sol in [145], 'sol=%s FMETHOD' % sol
+        assert sol in [145], 'sol=%s FMETHOD\n%s' % (sol, subcase)
     if 'LOAD' in subcase:
         loadcase_id = subcase.get_parameter('LOAD')[0]
         force, moment = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)

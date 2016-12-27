@@ -32,6 +32,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.loads.static_loads import LOAD
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 def _mass_properties_mass_mp_func(element):  # pragma: no cover
@@ -129,7 +130,7 @@ class BDFMethods(BDFAttributes):
             'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
             'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
             'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
-            'PCOMPS',
+            'PCOMPS', 'PVISC', 'PBCOMP', 'PBEND',
         ]
 
         pid_eids = self.get_element_ids_dict_with_pids(property_ids)
@@ -204,7 +205,8 @@ class BDFMethods(BDFAttributes):
             elif prop.type in ['PLPLANE', 'PPLANE', 'PELAS',
                                'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
                                'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
-                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',]:
+                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
+                               'PVISC', 'PBCOMP', 'PBEND']:
                 pass
             else:
                 raise NotImplementedError(prop)
@@ -260,7 +262,8 @@ class BDFMethods(BDFAttributes):
             elif prop.type in ['PLPLANE', 'PPLANE', 'PELAS',
                                'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
                                'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
-                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',]:
+                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
+                               'PVISC', 'PBCOMP', 'PBEND']:
                 pass
             else:
                 raise NotImplementedError(prop)
@@ -1581,179 +1584,180 @@ class BDFMethods(BDFAttributes):
 
                 p1 = load.p1 * scale
                 p2 = load.p2 * scale
-                if elem.type not in ['CBAR', 'CBEAM', 'CBEND']:
-                    raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
+                if elem.type in ['CBAR', 'CBEAM']:
+                    nodes = elem.node_ids
+                    n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
+                    n1 += elem.wa
+                    n2 += elem.wb
 
-                nodes = elem.node_ids
-                n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
-                n1 += elem.wa
-                n2 += elem.wb
-
-                deltaL = n2 - n1
-                L = norm(deltaL)
-                try:
-                    Ldir = deltaL / L
-                except:
-                    msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
-                    msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
-                    raise FloatingPointError(msg)
-                if load.scale == 'FR':  # x1, x2 are fractional lengths
-                    x1 = load.x1
-                    x2 = load.x2
-                    #compute_fx = False
-                elif load.scale == 'LE': # x1, x2 are actual lengths
-                    x1 = load.x1 / L
-                    x2 = load.x2 / L
-                elif load.scale == 'LEPR':
-                    print('PLOAD1 LEPR continue')
-                    continue
-                    #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
-                    #raise NotImplementedError(msg)
-                elif load.scale == 'FRPR':
-                    print('PLOAD1 FRPR continue')
-                    continue
-                    #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
-                    #raise NotImplementedError(msg)
-                else:
-                    msg = 'PLOAD1 scale=%r is not supported.  Use "FR", "LE".' % load.scale
-                    raise NotImplementedError(msg)
-
-                # FY - force in basic coordinate system
-                # FR - fractional;
-                assert x1 <= x2, 'x1=%s x2=%s' % (x1, x2)
-                if x1 != x2:
-                    # continue
-                    if not load.type in ['FX', 'FY', 'FZ']:
-                        print('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (
-                            x1, x2, load.scale, str(elem), str(load)))
+                    deltaL = n2 - n1
+                    L = norm(deltaL)
+                    try:
+                        Ldir = deltaL / L
+                    except:
+                        msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
+                        msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
+                        raise FloatingPointError(msg)
+                    if load.scale == 'FR':  # x1, x2 are fractional lengths
+                        x1 = load.x1
+                        x2 = load.x2
+                        #compute_fx = False
+                    elif load.scale == 'LE': # x1, x2 are actual lengths
+                        x1 = load.x1 / L
+                        x2 = load.x2 / L
+                    elif load.scale == 'LEPR':
+                        print('PLOAD1 LEPR continue')
                         continue
-                    print('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (
-                        x1, x2, load.scale, str(elem), str(load)))
-
-                    # y = (y2-y1)/(x2-x1)*(x-x1) + y1
-                    # y = (y2-y1) * (x-x1)/(x2-x1) + y1
-                    # y = y2*(x-x1)/(x2-x1) + y1*(1-(x-x1)/(x2-x1))
-                    # y = y2 * r + y1 * (1-r)
-                    # r = (x-x1)/(x2-x1)
-                    #
-                    # y = y2 * r + y1 - y1 * r
-                    # yi = y2 * ri + y1 * x + y1 * ri
-                    # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
-                    #
-                    # ri = integral(r)
-                    # ri = 1/(x2-x1) * (0.5) * (x1-x2)**2
-                    #
-                    # yi = integral(y)
-                    # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
-                    # ri = 1./(x2-x1) * (0.5) * (x1-x2)**2
-                    # y1 = p1
-                    # y2 = p2
-                    # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
-                    # F = yi
-                    if allclose(p1, -p2):
-                        Ftotal = p1
-                        x = (x1 + x2) / 2.
+                        #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                        #raise NotImplementedError(msg)
+                    elif load.scale == 'FRPR':
+                        print('PLOAD1 FRPR continue')
+                        continue
+                        #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                        #raise NotImplementedError(msg)
                     else:
-                        Ftotal = L * (x2-x1) * (p1 + p2)/2.
-                        Mx = L * p1 * (x2-x1)/2. + L * (p2-p1) * (2./3. * x2 + 1./3. * x1)
-                        x = Mx / Ftotal
-                    print('L=%s x1=%s x2=%s p1/L=%s p2/L=%s Ftotal=%s Mtotal=%s x=%s' % (
-                        L, x1, x2, p1, p2, Ftotal, Mx, x))
+                        msg = 'PLOAD1 scale=%r is not supported.  Use "FR", "LE".' % load.scale
+                        raise NotImplementedError(msg)
 
-                    i = Ldir
-                    if load.Type in ['FX', 'FY', 'FZ']:
-                        r = (1. - x) * n1 + x * n2
-                        # print('r=%s n1=%s n2=%s' % (r, n1, n2))
-                        if load.Type == 'FX':
-                            Fdir = array([1., 0., 0.])
-                        elif load.Type == 'FY':
-                            Fdir = array([0., 1., 0.])
-                        elif load.Type == 'FZ':
-                            Fdir = array([0., 0., 1.])
+                    # FY - force in basic coordinate system
+                    # FR - fractional;
+                    assert x1 <= x2, 'x1=%s x2=%s' % (x1, x2)
+                    if x1 != x2:
+                        # continue
+                        if not load.type in ['FX', 'FY', 'FZ']:
+                            print('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (
+                                x1, x2, load.scale, str(elem), str(load)))
+                            continue
+                        print('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (
+                            x1, x2, load.scale, str(elem), str(load)))
+
+                        # y = (y2-y1)/(x2-x1)*(x-x1) + y1
+                        # y = (y2-y1) * (x-x1)/(x2-x1) + y1
+                        # y = y2*(x-x1)/(x2-x1) + y1*(1-(x-x1)/(x2-x1))
+                        # y = y2 * r + y1 * (1-r)
+                        # r = (x-x1)/(x2-x1)
+                        #
+                        # y = y2 * r + y1 - y1 * r
+                        # yi = y2 * ri + y1 * x + y1 * ri
+                        # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
+                        #
+                        # ri = integral(r)
+                        # ri = 1/(x2-x1) * (0.5) * (x1-x2)**2
+                        #
+                        # yi = integral(y)
+                        # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
+                        # ri = 1./(x2-x1) * (0.5) * (x1-x2)**2
+                        # y1 = p1
+                        # y2 = p2
+                        # yi = y2 * ri + y1 * (x2-x1) + y1 * ri
+                        # F = yi
+                        if allclose(p1, -p2):
+                            Ftotal = p1
+                            x = (x1 + x2) / 2.
+                        else:
+                            Ftotal = L * (x2-x1) * (p1 + p2)/2.
+                            Mx = L * p1 * (x2-x1)/2. + L * (p2-p1) * (2./3. * x2 + 1./3. * x1)
+                            x = Mx / Ftotal
+                        print('L=%s x1=%s x2=%s p1/L=%s p2/L=%s Ftotal=%s Mtotal=%s x=%s' % (
+                            L, x1, x2, p1, p2, Ftotal, Mx, x))
+
+                        i = Ldir
+                        if load.Type in ['FX', 'FY', 'FZ']:
+                            r = (1. - x) * n1 + x * n2
+                            # print('r=%s n1=%s n2=%s' % (r, n1, n2))
+                            if load.Type == 'FX':
+                                Fdir = array([1., 0., 0.])
+                            elif load.Type == 'FY':
+                                Fdir = array([0., 1., 0.])
+                            elif load.Type == 'FZ':
+                                Fdir = array([0., 0., 1.])
+                            else:
+                                raise NotImplementedError('Type=%r is not supported.  '
+                                                          'Use "FX", "FY", "FZ".' % load.Type)
+
+                        Fi = Ftotal * Fdir
+                        Mi = cross(r - p, Fdir * Ftotal)
+                        F += Fi
+                        M += Mi
+                        print('Fi=%s Mi=%s x=%s' % (Fi, Mi, x))
+                    else:
+                        v = elem.get_orientation_vector(xyz)
+                        i = Ldir
+                        ki = cross(i, v)
+                        k = ki / norm(ki)
+                        j = cross(k, i)
+
+                        if load.Type in ['FX', 'FY', 'FZ']:
+                            r = (1 - x1) * n1 + x1 * n2
+                            if load.Type == 'FX':
+                                if x1 == x2:
+                                    Fdir = array([1., 0., 0.])
+                            elif load.Type == 'FY':
+                                if x1 == x2:
+                                    Fdir = array([0., 1., 0.])
+                            elif load.Type == 'FZ':
+                                if x1 == x2:
+                                    Fdir = array([0., 0., 1.])
+                            F += p1 * Fdir
+                            M += cross(r - p, F)
+                        elif load.Type in ['MX', 'MY', 'MZ']:
+                            if load.Type == 'MX':
+                                if x1 == x2:
+                                    Mdir = array([1., 0., 0.])
+                            elif load.Type == 'MY':
+                                if x1 == x2:
+                                    Mdir = array([0., 1., 0.])
+                            elif load.Type == 'MZ':
+                                if x1 == x2:
+                                    Mdir = array([0., 0., 1.])
+                            M += p1 * Mdir
+                        elif load.Type in ['FXE', 'FYE', 'FZE']:
+                            r = (1 - x1) * n1 + x1 * n2
+                            if load.Type == 'FXE':
+                                if x1 == x2:
+                                    Fdir = i
+                            elif load.Type == 'FYE':
+                                if x1 == x2:
+                                    Fdir = j
+                            elif load.Type == 'FZE':
+                                if x1 == x2:
+                                    Fdir = k
+                            #print('    Fdir =', Fdir, load.Type)
+                            try:
+                                F += p1 * Fdir
+                            except FloatingPointError:
+                                msg = 'eid = %s\n' % elem.eid
+                                msg += 'i = %s\n' % Ldir
+                                msg += 'Fdir = %s\n' % Fdir
+                                msg += 'load = \n%s' % str(load)
+                                raise FloatingPointError(msg)
+                            M += cross(r - p, F)
+                            del Fdir
+
+                        elif load.Type in ['MXE', 'MYE', 'MZE']:
+                            if load.Type == 'MXE':
+                                if x1 == x2:
+                                    Mdir = i
+                            elif load.Type == 'MYE':
+                                if x1 == x2:
+                                    Mdir = j
+                            elif load.Type == 'MZE':
+                                if x1 == x2:
+                                    Mdir = k
+                            try:
+                                M += p1 * Mdir
+                            except FloatingPointError:
+                                msg = 'eid = %s\n' % elem.eid
+                                msg += 'Mdir = %s\n' % Mdir
+                                msg += 'load = \n%s' % str(load)
+                                raise FloatingPointError(msg)
+                            del Mdir
                         else:
                             raise NotImplementedError('Type=%r is not supported.  '
-                                                      'Use "FX", "FY", "FZ".' % load.Type)
-
-                    Fi = Ftotal * Fdir
-                    Mi = cross(r - p, Fdir * Ftotal)
-                    F += Fi
-                    M += Mi
-                    print('Fi=%s Mi=%s x=%s' % (Fi, Mi, x))
+                                                      'Use "FX", "FXE".' % load.Type)
                 else:
-                    v = elem.get_orientation_vector(xyz)
-                    i = Ldir
-                    ki = cross(i, v)
-                    k = ki / norm(ki)
-                    j = cross(k, i)
-
-                    if load.Type in ['FX', 'FY', 'FZ']:
-                        r = (1 - x1) * n1 + x1 * n2
-                        if load.Type == 'FX':
-                            if x1 == x2:
-                                Fdir = array([1., 0., 0.])
-                        elif load.Type == 'FY':
-                            if x1 == x2:
-                                Fdir = array([0., 1., 0.])
-                        elif load.Type == 'FZ':
-                            if x1 == x2:
-                                Fdir = array([0., 0., 1.])
-                        F += p1 * Fdir
-                        M += cross(r - p, F)
-                    elif load.Type in ['MX', 'MY', 'MZ']:
-                        if load.Type == 'MX':
-                            if x1 == x2:
-                                Mdir = array([1., 0., 0.])
-                        elif load.Type == 'MY':
-                            if x1 == x2:
-                                Mdir = array([0., 1., 0.])
-                        elif load.Type == 'MZ':
-                            if x1 == x2:
-                                Mdir = array([0., 0., 1.])
-                        M += p1 * Mdir
-                    elif load.Type in ['FXE', 'FYE', 'FZE']:
-                        r = (1 - x1) * n1 + x1 * n2
-                        if load.Type == 'FXE':
-                            if x1 == x2:
-                                Fdir = i
-                        elif load.Type == 'FYE':
-                            if x1 == x2:
-                                Fdir = j
-                        elif load.Type == 'FZE':
-                            if x1 == x2:
-                                Fdir = k
-                        #print('    Fdir =', Fdir, load.Type)
-                        try:
-                            F += p1 * Fdir
-                        except FloatingPointError:
-                            msg = 'eid = %s\n' % elem.eid
-                            msg += 'i = %s\n' % Ldir
-                            msg += 'Fdir = %s\n' % Fdir
-                            msg += 'load = \n%s' % str(load)
-                            raise FloatingPointError(msg)
-                        M += cross(r - p, F)
-                        del Fdir
-
-                    elif load.Type in ['MXE', 'MYE', 'MZE']:
-                        if load.Type == 'MXE':
-                            if x1 == x2:
-                                Mdir = i
-                        elif load.Type == 'MYE':
-                            if x1 == x2:
-                                Mdir = j
-                        elif load.Type == 'MZE':
-                            if x1 == x2:
-                                Mdir = k
-                        try:
-                            M += p1 * Mdir
-                        except FloatingPointError:
-                            msg = 'eid = %s\n' % elem.eid
-                            msg += 'Mdir = %s\n' % Mdir
-                            msg += 'load = \n%s' % str(load)
-                            raise FloatingPointError(msg)
-                        del Mdir
-                    else:
-                        raise NotImplementedError('Type=%r is not supported.  '
-                                                  'Use "FX", "FXE".' % load.Type)
+                    # CBEND
+                    raise RuntimeError('element.type=%r is not a CBAR, CBEAM' % elem.type)
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale
@@ -2120,11 +2124,19 @@ class BDFMethods(BDFAttributes):
                 mids_to_write.sort()
                 for imid, mid in enumerate(mids_to_write):
                     card = ['PSHELL', pid_shell + imid, mid_shell + imid, 0.1]
-                    bdf_file.write(print_card_8(card))
+                    try:
+                        msg = print_card_8(card)
+                    except RuntimeError:
+                        msg = print_card_16(card)
+                    bdf_file.write(msg)
 
                     card = ['MAT1', mid_shell + imid, 3.e7, None, 0.3]
                     #bdf_file.write(self.materials[mid].comment)
-                    bdf_file.write(print_card_8(card))
+                    try:
+                        msg = print_card_8(card)
+                    except RuntimeError:
+                        msg = print_card_16(card)
+                    bdf_file.write(msg)
 
                 for face, eids in iteritems(eid_set):
                     face_raw = face_map[face]
@@ -2160,7 +2172,11 @@ class BDFMethods(BDFAttributes):
                         card = ['CQUAD8', eid_shell, pid_shell + imid] + list(face_raw)
                     else:
                         raise NotImplementedError('face=%s len(face)=%s' % (face, nface))
-                    bdf_file.write(print_card_8(card))
+                    try:
+                        msg = print_card_8(card)
+                    except RuntimeError:
+                        msg = print_card_16(card)
+                    bdf_file.write(msg)
                     eid_shell += 1
 
                     #elem = self.elements[eid]

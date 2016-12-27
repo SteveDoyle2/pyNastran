@@ -983,7 +983,6 @@ class CTRIAR(TriShell):
         """deprecated"""
         return self.theta_mcid
 
-
     @zOffset.setter
     def zOffset(self, zoffset):
         """deprecated"""
@@ -2824,9 +2823,20 @@ class CPLSTS3(TriShell):
 
 
 class CQUAD(QuadShell):
+    """
+    +-------+-------+-----+----+------------+----+----+------------+-------+
+    |    1  |   2   |  3  |  4 |     5      |  6 |  7 |      8     |   9   |
+    +=======+=======+=====+====+============+====+====+============+=======+
+    | CQUAD |  EID  | PID | G1 |     G2     | G3 | G4 |     G5     |  G6   |
+    +-------+-------+-----+----+------------+----+----+------------+-------+
+    |       |   G7  | G8  | G9 | THETA/MCID |    |    |            |       |
+    +-------+-------+-----+----+------------+----+----+------------+-------+
+
+    theta_mcid is an MSC specific variable
+    """
     type = 'CQUAD'
 
-    def __init__(self, eid, pid, nids, comment=''):
+    def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -2834,6 +2844,7 @@ class CQUAD(QuadShell):
         self.eid = eid
         #: Property ID
         self.pid = pid
+        self.theta_mcid = theta_mcid
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 9
 
@@ -2850,8 +2861,9 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 9, 'n7'),
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9')]
-        assert len(card) <= 12, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
-        return CQUAD(eid, pid, nids, comment=comment)
+        theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', 0.)
+        assert len(card) <= 13, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
+        return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2897,20 +2909,30 @@ class CQUAD(QuadShell):
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
 
+    def _verify(self, xref=True):
+        pass
+
     def raw_fields(self):
-        list_fields = ['CQUAD', self.eid, self.Pid()] + self.node_ids
+        list_fields = ['CQUAD', self.eid, self.Pid()] + self.node_ids + [self.theta_mcid]
         return list_fields
 
     def repr_fields(self):
-        list_fields = ['CQUAD', self.eid, self.Pid()] + self.node_ids
+        list_fields = ['CQUAD', self.eid, self.Pid()] + self.node_ids + [self.theta_mcid]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
-        data = [self.eid, self.Pid()] + nodes[:4] + nodes2
+        theta_mcid = self.theta_mcid
+        if theta_mcid == 0.:
+            stheta = ''
+        elif isinstance(theta_mcid, int):
+            stheta = '%s' % theta_mcid
+        else:
+            stheta = '%s' % theta_mcid
+        data = [self.eid, self.Pid()] + nodes[:4] + nodes2 + [theta_mcid]
         msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
-               '        %8s%8s%8s\n' % tuple(data))
+               '        %8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
     #def write_card(self, size=8, is_double=False):
