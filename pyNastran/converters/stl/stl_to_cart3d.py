@@ -1,17 +1,20 @@
+from __future__ import print_function
+from six import string_types
 from pyNastran.converters.stl.stl import STL, read_stl
 from pyNastran.converters.cart3d.cart3d import Cart3D
 
-def stl_to_cart3d(stl, cart3d_filename=None, log=None, debug=False,
+def stl_to_cart3d(stl_filename, cart3d_filename=None, log=None, debug=False,
                   is_binary=False, float_fmt='%6.7f'):
     """
     Converts a Cart3D object to STL format.
 
     Parameters
     ----------
-    cart3d : Cart3D()
-        a Cart3D object
+    stl_filename : str / STL()
+        str : path to the input STL file
+        STL() : an STL object
     cart3d_filename : str; default=None
-        path to the output Cart3D file (or None to skip)
+        str : path to the output Cart3D file (or None to skip)
     log : log
         a logger object (or None)
     debug : bool; default=False
@@ -27,9 +30,9 @@ def stl_to_cart3d(stl, cart3d_filename=None, log=None, debug=False,
         an STL object
     """
     if isinstance(stl_filename, string_types):
-        model = read_stl(stl_filename, log=log, debug=debug)
+        stl = read_stl(stl_filename, log=log, debug=debug)
     elif isinstance(stl_filename, STL):
-        model = stl_filename
+        stl = stl_filename
     else:
         raise TypeError('stl_filename must be a string or STL; type=%s' % type(stl_filename))
 
@@ -37,5 +40,5 @@ def stl_to_cart3d(stl, cart3d_filename=None, log=None, debug=False,
     cart3d.nodes = stl.nodes + 1
     cart3d.elements = stl.elements + 1
     if cart3d_filename:
-        cart3d.write_cart3d(Cart3D, is_binary=False, float_fmt='%6.7f')
+        cart3d.write_cart3d(Cart3D, is_binary=is_binary, float_fmt=float_fmt)
     return cart3d
