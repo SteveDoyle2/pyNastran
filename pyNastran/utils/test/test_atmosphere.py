@@ -16,7 +16,7 @@ from pyNastran.utils.atmosphere2 import (
 )
 
 
-class Atm(unittest.TestCase):
+class TestAtm(unittest.TestCase):
     def test_temperature(self):
         self.assertEqual(atm_temperature(alt=10 *1000.), 482.40003999999999)
         self.assertEqual(atm_temperature(alt=60 *1000.), 389.988)

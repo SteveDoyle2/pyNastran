@@ -102,6 +102,11 @@ class TestSTL(unittest.TestCase):
         os.remove(bdf_filename_16)
         os.remove(bdf_filename_double)
 
+    def test_stl_to_cart3d_01(self):
+        stl_filename = os.path.join(test_path, 'sphere.stl')
+        cart3d_filename = os.path.join(test_path, 'sphere.tri')
+        stl_to_cart3d(stl_filename, cart3d_filename)
+        os.remove(cart3d_filename)
 
 def main():  # pragma: no cover
     import time
