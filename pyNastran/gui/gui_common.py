@@ -3334,12 +3334,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #point3d = Point3D(x, y, 0)
         #return view_projection_inverse.multiply(point3d)
 
-    def hide_actors(self, except_names=None):
+    def hide_actors(self, except_names=None, show_everything_else=False):
         """
         Hide all the actors
 
         except_names : str, List[str], None
             list of names to exclude
+        show_everything_else : bool; default=False
+            it's pretty self explanatory :)
         """
         if except_names is None:
             except_names = []
@@ -3350,6 +3352,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         for key, actor in iteritems(self.geometry_actors):
             if key not in except_names:
                 actor.VisibilityOff()
+            elif show_everything_else:
+                actor.VisibilityOn()
             #else:
                 #prop = actor.GetProperty()
                 #prop.SetLineWidth(1.5)
@@ -5003,7 +5007,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
         grid.Modified()
         #print('update2...')
 
-    def _add_user_points(self, points_filename, name, color):
+    def _add_user_points(self, points_filename, name, color, point_size=4):
+        """
+        Helper method for adding csv nodes to the gui
+
+        Parameters
+        ----------
+        points_filename : str
+            CSV filename that defines one xyz point per line
+        name : str
+            name of the geometry actor
+        color : List[float, float, float]
+            RGB values; [0. to 1.]
+        point_size : int; default=4
+            the nominal point size
+        """
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
@@ -5013,7 +5031,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # create grid
         self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
-                                       point_size=1, representation='point')
+                                       point_size=point_size, representation='point')
 
         assert os.path.exists(points_filename), print_bad_path(points_filename)
         # read input file
@@ -5052,4 +5070,4 @@ class GuiCommon2(QMainWindow, GuiCommon):
         actor = self.geometry_actors[name]
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
-        prop.SetPointSize(4)
+        prop.SetPointSize(point_size)
