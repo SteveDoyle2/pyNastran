@@ -1182,7 +1182,7 @@ class MAT8(OrthotropicMaterial):
         15:'Yc', 16: 'S', 17:'ge', 18:'F12', 19:'strn',
     }
 
-    def __init__(self, mid, e11, e22, nu12, g12, g1z, g2z, rho=0.,
+    def __init__(self, mid, e11, e22, nu12, g12=0.0, g1z=1e8, g2z=1e8, rho=0.,
                  a1=0., a2=0., TRef=0.,
                  Xt=0., Xc=None,
                  Yt=0., Yc=None, S=0.,
@@ -1612,10 +1612,11 @@ class MAT10(Material):
         1: 'mid', 2:'bulk', 3:'rho', 4:'c', 5:'ge',
     }
 
-    def __init__(self, mid, bulk, rho, c, ge, comment=''):
+    def __init__(self, mid, bulk=None, rho=None, c=None, ge=0.0, comment=''):
         Material.__init__(self)
         if comment:
             self.comment = comment
+        bulk, rho, c = _mat10_get_bulk_rho_c(bulk, rho, c)
         self.mid = mid
         self.bulk = bulk
         self.rho = rho
@@ -1625,7 +1626,9 @@ class MAT10(Material):
     @classmethod
     def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
-        bulk, rho, c = _mat10_get_bulk_rho_c(card)
+        bulk = double_or_blank(card, 2, 'bulk')
+        rho = double_or_blank(card, 3, 'rho')
+        c = double_or_blank(card, 4, 'c')
         ge = double_or_blank(card, 5, 'ge', 0.0)
         assert len(card) <= 6, 'len(MAT10 card) = %i\ncard=%s' % (len(card), card)
         return MAT10(mid, bulk, rho, c, ge, comment=comment)
@@ -1681,14 +1684,10 @@ class MAT10(Material):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def _mat10_get_bulk_rho_c(card):
+def _mat10_get_bulk_rho_c(bulk, rho, c):
     r"""
     .. math:: bulk = c^2 \rho
     """
-    bulk = double_or_blank(card, 2, 'bulk')
-    rho = double_or_blank(card, 3, 'rho')
-    c = double_or_blank(card, 4, 'c')
-
     if c is not None:
         if rho is not None:
             bulk = c ** 2. * rho

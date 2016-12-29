@@ -895,7 +895,7 @@ class PBARL(LineProperty):
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, pid, mid, group, Type, dim, nsm=0., comment=''):
+    def __init__(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -910,8 +910,17 @@ class PBARL(LineProperty):
         self.dim = dim
         #: non-structural mass
         self.nsm = nsm
+        ndim = self.valid_types[Type]
+        assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
 
     def validate(self):
+        ndim = self.valid_types[self.Type]
+        assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
+        if not isinstance(self.group, str):
+            raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
+        if self.group != 'MSCBMLO':
+            raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
+
         if self.Type not in self.valid_types:
             msg = ('Invalid PBARL Type, Type=%s '
                    'valid_types=%s' % (self.Type, self.valid_types.keys()))
@@ -946,7 +955,7 @@ class PBARL(LineProperty):
         #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
         nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
-        return PBARL(pid, mid, group, Type, dim, nsm, comment=comment)
+        return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -956,13 +965,7 @@ class PBARL(LineProperty):
         Type = data[3].strip()
         dim = list(data[4:-1])
         nsm = data[-1]
-        #print("group = %r" % self.group)
-        #print("Type  = %r" % self.Type)
-        #print("dim = ",self.dim)
-        #print(str(self))
-        #print("*PBARL = ",data)
-        #raise NotImplementedError('not finished...')
-        return PBARL(pid, mid, group, Type, dim, nsm, comment=comment)
+        return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
     def cross_reference(self, model):
         """
