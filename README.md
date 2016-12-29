@@ -53,17 +53,27 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 # News
 
 ### pyNastran v0.9 progress (12/1/2016)
- - OP2
+ - [OP2](http://pynastran-git.readthedocs.io/en/latest/quick_start/op2_demo.html)
    - preliminary random results (ATO/CRM/PSD/RMS/NO)
- - F06
+   - improved geometry support
+   - MONPNT1/MONPNT3 reading
+
+ - F06 scripts
    - added a preliminary flutter (SOL 145) parser
      - supports multiple subcases
      - PK and PKNL methods supported
      - `plot_Vg_Vf(...)`, `plot_Vg(...)`, `plot_root_locus(...)`
      - input/output units
      - mode switching not fixed yet
- - BDF
-   - simplified card adding
+
+ - [BDF](http://pynastran-git.readthedocs.io/en/latest/quick_start/bdf_demo.html)
+   - 297 cards supported
+   - faster node transforms using:
+     
+     `>>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = get_displacement_index_xyz_cp_cd(dtype='float64, sort_ids=True)`
+     `>>> xyz_cid0 = transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0, in_place=False)`
+     
+   - simplified card adding (**card defaults are still a work in progress**)
    
      `>>> model.add_grid(nid, xyz=[4.,5.,6.], comment='nid, cp, x, y, z')`
 
@@ -76,15 +86,15 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      `$grid,nid,cp,x,y,z`
 
      `GRID,10,,4.0,5.0,6.0`
-     
-   - lots more tests
+   
+   - unit conversion
 
-- GUI
+- [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html)
    - buttons for picking, rotation center
    - PyQt5 support
    - QScintilla & pygments support for scripting code editor
 
-- Matlab integration
+- [Matlab](http://pynastran-git.readthedocs.io/en/latest/quick_start/matlab.html) integration
    - pyNastran works with Matlab 2014a+
 
 ### pyNastran v0.8.0 has been released (8/21/2016)
