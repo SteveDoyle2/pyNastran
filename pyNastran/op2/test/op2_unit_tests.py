@@ -307,6 +307,18 @@ class TestOP2(Tester):
             #assert fem.card_count['MPC'] == 1, fem.card_count
             #assert fem.card_count['TF'] == 2, fem.card_count
 
+    def test_monpnt3(self):
+        """creates the MONPNT3 table"""
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'aero', 'monpnt3'))
+        op2_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.op2')
+        f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
+        op2 = read_op2(op2_filename, debug=False)
+        monitor3 = op2.monitor3
+        assert len(monitor3.frequencies) == 11, monitor3
+        str(monitor3)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
+
     def test_op2_nastran_2005r3b(self):
         """Nastran2005r3 bug"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'modele_petite_zone'))
