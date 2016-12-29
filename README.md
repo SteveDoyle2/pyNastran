@@ -63,7 +63,11 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      - input/output units
      - mode switching not fixed yet
  - BDF
-   - comments can now be created without worrying about $ signs
+   - simplified card adding
+   
+     `>>> model.add_grid(nid, xyz=[4.,5.,6.], comment='nid, cp, x, y, z')`
+
+   - comments can now be created without worrying about `$` signs
 
      `>>> model.add_card(['GRID', 10, None, 4.0, 5.0, 6.0], comment='GRID comment\ngrid,nid,cp,x,y,z')`
 
@@ -72,11 +76,16 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      `$grid,nid,cp,x,y,z`
 
      `GRID,10,,4.0,5.0,6.0`
+     
+   - lots more tests
 
 - GUI
    - buttons for picking, rotation center
    - PyQt5 support
    - QScintilla & pygments support for scripting code editor
+
+- Matlab integration
+   - pyNastran works with Matlab 2014a+
 
 ### pyNastran v0.8.0 has been released (8/21/2016)
 
