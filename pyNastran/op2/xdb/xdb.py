@@ -59,7 +59,7 @@ class XDB(FortranFormat):
             # SUBCASES-----
             # SUBTITL-----
             # SUBGRID-----
-            for i in range(26 + npload4s + nsubcases):
+            for i in range(32 + npload4s + nsubcases):
                 table_name = self.read_table_name()
                 self.read_table_header(table_name, etype, npload4s)
 
@@ -424,10 +424,12 @@ class XDB(FortranFormat):
                           b'MAT1', b'PATHINT', b'PATHLINK', b'PATHQUAL', b'PLOAD4',
                           b'SPC1', b'PRODUCT', b'PROJECT', b'PSHELL', b'SID',
                           b'SOLVE', b'SPCFR', b'SUBCASE', b'SUBCASES', b'SUBCTITL',
-                          b'SUBGRID', b'EQEXINE', b'EQEXING', b'SPCFR', b'CTR3',
+                          b'SUBGRID', b'EQEXINE', b'EQEXING', b'SPCFR', b'CTR3', b'CBAR',b'CCON',
+                          b'CELAS2',b'CONM2',b'CSTM',b'EBARR',b'ECONR',b'EELSR',b'EQD4R',b'ETR3R',
+                          b'FBARR', b'FCONR', b'MPCFR', b'PATHBCD',b'PATHINT'
                           ]:
             dn = 88
-            #self.show(dn, types='i')
+            self.show(dn, types='i')
             self.f.read(dn)
             self.n += dn
         else:
@@ -502,16 +504,16 @@ class XDB(FortranFormat):
         return struct.unpack(self._endian + '8s', data)[0].rstrip()
 
 def test_ctria3():
-    xdb_filename = r'F:\work\pyNastran\pyNastran\master3\models\pload4\ctria3_6subcases.xdb'
-    model = read_xdb(xdb_filename, 'tri', nsubcases=6, npload4s=6)
+    #xdb_filename = r'F:\work\pyNastran\pyNastran\master3\models\pload4\ctria3_6subcases.xdb'
+    #model = read_xdb(xdb_filename, 'tri', nsubcases=6, npload4s=6)
     #xdb_filename = r'F:\work\pyNastran\pyNastran\master3\models\pload4\ctria3.xdb'
-    xdb_filename = r'F:\work\pyNastran\pyNastran\master3\models\pload4\ctria3.xdb'
+    #xdb_filename = r'F:\work\pyNastran\pyNastran\master3\models\pload4\ctria3.xdb'
     #model = read_xdb(xdb_filename, 'tri', nsubcases=1, npload4s=6)
 
-    xdb_filename = r'F:\work\pyNastran\pyNastran\master3\models\pload4\cquad4_2subcases.xdb'
-    #model = read_xdb(xdb_filename, 'quad', nsubcases=2, npload4s=6)
+    xdb_filename = r'C:\Users\nikita.kalutskiy\Desktop\A318_FEM\Static\w1000bostat.xdb'
+    model = read_xdb(xdb_filename, 'quad', nsubcases=3, npload4s=6)
 
-    xdb_filename = r'F:\work\pyNastran\pyNastran\master3\models\pload4\cquad4_1subcase.xdb'
+    xdb_filename = r'C:\Users\nikita.kalutskiy\Source\Repos\pyNastran\models\pload4\cquad4_1subcase.xdb'
     #model = read_xdb(xdb_filename, 'quad', nsubcases=1, npload4s=6)
 
 if __name__ == '__main__':
