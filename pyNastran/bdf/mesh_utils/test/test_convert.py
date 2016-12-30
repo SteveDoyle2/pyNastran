@@ -10,7 +10,6 @@ from numpy import allclose
 #root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 from pyNastran.bdf.cards.elements.mass import CONM2
-from pyNastran.bdf.mesh_utils.remove_unused import remove_unused_materials
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
@@ -94,13 +93,12 @@ class TestConvert(unittest.TestCase):
         units_to = ['m', 'kg', 's']
 
         convert(model, units_to, units=units_from)
-        remove_unused_materials(model)
         model.write_bdf(bdf_filename_out2)
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
 
     def test_convert_sine(self):
-        """converts a bwb model"""
+        """converts a sine model"""
         model_path = os.path.join(pkg_path, '..', 'models', 'freq_sine')
         bdf_filename = os.path.join(model_path, 'good_sine.dat')
         bdf_filename_out = os.path.join(model_path, 'sine_modes.bdf')

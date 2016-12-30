@@ -780,6 +780,20 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
+    def add_ctriar(self, eid, pid, nids, theta_mcid, zoffset,
+                   TFlag, T1, T2, T3, comment=''):
+        elem = CTRIAR(eid, pid, nids, theta_mcid, zoffset,
+                      TFlag, T1, T2, T3, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cquadr(self, eid, pid, nids, theta_mcid, zoffset,
+                   TFlag, T1, T2, T3, T4, comment=''):
+        elem = CQUADR(eid, pid, nids, theta_mcid, zoffset,
+                      TFlag, T1, T2, T3, T4, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
     def add_pshell(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
                    mid3=None, tst=0.833333, nsm=0.0,
                    z1=None, z2=None, mid4=None,
@@ -954,6 +968,35 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
+    def add_crac2d(self, eid, pid, nids, comment=''):
+        elem = CRAC2D(eid, pid, nids, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_prac2d(self, pid, mid, thick, iplane, nsm=0., gamma=0.5, phi=180.,
+                   comment=''):
+        prop = PRAC2D(pid, mid, thick, iplane, nsm=nsm, gamma=gamma, phi=phi,
+                      comment=comment)
+        self._add_property_object(prop)
+        return prop
+
+    def add_crac3d(self, eid, pid, nids, comment=''):
+        elem = CRAC3D(eid, pid, nids, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_prac3d(self, pid, mid, gamma=0.5, phi=180., comment=''):
+        prop = PRAC3D(pid, mid, gamma=gamma, phi=phi, comment=comment)
+        self._add_property_object(prop)
+        return prop
+
+    def add_pconeax(self, pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
+                    comment=''):
+        prop = PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
+                       comment=comment)
+        self._add_property_object(prop)
+        return prop
+
     def add_ctrax3(self, eid, pid, nids, theta=0., comment=''):
         elem = CTRAX3(eid, pid, nids, theta=theta, comment=comment)
         self._add_element_object(elem)
@@ -1002,6 +1045,13 @@ class AddCards(AddMethods):
                      fctn=fctn, comment=comment)
         self._add_property_object(prop)
         return prop
+
+    def add_creep(self, mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
+                  a, b, c, d, e, f, g, comment=''):
+        mat = CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
+                    a, b, c, d, e, f, g, comment=comment)
+        self._add_creep_material_object(mat)
+        return mat
 
     def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, TRef=0.0, ge=0.0, St=0.0,
                  Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
@@ -1092,7 +1142,7 @@ class AddCards(AddMethods):
                     a30, a21, a12, a03, d3,
                     a40, a31, a22, a13, a04,
                     d4, a50, a41, a32, a23, a14, a05, d5, tab1, tab2, tab3,
-                    tab4, tabd, comment='')
+                    tab4, tabd, comment=comment)
         self._add_hyperelastic_material_object(mat)
         return mat
 
@@ -1147,6 +1197,11 @@ class AddCards(AddMethods):
     def add_lseq(self, sid, excite_id, lid, tid, comment=''):
         load = LSEQ(sid, excite_id, lid, tid, comment=comment)
         self._add_lseq_object(load)
+        return load
+
+    def add_sload(self, sid, nids, mags, comment=''):
+        load = SLOAD(sid, nids, mags, comment=comment)
+        self._add_load_object(load)
         return load
 
     def add_dload(self, sid, scale, scale_factors, load_ids, comment):

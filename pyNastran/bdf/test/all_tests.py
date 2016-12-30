@@ -6,8 +6,9 @@ from pyNastran.bdf.test.bdf_unit_tests import TestBDF, TestBaseCard
 from pyNastran.bdf.test.test_case_control_deck import CaseControlTest
 
 from pyNastran.bdf.cards.test.all_tests import *
-from pyNastran.bdf.mesh_utils.test_mesh_utils import TestMeshUtils
-from pyNastran.bdf.mesh_utils.test_convert import TestConvert
+from pyNastran.bdf.mesh_utils.test.test_mesh_utils import TestMeshUtils
+from pyNastran.bdf.mesh_utils.test.test_convert import TestConvert
+from pyNastran.bdf.mesh_utils.test.test_remove_unused import TestRemoveUnused
 
 # unit
 from pyNastran.bdf.test.unit.test_mass import TestMass
