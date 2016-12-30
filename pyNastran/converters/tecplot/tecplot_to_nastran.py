@@ -6,7 +6,7 @@ Defines:
 
 from numpy import unique
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.mesh_utils.remove_unused import remove_unassociated_nodes
+from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 
@@ -105,5 +105,4 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True):
     if removed_nodes:
         bdf_model = BDF(debug=debug)
         bdf_model.read_bdf(bdf_filename)
-        remove_unassociated_nodes(bdf_filename, bdf_filename,
-                                  renumber=True)
+        remove_unused(bdf_model)
