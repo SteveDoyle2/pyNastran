@@ -130,7 +130,6 @@ def checkImages(images):
         else:
             raise ValueError('Invalid image type: %s\nim=%r' % (str(type(im)), im))
 
-    # Done
     return images2
 
 
@@ -237,7 +236,6 @@ class GifWriter(object):
           * 4-7 -To be defined.
 
         """
-
         bb = '\x21\xF9\x04'
         bb += chr(((dispose & 3) << 2)|(transparent_flag & 1))  # low bit 1 == transparency,
         # 2nd bit 1 == user input , next 3 bits, the low two of which are used,
@@ -361,7 +359,6 @@ class GifWriter(object):
         written to a single animaged GIF.
 
         """
-
         # Convert to PIL images
         images2 = []
         for im in images:
@@ -392,7 +389,7 @@ class GifWriter(object):
 
                 self.transparency = True # since NQ assumes transparency
                 if self.transparency:
-                    alpha = im.split()[3]
+                    alpha = im.split()[3]  ## .. todo:: this doesn't work because reasons
                     mask = Image.eval(alpha, lambda a: 255 if a <= 128 else 0)
                     im.paste(255, mask=mask)
                 images2.append(im)
@@ -408,7 +405,6 @@ class GifWriter(object):
                     im.paste(255, mask=mask)
                 images2.append(im)
 
-        # Done
         return images2
 
 
@@ -418,7 +414,6 @@ class GifWriter(object):
         Given a set of images writes the bytes to the specified stream.
 
         """
-
         # Obtain palette for all images and count each occurance
         palettes, occur = [], []
         for im in images:
@@ -498,7 +493,6 @@ class GifWriter(object):
 
         fp.write(";")  # end gif
         return frames
-
 
 
 
@@ -613,7 +607,6 @@ def writeGif(filename, images, duration=0.1, repeat=True, dither=False,
         fp.close()
 
 
-
 def readGif(filename, asNumpy=True):
     """ readGif(filename, asNumpy=True)
 
@@ -661,7 +654,6 @@ def readGif(filename, asNumpy=True):
             tmp = PIL.Image.fromarray(im)
             images.append(tmp)
 
-    # Done
     return images
 
 
@@ -765,7 +757,7 @@ class NeuQuant(object):
         self.INITALPHA = 1 << self.ALPHABIASSHIFT # biased by 10 bits
 
         self.GAMMA = 1024.0
-        self.BETA = 1.0/1024.0
+        self.BETA = 1.0 / 1024.0
         self.BETAGAMMA = self.BETA * self.GAMMA
 
         self.network = np.empty((self.NETSIZE, 3), dtype='float64') # The network itself
@@ -909,9 +901,6 @@ class NeuQuant(object):
         self.bias[bestpos] -= self.BETAGAMMA
         return bestbiaspos
 
-
-
-
     def specialFind(self, b, g, r):
         for i in range(self.SPECIALS):
             n = self.network[i]
@@ -950,8 +939,8 @@ class NeuQuant(object):
         while i < samplepixels:
             if i%100 == 99:
                 tmp = '\b'*len(printed_string)
-                printed_string = str((i+1)*100/samplepixels)+"%\n"
-                print(tmp + printed_string)
+                printed_string = str((i+1)*100 / samplepixels) + "%\n"
+                #print(tmp + printed_string)
             p = self.pixels[pos]
             r = (p >> 16) & 0xff
             g = (p >>  8) & 0xff
