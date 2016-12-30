@@ -71,6 +71,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
    - faster node transforms using:
      
      `>>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = get_displacement_index_xyz_cp_cd(dtype='float64, sort_ids=True)`
+     
      `>>> xyz_cid0 = transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0, in_place=False)`
      
    - simplified card adding (**card defaults are still a work in progress**)
