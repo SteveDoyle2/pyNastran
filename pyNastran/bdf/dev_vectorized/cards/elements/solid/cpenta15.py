@@ -89,7 +89,7 @@ class CPENTA15(SolidElement):
                 self.node_ids[i, 14] = nid_map[nids[14]]
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)

@@ -57,7 +57,7 @@ class CPYRAM13(SolidElement):
         self.i += 1
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)

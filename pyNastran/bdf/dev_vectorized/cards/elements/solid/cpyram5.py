@@ -68,7 +68,7 @@ class CPYRAM5(SolidElement):
         return K, dofs, nijv
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)

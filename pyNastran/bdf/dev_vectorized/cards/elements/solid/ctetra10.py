@@ -92,7 +92,7 @@ class CTETRA10(SolidElement):
                 self.node_ids[i, 9] = nid_map[nids[9]]
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)
