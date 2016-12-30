@@ -117,9 +117,6 @@ class SolidElement(Element):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    def Eid(self):
-        return self.eid
-
     def E(self):
         return self.pid_ref.mid_ref.E()
 
@@ -352,7 +349,7 @@ class CHEXA8(SolidElement):
         return faces
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
@@ -629,7 +626,7 @@ class CHEXA20(SolidElement):
         return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:8])
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
         assert isinstance(eid, int)
@@ -874,7 +871,7 @@ class CPENTA6(SolidElement):
         return [face_node_ids, area]
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)
@@ -1193,7 +1190,7 @@ class CPENTA15(SolidElement):
         ]
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)
@@ -1360,7 +1357,7 @@ class CPYRAM5(SolidElement):
         ]
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)
@@ -1540,7 +1537,7 @@ class CPYRAM13(SolidElement):
         ]
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)
@@ -1710,7 +1707,7 @@ class CTETRA4(SolidElement):
         self.pid_ref = self.pid
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)
@@ -1953,7 +1950,7 @@ class CTETRA10(SolidElement):
         ]
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)

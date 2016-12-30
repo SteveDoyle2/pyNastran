@@ -327,12 +327,6 @@ class DESVAR(OptConstraint):
         return DESVAR(desvar_id, label, xinit, xlb=xlb, xub=xub,
                       delx=delx, ddval=ddval, comment=comment)
 
-    def OptID(self):
-        return self.DesvarID()
-
-    def DesvarID(self):
-        return self.desvar_id
-
     def raw_fields(self):
         list_fields = ['DESVAR', self.desvar_id, self.label, self.xinit, self.xlb,
                        self.xub, self.delx, self.ddval]

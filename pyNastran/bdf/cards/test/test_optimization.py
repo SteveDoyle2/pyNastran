@@ -28,7 +28,7 @@ class TestOpt(unittest.TestCase):
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
-        op2 = read_op2(op2_filename)
+        op2 = read_op2(op2_filename, debug=False)
 
         #subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
@@ -44,9 +44,36 @@ class TestOpt(unittest.TestCase):
         ddval = model.add_ddval(oid, ddvals, comment='ddval')
         ddval.write_card(size=8)
         ddval.write_card(size=16)
+        ddval.write_card(size=16, is_double=True)
         ddval.raw_fields()
         model.validate()
         model.cross_reference()
+
+    def test_doptprm(self):
+        """tests a doptprm"""
+        #DOPTPRM    CONV1  .00001  DELOBJ .000001  DESMAX     100      P1       1
+        #              P2      13
+        model = BDF(debug=False)
+
+        params = {
+            'CONV1' : 0.0001,
+            'DELOBJ' : 0.000001,
+            'DESMAX' : 100,
+            'P1' : 1,
+            'P2' : 13,
+        }
+        doptprm = model.add_doptprm(params, comment='doptprm')
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+
+        doptprm.comment = ''
+        doptprm.raw_fields()
+        doptprm.write_card(size=8)
+        doptprm.write_card(size=16)
+        doptprm.write_card(size=16, is_double=True)
+
 
     def test_dlink(self):
         """tests a DLINK"""
@@ -61,10 +88,11 @@ class TestOpt(unittest.TestCase):
         dlink.comment = ''
         msg = dlink.write_card(size=8)
         dlink.write_card(size=16)
+        dlink.write_card(size=16, is_double=True)
         assert '$' not in msg, msg
         lines = msg.split('\n')
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.add_card(lines, 'DLINK', is_list=False)
         model.dlinks[10]
 
@@ -124,9 +152,9 @@ class TestOpt(unittest.TestCase):
         atta = 9
         attb = None
         atti = pid
-        dresp = model.add_dresp1(dresp_id, label, response_type,
+        dresp1 = model.add_dresp1(dresp_id, label, response_type,
                                  property_type, region,
-                                 atta, attb, atti, validate=True, comment='dresp')
+                                 atta, attb, atti, validate=True, comment='dresp1')
         dconstr = model.add_dconstr(oid, dresp_id, lid=-1.e20, uid=1.e20,
                                    lowfq=0., highfq=1.e20, comment='dconstr')
         desvar.write_card(size=8)
@@ -135,8 +163,9 @@ class TestOpt(unittest.TestCase):
         dvprel1.write_card(size=16)
         dconstr.write_card(size=8)
         dconstr.write_card(size=16)
-        dresp.write_card(size=8)
-        dresp.write_card(size=16)
+        dresp1.write_card(size=8)
+        dresp1.write_card(size=16)
+        dresp1.write_card(size=16, is_double=True)
 
         model.validate()
         #model._verify_bdf(xref=False)
@@ -151,9 +180,9 @@ class TestOpt(unittest.TestCase):
         dconstr.write_card(size=8)
         dconstr.write_card(size=16)
         dconstr.raw_fields()
-        dresp.write_card(size=8)
-        dresp.write_card(size=16)
-        dresp.raw_fields()
+        dresp1.write_card(size=8)
+        dresp1.write_card(size=16)
+        dresp1.raw_fields()
 
         stringio = StringIO()
         model.write_bdf(stringio, close=False)
@@ -164,7 +193,7 @@ class TestOpt(unittest.TestCase):
 
     def test_dvmrel1(self):
         """tests a DVMREL1"""
-        model = BDF()
+        model = BDF(debug=False)
         oid = 10
         mid1 = 4
         mp_min = 1e6
@@ -233,7 +262,7 @@ class TestOpt(unittest.TestCase):
 
     def test_dvcrel1(self):
         """tests a DVCREL"""
-        model = BDF()
+        model = BDF(debug=False)
         oid = 10
         eid = 100
         cp_min = 0.01
@@ -320,3 +349,4 @@ class TestOpt(unittest.TestCase):
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
+

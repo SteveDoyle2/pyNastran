@@ -113,7 +113,7 @@ class CROD(RodElement):
         return CROD(eid, pid, nids, comment=comment)
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
         assert isinstance(pid, int), 'pid=%r' % pid
@@ -137,9 +137,6 @@ class CROD(RodElement):
 
     def Centroid(self):
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
-
-    def Eid(self):
-        return self.eid
 
     def Mid(self):
         if isinstance(self.pid, integer_types):
@@ -286,9 +283,6 @@ class CTUBE(RodElement):
         c = self.Centroid()
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
-
-    def Eid(self):
-        return self.eid
 
     def Mid(self):
         return self.pid_ref.Mid()
@@ -443,9 +437,6 @@ class CONROD(RodElement):
             #return None
         else:
             return self.mid_ref.mid
-
-    def Eid(self):
-        return self.eid
 
     def Pid(self):
         return None

@@ -25,9 +25,6 @@ class SpringElement(Element):
         Element.__init__(self)
         self.nodes = [None, None]
 
-    def Eid(self):
-        return self.eid
-
     def Centroid(self):
         p = (self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position()) / 2.
         return p
@@ -107,7 +104,7 @@ class CELAS1(SpringElement):
         return [tuple(sorted(self.node_ids))]
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         k = self.K()
         nodeIDs = self.node_ids
         c1 = self.c2
@@ -258,7 +255,7 @@ class CELAS2(SpringElement):
         del self.nodes_ref
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         k = self.K()
         node_ids = self.node_ids
         c1 = self.c2

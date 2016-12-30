@@ -211,7 +211,7 @@ class CGAP(Element):
 
     def _verify(self, xref=True):
         cid = self.Cid()
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
 
@@ -237,7 +237,7 @@ class CGAP(Element):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by CGAP eid=%s' % self.Eid()
+        msg = ' which is required by CGAP eid=%s' % self.eid
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
         self.ga_ref = self.ga
@@ -260,9 +260,6 @@ class CGAP(Element):
         if self.cid:
             del self.cid_ref
         del self.ga_ref, self.gb_ref, self.pid_ref
-
-    def Eid(self):
-        return self.eid
 
     @property
     def nodes(self):
@@ -386,15 +383,12 @@ class CRAC2D(CrackElement):
         return CRAC2D(eid, pid, nids, comment=comment)
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-
-    def Eid(self):
-        return self.eid
 
     def get_edge_ids(self):
         return []
@@ -450,11 +444,8 @@ class CRAC3D(CrackElement):
         nids = data[2:]
         return CRAC3D(eid, pid, nids, comment=comment)
 
-    def Eid(self):
-        return self.eid
-
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         assert isinstance(eid, int)
@@ -530,7 +521,7 @@ class PLOTEL(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by PLOTEL eid=%s' % self.Eid()
+        msg = ' which is required by PLOTEL eid=%s' % self.eid
         node_ids = self.node_ids
         self.nodes = [
             model.Node(node_ids[0], msg=msg),
@@ -541,9 +532,6 @@ class PLOTEL(BaseCard):
     def uncross_reference(self):
         self.nodes = self.node_ids
         del self.nodes_ref
-
-    def Eid(self):
-        return self.eid
 
     @property
     def node_ids(self):

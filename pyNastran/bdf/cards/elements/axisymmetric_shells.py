@@ -38,9 +38,6 @@ class AxisymmetricElement(Element):
     def __init__(self):
         Element.__init__(self)
 
-    def Eid(self):
-        return self.eid
-
 
 class AxisymmetricTri(AxisymmetricElement):
     def __init__(self):
@@ -56,9 +53,6 @@ class AxisymmetricTri(AxisymmetricElement):
             tuple(sorted([node_ids[1], node_ids[2]])),
             tuple(sorted([node_ids[2], node_ids[0]]))
         ]
-
-    def Eid(self):
-        return self.eid
 
     def Centroid(self):
         r"""
@@ -116,7 +110,7 @@ class CTRAX3(AxisymmetricTri):
         return CTRAX3(eid, pid, nids, theta=theta, comment=comment)
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -251,7 +245,7 @@ class CTRAX6(AxisymmetricTri):
         return CTRAX6(eid, pid, nids, theta=theta, comment=comment)
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -384,7 +378,7 @@ class CTRIAX(TriShell):
         return CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -554,7 +548,7 @@ class CTRIAX6(TriShell):
         del self.nodes_ref, self.mid_ref
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         nids = self.node_ids
         edges = self.get_edge_ids()
 

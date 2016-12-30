@@ -110,9 +110,6 @@ class ShellElement(Element):
         #self.deprecated('Rho()', 'pid.mid().rho', '0.8')
         #return self.pid_ref.mid().rho
 
-    def Eid(self):
-        return self.eid
-
     def Area(self):
         raise NotImplementedError('Area undefined for %s' % self.type)
 
@@ -422,7 +419,7 @@ class CTRIA3(TriShell):
         self.theta_mcid = theta_mcid
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -605,7 +602,7 @@ class CPLSTN3(TriShell):
         del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -785,7 +782,7 @@ class CTRIA6(TriShell):
         self.theta_mcid = theta_mcid
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -1029,26 +1026,8 @@ class CTRIAR(TriShell):
         return (theta_mcid, zoffset, TFlag, T1, T2, T3)
 
 
-    #def _verify(self, xref=False):
-        #eid = self.Eid()
-        #pid = self.Pid()
-        #nids = self.node_ids
-
-        #assert isinstance(eid, integer_types)
-        #assert isinstance(pid, integer_types)
-        #for i,nid in enumerate(nids):
-            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
-
-        #if xref:
-            #assert self.pid_ref.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
-            #t = self.Thickness()
-            #a,c,n = self.AreaCentroidNormal()
-            #for i in range(3):
-                #assert isinstance(c[i], float)
-                #assert isinstance(n[i], float)
-
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -1334,7 +1313,7 @@ class CSHEAR(QuadShell):
         return centroid
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -1862,7 +1841,7 @@ class CQUAD4(QuadShell):
         del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -2034,7 +2013,7 @@ class CPLSTN4(QuadShell):
         del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -2154,7 +2133,7 @@ class CPLSTN6(TriShell):
         del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -2335,7 +2314,7 @@ class CPLSTN8(QuadShell):
         del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -2567,7 +2546,7 @@ class CQUADR(QuadShell):
         return self.pid_ref.Thickness()
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
 
@@ -2751,7 +2730,7 @@ class CPLSTS3(TriShell):
         del self.nodes_ref, self.pid_ref
 
     def _verify(self, xref=True):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()
@@ -3085,7 +3064,7 @@ class CQUAD8(QuadShell):
         self.theta_mcid = theta_mcid
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
         edges = self.get_edge_ids()

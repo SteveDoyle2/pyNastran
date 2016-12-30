@@ -131,9 +131,6 @@ class CBUSH(BushElement):
         ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
         return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
-    def Eid(self):
-        return self.eid
-
     #def nodeIDs(self):
         #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         #return self.node_ids

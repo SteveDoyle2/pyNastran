@@ -79,9 +79,9 @@ class CMASS1(PointMassElement):
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
-        g1 = integer_or_blank(card, 3, 'g1')
+        g1 = integer(card, 3, 'g1')
         c1 = integer_or_blank(card, 4, 'c1')
-        g2 = integer_or_blank(card, 5, 'g2')
+        g2 = integer(card, 5, 'g2')
         c2 = integer_or_blank(card, 6, 'c2')
         assert len(card) <= 7, 'len(CMASS1 card) = %i\ncard=%s' % (len(card), card)
         return CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
@@ -96,14 +96,11 @@ class CMASS1(PointMassElement):
         c2 = data[5]
         return CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
 
-    def Eid(self):
-        return self.eid
-
     def Mass(self):
         return self.pid_ref.mass
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         mass = self.Mass()
         c1 = self.c1
@@ -258,7 +255,7 @@ class CMASS2(PointMassElement):
         return CMASS2(eid, mass, g1, c1, g2, c2, comment=comment)
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         pid = self.Pid()
         mass = self.Mass()
         c1 = self.c1
@@ -270,13 +267,6 @@ class CMASS2(PointMassElement):
         assert isinstance(mass, float), 'mass=%r' % mass
         assert c1 is None or isinstance(c1, int), 'c1=%r' % c1
         assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
-
-    def Eid(self):
-        return self.eid
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -409,9 +399,6 @@ class CMASS3(PointMassElement):
         s2 = data[3]
         return CMASS3(eid, pid, s1, s2, comment=comment)
 
-    def Eid(self):
-        return self.eid
-
     def Mass(self):
         return self.pid_ref.mass
 
@@ -499,9 +486,6 @@ class CMASS4(PointMassElement):
         s1 = data[2]
         s2 = data[3]
         return CMASS4(eid, mass, s1, s2, comment=comment)
-
-    def Eid(self):
-        return self.eid
 
     def Mass(self):
         return self.mass
@@ -712,11 +696,8 @@ class CONM1(PointMassElement):
         return CONM1(eid, nid, m, cid=cid, comment=comment)
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         assert isinstance(eid, integer_types), 'eid=%r' % eid
-
-    def Eid(self):
-        return self.eid
 
     def Mass(self):
         return 0.0
@@ -945,7 +926,7 @@ class CONM2(PointMassElement):
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     def _verify(self, xref=False):
-        eid = self.Eid()
+        eid = self.eid
         nid = self.Nid()
         cid = self.Cid()
         mass = self.Mass()
@@ -957,9 +938,6 @@ class CONM2(PointMassElement):
         assert isinstance(mass, float), 'mass=%r' % mass
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
-
-    def Eid(self):
-        return self.eid
 
     def Mass(self):
         return self.mass
