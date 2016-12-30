@@ -69,23 +69,27 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
  - [BDF](http://pynastran-git.readthedocs.io/en/latest/quick_start/bdf_demo.html)
    - 297 cards supported
    - faster node transforms using:
-     
-     `>>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = get_displacement_index_xyz_cp_cd(dtype='float64, sort_ids=True)`
-     `>>> xyz_cid0 = transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0, in_place=False)`
-     
+
+     ```python
+     >>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = get_displacement_index_xyz_cp_cd(dtype='float64, sort_ids=True)
+     >>> xyz_cid0 = transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0, in_place=False)
+     ```
+
    - simplified card adding (**card defaults are still a work in progress**)
-   
-     `>>> model.add_grid(nid, xyz=[4.,5.,6.], comment='nid, cp, x, y, z')`
+     ```python
+     >>> model.add_grid(nid, xyz=[4.,5.,6.], comment='nid, cp, x, y, z')
+     ```
 
-   - comments can now be created without worrying about `$` signs
+- comments can now be created without worrying about `$` signs
 
-     `>>> model.add_card(['GRID', 10, None, 4.0, 5.0, 6.0], comment='GRID comment\ngrid,nid,cp,x,y,z')`
-
-     `$GRID comment`
-
-     `$grid,nid,cp,x,y,z`
-
-     `GRID,10,,4.0,5.0,6.0`
+     ```python
+     >>> model.add_card(['GRID', 10, None, 4.0, 5.0, 6.0], comment='GRID comment\ngrid,nid,cp,x,y,z')
+     ```
+     ```
+     $GRID comment
+     $grid,nid,cp,x,y,z
+     GRID,10,,4.0,5.0,6.0
+     ```
    
    - unit conversion
 
