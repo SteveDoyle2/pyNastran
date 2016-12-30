@@ -34,7 +34,7 @@ class TEMPD(object):
         self.temperature_default = []
 
     def add_card(self, card, comment=''):
-         self.comment = comment
+        self.comment = comment
         self.n += 1
 
         n = 1

@@ -12,7 +12,10 @@ def save_file_dialog(self, title, default_filename,
     if qt_version == 4:
         fname = str(QFileDialog.getSaveFileName(
             self, title, default_filename, file_types, filt))
-        flt = str(filt).split()[0]
+        try:
+            flt = str(filt).split()[0]
+        except IndexError:
+            flt = None
     else:
         fname, flt = QFileDialog.getSaveFileName(
             self, title, default_filename, file_types, filt)

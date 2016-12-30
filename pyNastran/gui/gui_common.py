@@ -409,7 +409,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
 
                 ('load_csv_user_geom', 'Load CSV User Geometry', '', None, 'Loads custom geometry file', self.on_load_user_geom),
-                ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads user defined points ', self.on_load_user_points),
+                ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads CSV points ', self.on_load_csv_points),
 
                 ('load_csv_nodal', 'Load CSV Nodal Results', '', None, 'Loads a custom nodal results file', self.on_load_nodal_results),
                 ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),
@@ -2968,7 +2968,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #prop.SetRepresentationToPoints()
         #prop.SetPointSize(4)
 
-    def on_load_user_points(self, csv_filename=None, name=None, color=None):
+    def on_load_csv_points(self, csv_filename=None, name=None, color=None):
         """
         Loads a User Points CSV File of the form:
 
@@ -3005,9 +3005,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             sline = os.path.basename(csv_filename).rsplit('.', 1)
             name = sline[0]
 
-        self._add_user_points(csv_filename, name, color)
+        self._add_user_points_from_csv(csv_filename, name, color)
         self.num_user_points += 1
-        self.log_command('on_load_user_points(%r, %r, %s)' % (
+        self.log_command('on_load_csv_points(%r, %r, %s)' % (
             csv_filename, name, str(color)))
 
     def create_cell_picker(self):
@@ -3334,12 +3334,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #point3d = Point3D(x, y, 0)
         #return view_projection_inverse.multiply(point3d)
 
+    def show_only(self, names):
+        """
+        Show these actors only
+
+        names : str, List[str]
+            names to show
+            If they're hidden, show them.
+            If they're shown and shouldn't be, hide them.
+
+        ..todo :: update the GeomeryProperties
+        """
+        asdf
+
     def hide_actors(self, except_names=None):
         """
         Hide all the actors
 
         except_names : str, List[str], None
             list of names to exclude
+            None : hide all
+
+        ..note :: If an actor is hidden and in the except_names, it will still be hidden.
+        ..todo :: update the GeomeryProperties
         """
         if except_names is None:
             except_names = []
@@ -3350,20 +3367,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
         for key, actor in iteritems(self.geometry_actors):
             if key not in except_names:
                 actor.VisibilityOff()
-            #else:
-                #prop = actor.GetProperty()
-                #prop.SetLineWidth(1.5)
-                #prop.SetColor((0., 0., 0.))
+
         self.hide_axes()
         self.hide_legend()
         #self.set_background_color_to_white()
 
-    def hide_axes(self):
+    def hide_axes(self, cids=None):
+        """
+        ..todo :: support cids
+        ..todo :: fix the coords
+        """
         for axis in self.axes.itervalues():
             axis.VisibilityOff()
         self.corner_axis.EnabledOff()
 
-    def show_axes(self):
+    def show_axes(self, cids=None):
+        """
+        ..todo :: support cids
+        ..todo :: fix the coords
+        """
         for axis in self.axes.itervalues():
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
@@ -5003,7 +5025,47 @@ class GuiCommon2(QMainWindow, GuiCommon):
         grid.Modified()
         #print('update2...')
 
-    def _add_user_points(self, points_filename, name, color):
+
+    def _add_user_points_from_csv(self, csv_points_filename, name, color, point_size=4):
+        """
+        Helper method for adding csv nodes to the gui
+
+        Parameters
+        ----------
+        csv_points_filename : str
+            CSV filename that defines one xyz point per line
+        name : str
+            name of the geometry actor
+        color : List[float, float, float]
+            RGB values; [0. to 1.]
+        point_size : int; default=4
+            the nominal point size
+        """
+        assert os.path.exists(points_filename), print_bad_path(points_filename)
+        # read input file
+        try:
+            user_points = np.loadtxt(points_filename, delimiter=',')
+        except ValueError:
+            user_points = loadtxt_nice(points_filename, delimiter=',')
+            # can't handle leading spaces?
+            #raise
+        self._add_user_points(user_points, name, color, point_size=point_size)
+
+    def _add_user_points(self, user_points, name, color, point_size=4):
+        """
+        Helper method for adding csv nodes to the gui
+
+        Parameters
+        ----------
+        user_points : (n, 3) float ndarray
+            the points to add
+        name : str
+            name of the geometry actor
+        color : List[float, float, float]
+            RGB values; [0. to 1.]
+        point_size : int; default=4
+            the nominal point size
+        """
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
@@ -5013,16 +5075,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # create grid
         self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
-                                       point_size=1, representation='point')
-
-        assert os.path.exists(points_filename), print_bad_path(points_filename)
-        # read input file
-        try:
-            user_points = np.loadtxt(points_filename, delimiter=',')
-        except ValueError:
-            user_points = loadtxt_nice(points_filename, delimiter=',')
-            # can't handle leading spaces?
-            #raise
+                                       point_size=point_size, representation='point')
 
         npoints = user_points.shape[0]
         if npoints == 0:
@@ -5052,4 +5105,4 @@ class GuiCommon2(QMainWindow, GuiCommon):
         actor = self.geometry_actors[name]
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
-        prop.SetPointSize(4)
+        prop.SetPointSize(point_size)
