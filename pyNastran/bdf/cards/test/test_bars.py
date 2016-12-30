@@ -143,7 +143,7 @@ class TestBars(unittest.TestCase):
         Type = 'bad_type'
         dim = 42
         nsm = 0.5
-        pbarl = PBARL(pid, mid, group, Type, dim, nsm=nsm, comment='comment')
+        pbarl = PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment='comment')
         with self.assertRaises(ValueError): # Type
             pbarl.validate()
 
@@ -156,6 +156,10 @@ class TestBars(unittest.TestCase):
             pbarl.validate()
 
         pbarl.dim = [2., 1.]
+        #with self.assertRaises(ValueError):
+            #pbarl.validate()
+        #pbarl.group = 'MSCBMLO'
+
         pbarl.validate()
         str(pbarl)
         pbarl.write_card(size=8, is_double=False)

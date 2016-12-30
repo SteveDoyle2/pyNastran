@@ -275,7 +275,7 @@ class AddCards(AddMethods):
         self._add_mass_object(mass)
         return mass
 
-    def add_conm2(self, eid, nid, cid, mass, X=None, I=None, comment=''):
+    def add_conm2(self, eid, nid, mass, cid=0, X=None, I=None, comment=''):
         """
         Creates a CONM2 card
 
@@ -612,8 +612,8 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pbarl(self, pid, mid, group, Type, dim, nsm=0., comment=''):
-        prop = PBARL(pid, mid, group, Type, dim, nsm=nsm, comment=comment)
+    def add_pbarl(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
+        prop = PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
         self._add_property_object(prop)
         return prop
 
@@ -1008,7 +1008,8 @@ class AddCards(AddMethods):
                    rho=rho, hgen=hgen, comment=comment)
         self._add_thermal_material_object(mat)
 
-    def add_mat8(self, mid, e11, e22, nu12, g12, g1z, g2z, rho=0., a1=0., a2=0.,
+    def add_mat8(self, mid, e11, e22, nu12, g12=0.0, g1z=1e8, g2z=1e8,
+                 rho=0., a1=0., a2=0.,
                  TRef=0., Xt=0., Xc=None, Yt=0., Yc=None,
                  S=0., ge=0., F12=0., strn=0., comment=''):
         mat = MAT8(mid, e11, e22, nu12, g12, g1z, g2z, rho=rho, a1=a1, a2=a2,
@@ -1026,8 +1027,8 @@ class AddCards(AddMethods):
         self._add_structural_material_object(mat)
         return mat
 
-    def add_mat10(self, mid, bulk, rho, c, ge, comment=''):
-        mat = MAT10(mid, bulk, rho, c, ge, comment=comment)
+    def add_mat10(self, mid, bulk=None, rho=None, c=None, ge=0.0, comment=''):
+        mat = MAT10(mid, bulk=bulk, rho=rho, c=c, ge=ge, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
@@ -1936,17 +1937,19 @@ class AddCards(AddMethods):
         self._add_dresp_object(dresp)
         return dresp
 
-    def add_dvcrel1(self, oid, Type, eid, cp_name, cp_min, cp_max, dvids,
-                    coeffs, c0=0., validate=True, comment=''):
-        dvcrel = DVCREL1(oid, Type, eid, cp_name, cp_min, cp_max, dvids,
-                         coeffs, c0=c0, validate=validate, comment=comment)
+    def add_dvcrel1(self, oid, Type, eid, cp_name, dvids, coeffs,
+                    cp_min=None, cp_max=1e20, c0=0., validate=True, comment=''):
+        dvcrel = DVCREL1(oid, Type, eid, cp_name, dvids, coeffs,
+                         cp_min=cp_min, cp_max=cp_max, c0=c0,
+                         validate=validate, comment=comment)
         self._add_dvcrel_object(dvcrel)
         return dvcrel
 
-    def add_dvcrel2(self, oid, Type, eid, cp_name, cp_min, cp_max, deqation,
-                    dvids, labels, validate=True, comment=''):
-        dvcrel = DVCREL2(oid, Type, eid, cp_name, cp_min, cp_max, deqation,
-                         dvids, labels, validate=validate, comment=comment)
+    def add_dvcrel2(self, oid, Type, eid, cp_name, deqation, dvids, labels,
+                    cp_min=None, cp_max=1e20, validate=True, comment=''):
+        dvcrel = DVCREL2(oid, Type, eid, cp_name, deqation, dvids, labels,
+                         cp_min=cp_min, cp_max=cp_max,
+                         validate=validate, comment=comment)
         self._add_dvcrel_object(dvcrel)
         return dvcrel
 
@@ -2157,7 +2160,7 @@ class AddCards(AddMethods):
         return nlparm
 
     def add_nlpci(self, nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
-                 scale=0., desiter=12, mxinc=20, comment=''):
+                  scale=0., desiter=12, mxinc=20, comment=''):
         nlpci = NLPCI(nlpci_id, Type=Type, minalr=minalr, maxalr=maxalr,
                       scale=scale, desiter=desiter, mxinc=mxinc, comment=comment)
         self._add_nlpci_object(nlpci)

@@ -14,10 +14,6 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 Overall Notes
 
 Added BDF
-   - added PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
-   - added CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE
-   - added POINT, PBRSECT, PBMSECT
-   - added DVGRID
    - *** SET2,PEALST,TIC,DMI,CONM1
 
 Overall OP2
@@ -90,11 +86,11 @@ BDF:
    - FLFACT can now write in wide field format
 
  - added cards:
-   - POINT
-   - PBRSECT
-   - PBMSECT
-   - DVGRID
+   - CTRAX3, CTRAX6, CQUADX4, CQUADX8
+   - PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
    - CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE
+   - POINT, PBRSECT, PBMSECT
+   - DVGRID
 
 GUI:
  - added:

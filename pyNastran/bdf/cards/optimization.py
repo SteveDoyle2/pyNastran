@@ -261,7 +261,7 @@ class DCONSTR(OptConstraint):
             del self.lid
         if isinstance(self.uid, integer_types):
             del self.uid_ref
-        del self.rid_ref
+        del self.dresp_id_ref
 
     def raw_fields(self):
         list_fields = ['DCONSTR', self.oid, self.DRespID(), self.Lid(),
@@ -1826,8 +1826,8 @@ class DSCREEN(OptConstraint):
 class DVCREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVCREL1'
 
-    def __init__(self, oid, Type, eid, cp_name, cp_min, cp_max, dvids, coeffs, c0=0.,
-                 validate=False, comment=''):
+    def __init__(self, oid, Type, eid, cp_name, dvids, coeffs,
+                 cp_min=None, cp_max=1e20, c0=0., validate=False, comment=''):
         """
         +---------+--------+--------+--------+-----------+-------+--------+-----+---+
         |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  | 9 |
@@ -1845,6 +1845,11 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
         """
         if comment:
             self.comment = comment
+        if isinstance(dvids, int):
+            dvids = [dvids]
+        if isinstance(coeffs, float):
+            coeffs = [coeffs]
+
         self.oid = oid
 
         # element type (e.g. CQUAD4)
@@ -1903,8 +1908,8 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVCREL1...')
-        return DVCREL1(oid, Type, eid, cp_name, cp_min, cp_max, dvids, coeffs, c0=0.,
-                       comment=comment)
+        return DVCREL1(oid, Type, eid, cp_name, dvids, coeffs,
+                       c0=c0, cp_min=cp_min, cp_max=cp_max, comment=comment)
 
     def _verify(self, xref):
         """
@@ -1989,15 +1994,13 @@ class DVCREL2(OptConstraint):
     type = 'DVCREL2'
 
     allowed_elements = [
-        #'CELAS2', 'CBAR', 'CBEAM',
-        #'CQUAD4',
-        #'CBUSH',
+        'CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CBUSH',
         'CDAMP2',
     ]
     #allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     #allowed_properties_mass = ['PMASS']
-    def __init__(self, oid, Type, eid, cp_name, cp_min, cp_max, deqation,
-                 dvids, labels, validate=False, comment=''):
+    def __init__(self, oid, Type, eid, cp_name, deqation, dvids, labels,
+                 cp_min=None, cp_max=1e20, validate=False, comment=''):
         """
         +----------+--------+--------+-------+------------+-------+-------+-------+-------+
         |    1     |    2   |   3    |   4   |      5     |   6   |   7   |   8   |   9   |
@@ -2015,6 +2018,16 @@ class DVCREL2(OptConstraint):
         """
         if comment:
             self.comment = comment
+        if dvids is None:
+            dvids = []
+        elif isinstance(dvids, int):
+            dvids = [dvids]
+
+        if labels is None:
+            labels = []
+        elif isinstance(labels, str):
+            labels = [labels]
+
         #: Unique identification number
         self.oid = oid
 
@@ -2097,8 +2110,8 @@ class DVCREL2(OptConstraint):
                 if label:
                     assert label is not 'DTABLE'
                     labels.append(label)
-        return DVCREL2(oid, Type, pid, cp_name, cp_min, cp_max, dequation, dvids,
-                       labels, comment=comment)
+        return DVCREL2(oid, Type, pid, cp_name, dequation, dvids, labels,
+                       cp_min, cp_max, comment=comment)
 
     def OptID(self):
         return self.oid
@@ -2166,7 +2179,7 @@ class DVCREL2(OptConstraint):
 
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
-        msg = ', which is required by DVCREL2 name=%r' % self.type
+        msg = ', which is required by DVCREL2 oid=%r' % self.oid
         #if self.Type in self.allowed_elements:
             #self.pid = model.Element(self.pid, msg=msg)
         #elif self.Type in self.allowed_masses:
@@ -2177,14 +2190,13 @@ class DVCREL2(OptConstraint):
             #raise NotImplementedError('Type=%r is not supported' % self.Type)
         self.dequation = model.DEQATN(self.dequation)
 
-        msg = ', which is required by DVCREL1 name=%r' % self.type
         self.eid = model.Element(self.eid, msg=msg)
         self.eid_ref = self.eid
         #self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
         self.eid_ref = self.eid
         self.dequation_ref = self.dequation
-        assert self.eid_ref.type in ['CDAMP2'], self.eid.type
+        assert self.eid_ref.type in self.allowed_elements, self.eid.type
 
     def uncross_reference(self):
         self.eid = self.Eid()
@@ -2910,6 +2922,7 @@ class DVPREL2(OptConstraint):
             labels = []
         elif isinstance(labels, str):
             labels = [labels]
+
         #: Unique identification number
         self.oid = oid
 

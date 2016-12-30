@@ -25,12 +25,12 @@ op2_filename = r'C:\Users\Steve\Dropbox\pyNastran_examples\iSat\ISat_Launch_Sm_4
 #assert os.path.exists(op2_filename), print_bad_path(op2_filename)
 
 # define the input file with a file path
-op2 = OP2(op2_filename)
+op2 = OP2()
 
 # <codecell>
 
 # read the op2
-op2.read_op2()
+op2.read_op2(op2_filename)
 
 # <codecell>
 

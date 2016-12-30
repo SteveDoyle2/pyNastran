@@ -3,7 +3,7 @@
 | :-------:	| :--- 	  | :--- 	  | :--- 	  |
 |  v0.7.2 	| [Download] (https://github.com/SteveDoyle2/pyNastran/releases) |  [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.7.2)](http://pynastran-git.readthedocs.io/en/v0.7.2/?badge=v0.7.2) | 
 |  v0.8.0 	| [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v0.8.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v0.8.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v0.8) | 
-|   Master	|        | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master) | 
+|   Master	|        | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master) | 
 
 <!---
 
@@ -53,17 +53,31 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 # News
 
 ### pyNastran v0.9 progress (12/1/2016)
- - OP2
+ - [OP2](http://pynastran-git.readthedocs.io/en/latest/quick_start/op2_demo.html)
    - preliminary random results (ATO/CRM/PSD/RMS/NO)
- - F06
+   - improved geometry support
+   - MONPNT1/MONPNT3 reading
+
+ - F06 scripts
    - added a preliminary flutter (SOL 145) parser
      - supports multiple subcases
      - PK and PKNL methods supported
      - `plot_Vg_Vf(...)`, `plot_Vg(...)`, `plot_root_locus(...)`
      - input/output units
      - mode switching not fixed yet
- - BDF
-   - comments can now be created without worrying about $ signs
+
+ - [BDF](http://pynastran-git.readthedocs.io/en/latest/quick_start/bdf_demo.html)
+   - 297 cards supported
+   - faster node transforms using:
+     
+     `>>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = get_displacement_index_xyz_cp_cd(dtype='float64, sort_ids=True)`
+     `>>> xyz_cid0 = transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0, in_place=False)`
+     
+   - simplified card adding (**card defaults are still a work in progress**)
+   
+     `>>> model.add_grid(nid, xyz=[4.,5.,6.], comment='nid, cp, x, y, z')`
+
+   - comments can now be created without worrying about `$` signs
 
      `>>> model.add_card(['GRID', 10, None, 4.0, 5.0, 6.0], comment='GRID comment\ngrid,nid,cp,x,y,z')`
 
@@ -72,11 +86,16 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      `$grid,nid,cp,x,y,z`
 
      `GRID,10,,4.0,5.0,6.0`
+   
+   - unit conversion
 
-- GUI
+- [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html)
    - buttons for picking, rotation center
    - PyQt5 support
    - QScintilla & pygments support for scripting code editor
+
+- [Matlab](http://pynastran-git.readthedocs.io/en/latest/quick_start/matlab.html) integration
+   - pyNastran works with Matlab 2014a+
 
 ### pyNastran v0.8.0 has been released (8/21/2016)
 
