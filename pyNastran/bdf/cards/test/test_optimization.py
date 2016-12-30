@@ -263,7 +263,6 @@ class TestOpt(unittest.TestCase):
                               wa=None, wb=None, comment='cbar')
 
         oid = 11
-        Type = 'CBAR'
         equation_id = 100
         dvcrel2 = model.add_dvcrel2(oid, 'CBAR', eid, 'X3', equation_id, desvar_ids, labels=None,
                                     cp_min=2., cp_max=4.,

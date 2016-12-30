@@ -1108,7 +1108,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch, *.ecd)|" \
-                "*.bdf;*.dat;*.nas;*.pch|" \
+                "*.bdf;*.dat;*.nas;*.pch;*.ecd|" \
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch *.ecd);;All files (*)"
             title = 'Please select a BDF/DAT/PCH/ECD to load'
@@ -3100,7 +3100,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
         Used in combination with ``OP2.transform_displacements_to_global``
 
         Returns
-        ----------
+        -------
         icd_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
@@ -3143,7 +3143,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
         Used in combination with ``OP2.transform_displacements_to_global``
 
         Returns
-        ----------
+        -------
         icd_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
@@ -3260,7 +3260,6 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
 
         Parameters
         ----------
-
         bdf_filename : str
             the main bdf_filename
         punch : bool, optional
@@ -3378,7 +3377,6 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, XrefMesh):
 
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
-
         return _lines_to_decks(lines, i, punch)
 
     def _dump_file(self, bdf_dump_filename, lines, i):
