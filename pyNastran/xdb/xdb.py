@@ -516,10 +516,11 @@ def test_ctria3():
     #model = read_xdb(xdb_filename, 'tri', nsubcases=1, npload4s=6)
 
     #xdb_filename = r'C:\Users\nikita.kalutskiy\Desktop\A318_FEM\Static\w1000bostat.xdb'
-    #model = read_xdb(xdb_filename, 'quad', nsubcases=3, npload4s=6)
+    xdb_filename = os.path.join(model_path, 'support_structure', 'w1000bostat.xdb')
+    model = read_xdb(xdb_filename, 'quad', nsubcases=3, npload4s=6)
 
-    xdb_filename = os.path.join(model_path, 'pload4', 'cquad4_1subcase.xdb')
-    model = read_xdb(xdb_filename, 'quad', nsubcases=1, npload4s=6)
+    #xdb_filename = os.path.join(model_path, 'pload4', 'cquad4_1subcase.xdb')
+    #model = read_xdb(xdb_filename, 'quad', nsubcases=1, npload4s=6)
 
 if __name__ == '__main__':
     test_ctria3()
