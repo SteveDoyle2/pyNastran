@@ -28,12 +28,54 @@ from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.elements.shell import TriShell, QuadShell, _triangle_area_centroid_normal, _normal
+from pyNastran.bdf.cards.base_card import Element
 
 __all__ = ['CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
            'CQUADX', 'CQUADX4', 'CQUADX8']
 
 
-class CTRAX3(TriShell):
+class AxisymmetricElement(Element):
+    def __init__(self):
+        Element.__init__(self)
+
+    def Eid(self):
+        return self.eid
+
+
+class AxisymmetricTri(AxisymmetricElement):
+    def __init__(self):
+        AxisymmetricElement.__init__(self)
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[0]]))
+        ]
+
+    def Eid(self):
+        return self.eid
+
+    def Centroid(self):
+        r"""
+        Get the centroid.
+
+        .. math::
+          CG = \frac{1}{3} (n_0+n_1+n_2)
+        """
+        n1, n2, n3 = self.get_node_positions()[:3, :]
+        centroid = (n1 + n2 + n3) / 3.
+        return centroid
+
+    def Mass(self):
+        n1, n2, n3 = self.get_node_positions()[:3, :]
+        return 0.
+
+class CTRAX3(AxisymmetricTri):
     """
     +--------+------------+-------+----+----+----+-------+
     |   1    |     2      |   3   |  4 |  5 |  6 |   7   |
@@ -45,7 +87,7 @@ class CTRAX3(TriShell):
     """
     type = 'CTRAX3'
     def __init__(self, eid, pid, nids, theta=0., comment=''):
-        TriShell.__init__(self)
+        AxisymmetricTri.__init__(self)
         if comment:
             self.comment = comment
         #: Element ID
@@ -91,11 +133,9 @@ class CTRAX3(TriShell):
             assert self.pid_ref.type in ['PSOLID', 'PLSOLID'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             mass = self.Mass()
             assert isinstance(mass, float), 'mass=%r' % mass
-            a, c, n = self.AreaCentroidNormal()
-            assert isinstance(a, float), 'Area=%r' % a
+            c = self.Centroid()
             for i in range(3):
                 assert isinstance(c[i], float)
-                assert isinstance(n[i], float)
 
     def flipNormal(self):
         pass
@@ -165,7 +205,7 @@ class CTRAX3(TriShell):
         return msg
 
 
-class CTRAX6(TriShell):
+class CTRAX6(AxisymmetricTri):
     """
     +--------+-------+-------+----+----+----+----+----+-----+
     |   1    |   2   |   3   |  4 |  5 |  6 | 7  |  8 |  9  |
@@ -179,14 +219,14 @@ class CTRAX6(TriShell):
     """
     type = 'CTRAX6'
     def __init__(self, eid, pid, nids, theta=0., comment=''):
-        TriShell.__init__(self)
+        AxisymmetricTri.__init__(self)
         if comment:
             self.comment = comment
         #: Element ID
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.theta_mcid = theta_mcid
+        self.theta = theta
         self.nodes = nids
         assert len(nids) == 6, 'error on CTRAX6'
 
@@ -228,11 +268,9 @@ class CTRAX6(TriShell):
             assert self.pid_ref.type in ['PSOLID', 'PLSOLID'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             mass = self.Mass()
             assert isinstance(mass, float), 'mass=%r' % mass
-            a, c, n = self.AreaCentroidNormal()
-            assert isinstance(a, float), 'Area=%r' % a
+            c = self.Centroid()
             for i in range(3):
                 assert isinstance(c[i], float)
-                assert isinstance(n[i], float)
 
     def flipNormal(self):
         pass
@@ -285,7 +323,7 @@ class CTRAX6(TriShell):
         return list_fields
 
     def repr_fields(self):
-        theta_mcid = set_blank_if_default(self.theta, 0.0)
+        theta = set_blank_if_default(self.theta, 0.0)
         nodeIDs = self.node_ids
         list_fields = ['CTRAX6', self.eid, self.Pid()] + nodeIDs + [theta]
         return list_fields
@@ -319,7 +357,7 @@ class CTRIAX(TriShell):
             self.comment = comment
         #: Element ID
         self.eid = eid
-        #: Property ID
+        #: Property ID of a PLPLANE or PAXSYMH entry
         self.pid = pid
         self.theta_mcid = theta_mcid
         self.nodes = nids

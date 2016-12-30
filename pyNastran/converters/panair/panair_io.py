@@ -1,9 +1,9 @@
 from __future__ import print_function
-from six import iteritems
 import os
+
+from six import iteritems
 import numpy as np
-from numpy import zeros, array, cross, ravel, amax, amin, arange
-from numpy.linalg import norm
+from numpy import zeros, ravel, amax, amin, arange
 
 import vtk
 from vtk import vtkQuad
@@ -109,7 +109,8 @@ class PanairIO(object):
 
         #print "nElements = ", nElements
         loads = []
-        form, cases = self._fill_panair_geometry_case(cases, ID, nodes, elements, regions, kt, cp_norm, loads)
+        form, cases = self._fill_panair_geometry_case(
+            cases, ID, nodes, elements, regions, kt, cp_norm, loads)
         #if plot:
         self._finish_results_io2(form, cases)
         #else:
@@ -118,7 +119,8 @@ class PanairIO(object):
     def clear_panair(self):
         del self.elements
 
-    def _fill_panair_geometry_case(self, cases, ID, nodes, elements, regions, kt, cp_norm, loads):
+    def _fill_panair_geometry_case(self, cases, ID, nodes, elements, regions,
+                                   kt, cp_norm, loads):
         self.elements = elements
         nnids = nodes.shape[0]
         neids = elements.shape[0]
@@ -171,20 +173,32 @@ class PanairIO(object):
 
         itime = 0
         # ID, header, title, location, values, format, uname
-        region_res = GuiResult(ID, 'Region', 'Region', 'centroid', regions, data_format=None, uname='Region')
-        eid_res = GuiResult(ID, 'ElementID', 'ElementID', 'centroid', eids, data_format=None, uname='ElementID')
-        nid_res = GuiResult(ID, 'NodeID', 'NodeID', 'node', nids, data_format=None, uname='NodeID')
-        area_res = GuiResult(ID, 'Area', 'Area', 'centroid', area, data_format=None, uname='Area')
+        region_res = GuiResult(ID, 'Region', 'Region', 'centroid', regions,
+                               data_format=None, uname='Region')
+        eid_res = GuiResult(ID, 'ElementID', 'ElementID', 'centroid', eids,
+                            data_format=None, uname='ElementID')
+        nid_res = GuiResult(ID, 'NodeID', 'NodeID', 'node', nids,
+                            data_format=None, uname='NodeID')
+        area_res = GuiResult(ID, 'Area', 'Area', 'centroid', area,
+                             data_format=None, uname='Area')
 
-        nx_res = GuiResult(ID, 'normal_x', 'NormalX', 'centroid', normal[:, 0], data_format='%.3f', uname='NormalX')
-        ny_res = GuiResult(ID, 'normal_y', 'NormalY', 'centroid', normal[:, 1], data_format='%.3f', uname='NormalY')
-        nz_res = GuiResult(ID, 'normal_z', 'NormalZ', 'centroid', normal[:, 2], data_format='%.3f', uname='NormalZ')
-        cenx_res = GuiResult(ID, 'centroid_x', 'CentroidX', 'centroid', xyz_centroid[:, 0], data_format=None, uname='CentroidX')
-        ceny_res = GuiResult(ID, 'centroid_y', 'CentroidY', 'centroid', xyz_centroid[:, 1], data_format=None, uname='CentroidY')
-        cenz_res = GuiResult(ID, 'centroid_z', 'CentroidZ', 'centroid', xyz_centroid[:, 2], data_format=None, uname='CentroidZ')
+        nx_res = GuiResult(ID, 'normal_x', 'NormalX', 'centroid', normal[:, 0],
+                           data_format='%.3f', uname='NormalX')
+        ny_res = GuiResult(ID, 'normal_y', 'NormalY', 'centroid', normal[:, 1],
+                           data_format='%.3f', uname='NormalY')
+        nz_res = GuiResult(ID, 'normal_z', 'NormalZ', 'centroid', normal[:, 2],
+                           data_format='%.3f', uname='NormalZ')
+        cenx_res = GuiResult(ID, 'centroid_x', 'CentroidX', 'centroid', xyz_centroid[:, 0],
+                             data_format=None, uname='CentroidX')
+        ceny_res = GuiResult(ID, 'centroid_y', 'CentroidY', 'centroid', xyz_centroid[:, 1],
+                             data_format=None, uname='CentroidY')
+        cenz_res = GuiResult(ID, 'centroid_z', 'CentroidZ', 'centroid', xyz_centroid[:, 2],
+                             data_format=None, uname='CentroidZ')
 
-        kt_res = GuiResult(ID, 'Kt', 'Kt', 'centroid', kt, data_format=None, uname='Kt')
-        cp_res = GuiResult(ID, 'CpNorm', 'CpNorm', 'centroid', cp_norm, data_format=None, uname='CpNorm')
+        kt_res = GuiResult(ID, 'Kt', 'Kt', 'centroid', kt,
+                           data_format=None, uname='Kt')
+        cp_res = GuiResult(ID, 'CpNorm', 'CpNorm', 'centroid', cp_norm,
+                           data_format=None, uname='CpNorm')
 
         cases[icase] = (region_res, (itime, 'Region'))
         cases[icase + 1] = (eid_res, (itime, 'ElementID'))
@@ -202,9 +216,12 @@ class PanairIO(object):
         cases[icase + 14] = (cp_res, (itime, 'CpNorm'))
 
         # nodal
-        cenx_res = GuiResult(ID, 'node_x', 'NodeX', 'node', nodes[:, 0], data_format='%.2f', uname='node_x')
-        ceny_res = GuiResult(ID, 'node_y', 'NodeY', 'node', nodes[:, 1], data_format='%.2f', uname='node_y')
-        cenz_res = GuiResult(ID, 'node_z', 'NodeZ', 'node', nodes[:, 2], data_format='%.2f', uname='node_z')
+        cenx_res = GuiResult(ID, 'node_x', 'NodeX', 'node', nodes[:, 0],
+                             data_format='%.2f', uname='node_x')
+        ceny_res = GuiResult(ID, 'node_y', 'NodeY', 'node', nodes[:, 1],
+                             data_format='%.2f', uname='node_y')
+        cenz_res = GuiResult(ID, 'node_z', 'NodeZ', 'node', nodes[:, 2],
+                             data_format='%.2f', uname='node_z')
         cases[icase + 10] = (cenx_res, (itime, 'node_x'))
         cases[icase + 11] = (ceny_res, (itime, 'node_y'))
         cases[icase + 12] = (cenz_res, (itime, 'node_z'))
@@ -248,8 +265,10 @@ class PanairIO(object):
         form.append(('Results', None, results_form))
 
         ID = 1
-        Cpn_res = GuiResult(ID, 'Cp Nodal', 'Cp', 'node', Cp_array, data_format='%.3f', uname='Cp_nodal')
-        Cpc_res = GuiResult(ID, 'Cp Centroidal', 'Cp', 'centroid', Cp_array2, data_format='%.3f', uname='Cp_centroidal')
+        Cpn_res = GuiResult(ID, 'Cp Nodal', 'Cp', 'node', Cp_array,
+                            data_format='%.3f', uname='Cp_nodal')
+        Cpc_res = GuiResult(ID, 'Cp Centroidal', 'Cp', 'centroid', Cp_array2,
+                            data_format='%.3f', uname='Cp_centroidal')
         cases[icase] = (Cpn_res, (0, 'Cp_nodal'))
         cases[icase + 1] = (Cpc_res, (0, 'Cp_centroidal'))
 

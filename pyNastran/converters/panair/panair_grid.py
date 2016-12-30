@@ -10,7 +10,8 @@ from six.moves import zip, range
 import numpy as np
 
 
-from pyNastran.converters.panair.panair_grid_patch import PanairPatch, PanairWakePatch, print_float
+from pyNastran.converters.panair.panair_grid_patch import (
+    PanairPatch, PanairWakePatch, print_float)
 #from pyNastran.converters.panair.panair_write import PanairWrite
 from pyNastran.utils.log import get_logger
 from pyNastran.utils import print_bad_path

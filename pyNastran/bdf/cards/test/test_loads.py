@@ -491,6 +491,74 @@ class TestLoads(unittest.TestCase):
         if fail:
             raise RuntimeError('incorrect loads')
 
+    def test_ploadx1(self):
+        """tests a PLOADX1"""
+        model = BDF(debug=False)
+        sid = 10
+        eid1 = 11
+        pa = 200.
+        ga = 1
+        gb = 2
+        ploadx1 = model.add_ploadx1(sid, eid1, pa, ga, gb, pb=None,
+                                    theta=0., comment='ploadx1')
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+
+        pid = 20
+        nids = [1, 2, 3, None, None, None]
+        ctriax = model.add_ctriax(eid1, pid, nids, theta_mcid=0., comment='ctriax')
+
+        mid = 21
+        plplane = model.add_plplane(pid, mid, cid=0,
+                                    stress_strain_output_location='GRID',
+                                    comment='plplane')
+
+        #eid2 = 12
+        #model.add_ctriax6(eid2, mid, nids, theta=0., comment='ctriax6')
+
+        #E = 30.e7
+        #G = None
+        #nu = 0.3
+        #mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
+        #mathe = model.add_mathe(mid, model, bulk, rho, texp, mus, alphas,
+                                #betas, mooney, sussbat, comment='mathe')
+        mathp = model.add_mathp(mid, comment='mathp')
+
+
+        ctriax.raw_fields()
+        ctriax.write_card(size=8)
+        ctriax.write_card(size=16)
+
+        plplane.raw_fields()
+        plplane.write_card(size=8)
+        plplane.write_card(size=16)
+
+        #mathe.raw_fields()
+        #mathe.write_card(size=8)
+        #mathe.write_card(size=16)
+
+        mathp.raw_fields()
+        mathp.write_card(size=8)
+        mathp.write_card(size=16)
+
+        ploadx1.raw_fields()
+        ploadx1.write_card(size=8)
+        ploadx1.write_card(size=16)
+        ploadx1.write_card(size=16, is_double=True)
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+
+        ctriax.write_card(size=8)
+        plplane.write_card(size=8)
+        #mathe.write_card(size=8)
+        mathp.write_card(size=8)
+        ploadx1.write_card(size=8)
+
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

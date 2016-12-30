@@ -739,7 +739,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pshear(self, pid, t, mid, nsm, f1, f2, comment=''):
+    def add_pshear(self, pid, t, mid, nsm=0., f1=0., f2=0., comment=''):
         prop = PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
         self._add_property_object(prop)
         return prop
@@ -791,11 +791,46 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pcomp(self, pid, mids, thicknesses, thetas, souts, nsm=0., sb=0.,
-                  ft=None, TRef=0., ge=0., lam=None,
+    def add_pcomp(self, pid, mids, thicknesses, thetas=None, souts=None,
+                  nsm=0., sb=0., ft=None, TRef=0., ge=0., lam=None,
                   z0=None, comment=''):
-        prop = PCOMP(pid, mids, thicknesses, thetas, souts, nsm=nsm, sb=sb,
-                     ft=ft, TRef=TRef, ge=ge, lam=lam,
+        """
+        Creates a PCOMP card
+
+        pid : int
+            property id
+        mids : List[int, ..., int]
+            material ids for each ply
+        thicknesses : List[float, ..., float]
+            thicknesses for each ply
+        thetas : List[float, ..., float]; default=None
+            ply angle
+            None : [0.] * nplies
+        souts : List[str, ..., str]; default=None
+            should the stress? be printed; {YES, NO}
+            None : [NO] * nplies
+        nsm : float; default=0.
+            nonstructural mass per unit area
+        sb : float; default=0.
+            Allowable shear stress of the bonding material.
+            Used by the failure theory
+        ft : str; default=None
+            failure theory; {HILL, HOFF, TSAI, STRN, None}
+        TRef : float; default=0.
+            reference temperature
+        ge : float; default=0.
+            structural damping
+        lam : str; default=None
+            symmetric flag; {SYM, MEM, BEND, SMEAR, SMCORE, None}
+            None : not symmmetric
+        z0 : float; default=None
+            Distance from the reference plane to the bottom surface
+            None : -1/2 * total_thickness
+        comment : str; default=''
+            a comment for the card
+        """
+        prop = PCOMP(pid, mids, thicknesses, thetas, souts,
+                     nsm=nsm, sb=sb, ft=ft, TRef=TRef, ge=ge, lam=lam,
                      z0=z0, comment=comment)
         self._add_property_object(prop)
         return prop
@@ -1027,8 +1062,8 @@ class AddCards(AddMethods):
         self._add_structural_material_object(mat)
         return mat
 
-    def add_mat10(self, mid, bulk=None, rho=None, c=None, ge=0.0, comment=''):
-        mat = MAT10(mid, bulk=bulk, rho=rho, c=c, ge=ge, comment=comment)
+    def add_mat10(self, mid, bulk, rho, c, ge=0.0, comment=''):
+        mat = MAT10(mid, bulk, rho, c, ge=ge, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
@@ -1037,6 +1072,28 @@ class AddCards(AddMethods):
         mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
                     a1, a2, a3, TRef, ge, comment=comment)
         self._add_structural_material_object(mat)
+        return mat
+
+    def add_mathe(self, mid, model, bulk, rho, texp, mus, alphas, betas, mooney,
+                  sussbat, comment=''):
+        mat = MATHE(mid, model, bulk, rho, texp, mus, alphas, betas, mooney,
+                    sussbat, comment=comment)
+        self._add_hyperelastic_material_object(mat)
+        return mat
+
+    def add_mathp(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., TRef=0., ge=0., na=1, nd=1,
+                  a20=0., a11=0., a02=0., d2=0.,
+                  a30=0., a21=0., a12=0., a03=0., d3=0.,
+                  a40=0., a31=0., a22=0., a13=0., a04=0., d4=0.,
+                  a50=0., a41=0., a32=0., a23=0., a14=0., a05=0., d5=0.,
+                  tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment=''):
+        mat = MATHP(mid, a10, a01, d1, rho, av, TRef, ge, na, nd,
+                    a20, a11, a02, d2,
+                    a30, a21, a12, a03, d3,
+                    a40, a31, a22, a13, a04,
+                    d4, a50, a41, a32, a23, a14, a05, d5, tab1, tab2, tab3,
+                    tab4, tabd, comment='')
+        self._add_hyperelastic_material_object(mat)
         return mat
 
     def add_mats1(self, mid, tid, Type, h, hr, yf, limit1, limit2, comment=''):
@@ -1245,6 +1302,11 @@ class AddCards(AddMethods):
         load = PLOAD4(sid, eids, pressures, g1=g1, g34=g34, cid=cid,
                       NVector=NVector, sorl=sorl,
                       ldir=ldir, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_ploadx1(self, sid, eid, pa, ga, gb, pb=None, theta=0., comment=''):
+        load = PLOADX1(sid, eid, pa, ga, gb, pb=pb, theta=theta, comment=comment)
         self._add_load_object(load)
         return load
 

@@ -1,12 +1,14 @@
-from six import iteritems
+from __future__ import print_function
 import os
+from six import iteritems
 
 from numpy import zeros, array
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
 
-def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None, debug=False):
+def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename,
+                                log=None, debug=False):
     """
     Converts a UGRID to a Tecplot ASCII file.
 
@@ -19,6 +21,8 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None, debu
         the output Tecplot filename
     log : logger; default=None
         a logger object
+    debug : bool; default=False
+        developer debug
     """
     if isinstance(ugrid_filename, str):
         #assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename
@@ -27,7 +31,6 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename, log=None, debu
     else:
         model = ugrid_filename
     model.write_tecplot(tecplot_filename)
-
 
 
 #def write_tecplot(self, tecplot_filename):
@@ -95,8 +98,9 @@ def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, log=None, debug=False):
 def main(): # pragma: no cover
     import sys
     if len(sys.argv) != 3:
-        msg = 'number of arguments must be 2; ugrid_filename, tecplot_filename; nargs=%s; args=%s' % (
-            len(sys.argv[1:]), sys.argv[1:])
+        msg = ('number of arguments must be 2; ugrid_filename, tecplot_filename;'
+               ' nargs=%s; args=%s' % (
+                   len(sys.argv[1:]), sys.argv[1:]))
         raise RuntimeError(msg)
     ugrid_filename = sys.argv[1]
     tecplot_filename = sys.argv[2]

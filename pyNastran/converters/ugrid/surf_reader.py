@@ -22,11 +22,11 @@ def combine_surfs(surf_filenames, surf_out_filename=None):
     nodes = []
     tris = []
     quads = []
-    tris_props = []
+    tri_props = []
     quad_props = []
 
     n0 = 0
-    for fname in stl_filenames:
+    for fname in surf_filenames:
         surf = SurfReader()
         surf.read_surf(fname)
         nnodes = surf.nodes.shape[0]
@@ -52,6 +52,14 @@ class SurfReader(object):
     def __init__(self, log=None, debug=False):
         self.log = log
         self.debug = debug
+
+        self.nodes = None
+        self.node_props = None
+        #self.nodes_failed = None
+        self.tris = None
+        self.tri_props = None
+        self.quads = None
+        self.quad_props = None
 
     def read_surf(self, surf_filename):
         """
@@ -87,7 +95,7 @@ class SurfReader(object):
         |         | BL region                                                    |
         +---------+--------------------------------------------------------------+
         """
-        basename = os.path.splitext(surf_filename)[0]
+        #basename = os.path.splitext(surf_filename)[0]
         #fail_surf_filename = basename +
         #print(fail_surf_filename)
 
@@ -96,52 +104,54 @@ class SurfReader(object):
         # if '.FAIL.' in surf_filename:
             # is_failed_surf = True
 
-        f = open(surf_filename, 'r')
-        ntris, nquads, nnodes = f.readline().strip().split()
-        ntris = int(ntris)
-        nquads = int(nquads)
-        nnodes = int(nnodes)
+        with open(surf_filename, 'r') as surf_file:
+            ntris, nquads, nnodes = surf_file.readline().strip().split()
+            ntris = int(ntris)
+            nquads = int(nquads)
+            nnodes = int(nnodes)
 
-        nodes = zeros((nnodes, 3), dtype='float64')
-        node_props = zeros((nnodes, 2), dtype='float64')
+            nodes = zeros((nnodes, 3), dtype='float64')
+            node_props = zeros((nnodes, 2), dtype='float64')
 
-        tris = zeros((ntris, 3), dtype='int32')
-        quads = zeros((nquads, 4), dtype='int32')
+            tris = zeros((ntris, 3), dtype='int32')
+            quads = zeros((nquads, 4), dtype='int32')
 
-        tri_props = zeros((ntris, 3), dtype='int32')
-        quad_props = zeros((nquads, 3), dtype='int32')
+            tri_props = zeros((ntris, 3), dtype='int32')
+            quad_props = zeros((nquads, 3), dtype='int32')
 
 
-        # read nodes
-        if is_failed_surf:
-            for inode in range(nnodes):
-                (x, y, z) = f.readline().strip().split()
-                nodes[inode, :] = [x, y, z]
-        else:
-            for inode in range(nnodes):
-                x_y_z_initalnormalspacing_blthickness = f.readline().strip().split()
-                if len(x_y_z_initalnormalspacing_blthickness) == 4:
-                    (x, y, z, initial_normal_spacing) = x_y_z_initalnormalspacing_blthickness
-                    bl_thickness = 0.0
-                elif len(x_y_z_initalnormalspacing_blthickness) == 5:
-                    (x, y, z, initial_normal_spacing,
-                     bl_thickness) = x_y_z_initalnormalspacing_blthickness
-                else:
-                    raise NotImplementedError(x_y_z_initalnormalspacing_blthickness)
-                nodes[inode, :] = [x, y, z]
-                node_props[inode, :] = [initial_normal_spacing, bl_thickness]
+            # read nodes
+            if is_failed_surf:
+                for inode in range(nnodes):
+                    (x, y, z) = surf_file.readline().strip().split()
+                    nodes[inode, :] = [x, y, z]
+            else:
+                for inode in range(nnodes):
+                    x_y_z_initalnormalspacing_blthickness = surf_file.readline().strip().split()
+                    if len(x_y_z_initalnormalspacing_blthickness) == 4:
+                        (x, y, z, initial_normal_spacing) = x_y_z_initalnormalspacing_blthickness
+                        bl_thickness = 0.0
+                    elif len(x_y_z_initalnormalspacing_blthickness) == 5:
+                        (x, y, z, initial_normal_spacing,
+                         bl_thickness) = x_y_z_initalnormalspacing_blthickness
+                    else:
+                        raise NotImplementedError(x_y_z_initalnormalspacing_blthickness)
+                    nodes[inode, :] = [x, y, z]
+                    node_props[inode, :] = [initial_normal_spacing, bl_thickness]
 
-        # read tris
-        for itri in range(ntris):
-            n1, n2, n3, surface_id, reconnection_flag, grid_bc_flag = f.readline().strip().split()
-            tris[itri, :] = [n1, n2, n3]
-            tri_props[itri, :] = [surface_id, reconnection_flag, grid_bc_flag]
+            # read tris
+            for itri in range(ntris):
+                (n1, n2, n3, surface_id, reconnection_flag,
+                 grid_bc_flag) = surf_file.readline().strip().split()
+                tris[itri, :] = [n1, n2, n3]
+                tri_props[itri, :] = [surface_id, reconnection_flag, grid_bc_flag]
 
-        # read quads
-        for iquad in range(nquads):
-            n1, n2, n3, n4, surface_id, reconnection_flag, grid_bc_flag = f.readline().strip().split()
-            quads[iquad, :] = [n1, n2, n3, n4]
-            quad_props[iquad, :] = [surface_id, reconnection_flag, grid_bc_flag]
+            # read quads
+            for iquad in range(nquads):
+                (n1, n2, n3, n4, surface_id, reconnection_flag,
+                 grid_bc_flag) = surf_file.readline().strip().split()
+                quads[iquad, :] = [n1, n2, n3, n4]
+                quad_props[iquad, :] = [surface_id, reconnection_flag, grid_bc_flag]
 
         self.nodes = nodes
         self.node_props = node_props
@@ -207,17 +217,19 @@ class TagReader(object):
         with open(tag_filename, 'r') as tag_file:
             lines = tag_file.readlines()
 
-        lines = [line.strip().split('#')[0].strip() for line in lines
-                 if line.strip().split('#')[0].strip()
-                 ]
+        lines = [
+            line.strip().split('#')[0].strip() for line in lines
+            if line.strip().split('#')[0].strip()
+        ]
         #print('\n'.join(lines))
 
-        #ID Group           Visc    Recon   Rebuild Fixed   Source  Trans   Delete  Spacing Thcknss Layers
+        #ID Group  Visc  Recon  Rebuild Fixed  Source  Trans  Delete  Spacing Thcknss Layers
         data = {}
         for line in lines:
             sline = line.split()
             if len(sline) == 12:
-                ID, name, is_visc, is_recon, is_rebuild, is_fixed, is_source, is_trans, is_delete, bl_spacing, bl_thickness, nlayers = sline
+                (ID, name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
+                 is_trans, is_delete, bl_spacing, bl_thickness, nlayers) = sline
                 ID = int(ID)
                 is_visc = int(is_visc)
                 is_recon = int(is_recon)
@@ -249,5 +261,6 @@ class TagReader(object):
                     pass
                 raise RuntimeError(msg)
 
-            data[ID] = [name, is_visc, is_recon, is_rebuild, is_fixed, is_source, is_trans, is_delete, bl_spacing, bl_thickness, nlayers]
+            data[ID] = [name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
+                        is_trans, is_delete, bl_spacing, bl_thickness, nlayers]
         return data

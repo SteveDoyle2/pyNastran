@@ -17,17 +17,17 @@ class LaWGS_IO(object):
                 None, None)
         return data
 
-    def load_lawgs_geometry(self, lawgsFileName, dirname, name='main', plot=True):
+    def load_lawgs_geometry(self, lawgs_filename, dirname, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self._remove_old_geometry(lawgsFileName)
+        skip_reading = self._remove_old_geometry(lawgs_filename)
         if skip_reading:
             return
 
-        model = LaWGS(lawgsFileName)
+        model = LaWGS(lawgs_filename)
         self.model_type = model.model_type
-        model.readLaWGS()
+        model.read_lawgs()
 
         nodes, elements, regions = model.get_points_elements_regions()
         self.nNodes = len(nodes)
@@ -126,10 +126,6 @@ class LaWGS_IO(object):
         cases[icase + 1] = (eid_res, (ID, 'ElementID'))
         cases[icase + 2] = (nid_res, (ID, 'NodeID'))
 
-        #cases[(ID, icase, 'Region', 1, 'centroid', '%i', '')] = regions
-        #cases[(ID, icase + 1, 'ElementID', 1, 'centroid', '%i', '')] = eids
-        #cases[(ID, icase + 2, 'NodeID', 1, 'node', '%i', '')] = nids
-
         #nnids = len(nids)
         neids = len(elements)
 
@@ -161,13 +157,5 @@ class LaWGS_IO(object):
         cases[icase + 6] = (nx_res, (ID, 'NormalX'))
         cases[icase + 7] = (ny_res, (ID, 'NormalY'))
         cases[icase + 8] = (nz_res, (ID, 'NormalZ'))
-
-        #cases[(ID, icase + 3, 'X', 1, 'node', '%.3f', '')] = nodes[:, 0]
-        #cases[(ID, icase + 4, 'Y', 1, 'node', '%.3f', '')] = nodes[:, 1]
-        #cases[(ID, icase + 5, 'Z', 1, 'node', '%.3f', '')] = nodes[:, 2]
-
-        #cases[(ID, icase + 6, 'NormalX', 1, 'centroid', '%.3f', '')] = normals[:, 0]
-        #cases[(ID, icase + 7, 'NormalY', 1, 'centroid', '%.3f', '')] = normals[:, 1]
-        #cases[(ID, icase + 8, 'NormalZ', 1, 'centroid', '%.3f', '')] = normals[:, 2]
         return geometry_form, cases
 

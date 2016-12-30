@@ -4,8 +4,6 @@ All shell elements are defined in this file.  This includes:
 
  * CTRIA3
  * CTRIA6
- * CTRIAX
- * CTRIAX6
 
  * CSHEAR
 
@@ -13,7 +11,6 @@ All shell elements are defined in this file.  This includes:
  * CQUAD4
  * CQUAD8
  * CQUADR
- * CQUADX
 
  * CPLTSN3
  * CPLSTN4
@@ -32,7 +29,7 @@ from numpy import cross, allclose
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank, print_float_8
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank)
@@ -72,7 +69,7 @@ def _triangle_area_centroid_normal(nodes, card):
       |V| = sqrt(v1^0.5+v2^0.5+v3^0.5) = norm(V)
 
       Area = 0.5 * |n|
-      unitNormal = n/|n|
+      unit_normal = n/|n|
     """
     (n0, n1, n2) = nodes
     vector = cross(n0 - n1, n0 - n2)
@@ -81,7 +78,7 @@ def _triangle_area_centroid_normal(nodes, card):
         normal = vector / length
     except FloatingPointError as e:
         msg = e.strerror
-        msg += '\nvector: %s ; length: %s' % (vector, length)
+        msg += '\nvector: %s; length: %s' % (vector, length)
         raise RuntimeError(msg)
 
     if not allclose(norm(normal), 1.):
@@ -403,22 +400,25 @@ class CTRIA3(TriShell):
     @property
     def zOffset(self):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         return self.zoffset
 
     @property
     def thetaMcid(self):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         return self.theta_mcid
-
 
     @zOffset.setter
     def zOffset(self, zoffset):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         self.zoffset = zoffset
 
     @thetaMcid.setter
     def thetaMcid(self, theta_mcid):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         self.theta_mcid = theta_mcid
 
     def _verify(self, xref=True):
@@ -763,22 +763,25 @@ class CTRIA6(TriShell):
     @property
     def zOffset(self):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         return self.zoffset
 
     @property
     def thetaMcid(self):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         return self.theta_mcid
-
 
     @zOffset.setter
     def zOffset(self, zoffset):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         self.zoffset = zoffset
 
     @thetaMcid.setter
     def thetaMcid(self, theta_mcid):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         self.theta_mcid = theta_mcid
 
     def _verify(self, xref=False):
@@ -976,21 +979,25 @@ class CTRIAR(TriShell):
     @property
     def zOffset(self):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         return self.zoffset
 
     @property
     def thetaMcid(self):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         return self.theta_mcid
 
     @zOffset.setter
     def zOffset(self, zoffset):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         self.zoffset = zoffset
 
     @thetaMcid.setter
     def thetaMcid(self, theta_mcid):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         self.theta_mcid = theta_mcid
 
     def Thickness(self):
@@ -1210,7 +1217,7 @@ class QuadShell(ShellElement):
         self.nodes = [n1, n4, n3, n2]
 
     def _get_repr_defaults(self):
-        zoffset = set_blank_if_default(self.zOffset, 0.0)
+        zoffset = set_blank_if_default(self.zoffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
@@ -1456,30 +1463,6 @@ class CQUAD4(QuadShell):
         assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
-        eid = data[0]
-        pid = data[1]
-        nids = data[2:6]
-
-        theta_mcid = data[6]
-        zoffset = data[7]
-        TFlag = data[8]
-        T1 = data[9]
-        T2 = data[10]
-        T3 = data[11]
-        T4 = data[12]
-        if T1 == -1.0:
-            T1 = 1.0
-        if T2 == -1.0:
-            T2 = 1.0
-        if T3 == -1.0:
-            T3 = 1.0
-        if T4 == -1.0:
-            T4 = 1.0
-        return CQUAD4(eid, pid, nids, theta_mcid, zoffset,
-                      TFlag, T1, T2, T3, T4, comment=comment)
-
-    @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -1505,6 +1488,31 @@ class CQUAD4(QuadShell):
             T2 = 1.0
             T3 = 1.0
             T4 = 1.0
+
+        return CQUAD4(eid, pid, nids, theta_mcid, zoffset,
+                      TFlag, T1, T2, T3, T4, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
+        nids = data[2:6]
+
+        theta_mcid = data[6]
+        zoffset = data[7]
+        TFlag = data[8]
+        T1 = data[9]
+        T2 = data[10]
+        T3 = data[11]
+        T4 = data[12]
+        if T1 == -1.0:
+            T1 = 1.0
+        if T2 == -1.0:
+            T2 = 1.0
+        if T3 == -1.0:
+            T3 = 1.0
+        if T4 == -1.0:
+            T4 = 1.0
         return CQUAD4(eid, pid, nids, theta_mcid, zoffset,
                       TFlag, T1, T2, T3, T4, comment=comment)
 
@@ -1526,21 +1534,25 @@ class CQUAD4(QuadShell):
     @property
     def zOffset(self):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         return self.zoffset
 
     @property
     def thetaMcid(self):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         return self.theta_mcid
 
     @zOffset.setter
     def zOffset(self, zoffset):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         self.zoffset = zoffset
 
     @thetaMcid.setter
     def thetaMcid(self, theta_mcid):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         self.theta_mcid = theta_mcid
 
     def material_coordinate_system(self, normal=None, xyz1234=None):
@@ -2527,22 +2539,25 @@ class CQUADR(QuadShell):
     @property
     def zOffset(self):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         return self.zoffset
 
     @property
     def thetaMcid(self):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         return self.theta_mcid
-
 
     @zOffset.setter
     def zOffset(self, zoffset):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         self.zoffset = zoffset
 
     @thetaMcid.setter
     def thetaMcid(self, theta_mcid):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         self.theta_mcid = theta_mcid
 
     def Thickness(self):
@@ -2572,12 +2587,6 @@ class CQUADR(QuadShell):
                 #assert isinstance(n[i], float)
             mass = self.Mass()
             assert isinstance(mass, float), 'mass=%r' % mass
-
-    def Thickness(self):
-        """
-        Returns the thickness
-        """
-        return self.pid_ref.Thickness()
 
     def flipNormal(self):
         r"""
@@ -2972,8 +2981,8 @@ class CQUAD8(QuadShell):
         self.T3 = T3
         self.T4 = T4
         self.TFlag = TFlag
-        self.thetaMcid = theta_mcid
-        self.zOffset = zoffset
+        self.theta_mcid = theta_mcid
+        self.zoffset = zoffset
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
 
@@ -3054,21 +3063,25 @@ class CQUAD8(QuadShell):
     @property
     def zOffset(self):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         return self.zoffset
 
     @property
     def thetaMcid(self):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         return self.theta_mcid
 
     @zOffset.setter
     def zOffset(self, zoffset):
         """deprecated"""
+        self.deprecated('self.zOffset', 'self.zoffset', '0.9')
         self.zoffset = zoffset
 
     @thetaMcid.setter
     def thetaMcid(self, theta_mcid):
         """deprecated"""
+        self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         self.theta_mcid = theta_mcid
 
     def _verify(self, xref=False):
@@ -3165,7 +3178,7 @@ class CQUAD8(QuadShell):
 
     def raw_fields(self):
         list_fields = ['CQUAD8', self.eid, self.Pid()] + self.node_ids + [
-            self.T1, self.T2, self.T3, self.T4, self.thetaMcid, self.zoffset,
+            self.T1, self.T2, self.T3, self.T4, self.theta_mcid, self.zoffset,
             self.TFlag]
         return list_fields
 

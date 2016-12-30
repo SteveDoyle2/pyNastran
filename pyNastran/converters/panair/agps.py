@@ -7,7 +7,7 @@ class AGPS(object):
         self.infilename = None
         self.pressures = {}
         self.log = log
-        self.debug = False
+        self.debug = debug
 
     def read_agps(self, infilename):
         """Loads an AGPS file"""

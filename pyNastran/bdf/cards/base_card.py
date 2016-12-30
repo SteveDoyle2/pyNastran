@@ -56,7 +56,7 @@ class BaseCard(object):
 
     def deprecated(self, old_name, new_name, deprecated_version):
         """deprecates methods"""
-        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
+        deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def validate(self):
         """card checking method that should be overwritten"""

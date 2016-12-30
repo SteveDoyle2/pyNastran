@@ -127,15 +127,15 @@ class PanairPatch(object):
         p4 = self.get_point(r + 1, c)
         return (p1, p2, p3, p4)
 
-    def get_panel_point_IDs(self, ipanel):
+    def get_panel_point_ids(self, ipanel):
         r = ipanel % (self.nrows - 1)
         c = ipanel // (self.nrows - 1)
 
         #print "r=%s c=%s" % (r, c)
-        p1 = self.get_point_ID(r, c)
-        p2 = self.get_point_ID(r, c + 1)
-        p3 = self.get_point_ID(r + 1, c + 1)
-        p4 = self.get_point_ID(r + 1, c)
+        p1 = self.get_point_id(r, c)
+        p2 = self.get_point_id(r, c + 1)
+        p3 = self.get_point_id(r + 1, c + 1)
+        p4 = self.get_point_id(r + 1, c)
         return (p1, p2, p3, p4)
 
     def get_subpanel_properties(self, ipanel):
@@ -195,7 +195,7 @@ class PanairPatch(object):
     def get_point(self, row, col):
         return self.xyz[row, col]
 
-    def get_point_ID(self, row, col):
+    def get_point_id(self, row, col):
         return col * self.nrows + row
 
     def get_ipoint(self, ipoint):
@@ -389,8 +389,8 @@ class PanairWakePatch(PanairPatch):
         self.matchw = matchw
         self.trailed_panel = trailed_panel
         self.edge_number = edge_number
-        self.xWake = xwake
-        self.tWake = twake
+        self.xwake = xwake
+        self.twake = twake
         #self.log.debug("matchw = %s" % (self.matchw))
         #self.log.debug("wake patch")
 
@@ -406,13 +406,14 @@ class PanairWakePatch(PanairPatch):
         #header += '%-10s%-10s%40s%-10s\n' %(self.nrows,self.nCols,'',self.netName)
         header += '%-10s%-10s%-10s%-10s%-30s%-10s\n' % (self.trailed_panel,
                                                         print_float(self.edge_number),
-                                                        self.xWake,
-                                                        print_float(self.tWake),
+                                                        self.xwake,
+                                                        print_float(self.twake),
                                                         ' ',
                                                         self.network_name)
         return header
 
 def elements_from_quad(nx, ny):
+    """creates quad elements for the gui"""
     assert nx > 1
     assert ny > 1
 

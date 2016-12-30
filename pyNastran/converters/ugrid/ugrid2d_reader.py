@@ -1,15 +1,18 @@
-from copy import deepcopy
-from numpy import zeros, array
+from numpy import array
+from pyNastran.utils.log import get_logger2
 
 
 class UGRID2D_Reader(object):
     def __init__(self, log=None, debug=None):
-        pass
+        self.log = get_logger2(log=log, debug=debug)
+        self.nodes = None
+        self.tris = None
+        self.quads = None
 
     def read_ugrid(self, ugrid_filename):
         with open(ugrid_filename, 'r') as ugrid_file:
-            f = ugrid_file.read()
-            data = f.split()
+            ugrid_str = ugrid_file.read()
+            data = ugrid_str.split()
 
         nnodes, ntrias, nquads, ntets, npyram5, npenta6, nhexas8s = (int(val) for val in data[:7])
         i = 7

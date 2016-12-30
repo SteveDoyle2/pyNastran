@@ -2,10 +2,7 @@ from __future__ import print_function
 import os
 
 from six import iteritems
-from six.moves import range
-#from numpy import unique
 from numpy import vstack, amax, amin, arange, ones, zeros, where
-#from numpy import zeros, arange, mean, amax, amin, array
 
 #VTK_TRIANGLE = 5
 import vtk

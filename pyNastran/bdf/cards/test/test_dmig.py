@@ -2,11 +2,12 @@ from __future__ import print_function
 import unittest
 
 import os
+from numpy import array, array_equal, sin, cos, radians
+
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, DMIG, read_bdf
+from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf
 from pyNastran.bdf.bdf import DMI, DMIG
 
-from numpy import array, array_equal, sin, cos, radians
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -43,9 +44,9 @@ class TestDMIG(unittest.TestCase):
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['REAL'].get_matrix(is_sparse=False)
-        REAL_actual, rows_reversed, cols_reversed = out
+        real_actual, rows_reversed, cols_reversed = out
         #print "---REAL_actual---\n", REAL_actual
-        REAL_expected = [
+        real_expected = [
             [1.0, 0.5, 0.25],
             [0.0, 2.0, 0.75],
             [0.0, 0.0, 3.0],
@@ -54,7 +55,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
-        self.assertTrue(array_equal(REAL_expected, REAL_actual))
+        self.assertTrue(array_equal(real_expected, real_actual))
         a_matrix.get_matrix()
 
         #model2 = BDF(debug=False)
@@ -148,12 +149,12 @@ class TestDMIG(unittest.TestCase):
         lines = ['DMIG    ENFORCE 0       1       1       0']
         model = BDF(debug=False)
         card = model.process_card(lines)
-        card = BDFCard(card)
+        card_obj = BDFCard(card)
 
         size = 8
-        card = DMIG.add_card(card)
-        card.write_card(size, 'dummy')
-        #card.rawFields()
+        dmi = DMIG.add_card(card_obj)
+        dmi.write_card(size, 'dummy')
+        #dmi.rawFields()
 
     def test_dmig_07(self):
         cards = [
@@ -211,9 +212,9 @@ class TestDMIG(unittest.TestCase):
         cards = [
             ['DMIG,AMTRXX,0,6,1,0'],
             ['DMIG,AMTRXX,2,1, ,2,1,201.0, ,+DM1',
-            '+DM1,2,3,203.0'],
+             '+DM1,2,3,203.0'],
             ['DMIG,AMTRXX,3,1, ,3,1,301.0, ,+DM2',
-            '+DM2,3,3,303.0'],
+             '+DM2,3,3,303.0'],
         ]
         model = BDF(debug=False)
         for card_lines in cards:
@@ -242,15 +243,16 @@ class TestDMIG(unittest.TestCase):
 
 
     def test_dmi_01(self):
+        """tests a DMI card"""
         lines = ['DMI,Q,0,6,1,0,,4,4']
         model = BDF(debug=False)
         card = model.process_card(lines)
-        card = BDFCard(card)
+        card_obj = BDFCard(card)
 
         size = 8
-        card = DMI.add_card(card)
-        card.write_card(size, 'dummy')
-        #card.rawFields()
+        dmi = DMI.add_card(card_obj)
+        dmi.write_card(size, 'dummy')
+        #dmi.rawFields()
 
     def test_dmi_02(self):
         data = """

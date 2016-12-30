@@ -1,8 +1,10 @@
 from __future__ import print_function
-from six import iteritems
-from six.moves import range
+
 import copy
 from math import sin, cos
+
+from six import iteritems
+from six.moves import range
 from numpy import array, radians, dot, zeros
 
 
@@ -19,37 +21,37 @@ class LaWGS_Panel(object):
     """
     def __init__(self, key, header, group):
         #print("key=%s \nheader=|%s|" % (key, header))   # ,iSymG
-        (ID, nline, npnt, isyml, rx, ry, rz, tx, ty, tz, xScale,
-         yScale, zScale, iSymG) = header.strip().split()
+        (ID, nline, npnt, isyml, rx, ry, rz, tx, ty, tz, xscale,
+         yscale, zscale, iSymG) = header.strip().split()
         print("ID=%s name=%s imax=%s jmax=%s" % (ID, key, nline, npnt))
         print("Rotate    = <%s,%s,%s>" % (rx, ry, rz))
         print("Translate = <%s,%s,%s>" % (tx, ty, rz))
-        print("Scale     = <%s,%s,%s>" % (xScale, yScale, zScale))
+        print("Scale     = <%s,%s,%s>" % (xscale, yscale, zscale))
 
         self.name = key
-        self.rotate = array([rx, ry, rz], 'd')
-        self.translate = array([tx, ty, tz], 'd')
-        self.scale = array([xScale, yScale, zScale], 'd')
+        self.rotate = array([rx, ry, rz], dtype='float64')
+        self.translate = array([tx, ty, tz], dtype='float64')
+        self.scale = array([xscale, yscale, zscale], dtype='float64')
         npnt = int(npnt)
         nline = int(nline)
 
-        self.nCols = npnt
-        self.nRows = nline
-        nGroupLines = npnt // 2  # self.nCols
-        isSingleLine = False
-        if npnt % 2 == 1:  # self.nCols
-            isSingleLine = True
-            #nGroupLines+=1
+        self.ncols = npnt
+        self.nrows = nline
+        ngroup_lines = npnt // 2  # self.ncols
+        is_single_line = False
+        if npnt % 2 == 1:  # self.ncols
+            is_single_line = True
+            #ngroup_lines += 1
 
-        #X = array((nRows,nCols))
-        #Y = array((nRows,nCols))
-        #Z = array((nRows,nCols))
+        #X = array((nRows, nCols))
+        #Y = array((nRows, nCols))
+        #Z = array((nRows, nCols))
         points = []
 
         irow = 0
         #print("*****",group[-1])
-        for iline in range(self.nRows):
-            for row in range(nGroupLines):
+        for iline in range(self.nrows):
+            for row in range(ngroup_lines):
                 line = group[irow]
                 #print(" line = ",line)
                 (x1, y1, z1, x2, y2, z2) = line.strip().split()
@@ -60,7 +62,7 @@ class LaWGS_Panel(object):
                 #print("---")
                 irow += 1
 
-            if isSingleLine:
+            if is_single_line:
                 line = group[irow]
                 #print("*line = ",line)
                 (x1, y1, z1) = line.strip().split()
@@ -68,17 +70,17 @@ class LaWGS_Panel(object):
                 irow += 1
 
         #for i,point in enumerate(points):
-            #print("point[%s] = %s" %(i,point))
+            #print("point[%s] = %s" % (i, point))
 
         n = 0
         #for n,point in enumerate(points):
         Points = []
-        for i in range(self.nRows):
+        for i in range(self.nrows):
             points2 = []
-            for j in range(self.nCols):
+            for j in range(self.ncols):
                 points2.append(points[n])
-                #jj = n%self.nCols
-                #ii = n/self.nCols
+                #jj = n%self.ncols
+                #ii = n/self.ncols
                 #print("n=%-2s i=%-2s j=%-2s ii=%-2s jj=%-2s" %(n,i,j,ii,jj))
                 n += 1
 
@@ -88,7 +90,7 @@ class LaWGS_Panel(object):
         self.points = Points
         #print("len(self.points) = %s" %(len(self.points)))
 
-    def buildRotationMatrix(self, r):
+    def build_rotation_matrix(self, r):
         """
         Form the rotation matrix used for geometrical transformations
         Taken from NASA TM 85767 defining LaWGS.
@@ -97,76 +99,76 @@ class LaWGS_Panel(object):
         #r = radians([self.phi,self.theta,self.psi])
         #print("self.rotate = ",self.rotate)
         r = [radians(ri) for ri in self.rotate]
-        cPhi = cos(r[0])
-        sPhi = sin(r[0])
-        cTheta = cos(r[1])
-        sTheta = sin(r[1])
-        cPsi = cos(r[2])
-        sPsi = sin(r[2])
+        cphi = cos(r[0])
+        sphi = sin(r[0])
+        ctheta = cos(r[1])
+        stheta = sin(r[1])
+        cpsi = cos(r[2])
+        spsi = sin(r[2])
 
         rot = zeros((3, 3), 'd')
         #print(rot)
-        rot[0, 0] = cTheta * cPsi
-        rot[1, 0] = cTheta * sPsi
-        rot[2, 0] = -sTheta
+        rot[0, 0] = ctheta * cpsi
+        rot[1, 0] = ctheta * spsi
+        rot[2, 0] = -stheta
 
-        rot[0, 1] = -sPsi * cPhi + sTheta * cPsi * sPhi
-        rot[1, 1] = cPsi * cPhi + sTheta * sPsi * sPhi
-        rot[2, 1] = cTheta * sPhi
+        rot[0, 1] = -spsi * cphi + stheta * cpsi * sphi
+        rot[1, 1] = cpsi * cphi + stheta * spsi * sphi
+        rot[2, 1] = ctheta * sphi
 
-        rot[0, 2] = sPsi * sPhi + sTheta * cPsi * cPhi
-        rot[1, 2] = -cPsi * sPhi + sTheta * sPsi * cPhi
-        rot[2, 2] = cTheta * cPhi
+        rot[0, 2] = spsi * sphi + stheta * cpsi * cphi
+        rot[1, 2] = -cpsi * sphi + stheta * spsi * cphi
+        rot[2, 2] = ctheta * cphi
 
         return rot
 
-    def updatePoints(self):
-        rot = self.buildRotationMatrix(self.rotate)
+    def update_points(self):
+        rot = self.build_rotation_matrix(self.rotate)
         scale = self.scale
         translate = self.translate
 
         points = self.points
         Points2 = copy.deepcopy(points)
         print("size(points) = (%s,%s)\n" % (len(points), len(points[0])))
-        for i in range(self.nRows):
+        for i in range(self.nrows):
             #points2 = []
-            for j in range(self.nCols):
+            for j in range(self.ncols):
                 Points2[i][j] = scale * (dot(rot, points[i][j]) + translate)
         self.Points = Points2
 
     def get_points(self):
         Points = []
-        for i in range(self.nRows):
+        for i in range(self.nrows):
             #points2 = []
-            for j in range(self.nCols):
+            for j in range(self.ncols):
                 Points.append(self.Points[i][j])
         return Points, len(Points)
 
     def get_elements(self, pointI):
-        n = (self.nRows - 1) * (self.nCols - 1)
+        n = (self.nrows - 1) * (self.ncols - 1)
         #print("name=%s n=%s nout=%s" %(self.name,n))
         elements = []
 
-        for i in range(self.nRows - 1):
-            for j in range(self.nCols - 1):
-                elements.append(self.getElement(pointI, i, j))
+        for i in range(self.nrows - 1):
+            for j in range(self.ncols - 1):
+                elements.append(self.get_element(pointI, i, j))
         assert n == len(elements)
         return elements, n
 
-    def getElement(self, pointI, j, i):
-        p1 = (j) * self.nCols + (i) + pointI
-        p2 = (j) * self.nCols + (i + 1) + pointI
-        p3 = (j + 1) * self.nCols + (i + 1) + pointI
-        p4 = (j + 1) * self.nCols + (i) + pointI
+    def get_element(self, pointI, j, i):
+        p1 = (j) * self.ncols + (i) + pointI
+        p2 = (j) * self.ncols + (i + 1) + pointI
+        p3 = (j + 1) * self.ncols + (i + 1) + pointI
+        p4 = (j + 1) * self.ncols + (i) + pointI
         return [p1, p2, p3, p4]
 
-    def write_as_plot3d(self, f):
+    def write_as_plot3d(self, p3d_file):
         X = []
         Y = []
         Z = []
-        for i in range(self.nRows):
+        for i in range(self.nrows):
             #points2 = []
-            for j in range(self.nCols):
+            for j in range(self.ncols):
                 (x, y, z) = self.Points[i][j]
                 X.append(x)
                 Y.append(y)
@@ -175,17 +177,17 @@ class LaWGS_Panel(object):
         msg = ''
         for x in X:
             msg += '%s ' % (x)
-        f.write(msg + '\n')
+        p3d_file.write(msg + '\n')
 
         msg = ''
         for y in Y:
             msg += '%s ' % (y)
-        f.write(msg + '\n')
+        p3d_file.write(msg + '\n')
 
         msg = ''
         for z in Z:
             msg += '%s ' % (z)
-        f.write(msg + '\n')
+        p3d_file.write(msg + '\n')
 
 
 class LaWGS(object):
@@ -194,9 +196,9 @@ class LaWGS(object):
     def __init__(self, filename='tmx1242.wgs'):
         self.filename = filename
 
-    def readLaWGS(self):
-        lawgs = open(self.filename, 'r')
-        lines = lawgs.readlines()
+    def read_lawgs(self):
+        with open(self.filename, 'r') as lawgs_file:
+            lines = lawgs_file.readlines()
 
         nlines = len(lines)
         groups = {}
@@ -231,10 +233,10 @@ class LaWGS(object):
             #if key=='BODY':
             if 1:
                 panel = LaWGS_Panel(key, header, group)
-                panel.updatePoints()
+                panel.update_points()
                 self.panels[key] = panel
 
-    def getPointsElements(self):
+    def get_points_elements(self):
         points, elements, regions = self.get_points_elements_regions()
         return points, elements
 
@@ -252,22 +254,26 @@ class LaWGS(object):
             pointI += pointi
             regions += [iregion] * n
             iregion += 1
-            #print("name=%s len(AllElements)=%s len(allPoints)=%s" %(name,len(elements),len(points)))
+            #print("name=%s len(AllElements)=%s len(allPoints)=%s" % (
+                #name, len(elements), len(points)))
 
         #for point in points:
             #print(point)
         return points, elements, regions
 
     def write_as_plot3d(self, p3dname):
-        f = open(p3dname, 'wb')
+        with open(p3dname, 'wb') as p3d_file:
+            p3d_file.write('%s\n' % (len(self.panels)))
+            for (name, panel) in sorted(iteritems(self.panels)):
+                p3d_file.write('%s %s 1\n' % (panel.nRows, panel.nCols))
 
-        f.write('%s\n' % (len(self.panels)))
-        for (name, panel) in sorted(iteritems(self.panels)):
-            f.write('%s %s 1\n' % (panel.nRows, panel.nCols))
+            for (name, panel) in sorted(iteritems(self.panels)):
+                panel.write_as_plot3d(p3d_file)
 
-        for (name, panel) in sorted(iteritems(self.panels)):
-            panel.write_as_plot3d(f)
+def main():  # pragma: no cover
+    lawgs = LaWGS('tmx1242.wgs')
+    lawgs.read_lawgs()
+
 
 if __name__ == '__main__':  # pragma: no cover
-    lawgs = LaWGS('tmx1242.wgs')
-    lawgs.readLaWGS()
+    main()

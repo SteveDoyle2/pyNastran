@@ -16,7 +16,7 @@ class BEdge_IO(object):
         data = (
             'AFLR2 BEdge',
             'AFLR2 BEdge (*.bedge)', self.load_bedge_geometry,
-             None, None)
+            None, None)
         return data
 
     def load_bedge_geometry(self, bedge_filename, dirname, name='main', plot=True):
@@ -166,7 +166,8 @@ class BEdge_IO(object):
             gf = ('TurnAngle', 5, [])
             geometry_form.append(gf)
             turnangle_res = GuiResult(0, header='TurnAngle', title='TurnAngle',
-                                   location='centroid', scalar=np.degrees(np.abs(model.turn_angle)))
+                                      location='centroid',
+                                      scalar=np.degrees(np.abs(model.turn_angle)))
             cases[icase] = (turnangle_res, (0, 'TurnAngle'))
             icase += 1
 

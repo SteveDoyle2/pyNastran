@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import range, zip
 from copy import deepcopy
@@ -49,12 +50,14 @@ class FaceFile(object):
         i = 0
         nfaces = 0
         while nfaces == 0:
-            line = f.readline(); i+=1
+            line = f.readline()
+            i += 1
             try:
                 nfaces = int(line)
             except:
                 pass
-        line = f.readline(); i+=1
+        line = f.readline()
+        i += 1
 
         print('nfaces = %s' % nfaces)
         #print('lineA = %r' % line)
@@ -144,12 +147,14 @@ class PointFile(object):
         i = 0
         npoints = 0
         while npoints == 0:
-            line = f.readline(); i+=1
+            line = f.readline()
+            i+=1
             try:
                 npoints = int(line)
             except:
                 pass
-        line = f.readline(); i+=1
+        line = f.readline()
+        i+=1
 
         print('npoints = %s' % npoints)
         #print('lineA = %r' % line)
@@ -356,7 +361,7 @@ class Boundary(object):
         print('nfaces2 = ', nfaces2)
         ifaces_to_read = ravel(ifaces_to_read)
         assert len(ifaces_to_read) == nfaces2, 'len(ifaces_to_read)=%s nfaces2=%s' % (ifaces_to_read.shape, nfaces2)
-        print ifaces_to_read
+        print(ifaces_to_read)
 
         faces = f.read_face_file(face_filename, ifaces_to_read=ifaces_to_read)
         #faces = f.read_face_file(face_filename, ifaces_to_read=None)
@@ -385,14 +390,14 @@ class Boundary(object):
             for i, nid in enumerate(ipoints_to_read):
                 nid_to_ipoint[nid] = i
 
-            print faces, faces.max()
+            print(faces, faces.max())
             for i, face in enumerate(faces):
                 #print('face      = %s' % face)
                 faces[i, 0] = nid_to_ipoint[faces[i, 0]]
                 faces[i, 1] = nid_to_ipoint[faces[i, 1]]
                 faces[i, 2] = nid_to_ipoint[faces[i, 2]]
                 #print('faces[%i] = %s' % (i, faces[i, :]))
-            print faces, faces.max()
+            print(faces, faces.max())
             print('done...')
             del ipoints_to_read
             del nid_to_ipoint
@@ -414,7 +419,7 @@ class Boundary(object):
                 nfacesi = int(boundary[1])
                 startface = int(boundary[2])
             except:
-                print boundary.keys()
+                print(boundary.keys())
                 raise
             #faces2[iface:iface+nfacesi] = faces[startface:startface + nfacesi]
             names[iface:iface+nfacesi] = iname
@@ -482,13 +487,12 @@ class BlockMesh(object):
         points = []
         line_pairs = [
             #set1 set2 idir, face
-            (0,1, 4,5, 0, 2)
-            (3,2, 7,6, 0, 2)
-            (0,3, 1,2, 1, 1)
-            (4,7, 5,6, 1, 1)
-            (0,4, 1,5, 2, 0)
-            (3,7, 2,6, 2, 0)
-
+            (0,1, 4,5, 0, 2),
+            (3,2, 7,6, 0, 2),
+            (0,3, 1,2, 1, 1),
+            (4,7, 5,6, 1, 1),
+            (0,4, 1,5, 2, 0),
+            (3,7, 2,6, 2, 0),
         ]
 
         points = []
@@ -700,13 +704,13 @@ class BlockMesh(object):
                 new_ids_map[i] = i
 
         stack_nodes = set(self.hexas.flatten())
-        print stack_nodes
+        print(stack_nodes)
         for iname, faces in iteritems(self.iname_to_quads):
             for face in faces:
                 stack_nodes.update(set(list(face)))
 
         if 0:
-            print stack_nodes, len(stack_nodes)
+            print(stack_nodes, len(stack_nodes))
             for key, value in sorted(iteritems(new_ids_map)):
                 if key not in stack_nodes:
                     print(' #k=%s v=%s' % (key, value))
@@ -788,8 +792,8 @@ class BlockMesh(object):
                 faces2.append(face2)
             iname_to_quads[iname] = array(faces2, dtype='int32')
 
-        print nodes.shape
-        print nodes2.shape
+        print(nodes.shape)
+        print(nodes2.shape)
         self.nodes = nodes2
         self.hexas = hexas2
         self.grading = grading2

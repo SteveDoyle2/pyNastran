@@ -2497,9 +2497,11 @@ class PLOADX1(Load):
     """
     type = 'PLOADX1'
 
-    def __init__(self, sid, eid, pa, pb, ga, gb, theta=0., comment=''):
+    def __init__(self, sid, eid, pa, ga, gb, pb=None, theta=0., comment=''):
         if comment:
             self.comment = comment
+        if pb is None:
+            pb = pa
         self.sid = sid
         self.eid = eid
         self.pa = pa

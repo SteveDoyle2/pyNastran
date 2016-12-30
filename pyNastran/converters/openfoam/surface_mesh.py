@@ -1,13 +1,15 @@
+from __future__ import print_function
 from numpy import zeros
-from openfoam_parser import write_dict, FoamFile, convert_to_dict
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.converters.openfoam.openfoam_parser import (
+    write_dict, FoamFile, convert_to_dict)
+from pyNastran.bdf.field_writer import print_card_8
 
 
 class Points(object):
     def __init__(self):
-        f = FoamFile('points')
-        lines = f.read_foam_file()
-        self.d = convert_to_dict(lines)
+        foam_points = FoamFile('points')
+        lines = foam_points.read_foam_file()
+        self.d = convert_to_dict(self, lines)
 
     def read_points(self):
         #print write_dict(d, baseword='Points = ')
@@ -17,7 +19,7 @@ class Points(object):
         keys.pop(ifoam)
         assert len(keys) == 1, keys
         npoints = keys[0]
-        print "npoints = ", npoints
+        print("npoints = ", npoints)
 
         nodes = self.d[npoints]
         #f = open('points2.bdf', 'wb')
@@ -41,7 +43,7 @@ class Faces(object):
     def __init__(self):
         f = FoamFile('faces')
         lines = f.read_foam_file()
-        self.d = convert_to_dict(lines)
+        self.d = convert_to_dict(self, lines)
 
     def read_faces(self):
         keys = self.d.keys()
@@ -50,7 +52,7 @@ class Faces(object):
         keys.pop(ifoam)
         assert len(keys) == 1, keys
         nfaces = keys[0]
-        print "nfaces = ", nfaces
+        print("nfaces = ", nfaces)
 
         faces = self.d[nfaces]
         nfaces = len(faces)
@@ -71,7 +73,7 @@ class Faces(object):
 def main():
     fp = Points()
     nodes = fp.read_points()
-    nnodes, three = nodes.shape
+    nnodes = nodes.shape[0]
 
     fe = Faces()
     quads = fe.read_faces()

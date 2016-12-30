@@ -2048,15 +2048,18 @@ class MATHE(HyperelasticMaterial):
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
 
-    def __init__(self, mid, a10, a01, d1, rho, av, TRef, ge, na, nd,
-                 a20, a11, a02, d2,
-                 a30, a21, a12, a03, d3,
-                 a40, a31, a22, a13, a04, d4,
-                 a50, a41, a32, a23, a14, a05, d5,
-                 tab1, tab2, tab3, tab4, tabd, comment=''):
+    def __init__(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., TRef=0., ge=0., na=1, nd=1,
+                 a20=0., a11=0., a02=0., d2=0.,
+                 a30=0., a21=0., a12=0., a03=0., d3=0.,
+                 a40=0., a31=0., a22=0., a13=0., a04=0., d4=0.,
+                 a50=0., a41=0., a32=0., a23=0., a14=0., a05=0., d5=0.,
+                 tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment=''):
         HyperelasticMaterial.__init__(self)
         if comment:
             self.comment = comment
+        if d1 is None:
+            d1 = (a10 + a01) * 1000.
+
         self.mid = mid
         self.a10 = a10
         self.a01 = a01

@@ -16,7 +16,9 @@ class TestShells(unittest.TestCase):
         n3 = 3
         n4 = 4
         A = 2.
-        mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
+        z0_elem = 0.1
+        mid2 = mid3 = mid4 = theta_mcid = twelveIt3 = tst = z1 = z2 = None
+        #z0_prop =  None
 
         mass = A * (t * rho + nsm)
         cards = [
@@ -24,14 +26,19 @@ class TestShells(unittest.TestCase):
             ['grid', n2, 0, 2., 0., 0.],
             ['grid', n3, 0, 2., 1., 0.],
             ['grid', n4, 0, 0., 1., 0.],
-            ['cquad4', eid, pid, n1, n2, n3, n4],
+            ['cquad4', eid, pid, n1, n2, n3, n4, theta_mcid, z0_elem],
             ['pshell', pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2],
             ['mat1', mid, E, G, nu, rho],
         ]
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
+
+        model.validate()
+        model._verify_bdf(xref=False)
         model.cross_reference()
+        model._verify_bdf(xref=True)
         cquad4 = model.Element(eid)
+        pshell = model.Property(pid)
         node_ids = cquad4.node_ids
         assert node_ids == [n1, n2, n3, n4], node_ids
 
@@ -44,6 +51,8 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(cquad4.MassPerArea(), mass / A)
         self.assertEqual(cquad4.Area(), A)
         self.assertEqual(cquad4.Thickness(), t)
+        self.assertEqual(cquad4.zoffset, z0_elem)
+        self.assertEqual(pshell.z1, -t/2.)
         #self.assertEqual(cquad4.Rho(), rho)  # removed because of PCOMP
 
     def _make_ctria3(self, model, rho, nu, G, E, t, nsm):
@@ -53,8 +62,10 @@ class TestShells(unittest.TestCase):
         n1 = 1
         n2 = 2
         n3 = 3
-        mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
-        z0 = sb = ft = tref = ge = lam = None
+        mid2 = mid3 = mid4 = theta_mcid = twelveIt3 = tst = z1 = z2 = None
+        z0_elem = 0.1
+
+        z0_prop = sb = ft = tref = ge = lam = None
         sout = None
         theta0 = 0.
         theta1 = 30.
@@ -65,12 +76,12 @@ class TestShells(unittest.TestCase):
             ['grid', n1, 0, 0., 0., 0.],
             ['grid', n2, 0, 4., 0., 0.],
             ['grid', n3, 0, 4., 1., 0.],
-            ['ctria3', eid, pid, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
+            ['ctria3', eid, pid, n1, n2, n3, theta_mcid, z0_elem],   # A = 1/2 * 4 * 1 = 2.
             ['pshell', pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4],
 
-            ['ctria3', eid + 1, pid + 1, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
+            ['ctria3', eid + 1, pid + 1, n1, n2, n3, theta_mcid, z0_elem],   # A = 1/2 * 4 * 1 = 2.
             [
-                'pcomp', pid + 1, z0, nsm, sb, ft, tref, ge, lam,
+                'pcomp', pid + 1, z0_prop, nsm, sb, ft, tref, ge, lam,
                 mid, t, theta0, sout,
                 mid, 2 * t, theta1, sout,
                 mid, 3 * t, theta2, sout,
@@ -80,7 +91,10 @@ class TestShells(unittest.TestCase):
         ]
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
+        model.validate()
+        model._verify_bdf(xref=False)
         model.cross_reference()
+        model._verify_bdf(xref=True)
 
         # ctria3 / pshell
         ctria3 = model.Element(eid)
@@ -96,6 +110,8 @@ class TestShells(unittest.TestCase):
         self.assertEqual(ctria3.Area(), A)
         self.assertEqual(ctria3.Thickness(), t)
         self.assertEqual(ctria3.MassPerArea(), mass / A)
+        self.assertEqual(ctria3.zoffset, z0_elem)
+        ctria3.raw_fields()
 
         # removed because of PCOMP
         # also no E, G, J, Nu, for the same reason
@@ -173,7 +189,7 @@ class TestShells(unittest.TestCase):
             self.assertEqual(pcomp.Theta(4), rho)
         self.assertEqual(pcomp.z0, -10*t/2.)
 
-    def test_PSHELL_01(self):
+    def test_pshell_01(self):
         """tests a CQUAD4 and a PSHELL"""
 
         rho = 0.1
@@ -196,7 +212,7 @@ class TestShells(unittest.TestCase):
         model = BDF(debug=False)
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
 
-    def test_CQUAD4_01(self):
+    def test_cquad4_01(self):
         model = BDF(debug=False)
         eid = 10
         pid = 20
@@ -257,7 +273,7 @@ class TestShells(unittest.TestCase):
 
 
 
-    def test_PCOMP_01(self):
+    def test_pcomp_01(self):
         """
         asymmetrical, nsm=0.0 and nsm=1.0
         """
@@ -403,7 +419,7 @@ class TestShells(unittest.TestCase):
         for za, ze in zip(z, z_expected):
             self.assertAlmostEqual(za, ze)
 
-    def test_PCOMP_02(self):
+    def test_pcomp_02(self):
         """
         symmetrical, nsm=0.0 and nsm=1.0
         """
@@ -525,6 +541,203 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(IndexError):
             p.MassPerArea(6)
 
+    def test_cshear(self):
+        """tests a PSHEAR/CSHEAR"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+
+        eid = 10
+        pid = 20
+        mid = 30
+        t = 0.1
+        nids = [1, 2, 3, 4]
+
+        cshear = model.add_cshear(eid, pid, nids, comment='cshear')
+        pshear = model.add_pshear(pid, t, mid, nsm=0., f1=0., f2=0., comment='')
+
+        E = 30.e7
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
+
+        cshear.raw_fields()
+        cshear.write_card(size=8)
+
+        pshear.raw_fields()
+        pshear.write_card(size=8)
+        pshear.write_card(size=16)
+        pshear.write_card(size=16, is_double=True)
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+
+        cshear.write_card(size=8)
+        pshear.write_card(size=8)
+
+    def test_shells(self):
+        """tests a CTRIA3/CQUAD4/PSHELL and CTRIA6/CQUAD8/CQUAD/PCOMP"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+
+        model.add_grid(5, xyz=[.5, 0., 0.])
+        model.add_grid(6, xyz=[1., 0.5, 0.])
+        model.add_grid(7, xyz=[.5, 1., 0.])
+        model.add_grid(8, xyz=[0., .5, 0.])
+
+        model.add_grid(9, xyz=[.5, .5, 0.])
+
+        E = 30.e7
+        G = None
+        nu = 0.3
+        model.add_mat1(1, E, G, nu, rho=0.1)
+        model.add_mat1(2, E, G, nu, rho=0.1)
+        model.add_mat1(3, E, G, nu, rho=0.1)
+
+        pid = 1
+        nids = [1, 2, 3]
+        model.add_ctria3(1, pid, nids)
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(2, pid, nids)
+        model.add_pshell(pid, mid1=2, t=0.1)
+
+        pid = 2
+        nids = [1, 2, 3, 5, 6, 9]
+        ctria6 = model.add_ctria6(3, pid, nids, comment='ctria6')
+
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        cquad8 = model.add_cquad8(4, pid, nids, comment='cquad8')
+
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        cquad = model.add_cquad(5, pid, nids, comment='cquad')
+
+        mids = [1, 2, 3]
+        thicknesses = [0.1, 0.2, 0.3]
+        pcomp = model.add_pcomp(pid, mids, thicknesses)
+
+        assert pcomp.Thickness() == sum(thicknesses), thicknesses
+
+        pcomp.lam = 'SYM'
+        assert pcomp.Thickness() == sum(thicknesses)*2, thicknesses
+
+        model.validate()
+
+        ctria6.raw_fields()
+        ctria6.write_card(size=8)
+
+        cquad8.raw_fields()
+        cquad8.write_card(size=8)
+
+        cquad.raw_fields()
+        cquad.write_card(size=8)
+
+        pcomp.raw_fields()
+        pcomp.write_card(size=8)
+        pcomp.write_card(size=16)
+        pcomp.write_card(size=16, is_double=True)
+
+
+        model._verify_bdf(xref=False)
+        #--------------------------------
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+
+        ctria6.raw_fields()
+        ctria6.write_card(size=8)
+
+        cquad8.raw_fields()
+        cquad8.write_card(size=8)
+
+        cquad.raw_fields()
+        cquad.write_card(size=8)
+
+        pcomp.raw_fields()
+        pcomp.write_card(size=8)
+        pcomp.write_card(size=16)
+        pcomp.write_card(size=16, is_double=True)
+
+    def test_trax(self):
+        """tests a CTRAX3/CTRAX6/???"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+
+        model.add_grid(5, xyz=[.5, 0., 0.])
+        model.add_grid(6, xyz=[1., 0.5, 0.])
+        model.add_grid(7, xyz=[.5, 1., 0.])
+        model.add_grid(8, xyz=[0., .5, 0.])
+
+        model.add_grid(9, xyz=[.5, .5, 0.])
+
+        mid1 = 1
+        E = 30.e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid1, E, G, nu, rho=0.1)
+        #model.add_mat1(2, E, G, nu, rho=0.1)
+        #model.add_mat1(3, E, G, nu, rho=0.1)
+
+        pid = 1
+        nids = [1, 2, 3]
+        ctrax3 = model.add_ctrax3(1, pid, nids, theta=0., comment='ctrax3')
+        #model.add_pshell(pid, mid1=2, t=0.1)
+
+        psolid = model.add_psolid(pid, mid1, cordm=0, integ=None, stress=None,
+                                  isop=None, fctn='SMECH', comment='psolid')
+
+        pid = 2
+        nids = [1, 2, 3, 5, 6, 9]
+        ctrax6 = model.add_ctrax6(2, pid, nids, theta=0., comment='ctrax6')
+
+        plsolid = model.add_plsolid(pid, mid1, stress_strain='GRID', ge=0.,
+                                    comment='plsolid')
+
+        #assert pcomp.Thickness() == sum(thicknesses), thicknesses
+
+        #pcomp.lam = 'SYM'
+        #assert pcomp.Thickness() == sum(thicknesses)*2, thicknesses
+
+        model.validate()
+
+        ctrax6.raw_fields()
+        ctrax6.write_card(size=8)
+
+
+        psolid.raw_fields()
+        psolid.write_card(size=8)
+        #psolid.write_card(size=16)
+        #psolid.write_card(size=16, is_double=True)
+
+        plsolid.raw_fields()
+        plsolid.write_card(size=8)
+        #plsolid.write_card(size=16)
+        #plsolid.write_card(size=16, is_double=True)
+
+        model._verify_bdf(xref=False)
+
+        #--------------------------------
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+
+        ctrax3.raw_fields()
+        ctrax3.write_card(size=8)
+
+        ctrax6.raw_fields()
+        ctrax6.write_card(size=8)
+
+        #pcomp.raw_fields()
+        #pcomp.write_card(size=8)
+        #pcomp.write_card(size=16)
+        #pcomp.write_card(size=16, is_double=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

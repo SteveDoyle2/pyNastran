@@ -519,31 +519,53 @@ class PCOMP(CompositeShellProperty):
         slot = nnew % 4
         ply[slot] = value
 
-    @property
-    def plies(self):
-        plies = []
-        for mid, t, theta, sout in zip(self.mids, self.thicknesses, self.thetas, self.souts):
-            plies.append([mid, t, theta, sout])
-        return plies
-
-    #@plies.setter
-    #def plies(self, plies):
-        #i = 0
-        #for mid, t, theta, sout in zip(plies):
-            #self.mids[i] = mid
-            #self.thicknesses[i] = t
-            #self.thetas[i] = theta
-            #self.souts[i] = sout
-            #i += 1
-
     def __init__(self, pid,
-                 mids, thicknesses, thetas, souts,
+                 mids, thicknesses, thetas=None, souts=None,
                  nsm=0., sb=0., ft=None, TRef=0., ge=0., lam=None, z0=None,
                  comment=''):
+        """
+        Creates a PCOMP card
+
+        pid : int
+            property id
+        mids : List[int, ..., int]
+            material ids for each ply
+        thicknesses : List[float, ..., float]
+            thicknesses for each ply
+        thetas : List[float, ..., float]; default=None
+            ply angle
+            None : [0.] * nplies
+        souts : List[str, ..., str]; default=None
+            should the stress? be printed; {YES, NO}
+            None : [NO] * nplies
+        nsm : float; default=0.
+            nonstructural mass per unit area
+        sb : float; default=0.
+            Allowable shear stress of the bonding material.
+            Used by the failure theory
+        ft : str; default=None
+            failure theory; {HILL, HOFF, TSAI, STRN, None}
+        TRef : float; default=0.
+            reference temperature
+        ge : float; default=0.
+            structural damping
+        lam : str; default=None
+            symmetric flag; {SYM, MEM, BEND, SMEAR, SMCORE, None}
+            None : not symmmetric
+        z0 : float; default=None
+            Distance from the reference plane to the bottom surface
+            None : -1/2 * total_thickness
+        comment : str; default=''
+            a comment for the card
+        """
         CompositeShellProperty.__init__(self)
         if comment:
             self.comment = comment
-
+        if thetas is None:
+            nplies = len(self.mids)
+            thetas = [0.] * nplies
+        if souts is None:
+            souts = ['NO'] * nplies
         #: Property ID
         self.pid = pid
 
@@ -719,6 +741,23 @@ class PCOMP(CompositeShellProperty):
         return PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm, sb, ft, TRef, ge, lam, z0, comment=comment)
 
+    @property
+    def plies(self):
+        plies = []
+        for mid, t, theta, sout in zip(self.mids, self.thicknesses, self.thetas, self.souts):
+            plies.append([mid, t, theta, sout])
+        return plies
+
+    #@plies.setter
+    #def plies(self, plies):
+        #i = 0
+        #for mid, t, theta, sout in zip(plies):
+            #self.mids[i] = mid
+            #self.thicknesses[i] = t
+            #self.thetas[i] = theta
+            #self.souts[i] = sout
+            #i += 1
+
     def _verify(self, xref=False):
         pid = self.Pid()
         is_sym = self.isSymmetrical()
@@ -733,18 +772,23 @@ class PCOMP(CompositeShellProperty):
         assert isinstance(mids, list), 'mids=%r' % mids
 
         t = self.Thickness()
-        mpa = self.MassPerArea()
         assert isinstance(t, float), 'thickness=%r' % t
-        assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+        if xref:
+            mpa = self.MassPerArea()
+            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+
         for iply in range(nplies):
             mid2 = self.Mid(iply)
             assert mids[iply] == mid2
             t = self.Thickness(iply)
-            rho = self.Rho(iply)
-            mpa = self.MassPerArea(iply)
             assert isinstance(t, float), 'thickness=%r' % t
-            assert isinstance(rho, float), 'rho=%r' % rho
-            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+
+            if xref:
+                rho = self.Rho(iply)
+                mpa = self.MassPerArea(iply)
+                assert isinstance(rho, float), 'rho=%r' % rho
+                assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+
         for ply in self.plies:
             assert len(ply) == 4, ply
 
@@ -983,6 +1027,10 @@ class PCOMPG(CompositeShellProperty):
 
 
 class PLPLANE(ShellProperty):
+    """
+    Referenced by:
+     - CTRIAX
+    """
     type = 'PLPLANE'
     _field_map = {1: 'pid', 2:'mid', 6:'cid', 7:'str'}
 
@@ -1027,7 +1075,7 @@ class PLPLANE(ShellProperty):
         cid = self.Cid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
-            assert self.mid.type in ['MATHE', 'MATHP'], 'mid.type=%s' % self.mid.type
+            assert self.mid_ref.type in ['MATHE', 'MATHP'], 'mid_ref.type=%s' % self.mid_ref.type
 
     #def Pid(self):
         #return self.pid
@@ -1053,6 +1101,7 @@ class PLPLANE(ShellProperty):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class PPLANE(ShellProperty):
     type = 'PPLANE'
@@ -1125,7 +1174,7 @@ class PSHEAR(ShellProperty):
     type = 'PSHEAR'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'f1', 6:'f2'}
 
-    def __init__(self, pid, t, mid, nsm, f1, f2, comment=''):
+    def __init__(self, pid, t, mid, nsm=0., f1=0., f2=0., comment=''):
         """
         Defines the properties of a shear panel (CSHEAR entry).
 
@@ -1213,7 +1262,6 @@ class PSHEAR(ShellProperty):
         return mass_per_area
 
     def _verify(self, xref=False):
-        print('xref =', xref)
         pid = self.Pid()
         midi = self.Mid()
 
@@ -1457,8 +1505,9 @@ class PSHELL(ShellProperty):
         return self.mid2_ref
 
     def Mid(self):
-        if isinstance(self.mid1, Material):
-            return self.mid1_ref.mid
+        mid1 = self.Mid1()
+        if isinstance(mid1, int):
+            return mid1
         return self.Mid2()
 
     def Mid1(self):
