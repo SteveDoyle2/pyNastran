@@ -1255,6 +1255,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                                             row_id, column_id)
                 #print(msg)
                 #self.log.debug(msg)
+            elif Type == 5:  # DISP
+                # out = (1, 101, 5, 'DISP1   ', 101, 1, 3, 0, 1, 0, 0, 0, 0, 0)
+
+                #print(out[6:])
+                # (3,   0,  1,    0,   0,   0,   0,   0)
+                # (???, NA, comp, ???, ???, ???, ???, ???)
+                pass
             elif Type == 6:  # STRESS
                 #                                                 -----    STRESS RESPONSES    -----
                 #     ---------------------------------------------------------------------------------------------------------------------------
