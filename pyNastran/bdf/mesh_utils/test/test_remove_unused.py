@@ -26,6 +26,7 @@ np.set_printoptions(edgeitems=3, infstr='inf',
 log = SimpleLogger(level='error')
 class TestRemoveUnused(unittest.TestCase):
     """various BDF cleanup tests"""
+
     def test_remove_bar(self):
         """removes unused data from the bar model"""
         model_path = os.path.join(pkg_path, '..', 'models', 'beam_modes')
@@ -36,7 +37,7 @@ class TestRemoveUnused(unittest.TestCase):
         remove_unused(model)
         #os.remove(bdf_filename_out)
 
-    def test_remove_isat(self):
+    def _test_remove_isat(self):
         """removes unused data from the isat model"""
         model_path = os.path.join(pkg_path, '..', 'models', 'isat')
         bdf_filename = os.path.join(model_path, 'ISat_Dploy_Sm.dat')
@@ -47,7 +48,7 @@ class TestRemoveUnused(unittest.TestCase):
         model.write_bdf(bdf_filename_out)
         os.remove(bdf_filename_out)
 
-    def test_remove_bwb(self):
+    def _test_remove_bwb(self):
         """removes unused data from the bwb model"""
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
         bdf_filename_out = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes.bdf')
