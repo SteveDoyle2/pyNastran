@@ -166,7 +166,7 @@ class TestReadWrite(unittest.TestCase):
         card_lines3 = ['GMSPC', 1, 'd', 'e', 'f']
         model.add_card(card_lines3, 'GMSPC')
 
-        card_lines4 = ['GRDSET', 1, 'd', 'e', 'f']
+        card_lines4 = ['GRDSET', 1, 'd2', 'e2', 'f2']
         model.add_card(card_lines4, 'GRDSET')
 
     def test_include_end(self):
