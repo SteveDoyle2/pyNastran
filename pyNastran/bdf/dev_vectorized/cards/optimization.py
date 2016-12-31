@@ -1337,7 +1337,7 @@ class DRESP2(OptConstraint):
                 print('model.table =')
                 print(model.bdf_filename)
                 print(model.dtable)
-                #self.dtable = model.dtable
+                #self.dtable_ref = model.dtable
                 print(model.dtable)
                 for i, val in enumerate(vals):
                     default_values[val] = model.dtable[val]
@@ -1613,9 +1613,9 @@ class DRESP3(OptConstraint):
                 for i, val in enumerate(vals):
                     self.params[name][i] = model.Desvar(val, msg)
             elif name == 'DTABLE':
-                self.dtable = model.dtable
+                self.dtable_ref = model.dtable
                 for i, val in enumerate(vals):
-                    default_values[val] = self.dtable[val]
+                    default_values[val] = self.dtable_ref[val]
             else:
                 raise NotImplementedError('  TODO: xref %s' % str(name))
         self.params_ref = self.params
@@ -2381,7 +2381,7 @@ class DVMREL2(OptConstraint):
                 argsi.append(arg)
         if self.labels:
             for label in self.labels: # DTABLE
-                arg = self.dtable[label]
+                arg = self.dtable_ref[label]
                 argsi.append(arg)
         #op2_model.log.info('DVMREL2; args = %s' % argsi)
 

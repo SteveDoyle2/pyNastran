@@ -1884,7 +1884,7 @@ class BDFMethods(BDFAttributes):
             self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
         return (F, M)
 
-    def skin_solid_elements(self, element_ids=None):
+    def skin_solid_elements(self, element_ids=None, allow_blank_nids=True):
         """
         Gets the elements and faces that are skinned from solid elements
 
@@ -1893,6 +1893,8 @@ class BDFMethods(BDFAttributes):
         element_ids : List[int] / None
             skin a subset of element faces
             default=None -> all elements
+        allow_blank_nids : bool; default=True
+            allows for nids to be None
 
         Returns
         -------
@@ -1904,17 +1906,24 @@ class BDFMethods(BDFAttributes):
             element_ids = self.element_ids
 
         eid_faces = []
-        for eid in element_ids:
-            elem = self.elements[eid]
-            if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
-                faces = elem.faces
-                #print(faces)
-                for face_id, face in iteritems(faces):
-                    if None in face:
-                        msg = 'There is a None in the face.\n'
-                        msg = 'face_id=%s face=%s\n%s' % (face_id, str(face), str(elem))
-                        raise RuntimeError(msg)
-                    eid_faces.append((eid, face))
+        if allow_blank_nids:
+            for eid in element_ids:
+                elem = self.elements[eid]
+                if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
+                    faces = elem.faces
+                    for face_id, face in iteritems(faces):
+                        eid_faces.append((eid, face))
+        else:
+            for eid in element_ids:
+                elem = self.elements[eid]
+                if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
+                    faces = elem.faces
+                    for face_id, face in iteritems(faces):
+                        if None in face:
+                            msg = 'There is a None in the face.\n'
+                            msg = 'face_id=%s face=%s\n%s' % (face_id, str(face), str(elem))
+                            raise RuntimeError(msg)
+                        eid_faces.append((eid, face))
         return eid_faces
 
     def get_solid_skin_faces(self):

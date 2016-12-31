@@ -19,7 +19,7 @@ class TestRods(unittest.TestCase):
         card = CROD.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
-        self.assertEqual(card.Eid(), 10)
+        self.assertEqual(card.eid, 10)
         self.assertEqual(card.Pid(), 100)
         node_ids = card.node_ids
         assert node_ids == [10, 2], node_ids # probably wrong
@@ -38,7 +38,7 @@ class TestRods(unittest.TestCase):
         card = CONROD.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
-        self.assertEqual(card.Eid(), eid)
+        self.assertEqual(card.eid, eid)
         self.assertEqual(card.Mid(), mid)
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids
@@ -140,7 +140,7 @@ class TestRods(unittest.TestCase):
         mass = L * (rho * A + nsm)
 
         # conrod
-        self.assertEqual(conrod.Eid(), eid)
+        self.assertEqual(conrod.eid, eid)
         self.assertEqual(conrod.Pid(), None)
         self.assertEqual(conrod.Mid(), mid)
         self.assertEqual(conrod.Length(), L)
@@ -154,7 +154,7 @@ class TestRods(unittest.TestCase):
         self.assertEqual(conrod.Rho(), rho)
 
         # crod
-        self.assertEqual(crod.Eid(), eid+1)
+        self.assertEqual(crod.eid, eid+1)
         self.assertEqual(crod.Pid(), pid)
         self.assertEqual(crod.Mid(), mid)
         self.assertEqual(crod.Length(), L)
@@ -180,7 +180,7 @@ class TestRods(unittest.TestCase):
         self.assertEqual(prod.Rho(), rho)
 
         # ctube
-        self.assertEqual(ctube.Eid(), eid+2)
+        self.assertEqual(ctube.eid, eid+2)
         self.assertEqual(ctube.Pid(), pid+1)
         self.assertEqual(ctube.Mid(), mid)
         self.assertEqual(ctube.Length(), L)

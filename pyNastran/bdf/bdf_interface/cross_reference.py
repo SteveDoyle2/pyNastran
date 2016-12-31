@@ -91,242 +91,6 @@ class XrefMesh(BDFAttributes):
         # for elem in model.elements:
             # elem.check_unique_nodes()
 
-    def safe_cross_reference(self, xref=True,
-                             xref_elements=True,
-                             xref_nodes_with_elements=True,
-                             xref_properties=True,
-                             xref_masses=True,
-                             xref_materials=True,
-                             xref_loads=True,
-                             xref_constraints=True,
-                             xref_aero=True,
-                             xref_sets=True,
-                             xref_optimization=True,
-                             debug=True):
-        """
-        Performs cross referencing in a way that skips data gracefully.
-
-        .. warning:: not fully implemented
-        """
-        self._cross_reference_nodes()
-        self._cross_reference_coordinates()
-
-        if xref_elements:
-            self._safe_cross_reference_elements()
-        if xref_properties:
-            self._cross_reference_properties()
-        if xref_masses:
-            self._cross_reference_masses()
-        if xref_materials:
-            self._cross_reference_materials()
-
-        if xref_sets:
-            self._cross_reference_sets()
-        if xref_aero:
-            self._safe_cross_reference_aero()
-        if xref_constraints:
-            self._cross_reference_constraints()
-        if xref_loads:
-            self._safe_cross_reference_loads(debug=debug)
-        if xref_optimization:
-            self._cross_reference_optimization()
-        if xref_nodes_with_elements:
-            self._cross_reference_nodes_with_elements()
-
-
-    def _safe_cross_reference_elements(self):
-        """
-        Links the elements to nodes, properties (and materials depending on
-        the card).
-        """
-        for elem in itervalues(self.elements):
-            try:
-                elem.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
-                self._stored_xref_errors.append((elem, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
-                    #msg = "Couldn't cross reference Element.\n%s" % str(elem)
-                    #self.log.error(msg)
-                    #raise
-        for elem in itervalues(self.rigid_elements):
-            try:
-                elem.safe_cross_reference(self)
-            except AttributeError:
-                elem.cross_reference(self)
-
-    def uncross_reference(self):
-        self._uncross_reference_nodes()
-        self._uncross_reference_coords()
-        self._uncross_reference_elements()
-        self._uncross_reference_properties()
-        self._uncross_reference_materials()
-        self._uncross_reference_masses()
-        self._uncross_reference_aero()
-        self._uncross_reference_constraints()
-        self._uncross_reference_loads()
-        self._uncross_reference_sets()
-        self._uncross_reference_optimization()
-
-    def _uncross_reference_nodes(self):
-        """cross references the GRID objects"""
-        for node in itervalues(self.nodes):
-            node.uncross_reference()
-
-    def _uncross_reference_coords(self):
-        """cross references the CORDx objects"""
-        for cid, coord in iteritems(self.coords):
-            if cid == 0:
-                continue
-            coord.uncross_reference()
-
-    def _uncross_reference_elements(self):
-        """cross references the element objects"""
-        for element in itervalues(self.elements):
-            try:
-                element.uncross_reference()
-            except TypeError:
-                raise NotImplementedError('%s.uncross_reference' % element.type)
-        for element in itervalues(self.rigid_elements):
-            element.uncross_reference()
-        for element in itervalues(self.plotels):
-            element.uncross_reference()
-
-    def _uncross_reference_properties(self):
-        """cross references the property objects"""
-        for prop in itervalues(self.properties):
-            try:
-                prop.uncross_reference()
-            except TypeError:
-                raise NotImplementedError('%s.uncross_reference' % prop.type)
-            except AttributeError:
-                print('%s.uncross_reference error' % prop.type)
-                raise
-
-    def _uncross_reference_materials(self):
-        """cross references the material objects"""
-        for material in itervalues(self.materials):
-            material.uncross_reference()
-
-    def _uncross_reference_masses(self):
-        """cross references the mass objects"""
-        for mass in itervalues(self.masses):
-            mass.uncross_reference()
-        for prop in itervalues(self.properties_mass):
-            prop.uncross_reference()
-
-    def _uncross_reference_aero(self):
-        """cross references the aero objects"""
-        for caero in itervalues(self.caeros):
-            caero.uncross_reference()
-        for paero in itervalues(self.paeros):
-            paero.uncross_reference()
-        for spline in itervalues(self.splines):
-            spline.uncross_reference()
-        for aecomp in itervalues(self.aecomps):
-            aecomp.uncross_reference()
-        for aelist in itervalues(self.aelists):
-            aelist.uncross_reference()
-        for aeparam in itervalues(self.aeparams):
-            aeparam.uncross_reference()
-        #for aestat in itervalues(self.aestats):
-            #aestat.uncross_reference()
-        for aesurf in itervalues(self.aesurf):
-            aesurf.uncross_reference()
-        for aesurfs in itervalues(self.aesurfs):
-            aesurfs.uncross_reference()
-        for flutter in itervalues(self.flutters):
-            flutter.uncross_reference()
-
-    def _uncross_reference_constraints(self):
-        """
-        Unlinks the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
-        SUPORT1, SESUPORT cards.
-        """
-        for spcadd in itervalues(self.spcadds):
-            spcadd.uncross_reference()
-        for spc in itervalues(self.spcs):
-            for spci in spc:
-                spci.uncross_reference()
-        for mpc in itervalues(self.mpcs):
-            for mpci in mpc:
-                mpci.uncross_reference()
-        for suport in self.suport:
-            suport.uncross_reference()
-        for suport1 in itervalues(self.suport1):
-            suport1.uncross_reference()
-        for se_suport in self.se_suport:
-            se_suport.uncross_reference()
-
-    def _uncross_reference_loads(self):
-        """
-        Unlinks the LOAD
-        PLOAD1, PLOAD2, PLOAD4
-        FORCE, FORCE1, FORCE2
-        MOMENT, MOMENT1, MOMENT2
-
-        DLOAD, ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2
-        DPHASE, DAREA
-
-        TEMP
-        """
-        for (lid, sid) in iteritems(self.loads):
-            for load in sid:
-                load.uncross_reference()
-        for (lid, sid) in iteritems(self.dloads):
-            for load in sid:
-                load.uncross_reference()
-        for (lid, sid) in iteritems(self.dload_entries):
-            for load in sid:
-                load.uncross_reference()
-        for key, darea in iteritems(self.dareas):
-            darea.uncross_reference()
-        for key, dphase in iteritems(self.dphases):
-            dphase.uncross_reference()
-
-    def _uncross_reference_sets(self):
-        for set_obj in self.asets:
-            set_obj.uncross_reference()
-        for set_obj in self.bsets:
-            set_obj.uncross_reference()
-        for set_obj in self.csets:
-            set_obj.uncross_reference()
-        for set_obj in self.qsets:
-            set_obj.uncross_reference()
-        for name, set_objs in iteritems(self.usets):
-            for set_obj in set_objs:
-                set_obj.uncross_reference()
-
-        # superelements
-        for key, set_obj in iteritems(self.se_sets):
-            set_obj.uncross_reference()
-        for set_obj in self.se_bsets:
-            set_obj.uncross_reference()
-        for set_obj in self.se_csets:
-            set_obj.uncross_reference()
-        for set_obj in self.se_qsets:
-            set_obj.uncross_reference()
-        for set_obj in self.se_usets:
-            set_obj.uncross_reference()
-
-    def _uncross_reference_optimization(self):
-        """uncross references the optimization objects"""
-        for key, deqatn in iteritems(self.dequations):
-            deqatn.uncross_reference()
-        for key, dresp in iteritems(self.dresps):
-            dresp.uncross_reference()
-        for key, dconstr in iteritems(self.dconstrs):
-            dconstr.uncross_reference()
-
-        for key, dvcrel in iteritems(self.dvcrels):
-            dvcrel.uncross_reference()
-        for key, dvmrel in iteritems(self.dvmrels):
-            dvmrel.uncross_reference()
-        for key, dvprel in iteritems(self.dvprels):
-            dvprel.uncross_reference()
-
     def cross_reference(self, xref=True,
                         xref_elements=True,
                         xref_nodes_with_elements=True,
@@ -375,33 +139,34 @@ class XrefMesh(BDFAttributes):
 
         .. warning:: be careful if you call this method with False values
         """
-        if xref:
-            self.log.debug("Cross Referencing...")
-            self._cross_reference_nodes()
-            self._cross_reference_coordinates()
+        if not xref:
+            return
+        self.log.debug("Cross Referencing...")
+        self._cross_reference_nodes()
+        self._cross_reference_coordinates()
 
-            if xref_elements:
-                self._cross_reference_elements()
-            if xref_properties:
-                self._cross_reference_properties()
-            if xref_masses:
-                self._cross_reference_masses()
-            if xref_materials:
-                self._cross_reference_materials()
+        if xref_elements:
+            self._cross_reference_elements()
+        if xref_properties:
+            self._cross_reference_properties()
+        if xref_masses:
+            self._cross_reference_masses()
+        if xref_materials:
+            self._cross_reference_materials()
 
-            if xref_aero:
-                self._cross_reference_aero()
-            if xref_constraints:
-                self._cross_reference_constraints()
-            if xref_loads:
-                self._cross_reference_loads()
-            if xref_sets:
-                self._cross_reference_sets()
-            if xref_optimization:
-                self._cross_reference_optimization()
-            if xref_nodes_with_elements:
-                self._cross_reference_nodes_with_elements()
-            #self.case_control_deck.cross_reference(self)
+        if xref_aero:
+            self._cross_reference_aero()
+        if xref_constraints:
+            self._cross_reference_constraints()
+        if xref_loads:
+            self._cross_reference_loads()
+        if xref_sets:
+            self._cross_reference_sets()
+        if xref_optimization:
+            self._cross_reference_optimization()
+        if xref_nodes_with_elements:
+            self._cross_reference_nodes_with_elements()
+        #self.case_control_deck.cross_reference(self)
 
     def _cross_reference_constraints(self):
         """
@@ -781,26 +546,6 @@ class XrefMesh(BDFAttributes):
                 self._stored_xref_errors.append((load, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
-
-    def _safe_cross_reference_loads(self, debug=True):
-        """
-        Links the loads to nodes, coordinate systems, and other loads.
-        """
-        for (lid, sid) in iteritems(self.loads):
-            for load in sid:
-                load.safe_cross_reference(self)
-
-        for (lid, sid) in iteritems(self.dloads):
-            for load in sid:
-                load.safe_cross_reference(self)
-        for (lid, sid) in iteritems(self.dload_entries):
-            for load in sid:
-                load.safe_cross_reference(self)
-
-        for key, darea in iteritems(self.dareas):
-            darea.safe_cross_reference(self)
-        for key, dphase in iteritems(self.dphases):
-            dphase.safe_cross_reference(self)
 
     def _cross_reference_sets(self):
         """cross references the SET objects"""

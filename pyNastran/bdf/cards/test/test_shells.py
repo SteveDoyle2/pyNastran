@@ -43,7 +43,7 @@ class TestShells(unittest.TestCase):
         assert node_ids == [n1, n2, n3, n4], node_ids
 
         # cquad4 / pshell
-        self.assertEqual(cquad4.Eid(), eid)
+        self.assertEqual(cquad4.eid, eid)
         self.assertEqual(cquad4.Pid(), pid)
         self.assertEqual(cquad4.Mid(), mid)
         self.assertEqual(cquad4.Nsm(), nsm)
@@ -101,7 +101,7 @@ class TestShells(unittest.TestCase):
         node_ids = ctria3.node_ids
         assert node_ids == [n1, n2, n3], node_ids
         mass = A * (t * rho + nsm)
-        self.assertEqual(ctria3.Eid(), eid)
+        self.assertEqual(ctria3.eid, eid)
         self.assertEqual(ctria3.Pid(), pid)
         self.assertEqual(ctria3.Mid(), mid)
         self.assertEqual(ctria3.Nsm(), nsm)
@@ -132,7 +132,7 @@ class TestShells(unittest.TestCase):
         # ctria3 / pcomp
         ctria3 = model.Element(eid + 1)
         mass = A * (10 * t * rho + nsm)
-        self.assertEqual(ctria3.Eid(), eid + 1)
+        self.assertEqual(ctria3.eid, eid + 1)
         self.assertEqual(ctria3.Pid(), pid + 1)
         #self.assertEqual(ctria3.Mid(), mid)
         self.assertEqual(ctria3.Nsm(), nsm)

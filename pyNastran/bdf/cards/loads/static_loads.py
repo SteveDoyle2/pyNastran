@@ -2135,7 +2135,7 @@ class PLOAD2(Load):
         if isinstance(self.eids[0], int):
             eids = self.eids
         else:
-            eids = [elem.Eid() for elem in self.eids]
+            eids = [elem.eid for elem in self.eids]
         return eids
 
     def get_loads(self):

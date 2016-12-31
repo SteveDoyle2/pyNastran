@@ -385,7 +385,7 @@ class TestSolids(unittest.TestCase):
         element.node_ids
         assert pid in model.properties, 'pid is missing for\n%s' % str(element)
         self.assertEqual(element.type, etype)
-        self.assertEqual(element.Eid(), eid)
+        self.assertEqual(element.eid, eid)
         self.assertEqual(element.pid.type, ptype)
         self.assertEqual(element.Pid(), pid)
         self.assertEqual(element.pid.mid.type, mtype)

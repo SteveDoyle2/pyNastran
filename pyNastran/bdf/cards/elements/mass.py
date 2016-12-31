@@ -81,7 +81,7 @@ class CMASS1(PointMassElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         g1 = integer(card, 3, 'g1')
         c1 = integer_or_blank(card, 4, 'c1')
-        g2 = integer(card, 5, 'g2')
+        g2 = integer_or_blank(card, 5, 'g2')
         c2 = integer_or_blank(card, 6, 'c2')
         assert len(card) <= 7, 'len(CMASS1 card) = %i\ncard=%s' % (len(card), card)
         return CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)

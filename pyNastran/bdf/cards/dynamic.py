@@ -28,9 +28,9 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, integer_or_string,
+    integer, integer_or_blank, double, double_or_blank,
     string_or_blank, blank, fields, components_or_blank,
-    integer_string_or_blank,
+    integer_string_or_blank, integer_or_double,
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -748,7 +748,12 @@ class ROTORD(BaseCard):
                  zstein='NO', orbeps=1.e-6, roprt=0, sync=1,
                  etype=1, eorder=1.0, threshold=0.02, maxiter=10,
                  comment=''):
+        """
+        rspeeds : List[int/float, ..., int/float]
 
+            float : rotor speeds
+            int : TABLEDi
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -776,13 +781,23 @@ class ROTORD(BaseCard):
         self.w4s = w4s
         self.rforces = rforces
         self.brgsets = brgsets
+        self.rspeeds_ref = None
 
     def validate(self):
         pass
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
 
     def cross_reference(self, model):
-        pass
+        self.rspeeds_ref = []
+        for rspeed in self.rspeeds:
+            if isinstance(rspeed, int):
+                self.rspeeds_ref.append(model.Table(rspeed))
+            else:
+                self.rspeeds_ref.append(rspeed)
+
+        for rforce in self.rforces:
+            self.rspeeds_ref.append(model.DLoads(rforce))
+        # ..todo ::  BRGSETi
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -821,7 +836,7 @@ class ROTORD(BaseCard):
             j = irow * 8 + 17
             rid = integer(card, j, 'rid_%i' % (irow + 1))
             rset = integer(card, j+1, 'rset_%i' % (irow + 1))
-            rspeed = double(card, j+2, 'rspeed_%i' % (irow + 1))
+            rspeed = integer_or_double(card, j+2, 'rspeed_%i' % (irow + 1))
             rcord = integer_or_blank(card, j+3, 'rcord_%i' % (irow + 1), 0)
             w3 = double_or_blank(card, j+4, 'w3_%i' % (irow + 1), 0.)
             w4 = double_or_blank(card, j+5, 'w4_%i' % (irow + 1), 0.)
@@ -897,9 +912,6 @@ class ROTORG(BaseCard):
     def validate(self):
         pass
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
-
-    def cross_reference(self, model):
-        pass
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1168,9 +1180,12 @@ class TSTEPNL(BaseCard):
     +---------+--------+--------+-------+--------+--------+-------+---------+------+
     |         | MAXBIS | ADJUST | MSTEP |   RB   |  MAXR  | UTOL  | RTOLB   |      |
     +---------+--------+--------+-------+--------+--------+-------+---------+------+
+
+    method = None for NX, but apparently TSTEP as well, which is not in the QRG
     """
     type = 'TSTEPNL'
-    allowed_methods = ['AUTO', 'ITER', 'ADAPT', 'SEMI', 'FNT', 'PFNT']
+    allowed_methods = ['AUTO', 'ITER', 'ADAPT', 'SEMI', 'FNT', 'PFNT', # MSC
+                       'TSTEP'] # NX
 
     def __init__(self, sid, ndt, dt, no, method='ADAPT', kstep=None,
                  max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,

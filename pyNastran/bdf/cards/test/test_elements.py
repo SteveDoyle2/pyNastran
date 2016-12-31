@@ -14,7 +14,7 @@ class TestElements(unittest.TestCase):
 
         size = 8
         elem = CBUSH.add_card(card)
-        self.assertEqual(elem.Eid(), 101)
+        self.assertEqual(elem.eid, 101)
         self.assertEqual(elem.Pid(), 102)
         elem.write_card(size, 'dummy')
         elem.raw_fields()
@@ -26,7 +26,7 @@ class TestElements(unittest.TestCase):
 
         size = 8
         elem = CDAMP1.add_card(card)
-        self.assertEqual(elem.Eid(), 2001)
+        self.assertEqual(elem.eid, 2001)
         self.assertEqual(elem.Pid(), 20)
         node_ids = elem.node_ids
         assert node_ids == [1001, None], node_ids
@@ -42,7 +42,7 @@ class TestElements(unittest.TestCase):
         elem = CGAP.add_card(card)
         node_ids = elem.node_ids
         assert node_ids == [21, 99], node_ids
-        self.assertEqual(elem.Eid(), 899)
+        self.assertEqual(elem.eid, 899)
         self.assertEqual(elem.Pid(), 90)
         elem.write_card(size, 'dummy')
         elem.raw_fields()
