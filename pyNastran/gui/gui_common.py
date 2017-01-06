@@ -149,7 +149,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #QMainWindow.__init__(self)
 
         #-----------------------------------------------------------------------
-        self.use_background_image = False
+        self._active_background_image = None
         self.reset_settings = False
         self.fmts = fmt_order
         self.base_window_title = "pyNastran v%s"  % pyNastran.__version__
@@ -177,6 +177,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print(e)
         #print('drop event')
 
+    def Render(self):
+        #self.vtk_interactor.Render()
+        self.vtk_interactor.GetRenderWindow().Render()
+
     @property
     def legend_shown(self):
         return self.scalar_bar.is_shown
@@ -191,7 +195,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     #def get_color_function(self):
         #return self.scalar_bar.color_function
-
 
     @property
     def window_title(self):
@@ -1016,8 +1019,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
-        if self.use_background_image:
-            self.rend.SetLayer(1)
 
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
@@ -1671,57 +1672,93 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def render_window(self):
         return self.vtk_interactor.GetRenderWindow()
 
-    def setup_background_image(self):
+    def set_background_image(self, image_filename='GeologicalExfoliationOfGraniteRock.jpg'):
         """adds a background image"""
-        if self.use_background_image:
-            jpeg_reader = vtk.vtkJPEGReader()
-            image_filename = 'AtacamaDesertByFrode.jpg'
-            if not jpeg_reader.CanReadFile(image_filename):
-                print("Error reading file %s" % image_filename)
-                return
+        if not os.path.exists(image_filename):
+            return
 
-            jpeg_reader.SetFileName(image_filename)
-            jpeg_reader.Update()
-            image_data = jpeg_reader.GetOutput()
+        fmt = os.path.splitext(image_filename)[1].lower()
+        if fmt not in ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp']:
+            raise NotImplementedError('invalid image type=%r; filename=%r' % (fmt, image_filename))
 
-            # Create an image actor to display the image
-            image_actor = vtk.vtkImageActor()
+        #image_reader = vtk.vtkJPEGReader()
+        #image_reader = vtk.vtkPNGReader()
+        #image_reader = vtk.vtkTIFFReader()
+        #image_reader = vtk.vtkBMPReader()
+        #image_reader = vtk.vtkPostScriptReader()  # doesn't exist?
 
+        has_background_image = self._active_background_image is not None
+        self._active_background_image = image_filename
+        #if has_background_image:
+            #self.image_reader.Delete()
+
+
+        if fmt in ['.jpg', '.jpeg']:
+            self.image_reader = vtk.vtkJPEGReader()
+        elif fmt == '.png':
+            self.image_reader = vtk.vtkPNGReader()
+        elif fmt in ['.tif', '.tiff']:
+            self.image_reader = vtk.vtkTIFFReader()
+        elif fmt == '.bmp':
+            self.image_reader = vtk.vtkBMPReader()
+        #elif fmt == '.ps': # doesn't exist?
+            #self.image_reader = vtk.vtkPostScriptReader()
+        else:
+            raise NotImplementedError('invalid image type=%r; filename=%r' % (fmt, image_filename))
+
+        if not self.image_reader.CanReadFile(image_filename):
+            print("Error reading file %s" % image_filename)
+            return
+
+        self.image_reader.SetFileName(image_filename)
+        self.image_reader.Update()
+        image_data = self.image_reader.GetOutput()
+
+        if has_background_image:
             if vtk.VTK_MAJOR_VERSION <= 5:
-                image_actor.SetInput(image_data)
+                self.image_actor.SetInput(image_data)
             else:
-                image_actor.SetInputData(image_data)
+                self.image_actor.SetInputData(image_data)
+            self.Render()
+            return
 
-            self.background_rend = vtk.vtkRenderer()
-            self.background_rend.SetLayer(0)
-            self.background_rend.InteractiveOff()
-            self.background_rend.AddActor(image_actor)
+        # Create an image actor to display the image
+        self.image_actor = vtk.vtkImageActor()
 
-            self.rend.SetLayer(1)
-            render_window = self.vtk_interactor.GetRenderWindow()
-            render_window.SetNumberOfLayers(2)
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            self.image_actor.SetInput(image_data)
+        else:
+            self.image_actor.SetInputData(image_data)
 
-            render_window.AddRenderer(self.background_rend)
+        self.background_rend = vtk.vtkRenderer()
+        self.background_rend.SetLayer(0)
+        self.background_rend.InteractiveOff()
+        self.background_rend.AddActor(self.image_actor)
 
-            # Set up the background camera to fill the renderer with the image
-            origin = image_data.GetOrigin()
-            spacing = image_data.GetSpacing()
-            extent = image_data.GetExtent()
+        self.rend.SetLayer(1)
+        render_window = self.vtk_interactor.GetRenderWindow()
+        render_window.SetNumberOfLayers(2)
 
-            camera = self.background_rend.GetActiveCamera()
-            camera.ParallelProjectionOn()
+        render_window.AddRenderer(self.background_rend)
 
-            xc = origin[0] + 0.5*(extent[0] + extent[1]) * spacing[0]
-            yc = origin[1] + 0.5*(extent[2] + extent[3]) * spacing[1]
-            # xd = (extent[1] - extent[0] + 1) * spacing[0]
-            yd = (extent[3] - extent[2] + 1) * spacing[1]
-            d = camera.GetDistance()
-            camera.SetParallelScale(0.5 * yd)
-            camera.SetFocalPoint(xc, yc, 0.0)
-            camera.SetPosition(xc, yc, d)
+        # Set up the background camera to fill the renderer with the image
+        origin = image_data.GetOrigin()
+        spacing = image_data.GetSpacing()
+        extent = image_data.GetExtent()
+
+        camera = self.background_rend.GetActiveCamera()
+        camera.ParallelProjectionOn()
+
+        xc = origin[0] + 0.5*(extent[0] + extent[1]) * spacing[0]
+        yc = origin[1] + 0.5*(extent[2] + extent[3]) * spacing[1]
+        # xd = (extent[1] - extent[0] + 1) * spacing[0]
+        yd = (extent[3] - extent[2] + 1) * spacing[1]
+        d = camera.GetDistance()
+        camera.SetParallelScale(0.5 * yd)
+        camera.SetFocalPoint(xc, yc, 0.0)
+        camera.SetPosition(xc, yc, d)
 
     def build_vtk_frame(self):
-        print('build-vtk-frame')
         vtk_hbox = QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
@@ -1753,7 +1790,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             rend.SetViewport(*frame2)
             self.vtk_interactor.GetRenderWindow().AddRenderer(rend)
 
-        self.setup_background_image()
+        self.set_background_image()
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
 
