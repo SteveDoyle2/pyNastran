@@ -14,6 +14,9 @@ import os.path
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
 
+from pyNastran.gui.arg_handling import get_inputs
+get_inputs()
+
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore, QtGui
@@ -43,7 +46,6 @@ from pyNastran.gui.formats import (NastranIO, Cart3dIO,  DegenGeomIO, PanairIO, 
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
     AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO,
     )
-from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.gui_common import GuiCommon2
 
 try:
