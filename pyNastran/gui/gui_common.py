@@ -1958,7 +1958,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.edge_actor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
         self.edge_actor.Modified()
         #self.widget.Update()
-        self._update_camera()
+        #self._update_camera()
+        self.Render()
         #self.refresh()
         self.log_command('on_flip_edges()')
 
@@ -1998,6 +1999,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.rend.AddActor(self.edge_actor)
 
     def post_group_by_name(self, name):
+        """posts a group with a specific name"""
         group = self.groups[name]
         self.post_group(group)
         self.group_active = name
@@ -2042,6 +2044,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.show_ids_mask(i)
 
     def create_groups_by_visible_result(self):
+        """
+        Creates group by the active result
+
+        This should really only be called for integer results < 100-ish.
+        """
         #self.scalar_bar.title
 
         case_key = self.case_keys[self.icase] # int for object
@@ -2055,10 +2062,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command('create_groups_by_visible_result()')
 
     def create_groups_by_property_id(self):
+        """
+        Creates a group for each Property ID.
+
+        As this is somewhat Nastran specific, create_groups_by_visible_result exists as well.
+        """
         self._create_groups_by_name('PropertyID', 'property')
         self.log_command('create_groups_by_property_id()')
 
     def _create_groups_by_name(self, name, prefix):
+        """
+        Helper method for `create_groups_by_visible_result` and `create_groups_by_property_id`
+        """
         #eids = self.find_result_by_name('ElementID')
         #elements_pound = eids.max()
         eids = self.groups['main'].element_ids
@@ -2242,20 +2257,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         text_actor.VisibilityOff()
 
-        #txt.SetDisplayPosition(5, 5) # bottom left
-        #txt.SetDisplayPosition(5, 95)
-        #txt.SetPosition(0.1, 0.5)
-
         # assign actor to the renderer
         self.rend.AddActor(text_actor)
         self.text_actors[self.itext] = text_actor
         self.itext += 1
 
     def turn_text_off(self):
+        """turns all the text actors off"""
         for text in itervalues(self.text_actors):
             text.VisibilityOff()
 
     def turn_text_on(self):
+        """turns all the text actors on"""
         for text in itervalues(self.text_actors):
             text.VisibilityOn()
 
