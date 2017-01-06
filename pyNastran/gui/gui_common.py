@@ -149,6 +149,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #QMainWindow.__init__(self)
 
         #-----------------------------------------------------------------------
+        self.use_background_image = False
         self.reset_settings = False
         self.fmts = fmt_order
         self.base_window_title = "pyNastran v%s"  % pyNastran.__version__
@@ -1015,6 +1016,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
+        if self.use_background_image:
+            self.rend.SetLayer(1)
 
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
@@ -1668,7 +1671,57 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def render_window(self):
         return self.vtk_interactor.GetRenderWindow()
 
+    def setup_background_image(self):
+        """adds a background image"""
+        if self.use_background_image:
+            jpeg_reader = vtk.vtkJPEGReader()
+            image_filename = 'AtacamaDesertByFrode.jpg'
+            if not jpeg_reader.CanReadFile(image_filename):
+                print("Error reading file %s" % image_filename)
+                return
+
+            jpeg_reader.SetFileName(image_filename)
+            jpeg_reader.Update()
+            image_data = jpeg_reader.GetOutput()
+
+            # Create an image actor to display the image
+            image_actor = vtk.vtkImageActor()
+
+            if vtk.VTK_MAJOR_VERSION <= 5:
+                image_actor.SetInput(image_data)
+            else:
+                image_actor.SetInputData(image_data)
+
+            self.background_rend = vtk.vtkRenderer()
+            self.background_rend.SetLayer(0)
+            self.background_rend.InteractiveOff()
+            self.background_rend.AddActor(image_actor)
+
+            self.rend.SetLayer(1)
+            render_window = self.vtk_interactor.GetRenderWindow()
+            render_window.SetNumberOfLayers(2)
+
+            render_window.AddRenderer(self.background_rend)
+
+            # Set up the background camera to fill the renderer with the image
+            origin = image_data.GetOrigin()
+            spacing = image_data.GetSpacing()
+            extent = image_data.GetExtent()
+
+            camera = self.background_rend.GetActiveCamera()
+            camera.ParallelProjectionOn()
+
+            xc = origin[0] + 0.5*(extent[0] + extent[1]) * spacing[0]
+            yc = origin[1] + 0.5*(extent[2] + extent[3]) * spacing[1]
+            # xd = (extent[1] - extent[0] + 1) * spacing[0]
+            yd = (extent[3] - extent[2] + 1) * spacing[1]
+            d = camera.GetDistance()
+            camera.SetParallelScale(0.5 * yd)
+            camera.SetFocalPoint(xc, yc, 0.0)
+            camera.SetPosition(xc, yc, d)
+
     def build_vtk_frame(self):
+        print('build-vtk-frame')
         vtk_hbox = QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
@@ -1700,6 +1753,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             rend.SetViewport(*frame2)
             self.vtk_interactor.GetRenderWindow().AddRenderer(rend)
 
+        self.setup_background_image()
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
 
