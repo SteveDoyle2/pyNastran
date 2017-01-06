@@ -1238,8 +1238,9 @@ def get_element_stats(fem1, fem2, quiet=False):
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
     #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
     if not quiet:
-        print("mass =", mass)
-        print("cg   =", cg)
+        print("mass = %s" % mass)
+        print("cg   = %s" % cg)
+        print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s Ipolar-%s" % tuple(I))
         #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
         #print("mass_old =", mass)
         #print("cg_old   =", cg)

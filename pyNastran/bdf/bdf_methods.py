@@ -283,9 +283,14 @@ class BDFMethods(BDFAttributes):
             An array of element ids.
         mass_ids : list[int]; (n, ) ndarray, optional
             An array of mass ids.
-        reference_point : ndarray, optional
-            An array that defines the origin of the frame.
-            default = <0,0,0>.
+        reference_point : ndarray/str/int, optional
+            type : ndarray
+                An array that defines the origin of the frame.
+                default = <0,0,0>.
+            type : str
+                'cg' is the only allowed string
+            type : int
+                the node id
         sym_axis : str, optional
             The axis to which the model is symmetric. If AERO cards are used, this can be left blank
             allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
@@ -339,6 +344,8 @@ class BDFMethods(BDFAttributes):
         """
         if reference_point is None:
             reference_point = array([0., 0., 0.])
+        elif isinstance(reference_point, integer_types):
+            reference_point = self.nodes[reference_point].get_position()
 
         # if neither element_id nor mass_ids are specified, use everything
         if element_ids is None and mass_ids is None:
