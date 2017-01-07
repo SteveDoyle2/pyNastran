@@ -288,7 +288,7 @@ class CBEAM(CBAR):
     @property
     def is_offt(self):
         """is the offt flag active?"""
-        if isinstance(self.offt, str):
+        if isinstance(self.offt, string_types):
             return True
         assert isinstance(self.bit, float), 'bit=%s type=%s' % (self.bit, type(self.bit))
         return False
