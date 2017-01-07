@@ -1054,14 +1054,15 @@ class NastranIO(object):
                         self._fill_spc(spc_id, nspcs, nspc1s, nspcds, dim_max,
                                        model, nid_to_pid_map)
 
+            # rigid body elements and MPCS
+            lines = self._get_rigid(model)
             if 'MPC' in subcase:
                 mpc_id, options = subcase.get_parameter('MPC')
                 if mpc_id is not None:
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
-                        self._fill_mpc(mpc_id, dim_max, model, nid_to_pid_map)
-            else:
-                self._fill_rigid(dim_max, model, nid_to_pid_map)
+                        lines += self.get_MPCx_node_ids_c1(model, mpc_id, exclude_mpcadd=False)
+            self._fill_dependent_independent(dim_max, model, lines, nid_to_pid_map)
 
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
                 suport_id, options = subcase.get_parameter('SUPORT1')
@@ -1773,7 +1774,6 @@ class NastranIO(object):
         # print(Ly)
         self.alt_grids[name].SetPoints(points)
 
-
     def _get_rigid(self, model):
         """
         dependent = (lines[:, 0])
@@ -1808,17 +1808,6 @@ class NastranIO(object):
             else:
                 print(str(elem))
         return lines_rigid
-
-    def _fill_mpc(self, mpc_id, dim_max, model, nid_to_pid_map):
-        """helper for making MPCs"""
-        lines = self.get_MPCx_node_ids_c1(model, mpc_id, exclude_mpcadd=False)
-        lines += self._get_rigid(model)
-        self._fill_dependent_independent(dim_max, model, lines, nid_to_pid_map)
-
-    def _fill_rigid(self, dim_max, model, nid_to_pid_map):
-        """helper for making rigid elements"""
-        lines = self._get_rigid(model)
-        self._fill_dependent_independent(dim_max, model, lines, nid_to_pid_map)
 
     def _fill_dependent_independent(self, dim_max, model, lines, nid_to_pid_map):
         if not lines:
