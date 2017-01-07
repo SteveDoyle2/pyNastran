@@ -15,12 +15,12 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None):
 
     Parameters
     ----------
-    nodes_xyz : (N, 3) float ndarray
-         the source points
-    nids : (N, ) int ndarray
-         the source node ids
-    xyz_compare : (N, 3) float ndarray
-         the xyz points to compare to
+    nodes_xyz : (Nnodes, 3) float ndarray
+        the source points
+    nids : (Nnodes, ) int ndarray
+        the source node ids
+    xyz_compare : (Ncompare, 3) float ndarray
+        the xyz points to compare to
     tol : float; default=None
         the max spherical tolerance; the whole model
     neq_max : int; default=1.0
@@ -28,7 +28,7 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None):
 
     Returns
     -------
-    nids_close: (N, ) int ndarray
+    nids_close: (Ncompare, ) int ndarray
         the close node ids
     """
     if not isinstance(neq_max, int):
@@ -42,8 +42,8 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None):
         tol = 2. * dxyz
 
     ieq = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
-                                      neq_max=neq_max)[2:]
-    assert len(ieq) == len(nids), 'increase the tolerance so you '
+                                      neq_max=neq_max)[1]
+    #assert len(ieq) == len(nids), 'increase the tolerance so you '
     return nids[ieq]
 
 
@@ -53,10 +53,10 @@ def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol):
 
     Parameters
     ----------
-    nodes_xyz : (N, 3) float ndarray
-         the source points
-    xyz_compare : (N, 3) float ndarray
-         the xyz points to compare to
+    nodes_xyz : (Nnodes, 3) float ndarray
+        the source points
+    xyz_compare : (Ncompare, 3) float ndarray
+        the xyz points to compare to
     neq_max : int
         the number of "close" points (default=4)
     tol : float
@@ -64,14 +64,14 @@ def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol):
 
     Returns
     -------
-    slots : (N, ) int ndarray
+    slots : (Ncompare, ) int ndarray
         the indices of the close nodes corresponding to nodes_xyz
     """
     #nodes_xyz, model, nids, inew = _eq_nodes_setup(
         #bdf_filename, tol, renumber_nodes=renumber_nodes,
         #xref=xref, node_set=node_set, debug=debug)
     ieq, slots = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
-                                             neq_max=neq_max)[1:]
+                                             neq_max=neq_max)[1:3]
     return ieq
 
 
@@ -81,9 +81,9 @@ def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4):
 
     Parameters
     ----------
-    nodes_xyz : (N, 3) float ndarray
+    nodes_xyz : (Nnodes, 3) float ndarray
          the source points
-    xyz_compare : (N, 3) float ndarray
+    xyz_compare : (Ncompare, 3) float ndarray
          the xyz points to compare to
     tol : float
         the max spherical tolerance
