@@ -427,14 +427,20 @@ class XDB(FortranFormat):
                           b'SUBGRID', b'EQEXINE', b'EQEXING', b'SPCFR', b'CTR3',
                           b'CBAR', b'CCON', b'CELAS2', b'CONM2' ,b'CSTM', b'EBARR',
                           b'ECONR', b'EELSR', b'EQD4R', b'ETR3R', b'FBARR', b'FCONR',
-                          b'MPCFR', b'PATHBCD', b'PATHINT',
+                          b'MPCFR', b'PATHBCD', b'PATHINT', b'FORCE', b'PBAR', b'SBARR',
+                          b'SUBELEM', 
                           ]:
             dn = 88
-            self.show(dn, types='i')
-            self.f.read(dn)
-            self.n += dn
+            #self.show(dn, types='i')
+
+        elif table_name in [b'SUPERS']:
+            dn=1684
         else:
             raise NotImplementedError('table_name=%r' % table_name)
+        
+        self.f.read(dn)
+        self.n += dn
+
         print('read_table_header table_name=%r (%s)' % (table_name, dn))
 
     def read_table(self, table_name, etype, nsubcases):
@@ -516,8 +522,10 @@ def test_ctria3():
     #model = read_xdb(xdb_filename, 'tri', nsubcases=1, npload4s=6)
 
     #xdb_filename = r'C:\Users\nikita.kalutskiy\Desktop\A318_FEM\Static\w1000bostat.xdb'
-    xdb_filename = os.path.join(model_path, 'support_structure', 'w1000bostat.xdb')
+    xdb_filename = r'D:\!Work\bar1.xdb'
+    #os.path.join(model_path, 'support_structure', 'w1000bostat.xdb')
     model = read_xdb(xdb_filename, 'quad', nsubcases=3, npload4s=6)
+
 
     #xdb_filename = os.path.join(model_path, 'pload4', 'cquad4_1subcase.xdb')
     #model = read_xdb(xdb_filename, 'quad', nsubcases=1, npload4s=6)
