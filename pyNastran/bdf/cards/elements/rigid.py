@@ -891,7 +891,7 @@ class RBE3(RigidElement):
 
         i = ioffset
         n = 1
-        weight_cg_group = []
+        #weight_cg_group = []
         weights = []
         comps = []
         Gijs = []
@@ -1133,7 +1133,10 @@ class RSPLINE(RigidElement):
         nids = []
         components = []
         j = 1
-        for i in range(3, nfields, 2):
+        nid = integer(card, 3, 'nid_%s' % j)
+        nids.append(nid)
+        j += 1
+        for i in range(4, nfields, 2):
             nid = integer(card, i, 'nid_%s' % j)
             comp = components_or_blank(card, i+1, 'components_%i' % j)
             nids.append(nid)
