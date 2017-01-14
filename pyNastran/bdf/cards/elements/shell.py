@@ -2946,8 +2946,9 @@ class CQUAD8(QuadShell):
     type = 'CQUAD8'
     aster_type = 'QUAD8'
 
-    def __init__(self, eid, pid, nids, T1=None, T2=None, T3=None, T4=None,
-                 theta_mcid=0., zoffset=0., TFlag=0, comment=''):
+    def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
+                 TFlag=0, T1=None, T2=None, T3=None, T4=None,
+                 comment=''):
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -2994,8 +2995,8 @@ class CQUAD8(QuadShell):
             T3 = 1.0
             T4 = 1.0
             TFlag = 0
-        return CQUAD8(eid, pid, nids, T1=T1, T2=T2, T3=T3, T4=T4,
-                      theta_mcid=theta_mcid, zoffset=zoffset, TFlag=TFlag,
+        return CQUAD8(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4,
                       comment=comment)
 
     @classmethod
@@ -3016,8 +3017,8 @@ class CQUAD8(QuadShell):
         theta_mcid = data[14]
         zoffset = data[14]
         TFlag = data[15]
-        return CQUAD8(eid, pid, nids, T1, T2, T3, T4, theta_mcid, zoffset, TFlag,
-                      comment=comment)
+        return CQUAD8(eid, pid, nids, theta_mcid, zoffset,
+                      TFlag, T1, T2, T3, T4, comment=comment)
 
     def cross_reference(self, model):
         """

@@ -186,12 +186,31 @@ class AEFACT(BaseCard):
     type = 'AEFACT'
 
     def __init__(self, sid, Di, comment=''):
+        """
+        Creates an AEFACT card, which defines the mach, dynamic_pressure,
+        velocity, and reduced frequency for an FLUTTER card
+
+        Used in flutter (145) and gust (146) analysis.
+
+        Parameters
+        ----------
+        sid : int
+            unique id
+        Di : List[float, ..., float]
+            list of:
+             - machs
+             - dynamic_pressures
+             - velocities
+             - reduced frequency
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
         #: Number (float)
-        self.Di = np.array(Di, dtype='float64')
+        self.Di = np.asarray(Di, dtype='float64')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -242,7 +261,7 @@ class AELINK(BaseCard):
     +========+=======+=======+========+====+=======+====+=======+====+
     | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
     +--------+-------+-------+--------+----+-------+----+-------+----+
-    |        | LABL4 | C4    | etc.   |    |       |    |       |    |
+    |        | LABL4 |  C4   | etc.   |    |       |    |       |    |
     +--------+-------+-------+--------+----+-------+----+-------+----+
 
     +--------+-------+-------+-------+------+
@@ -252,12 +271,29 @@ class AELINK(BaseCard):
     type = 'AELINK'
 
     def __init__(self, id, label, independent_labels, Cis, comment=''):
+        """
+        Creates an AELINK card, which defines an equation linking
+        AESTAT and AESURF cards
+
+        Parameters
+        ----------
+        id : int
+            unique id
+        label : str
+            name of the AESURF(???) card
+        independent_labels : List[str, ..., str]
+            name for the AESTAT(???) cards
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: defines the dependent variable name (string)
         self.label = label
+
         #: defines the independent variable name (string)
         self.independent_labels = independent_labels
+
         #: linking coefficient (real)
         self.Cis = Cis
 
@@ -342,6 +378,19 @@ class AELIST(BaseCard):
     type = 'AELIST'
 
     def __init__(self, sid, elements, comment=''):
+        """
+        Creates an AELIST card, which defines the aero boxes for
+        an AESURF/SPLINEx.
+
+        Parameters
+        ----------
+        sid : int
+            unique id
+        elements : List[int, ..., int]
+            list of box ids
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Set identification number. (Integer > 0)
@@ -404,6 +453,20 @@ class AEPARM(BaseCard):
     }
 
     def __init__(self, id, label, units, comment=''):
+        """
+        Creates an AEPARM card, which defines a new trim variable.
+
+        Parameters
+        ----------
+        id : int
+            the unique id
+        label : str
+            the variable name
+        units : str
+            unused by Nastran
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.id = id
@@ -413,7 +476,7 @@ class AEPARM(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         id = integer(card, 1, 'id')
-        label = string(card, 2, 'lable')
+        label = string(card, 2, 'label')
         units = card.field(3)
         units = '' if units is None else units
 
@@ -552,7 +615,7 @@ class AESURF(BaseCard):
                  hmllim=None, hmulim=None, tqllim=None, tqulim=None,
                  comment=''):
         """
-        Creates an AESURF card
+        Creates an AESURF card, which defines a control surface
 
         Parameters
         ----------
@@ -560,14 +623,10 @@ class AESURF(BaseCard):
             controller number
         label : str
             controller name
-        cid1 : int
-            coordinate system id for primary control surface
-        alid1 : int
-            AELIST id for primary control surface
-        cid2 : int; default=None
-            coordinate system id for secondary control surface
-        alid2 : int; default=None
-            AELIST id for secondary control surface
+        cid1 / cid2 : int / None
+            coordinate system id for primary/secondary control surface
+        alid1 / alid2 : int / None
+            AELIST id for primary/secondary control surface
         eff : float; default=1.0
             Control surface effectiveness
         ldw : str; default='LDW'
@@ -797,6 +856,21 @@ class AESURFS(BaseCard):  # not integrated
     type = 'AESURFS'
 
     def __init__(self, aesid, label, list1, list2, comment=''):
+        """
+        Creates an AESURFS card
+
+        Parameters
+        ----------
+        aesid : int
+            the unique id
+        label : str
+            the AESURF name
+        list1 / list2 : int / None
+            the list (AELIST) of node ids for the primary/secondary
+            control surface(s) on the AESURF card
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.aesid = aesid
@@ -1235,8 +1309,8 @@ class AEROS(Aero):
 
 class CSSCHD(Aero):
     """
-    Defines a scheduled control surface deflection as a function of Mach number
-    and angle of attack.
+    Defines a scheduled control surface deflection as a function of
+    Mach number and angle of attack.
 
     +--------+-----+-------+--------+-------+-------+
     |    1   |  2  |   3   |   4    |   5   |   6   |
@@ -1254,6 +1328,25 @@ class CSSCHD(Aero):
     }
 
     def __init__(self, sid, aesid, lschd, lalpha=None, lmach=None, comment=''):
+        """
+        Creates an CSSCHD card, which defines a specified control surface
+        deflection as a function of Mach and alpha (used in SOL 144/146).
+
+        Parameters
+        ----------
+        sid : int
+            the unique id
+        aesid : int
+            the control surface (AESURF) id
+        lalpha : int; default=None
+            the angle of attack profile (AEFACT) id
+        lmach : int; default=None
+            the mach profile (AEFACT) id
+        lschd : int; default=None
+            the control surface deflection profile (AEFACT) id
+        comment : str; default=''
+            a comment for the card
+        """
         Aero.__init__(self)
         if comment:
             self.comment = comment
@@ -2985,13 +3078,13 @@ class PAERO5(BaseCard):
 
 class DIVERG(BaseCard):
     """
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
-    |   1    |   2   |    3     |   4   |   5   |   6   |   7   |   8   |   9   |
-    +========+=======+==========+=======+=======+=======+=======+=======+=======+
-    | DIVERG |  SID  |  NROOT   |   M1  |   M2  |   M3  |   M4  |   M5  |   M6  |
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
-    |        |   M7  |  -etc.-  |       |       |       |       |       |       |
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    +--------+-----+--------+----+----+----+----+----+---+
+    |   1    |  2  |   3    | 4  | 5  | 6  | 7  | 8  | 9 |
+    +========+=====+========+====+====+====+====+====+===+
+    | DIVERG | SID | NROOT  | M1 | M2 | M3 | M4 | M5 | M6|
+    +--------+-----+--------+----+----+----+----+----+---+
+    |        |  M7 |  etc.  |    |    |    |    |    |   |
+    +--------+-----+--------+----+----+----+----+----+---+
 
     Attributes
     ----------
@@ -2999,20 +3092,25 @@ class DIVERG(BaseCard):
         The name.
     nroots : int
         the number of roots
-    machs : List[float]
+    machs : List[float, ..., float]
         list of Mach numbers
     """
     type = 'DIVERG'
     def __init__(self, sid, nroots, machs, comment=''):
         """
-        Attributes
+        Creates an DIVERG card, which is used in divergence
+        analysis (SOL 144).
+
+        Parameters
         ----------
         sid : int
             The name
         nroots : int
             the number of roots
-        machs : List[float]
+        machs : List[float, ..., float]
             list of Mach numbers
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment

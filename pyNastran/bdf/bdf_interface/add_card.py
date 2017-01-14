@@ -13,7 +13,8 @@ from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (
-    CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1,
+    #CTETRA, CPYRAM, CPENTA, CHEXA,
+    CIHEX1,
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
@@ -729,6 +730,27 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
+    def add_pbcomp(self, pid, mid, y, z, c, mids,
+                   area=0.0, i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
+                   k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
+                   symopt=0, comment=''):
+        prop = PBCOMP(pid, mid, y, z, c, mids,
+                      area, i1, i2, i12, j, nsm,
+                      k1, k2, m1, m2, n1, n2,
+                      symopt, comment=comment)
+        self._add_property_object(prop)
+        return prop
+
+    def add_pbmsect(self, pid, mid, form, options, comment=''):
+        prop = PBMSECT(pid, mid, form, options, comment=comment)
+        self._add_property_object(prop)
+        return prop
+
+    def add_pbrsect(self, pid, mid, form, options, comment=''):
+        prop = PBRSECT(pid, mid, form, options, comment=comment)
+        self._add_property_object(prop)
+        return prop
+
     def add_pbeaml(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
         prop = PBEAML(pid, mid, group, Type, xxb, so, dims, nsm, comment=comment)
         self._add_property_object(prop)
@@ -744,34 +766,33 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_ctria3(self, eid, pid, nids, zoffset=0., theta_mcid=0.0, TFlag=0,
-                   T1=1.0, T2=1.0, T3=1.0, comment=''):
+    def add_ctria3(self, eid, pid, nids, zoffset=0., theta_mcid=0.0,
+                   TFlag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
         elem = CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                       TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cquad4(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
-                   T1=1.0, T2=1.0, T3=1.0, T4=1.0,
+    def add_cquad4(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
+                   TFlag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0,
                    comment=''):
-        elem = CQUAD4(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset, TFlag=TFlag,
-                      T1=T1, T2=T2, T3=T3, T4=T4,
-                      comment=comment)
+        elem = CQUAD4(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_ctria6(self, eid, pid, nids, theta_mcid=0., zoffset=0., TFlag=0,
-                   T1=None, T2=None, T3=None, comment=''):
+    def add_ctria6(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
+                   TFlag=0, T1=None, T2=None, T3=None, comment=''):
         elem = CTRIA6(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cquad8(self, eid, pid, nids, T1=None, T2=None, T3=None, T4=None,
-                   theta_mcid=0., zoffset=0., TFlag=0, comment=''):
+    def add_cquad8(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
+                   TFlag=0, T1=None, T2=None, T3=None, T4=None, comment=''):
         elem = CQUAD8(eid, pid, nids,
-                      T1=T1, T2=T2, T3=T3, T4=T4,
-                      theta_mcid=theta_mcid, zoffset=zoffset, TFlag=TFlag, comment=comment)
+                      theta_mcid=theta_mcid, zoffset=zoffset,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -923,7 +944,10 @@ class AddCards(AddMethods):
         return elem
 
     def add_pyram(self, eid, pid, nids, comment=''):
-        elem = CPYRAM(eid, pid, nids, comment=comment)
+        if len(nids) == 5:
+            elem = CPYRAM5(eid, pid, nids, comment=comment)
+        else:
+            elem = CPYRAM13(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -1385,6 +1409,16 @@ class AddCards(AddMethods):
         self._add_constraint_spc_object(spcadd)
         return spcadd
 
+    def add_spcax(self, conid, rid, hid, c, d, comment=''):
+        spcax = SPCAX(conid, rid, hid, c, d, comment=comment)
+        self._add_constraint_spc_object(spcax)
+        return spcax
+
+    def add_gmspc(self, conid, component, entity, entity_id, comment=''):
+        spc = GMSPC(conid, component, entity, entity_id, comment=comment)
+        self._add_constraint_spc_object(spc)
+        return spc
+
     def add_mpc(self, conid, gids, constraints, enforced, comment=''):
         mpc = MPC(conid, gids, constraints, enforced, comment=comment)
         self._add_constraint_mpc_object(mpc)
@@ -1690,6 +1724,46 @@ class AddCards(AddMethods):
         self._add_uset_object(uset)
         return uset
 
+    def add_sebset(self, seid, ids, components, comment=''):
+        sebset = SEBSET(seid, ids, components, comment=comment)
+        self._add_sebset_object(sebset)
+        return sebset
+
+    def add_sebset1(self, seid, ids, components, comment=''):
+        sebset = SEBSET1(seid, components, ids, comment=comment)
+        self._add_sebset_object(sebset)
+        return sebset
+
+    def add_secset(self, seid, ids, components, comment=''):
+        secset = SECSET(seid, components, ids, comment=comment)
+        self._add_secset_object(secset)
+        return secset
+
+    def add_secset1(self, seid, ids, components, comment=''):
+        secset = SECSET1(seid, components, ids, comment=comment)
+        self._add_secset_object(secset)
+        return secset
+
+    def add_seqset(self, seid, ids, components, comment=''):
+        seqset = SEQSET(seid, ids, components, comment=comment)
+        self._add_seqset_object(seqset)
+        return seqset
+
+    def add_seqset1(self, seid, components, ids, comment=''):
+        seqset = SEQSET1(seid, components, ids, comment=comment)
+        self._add_seqset_object(seqset)
+        return seqset
+
+    def add_seset(self, seid, ids, comment=''):
+        seset = SESET(seid, ids, comment=comment)
+        self._add_seset_object(seset)
+        return seset
+
+    def add_sesup(self, IDs, Cs, comment=''):
+        se_suport = SESUP(IDs, Cs, comment=comment)
+        self._add_sesuport_object(se_suport)
+        return se_suport
+
     def add_flutter(self, sid, method, density, mach, reduced_freq_velocity,
                     imethod='L', nvalue=None,
                     omax=None, epsilon=None,
@@ -1770,27 +1844,108 @@ class AddCards(AddMethods):
         self._add_aestat_object(aestat)
 
     def add_aelink(self, id, label, independent_labels, Cis, comment=''):
+        """
+        Creates an AELINK card, which defines an equation linking
+        AESTAT and AESURF cards
+
+        Parameters
+        ----------
+        id : int
+            unique id
+        label : str
+            name of the AESURF(???) card
+        independent_labels : List[str, ..., str]
+            name for the AESTAT(???) cards
+        comment : str; default=''
+            a comment for the card
+        """
         aelink = AELINK(id, label, independent_labels, Cis, comment=comment)
         self._add_aelink_object(aelink)
         return aelink
 
     def add_aelist(self, sid, elements, comment):
+        """
+        Creates an AELIST card, which defines the aero boxes for
+        an AESURF/SPLINEx.
+
+        Parameters
+        ----------
+        sid : int
+            unique id
+        elements : List[int, ..., int]
+            list of box ids
+        comment : str; default=''
+            a comment for the card
+        """
         aelist = AELIST(sid, elements, comment=comment)
         self._add_aelist_object(aelist)
         return aelist
 
     def add_aefact(self, sid, Di, comment=''):
+        """
+        Creates an AEFACT card, which defines the mach, dynamic_pressure,
+        velocity, and reduced frequency for an FLUTTER card
+
+        Used in flutter (145) and gust (146) analysis.
+
+        Parameters
+        ----------
+        sid : int
+            unique id
+        Di : List[float, ..., float]
+            list of:
+             - machs
+             - dynamic_pressures
+             - velocities
+             - reduced frequency
+        comment : str; default=''
+            a comment for the card
+        """
         aefact = AEFACT(sid, Di, comment=comment)
         self._add_aefact_object(aefact)
         return aefact
 
     def add_diverg(self, sid, nroots, machs, comment=''):
+        """
+        Creates an DIVERG card, which is used in divergence
+        analysis (SOL 144).
+
+        Parameters
+        ----------
+        sid : int
+            The name
+        nroots : int
+            the number of roots
+        machs : List[float, ..., float]
+            list of Mach numbers
+        comment : str; default=''
+            a comment for the card
+        """
         diverg = DIVERG(sid, nroots, machs, comment=comment)
         self._add_diverg_object(diverg)
         return diverg
 
     def add_csschd(self, sid, aesid, lschd, lalpha=None, lmach=None,
                    comment=''):
+        """
+        Creates an CSSCHD card, which defines a specified control surface
+        deflection as a function of Mach and alpha (used in SOL 144/146).
+
+        Parameters
+        ----------
+        sid : int
+            the unique id
+        aesid : int
+            the control surface (AESURF) id
+        lalpha : int; default=None
+            the angle of attack profile (AEFACT) id
+        lmach : int; default=None
+            the mach profile (AEFACT) id
+        lschd : int; default=None
+            the control surface deflection profile (AEFACT) id
+        comment : str; default=''
+            a comment for the card
+        """
         csschd = CSSCHD(sid, aesid, lschd, lalpha=lalpha, lmach=lmach,
                         comment=comment)
         self._add_csschd_object(csschd)
@@ -1803,7 +1958,7 @@ class AddCards(AddMethods):
                    hmulim=None, tqllim=None,
                    tqulim=None, comment=''):
         """
-        Creates an AESURF card
+        Creates an AESURF card, which defines a control surface
 
         Parameters
         ----------
@@ -1811,14 +1966,10 @@ class AddCards(AddMethods):
             controller number
         label : str
             controller name
-        cid1 : int
-            coordinate system id for primary control surface
-        alid1 : int
-            AELIST id for primary control surface
-        cid2 : int; default=None
-            coordinate system id for secondary control surface
-        alid2 : int; default=None
-            AELIST id for secondary control surface
+        cid1 / cid2 : int / None
+            coordinate system id for primary/secondary control surface
+        alid1 / alid2 : int / None
+            AELIST id for primary/secondary control surface
         eff : float; default=1.0
             Control surface effectiveness
         ldw : str; default='LDW'
@@ -1849,11 +2000,40 @@ class AddCards(AddMethods):
         return aesurf
 
     def add_aesurfs(self, aesid, label, list1, list2, comment=''):
+        """
+        Creates an AESURFS card
+
+        Parameters
+        ----------
+        aesid : int
+            the unique id
+        label : str
+            the AESURF name
+        list1 / list2 : int / None
+            the list (AELIST) of node ids for the primary/secondary
+            control surface(s) on the AESURF card
+        comment : str; default=''
+            a comment for the card
+        """
         aesurfs = AESURFS(aesid, label, list1, list2, comment=comment)
         self._add_aesurfs_object(aesurfs)
         return aesurfs
 
     def add_aeparm(self, id, label, units, comment=''):
+        """
+        Creates an AEPARM card, which defines a new trim variable.
+
+        Parameters
+        ----------
+        id : int
+            the unique id
+        label : str
+            the variable name
+        units : str
+            unused by Nastran
+        comment : str; default=''
+            a comment for the card
+        """
         aeparm = AEPARM(id, label, units, comment=comment)
         self._add_aeparm_object(aeparm)
         return aeparm
@@ -1983,7 +2163,9 @@ class AddCards(AddMethods):
         Cmi : List[str]
             the dependent components (e.g., '123456')
         alpha : float; default=0.
-            Thermal expansion coefficient
+            thermal expansion coefficient
+        comment : str; default=''
+            a comment for the card
         """
         elem = RBE1(eid, Gni, Cni, Gmi, Cmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
@@ -1996,6 +2178,39 @@ class AddCards(AddMethods):
 
     def add_rbe3(self, eid, refgrid, refc, weights, comps, Gijs, Gmi=None,
                  Cmi=None, alpha=0.0, comment=''):
+        """
+        Creates an RBE3
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        refgrid : int
+            dependent node
+        refc - str
+            dependent components for refgrid???
+
+        Independent Set
+        ---------------
+          GiJs : List[int, ..., int]
+              independent nodes
+          comps : List[str, ..., str]
+              independent components
+          weights : List[float, ..., float]
+              weights for the importance of the DOF
+
+        Dependent / UM Set
+        ------------------
+          Gmi : List[int, ..., int]
+              dependent nodes
+          Cmi : List[str, ..., str]
+              dependent components
+
+        alpha : float; default=0.0
+            thermal expansion coefficient
+        comment : str; default=''
+            a comment for the card
+        """
         elem = RBE3(eid, refgrid, refc, weights, comps, Gijs, Gmi=Gmi,
                     Cmi=Cmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
@@ -2012,7 +2227,7 @@ class AddCards(AddMethods):
         return elem
 
     def add_rspline(self, eid, independent_nid, dependent_nids, dependent_components,
-                 diameter_ratio=0.1, comment=''):
+                    diameter_ratio=0.1, comment=''):
         elem = RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
                        diameter_ratio=diameter_ratio, comment=comment)
         self._add_rigid_element_object(elem)
@@ -2352,7 +2567,134 @@ class AddCards(AddMethods):
         self._add_thermal_load_object(load)
         return load
 
-    def add_phbdy(self, pid, af, d1, d2, comment=''):
-        prop = PHBDY(pid, af, d1, d2, comment=comment)
+    def add_qvol(self, sid, qvol, control_point, elements, comment=''):
+        load = QVOL(sid, qvol, control_point, elements, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_chbdyg(self, eid, Type, nodes,
+                   iViewFront=0, iViewBack=0,
+                   radMidFront=0, radMidBack=0, comment=''):
+        elem = CHBDYG(eid, Type, nodes,
+                      iViewFront=iViewFront, iViewBack=iViewBack,
+                      radMidFront=radMidFront, radMidBack=radMidBack,
+                      comment=comment)
+        self._add_thermal_element_object(elem)
+        return elem
+
+    def add_chbdyp(self, eid, pid, Type, g1, g2,
+                   g0=0, gmid=None, ce=0,
+                   iViewFront=0, iViewBack=0,
+                   radMidFront=0, radMidBack=0,
+                   e1=None, e2=None, e3=None,
+                   comment=''):
+        elem = CHBDYP(eid, pid, Type, g1, g2,
+                      g0=g0, gmid=gmid, ce=ce,
+                      iViewFront=iViewFront, iViewBack=iViewBack,
+                      radMidFront=radMidFront, radMidBack=radMidBack,
+                      e1=e1, e2=e2, e3=e3,
+                      comment=comment)
+        self._add_thermal_element_object(elem)
+        return elem
+
+    def add_cpbdye(self, eid, eid2, side,
+                   iViewFront=0, iViewBack=0,
+                   radMidFront=0, radMidBack=0,
+                   comment=''):
+        elem = CHBDYE(eid, eid2, side,
+                      iViewFront=iViewFront, iViewBack=iViewBack,
+                      radMidFront=radMidFront, radMidBack=radMidBack,
+                      comment=comment)
+        self._add_thermal_element_object(elem)
+        return elem
+
+    def add_phbdy(self, pid, af=None, d1=None, d2=None, comment=''):
+        prop = PHBDY(pid, af=af, d1=d1, d2=d2, comment=comment)
         self._add_phbdy_object(prop)
         return prop
+
+    def add_conv(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment=''):
+        boundary_condition = CONV(eid, pconid, ta,
+                                  film_node=film_node, cntrlnd=cntrlnd,
+                                  comment=comment)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
+        return boundary_condition
+
+    def add_convm(self, eid, pconvm, ta1, film_node=0, cntmdot=0,
+                  ta2=None, mdot=1.0,
+                  comment=''):
+        boundary_condition = CONVM(eid, pconvm, ta1,
+                                   film_node=film_node, cntmdot=cntmdot,
+                                   ta2=ta2, mdot=mdot,
+                                   comment=comment)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
+        return boundary_condition
+
+    def add_radm(self, radmid, absorb, emissivity, comment=''):
+        boundary_condition = RADM(radmid, absorb, emissivity, comment=comment)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
+        return boundary_condition
+
+    def add_radbc(self, nodamb, famb, cntrlnd, eids, comment=''):
+        boundary_condition = RADBC(nodamb, famb, cntrlnd, eids, comment=comment)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
+        return boundary_condition
+
+    def add_pconv(self, pconid, mid, form=0, expf=0.0, ftype=0, tid=None,
+                  chlen=None, gidin=None, ce=0,
+                  e1=None, e2=None, e3=None,
+                  comment=''):
+        prop = PCONV(pconid, mid,
+                     form=form, expf=expf, ftype=ftype,
+                     tid=tid, chlen=chlen, gidin=gidin,
+                     ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
+        self._add_convection_property_object(prop)
+        return prop
+
+    def add_pconvm(self, pconid, mid, coef, form=0, flag=0,
+                   expr=0.0, exppi=0.0, exppo=0.0, comment=''):
+        prop = PCONVM(pconid, mid, coef, form=form, flag=flag,
+                      expr=expr, exppi=exppi, exppo=exppo, comment=comment)
+        self._add_convection_property_object(prop)
+        return prop
+
+    def add_dmig_uaccel(self, tin, ncol, load_sequences, comment=''):
+        dmig = DMIG_UACCEL(tin, ncol, load_sequences, comment=comment)
+        self._add_dmig_object(dmig)
+        return dmig
+
+    def add_dmig(self, name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                 Real, Complex=None, comment=''):
+        dmig = DMIG(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                    Real, Complex, comment=comment)
+        self._add_dmig_object(dmig)
+        return dmig
+
+    def add_dmi(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
+                Real, Complex=None, comment=''):
+        dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
+                  Complex, comment=comment)
+        self._add_dmi_object(dmi)
+        return dmi
+
+    def add_dmij(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
+                 Real, Complex=None, comment=''):
+        dmij = DMIJ(name, form, tin, tout, nrows, ncols, GCj, GCi,
+                    Real, Complex, comment=comment)
+        self._add_dmij_object(dmij)
+        return dmij
+
+    def add_dmiji(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
+                  Real, Complex=None, comment=''):
+        dmiji = DMIJI(name, form, tin, tout, nrows, ncols, GCj, GCi,
+                      Real, Complex, comment=comment)
+        self._add_dmiji_object(dmiji)
+        return dmiji
+
+    def add_dmik(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
+                 Real, Complex=None, comment=''):
+        dmik = DMIK(name, form, tin, tout, nrows, ncols, GCj, GCi,
+                    Real, Complex, comment=comment)
+        self._add_dmik_object(dmik)
+        return dmik
+

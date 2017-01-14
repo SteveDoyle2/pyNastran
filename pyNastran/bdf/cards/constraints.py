@@ -226,8 +226,8 @@ class SUPORT(Constraint):
 class SESUP(SUPORT):
     type = 'SESUP'
 
-    def __init__(self):
-        SUPORT.__init__(self)
+    def __init__(self, IDs, Cs, comment=''):
+        SUPORT.__init__(self, IDs, Cs, comment='')
 
 
 class MPC(Constraint):

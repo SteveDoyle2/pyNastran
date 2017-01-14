@@ -62,6 +62,8 @@ class CHBDYE(ThermalElement):
     conduction element.
 
     +--------+-----+------+------+--------+--------+---------+---------+
+    |   1    |  2  |   3  |  4   |   5    |    6   |    7    |    8    |
+    +========+=====+======+======+========+========+=========+=========+
     | CHBDYE | EID | EID2 | SIDE | IVIEWF | IVIEWB | RADMIDF | RADMIDB |
     +--------+-----+------+------+--------+--------+---------+---------+
     """
@@ -592,8 +594,9 @@ class PCONV(ThermalProperty):
     """
     type = 'PCONV'
 
-    def __init__(self, pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
-                 e1, e2, e3, comment=''):
+    def __init__(self, pconid, mid, form=0, expf=0.0, ftype=0, tid=None,
+                 chlen=None, gidin=None, ce=0,
+                 e1=None, e2=None, e3=None, comment=''):
         ThermalProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -653,8 +656,10 @@ class PCONV(ThermalProperty):
         e2 = double_or_blank(card, 13, 'e2')
         e3 = double_or_blank(card, 14, 'e3')
         assert len(card) <= 15, 'len(PCONV card) = %i\ncard=%s' % (len(card), card)
-        return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
-                     e1, e2, e3, comment=comment)
+        return PCONV(pconid, mid,
+                     form=form, expf=expf, ftype=ftype,
+                     tid=tid, chlen=chlen, gidin=gidin,
+                     ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -698,8 +703,8 @@ class PCONVM(ThermalProperty):
     """
     type = 'PCONVM'
 
-    def __init__(self, pconid, mid, form, flag, coef, expr, exppi, exppo,
-                 comment=''):
+    def __init__(self, pconid, mid, coef, form=0, flag=0,
+                 expr=0.0, exppi=0.0, exppo=0.0, comment=''):
         ThermalProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -744,8 +749,8 @@ class PCONVM(ThermalProperty):
         exppi = double_or_blank(card, 7, 'exppi', 0.0)
         exppo = double_or_blank(card, 8, 'exppo', 0.0)
         assert len(card) <= 9, 'len(PCONVM card) = %i\ncard=%s' % (len(card), card)
-        return PCONVM(pconid, mid, form, flag, coef, expr, exppi, exppo,
-                      comment=comment)
+        return PCONVM(pconid, mid, coef, form=form, flag=flag,
+                      expr=expr, exppi=exppi, exppo=exppo, comment=comment)
 
     #def cross_reference(self, model):
         #pass
@@ -782,10 +787,12 @@ class PHBDY(ThermalProperty):
     """
     type = 'PHBDY'
 
-    def __init__(self, pid, af, d1, d2, comment=''):
+    def __init__(self, pid, af=None, d1=None, d2=None, comment=''):
         ThermalProperty.__init__(self)
         if comment:
             self.comment = comment
+        if d2 is None:
+            d2 = d1
 
         #: Property identification number. (Unique Integer among all PHBDY
         #: entries). (Integer > 0)
@@ -854,7 +861,7 @@ class CONV(ThermalBC):
     """
     type = 'CONV'
 
-    def __init__(self, eid, pconid, film_node, cntrlnd, ta, comment=''):
+    def __init__(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
@@ -897,7 +904,7 @@ class CONV(ThermalBC):
         ta8 = integer_or_blank(card, 12, 'ta8', ta1)
         ta = [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8]
         assert len(card) <= 13, 'len(CONV card) = %i\ncard=%s' % (len(card), card)
-        return CONV(eid, pconid, film_node, cntrlnd, ta, comment=comment)
+        return CONV(eid, pconid, ta, film_node, cntrlnd, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -909,7 +916,7 @@ class CONV(ThermalBC):
         #ta1, ta2, ta3, ta5, ta6, ta7, ta8 = ta
         #wt1, wt2, wt3, wt5, wt6, wt7, wt8 = aft
 
-        return CONV(eid, pconid, film_node, cntrlnd, ta, comment=comment)
+        return CONV(eid, pconid, ta, film_node, cntrlnd, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -964,11 +971,13 @@ class CONVM(ThermalBC):
     """
     type = 'CONVM'
 
-    def __init__(self, eid, pconvm, film_node, cntmdot, ta1, ta2, mdot,
-                 comment=''):
+    def __init__(self, eid, pconvm, ta1, film_node=0, cntmdot=0,
+                 ta2=None, mdot=1.0, comment=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
+        if ta2 is None:
+            ta2 = ta1
         self.eid = eid
         self.pconvm = pconvm
         self.film_node = film_node
@@ -993,13 +1002,13 @@ class CONVM(ThermalBC):
         ta2 = integer_or_blank(card, 6, 'ta2', ta1)
         mdot = double_or_blank(card, 7, 'mdot', 1.0)
         assert len(card) <= 8, 'len(CONVM card) = %i\ncard=%s' % (len(card), card)
-        return CONVM(eid, pconvm, film_node, cntmdot, ta1, ta2, mdot,
-                     comment=comment)
+        return CONVM(eid, pconvm, ta1, film_node=film_node, cntmdot=cntmdot,
+                     ta2=ta2, mdot=mdot, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         (eid, pconvm_id, film_node, cntrlnd, ta1, ta2, mdot) = data
-        return CONVM(eid, pconvm_id, film_node, cntrlnd, ta1, ta2, mdot,
+        return CONVM(eid, pconvm_id, ta1, film_node, cntrlnd, ta2, mdot,
                      comment=comment)
 
     def cross_reference(self, model):
@@ -1103,36 +1112,40 @@ class RADBC(ThermalBC):
     """
     type = 'RADBC'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, nodamb, famb, cntrlnd, eids, comment=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
 
-        if card:
-            #: NODAMB Ambient point for radiation exchange. (Integer > 0)
-            self.nodamb = integer(card, 1, 'nodamb')
-            assert self.nodamb > 0
+        #: NODAMB Ambient point for radiation exchange. (Integer > 0)
+        self.nodamb = nodamb
 
-            #: Radiation view factor between the face and the ambient point.
-            #: (Real > 0.0)
-            self.famb = double(card, 2, 'famb')
-            assert self.famb > 0.0
+        #: Radiation view factor between the face and the ambient point.
+        #: (Real > 0.0)
+        self.famb = famb
 
-            #: Control point for thermal flux load. (Integer > 0; Default = 0)
-            self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
-            assert self.cntrlnd >= 0
+        #: Control point for thermal flux load. (Integer > 0; Default = 0)
+        self.cntrlnd = cntrlnd
 
-            nfields = card.nfields
-            eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
-            #: CHBDYi element identification number
-            self.eids = expand_thru_by(eids)
-        else:
-            raise NotImplementedError(data)
+        #: CHBDYi element identification number
+        self.eids = expand_thru_by(eids)
 
+        assert self.nodamb > 0
+        assert self.famb > 0.0
+        assert self.cntrlnd >= 0
         min_eid = min(self.eids)
         if min_eid < 1:
             msg = 'min(eids)=%i' % min_eid
             raise ValueError(msg)
+
+    def add_card(self):
+        nodamb = integer(card, 1, 'nodamb')
+        famb = double(card, 2, 'famb')
+        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
+
+        nfields = card.nfields
+        eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
+        return RADBC(nodamb, famb, cntrlnd, eids, comment=comment)
 
     def cross_reference(self, model):
         """

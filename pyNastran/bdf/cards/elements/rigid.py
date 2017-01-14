@@ -405,7 +405,9 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         Cmi : List[str]
             the dependent components (e.g., '123456')
         alpha : float; default=0.
-            Thermal expansion coefficient
+            thermal expansion coefficient
+        comment : str; default=''
+            a comment for the card
         """
         RigidElement.__init__(self)
         if comment:
@@ -820,16 +822,37 @@ class RBE3(RigidElement):
     def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
                  Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
+        Creates an RBE3
+
+        Parameters
+        ----------
         eid : int
             element id
         refgrid : int
             dependent node
-        refc - independent
-        GiJs - independent
-        Gmi - dependent
-        Cmi - dependent
-        alpha : float
-            ???
+        refc - str
+            dependent components for refgrid???
+
+        Independent Set
+        ---------------
+          GiJs : List[int, ..., int]
+              independent nodes
+          comps : List[str, ..., str]
+              independent components
+          weights : List[float, ..., float]
+              weights for the importance of the DOF
+
+        Dependent / UM Set
+        ------------------
+          Gmi : List[int, ..., int]
+              dependent nodes
+          Cmi : List[str, ..., str]
+              dependent components
+
+        alpha : float; default=0.0
+            thermal expansion coefficient
+        comment : str; default=''
+            a comment for the card
         """
         RigidElement.__init__(self)
         if comment:
@@ -838,7 +861,6 @@ class RBE3(RigidElement):
         self.refgrid = refgrid
         self.refc = refc
 
-        #self.WtCG_groups = []
         if not len(weights) == len(comps) and len(weights) == len(Gijs):
             msg = 'len(weights)=%s len(comps)=%s len(Gijs)=%s' % (
                 len(weights), len(comps), len(Gijs))

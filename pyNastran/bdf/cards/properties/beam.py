@@ -1391,9 +1391,10 @@ class PBMSECT(LineProperty):
 class PBCOMP(LineProperty):
     type = 'PBCOMP'
 
-    def __init__(self, pid, mid, area, i1, i2, i12, j, nsm,
-                 k1, k2, m1, m2, n1, n2, symopt, y, z, c,
-                 mids, comment=''):
+    def __init__(self, pid, mid, y, z, c, mids,
+                 area=0.0, i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
+                 k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
+                 symopt=0, comment=''):
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -1460,13 +1461,13 @@ class PBCOMP(LineProperty):
             z.append(zi)
             c.append(ci)
             mids.append(mid)
-        return PBCOMP(pid, mid, area, i1, i2, i12, j, nsm,
+        return PBCOMP(pid, mid, y, z, c, mids,
+                      area, i1, i2, i12, j, nsm,
                       k1, k2, m1, m2, n1, n2,
-                      symopt, y, z, c, mids,
-                      comment=comment)
+                      symopt, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        raise NotImplementedError()
+    #def add_op2_data(self, data, comment=''):
+        #raise NotImplementedError()
 
     def _verify(self, xref=True):
         pid = self.Pid()

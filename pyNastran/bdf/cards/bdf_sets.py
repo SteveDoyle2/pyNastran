@@ -997,40 +997,40 @@ class SEBSET(SuperABCQSet):
     """
     type = 'SEBSET'
 
-    def __init__(self, seid, IDs, components, comment=''):
-        SuperABCQSet.__init__(self, seid, IDs, components, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEBSET1(SuperABQSet1):
     type = 'SEBSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SECSET(SuperABCQSet):
     type = 'SECSET'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABCQSet.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABCQSet.__init__(self, seid, components, ids, comment)
 
 class SECSET1(SuperABQSet1):
     type = 'SECSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SEQSET(SuperABCQSet):
     type = 'SEQSET'
 
-    def __init__(self, seid, IDs, components, comment=''):
-        SuperABCQSet.__init__(self, seid, IDs, components, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEQSET1(SuperABQSet1):
     type = 'SEQSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
