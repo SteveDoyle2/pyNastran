@@ -891,7 +891,6 @@ class RBE3(RigidElement):
 
         i = ioffset
         n = 1
-        weight_cg_group = []
         weights = []
         comps = []
         Gijs = []
@@ -921,11 +920,9 @@ class RBE3(RigidElement):
                 assert compi is not None
                 assert len(Gij) > 0, Gij
                 assert Gij[0] is not None, Gij
-                #weight_cg_group = [wt, compi, Gij]
                 weights.append(wt)
                 comps.append(compi)
                 Gijs.append(Gij)
-                #weight_cg_group.append(weight_cg_group)
                 #print('----finished a group=%r----' % weight_cg_group)
             else:
                 i += 1
@@ -944,7 +941,7 @@ class RBE3(RigidElement):
                 gmi = integer_or_blank(card, j, gm_name)
                 if gmi is not None:
                     cmi = components(card, j + 1, cm_name)
-                    #print "gmi=%s cmi=%s" % (gmi, cmi)
+                    #print("gmi=%s cmi=%s" % (gmi, cmi))
                     Gmi.append(gmi)
                     Cmi.append(cmi)
 
@@ -1111,16 +1108,19 @@ class RSPLINE(RigidElement):
     |         |  C4 |  G5 | C5 | G6 | -etc.- |    |    |    |
     +---------+-----+-----+----+----+--------+----+----+----+
     """
-    def __init__(self, eid, nids, components, diameter_ratio=0.1, comment=''):
+    def __init__(self, eid, independent_nid, dependent_nids, dependent_components,
+                 diameter_ratio=0.1, comment=''):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
-        self.nids = nids
+        self.independent_nid = independent_nid
+        self.dependent_nids = dependent_nids
         # Components to be constrained
-        self.components = components
+        self.dependent_components = dependent_components
 
-        # Ratio of the diameter of the elastic tube to the sum of the lengths of all segments
+        # Ratio of the diameter of the elastic tube to the sum of the
+        # lengths of all segments
         self.diameter_ratio = diameter_ratio
 
     @classmethod
@@ -1130,16 +1130,18 @@ class RSPLINE(RigidElement):
         nfields = len(card)
         assert nfields % 2 == 1, 'nfields=%s card=%s'  % (nfields, card)
 
-        nids = []
-        components = []
-        j = 1
-        for i in range(3, nfields, 2):
+        dependent_nids = []
+        dependent_components = []
+        independent_nid = integer(card, 3, 'nid_1')
+        j = 2
+        for i in range(4, nfields, 2):
             nid = integer(card, i, 'nid_%s' % j)
             comp = components_or_blank(card, i+1, 'components_%i' % j)
-            nids.append(nid)
-            components.append(comp)
+            dependent_nids.append(nid)
+            dependent_components.append(comp)
             j += 1
-        return RSPLINE(eid, nids, components, diameter_ratio=diameter_ratio, comment=comment)
+        return RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
+                       diameter_ratio=diameter_ratio, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1178,7 +1180,7 @@ class RSPLINE(RigidElement):
     @property
     def independent_nodes(self):
         """gets the independent node ids"""
-        return []
+        return [self.independent_nid]
         #return self.Gni_node_ids
 
     @property
@@ -1186,11 +1188,11 @@ class RSPLINE(RigidElement):
         """gets the dependent node ids"""
         #nodes = self.Gmi_node_ids
         #return nodes
-        return self.nids
+        return self.dependent_nids
 
     def raw_fields(self):
-        list_fields = [self.type, self.eid, self.diameter_ratio]
-        for (i, gn, cn) in zip(count(), self.nids, self.components):
+        list_fields = [self.type, self.eid, self.diameter_ratio, self.independent_nid]
+        for (i, gn, cn) in zip(count(), self.dependent_nids, self.components):
             list_fields += [gn, cn]
         return list_fields
 
