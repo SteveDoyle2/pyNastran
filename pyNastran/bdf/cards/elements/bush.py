@@ -92,6 +92,12 @@ class CBUSH(BushElement):
         ga = integer(card, 3, 'ga')
         gb = integer_or_blank(card, 4, 'gb')
 
+        #: Element coordinate system identification. A 0 means the basic
+        #: coordinate system. If CID is blank, then the element coordinate
+        #: system is determined from GO or Xi.
+        #: (default=blank=element-based)
+        cid = integer_or_blank(card, 8, 'cid')
+
         x1_g0 = integer_double_or_blank(card, 5, 'x1_g0')
         if isinstance(x1_g0, integer_types):
             g0 = x1_g0
@@ -102,16 +108,12 @@ class CBUSH(BushElement):
             x2 = double_or_blank(card, 6, 'x2', 0.0)
             x3 = double_or_blank(card, 7, 'x3', 0.0)
             x = [x1, x2, x3]
-            assert max(x) != min(x), 'x=%s' % x
+            if not isinstance(cid, integer_types):
+                assert max(x) != min(x), 'x=%s' % x
         else:
             g0 = None
             x = [None, None, None]
 
-        #: Element coordinate system identification. A 0 means the basic
-        #: coordinate system. If CID is blank, then the element coordinate
-        #: system is determined from GO or Xi.
-        #: (default=blank=element-based)
-        cid = integer_or_blank(card, 8, 'cid')
         #: Location of spring damper (0 <= s <= 1.0)
         s = double_or_blank(card, 9, 's', 0.5)
         #: Coordinate system identification of spring-damper offset. See
