@@ -63,6 +63,7 @@ def print_float_16(value):
     using the highest precision possbile.
     .. seealso:: print_float_8
     """
+    print('DEBUG isnan', value)
     if isnan(value):
         return '                '
     elif value == 0.0:
