@@ -63,10 +63,12 @@ def print_float_16(value):
     using the highest precision possbile.
     .. seealso:: print_float_8
     """
-    print('DEBUG isnan', value)
-    if isnan(value):
-        return '                '
-    elif value == 0.0:
+    try:
+        if isnan(value):
+            return '                '
+    except:
+        print('DEBUG isnan', value)
+    if value == 0.0:
         return '%16s' % '0.'
     elif value > 0.:  # positive, not perfect...
         if value < 5e-16:
