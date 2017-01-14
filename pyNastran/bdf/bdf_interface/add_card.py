@@ -2011,8 +2011,10 @@ class AddCards(AddMethods):
         self._add_rigid_element_object(elem)
         return elem
 
-    def add_rspline(self, eid, nids, components, diameter_ratio=0.1, comment=''):
-        elem = RSPLINE(eid, nids, components, diameter_ratio=diameter_ratio, comment=comment)
+    def __init__(self, eid, independent_nid, dependent_nids, dependent_components,
+                 diameter_ratio=0.1, comment=''):
+        elem = RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
+                       diameter_ratio=diameter_ratio, comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 
