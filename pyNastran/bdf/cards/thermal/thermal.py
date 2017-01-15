@@ -1138,7 +1138,8 @@ class RADBC(ThermalBC):
             msg = 'min(eids)=%i' % min_eid
             raise ValueError(msg)
 
-    def add_card(self):
+    @classmethod
+    def add_card(cls, card, comment=''):
         nodamb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
         cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)

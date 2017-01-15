@@ -86,7 +86,7 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, F
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11,
-                                           MATHE, MATHP, CREEP, EQUIV)
+                                           MATG, MATHE, MATHP, CREEP, EQUIV)
 # TODO: add MATT3, MATT8, MATT9
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
 
@@ -393,7 +393,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
             ## materials
             'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-            'MATHE', 'MATHP',
+            'MATG', 'MATHE', 'MATHP',
 
             ## Material dependence - MATT1/MATT2/etc.
             'MATT1', 'MATT2', 'MATT4', 'MATT5',  #'MATT3', 'MATT8', 'MATT9',
@@ -1907,6 +1907,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'MAT10' : (MAT10, self._add_structural_material_object),
             'MAT11' : (MAT11, self._add_structural_material_object),
             'EQUIV' : (EQUIV, self._add_structural_material_object),
+            'MATG' : (MATG, self._add_structural_material_object),
 
             'MATHE' : (MATHE, self._add_hyperelastic_material_object),
             'MATHP' : (MATHP, self._add_hyperelastic_material_object),
@@ -2250,7 +2251,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
     def _prepare_radbc(self, card, card_obj, comment=''):
         """adds a RADBC"""
-        boundary_condition = RADBC(card_obj, comment=comment)
+        boundary_condition = RADBC.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
 
     def _prepare_tempd(self, card, card_obj, comment=''):
@@ -2624,7 +2625,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
                 raise
                 #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                #raise
+                raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
                 #raise
@@ -2644,7 +2645,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             try:
                 add_card_function(card, card_obj)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                #raise
+                raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
                 #raise
@@ -2849,7 +2850,12 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             msg.append('  %-8s %s' % ('MKAERO:', len(self.mkaeros)))
 
         for card_group_name in card_stats:
-            card_group = getattr(self, card_group_name)
+            try:
+                card_group = getattr(self, card_group_name)
+            except AttributeError:
+                msg = 'cant find card_group_name=%r' % card_group_name
+                raise AttributeError(msg)
+
             groups = set([])
 
             if not isinstance(card_group, dict):

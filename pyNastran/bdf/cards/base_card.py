@@ -188,7 +188,7 @@ class BaseCard(object):
             has this model been cross referenced
         """
         print('# skipping _verify (type=%s) because _verify is '
-              'not implemented\n' % self.type)
+              'not implemented' % self.type)
 
     def _is_same_fields(self, fields1, fields2):
         for (field1, field2) in zip(fields1, fields2):

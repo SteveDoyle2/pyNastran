@@ -1214,7 +1214,7 @@ class RSPLINE(RigidElement):
 
     def raw_fields(self):
         list_fields = [self.type, self.eid, self.diameter_ratio, self.independent_nid]
-        for (i, gn, cn) in zip(count(), self.dependent_nids, self.components):
+        for (i, gn, cn) in zip(count(), self.dependent_nids, self.dependent_components):
             list_fields += [gn, cn]
         return list_fields
 

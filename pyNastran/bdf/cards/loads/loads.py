@@ -862,9 +862,9 @@ class RFORCE1(Load):
         return self.cid_ref.cid
 
     def raw_fields(self):
-        list_fields = ['RFORCE1', self.sid, self.node_id, self.Cid(), self.scale,
-                       self.r1, self.r2, self.r3, self.method, self.racc,
-                       self.mb, self.group_id]
+        list_fields = (['RFORCE1', self.sid, self.node_id, self.Cid(), self.scale]
+                       + list(self.r123) + [self.method, self.racc,
+                                            self.mb, self.group_id])
         return list_fields
 
     def write_card(self, size=8, is_double=False):

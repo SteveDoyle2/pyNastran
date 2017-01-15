@@ -1708,6 +1708,118 @@ def _mat10_get_bulk_rho_c(bulk, rho, c):
 
     return bulk, rho, c
 
+class MATG(Material):
+
+    """
+    +------+--------+--------+---------+--------+--------+---------+--------+--------+
+    |   1  |   2    |   3    |    4    |   5    |   6    |    7    |    8   |   9    |
+    +======+========+========+=========+========+========+=========+========+========+
+    | MATG |  MID   | IDMEM  |  BEHAV  | TABLD  | TABLU1 | TABLU2  | TABLU3 | TABLU4 |
+    +------+--------+--------+---------+--------+--------+---------+--------+--------+
+    |      | TABLU5 | TABLU6 | TABLU7  | TABLU8 | TABLU9 | TABLU10 |  YPRS  | EPL    |
+    +------+--------+--------+---------+--------+--------+---------+--------+--------+
+    |      |   GPL  |  GAP   | TABYPRS | TABEPL | TABGPL | TABGAP  |        |        |
+    +------+--------+--------+---------+--------+--------+---------+--------+--------+
+    per MSC 2016
+
+    +------+--------+--------+---------+--------+--------+---------+--------+--------+
+    |   1  |   2    |   3    |    4    |   5    |   6    |    7    |    8   |   9    |
+    +======+========+========+=========+========+========+=========+========+========+
+    | MATG |  MID   | IDMEM  |  BEHAV  | TABLD  | TABLU1 | TABLU2  | TABLU3 | TABLU4 |
+    +------+--------+--------+---------+--------+--------+---------+--------+--------+
+    |      | TABLU5 | TABLU6 | TABLU7  | TABLU8 | TABLU9 | TABLU10 |  YPRS  | EPL    |
+    +------+--------+--------+---------+--------+--------+---------+--------+--------+
+    |      |   GPL  |        |         |        |        |         |        |        |
+    +------+--------+--------+---------+--------+--------+---------+--------+--------+
+    per NX 10
+
+    MATG 100 10 0 1001 1002 1003
+    100. 2500.
+    950. 0.0
+    """
+    type = 'MATG'
+
+    #_field_map = {
+        #1: 'mid', 2:'e1', 3:'e2', 4:'e3', 5: 'nu12', 6:'nu13', 7:'nu23',
+        #8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
+        #15:'TRef', 16: 'ge',
+    #}
+    def __init__(self, mid, idmem, behav, tabld, tablu, yprs, epl, gpl,
+                 gap=0., tab_yprs=None, tab_epl=None, tab_gpl=None, tab_gap=None, comment=''):
+        Material.__init__(self)
+        if comment:
+            self.comment = comment
+        self.mid = mid
+        self.idmem = idmem
+        self.behav = behav
+
+        self.tabld = tabld
+        self.tablu = tablu
+
+        self.yprs = yprs
+        self.epl = epl
+        self.gpl = gpl
+        self.gap = gap
+
+        self.tab_yprs = tab_yprs
+        self.tab_epl = tab_epl
+        self.tab_gpl = tab_gpl
+        self.tab_gap = tab_gap
+
+        #self._validate_input()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        mid = integer(card, 1, 'mid')
+        idmem = integer(card, 2, 'idmem')
+        behav = integer(card, 3, 'behav')
+        tabld = integer(card, 4, 'tabld')
+
+        tablu = [
+            integer(card, 5, 'tablu1'),
+            integer(card, 6, 'tablu2'),
+            integer_or_blank(card, 7, 'tablu3'),
+            integer_or_blank(card, 8, 'tablu4'),
+        ]
+        yprs = double(card, 9, 'yprs')
+        epl = double(card, 10, 'epl')
+        gpl = double(card, 11, 'gpl')
+        gap = double_or_blank(card, 12, 'gap', 0.0)
+
+        tab_yprs = integer_or_blank(card, 13, 'tabyprs')
+        tab_epl = integer_or_blank(card, 14, 'tabepl')
+        tab_gpl = integer_or_blank(card, 15, 'tabgpl')
+        tab_gap = integer_or_blank(card, 16, 'tabgap')
+
+        assert len(card) <= 17, 'len(MATG card) = %i\ncard=%s' % (len(card), card)
+        return MATG(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap,
+                    tab_yprs, tab_epl, tab_gpl, tab_gap,
+                    comment='')
+
+    def raw_fields(self):
+        list_fields = ['MATG', self.mid, self.idmem, self.behav, self.tabld
+                       ] + self.tablu + [self.yprs, self.epl, self.gpl, self.gap,
+                                         self.tab_yprs, self.tab_epl, self.tab_gpl, self.tab_gap]
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
+        """
+        list_fields = self.raw_fields()
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
 class MAT11(Material):
     """
     Defines the material properties for a 3D orthotropic material for

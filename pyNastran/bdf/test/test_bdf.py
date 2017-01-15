@@ -706,7 +706,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), subcase
     elif sol == 103:
-        assert 'METHOD' in subcase, subcase
+        assert True in subcase.has_parameter('METHOD', 'RSMETHOD'), subcase
     elif sol == 105: # buckling
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
@@ -1240,7 +1240,7 @@ def get_element_stats(fem1, fem2, quiet=False):
     if not quiet:
         print("mass = %s" % mass)
         print("cg   = %s" % cg)
-        print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s Ipolar-%s" % tuple(I))
+        print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s" % tuple(I))
         #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
         #print("mass_old =", mass)
         #print("cg_old   =", cg)

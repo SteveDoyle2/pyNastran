@@ -1443,7 +1443,7 @@ class DRESP2(OptConstraint):
                 if isinstance(val, int):
                     out.append(val)
                 else:
-                    out.append(val.OptID())
+                    out.append(val.desvar_id)
         elif name == 'DNODE':
             #print(values_list)
             for i in range(0, len(values_list), 2):
@@ -1590,7 +1590,7 @@ class DRESP3(OptConstraint):
                 if isinstance(val, int):
                     out.append(val)
                 else:
-                    out.append(val.OptID())
+                    out.append(val.desvar_id)
         elif name == 'DNODE':
             #print(values_list)
             for i in range(0, len(values_list), 2):
@@ -1930,7 +1930,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
         """
         msg = ', which is required by DVCREL1 name=%r' % self.type
         if self.Type in ['CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CELAS2', 'CELAS4',
-                         'CDAMP2', 'CGAP']:
+                         'CDAMP2', 'CGAP', 'CBUSH']:
             self.eid = model.Element(self.eid, msg=msg)
         elif self.Type in ['CONM1', 'CONM2', 'CMASS2', 'CMASS4']:
             self.eid = model.masses[self.eid]
@@ -2484,10 +2484,10 @@ class DVMREL2(OptConstraint):
             mid = self.mid_ref.mid
         else:
             raise NotImplementedError('Type=%r is not supported' % self.Type)
-        #return mid
+        return mid
 
     def DEquation(self):
-        if isinstance(self.dequation, int):
+        if isinstance(self.dequation, integer_types):
             return self.dequation
         return self.dequation_ref.equation_id
 

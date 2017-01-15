@@ -789,7 +789,7 @@ class AddMethods(BDFAttributes):
     def _add_dvcrel_object(self, dvcrel):
         """adds a DVCREL1/DVCREL2 object"""
         key = dvcrel.oid
-        assert key not in self.dvprels, 'DVCRELx=%s old\n%snew=\n%s' % (
+        assert key not in self.dvcrels, 'DVCRELx=%s old\n%snew=\n%s' % (
                     key, self.dvcrels[key], dvcrel)
         assert key > 0
         self.dvcrels[key] = dvcrel

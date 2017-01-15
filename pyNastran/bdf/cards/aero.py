@@ -491,8 +491,8 @@ class AEPARM(BaseCard):
         assert len(data) == 3, 'data = %s' % data
         return AEPARM(id, label, units, comment=comment)
 
-    #def cross_reference(self, model):
-        #pass
+    def cross_reference(self, model):
+        pass
 
     #def uncross_reference(self):
         #pass
