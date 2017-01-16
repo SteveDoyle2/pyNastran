@@ -420,19 +420,54 @@ class XDB(FortranFormat):
         print('done!')
 
     def read_table_header(self, table_name, etype, nsubcases):
-        if table_name in [b'CQD4', b'DDLFORDB', b'DISPR', b'GRIDX', b'LIMITS',
-                          b'MAT1', b'PATHINT', b'PATHLINK', b'PATHQUAL', b'PLOAD4',
-                          b'SPC1', b'PRODUCT', b'PROJECT', b'PSHELL', b'SID',
-                          b'SOLVE', b'SPCFR', b'SUBCASE', b'SUBCASES', b'SUBCTITL',
-                          b'SUBGRID', b'EQEXINE', b'EQEXING', b'SPCFR', b'CTR3',
-                          b'CBAR', b'CCON', b'CELAS2', b'CONM2' ,b'CSTM', b'EBARR',
-                          b'ECONR', b'EELSR', b'EQD4R', b'ETR3R', b'FBARR', b'FCONR',
+        """Reading control information"""
+
+        if table_name in [b'CQD4', #Connectivity Data
+                          b'CTR3', #Connectivity Data
+                          b'CBAR', b'CCON', b'CELAS2', b'CONM2' ,b'CSTM',
+
+                          b'DDLFORDB', 
+                          b'DISPR', # Displacements real
+                          b'GRIDX', # Node locations in both reference and analysis CSs
+
+                          b'LIMITS',
+                          b'MAT1', # Material data
+                          b'PATHINT', # Path Attribute Field (integer)
+                          b'PATHLINK', # Qualifier data type, the number of values associated with the qualifier, and a pointer to the appropriate path value object
+                          b'PATHQUAL', # The most global data base object (utilize no attributes). Keyed object is used to obtain the valid list of qualifiers for the database.
+                          
+                          b'PLOAD4',
+                          b'SPC1', 
+                          b'PRODUCT', # MSC product definition, i.e. NASTRAN
+                          b'PROJECT', # Project description. The most global data base object (utilize no attributes).
+                          b'PSHELL', # Information from the Bulk Data user input
+                          b'SID',
+                          b'SOLVE', 
+                          b'SPCFR', #SPC forces real
+                          b'SUBCASE', #This field corresponds to the MSC.Nastran Case Control Section definition of SUBCASE structure
+                          b'SUBCASES', 
+                          b'SUBCTITL', #Contain the information from the TITLE, SUBTITLE and LABEL statements found in the Case Control Section
+                          b'SUBGRID', #Grid object presence indicator for output data recovery
+                          b'EQEXINE', b'EQEXING',
+                           
+                          #Strain Recovery Data (Real)
+                          b'EBARR',
+                          b'ECONR',
+                          b'EELSR', 
+                          b'EQD4R',
+                          b'ETR3R',
+                          
+                          #Force Recovery Data
+                          b'FBARR', 
+                          b'FCONR', 
+
                           b'MPCFR', b'PATHBCD', b'PATHINT', b'FORCE', b'PBAR', b'SBARR',
                           b'SUBELEM', 
                           ]:
             dn = 88
-            #self.show(dn, types='i')
-
+            strings, ints, floats=self.show(dn, types='i')
+            
+            pass
         elif table_name in [b'SUPERS']:
             dn=1684
         else:
