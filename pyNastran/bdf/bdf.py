@@ -2616,7 +2616,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             except TypeError:
                 msg = 'problem adding %s' % card_obj
                 #print(msg)
-                raise
+                #raise
                 #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
@@ -2639,7 +2639,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             try:
                 add_card_function(card, card_obj)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                raise
+                #raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
                 #raise

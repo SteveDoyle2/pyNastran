@@ -474,7 +474,7 @@ class GRDSET(BaseCard):
     type = 'GRDSET'
 
     #: allows the get_field method and update_field methods to be used
-    _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
+    _field_map = {2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
     def __init__(self, cp, cd, ps, seid, comment=''):
         """

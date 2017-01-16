@@ -1174,11 +1174,11 @@ class AddCards(AddMethods):
         return mat
 
     def add_mat10(self, mid, bulk, rho, c, ge=0.0, gamma=None,
-                    tid_bulk=None, tid_rho=None, tid_ge=None, tid_gamma=None,
+                    table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
                     comment=''):
         mat = MAT10(mid, bulk, rho, c, ge=ge, gamma=gamma,
-                   tid_bulk=tid_bulk, tid_rho=tid_rho,
-                   tid_ge=tid_ge, tid_gamma=tid_gamma,
+                   table_bulk=table_bulk, table_rho=table_rho,
+                   table_ge=table_ge, table_gamma=table_gamma,
                    comment=comment)
         self._add_structural_material_object(mat)
         return mat
