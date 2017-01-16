@@ -415,7 +415,7 @@ class TestOP2(Tester):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         #bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        op2 = read_op2_geom(op2_filename, xref=False, debug=False)
 
         i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, op2.coords)
@@ -472,7 +472,7 @@ class TestOP2(Tester):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         #bdf_filename1 = os.path.join(folder, 'static_solid_shell_bar_xyz.bdf')
         op2_filename1 = os.path.join(folder, 'static_solid_shell_bar_xyz.op2')
-        op2_1 = read_op2_geom(op2_filename1, debug=False)
+        op2_1 = read_op2_geom(op2_filename1, xref=False, debug=False)
         #print("disp_orig =\n", op2_1.displacements[1].data[0, :2, :])
         #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
         print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
@@ -568,7 +568,7 @@ class TestOP2(Tester):
         debug_log = SimpleLogger(level='debug')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename1 = os.path.join(folder, 'static_solid_shell_bar_global_radial_cd.op2')
-        op2_1 = read_op2_geom(op2_filename1, log=warning_log)
+        op2_1 = read_op2_geom(op2_filename1, xref=False, log=warning_log)
         op2_1.log = debug_log
 
         #print("disp_orig =\n", op2_1.displacements[1].data[0, :4, :])
@@ -684,7 +684,7 @@ class TestOP2(Tester):
         debug_log = SimpleLogger(level='debug')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
-        op2_1 = read_op2_geom(op2_filename, log=warning_log)
+        op2_1 = read_op2_geom(op2_filename, xref=False, log=warning_log)
         op2_1.log = debug_log
 
         print("disp_orig =\n", op2_1.displacements[1].data[0, :2, :])
