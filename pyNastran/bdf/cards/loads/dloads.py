@@ -19,7 +19,7 @@ from pyNastran.utils import integer_types, integer_float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_string_or_blank,
-    integer_double_or_blank, double)
+    integer_double_or_blank, double, integer_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -305,6 +305,7 @@ class RLOAD1(TabularLoad):
     +--------+-----+----------+-------+--------+----+----+------+
     | RLOAD1 |  5  |    3     |       |        | 1  |    |      |
     +--------+-----+----------+-------+--------+----+----+------+
+    NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD1'
 
@@ -378,10 +379,10 @@ class RLOAD1(TabularLoad):
             the BDF object
         """
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
-        if self.tc > 0:
+        if isinstance(self.tc, integer_types) and self.tc:
             self.tc = model.TableD(self.tc, msg=msg)
             self.tc_ref = self.tc
-        if self.td > 0:
+        if isinstance(self.td, integer_types) and self.td:
             self.td = model.TableD(self.td, msg=msg)
             self.td_ref = self.td
         if isinstance(self.delay, integer_types) and self.delay > 0:
@@ -393,10 +394,10 @@ class RLOAD1(TabularLoad):
 
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
-        if self.tc > 0:
+        if isinstance(self.tc, integer_types) and self.tc:
             self.tc = model.TableD(self.tc, msg=msg)
             self.tc_ref = self.tc
-        if self.td > 0:
+        if isinstance(self.td, integer_types) and self.td:
             self.td = model.TableD(self.td, msg=msg)
             self.td_ref = self.td
         if isinstance(self.delay, integer_types) and self.delay > 0:
@@ -423,6 +424,8 @@ class RLOAD1(TabularLoad):
     def Tc(self):
         if self.tc in [0, 0.0]:
             return 0
+        elif isinstance(self.tc, float):
+            return self.tc
         elif isinstance(self.tc, integer_types):
             return self.tc
         return self.tc.tid
@@ -430,15 +433,19 @@ class RLOAD1(TabularLoad):
     def Td(self):
         if self.td in [0, 0.0]:
             return 0
+        elif isinstance(self.td, float):
+            return self.td
         elif isinstance(self.td, integer_types):
             return self.td
         return self.td.tid
 
     @property
     def delay_id(self):
-        if self.delay in [0, 0.0]:
+        if self.delay in [0, 0.]:
             return 0
-        elif isinstance(self.delay, integer_float_types):
+        elif isinstance(self.delay, float):
+            return self.delay
+        elif isinstance(self.delay, integer_types):
             return self.delay
         return self.delay_ref.sid
 
@@ -477,10 +484,12 @@ class RLOAD1(TabularLoad):
 
         if isinstance(self.delay, float):
             tau = self.delay
-        elif self.delay == 0 or self.dphase is None:
+        elif self.delay == 0 or self.delay is None:
             tau = 0.0
         else:
-            tau = self.delay.get_delay_at_freq(freq)
+            nids, comps, taus = self.delay_ref.get_delay_at_freq(freq)
+            assert len(taus) == 1, taus
+            tau = taus[0]
 
         out = (c + 1.j * d) * np.exp(dphase - 2 * np.pi * freq * tau)
         return out
@@ -520,6 +529,7 @@ class RLOAD2(TabularLoad):
     +--------+-----+----------+-------+--------+----+----+------+
     | RLOAD2 |  5  |    3     |       |        | 1  |    |      |
     +--------+-----+----------+-------+--------+----+----+------+
+    NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD2'
 
@@ -575,8 +585,8 @@ class RLOAD2(TabularLoad):
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', 0)
         dphase = integer_double_or_blank(card, 4, 'dphase', 0)
-        tb = integer_or_blank(card, 5, 'tb', 0)
-        tp = integer_or_blank(card, 6, 'tp', 0)
+        tb = integer_double_or_blank(card, 5, 'tb', 0)
+        tp = integer_double_or_blank(card, 6, 'tp', 0)
         Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
 
         assert len(card) <= 8, 'len(RLOAD2 card) = %i\ncard=%s' % (len(card), card)
@@ -636,11 +646,11 @@ class RLOAD2(TabularLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RLOAD2=%s' % (self.sid)
-        if self.tb:
+        msg = ', which is required by RLOAD2=%s' % (self.sid)
+        if isinstance(self.tb, integer_types) and self.tb:
             self.tb = model.TableD(self.tb, msg=msg)
             self.tb_ref = self.tb
-        if self.tp:
+        if isinstance(self.tp, integer_types) and self.tp:
             self.tp = model.TableD(self.tp, msg=msg)
             self.tp_ref = self.tp
         if isinstance(self.delay, integer_types) and self.delay > 0:
@@ -651,17 +661,17 @@ class RLOAD2(TabularLoad):
             self.dphase_ref = self.dphase
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by RLOAD2=%s' % (self.sid)
-        if self.tb:
+        msg = ', which is required by RLOAD2=%s' % (self.sid)
+        if isinstance(self.tb, integer_types) and self.tb:
             self.tb = model.TableD(self.tb, msg=msg)
             self.tb_ref = self.tb
-        if self.tp:
+        if isinstance(self.tp, integer_types) and self.tp:
             self.tp = model.TableD(self.tp, msg=msg)
             self.tp_ref = self.tp
-        if self.delay > 0:
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay, msg=msg)
             self.delay_ref = self.delay
-        if self.dphase:
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase = model.DPHASE(self.dphase, msg=msg)
             self.dphase_ref = self.dphase
 
@@ -689,6 +699,8 @@ class RLOAD2(TabularLoad):
     def Tb(self):
         if self.tb == 0:
             return 0
+        elif isinstance(self.tb, float):
+            return self.tb
         elif isinstance(self.tb, integer_types):
             return self.tb
         return self.tb_ref.tid
@@ -696,6 +708,8 @@ class RLOAD2(TabularLoad):
     def Tp(self):
         if self.tp == 0:
             return 0
+        elif isinstance(self.tp, float):
+            return self.tp
         elif isinstance(self.tp, integer_types):
             return self.tp
         return self.tp_ref.tid
@@ -704,6 +718,8 @@ class RLOAD2(TabularLoad):
     def delay_id(self):
         if self.delay in [0, 0.]:
             return 0
+        elif isinstance(self.delay, float):
+            return self.delay
         elif isinstance(self.delay, integer_types):
             return self.delay
         return self.delay.sid

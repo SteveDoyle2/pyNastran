@@ -409,7 +409,7 @@ class BDFAttributes(object):
         self.nlpcis = {}
         #: stores NLPARM
         self.nlparms = {}
-        #: stores TSTEPs
+        #: stores TSTEPs, TSTEP1s
         self.tsteps = {}
         #: stores TSTEPNL
         self.tstepnls = {}
@@ -647,7 +647,7 @@ class BDFAttributes(object):
             'nlparms' : ['NLPARM'],
             'nlpcis' : ['NLPCI'],
             'tsteps' : ['TSTEP'],
-            'tstepnls' : ['TSTEPNL'],
+            'tstepnls' : ['TSTEPNL', 'TSTEP1'],
             'transfer_functions' : ['TF'],
             'delays' : ['DELAY'],
             'rotors' : ['ROTORG', 'ROTORD'],

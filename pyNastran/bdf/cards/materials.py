@@ -2024,10 +2024,65 @@ class MAT11(Material):
 
 
 class MATHE(HyperelasticMaterial):
+    """
+    model = MOONEY (default)
+    | MATHE | MID |     | Model | K | RHO | TEXP |
+    |  C10  | C01 |     |       |   |     |      |
+    |  C20  | C11 | C02 |       |   |     |      |
+    |  C30  | C21 | C12 |  C03  |   |     |      |
+    NX version
+
+    model = OGDEN, FOAM
+    | MATHE | MID   | Model  |       |  K  |  RHO   |  TEXP |
+    |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
+    |       |  MU2  | ALPHA2 | BETA2 | MU3 | ALPHA3 | BETA3 |
+    |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |
+    |       |  MU6  | ALPHA6 | BETA6 | MU7 | ALPHA7 | BETA7 | # NX only line
+    |       |  MU8  | ALPHA8 | BETA8 | MU9 | ALPHA9 | BETA9 | # NX only line
+    NX version
+
+    model = ABOYCE
+    | MATHE | MID | Model |    | K  | RHO | TEXP |
+    |       | NKT |   N1  |    |    |     |      |
+    |       |  D1 |   D2  | D3 | D4 | D5  |      |  # MSC only line
+    NX version
+
+    model = SUSSBAT
+    | MATHE | MID  | Model  |        | K | RHO | TEXP |
+    |       | TAB1 | SSTYPE | RELERR |   |     |      |
+    NX version
+
+    model = MOONEY (default)
+    | MATHE | MID |     | Model | K    | RHO  | TEXP | TREF | GE |
+    |  C10  | C01 |  D1 |  TAB1 | TAB2 | TAB3 | TAB4 | TABD |    |
+    |  C20  | C11 | C02 |  D2   | NA   |      |      |      |    |
+    |  C30  | C21 | C12 |  C03  | D3   |      |      |      |    |
+    |  C40  | C31 | C22 |  C13  | C04  |  D4  |      |      |    |
+    |  C50  | C41 | C32 |  C23  | C14  | C05  |  D5  |      |    |
+    MSC version
+
+    model = OGDEN, FOAM
+    | MATHE | MID   | Model  |  NOT  |  K  |  RHO   |  TEXP |  # NOT is MSC only
+    |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
+    |       |  MU2  | ALPHA2 | BETA2 | MU3 | ALPHA3 | BETA3 |
+    |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |
+    |       |  D1   |   D2   |  D3   |  D4 |   D5   |       |  # MSC only line
+    MSC version
+
+    model = ABOYCE, GENT
+    | MATHE | MID | Model |    | K  | RHO | TEXP |
+    |       | NKT | N1    |    |    |     |      |
+    |       |  D1 |   D2  | D3 | D4 | D5  |      |  # MSC only line
+    MSC version
+
+    model = GHEMi
+    | MATHE | MID | Model | K | RHO | Texp | Tref | GE |
+    MSC version
+    """
     type = 'MATHE'
 
     def __init__(self, mid, model, bulk, rho, texp,
-                 mus, alphas, betas, mooney, sussbat, comment=''):
+                 mus, alphas, betas, mooney, sussbat, aboyce, comment=''):
         HyperelasticMaterial.__init__(self)
         if comment:
             self.comment = comment
@@ -2048,14 +2103,17 @@ class MATHE(HyperelasticMaterial):
         # SUSSBAT
         self.sussbat = sussbat
 
+        # ABOYCE
+        self.aboyce = aboyce
+
     def validate(self):
-        assert self.model in ['MOONEY', 'OGDEN', 'FOAM', 'ABOYCE', 'SUSSBAT'], 'model=%r' % self.model
+        assert self.model in ['MOONEY', 'OGDEN', 'FOAM', 'ABOYCE', 'SUSSBAT', 'ABOYCE'], 'model=%r' % self.model
 
     @classmethod
     def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
         model = string_or_blank(card, 2, 'a10', 'MOONEY')
-        bulk = double_or_blank(card, 4, 'bulk', None)
+        bulk = double_or_blank(card, 4, 'bulk, k', None)
         rho = double_or_blank(card, 5, 'rho', 0.)
         texp = double_or_blank(card, 6, 'texp', 0.)
 
@@ -2070,6 +2128,7 @@ class MATHE(HyperelasticMaterial):
 
         mooney = []
         sussbat = []
+        aboyce = []
         if model in ['OGDEN', 'FOAM']:
             for iline in range(nlines):
                 ilinei = iline + 1
@@ -2083,33 +2142,40 @@ class MATHE(HyperelasticMaterial):
                 betas.append(beta)
             #print('nfields =', nfields)
         elif model == 'MOONEY':
-            c10 = double(card, 9, 'c10')
-            c01 = double(card, 10, 'c01')
+            c10 = double(card, 9, 'c10') # 1.0 for NX, 0.0 for MSC
+            c01 = double(card, 10, 'c01') # 1.0 for NX, 0.0 for MSC
 
-            c20 = double(card, 17, 'c20')
-            c11 = double(card, 18, 'c11')
-            c02 = double(card, 19, 'c02')
+            c20 = double_or_blank(card, 17, 'c20', 0.)
+            c11 = double_or_blank(card, 18, 'c11', 0.)
+            c02 = double_or_blank(card, 19, 'c02', 0.)
 
-            c30 = double(card, 25, 'c30')
-            c21 = double(card, 26, 'c21')
-            c12 = double(card, 27, 'c12')
-            c03 = double(card, 28, 'c03')
+            c30 = double_or_blank(card, 25, 'c30', 0.)
+            c21 = double_or_blank(card, 26, 'c21', 0.)
+            c12 = double_or_blank(card, 27, 'c12', 0.)
+            c03 = double_or_blank(card, 28, 'c03', 0.)
             mooney = [
                 c10, c01,
                 c20, c11, c02,
                 c30, c21, c12, c03,
             ]
+            assert len(card) <= 29, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
         elif model == 'SUSSBAT':
             tab1 = integer(card, 9, 'tab1')
             sstype = string_or_blank(card, 10, 'sstype', 'ENG')
             relerr = double_or_blank(card, 11, 'relerr', 0.01)
+            assert len(card) <= 12, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
             sussbat = [tab1, sstype, relerr]
+        elif model == 'ABOYCE':
+            # NX version
+            nkt = double_or_blank(card, 9, 'NKT', 1.0)
+            n = double_or_blank(card, 10, 'N', 1.0)
+            assert len(card) <= 11, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
+            aboyce = [nkt, n]
         else:
             raise NotImplementedError(model)
 
-        #assert len(card) <= 10, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
         return MATHE(mid, model, bulk, rho, texp,
-                     mus, alphas, betas, mooney, sussbat,
+                     mus, alphas, betas, mooney, sussbat, aboyce,
                      comment=comment)
 
     def raw_fields(self):
@@ -2199,6 +2265,11 @@ class MATHE(HyperelasticMaterial):
         elif self.model == 'SUSSBAT':
             (tab1, sstype, relerr) = self.sussbat
             list_fields += [tab1, sstype, relerr]
+        elif self.model == 'ABOYCE':
+            (nkt, n) = self.aboyce
+            list_fields = ['MATHE', self.mid, self.model, None,
+                           self.bulk, self.rho, self.texp, None, None,
+                           nkt, n]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

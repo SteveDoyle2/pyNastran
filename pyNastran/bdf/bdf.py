@@ -75,7 +75,7 @@ from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
-    TSTEP, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
+    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
@@ -472,7 +472,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'ROTORG', 'ROTORD', ## rotors
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
-            'TSTEPNL',  ## tstepnls
+            'TSTEPNL', 'TSTEP1',  ## tstepnls
             'TF',  ## transfer_functions
             'TIC', ## initial conditions - sid (set ID)
 
@@ -2054,6 +2054,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             #'NLPARM' : (NLPARM, self._add_nlparm_object),
             'NLPCI' : (NLPCI, self._add_nlpci_object),
             'TSTEP' : (TSTEP, self._add_tstep_object),
+            'TSTEP1' : (TSTEP1, self._add_tstepnl_object),
             'TSTEPNL' : (TSTEPNL, self._add_tstepnl_object),
 
             'TF' : (TF, self._add_tf_object),
@@ -3035,7 +3036,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             xyz_cid0 = np.copy(xyz_cp)
 
         # transform the grids to the global coordinate system
-        xyz_cid0_correct = self.get_xyz_in_coord(cid=0)
+        xyz_cid0_correct = self.get_xyz_in_coord(dtype=xyz_cid0.dtype, cid=0)
         #self.log.debug('icp_transform = %s' % icp_transform)
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
@@ -3050,7 +3051,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             xyz_cid0[inode, :] = new
             if not np.array_equal(xyz_cid0_correct[inode, :], new):
                 msg = ('xyz_cid0:\n%s\n'
-                       'xyz_cid0_correct:\n%s'
+                       'xyz_cid0_correct:\n%s\n'
                        'inode=%s' % (xyz_cid0[inode, :], xyz_cid0_correct[inode, :],
                                      inode))
                 raise ValueError(msg)
@@ -3062,7 +3063,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
         if not np.allclose(xyz_cid0, xyz_cid0_correct, atol=atol):
             #np.array_equal(xyz_cid, xyz_cid_alt):
-            out = self.get_displacement_index_xyz_cp_cd(dtype='float64', sort_ids=True)
+            out = self.get_displacement_index_xyz_cp_cd(dtype=xyz_cid0.dtype, sort_ids=True)
             icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
             msg = ('xyz_cid0:\n%s\n'
                    'xyz_cid0_correct:\n%s\n'

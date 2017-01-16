@@ -2493,7 +2493,11 @@ class PLOAD4(Load):
 
 class PLOADX1(Load):
     """
-    cid
+    +---------+-----+-----+----+----+----+----+-------+
+    |    1    |  2  |  3  |  4 |  5 |  6 |  7 |   8   |
+    +=========+=====+=====+====+====+====+====+=======+
+    | PLOADX1 | SID | EID | PA | PB | GA | GB | THETA |
+    +---------+-----+-----+----+----+----+----+-------+
     """
     type = 'PLOADX1'
 
@@ -2510,6 +2514,12 @@ class PLOADX1(Load):
         self.gb = gb
         self.theta = theta
 
+    def validate(self):
+        assert isinstance(self.ga, integer_types), 'ga=%r' % self.ga
+        assert isinstance(self.gb, integer_types), 'gb=%r' % self.gb
+        assert isinstance(self.pa, float), 'pa=%r' % self.pa
+        assert isinstance(self.pb, float), 'pb=%r' % self.pb
+
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
@@ -2520,12 +2530,12 @@ class PLOADX1(Load):
         gb = integer(card, 6, 'gb')
         theta = double_or_blank(card, 7, 'theta', 0.)
         assert len(card) <= 8, 'len(PLOADX1 card) = %i\ncard=%s' % (len(card), card)
-        return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
+        return PLOADX1(sid, eid, pa, ga, gb, pb, theta, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid, eid, pa, pb, ga, gb, theta = data
-        return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
+        return PLOADX1(sid, eid, pa, ga, gb, pb, theta, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2559,17 +2569,17 @@ class PLOADX1(Load):
         del self.eid_ref, self.ga_ref, self.gb_ref
 
     def Eid(self):
-        if isinstance(self.eid, (integer_types)):
+        if isinstance(self.eid, integer_types):
             return self.eid
         return self.eid_ref.eid
 
     def Ga(self):
-        if isinstance(self.ga, (integer_types)):
+        if isinstance(self.ga, integer_types):
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, (integer_types)):
+        if isinstance(self.gb, integer_types):
             return self.gb
         return self.gb_ref.nid
 

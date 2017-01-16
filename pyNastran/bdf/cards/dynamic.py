@@ -1107,15 +1107,23 @@ class TSTEP(BaseCard):
     Defines time step intervals at which a solution will be generated and
     output in transient analysis.
 
-    +-------+------+------+-----+-----+-----+-----+-----+-----+
-    |   1   |   2  |  3   |  4  |  5  |  6  |  7  |  8  |  9  |
-    +=======+======+======+=====+=====+=====+=====+=====+=====+
-    | TSTEP | SID  |  N1  | DT1 | NO1 |     |     |     |     |
-    +-------+------+------+-----+-----+-----+-----+-----+-----+
-    |       |      |  N2  | DT2 | NO2 |     |     |     |     |
-    +-------+------+------+-----+-----+-----+-----+-----+-----+
-    |       |      | etc. |     |     |     |     |     |     |
-    +-------+------+------+-----+-----+-----+-----+-----+-----+
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |   1   |   2  |  3   |  4   |  5   |  6  |  7  |  8  |  9  |
+    +=======+======+======+======+======+=====+=====+=====+=====+
+    | TSTEP | SID  |  N1  | DT1  | NO1  |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |       |      |  N2  | DT2  | NO2  |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |       |      | etc. |      |      |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
+
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |   1   |   2  |  3   |  4   |  5   |  6  |  7  |  8  |  9  |
+    +=======+======+======+======+======+=====+=====+=====+=====+
+    | TSTEP | 101  | 9000 | .001 | 9000 |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |       |      | 1000 | .001 | 1    |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
     """
     type = 'TSTEP'
 
@@ -1167,6 +1175,75 @@ class TSTEP(BaseCard):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
+class TSTEP1(BaseCard):
+    """
+    Transient Time Step
+    Defines time step intervals at which a solution will be generated and
+    output in transient analysis.
+
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |   1    |   2  |   3   |   4   |   5   |  6  |  7  |  8  |  9  |
+    +========+======+=======+=======+=======+=====+=====+=====+=====+
+    | TSTEP1 | SID  | TEND1 | NINC1 | NOUT1 |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |        |      | TEND2 | NINC2 | NOUT2 |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |        |      | etc.  |       |       |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |   1    |   2  |   3   |   4   |   5   |  6  |  7  |  8  |  9  |
+    +========+======+=======+=======+=======+=====+=====+=====+=====+
+    | TSTEP1 |   1  | 10.0  |   5   |   2   |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |        |      | 50.0  |   4   |   3   |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |        |      | 100   |   2   |  ALL  |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    """
+    type = 'TSTEP1'
+
+    def __init__(self, sid, tend, ninc, nout, comment=''):
+        self.sid = sid
+        self.tend = tend
+        self.ninc = ninc
+        self.nout = nout
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        tend = []
+        ninc = []
+        nout = []
+
+        nrows = int(ceil((len(card) - 1.) / 8.))
+        for i in range(nrows):
+            n = 8 * i + 1
+            tendi = double_or_blank(card, n + 1, 'TEND' + str(i), 1.)
+            ninci = integer_or_blank(card, n + 2, 'NINC' + str(i), 1)
+            nouti = integer_string_or_blank(card, n + 3, 'NOUT' + str(i), 'END')
+            tend.append(tendi)
+            ninc.append(ninci)
+            nout.append(nouti)
+            if not isinstance(nouti, integer_types):
+                assert nouti in ['YES', 'END', 'ALL', 'CPLD'], nouti
+        return TSTEP1(sid, tend, ninc, nout, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['TSTEP1', self.sid]
+        for (tend, ninc, nout) in zip(self.tend, self.ninc, self.nout):
+            list_fields += [tend, ninc, nout, None, None, None, None, None]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class TSTEPNL(BaseCard):
     """
@@ -1437,7 +1514,7 @@ class TIC(BaseCard):
     """Transient Initial Condition"""
     type = 'TIC'
 
-    def __init__(self, sid, nid, comp, u0, v0, comment=''):
+    def __init__(self, sid, nodes, components, u0, v0, comment=''):
         """
         Defines values for the initial conditions of variables used in
         structural transient analysis. Both displacement and velocity
@@ -1447,20 +1524,32 @@ class TIC(BaseCard):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        if isinstance(components, integer_types):
+            components = [components]
+        if isinstance(u0, float):
+            u0 = [u0]
+        if isinstance(v0, float):
+            v0 = [v0]
+
         self.sid = sid
-        self.nid = nid
-        self.comp = comp
+        self.nodes = nodes
+        self.components = components
         self.u0 = u0
         self.v0 = v0
-        assert self.nid > 0
+
+    def validate(self):
+        for nid in self.nodes:
+            assert nid > 0, self.nodes
 
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         nid = integer(card, 2, 'G')
         comp = components(card, 3, 'C')
-        u0 = double(card, 4, 'U0')
-        v0 = double(card, 5, 'V0')
+        u0 = double_or_blank(card, 4, 'U0', 0.)
+        v0 = double_or_blank(card, 5, 'V0', 0.)
         return TIC(sid, nid, comp, u0, v0, comment=comment)
 
     @classmethod
@@ -1472,12 +1561,42 @@ class TIC(BaseCard):
         u0 = data[4]
         return TIC(sid, nid, comp, u0, v0, comment=comment)
 
+    @property
+    def node_ids(self):
+        #return _node_ids(self, self.nodes, )
+        return self.nodes
+
+    def add(self, tic):
+        assert self.sid == tic.sid, 'sid=%s tic.sid=%s' % (self.sid, tic.sid)
+        if tic.comment:
+            if hasattr('_comment'):
+                self._comment += tic.comment
+            else:
+                self._comment = tic.comment
+        self.nodes += tic.nodes
+        self.components += tic.components
+        self.u0 += tic.u0
+        self.v0 += tic.v0
+
     def cross_reference(self, model):
         pass
 
     def raw_fields(self):
-        list_fields = ['TIC', self.sid, self.nid, self.comp, self.u0, self.v0]
+        list_fields = []
+        for nid, comp, u0, v0 in zip(self.node_ids, self.components, self.u0, self.v0):
+            list_fields += ['TIC', self.sid, nid, comp, u0, v0]
         return list_fields
 
-    def repr_fields(self):
-        return self.raw_fields()
+    #def repr_fields(self):
+        #return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        msg = self.comment
+        node_ids = self.node_ids
+        if size == 8:
+            for nid, comp, u0, v0 in zip(node_ids, self.components, self.u0, self.v0):
+                msg += print_card_8(['TIC', self.sid, nid, comp, u0, v0])
+        else:
+            for nid, comp, u0, v0 in zip(node_ids, self.components, self.u0, self.v0):
+                msg += print_card_16(['TIC', self.sid, nid, comp, u0, v0])
+        return msg

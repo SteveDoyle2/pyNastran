@@ -50,7 +50,7 @@ from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
-    TSTEP, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
+    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
@@ -819,6 +819,37 @@ class AddCards(AddMethods):
                    mid3=None, tst=0.833333, nsm=0.0,
                    z1=None, z2=None, mid4=None,
                    comment=''):
+        """
+        Creates a PSHELL card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid1 : int; default=None
+            defines membrane material
+            defines element density (unless blank)
+        mid2 : int; default=None
+            defines bending material
+            defines element density if mid1=None
+        mid3 : int; default=None
+            defines transverse shear material
+        mid4 : int; default=None
+            defines membrane-bending coupling material
+        twelveIt3 : float; default=1.0
+            Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
+            bending moment inertia of the shell, I, to the bending
+            moment of inertia of a homogeneous shell, T^3/12. The default
+            value is for a homogeneous shell.
+        nsm : float; default=0.0
+            non-structural mass per unit area
+        z1 / z2 : float; default=None
+            fiber distance location 1/2 for stress/strain calculations
+            z1 default : -t/2 if thickness is defined
+            z2 default : t/2 if thickness is defined
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PSHELL(pid, mid1=mid1, t=t, mid2=mid2, twelveIt3=twelveIt3,
                       mid3=mid3, tst=tst, nsm=nsm,
                       z1=z1, z2=z2, mid4=mid4,

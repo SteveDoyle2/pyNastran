@@ -734,7 +734,20 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
+        #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
+        if not any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
+            subcases = fem2.subcases
+            subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
+            has_flag = False
+            for isubcase, subcasei in iteritems(fem2.subcases):
+                if any(subcasei.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
+                    has_flag = True
+            if not has_flag:
+                msg = 'sol=%r; [TIME, TSTEP, TSTEPNL] not in subcase\n' % fem2.sol
+                for isubcase, subcasei in iteritems(fem2.subcases):
+                    msg += str(subcasei)
+                raise RuntimeError(msg)
+
     elif sol == 110:  # ???
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
@@ -864,6 +877,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
             raise NotImplementedError(msg)
 
+    elif sol in [1, 5, 21, 61, 68, 76, 100, 187, 401, 601]:
+        pass
     else:
         msg = 'SOL = %s\n' % (sol)
         msg += str(subcase)
@@ -992,7 +1007,9 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         #if 'LOADSET' in subcase:
             #raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
         if 'IC' in subcase:
-            raise NotImplementedError('IC & DLOAD -> TIC')
+            value = subcase.get_parameter('IC')[0]
+            if value != 0:
+                raise NotImplementedError('IC & DLOAD -> TIC\n%s' % subcase)
 
         # DLOAD (case)   -> dynamic loads -> DLOAD, RLOAD1, RLOAD2, TLOAD1, TLOAD2, ACSRCE
         # LOADSET (case) -> static load sequence - > LSEQ
@@ -1044,7 +1061,6 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
             for load2, scale_factor in zip(loads2, scale_factors2):
                 force = load2.get_load_at_time(0.) * scale_factor
-        ### 111
         else:
             fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
 

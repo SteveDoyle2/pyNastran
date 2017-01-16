@@ -1297,7 +1297,6 @@ class PSHEAR(ShellProperty):
 
 class PSHELL(ShellProperty):
     """
-
     +--------+-------+------+--------+------+----------+------+------+---------+
     |   1    |   2   |   3  |    4   |  5   |    6     |   7  |  8   |    9    |
     +========+=======+======+========+======+==========+======+======+=========+
@@ -1317,6 +1316,37 @@ class PSHELL(ShellProperty):
     def __init__(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
                  mid3=None, tst=0.833333, nsm=0.0,
                  z1=None, z2=None, mid4=None, comment=''):
+        """
+        Creates a PSHELL card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid1 : int; default=None
+            defines membrane material
+            defines element density (unless blank)
+        mid2 : int; default=None
+            defines bending material
+            defines element density if mid1=None
+        mid3 : int; default=None
+            defines transverse shear material
+        mid4 : int; default=None
+            defines membrane-bending coupling material
+        twelveIt3 : float; default=1.0
+            Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
+            bending moment inertia of the shell, I, to the bending
+            moment of inertia of a homogeneous shell, T^3/12. The default
+            value is for a homogeneous shell.
+        nsm : float; default=0.0
+            non-structural mass per unit area
+        z1 / z2 : float; default=None
+            fiber distance location 1/2 for stress/strain calculations
+            z1 default : -t/2 if thickness is defined
+            z2 default : t/2 if thickness is defined
+        comment : str; default=''
+            a comment for the card
+        """
         ShellProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -1350,7 +1380,7 @@ class PSHELL(ShellProperty):
         if z1 is None and self.t is not None:
             z1 = -self.t / 2.
         if z2 is None and self.t is not None:
-            z2 = -self.t / 2.
+            z2 = self.t / 2.
 
         self.z1 = z1
         self.z2 = z2

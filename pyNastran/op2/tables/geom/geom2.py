@@ -1451,7 +1451,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  PLOTEL=%s\n' % str(out))
             #(eid,n1,n2) = out
             elem = PLOTEL.add_op2_data(out)
-            self.add_op2_element(elem)
+            self._add_plotel_object(elem)
             n += ntotal
         self.card_count['PLOTEL'] = nelements
         return n

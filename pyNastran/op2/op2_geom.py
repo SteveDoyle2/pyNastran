@@ -13,8 +13,9 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 
 def read_op2_geom(op2_filename=None, combine=True, subcases=None,
-             log=None, debug=True, debug_file=None, build_dataframe=False,
-             skip_undefined_matrices=True, mode='msc', encoding=None):
+                  validate=True, xref=True,
+                  build_dataframe=False, skip_undefined_matrices=True,
+                  mode='msc', log=None, debug=True, debug_file=None, encoding=None):
     """
     Creates the OP2 object without calling the OP2 class.
 
@@ -28,15 +29,19 @@ def read_op2_geom(op2_filename=None, combine=True, subcases=None,
                 will be used for superelements regardless of the option
     subcases : List[int, ...] / int; default=None->all subcases
         list of [subcase1_ID,subcase2_ID]
+    validate : bool
+        runs various checks on the BDF (default=True)
+    xref :  bool
+        should the bdf be cross referenced (default=True)
     build_dataframe : bool; default=False
         builds a pandas DataFrame for op2 objects
     skip_undefined_matrices : bool; default=False
          True : prevents matrix reading crashes
-    debug : bool; default=False
-        enables the debug log and sets the debug in the logger
     log : Log()
         a logging object to write debug messages to
      (.. seealso:: import logging)
+    debug : bool; default=False
+        enables the debug log and sets the debug in the logger
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
     encoding : str
@@ -57,6 +62,10 @@ def read_op2_geom(op2_filename=None, combine=True, subcases=None,
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
                    encoding=encoding)
+    if validate:
+        model.validate()
+    if xref:
+        model.cross_reference()
     return model
 
 class OP2Geom(OP2, BDF,

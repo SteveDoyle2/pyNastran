@@ -527,10 +527,9 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[suport1.type].append(key)
 
     def _add_tic_object(self, tic, allow_overwrites=False):
-        key = (tic.sid, tic.nid, tic.comp)
-        if key in self.tics and not allow_overwrites:
-            if not tic._is_same_card(self.tics[key]):
-                assert key not in self.tics, '\ndtic=\n%s old_tic=\n%s' % (tic, self.tics[key])
+        key = tic.sid
+        if key in self.tics:
+            self.tics[key].add(tic)
         else:
             assert tic.sid > 0
             self.tics[key] = tic

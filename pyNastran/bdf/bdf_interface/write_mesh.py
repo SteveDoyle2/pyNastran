@@ -624,8 +624,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(delay.write_card(size, is_double))
             for (unused_id, rotor) in sorted(iteritems(self.rotors)):
                 msg.append(rotor.write_card(size, is_double))
-                for (unused_id, tic) in sorted(iteritems(self.tics)):
-                    msg.append(tic.write_card(size, is_double))
+            for (unused_id, tic) in sorted(iteritems(self.tics)):
+                msg.append(tic.write_card(size, is_double))
 
             for (unused_id, tfs) in sorted(iteritems(self.transfer_functions)):
                 for tf in tfs:

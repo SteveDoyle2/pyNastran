@@ -66,7 +66,7 @@ from pyNastran.bdf.cards.elements.bars import LineElement
 from pyNastran.bdf.cards.elements.springs import SpringElement
 from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-    CHEXA8, CHEXA20, CIHEX1,
+    CHEXA8, CHEXA20, CIHEX1, CIHEX2,
     CPYRAM5, CPYRAM13,
 )
 
@@ -83,6 +83,16 @@ except ImportError:
 
 piover2 = np.pi / 2.
 piover3 = np.pi / 3.
+
+green = (0., 1., 0.)
+blue = (0., 0., 1.)
+dunno = (0.5, 1., 0.5)
+pink = (0.98, 0.4, 0.93)
+orange = (219/255., 168/255., 13/255.)
+red = (1., 0., 0.)
+yellow = (1., 1., 0.)
+purple = (1., 0., 1.)
+
 
 class NastranIO(object):
     """
@@ -133,7 +143,6 @@ class NastranIO(object):
         self.has_caero = False
         self.dependents_nodes = set([])
         self.i_transform = {}
-        #self.transforms = {}
 
     def get_nastran_wildcard_geometry_results_functions(self):
         """
@@ -401,12 +410,7 @@ class NastranIO(object):
         #case = self.result_cases[key]
 
         skip_reading = self._remove_old_nastran_geometry(bdf_filename)
-        pink = (0.98, 0.4, 0.93)
-        orange = (219/255., 168/255., 13/255.)
-        #blue = (0., 0., 1.)
-        red = (1., 0., 0.)
         # if 0:
-            # yellow = (1., 1., 0.)
             # line_width = 3
             # opacity = 1
             # alt_grids = [
@@ -458,12 +462,12 @@ class NastranIO(object):
 
         assert nnodes + nspoints > 0, model.card_count
         nelements = model.nelements
+        nplotels = len(model.plotels)
         ncaero_cards = len(model.caeros)
-        assert nelements + ncaero_cards > 0
+        assert nelements + ncaero_cards + nplotels > 0
 
         self.nNodes = nnodes + nspoints
         self.nElements = nelements  # approximate...
-
 
         # count caeros
         ncaeros_sub = 0
@@ -477,7 +481,6 @@ class NastranIO(object):
                 pass
             else:
                 print('%r doesnt support panel_points_elements' % caero.type)
-        #ncaeros = model.ncaeros
 
         ncaeros_points = 0
         ncaeros = 0
@@ -548,7 +551,6 @@ class NastranIO(object):
         if 'CMASS2' in model.card_count:
             nconm2 += model.card_count['CMASS2']
 
-        #self.gridResult.SetNumberOfComponents(self.nElements)
         if nconm2 > 0:
             self.create_alternate_vtk_grid(
                 'conm2', color=orange, line_width=5, opacity=1., point_size=4,
@@ -557,7 +559,6 @@ class NastranIO(object):
         # Allocate grids
         self.grid.Allocate(self.nElements, 1000)
         if self.has_caero:
-            yellow = (1., 1., 0.)
             if 'caero' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
                     'caero', color=yellow, line_width=3, opacity=1.0,
@@ -604,9 +605,7 @@ class NastranIO(object):
         if model.suport:
             ids = []
             for suport in model.suport:
-                #print(suport)
                 idsi = suport.node_ids
-                #print('idsi =', idsi)
                 ids += idsi
             grid_name = 'SUPORT'
             self.create_alternate_vtk_grid(
@@ -732,11 +731,10 @@ class NastranIO(object):
 
     def create_splines(self, model, box_id_to_caero_element_map, caero_points):
         if model.splines:
-            blue = (0., 0., 1.)
             # 0 - caero / caero_subpanel
             # 1 - control surface
             iaero = 2
-            for spline_id, spline in sorted(model.splines.items()):
+            for spline_id, spline in sorted(iteritems(model.splines)):
                 # the control surfaces all lie perfectly on top of each other
                 # such that we have z fighting, so based on the aero index,
                 # we calculate a z offset.
@@ -813,7 +811,6 @@ class NastranIO(object):
 
                     print(', '.join(dir(elem)))
                     #prop = elem.GetProperty()
-                    #print(dir(prop))
 
                     points.InsertPoint(j, *cpoints[0])
                     points.InsertPoint(j + 1, *cpoints[1])
@@ -863,8 +860,7 @@ class NastranIO(object):
                 pointsi, elementsi = element.panel_points_elements()
                 for ipoint, pointii in enumerate(pointsi):
                     points.InsertPoint(j + ipoint, *pointii)
-                if eid == 10100:
-                    continue
+
                 elem = vtkQuad()
                 for elementi in elementsi:
                     elem = vtkQuad()
@@ -921,7 +917,7 @@ class NastranIO(object):
                 point[1] += zfighting_offset
                 point[2] += zfighting_offset
                 points.InsertPoint(j + ipoint, *point)
-            #print('')
+
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, j)
             elem.GetPointIds().SetId(1, j + 1)
@@ -995,7 +991,6 @@ class NastranIO(object):
             ipoint = nid_map[nid]
             point = xyz_cid0[i, :]
             points.InsertPoint(j, *point)
-
             j += 1
         self.alt_grids[name].SetPoints(points)
         return j
@@ -1147,7 +1142,6 @@ class NastranIO(object):
         return node_ids_c1
 
     def _fill_spc(self, spc_id, nspcs, nspc1s, nspcds, dim_max, model, nid_to_pid_map):
-        purple = (1., 0., 1.)
         self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1.,
                                        point_size=5, representation='point', is_visible=False)
 
@@ -1226,11 +1220,10 @@ class NastranIO(object):
         """
         plots the y, z vectors for CBAR & CBEAM elements
         """
-        green = (0., 1., 0.)
-        blue = (0., 0., 1.)
         card_types = ['CBAR', 'CBEAM']
         out = model.get_card_ids_by_card_types(card_types=card_types)
         bar_beam_eids = out['CBAR'] + out['CBEAM']
+
         self.bar_eids = {}
         self.bar_lines = {}
         if len(bar_beam_eids) == 0:
@@ -1311,6 +1304,7 @@ class NastranIO(object):
 
         #debug = True
         bar_nids = set([])
+        print('bar_beam_eids =', bar_beam_eids)
         for eid in bar_beam_eids:
             if eid not in self.eid_map:
                 self.log.error('eid=%s is not a valid element...' % eid)
@@ -1515,7 +1509,8 @@ class NastranIO(object):
             #print('wb =', wb)
             ## concept has a GOO
             #if not elem.offt in ['GGG', 'BGG']:
-                #msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (elem.offt, eid)
+                #msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (
+                    #elem.offt, eid)
                 #self.log.error(msg)
                 #continue
 
@@ -1592,7 +1587,6 @@ class NastranIO(object):
         #print('found_bar_types =', found_bar_types)
 
         bar_nids = list(bar_nids)
-        red = (1., 0., 0.)
         self.create_alternate_vtk_grid(
             'Bar Nodes', color=red, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=True)
@@ -1812,8 +1806,6 @@ class NastranIO(object):
     def _fill_dependent_independent(self, dim_max, model, lines, nid_to_pid_map):
         if not lines:
             return
-        green = (0., 1., 0.)
-        dunno = (0.5, 1., 0.5)
         self.create_alternate_vtk_grid(
             'mpc_dependent', color=green, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
@@ -1889,11 +1881,10 @@ class NastranIO(object):
         assert isinstance(spoint_ids, list), type(spoint_ids)
 
         nspoints = len(spoint_ids)
+        name = 'SPoints'
         if nspoints == 0:
             model.log.warning('0 spoints added for %r' % name)
             return
-        blue = (0., 0., 1.)
-        name = 'SPoints'
         self.create_alternate_vtk_grid(
             name, color=blue, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=True)
@@ -1972,8 +1963,6 @@ class NastranIO(object):
 
     def _fill_suport(self, suport_id, dim_max, model):
         """creates SUPORT and SUPORT1 nodes"""
-        #pink = (0.98, 0.4, 0.93)
-        red = (1.0, 0., 0.)
         self.create_alternate_vtk_grid(
             'suport', color=red, line_width=5, opacity=1., point_size=4,
             representation='point', is_visible=False)
@@ -2211,7 +2200,23 @@ class NastranIO(object):
             (0, 6, 5, 4), # (1, 7, 6, 5),
         )
         nid_to_pid_map = defaultdict(list)
+        pid = 0
+
+        nplotels = len(model.plotels)
+        if nplotels:
+            lines = []
+            for (eid, element) in sorted(iteritems(model.plotels)):
+                node_ids = element.node_ids
+                lines.append(node_ids)
+            lines = np.array(lines, dtype='int32')
+
+            self.create_alternate_vtk_grid(
+                'plotel', color=red, line_width=2, opacity=0.8,
+                point_size=5, representation='wire', is_visible=True)
+            self._add_nastran_lines_to_grid('plotel', lines, model)
+
         for (eid, element) in sorted(iteritems(model.elements)):
+            self.eid_map[eid] = i
             etype = element.type
             # if element.Pid() >= 82:
                 # continue
@@ -2221,7 +2226,6 @@ class NastranIO(object):
                 # continue
             # if element.pid.type == 'PSOLID':
                 # continue
-            self.eid_map[eid] = i
             pid = 0
             dideal_thetai = 0.0
             min_thetai = 0.0
@@ -2609,7 +2613,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(12, elem.GetPointIds())
                 min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
                     _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
-            elif isinstance(element, CHEXA20):
+            elif isinstance(element, (CHEXA20, CIHEX2)):
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -2760,6 +2764,7 @@ class NastranIO(object):
                         continue
 
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
             elif etype in ('CBAR', 'CBEAM', 'CROD', 'CONROD'):
                 if etype == 'CONROD':
                     pid = 0
@@ -2790,7 +2795,7 @@ class NastranIO(object):
                     continue
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
-                print('removing\n%s' % (elem))
+                print('removing\n%s' % (element))
                 print('removing eid=%s; %s' % (eid, element.type))
                 del self.eid_map[eid]
                 self.log_info("skipping %s" % element.type)
@@ -2838,25 +2843,10 @@ class NastranIO(object):
         #self.log_info("updated grid")
 
         cases = OrderedDict()
-        #pids = array(pids, 'int32')
-        #print('eid_map')
-        #for key, value in sorted(iteritems(self.eid_map)):
-            #print('  %s %s' % (key, value))
-
-        #if 0:
-            #if not len(pids) == len(self.eid_map):
-                #msg = 'ERROR:  len(pids)=%s len(eid_map)=%s\n' % (len(pids), len(self.eid_map))
-                #for eid, pid in sorted(iteritems(pids_dict)):
-                    ##self.eid_map[eid] = i
-                    ##pids_dict[eid] = pid
-                    #if eid not in self.eid_map:
-                        #msg += 'eid=%s %s' % (eid, str(model.elements[eid]))
-                #raise RuntimeError(msg)
         del pids_dict
 
 
         self.iSubcaseNameMap = {1: ['Nastran', '']}
-        #nelements = len(self.eid_map)
         icase = 0
         form = ['Geometry', None, []]
         form0 = form[2]
@@ -3051,6 +3041,7 @@ class NastranIO(object):
             #mid_eids_skip = []
             #for pid in upids:
 
+        #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
         if self.make_offset_normals_dim and nelements:
             #ielement = 0
             nelements = self.element_ids.shape[0]
@@ -3196,29 +3187,37 @@ class NastranIO(object):
             is_solid = np.abs(max_interior_angle).max() > 0.
             #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
             if is_shell:
-                nx_res = GuiResult(0, header='NormalX', title='NormalX',
-                                   location='centroid', scalar=normals[:, 0], data_format='%.2f')
-                ny_res = GuiResult(0, header='NormalY', title='NormalY',
-                                   location='centroid', scalar=normals[:, 1], data_format='%.2f')
-                nz_res = GuiResult(0, header='NormalZ', title='NormalZ',
-                                   location='centroid', scalar=normals[:, 2], data_format='%.2f')
+                nx_res = GuiResult(
+                    0, header='NormalX', title='NormalX',
+                    location='centroid', scalar=normals[:, 0], data_format='%.2f')
+                ny_res = GuiResult(
+                    0, header='NormalY', title='NormalY',
+                    location='centroid', scalar=normals[:, 1], data_format='%.2f')
+                nz_res = GuiResult(
+                    0, header='NormalZ', title='NormalZ',
+                    location='centroid', scalar=normals[:, 2], data_format='%.2f')
 
                 # this is just for testing nan colors that doesn't work
                 #max_interior_angle[:1000] = np.nan
                 area_res = GuiResult(0, header='Area', title='Area',
                                      location='centroid', scalar=area)
-                min_theta_res = GuiResult(0, header='Min Interior Angle', title='Min Interior Angle',
-                                          location='centroid', scalar=np.degrees(min_interior_angle))
-                max_theta_res = GuiResult(0, header='Max Interior Angle', title='Max Interior Angle',
-                                          location='centroid', scalar=np.degrees(max_interior_angle))
-                dideal_theta_res = GuiResult(0, header='Delta Ideal Angle', title='Delta Ideal Angle',
-                                             location='centroid', scalar=np.degrees(dideal_theta))
+                min_theta_res = GuiResult(
+                    0, header='Min Interior Angle', title='Min Interior Angle',
+                    location='centroid', scalar=np.degrees(min_interior_angle))
+                max_theta_res = GuiResult(
+                    0, header='Max Interior Angle', title='Max Interior Angle',
+                    location='centroid', scalar=np.degrees(max_interior_angle))
+                dideal_theta_res = GuiResult(
+                    0, header='Delta Ideal Angle', title='Delta Ideal Angle',
+                    location='centroid', scalar=np.degrees(dideal_theta))
 
                 skew = np.degrees(max_skew_angle)
-                skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
-                                     location='centroid', scalar=skew)
-                aspect_res = GuiResult(0, header='Aspect Ratio', title='AspectRatio',
-                                       location='centroid', scalar=max_aspect_ratio)
+                skew_res = GuiResult(
+                    0, header='Max Skew Angle', title='MaxSkewAngle',
+                    location='centroid', scalar=skew)
+                aspect_res = GuiResult(
+                    0, header='Aspect Ratio', title='AspectRatio',
+                    location='centroid', scalar=max_aspect_ratio)
 
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
@@ -3226,8 +3225,9 @@ class NastranIO(object):
                     form_checks.append(('ElementDim', icase, []))
 
                 if self.make_nnodes_result:
-                    nnodes_res = GuiResult(0, header='NNodes/Elem', title='NNodes/Elem',
-                                           location='centroid', scalar=nnodes_array)
+                    nnodes_res = GuiResult(
+                        0, header='NNodes/Elem', title='NNodes/Elem',
+                        location='centroid', scalar=nnodes_array)
                     form_checks.append(('NNodes', icase + 1, []))
                     cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
                     icase += 1
@@ -3254,22 +3254,25 @@ class NastranIO(object):
                 icase += 10
 
                 if area_ratio.max() > 1.:
-                    arearatio_res = GuiResult(0, header='Area Ratio', title='Area Ratio',
-                                              location='centroid', scalar=area_ratio)
+                    arearatio_res = GuiResult(
+                        0, header='Area Ratio', title='Area Ratio',
+                        location='centroid', scalar=area_ratio)
                     cases[icase] = (arearatio_res, (0, 'Area Ratio'))
                     form_checks.append(('Area Ratio', icase, []))
                     icase += 1
 
                 if taper_ratio.max() > 1.:
-                    taperratio_res = GuiResult(0, header='Taper Ratio', title='Taper Ratio',
-                                               location='centroid', scalar=taper_ratio)
+                    taperratio_res = GuiResult(
+                        0, header='Taper Ratio', title='Taper Ratio',
+                        location='centroid', scalar=taper_ratio)
                     cases[icase] = (taperratio_res, (0, 'Taper Ratio'))
                     form_checks.append(('Taper Ratio', icase, []))
                     icase += 1
 
                 if max_warp_angle.max() > 0.0:
-                    warp_res = GuiResult(0, header='Max Warp Angle', title='MaxWarpAngle',
-                                         location='centroid', scalar=np.degrees(max_warp_angle))
+                    warp_res = GuiResult(
+                        0, header='Max Warp Angle', title='MaxWarpAngle',
+                        location='centroid', scalar=np.degrees(max_warp_angle))
                     cases[icase + 4] = (warp_res, (0, 'Max Warp Angle'))
                     form_checks.append(('Max Warp Angle', icase, []))
                     icase += 1
@@ -3277,14 +3280,18 @@ class NastranIO(object):
                 #if (np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or
                     #np.abs(zoffset).max() > 0.0):
                 # offsets
-                offset_res = GuiResult(0, header='Offset', title='Offset',
-                                       location='centroid', scalar=offset, data_format='%g')
-                offset_x_res = GuiResult(0, header='OffsetX', title='OffsetX',
-                                         location='centroid', scalar=xoffset, data_format='%g')
-                offset_y_res = GuiResult(0, header='OffsetY', title='OffsetY',
-                                         location='centroid', scalar=yoffset, data_format='%g')
-                offset_z_res = GuiResult(0, header='OffsetZ', title='OffsetZ',
-                                         location='centroid', scalar=zoffset, data_format='%g')
+                offset_res = GuiResult(
+                    0, header='Offset', title='Offset',
+                    location='centroid', scalar=offset, data_format='%g')
+                offset_x_res = GuiResult(
+                    0, header='OffsetX', title='OffsetX',
+                    location='centroid', scalar=xoffset, data_format='%g')
+                offset_y_res = GuiResult(
+                    0, header='OffsetY', title='OffsetY',
+                    location='centroid', scalar=yoffset, data_format='%g')
+                offset_z_res = GuiResult(
+                    0, header='OffsetZ', title='OffsetZ',
+                    location='centroid', scalar=zoffset, data_format='%g')
 
                 cases[icase] = (offset_res, (0, 'Offset'))
                 cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
@@ -3298,12 +3305,15 @@ class NastranIO(object):
                 icase += 4
 
                 if self.make_xyz:
-                    x_res = GuiResult(0, header='X', title='X',
-                                      location='node', scalar=xyz_cid0[:, 0], data_format='%g')
-                    y_res = GuiResult(0, header='Y', title='Y',
-                                      location='node', scalar=xyz_cid0[:, 1], data_format='%g')
-                    z_res = GuiResult(0, header='Z', title='Z',
-                                      location='node', scalar=xyz_cid0[:, 2], data_format='%g')
+                    x_res = GuiResult(
+                        0, header='X', title='X',
+                        location='node', scalar=xyz_cid0[:, 0], data_format='%g')
+                    y_res = GuiResult(
+                        0, header='Y', title='Y',
+                        location='node', scalar=xyz_cid0[:, 1], data_format='%g')
+                    z_res = GuiResult(
+                        0, header='Z', title='Z',
+                        location='node', scalar=xyz_cid0[:, 2], data_format='%g')
                     cases[icase] = (x_res, (0, 'X'))
                     cases[icase + 1] = (y_res, (0, 'Y'))
                     cases[icase + 2] = (z_res, (0, 'Z'))
@@ -3316,10 +3326,12 @@ class NastranIO(object):
                 # only solid elements
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
-                min_theta_res = GuiResult(0, header='Min Interior Angle', title='Min Interior Angle',
-                                          location='centroid', scalar=np.degrees(min_interior_angle))
-                max_theta_res = GuiResult(0, header='Max Interior Angle', title='Max Interior Angle',
-                                          location='centroid', scalar=np.degrees(max_interior_angle))
+                min_theta_res = GuiResult(
+                    0, header='Min Interior Angle', title='Min Interior Angle',
+                    location='centroid', scalar=np.degrees(min_interior_angle))
+                max_theta_res = GuiResult(
+                    0, header='Max Interior Angle', title='Max Interior Angle',
+                    location='centroid', scalar=np.degrees(max_interior_angle))
                 #skew = 90. - np.degrees(max_skew_angle)
                 #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
                                      #location='centroid', scalar=skew)
@@ -3338,9 +3350,10 @@ class NastranIO(object):
                 icase += 1
 
             if np.abs(material_coord).max() > 0:
-                material_coord_res = GuiResult(0, header='MaterialCoord', title='MaterialCoord',
-                                               location='centroid',
-                                               scalar=material_coord, data_format='%i')
+                material_coord_res = GuiResult(
+                    0, header='MaterialCoord', title='MaterialCoord',
+                    location='centroid',
+                    scalar=material_coord, data_format='%i')
                 cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
                 form0.append(('MaterialCoord', icase, []))
                 icase += 1
@@ -3406,14 +3419,18 @@ class NastranIO(object):
                 if dvprel.p_min is not None:
                     dvprel.p_min
 
-            region_res = GuiResult(0, header='DV Region', title='DV Region',
-                                   location='centroid', scalar=design_region)
-            t_init_res = GuiResult(0, header='DVPREL Init - t', title='DVPREL Init - t',
-                                   location='centroid', scalar=dvprel_t_init)
-            t_min_res = GuiResult(0, header='DVPREL Min - t', title='DVPREL Min - t',
-                                  location='centroid', scalar=dvprel_t_min)
-            t_max_res = GuiResult(0, header='DVPREL Max - t', title='DVPREL Max - t',
-                                  location='centroid', scalar=dvprel_t_max)
+            region_res = GuiResult(
+                0, header='DV Region', title='DV Region',
+                location='centroid', scalar=design_region)
+            t_init_res = GuiResult(
+                0, header='DVPREL Init - t', title='DVPREL Init - t',
+                location='centroid', scalar=dvprel_t_init)
+            t_min_res = GuiResult(
+                0, header='DVPREL Min - t', title='DVPREL Min - t',
+                location='centroid', scalar=dvprel_t_min)
+            t_max_res = GuiResult(
+                0, header='DVPREL Max - t', title='DVPREL Max - t',
+                location='centroid', scalar=dvprel_t_max)
             cases[icase] = (region_res, (0, 'DV Region'))
             cases[icase + 1] = (t_init_res, (0, 'DVPREL Init - t'))
             cases[icase + 2] = (t_min_res, (0, 'DVPREL Min - t'))
@@ -3496,8 +3513,9 @@ class NastranIO(object):
             case_name = 'Pressure'
             # print('iload=%s' % iload)
             # print(case_name)
-            pressure_res = GuiResult(subcase_id, header='Pressure', title='Pressure',
-                                     location='centroid', scalar=pressures)
+            pressure_res = GuiResult(
+                subcase_id, header='Pressure', title='Pressure',
+                location='centroid', scalar=pressures)
             cases[icase] = (pressure_res, (0, 'Pressure'))
             form0.append((case_name, icase, []))
             icase += 1
