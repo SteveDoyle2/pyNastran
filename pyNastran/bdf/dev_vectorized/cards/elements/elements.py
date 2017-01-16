@@ -448,7 +448,7 @@ class Elements(BaseMethods):
             if etype in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',]:
                 pass
             elif etype in ['CROD', 'CONROD', 'CBAR', 'CBEAM']:
-                msg = 'which is required for %ss' % etype
+                msg = ', which is required for %ss' % etype
                 n1 = self.get_nodes(elements.node_ids[i, 0], xyz_cid0, msg=msg)
                 n2 = self.get_nodes(elements.node_ids[i, 1], xyz_cid0, msg=msg)
                 length = np.linalg.norm(n2 - n1, axis=1)

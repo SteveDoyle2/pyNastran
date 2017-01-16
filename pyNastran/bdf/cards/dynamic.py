@@ -14,6 +14,7 @@ All dynamic control cards are defined in this file.  This includes:
  * TSTEPNL
  * ROTORG
  * ROTORD
+ * TIC
 
 All cards are BaseCard objects.
 """
@@ -30,7 +31,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string_or_blank, blank, fields, components_or_blank,
-    integer_string_or_blank, integer_or_double,
+    integer_string_or_blank, integer_or_double, components,
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -99,7 +100,6 @@ class DELAY(BaseCard):
         """
         msg = ', which is required by DELAY sid=%s' % self.sid
         self.nodes = model.Node(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -208,6 +208,9 @@ class DPHASE(BaseCard):
     def uncross_reference(self):
         self.nodes = self.node_ids
         del self.nodes_ref
+
+    def get_dphase_at_freq(self, freq):
+        return self.nodes, self.components, self.phase_leads
 
     @property
     def node_id1(self):
@@ -790,8 +793,8 @@ class ROTORD(BaseCard):
     def cross_reference(self, model):
         self.rspeeds_ref = []
         for rspeed in self.rspeeds:
-            if isinstance(rspeed, int):
-                self.rspeeds_ref.append(model.Table(rspeed))
+            if isinstance(rspeed, integer_types):
+                self.rspeeds_ref.append(model.TableD(rspeed))
             else:
                 self.rspeeds_ref.append(rspeed)
 
@@ -1428,3 +1431,53 @@ class TSTEPNL(BaseCard):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+class TIC(BaseCard):
+    """Transient Initial Condition"""
+    type = 'TIC'
+
+    def __init__(self, sid, nid, comp, u0, v0, comment=''):
+        """
+        Defines values for the initial conditions of variables used in
+        structural transient analysis. Both displacement and velocity
+        values may be specified at independent degrees-of-freedom. This
+        entry may not be used for heat transfer analysis.
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.nid = nid
+        self.comp = comp
+        self.u0 = u0
+        self.v0 = v0
+        assert self.nid > 0
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nid = integer(card, 2, 'G')
+        comp = components(card, 3, 'C')
+        u0 = double(card, 4, 'U0')
+        v0 = double(card, 5, 'V0')
+        return TIC(sid, nid, comp, u0, v0, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        nid = data[1]
+        comp = data[2]
+        u0 = data[3]
+        u0 = data[4]
+        return TIC(sid, nid, comp, u0, v0, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['TIC', self.sid, self.nid, self.comp, self.u0, self.v0]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()

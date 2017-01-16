@@ -695,6 +695,8 @@ class AESURF(BaseCard):
         #: function of the dynamic pressure. (Integer>0, Default = no limit)
         self.tqllim = tqllim
         self.tqulim = tqulim
+        self.tqllim_ref = None
+        self.tqulim_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -763,6 +765,10 @@ class AESURF(BaseCard):
         if self.alid2:
             self.alid2 = model.AELIST(self.AELIST_id2())
             self.alid2_ref = self.alid2
+        if self.tqllim is not None:
+            self.tqllim_ref = model.TableD(self.tqllim)
+        if self.tqulim is not None:
+            self.tqulim_ref = model.TableD(self.tqulim)
 
     def uncross_reference(self):
         self.cid1 = self.Cid1()

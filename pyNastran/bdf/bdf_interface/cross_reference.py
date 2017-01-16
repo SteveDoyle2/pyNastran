@@ -536,6 +536,17 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
+        for key, tic in iteritems(self.tics):
+            try:
+                tic.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                #raise
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((load, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+
         for key, dphase in iteritems(self.dphases):
             try:
                 dphase.cross_reference(self)

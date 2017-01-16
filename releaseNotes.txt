@@ -14,7 +14,7 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 Overall Notes
 
 Added BDF
-   - *** SET2,PEALST,TIC,DMI,CONM1
+   - *** SET2,PEALST,DMI,CONM1
 
 Overall OP2
    - ***added support for SORT2
@@ -46,7 +46,7 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.8.1 released 2017/1/??-----------------------
+-----------------------v0.9.0 released 2017/1/??-----------------------
 This is a bug fix release and minor new features.
 
 Done
@@ -62,6 +62,7 @@ BDF:
   - other bugs:
     - fixed DIVERG bug (bad key when adding card)
     - fixed PFAST bug (bad xref)
+    - really annoying DTABLE/TABLED1 bug (they were both called by DTable, but are very different)
     - fixed bug in SET3 card (multiple THRUs on single card)
     - write_path function works (Windows)
  - minor changes
@@ -72,7 +73,10 @@ BDF:
       card._comment = 
       '$ this is a multi lined\n'
       '$  - comment\n'
-    
+ - API changes
+   - TABLEDx are no longer in tables and instead tables_d
+   - TABLEMx are no longer in tables and instead tables_m
+
  - bdf_renumber
    - removed execs from bdf_renumber, so Python 3 will work
    - fixed bug with handling Nones (caused by exec change)
@@ -86,11 +90,12 @@ BDF:
    - FLFACT can now write in wide field format
 
  - added cards:
-   - CTRAX3, CTRAX6, CQUADX4, CQUADX8
+   - CTRAX3, CTRAX6, CQUADX4, CQUADX8, CIHEX2
    - PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
    - CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE, MATG
    - POINT, PBRSECT, PBMSECT
    - DVGRID
+   - TIC
 
 GUI:
  - added:
@@ -497,7 +502,7 @@ Added BDF
    - ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1
    - DMIG, DMIJ, DMIJI, DMIK
    - TABRNDG
-   - TLOAD1, ACCEL1,RFORCE, PLOADX1
+   - TLOAD1, ACCEL1,RFORCE,PLOADX1
    - SPLINE4, SPLINE5
    - CBUSH1D, PBUSH1D
    - PRAC2D, PRAC3D

@@ -168,11 +168,11 @@ class MATS1(MaterialDependence):
         model : BDF()
             the BDF object
         """
-        msg = 'which is required by MATS1 mid=%s' % self.mid
+        msg = ', which is required by MATS1 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
         if self.tid:  # then self.h is used
-            self.tid = model.Table(self.tid, msg=msg)
+            self.tid = model.Table(self.tid, msg=msg) # TABLES1 or TABLEST
             self.tid_ref = self.tid
 
     def uncross_reference(self):
@@ -244,7 +244,7 @@ class MATT1(MaterialDependence):
         sc_table = integer_or_blank(card, 10, 'T(sc)')
         ss_table = integer_or_blank(card, 11, 'T(ss)')
 
-        assert len(card) <= 11, 'len(MATT1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, 'len(MATT1 card) = %i\ncard=%s' % (len(card), card)
         return MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
                      ge_table, st_table, sc_table,
                      ss_table, comment=comment)
@@ -253,8 +253,15 @@ class MATT1(MaterialDependence):
         """
         Gets E (Young's Modulus) for a given temperature.
 
-        :param temperature: the temperature (None -> linear E value)
-        :returns E:    Young's Modulus
+        Parameters
+        ----------
+        temperature : float; default=None
+            the temperature (None -> linear E value)
+
+        Returns
+        -------
+        E : float
+            Young's Modulus
         """
         E = None
         if self._E_table:
@@ -270,7 +277,7 @@ class MATT1(MaterialDependence):
         model : BDF()
             the BDF object
         """
-        msg = 'which is required by MATT1 mid=%s' % self.mid
+        msg = ', which is required by MATT1 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
@@ -293,7 +300,7 @@ class MATT1(MaterialDependence):
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
         if slot is not None:
-            setattr(self, key, model.Table(slot, msg))
+            setattr(self, key, model.TableM(slot, msg))
 
     def E_table(self):
         return self._get_table('_E_table')
@@ -411,7 +418,7 @@ class MATT2(MaterialDependence):
         model : BDF()
             the BDF object
         """
-        msg = 'which is required by MATT2 mid=%s' % self.mid
+        msg = ', which is required by MATT2 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
@@ -439,7 +446,7 @@ class MATT2(MaterialDependence):
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
         if slot is not None:
-            setattr(self, key, model.Table(slot, msg))
+            setattr(self, key, model.TableM(slot, msg))
 
     def G11_table(self):
         return self._get_table('_G11_table')
@@ -550,7 +557,7 @@ class MATT4(MaterialDependence):
         model : BDF()
             the BDF object
         """
-        msg = 'which is required by MATT4 mid=%s' % self.mid
+        msg = ', which is required by MATT4 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
@@ -566,7 +573,7 @@ class MATT4(MaterialDependence):
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
         if slot is not None:
-            setattr(self, key, model.Table(slot, msg))
+            setattr(self, key, model.TableM(slot, msg))
 
     def K_table(self):
         return self._get_table('_k_table')
@@ -656,7 +663,7 @@ class MATT5(MaterialDependence):
         model : BDF()
             the BDF object
         """
-        msg = 'which is required by MATT5 mid=%s' % self.mid
+        msg = ', which is required by MATT5 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
@@ -678,7 +685,7 @@ class MATT5(MaterialDependence):
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
         if slot is not None:
-            setattr(self, key, model.Table(slot, msg))
+            setattr(self, key, model.TableM(slot, msg))
 
     def Kxx_table(self):
         return self._get_table('_kxx_table')

@@ -14,7 +14,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
-    CIHEX1,
+    CIHEX1, CIHEX2,
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
@@ -50,7 +50,7 @@ from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
-    TSTEP, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD)
+    TSTEP, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
@@ -1062,6 +1062,12 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
+    def add_cihex2(self, eid, pid, nids, comment=''):
+        """see CHEXA"""
+        elem = CIHEX2(eid, pid, nids, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
     def add_pihex(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                   fctn='SMECH', comment=''):
         """see PSOLID"""
@@ -1136,8 +1142,13 @@ class AddCards(AddMethods):
         self._add_structural_material_object(mat)
         return mat
 
-    def add_mat10(self, mid, bulk, rho, c, ge=0.0, comment=''):
-        mat = MAT10(mid, bulk, rho, c, ge=ge, comment=comment)
+    def add_mat10(self, mid, bulk, rho, c, ge=0.0, gamma=None,
+                    tid_bulk=None, tid_rho=None, tid_ge=None, tid_gamma=None,
+                    comment=''):
+        mat = MAT10(mid, bulk, rho, c, ge=ge, gamma=gamma,
+                   tid_bulk=tid_bulk, tid_rho=tid_rho,
+                   tid_ge=tid_ge, tid_gamma=tid_gamma,
+                   comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
@@ -2058,42 +2069,42 @@ class AddCards(AddMethods):
 
     def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
-        self._add_table_object(table)
+        self._add_tabled_object(table)
         return table
 
     def add_tabled2(self, tid, x1, x, y, comment=''):
         table = TABLED2(tid, x1, x, y, comment=comment)
-        self._add_table_object(table)
+        self._add_tabled_object(table)
         return table
 
     def add_tabled3(self, tid, x1, x2, x, y, comment=''):
         table = TABLED3(tid, x1, x2, x, y, comment=comment)
-        self._add_table_object(table)
+        self._add_tabled_object(table)
         return table
 
     def add_tabled4(self, tid, x1, x2, x3, x4, a, comment=''):
         table = TABLED4(tid, x1, x2, x3, x4, a, comment=comment)
-        self._add_table_object(table)
+        self._add_tabled_object(table)
         return table
 
     def add_tablem1(self, tid, x, y, comment=''):
         table = TABLEM1(tid, x, y, comment=comment)
-        self._add_table_object(table)
+        self._add_tablem_object(table)
         return table
 
     def add_tablem2(self, tid, x1, x, y, comment=''):
         table = TABLEM2(tid, x1, x, y, comment=comment)
-        self._add_table_object(table)
+        self._add_tablem_object(table)
         return table
 
     def add_tablem3(self, tid, x1, x2, x, y, comment=''):
         table = TABLEM3(tid, x1, x2, x, y, comment=comment)
-        self._add_table_object(table)
+        self._add_tablem_object(table)
         return table
 
     def add_tablem4(self, tid, x1, x2, x3, x4, a, comment=''):
         table = TABLEM4(tid, x1, x2, x3, x4, a, comment=comment)
-        self._add_table_object(table)
+        self._add_tablem_object(table)
         return table
 
     def add_tables1(self, tid, Type, x, y, comment=''):

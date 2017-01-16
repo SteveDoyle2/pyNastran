@@ -599,7 +599,7 @@ class WriteMesh(BDFAttributes):
         """Writes the dynamic cards sorted by ID"""
         is_dynamic = (self.dareas or self.dphases or self.nlparms or self.frequencies or
                       self.methods or self.cMethods or self.tsteps or self.tstepnls or
-                      self.transfer_functions or self.delays or self.rotors)
+                      self.transfer_functions or self.delays or self.rotors or self.tics)
         if is_dynamic:
             msg = ['$DYNAMIC\n']
             for (unused_id, method) in sorted(iteritems(self.methods)):
@@ -624,6 +624,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(delay.write_card(size, is_double))
             for (unused_id, rotor) in sorted(iteritems(self.rotors)):
                 msg.append(rotor.write_card(size, is_double))
+                for (unused_id, tic) in sorted(iteritems(self.tics)):
+                    msg.append(tic.write_card(size, is_double))
 
             for (unused_id, tfs) in sorted(iteritems(self.transfer_functions)):
                 for tf in tfs:
@@ -983,9 +985,13 @@ class WriteMesh(BDFAttributes):
 
     def _write_tables(self, bdf_file, size=8, is_double=False):
         """Writes the TABLEx cards sorted by ID"""
-        if self.tables or self.tables_sdamping:
+        if self.tables or self.tables_d or self.tables_m or self.tables_sdamping:
             msg = ['$TABLES\n']
             for (unused_id, table) in sorted(iteritems(self.tables)):
+                msg.append(table.write_card(size, is_double))
+            for (unused_id, table) in sorted(iteritems(self.tables_d)):
+                msg.append(table.write_card(size, is_double))
+            for (unused_id, table) in sorted(iteritems(self.tables_m)):
                 msg.append(table.write_card(size, is_double))
             for (unused_id, table) in sorted(iteritems(self.tables_sdamping)):
                 msg.append(table.write_card(size, is_double))

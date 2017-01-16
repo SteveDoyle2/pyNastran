@@ -157,13 +157,13 @@ class PELAST(SpringProperty):
         self.pid = model.Property(self.pid)
         self.pid_ref = self.pid
         if self.tkid > 0:
-            self.tkid = model.Table(self.tkid)
+            self.tkid = model.TableD(self.tkid)
             self.tkid_ref = self.tkid
         if self.tgeid > 0:
-            self.tgeid = model.Table(self.tgeid)
+            self.tgeid = model.TableD(self.tgeid)
             self.tgeid_ref = self.tgeid
         if self.tknid > 0:
-            self.tknid = model.Table(self.tknid)
+            self.tknid = model.TableD(self.tknid)
             self.tknid_ref = self.tknid
 
     def uncross_reference(self, model):

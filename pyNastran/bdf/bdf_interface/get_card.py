@@ -788,20 +788,22 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         return load
 
     def DELAY(self, delay_id, msg=''):
+        assert isinstance(delay_id, integer_types), delay_id
         """gets a DELAY"""
         try:
             return self.delays[delay_id]
         except KeyError:
             raise KeyError('delay_id=%s not found%s.  Allowed DELAY=%s'
-                           % (delay_id, msg, np.unique(list(self.delays.keys()))))
+                           % (delay_id, msg, list(self.delays.keys())))
 
     def DPHASE(self, dphase_id, msg=''):
         """gets a DPHASE"""
+        assert isinstance(dphase_id, integer_types), dphase_id
         try:
             return self.dphases[dphase_id]
         except KeyError:
             raise KeyError('dphase_id=%s not found%s.  Allowed DPHASE=%s'
-                           % (dphase_id, msg, np.unique(list(self.dphases.keys()))))
+                           % (dphase_id, msg, list(self.dphases.keys())))
 
     #--------------------
     def MPC(self, mpc_id, msg=''):
@@ -1221,12 +1223,35 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
     #--------------------
     # TABLE CARDS
     def Table(self, tid, msg=''):
-        """gets a TABLEx (TABLED1, TABLED2, TABLD3)"""
+        """gets a TABLES1, TABLEST, ???"""
         try:
             return self.tables[tid]
         except KeyError:
+            table_keys = np.unique(list(self.tables.keys()))
             raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
-                           % (tid, msg, np.unique(list(self.tables.keys()))))
+                           % (tid, msg, table_keys))
+
+    def TableD(self, tid, msg=''):
+        """gets a TABLEDx (TABLED1, TABLED2, TABLED3, TABLED4)"""
+        try:
+            return self.tables_d[tid]
+        except KeyError:
+            table_keys = np.unique(list(self.tables.keys()))
+            tabled_keys = np.unique(list(self.tables_d.keys()))
+            tablem_keys = np.unique(list(self.tables_m.keys()))
+            raise KeyError('tid=%s not found%s.  Allowed TABLEDs=%s; TABLEs=%s; TABLEMs=%s'
+                           % (tid, msg, tabled_keys, table_keys, tablem_keys))
+
+    def TableM(self, tid, msg=''):
+        """gets a TABLEx (TABLEM1, TABLEM2, TABLEM3, TABLEM4)"""
+        try:
+            return self.tables_m[tid]
+        except KeyError:
+            table_keys = np.unique(list(self.tables.keys()))
+            tabled_keys = np.unique(list(self.tables_d.keys()))
+            tablem_keys = np.unique(list(self.tables_m.keys()))
+            raise KeyError('tid=%s not found%s.  Allowed TABLEMs=%s; TABLEs=%s; TABLEDs=%s'
+                           % (tid, msg, tablem_keys, table_keys, tabled_keys))
 
     def RandomTable(self, tid, msg=''):
         try:

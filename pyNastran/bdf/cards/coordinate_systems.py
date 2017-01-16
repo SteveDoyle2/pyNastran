@@ -900,7 +900,7 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
             raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
 
     # define e1, e2, e3
-    rcoord = model.Coord(rid, 'which is required to create cid=%s' % cid)
+    rcoord = model.Coord(rid, ', which is required to create cid=%s' % cid)
     e1 = rcoord.transform_node_to_local(origin)
     e2 = rcoord.transform_node_to_local(origin + k) # point on z axis
     e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis

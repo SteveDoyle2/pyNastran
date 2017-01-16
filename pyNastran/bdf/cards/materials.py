@@ -1601,18 +1601,32 @@ class MAT10(Material):
     Defines material properties for fluid elements in coupled fluid-structural
     analysis.
 
-    +------+-----+------+-----+-----+-----+-----+-----+-----+
-    |  1   |  2  |  3   |  4  |  5  |  6  |  7  |  8  |  9  |
-    +======+=====+======+=====+=====+=====+=====+=====+=====+
-    |MAT10 | MID | BULK | RHO |  C  | GE  |     |     |     |
-    +------+-----+------+-----+-----+-----+-----+-----+-----+
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+    |   1   |  2  |    3     |    4    |  5  |   6    |     7     |  8  |  9  |
+    +=======+=====+==========+=========+=====+========+===========+=====+=====+
+    | MAT10 | MID |   BULK   |   RHO   |  C  |   GE   |   ALPHA   |     |     |
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+    per MSC 2016
+
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+    |   1   |  2  |    3     |    4    |  5  |   6    |     7     |  8  |  9  |
+    +=======+=====+==========+=========+=====+========+===========+=====+=====+
+    | MAT10 | MID |   BULK   |   RHO   |  C  |   GE   |   GAMMA   |     |     |
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+    |       |     | TID_BULK | TID_RHO |     | TID_GE | TID_GAMMA |     |     |
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+    per NX 10
+
+    ..note :: alpha is called gamma
     """
     type = 'MAT10'
     _field_map = {
-        1: 'mid', 2:'bulk', 3:'rho', 4:'c', 5:'ge',
+        1: 'mid', 2:'bulk', 3:'rho', 4:'c', 5:'ge', 6:'gamma',
     }
 
-    def __init__(self, mid, bulk=None, rho=None, c=None, ge=0.0, comment=''):
+    def __init__(self, mid, bulk=None, rho=None, c=None, ge=0.0, gamma=None,
+                 table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
+                 comment=''):
         Material.__init__(self)
         if comment:
             self.comment = comment
@@ -1623,6 +1637,12 @@ class MAT10(Material):
         self.c = c
         self.ge = ge
 
+        self.gamma = gamma
+        self.table_bulk = table_bulk
+        self.table_rho = table_rho
+        self.table_ge = table_ge
+        self.table_gamma = table_gamma
+
     @classmethod
     def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
@@ -1630,8 +1650,16 @@ class MAT10(Material):
         rho = double_or_blank(card, 3, 'rho')
         c = double_or_blank(card, 4, 'c')
         ge = double_or_blank(card, 5, 'ge', 0.0)
-        assert len(card) <= 6, 'len(MAT10 card) = %i\ncard=%s' % (len(card), card)
-        return MAT10(mid, bulk, rho, c, ge, comment=comment)
+
+        gamma = double_or_blank(card, 6, 'gamma', None)
+        tid_bulk = integer_or_blank(card, 10, 'tid_bulk')
+        tid_rho = integer_or_blank(card, 11, 'tid_rho')
+        tid_ge = integer_or_blank(card, 13, 'tid_ge')
+        tid_gamma = integer_or_blank(card, 14, 'tid_gamma')
+        assert len(card) <= 15, 'len(MAT10 card) = %i\ncard=%s' % (len(card), card)
+        return MAT10(mid, bulk, rho, c, ge, gamma,
+                     tid_bulk, tid_rho, tid_ge, tid_gamma,
+                     comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1641,6 +1669,17 @@ class MAT10(Material):
         c = data[3]
         ge = data[4]
         return MAT10(mid, bulk, rho, c, ge, comment=comment)
+
+    def cross_reference(self, model):
+        msg = ', which is required by MAT10 mid=%s' % self.mid
+        if self.table_bulk is not None:
+            self.table_bulk_ref = model.TableD(self.table_bulk, msg)
+        if self.table_rho is not None:
+            self.table_rho_ref = model.TableD(self.table_rho, msg)
+        if self.table_ge is not None:
+            self.table_ge_ref = model.TableD(self.table_ge, msg)
+        if self.table_gamma is not None:
+            self.table_gamma_ref = model.TableD(self.table_gamma, msg)
 
     def _verify(self, xref):
         """
@@ -1662,7 +1701,11 @@ class MAT10(Material):
         assert isinstance(ge, float), 'ge=%r' % ge
 
     def raw_fields(self):
-        list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, self.ge]
+        list_fields = [
+            'MAT10', self.mid, self.bulk, self.rho, self.c, self.ge, self.gamma,
+            None, None, None,
+            self.table_bulk, self.table_rho, None, self.table_ge, self.table_gamma
+        ]
         return list_fields
 
     def repr_fields(self):
@@ -1675,7 +1718,11 @@ class MAT10(Material):
             the fields that define the card
         """
         ge = set_blank_if_default(self.ge, 0.0)
-        list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
+        list_fields = [
+            'MAT10', self.mid, self.bulk, self.rho, self.c, ge, self.gamma,
+            None, None, None,
+            self.table_bulk, self.table_rho, None, self.table_ge, self.table_gamma
+        ]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1698,7 +1745,11 @@ def _mat10_get_bulk_rho_c(bulk, rho, c):
             raise RuntimeError(msg)
     elif bulk is not None:
         if rho is not None:
-            c = (bulk / rho) ** 0.5
+            try:
+                c = (bulk / rho) ** 0.5
+            except ValueError:
+                msg = 'bulk=%s rho=%s c=sqrt(bulk/rho)=NA' % (bulk, rho)
+                raise ValueError(msg)
         else:
             msg = 'c, bulk, and rho are all undefined on tbe MAT10'
             raise RuntimeError(msg)

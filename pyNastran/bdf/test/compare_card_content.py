@@ -64,7 +64,7 @@ def compare_card_content(fem1, fem2):
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies',
         'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
         'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
-        'tables', 'random_tables', 'methods', 'cMethods']
+        'tables', 'tables_d', 'tables_m', 'random_tables', 'methods', 'cMethods']
     for name in check_obj_names:
         check_length(fem1, fem2, name)
 
@@ -137,6 +137,11 @@ def compare_card_content(fem1, fem2):
     for key in fem1.dareas:
         card1 = fem1.dareas[key]
         card2 = fem2.dareas[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.tics:
+        card1 = fem1.tics[key]
+        card2 = fem2.tics[key]
         assert_fields(card1, card2)
 
     for key in fem1.dphases:
