@@ -5,7 +5,6 @@ Defines the GUI IO file for Nastran.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-import sys
 from copy import deepcopy
 from collections import defaultdict, OrderedDict
 import traceback
@@ -56,14 +55,14 @@ from pyNastran.bdf.bdf import (BDF,
                                CQUAD4, CQUAD8, CQUADR, CSHEAR,
                                CTRIA3, CTRIA6, CTRIAR,
                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-                               CTRAX3, CTRAX6, CTRIAX, CTRIAX6,
-                               CQUADX, CQUADX4, CQUADX8,
+                               CTRAX3, CTRIAX6, # CTRIAX, CTRAX6,
+                               CQUADX4, CQUADX8, # CQUADX,
                                CONM2,
                                LOAD)
 
 from pyNastran.bdf.cards.elements.shell import ShellElement
-from pyNastran.bdf.cards.elements.bars import LineElement
-from pyNastran.bdf.cards.elements.springs import SpringElement
+#from pyNastran.bdf.cards.elements.bars import LineElement
+#from pyNastran.bdf.cards.elements.springs import SpringElement
 from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CTETRA10, CPENTA6, CPENTA15,
     CHEXA8, CHEXA20, CIHEX1, CIHEX2,
@@ -1476,11 +1475,13 @@ class NastranIO(object):
                 if node1.Cd() != 0:
                     #if node1.cd.type not in ['CORD2R', 'CORD1R']:
                         #continue # TODO: support CD transform
-                    wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(wa)  # TODO: fixme
+                    # TODO: fixme
+                    wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(wa)
             elif offt_end_a == 'B':
                 pass
             elif offt_end_a == 'O':
-                wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(n1 - wa)  # TODO: fixme
+                # TODO: fixme
+                wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
             else:
                 msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
                 self.log.error(msg)
