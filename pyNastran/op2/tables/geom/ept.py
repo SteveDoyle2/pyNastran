@@ -110,7 +110,7 @@ class EPT(GeomCommon):
         NSM(3201,32,55) - the marker for Record 2
         .. todo:: this isnt a property...
         """
-        self.log.debug('skipping NSM in EPT\n')
+        self.log.info('skipping NSM in EPT\n')
         return len(data)
         #s = Struct(b(self._endian + 'i4sif'))
         #while len(data) >= 16:  # 4*4
@@ -291,13 +291,13 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbeaml(self, data, n):
-        self.log.debug('skipping PBEAML in EPT\n')
+        self.log.info('skipping PBEAML in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PBEAML in EPT\n')
         return len(data)
 
     def _read_pbend(self, data, n):
-        self.log.debug('skipping PBEND in EPT\n')
+        self.log.info('skipping PBEND in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PBEND in EPT\n')
         return len(data)
@@ -368,13 +368,13 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbush1d(self, data, n):
-        self.log.debug('skipping PBUSH1D in EPT\n')
+        self.log.info('skipping PBUSH1D in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PBUSH1D in EPT\n')
         return len(data)
 
     def _read_pbusht(self, data, n):
-        self.log.debug('skipping PBUSHT in EPT\n')
+        self.log.info('skipping PBUSHT in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PBUSHT in EPT\n')
         return len(data)
@@ -439,7 +439,7 @@ class EPT(GeomCommon):
         """
         (152,19,147) - Record 24
         """
-        self.log.debug('skipping PCONEAX in EPT\n')
+        self.log.info('skipping PCONEAX in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PCONEAX\n')
         return len(data)
@@ -493,7 +493,7 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pconvm(self, data, n):  # 26
-        self.log.debug('skipping PCONVM in EPT\n')
+        self.log.info('skipping PCONVM in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PCONVM\n')
         return len(data)
@@ -628,19 +628,19 @@ class EPT(GeomCommon):
         return n
 
     def _read_pintc(self, data, n):
-        self.log.debug('skipping PINTC in EPT\n')
+        self.log.info('skipping PINTC in EPT\n')
         return len(data)
 
     def _read_pints(self, data, n):
-        self.log.debug('skipping PINTS in EPT\n')
+        self.log.info('skipping PINTS in EPT\n')
         return len(data)
 
     def _read_plplane(self, data, n):
-        self.log.debug('skipping PLPLANE in EPT\n')
+        self.log.info('skipping PLPLANE in EPT\n')
         return len(data)
 
     def _read_plsolid(self, data, n):
-        self.log.debug('skipping PLSOLID in EPT\n')
+        self.log.info('skipping PLSOLID in EPT\n')
         return len(data)
 
     def _read_pmass(self, data, n):
@@ -770,11 +770,11 @@ class EPT(GeomCommon):
         return n
 
     def _read_pset(self, data, n):
-        self.log.debug('skipping PSET in EPT\n')
+        self.log.info('skipping PSET in EPT\n')
         return len(data)
 
     def _read_pval(self, data, n):
-        self.log.debug('skipping PVAL in EPT\n')
+        self.log.info('skipping PVAL in EPT\n')
         return len(data)
 
     def _read_pvisc(self, data, n):
@@ -796,9 +796,9 @@ class EPT(GeomCommon):
 # PWELD
 # PWSEAM
     def _read_view(self, data, n):
-        self.log.debug('skipping VIEW in EPT\n')
+        self.log.info('skipping VIEW in EPT\n')
         return len(data)
 
     def _read_view3d(self, data, n):
-        self.log.debug('skipping VIEW3D in EPT\n')
+        self.log.info('skipping VIEW3D in EPT\n')
         return len(data)

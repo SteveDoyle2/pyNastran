@@ -53,7 +53,23 @@ class CELAS1(SpringElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, c1, c2, comment=''):
+    def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):
+        """
+        Creates a CELAS1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PELAS)
+        nids : List[int, int]
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         SpringElement.__init__(self)
         if comment:
             self.comment = comment
@@ -105,7 +121,6 @@ class CELAS1(SpringElement):
 
     def _verify(self, xref=True):
         eid = self.eid
-        k = self.K()
         nodeIDs = self.node_ids
         c1 = self.c2
         c2 = self.c1
@@ -115,10 +130,11 @@ class CELAS1(SpringElement):
         assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(c1, int), 'c1=%r' % c1
         assert isinstance(c2, int), 'c2=%r' % c2
-        assert isinstance(k, float), 'k=%r' % k
         #assert isinstance(ge, float), 'ge=%r' % ge
         #assert isinstance(s, float), 'ge=%r' % s
         if xref:
+            k = self.K()
+            assert isinstance(k, float), 'k=%r' % k
             assert len(nodeIDs) == len(self.nodes)
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
@@ -332,10 +348,10 @@ class CELAS3(SpringElement):
     type = 'CELAS3'
     aster_type = 'CELAS3'
     _field_map = {
-        1: 'eid', 2:'pid', 4:'s1', 6:'s2',
+        1: 'eid', 2:'pid', #4:'s1', 6:'s2',
     }
 
-    def __init__(self, eid, pid, s1, s2, comment=''):
+    def __init__(self, eid, pid, nodes, comment=''):
         SpringElement.__init__(self)
         if comment:
             self.comment = comment
@@ -343,8 +359,7 @@ class CELAS3(SpringElement):
         #: property ID
         self.pid = pid
         #: Scalar point identification numbers
-        self.s1 = s1
-        self.s2 = s2
+        self.nodes = nodes
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -354,7 +369,7 @@ class CELAS3(SpringElement):
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
         assert len(card) <= 5, 'len(CELAS3 card) = %i\ncard=%s' % (len(card), card)
-        return CELAS3(eid, pid, s1, s2, comment=comment)
+        return CELAS3(eid, pid, [s1, s2], comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -362,13 +377,13 @@ class CELAS3(SpringElement):
         pid = data[1]
         s1 = data[2]
         s2 = data[3]
-        return CELAS3(eid, pid, s1, s2, comment=comment)
+        return CELAS3(eid, pid, [s1, s2], comment=comment)
 
     def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
-        fields1 = [self.eid, self.pid, self.s1, self.s2]
-        fields2 = [elem.eid, elem.pid, elem.s1, elem.s2]
+        fields1 = [self.eid, self.pid] + self.node_ids
+        fields2 = [elem.eid, elem.pid] + self.node_ids
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
@@ -394,17 +409,13 @@ class CELAS3(SpringElement):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
         return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
-        list_fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
+        list_fields = ['CELAS3', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def get_edge_ids(self):
@@ -425,10 +436,10 @@ class CELAS4(SpringElement):
     type = 'CELAS4'
     aster_type = 'CELAS4'
     _field_map = {
-        1: 'eid', 2:'k', 4:'s1', 6:'s2',
+        1: 'eid', 2:'k', #4:'s1', 6:'s2',
     }
 
-    def __init__(self, eid, k, s1, s2, comment=''):
+    def __init__(self, eid, k, nodes, comment=''):
         SpringElement.__init__(self)
         if comment:
             self.comment = comment
@@ -437,9 +448,10 @@ class CELAS4(SpringElement):
         #: stiffness of the scalar spring
         self.k = k
         #: Scalar point identification numbers
-        self.s1 = s1
-        self.s2 = s2
-        assert self.s1 > 0 or self.s2 > 0, 's1=%s s2=%s' % (self.s1, self.s2)
+        self.nodes = nodes
+
+    def validate(self):
+        assert self.nodes[0] > 0 or self.nodes[1] > 0, 's1=%s s2=%s' % (self.nodes[0], self.nodes[1])
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -448,7 +460,7 @@ class CELAS4(SpringElement):
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
         assert len(card) <= 5, 'len(CELAS4 card) = %i\ncard=%s' % (len(card), card)
-        return CELAS4(eid, k, s1, s2, comment=comment)
+        return CELAS4(eid, k, [s1, s2], comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -456,21 +468,17 @@ class CELAS4(SpringElement):
         k = data[1]
         s1 = data[2]
         s2 = data[3]
-        return CELAS4(eid, k, s1, s2, comment=comment)
+        return CELAS4(eid, k, [s1, s2], comment=comment)
 
     def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
-        fields1 = [self.eid, self.k, self.s1, self.s2]
-        fields2 = [elem.eid, elem.k, elem.s1, elem.s2]
+        fields1 = [self.eid, self.k] + self.nodes
+        fields2 = [elem.eid, elem.k] + self.nodes
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.k
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -498,7 +506,7 @@ class CELAS4(SpringElement):
         del self.nodes_ref
 
     def raw_fields(self):
-        list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]
+        list_fields = ['CELAS4', self.eid, self.k] + self.nodes
         return list_fields
 
     def write_card(self, size=8, is_double=False):

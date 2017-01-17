@@ -327,12 +327,44 @@ class AddCards(AddMethods):
         self._add_mass_object(mass)
         return mass
 
-    def add_pelas(self, pid, k, ge, s, comment=''):
+    def add_pelas(self, pid, k, ge=0., s=0., comment=''):
+        """
+        Creates a PELAS card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        k : float
+            spring stiffness
+        ge : int; default=0
+            damping coefficient
+        s : float; default=0.
+            stress coefficient
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PELAS(pid, k, ge, s, comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_celas1(self, eid, pid, nids, c1, c2, comment=''):
+    def add_celas1(self, eid, pid, nids, c1=0, c2=0, comment=''):
+        """
+        Creates a CELAS1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PELAS)
+        nids : List[int, int]
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CELAS1(eid, pid, nids, c1, c2, comment=comment)
         self._add_element_object(elem)
         return elem
@@ -342,13 +374,13 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_celas3(self, eid, pid, s1, s2, comment=''):
-        elem = CELAS3(eid, pid, s1, s2, comment=comment)
+    def add_celas3(self, eid, pid, nids, comment=''):
+        elem = CELAS3(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_celas4(self, eid, k, s1, s2, comment=''):
-        elem = CELAS4(eid, k, s1, s2, comment=comment)
+    def add_celas4(self, eid, k, nids, comment=''):
+        elem = CELAS4(eid, k, nids, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -460,17 +492,69 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pelast(self, pid, tkid, tgeid, tknid, comment=''):
+    def add_pelast(self, pid, tkid=0, tgeid=0, tknid=0, comment=''):
+        """
+        Creates a PELAST card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        tkid : float
+            TABLEDx that defines k vs. frequency
+        tgeid : int; default=0
+            TABLEDx that defines ge vs. frequency
+        s : float; default=0.
+            TABLEDx that defines force vs. displacement
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PELAST(pid, tkid, tgeid, tknid, comment=comment)
-        self._add_property_object(prop)
+        self._add_pelast_object(prop)
         return prop
 
     def add_conrod(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+        """
+        Creates a CONROD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mid : int
+            material id
+        nids : List[int, int]
+            node ids
+        A : float
+            area
+        j : float; default=0.
+            polar moment of inertia
+        c : float; default=0.
+            stress factor
+        nsm : float; default=0.
+            non-structural mass per unit length
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CONROD(eid, mid, nids, A, j=j, c=c, nsm=nsm, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_crod(self, eid, pid, nids, comment=''):
+        """
+        Creates a CROD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PROD)
+        nids : List[int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CROD(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem

@@ -214,7 +214,6 @@ class MPT(GeomCommon):
         """
         MAT10(2801,28,365) - record 9
         """
-        #self.log.debug("reading MAT10")
         ntotal = 20  # 5*4
         s = Struct(b(self._endian + 'i4f'))
         nmaterials = (len(data) - n) // ntotal
@@ -320,38 +319,38 @@ class MPT(GeomCommon):
         return n
 
     def _read_matt1(self, data, n):
-        self.log.debug('skipping MATT1 in MPT\n')
+        self.log.info('skipping MATT1 in MPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT1 in MPT\n')
         return len(data)
 
     def _read_matt2(self, data, n):
-        self.log.debug('skipping MATT2 in MPT\n')
+        self.log.info('skipping MATT2 in MPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT2 in MPT\n')
         return len(data)
 
     def _read_matt3(self, data, n):
-        self.log.debug('skipping MATT3 in MPT\n')
+        self.log.info('skipping MATT3 in MPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT3 in MPT\n')
         return len(data)
 
     def _read_matt4(self, data, n):
-        self.log.debug('skipping MATT4 in MPT\n')
+        self.log.info('skipping MATT4 in MPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT4 in MPT\n')
         return len(data)
 
     def _read_matt5(self, data, n):
-        self.log.debug('skipping MATT5 in MPT\n')
+        self.log.info('skipping MATT5 in MPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT5 in MPT\n')
         return len(data)
 
 # MATT8 - unused
     def _read_matt9(self, data, n):
-        self.log.debug('skipping MATT9 in MPT\n')
+        self.log.info('skipping MATT9 in MPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT9 in MPT\n')
         return len(data)
@@ -403,7 +402,6 @@ class MPT(GeomCommon):
         """
         NLPARM(3003,30,286) - record 27
         """
-        #print("reading NLPARM")
         ntotal = 76  # 19*4
         s = Struct(b(self._endian + 'iif5i3f3iffiff'))
         nentries = (len(data) - n) // ntotal
@@ -418,6 +416,7 @@ class MPT(GeomCommon):
         return n
 
     def _read_nlpci(self, data, n):
+        self.log.debug('skipping NLPCI in MPT')
         if self.is_debug_file:
             self.binary_debug.write('skipping NLPCI in MPT\n')
         return len(data)
@@ -426,7 +425,6 @@ class MPT(GeomCommon):
         """
         TSTEPNL(3103,31,337) - record 29
         """
-        #print("reading TSTEPNL")
         ntotal = 88  # 19*4
         s = Struct(b(self._endian + 'iif5i3f3if3i4f'))
         nentries = (len(data) - n) // ntotal

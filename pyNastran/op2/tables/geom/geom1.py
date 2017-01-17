@@ -266,5 +266,5 @@ class GEOM1(GeomCommon):
 
     def _read_seqgp(self, data, n):
         """(5301,53,4) - the marker for Record 27"""
-        self.log.debug('skipping SEQGP in GEOM1\n')
+        self.log.info('skipping SEQGP in GEOM1\n')
         return len(data)

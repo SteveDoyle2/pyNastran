@@ -88,6 +88,20 @@ class CROD(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CROD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PROD)
+        nids : List[int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+        """
         RodElement.__init__(self)
         if comment:
             self.comment = comment
@@ -349,6 +363,28 @@ class CONROD(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+        """
+        Creates a CONROD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mid : int
+            material id
+        nids : List[int, int]
+            node ids
+        A : float
+            area
+        j : float; default=0.
+            polar moment of inertia
+        c : float; default=0.
+            stress factor
+        nsm : float; default=0.
+            non-structural mass per unit length
+        comment : str; default=''
+            a comment for the card
+        """
         RodElement.__init__(self)
         if comment:
             self.comment = comment

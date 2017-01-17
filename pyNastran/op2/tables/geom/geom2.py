@@ -290,7 +290,7 @@ class GEOM2(GeomCommon):
         """
         CBARAO(4001,40,275) - the marker for Record 9
         """
-        self.log.debug('skipping CBARAO in GEOM2\n')
+        self.log.info('skipping CBARAO in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CBARAO in GEOM2\n')
         return len(data)
@@ -339,7 +339,7 @@ class GEOM2(GeomCommon):
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
-        self.log.debug('skipping CBEAMP in GEOM2\n')
+        self.log.info('skipping CBEAMP in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CBEAMP in GEOM2\n')
         return len(data)
@@ -348,7 +348,7 @@ class GEOM2(GeomCommon):
         """
         CBEND(4601,46,298) - the marker for Record 12
         """
-        self.log.debug('skipping CBEND in GEOM2\n')
+        self.log.info('skipping CBEND in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CBEND in GEOM2\n')
         return len(data)
@@ -398,7 +398,7 @@ class GEOM2(GeomCommon):
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
         """
-        self.log.debug('skipping CBUSH1D in GEOM2\n')
+        self.log.info('skipping CBUSH1D in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
         return len(data)
@@ -407,7 +407,7 @@ class GEOM2(GeomCommon):
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
-        self.log.debug('skipping CCONE in GEOM2\n')
+        self.log.info('skipping CCONE in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CCONE in GEOM2\n')
         return len(data)
@@ -588,7 +588,7 @@ class GEOM2(GeomCommon):
         """
         CFAST(9801,98,506) - the marker for Record ???
         """
-        self.log.debug('skipping CFAST in GEOM2\n')
+        self.log.info('skipping CFAST in GEOM2\n')
         return len(data)
 
 # CFASTP
@@ -597,21 +597,21 @@ class GEOM2(GeomCommon):
         """
         CFLUID2(8515,85,209) - the marker for Record 35
         """
-        self.log.debug('skipping CFLUID2 in GEOM2\n')
+        self.log.info('skipping CFLUID2 in GEOM2\n')
         return len(data)
 
     def _read_cfluid3(self, data, n):
         """
         CFLUID3(8615,86,210) - the marker for Record 36
         """
-        self.log.debug('skipping CFLUID3 in GEOM2\n')
+        self.log.info('skipping CFLUID3 in GEOM2\n')
         return len(data)
 
     def _read_cfluid4(self, data, n):
         """
         CFLUID4(8715,87,211) - the marker for Record 37
         """
-        self.log.debug('skipping CFLUID4 in GEOM2\n')
+        self.log.info('skipping CFLUID4 in GEOM2\n')
         return len(data)
 
 # CINT
@@ -822,7 +822,7 @@ class GEOM2(GeomCommon):
         """
         CMFREE(2508,25,0) - the marker for Record 55
         """
-        self.log.debug('skipping CMFREE in GEOM2\n')
+        self.log.info('skipping CMFREE in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CMFREE in GEOM2\n')
         return len(data)
@@ -1415,19 +1415,19 @@ class GEOM2(GeomCommon):
         CWELD(11701,117,559) - Record 106
         same as CFAST
         """
-        self.log.debug('skipping CWELD in GEOM2\n')
+        self.log.info('skipping CWELD in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELD in GEOM2\n')
         return len(data)
 
     def _read_cweldc(self, data, n):  # 107
-        self.log.debug('skipping CWELDC in GEOM2\n')
+        self.log.info('skipping CWELDC in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDC in GEOM2\n')
         return len(data)
 
     def _read_cweldg(self, data, n):  # 108
-        self.log.debug('skipping CWELDG in GEOM2\n')
+        self.log.info('skipping CWELDG in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDG in GEOM2\n')
         return len(data)
@@ -1477,7 +1477,7 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_vubeam(self, data, n):  # 119
-        self.log.debug('skipping VUBEAM in GEOM2\n')
+        self.log.info('skipping VUBEAM in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping VUBEAM in GEOM2\n')
         return len(data)
