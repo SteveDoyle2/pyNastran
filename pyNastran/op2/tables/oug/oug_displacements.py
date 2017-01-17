@@ -49,7 +49,7 @@ class RealDisplacementArray(RealTableArray):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n', ]
         #' \n',
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        if self.table_name in ['OUGV1', 'OUGV2', b'BOUGV1']:
+        if self.table_name in ['OUGV1', 'OUGV2', 'BOUGV1']:
             pass
         elif self.table_name in ['ROUGV1', 'ROUGV2']:
             words += ['                                                (RELATIVE TO ENFORCED MOTION INPUT)']
@@ -62,7 +62,7 @@ class RealDisplacementArray(RealTableArray):
         elif self.table_name in ['OUGNO1', 'OUGNO2']:
             words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
         else:
-            raise NotImplementedError(self.table_name)
+            raise NotImplementedError('table_name=%r' % self.table_name)
         #words += self.get_table_marker()
         write_words = True
         if self.nonlinear_factor is not None:

@@ -1,3 +1,7 @@
+"""
+defines the F06Writer class and:
+ - write_f06(...)
+"""
 #pylint: disable=W0201,C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -48,7 +52,7 @@ def make_f06_header():
         spaces + '/*                                                                      */\n',
         spaces + '/*              A Python reader/editor/writer for the various           */\n',
         spaces + '/*                        NASTRAN file formats.                         */\n',
-        spaces + '/*                       Copyright (C) 2011-2016                        */\n',
+        spaces + '/*                       Copyright (C) 2011-2017                        */\n',
         spaces + '/*               Steven Doyle, Al Danial, Marcin Garrozik               */\n',
         spaces + '/*                                                                      */\n',
         spaces + '/*    This program is free software; you can redistribute it and/or     */\n',
@@ -97,6 +101,7 @@ def make_f06_header():
 
 
 def sorted_bulk_data_header():
+    """creates the bulk data echo header"""
     msg = '0                                                 S O R T E D   B U L K   D A T A   E C H O                                         \n'
     msg += '                 ENTRY                                                                                                              \n'
     msg += '                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      \n'
@@ -104,6 +109,7 @@ def sorted_bulk_data_header():
 
 
 def make_end(end_flag=False, options=None):
+    """creates the F06 footer"""
     lines = []
     lines2 = []
     if options is None:
@@ -204,14 +210,14 @@ class F06Writer(OP2_F06_Common):
             result = str(result)
             if result not in all_results:
                 raise RuntimeError('%r is not a valid result to remove; all_results=%s' % (result, all_results))
-            if 'stress' == result:
+            if result == 'stress':
                 stress_results = []
                 for result in all_results:
                     if 'stress' in result.lower():
                         stress_results.append(result)
                 #stress_results = [result if 'stress' in result.lower() for result in all_results]
                 self._results.update(stress_results)
-            elif 'strain' == result:
+            elif result == 'strain':
                 strain_results = []
                 for result in all_results:
                     if 'strain' in result.lower():
@@ -242,11 +248,19 @@ class F06Writer(OP2_F06_Common):
         """If this class is inherited, the F06 Header may be overwritten"""
         return make_f06_header()
 
-    def make_stamp(self, Title, today):
+    def make_stamp(self, title, today):
         """If this class is inherited, the PAGE stamp may be overwritten"""
-        return make_stamp(Title, today)
+        return make_stamp(title, today)
 
     def make_grid_point_singularity_table(self, failed):
+        """
+        creates a grid point singularity table
+
+        Parameters
+        ----------
+        failed : List[(nid, component), ...]
+            defines failed degrees of freedom
+        """
         msg = ''
         if failed:
             msg += '0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E\n'
@@ -263,6 +277,7 @@ class F06Writer(OP2_F06_Common):
         return msg
 
     def _write_summary(self, f06, card_count=None):
+        """writes the F06 card summary table"""
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
         summary = ''
 
@@ -444,8 +459,10 @@ class F06Writer(OP2_F06_Common):
         ----------
         f06 : file
             the opened file object
-        page_stamp : ???
-            ???
+        page_stamp : str
+            the format string stamp is the ending to every F06 page that
+            contains the version, date, and page number
+            (e.g., 'pyNastran 0.8   1/1/2016  PAGE %%i')
         is_mag_phase : bool; default=False
             should complex data be written using Magnitude/Phase
             instead of Real/Imaginary
@@ -813,16 +830,18 @@ class F06Writer(OP2_F06_Common):
                         class_name = result.__class__.__name__
                         if hasattr(result, 'data'):
                             if not quiet:
-                                print(res_format_vectorized % (class_name, isubcase, subtitle, element_name))
+                                print(res_format_vectorized % (
+                                    class_name, isubcase, subtitle, element_name))
                         else:
                             print(res_format % (class_name, isubcase, element_name))
 
                         try:
-                            self.page_num = result.write_f06(f06, header, page_stamp, page_num=self.page_num,
-                                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                            self.page_num = result.write_f06(
+                                f06, header, page_stamp, page_num=self.page_num,
+                                is_mag_phase=is_mag_phase, is_sort1=is_sort1)
                         except Exception as e:
                             print_exc(file=sys.stdout)
-                            is_failed = True
+                            raise
 
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                     except:
@@ -831,7 +850,3 @@ class F06Writer(OP2_F06_Common):
                     if delete_objects:
                         del result
                     self.page_num += 1
-        if is_failed:
-            if PY2:
-                raise
-            raise RuntimeError('Python 3 cannot reraise Exceptions like this...see previous traceback')
