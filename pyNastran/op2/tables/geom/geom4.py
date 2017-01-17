@@ -243,7 +243,6 @@ class GEOM4(GeomCommon):
         """RBAR(6601,66,292) - Record 22"""
         n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_nx,
                                  'RBAR', self._add_rigid_element_object)
-        #self.card_count['RBAR'] = nelements
         return n
 
     def _read_rbar_nx(self, data, n):

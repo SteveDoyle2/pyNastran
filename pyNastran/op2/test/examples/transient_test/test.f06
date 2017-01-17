@@ -1,0 +1,759 @@
+1
+ 
+ 
+ 
+ 
+                                                             
+                 Copyright 2014 Siemens Product Lifecycle    
+                        Management Software Inc.             
+                         All Rights Reserved.                
+                                                             
+               This software and related documentation are   
+                 proprietary to Siemens Product Lifecycle    
+                        Management Software Inc.             
+                                                             
+              Siemens and the Siemens logo are registered    
+             trademarks of Siemens AG. NX is a trademark or  
+                registered trademark of Siemens Product      
+               Lifecycle Management Software Inc. or its     
+             subsidiaries in the United States and in other  
+             countries.  NASTRAN is a registered trademark   
+                 of the National Aeronautics and Space       
+                 Administration.  All other trademarks,      
+              registered trademarks or service marks belong  
+                      to their respective holders.           
+                                                             
+           LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED
+           - RIGHTS RESERVED UNDER THE COPYRIGHT LAWS OF THE 
+            UNITED STATES. This computer software and related
+               computer software documentation have been     
+            developed exclusively at private expense and are 
+           provided subject to the following rights:  If this
+               computer software and computer  software      
+            documentation qualify as "commercial items" (as  
+             that term is defined in FAR 2.101), their use,  
+            duplication or disclosure by the U.S. Government 
+           is subject to the protections and restrictions as 
+            set forth in the Siemens commercial license for  
+            software and/or documentation, as prescribed in  
+           FAR 12.212 and FAR 27.405(b)(2)(i) (for civilian  
+             agencies) and in DFARS 227.7202-1(a) and DFARS  
+           227.7202-3(a) (for the Department of Defense), or 
+           any successor or similar regulation, as applicable
+           or as amended from time to time.  If this computer
+           software and computer documentation do not qualify
+            as "commercial items", then they are "restricted 
+           computer software" and are provided with "restric-
+            tive rights", and their use, duplication or dis- 
+            closure by the U.S. Government is subject to the 
+            protections and restrictions as set forth in FAR 
+           27.404(b) and FAR 52-227-14 (for civilian agencies
+           ), and DFARS 227.7203-5(c) and DFARS 252.227-7014 
+           (for the Department of Defense), or any successor 
+           or similar regulation, as applicable or as amended
+              from time to time.  Siemens PLM Software Inc.  
+            5800 Granite Parkway, Suite 600, Plano, TX 75024 
+
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *       N X   N a s t r a n       * *
+                * *                                 * *
+                * *        VERSION -   10.1         * *
+                * *                                 * *
+                * *          JAN  6, 2015           * *
+                * *                                 * *
+                * *                                 * *
+                * *Intel64 Family 6 Model 45 Steppi * *
+                * *                                 * *
+                * * Intel(R) Core(TM) i7-3820 CPU @ * *
+                * *                                 * *
+                * *            Windows 8            * *
+                * *                                 * *
+                * *       Compiled for X86-64       * *
+                * *                                 * *
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+1 
+  
+                        Welcome to NX Nastran
+                        -------------------------
+  
+  
+ This "news" information can be turned off by setting "news=no" in the runtime
+ configuration (RC) file.  The "news" keyword can be set in the system RC file
+ for global, or multi-user control, and in a local file for local control.
+ Individual jobs can be controlled by setting news to yes or no on the command
+ line.
+1                                                                          NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN BUFFSIZE=32769 $(F:/FEMAPV112/NASTRAN/CONF/NAST10.RCF[5])               
+     NASTRAN BUFFPOOL=11755                                                          
+     NASTRAN DIAGA=128 DIAGB=0 $(F:/FEMAPV112/NASTRAN/CONF/NAST10.RCF[12])           
+     NASTRAN REAL=2147483647 $(PROGRAM DEFAULT)                                      
+1                                                                          NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     SOL 112                                                                                 
+     CEND                                                                                    
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      TITLE = TRANSIENT SIMULATION                                                            
+                  2      ECHO = NONE                                                                             
+                  3      SET 100 = 1,13,24                                                                       
+                  4      ACCELERATION(PLOT,SORT1) = 100                                                          
+                  5      DISPLACEMENT(PLOT,SORT1) = 100                                                          
+                  6      SET 300 = 1,11,13                                                                       
+                  7      FORCE(PLOT,SORT1) = 300                                                                 
+                  8      SET 400 = 1                                                                             
+                  9      SPCFORCE(PLOT,SORT1) = 400                                                              
+                 10      METHOD = 1                                                                              
+                 11      SPC = 1                                                                                 
+                 12      SDAMPING = 300                                                                          
+                 13      TSTEP = 123                                                                             
+                 14      SUBCASE 1                                                                               
+                 15         DLOAD = 10                                                                           
+                 16      SUBCASE 2                                                                               
+                 17         DLOAD = 20                                                                           
+                 18      SUBCASE 3                                                                               
+                 19         DLOAD = 30                                                                           
+                 20                                                                                              
+                 21      BEGIN BULK                                                                              
+ *** USER WARNING MESSAGE 324 (XSORSO)
+     BLANK ENTRIES ENCOUNTERED WILL BE IGNORED.
+0                             INPUT BULK DATA ENTRY COUNT =         245
+0                       TOTAL COUNT=       227
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =       20
+ 
+ 
+                                   NUMBER OF CBAR     ELEMENTS =       10
+                                   NUMBER OF CBEAM    ELEMENTS =        2
+                                   NUMBER OF CBUSH    ELEMENTS =        1
+                                   NUMBER OF CONM2    ELEMENTS =        1
+                                   NUMBER OF CQUAD4   ELEMENTS =        4
+ 
+                                   NUMBER OF RBE2     ELEMENTS =        1
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS NX10.1   FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =        8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL =       17 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                37                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       37 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       61 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 3                 0               613                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      613 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       29 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1871 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EQEXINS  WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                20                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       40 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      108 WORDS.)
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+0                                                     REFERENCE POINT =        0
+                                                                M O
+                      *  1.000000E+09  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  2.000000E-02 *
+                      *  0.000000E+00  1.000000E+09  0.000000E+00  0.000000E+00  0.000000E+00  3.680000E-01 *
+                      *  0.000000E+00  0.000000E+00  1.000000E+09 -2.000000E-02 -3.680000E-01  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00 -2.000000E-02  3.011333E-02  1.800000E-01  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00 -3.680000E-01  1.800000E-01  3.272000E+00  0.000000E+00 *
+                      *  2.000000E-02  3.680000E-01  0.000000E+00  0.000000E+00  0.000000E+00  3.302000E+00 *
+                                                                 S
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+                               DIRECTION
+                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+                                  X            1.000000E+09      0.000000E+00 -2.000000E-11  0.000000E+00
+                                  Y            1.000000E+09      3.680000E-10  0.000000E+00  0.000000E+00
+                                  Z            1.000000E+09      3.680000E-10 -2.000000E-11  0.000000E+00
+                                                                I(S)
+                                           *  3.011333E-02 -1.800000E-01  0.000000E+00 *
+                                           * -1.800000E-01  3.272000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  3.302000E+00 *
+                                                                I(Q)
+                                           *  2.014977E-02                             *
+                                           *                3.281964E+00               *
+                                           *                              3.302000E+00 *
+                                                                 Q
+                                           *  9.984716E-01  5.526850E-02  0.000000E+00 *
+                                           * -5.526850E-02  9.984716E-01  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OGPWG    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0                 0                 0                 0                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      252 WORDS.)
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    1.000000E+09     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  1.000000E+09  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00                             
+0        2     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       1.000000E+09     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  1.000000E+09  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00                             
+0        3     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       1.000000E+09  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  1.000000E+09  0.000000E+00  0.000000E+00  0.000000E+00                             
+ *** USER INFORMATION MESSAGE - SINGULARITIES FOUND USING EIGENVALUE METHOD
+ ***       0 SINGULARITIES FOUND         0 SINGULARITIES ELIMINATED
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: DEFAULT, ORDERING METHOD USED: MMD
+  
+ *** USER INFORMATION MESSAGE 4158 (DFMSA)
+ ---- STATISTICS FOR SPARSE DECOMPOSITION OF DATA BLOCK KLL      FOLLOW
+        NUMBER OF NEGATIVE TERMS ON FACTOR DIAGONAL =      1
+        MAXIMUM RATIO OF MATRIX DIAGONAL TO FACTOR DIAGONAL =  7.6E+15 AT ROW NUMBER         83
+ *** USER WARNING MESSAGE 4698 (DCMPD)
+     STATISTICS FOR DECOMPOSITION OF MATRIX KLL     .
+     THE FOLLOWING DEGREES OF FREEDOM HAVE FACTOR DIAGONAL RATIOS GREATER THAN
+      1.00000E+07 OR HAVE NEGATIVE TERMS ON THE FACTOR DIAGONAL.
+     USER INFORMATION:
+     THIS MESSAGE MAY BE IGNORED IF NO GRID POINT IDS OR HIGH RATIO MESSAGES APPEAR IN THE TABLE ON THE NEXT PAGE.
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     8
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+0                                                                                                                                   
+         GRID POINT ID       DEGREE OF FREEDOM   MATRIX/FACTOR DIAGONAL RATIO        MATRIX DIAGONAL                                
+                                                                                                                                    
+              19                    T1                  -2.01384E+15                   9.08463E+05
+              19                    T2                   7.56888E+15                   9.08463E+05
+              19                    T3                   7.85407E+14                   3.00016E+04
+ ^^^ USER   WARNING MESSAGE 9136 (SEKRRS)    
+ ^^^ ENCOUNTERED EXCESSIVE PIVOT RATIOS IN MATRIX KLL.   
+ ^^^ USER INFORMATION:  AUTO-SUPORT WILL BE PERFORMED ON 
+ ^^^                    STRUCTURAL DEGREES OF FREEDOM IF 
+ ^^^                    NECESSARY.   
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: DEFAULT, ORDERING METHOD USED: MMD
+ *** USER INFORMATION MESSAGE 5010 (LNCILD)
+     STURM SEQUENCE DATA FOR EIGENVALUE EXTRACTION.
+     TRIAL EIGENVALUE =  5.547820D-05, CYCLES =  1.185445D-03 NUMBER OF EIGENVALUES BELOW THIS VALUE =     3
+ *** USER INFORMATION MESSAGE 5010 (LNCILD)
+     STURM SEQUENCE DATA FOR EIGENVALUE EXTRACTION.
+     TRIAL EIGENVALUE =  1.664346D-04, CYCLES =  2.053250D-03 NUMBER OF EIGENVALUES BELOW THIS VALUE =     3
+ *** USER INFORMATION MESSAGE 5010 (LNCILD)
+     STURM SEQUENCE DATA FOR EIGENVALUE EXTRACTION.
+     TRIAL EIGENVALUE =  8.567555D+10, CYCLES =  4.658526D+04 NUMBER OF EIGENVALUES BELOW THIS VALUE =    50
+
+ TABLE OF SHIFTS:  (LNNRIGL)
+ SHIFT #        SHIFT VALUE         FREQUENCY, CYCLES     # EIGENVALUES BELOW    # NEW EIGENVALUES FOUND
+     1.        5.5478198E-05          1.1854446E-03                 3                        3
+     2.        1.6643459E-04          2.0532503E-03                 3                       29
+     3.        8.5675549E+10          4.6585262E+04                50                       18
+
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE     9
+                                                                                                                                    
+0                                                                                                                                   
+0
+
+
+                          E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (READ MODULE) 
+
+
+
+                                     BLOCK SIZE USED ......................    7
+
+                                     NUMBER OF DECOMPOSITIONS .............    3
+
+                                     NUMBER OF ROOTS FOUND ................   50
+
+                                     NUMBER OF SOLVES REQUIRED ............   22
+
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+                                         (BEFORE AUGMENTATION OF RESIDUAL VECTORS)
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1       -2.918604E-16        1.708392E-08        2.718991E-09        1.000000E+00       -2.918604E-16
+        2         2       -7.616520E-18        2.759804E-09        4.392365E-10        1.000000E+00       -7.616520E-18
+        3         3        1.173649E-17        3.425856E-09        5.452419E-10        1.000000E+00        1.173649E-17
+        4         4        6.451455E+03        8.032095E+01        1.278348E+01        1.000000E+00        6.451455E+03
+        5         5        2.560359E+04        1.600112E+02        2.546658E+01        1.000000E+00        2.560359E+04
+        6         6        4.025336E+05        6.344553E+02        1.009767E+02        1.000000E+00        4.025336E+05
+        7         7        7.354899E+05        8.576071E+02        1.364924E+02        1.000000E+00        7.354899E+05
+        8         8        2.437751E+06        1.561330E+03        2.484934E+02        1.000000E+00        2.437751E+06
+        9         9        5.982720E+06        2.445960E+03        3.892866E+02        1.000000E+00        5.982720E+06
+       10        10        1.707636E+07        4.132356E+03        6.576849E+02        1.000000E+00        1.707636E+07
+       11        11        2.961441E+07        5.441912E+03        8.661072E+02        1.000000E+00        2.961441E+07
+       12        12        3.596641E+07        5.997200E+03        9.544840E+02        1.000000E+00        3.596641E+07
+       13        13        6.386098E+07        7.991307E+03        1.271856E+03        1.000000E+00        6.386098E+07
+       14        14        9.230701E+07        9.607653E+03        1.529105E+03        1.000000E+00        9.230701E+07
+       15        15        9.580280E+07        9.787891E+03        1.557791E+03        1.000000E+00        9.580280E+07
+       16        16        1.168590E+08        1.081013E+04        1.720486E+03        1.000000E+00        1.168590E+08
+       17        17        1.751424E+08        1.323414E+04        2.106279E+03        1.000000E+00        1.751424E+08
+       18        18        2.181232E+08        1.476899E+04        2.350558E+03        1.000000E+00        2.181232E+08
+       19        19        2.334213E+08        1.527813E+04        2.431590E+03        1.000000E+00        2.334213E+08
+       20        20        2.403473E+08        1.550314E+04        2.467401E+03        1.000000E+00        2.403473E+08
+       21        21        3.262073E+08        1.806121E+04        2.874531E+03        1.000000E+00        3.262073E+08
+       22        22        4.102359E+08        2.025428E+04        3.223569E+03        1.000000E+00        4.102359E+08
+       23        23        4.622884E+08        2.150089E+04        3.421973E+03        1.000000E+00        4.622884E+08
+       24        24        6.421654E+08        2.534098E+04        4.033143E+03        1.000000E+00        6.421654E+08
+       25        25        7.872332E+08        2.805768E+04        4.465518E+03        1.000000E+00        7.872332E+08
+       26        26        8.158047E+08        2.856229E+04        4.545830E+03        1.000000E+00        8.158047E+08
+       27        27        9.601886E+08        3.098691E+04        4.931720E+03        1.000000E+00        9.601886E+08
+       28        28        1.190848E+09        3.450866E+04        5.492224E+03        1.000000E+00        1.190848E+09
+       29        29        1.470034E+09        3.834103E+04        6.102164E+03        1.000000E+00        1.470034E+09
+       30        30        1.889351E+09        4.346667E+04        6.917935E+03        1.000000E+00        1.889351E+09
+       31        31        3.448165E+09        5.872108E+04        9.345750E+03        1.000000E+00        3.448165E+09
+       32        32        4.399271E+09        6.632700E+04        1.055627E+04        1.000000E+00        4.399271E+09
+       33        33        4.890206E+09        6.993001E+04        1.112971E+04        1.000000E+00        4.890206E+09
+       34        34        5.586681E+09        7.474410E+04        1.189589E+04        1.000000E+00        5.586681E+09
+       35        35        7.939775E+09        8.910541E+04        1.418157E+04        1.000000E+00        7.939775E+09
+       36        36        1.285383E+10        1.133748E+05        1.804415E+04        1.000000E+00        1.285383E+10
+       37        37        1.371023E+10        1.170907E+05        1.863556E+04        1.000000E+00        1.371023E+10
+       38        38        1.905428E+10        1.380372E+05        2.196931E+04        1.000000E+00        1.905428E+10
+       39        39        2.147845E+10        1.465553E+05        2.332499E+04        1.000000E+00        2.147845E+10
+       40        40        2.348408E+10        1.532452E+05        2.438972E+04        1.000000E+00        2.348408E+10
+       41        41        2.977575E+10        1.725565E+05        2.746322E+04        1.000000E+00        2.977575E+10
+       42        42        3.139195E+10        1.771777E+05        2.819871E+04        1.000000E+00        3.139195E+10
+       43        43        4.080776E+10        2.020093E+05        3.215078E+04        1.000000E+00        4.080776E+10
+       44        44        4.867290E+10        2.206194E+05        3.511266E+04        1.000000E+00        4.867290E+10
+       45        45        5.170503E+10        2.273874E+05        3.618983E+04        1.000000E+00        5.170503E+10
+       46        46        5.646128E+10        2.376158E+05        3.781773E+04        1.000000E+00        5.646128E+10
+       47        47        6.837165E+10        2.614797E+05        4.161579E+04        1.000000E+00        6.837165E+10
+       48        48        6.932680E+10        2.632998E+05        4.190546E+04        1.000000E+00        6.932680E+10
+       49        49        8.144238E+10        2.853811E+05        4.541982E+04        1.000000E+00        8.144238E+10
+       50        50        8.408016E+10        2.899658E+05        4.614949E+04        1.000000E+00        8.408016E+10
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    11
+                                                                                                                                    
+0                                                                                                                                   
+ ^^^ USER INFORMATION MESSAGE 9257 (AUTOSUP) 
+ ^^^ AUTO-SUPORT FOUND           3 RIGID BODY MODES    
+ ^^^ BELOW    1.000000E-03 HZ. 
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: DEFAULT, ORDERING METHOD USED: MMD
+ *** USER WARNING MESSAGE 4698 (DCMPD)
+     STATISTICS FOR DECOMPOSITION OF MATRIX KYY     .
+     THE FOLLOWING DEGREES OF FREEDOM HAVE FACTOR DIAGONAL RATIOS GREATER THAN
+      1.00000E+07 OR HAVE NEGATIVE TERMS ON THE FACTOR DIAGONAL.
+     USER INFORMATION:
+     THIS MESSAGE MAY BE IGNORED IF NO GRID POINT IDS OR HIGH RATIO MESSAGES APPEAR IN THE TABLE ON THE NEXT PAGE.
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+         GRID POINT ID       DEGREE OF FREEDOM   MATRIX/FACTOR DIAGONAL RATIO        MATRIX DIAGONAL                                
+                                                                                                                                    
+ ^^^ USER INFORMATION MESSAGE 9037 (RESVEC  )    
+ ^^^ CHECKING RESIDUAL VECTORS FOR LINEAR INDEPENDENCE.  
+ *** USER INFORMATION MESSAGE 4158 (SDCBOD)
+     STATISTICS FOR SYMMETRIC DECOMPOSITION OF DATA BLOCK MZZ      FOLLOW
+           MAXIMUM RATIO OF MATRIX DIAGONAL TO FACTOR DIAGONAL = 1.1E+15 AT ROW NUMBER     52
+ ^^^ THE FOLLOWING MODE SHAPES (EIGENVECTORS OR RESIDUAL VECTORS) ARE NOT LINEARLY INDEPENDENT WITH OTHER MODE                     
+     SHAPES AND WILL BE DISCARDED.   
+ ^^^ MZZ MATRIX DIAGONALS/FACTOR DIAGONALS,RESVRAT=   1.000000E+08 
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    13
+                                                                                                                                    
+0                                                                                                                                   
+0                BIGRATS                                                                                                            
+     POINT           VALUE     POINT           VALUE     POINT           VALUE     POINT           VALUE     POINT           VALUE  
+                                                                                                                                    
+
+ COLUMN           1
+         52  H  1.12590E+15
+ *** USER INFORMATION MESSAGE 5010 (LNCILD)
+     STURM SEQUENCE DATA FOR EIGENVALUE EXTRACTION.
+     TRIAL EIGENVALUE =  9.869604D+34, CYCLES =  5.000000D+16 NUMBER OF EIGENVALUES BELOW THIS VALUE =    52
+ *** USER INFORMATION MESSAGE 5010 (LNCILD)
+     STURM SEQUENCE DATA FOR EIGENVALUE EXTRACTION.
+     TRIAL EIGENVALUE =  8.408033D+10, CYCLES =  4.614953D+04 NUMBER OF EIGENVALUES BELOW THIS VALUE =    50
+ *** USER INFORMATION MESSAGE 5010 (LNCILD)
+     STURM SEQUENCE DATA FOR EIGENVALUE EXTRACTION.
+     TRIAL EIGENVALUE =  4.407490D+11, CYCLES =  1.056613D+05 NUMBER OF EIGENVALUES BELOW THIS VALUE =    51
+
+ TABLE OF SHIFTS:  (LNNRIGL)
+ SHIFT #        SHIFT VALUE         FREQUENCY, CYCLES     # EIGENVALUES BELOW    # NEW EIGENVALUES FOUND
+     1.        9.8696037E+34          4.9999999E+16                52                        0
+     2.        8.4080329E+10          4.6149535E+04                50                        0
+     3.        4.4074900E+11          1.0566127E+05                51                        2
+
+
+    THERE ARE ONLY      2 MODES BETWEEN  4.614953D+04 HZ AND  5.000000D+16 HZ.
+
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    14
+                                                                                                                                    
+0                                                                                                                                   
+0
+
+
+                          E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (READ MODULE) 
+
+
+
+                                     BLOCK SIZE USED ......................    7
+
+                                     NUMBER OF DECOMPOSITIONS .............    3
+
+                                     NUMBER OF ROOTS FOUND ................    2
+
+                                     NUMBER OF SOLVES REQUIRED ............   12
+
+ ^^^     
+ ^^^ FREQUENCY LIST OF RESIDUAL VECTORS FOLLOWS. 
+ ^^^     
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    15
+                                                                                                                                    
+0                                                                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        1.091475E+11        3.303748E+05        5.258079E+04        1.000000E+00        1.091475E+11
+        2         2        7.723282E+11        8.788221E+05        1.398689E+05        1.000000E+00        7.723282E+11
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    16
+                                                                                                                                    
+0                                                                                                                                   
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    17
+                                                                                                                                    
+0                                                                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+                                         (AFTER AUGMENTATION OF RESIDUAL VECTORS)
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        2.918604E-16        1.708392E-08        2.718991E-09        1.000000E+00        2.918604E-16
+        2         2        7.616520E-18        2.759804E-09        4.392365E-10        1.000000E+00        7.616520E-18
+        3         3        1.173649E-17        3.425856E-09        5.452419E-10        1.000000E+00        1.173649E-17
+        4         4        6.451456E+03        8.032095E+01        1.278348E+01        1.000000E+00        6.451456E+03
+        5         5        2.560359E+04        1.600112E+02        2.546658E+01        1.000000E+00        2.560359E+04
+        6         6        4.025336E+05        6.344553E+02        1.009767E+02        1.000000E+00        4.025336E+05
+        7         7        7.354899E+05        8.576071E+02        1.364924E+02        1.000000E+00        7.354899E+05
+        8         8        2.437751E+06        1.561330E+03        2.484934E+02        1.000000E+00        2.437751E+06
+        9         9        5.982720E+06        2.445960E+03        3.892866E+02        1.000000E+00        5.982720E+06
+       10        10        1.707637E+07        4.132356E+03        6.576849E+02        1.000000E+00        1.707637E+07
+       11        11        2.961441E+07        5.441912E+03        8.661072E+02        1.000000E+00        2.961441E+07
+       12        12        3.596641E+07        5.997200E+03        9.544840E+02        1.000000E+00        3.596641E+07
+       13        13        6.386098E+07        7.991307E+03        1.271856E+03        1.000000E+00        6.386098E+07
+       14        14        9.230700E+07        9.607653E+03        1.529105E+03        1.000000E+00        9.230700E+07
+       15        15        9.580280E+07        9.787891E+03        1.557791E+03        1.000000E+00        9.580280E+07
+       16        16        1.168590E+08        1.081013E+04        1.720486E+03        1.000000E+00        1.168590E+08
+       17        17        1.751424E+08        1.323414E+04        2.106279E+03        1.000000E+00        1.751424E+08
+       18        18        2.181231E+08        1.476899E+04        2.350558E+03        1.000000E+00        2.181231E+08
+       19        19        2.334213E+08        1.527813E+04        2.431590E+03        1.000000E+00        2.334213E+08
+       20        20        2.403473E+08        1.550314E+04        2.467401E+03        1.000000E+00        2.403473E+08
+       21        21        3.262073E+08        1.806121E+04        2.874531E+03        1.000000E+00        3.262073E+08
+       22        22        4.102359E+08        2.025428E+04        3.223569E+03        1.000000E+00        4.102359E+08
+       23        23        4.622884E+08        2.150089E+04        3.421973E+03        1.000000E+00        4.622884E+08
+       24        24        6.421654E+08        2.534098E+04        4.033143E+03        1.000000E+00        6.421654E+08
+       25        25        7.872332E+08        2.805768E+04        4.465518E+03        1.000000E+00        7.872332E+08
+       26        26        8.158046E+08        2.856229E+04        4.545830E+03        1.000000E+00        8.158046E+08
+       27        27        9.601886E+08        3.098691E+04        4.931720E+03        1.000000E+00        9.601886E+08
+       28        28        1.190848E+09        3.450866E+04        5.492224E+03        1.000000E+00        1.190848E+09
+       29        29        1.470034E+09        3.834103E+04        6.102164E+03        1.000000E+00        1.470034E+09
+       30        30        1.889351E+09        4.346667E+04        6.917935E+03        1.000000E+00        1.889351E+09
+       31        31        3.448165E+09        5.872108E+04        9.345750E+03        1.000000E+00        3.448165E+09
+       32        32        4.399271E+09        6.632700E+04        1.055627E+04        1.000000E+00        4.399271E+09
+       33        33        4.890206E+09        6.993001E+04        1.112971E+04        1.000000E+00        4.890206E+09
+       34        34        5.586681E+09        7.474410E+04        1.189589E+04        1.000000E+00        5.586681E+09
+       35        35        7.939775E+09        8.910541E+04        1.418157E+04        1.000000E+00        7.939775E+09
+       36        36        1.285384E+10        1.133748E+05        1.804415E+04        1.000000E+00        1.285384E+10
+       37        37        1.371023E+10        1.170907E+05        1.863556E+04        1.000000E+00        1.371023E+10
+       38        38        1.905428E+10        1.380372E+05        2.196931E+04        1.000000E+00        1.905428E+10
+       39        39        2.147845E+10        1.465553E+05        2.332499E+04        1.000000E+00        2.147845E+10
+       40        40        2.348408E+10        1.532452E+05        2.438972E+04        1.000000E+00        2.348408E+10
+       41        41        2.977575E+10        1.725565E+05        2.746322E+04        1.000000E+00        2.977575E+10
+       42        42        3.139195E+10        1.771777E+05        2.819871E+04        1.000000E+00        3.139195E+10
+       43        43        4.080776E+10        2.020093E+05        3.215078E+04        1.000000E+00        4.080776E+10
+       44        44        4.867290E+10        2.206194E+05        3.511266E+04        1.000000E+00        4.867290E+10
+       45        45        5.170503E+10        2.273874E+05        3.618983E+04        1.000000E+00        5.170503E+10
+       46        46        5.646128E+10        2.376158E+05        3.781773E+04        1.000000E+00        5.646128E+10
+       47        47        6.837166E+10        2.614798E+05        4.161579E+04        1.000000E+00        6.837166E+10
+       48        48        6.932679E+10        2.632998E+05        4.190546E+04        1.000000E+00        6.932679E+10
+       49        49        8.144239E+10        2.853811E+05        4.541982E+04        1.000000E+00        8.144239E+10
+       50        50        8.408017E+10        2.899658E+05        4.614949E+04        1.000000E+00        8.408017E+10
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    18
+                                                                                                                                    
+0                                                                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+                                         (AFTER AUGMENTATION OF RESIDUAL VECTORS)
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+       51        51        1.091475E+11        3.303748E+05        5.258079E+04        1.000000E+00        1.091475E+11
+       52        52        7.723282E+11        8.788221E+05        1.398689E+05        1.000000E+00        7.723282E+11
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    19
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.1055627E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.1112971E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.1189589E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.1418157E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.1804415E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.1863556E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.2196931E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.2332499E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.2438972E+05
+     EXTRAPOLATION IS DONE
+ *** USER WARNING MESSAGE 23101 (TAB)
+     OUT OF RANGE INPUT FOR TABLE INTERPOLATION. TABLE ID =      300
+     FOR X =    0.2746322E+05
+     EXTRAPOLATION IS DONE
+ *** USER INFORMATION MESSAGE 7559 (TRLGCD)
+     THIS TRANSIENT RESPONSE ANALYSIS INVOLVES THE FOLLOWING TYPES OF EXCITATION --
+
+     * APPLIED LOADS
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK TOL      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101               701                 1                 2                 2                 2              2123
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      703 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       14 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      721 WORDS.)
+ *** USER INFORMATION MESSAGE 5222 (TRD1)
+     UN COUPLED SOLUTION ALGORITHM USED.
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OQG1     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0              5608                28                16                 1                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =     7024 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   113587 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK LAMA     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                52                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      364 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      538 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OUGV1    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                18                 2                 1                15              8333
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =    14034 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   249576 WORDS.)
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    20
+                                                                                                                                    
+0                                                                                                                                   
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    21
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                22                 2                 3                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =    21044 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   341407 WORDS.)
+ *** USER INFORMATION MESSAGE 7559 (TRLGCD)
+     THIS TRANSIENT RESPONSE ANALYSIS INVOLVES THE FOLLOWING TYPES OF EXCITATION --
+
+     * APPLIED LOADS
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK TOL      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101               701                 1                 2                 2                 2              4259
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      703 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       14 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      721 WORDS.)
+ *** USER INFORMATION MESSAGE 5222 (TRD1)
+     UN COUPLED SOLUTION ALGORITHM USED.
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OQG1     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0              5608                28                16                 1                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =     7024 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   113587 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK LAMA     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                52                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      364 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      538 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OUGV1    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                18                 2                 1                15              8333
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =    14034 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   249576 WORDS.)
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    22
+                                                                                                                                    
+0                                                                                                                                   
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    23
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                22                 2                 3                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =    21044 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   341407 WORDS.)
+ *** USER INFORMATION MESSAGE 7559 (TRLGCD)
+     THIS TRANSIENT RESPONSE ANALYSIS INVOLVES THE FOLLOWING TYPES OF EXCITATION --
+
+     * APPLIED LOADS
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK TOL      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101               701                 1                 2                 2                 2              4259
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      703 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       14 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      721 WORDS.)
+ *** USER INFORMATION MESSAGE 5222 (TRD1)
+     UN COUPLED SOLUTION ALGORITHM USED.
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OQG1     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0              5608                28                16                 1                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =     7024 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   113587 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK LAMA     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                52                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      364 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      538 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OUGV1    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                18                 2                 1                15              8333
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =    14034 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   249576 WORDS.)
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    24
+                                                                                                                                    
+0                                                                                                                                   
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    25
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                22                 2                 3                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =    21044 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =   341407 WORDS.)
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1    TRANSIENT SIMULATION                                                  NOVEMBER  28, 2016  NX NASTRAN  1/ 6/15   PAGE    26
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     31
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     T      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+1                                        * * * END OF JOB * * *
+ 
+ 
