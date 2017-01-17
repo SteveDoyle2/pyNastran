@@ -56,13 +56,18 @@ class TestOP2(Tester):
         """this test will fail if IBULK talble doesn't work"""
         bdf_filename = os.path.abspath(os.path.join(
             test_path, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        f06_filename = os.path.abspath(os.path.join(
+            test_path, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
         op2_filename = os.path.abspath(os.path.join(
             test_path, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
         op2 = read_op2(op2_filename, debug=False)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
     def test_set_results(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         op2_filename = os.path.join(folder, 'solid_bending', 'solid_bending.op2')
+        f06_filename = os.path.join(folder, 'solid_bending', 'solid_bending.test_op2.f06')
 
         op2 = OP2(debug=False)
         op2.set_results('stress')
@@ -79,10 +84,13 @@ class TestOP2(Tester):
         self.assertEqual(len(op2.chexa_stress), 0, len(op2.chexa_stress))
         self.assertEqual(len(op2.ctetra_stress), 1, len(op2.ctetra_stress))
         self.assertEqual(len(op2.displacements), 1, len(op2.displacements))
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
     def test_op2_solid_bending_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
         op2_filename = os.path.join(folder, 'solid_bending.op2')
+        f06_filename = os.path.join(folder, 'solid_bending.test_op2.f06')
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -103,11 +111,13 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
-        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
+        op2 = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)[0]
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
     def test_op2_solid_bending_02(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
@@ -149,6 +159,7 @@ class TestOP2(Tester):
         """tests reading op2 geometry"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        f06_filename = os.path.join(folder, 'static_solid_shell_bar.test_op2.f06')
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
             write_f06=True, write_op2=False, write_xlsx=False,
@@ -157,6 +168,8 @@ class TestOP2(Tester):
             compare=True, debug=False, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True,
             dev=False)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
     def test_op2_mode_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""
@@ -252,6 +265,7 @@ class TestOP2(Tester):
         """transient test"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
+        f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
         op2, is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, write_xlsx=False,
@@ -260,11 +274,14 @@ class TestOP2(Tester):
             compare=True, debug=False, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True,
             dev=False)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
     def test_op2_frequency_solid_shell_bar_01_geom(self):
         """frequency test"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
+        f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
         op2 = read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
@@ -274,21 +291,28 @@ class TestOP2(Tester):
             compare=True, debug=False, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True,
             dev=False)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
     def test_op2_transfer_function_01(self):
         """tests the transfer function cards work"""
-        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        #bdf_filename = os.path.join(folder, 'transfer_function', 'actuator_tf_modeling.bdf')
-        op2_filename = os.path.join(folder, 'transfer_function', 'actuator_tf_modeling.op2')
+        folder = os.path.join(test_path, '..', 'models', 'transfer_function')
+        #bdf_filename = os.path.join(folder, 'actuator_tf_modeling.bdf')
+        op2_filename = os.path.join(folder, 'actuator_tf_modeling.op2')
+        f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
+
         op2 = read_op2_geom(op2_filename, debug=False)
 
         debug = False
         write_bdf = True
         write_f06 = True
         make_geom = True
-        run_op2(op2_filename, write_bdf=write_bdf, make_geom=make_geom, subcases=[],
-                write_f06=write_f06,
-                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        op2, is_passed = run_op2(
+            op2_filename, write_bdf=write_bdf, make_geom=make_geom, subcases=[],
+            write_f06=write_f06,
+            debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
         #fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
         #diff_cards2 = list(set(diff_cards))
@@ -323,7 +347,10 @@ class TestOP2(Tester):
         """Nastran2005r3 bug"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'modele_petite_zone'))
         op2_filename = os.path.join(folder, 'modele_petite_zone.op2')
+        f06_filename = os.path.join(folder, 'modele_petite_zone.test_op2.f06')
         op2 = read_op2(op2_filename, debug=False)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
     def test_gpforce_01(self):
         nids = np.array([1, 2, 3])
