@@ -1441,6 +1441,9 @@ def main():
 
 
     #print(data)
+    debug = True
+    if data['--quiet']:
+        debug = None
     if data['--profile']:
         #import cProfile
         import pstats
@@ -1451,7 +1454,7 @@ def main():
             run_bdf,
             '.',
             data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
+            debug=debug,
             xref=['--xref'],
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
@@ -1490,7 +1493,7 @@ def main():
         run_bdf(
             '.',
             data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
+            debug=debug,
             xref=data['--xref'],
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
