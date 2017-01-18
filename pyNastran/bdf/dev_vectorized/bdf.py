@@ -67,7 +67,7 @@ from pyNastran.bdf.dev_vectorized.cards.aero.aero_cards import (
     AESURF, AESURFS, AERO, AEROS, CSSCHD,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT1,
+    MONPNT1, MONPNT2, MONPNT3,
     FLFACT, FLUTTER, GUST, MKAERO1,
     MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
     SPLINE5, TRIM, DIVERG)
@@ -364,9 +364,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'DPHASE',  ## dphases
             'DELAY',  ## delays
             'NLPARM',  ## nlparms
+            'ROTORG', 'ROTORD', ## rotors
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
-            'TSTEPNL',  ## tstepnls
+            'TSTEPNL', 'TSTEP1',  ## tstepnls
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
 
@@ -680,7 +681,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             diverg.validate()
         for key, csschd in sorted(iteritems(self.csschds)):
             csschd.validate()
-        #self.monitor_points = []
+        for monitor in self.monitor_points:
+            monitor.validate()
 
         #------------------------------------------------
         if self.aero is not None:
@@ -804,6 +806,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             se_qset.validate()
         #------------------------------------------------
         for key, table in sorted(iteritems(self.tables)):
+            table.validate()
+        for key, table in sorted(iteritems(self.tables_d)):
+            table.validate()
+        for key, table in sorted(iteritems(self.tables_m)):
             table.validate()
         for key, random_table in sorted(iteritems(self.random_tables)):
             random_table.validate()
@@ -1554,14 +1560,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'EPOINT' : (EPOINTs, self.add_epoint),
             #'POINT' : (POINT, self.add_point),
 
-            'PARAM' : (PARAM, self.add_param),
+            'PARAM' : (PARAM, self._add_param_object),
 
             #'CORD2R' : (CORD2R, self._add_coord_object),
             #'CORD2C' : (CORD2C, self._add_coord_object),
             #'CORD2S' : (CORD2S, self._add_coord_object),
             #'GMCORD' : (GMCORD, self._add_coord_object),
 
-            'PLOTEL' : (PLOTEL, self.add_plotel),
+            'PLOTEL' : (PLOTEL, self._add_plotel_object),
 
             #'CONROD' : (CONROD, self.add_element),
             #'CROD' : (CROD, self.add_element),
@@ -1657,13 +1663,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             #'PCONEAX' : (PCONEAX, self.add_property),
 
-            'RBAR' : (RBAR, self.add_rigid_element),
-            'RBAR1' : (RBAR1, self.add_rigid_element),
-            'RBE1' : (RBE1, self.add_rigid_element),
-            'RBE2' : (RBE2, self.add_rigid_element),
-            'RBE3' : (RBE3, self.add_rigid_element),
-            'RROD' : (RROD, self.add_rigid_element),
-            'RSPLINE' : (RSPLINE, self.add_rigid_element),
+            'RBAR' : (RBAR, self._add_rigid_element_object),
+            'RBAR1' : (RBAR1, self._add_rigid_element_object),
+            'RBE1' : (RBE1, self._add_rigid_element_object),
+            'RBE2' : (RBE2, self._add_rigid_element_object),
+            'RBE3' : (RBE3, self._add_rigid_element_object),
+            'RROD' : (RROD, self._add_rigid_element_object),
+            'RSPLINE' : (RSPLINE, self._add_rigid_element_object),
 
 
             ## there is no MAT6 or MAT7
@@ -1753,8 +1759,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'FREQ2' : (FREQ2, self.add_FREQ),
             #'FREQ4' : (FREQ4, self.add_FREQ),
 
-            'DOPTPRM' : (DOPTPRM, self._add_doptprm),
-            'DESVAR' : (DESVAR, self.add_desvar),
+            'DOPTPRM' : (DOPTPRM, self._add_doptprm_object),
+            'DESVAR' : (DESVAR, self._add_desvar_object),
             # BCTSET
 
             #'TEMP' : (TEMP, self.add_thermal_load),
@@ -1771,73 +1777,75 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'PCONVM' : (PCONVM, self.add_convection_property),
 
             # aero
-            'AECOMP' : (AECOMP, self.add_aecomp),
-            'AEFACT' : (AEFACT, self.add_aefact),
-            'AELINK' : (AELINK, self.add_aelink),
-            'AELIST' : (AELIST, self.add_aelist),
-            'AEPARM' : (AEPARM, self.add_aeparm),
-            'AESTAT' : (AESTAT, self.add_aestat),
-            'AESURF' : (AESURF, self.add_aesurf),
-            'AESURFS' : (AESURFS, self.add_aesurfs),
+            'AECOMP' : (AECOMP, self._add_aecomp_object),
+            'AEFACT' : (AEFACT, self._add_aefact_object),
+            'AELINK' : (AELINK, self._add_aelink_object),
+            'AELIST' : (AELIST, self._add_aelist_object),
+            'AEPARM' : (AEPARM, self._add_aeparm_object),
+            'AESTAT' : (AESTAT, self._add_aestat_object),
+            'AESURF' : (AESURF, self._add_aesurf_object),
+            'AESURFS' : (AESURFS, self._add_aesurfs_object),
 
-            'CAERO1' : (CAERO1, self.add_caero),
-            'CAERO2' : (CAERO2, self.add_caero),
-            'CAERO3' : (CAERO3, self.add_caero),
-            'CAERO4' : (CAERO4, self.add_caero),
-            'CAERO5' : (CAERO5, self.add_caero),
+            'CAERO1' : (CAERO1, self._add_caero_object),
+            'CAERO2' : (CAERO2, self._add_caero_object),
+            'CAERO3' : (CAERO3, self._add_caero_object),
+            'CAERO4' : (CAERO4, self._add_caero_object),
+            'CAERO5' : (CAERO5, self._add_caero_object),
 
-            'PAERO1' : (PAERO1, self.add_paero),
-            'PAERO2' : (PAERO2, self.add_paero),
-            'PAERO3' : (PAERO3, self.add_paero),
-            'PAERO4' : (PAERO4, self.add_paero),
-            'PAERO5' : (PAERO5, self.add_paero),
+            'PAERO1' : (PAERO1, self._add_paero_object),
+            'PAERO2' : (PAERO2, self._add_paero_object),
+            'PAERO3' : (PAERO3, self._add_paero_object),
+            'PAERO4' : (PAERO4, self._add_paero_object),
+            'PAERO5' : (PAERO5, self._add_paero_object),
 
-            'SPLINE1' : (SPLINE1, self.add_spline),
-            'SPLINE2' : (SPLINE2, self.add_spline),
-            'SPLINE3' : (SPLINE3, self.add_spline),
-            'SPLINE4' : (SPLINE4, self.add_spline),
-            'SPLINE5' : (SPLINE5, self.add_spline),
+            'SPLINE1' : (SPLINE1, self._add_spline_object),
+            'SPLINE2' : (SPLINE2, self._add_spline_object),
+            'SPLINE3' : (SPLINE3, self._add_spline_object),
+            'SPLINE4' : (SPLINE4, self._add_spline_object),
+            'SPLINE5' : (SPLINE5, self._add_spline_object),
 
             # SOL 144
-            'AEROS' : (AEROS, self.add_aeros),
-            'TRIM' : (TRIM, self.add_trim),
-            'DIVERG' : (DIVERG, self.add_diverg),
+            'AEROS' : (AEROS, self._add_aeros_object),
+            'TRIM' : (TRIM, self._add_trim_object),
+            'DIVERG' : (DIVERG, self._add_diverg_object),
 
             # SOL 145
-            'AERO' : (AERO, self.add_aero),
-            'FLUTTER' : (FLUTTER, self.add_flutter),
-            'FLFACT' : (FLFACT, self.add_flfact),
-            'MKAERO1' : (MKAERO1, self.add_mkaero),
-            'MKAERO2' : (MKAERO2, self.add_mkaero),
+            'AERO' : (AERO, self._add_aero_object),
+            'FLUTTER' : (FLUTTER, self._add_flutter_object),
+            'FLFACT' : (FLFACT, self._add_flfact_object),
+            'MKAERO1' : (MKAERO1, self._add_mkaero_object),
+            'MKAERO2' : (MKAERO2, self._add_mkaero_object),
 
-            'GUST' : (GUST, self.add_gust),
-            'CSSCHD' : (CSSCHD, self.add_csschd),
-            'MONPNT1' : (MONPNT1, self.add_monpnt),
+            'GUST' : (GUST, self._add_gust_object),
+            'CSSCHD' : (CSSCHD, self._add_csschd_object),
+            'MONPNT1' : (MONPNT1, self._add_monpnt_object),
+            'MONPNT2' : (MONPNT2, self._add_monpnt_object),
+            'MONPNT3' : (MONPNT3, self._add_monpnt_object),
 
-            'NLPARM' : (NLPARM, self.add_nlparm),
-            'NLPCI' : (NLPCI, self.add_nlpci),
-            'TSTEP' : (TSTEP, self.add_tstep),
-            'TSTEPNL' : (TSTEPNL, self.add_tstepnl),
+            'NLPARM' : (NLPARM, self._add_nlparm_object),
+            'NLPCI' : (NLPCI, self._add_nlpci_object),
+            'TSTEP' : (TSTEP, self._add_tstep_object),
+            'TSTEPNL' : (TSTEPNL, self._add_tstepnl_object),
 
             #'TF' : (TF, self.add_TF),
             #'DELAY' : (DELAY, self.add_DELAY),
 
-            'DCONADD' : (DCONADD, self.add_dconstr),
-            'DCONSTR' : (DCONSTR, self.add_dconstr),
-            'DDVAL' : (DDVAL, self.add_ddval),
-            'DLINK' : (DLINK, self.add_dlink),
+            'DCONADD' : (DCONADD, self._add_dconstr_object),
+            'DCONSTR' : (DCONSTR, self._add_dconstr_object),
+            'DDVAL' : (DDVAL, self._add_ddval_object),
+            'DLINK' : (DLINK, self._add_dlink_object),
 
             #'DTABLE' : (DTABLE, self.add_dtable),
-            'DRESP1' : (DRESP1, self.add_dresp),
-            'DRESP2' : (DRESP2, self.add_dresp), # deqatn
-            'DRESP3' : (DRESP3, self.add_dresp),
-            'DVCREL1' : (DVCREL1, self.add_dvcrel), # dvcrels
-            'DVCREL2' : (DVCREL2, self.add_dvcrel),
-            'DVPREL1' : (DVPREL1, self.add_dvprel), # dvprels
-            'DVPREL2' : (DVPREL2, self.add_dvprel),
-            'DVMREL1' : (DVMREL1, self.add_dvmrel), # ddvmrels
-            'DVMREL2' : (DVMREL2, self.add_dvmrel),
-            'DVGRID' : (DVGRID, self.add_dvgrid), # dvgrids
+            'DRESP1' : (DRESP1, self._add_dresp_object),
+            'DRESP2' : (DRESP2, self._add_dresp_object), # deqatn
+            'DRESP3' : (DRESP3, self._add_dresp_object),
+            'DVCREL1' : (DVCREL1, self._add_dvcrel_object), # dvcrels
+            'DVCREL2' : (DVCREL2, self._add_dvcrel_object),
+            'DVPREL1' : (DVPREL1, self._add_dvprel_object), # dvprels
+            'DVPREL2' : (DVPREL2, self._add_dvprel_object),
+            'DVMREL1' : (DVMREL1, self._add_dvmrel_object), # ddvmrels
+            'DVMREL2' : (DVMREL2, self._add_dvmrel_object),
+            'DVGRID' : (DVGRID, self._add_dvgrid_object), # dvgrids
 
             #'TABLED1' : (TABLED1, self.add_table),
             #'TABLED2' : (TABLED2, self.add_table),
@@ -1855,46 +1863,46 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'TABRND1' : (TABRND1, self.add_random_table),
             #'TABRNDG' : (TABRNDG, self.add_random_table),
 
-            'EIGB' : (EIGB, self.add_method),
-            'EIGR' : (EIGR, self.add_method),
-            'EIGRL' : (EIGRL, self.add_method),
-            'EIGC' : (EIGC, self.add_cmethod),
-            'EIGP' : (EIGP, self.add_cmethod),
+            'EIGB' : (EIGB, self._add_method_object),
+            'EIGR' : (EIGR, self._add_method_object),
+            'EIGRL' : (EIGRL, self._add_method_object),
+            'EIGC' : (EIGC, self._add_cmethod_object),
+            'EIGP' : (EIGP, self._add_cmethod_object),
 
-            'BCRPARA' : (BCRPARA, self.add_bcrpara),
-            'BCTADD' : (BCTADD, self.add_bctadd),
-            'BCTPARA' : (BCTPARA, self.add_bctpara),
-            'BSURF' : (BSURF, self.add_bsurf),
-            'BSURFS' : (BSURFS, self.add_bsurfs),
+            'BCRPARA' : (BCRPARA, self._add_bcrpara_object),
+            'BCTADD' : (BCTADD, self._add_bctadd_object),
+            'BCTPARA' : (BCTPARA, self._add_bctpara_object),
+            'BSURF' : (BSURF, self._add_bsurf_object),
+            'BSURFS' : (BSURFS, self._add_bsurfs_object),
 
-            'ASET' : (ASET, self.add_aset),
-            'ASET1' : (ASET1, self.add_aset),
+            'ASET' : (ASET, self._add_aset_object),
+            'ASET1' : (ASET1, self._add_aset_object),
 
-            'BSET' : (BSET, self.add_bset),
-            'BSET1' : (BSET1, self.add_bset),
+            'BSET' : (BSET, self._add_bset_object),
+            'BSET1' : (BSET1, self._add_bset_object),
 
-            'CSET' : (CSET, self.add_cset),
-            'CSET1' : (CSET1, self.add_cset),
+            'CSET' : (CSET, self._add_cset_object),
+            'CSET1' : (CSET1, self._add_cset_object),
 
-            'QSET' : (QSET, self.add_qset),
-            'QSET1' : (QSET1, self.add_qset),
+            'QSET' : (QSET, self._add_qset_object),
+            'QSET1' : (QSET1, self._add_qset_object),
 
-            'USET' : (USET, self.add_uset),
-            'USET1' : (USET1, self.add_uset),
+            'USET' : (USET, self._add_uset_object),
+            'USET1' : (USET1, self._add_uset_object),
 
-            'SET1' : (SET1, self.add_set),
-            'SET3' : (SET3, self.add_set),
+            'SET1' : (SET1, self._add_set_object),
+            'SET3' : (SET3, self._add_set_object),
 
-            'SESET' : (SESET, self.add_seset),
+            'SESET' : (SESET, self._add_seset_object),
 
-            'SEBSET' : (SEBSET, self.add_sebset),
-            'SEBSET1' : (SEBSET1, self.add_sebset),
+            'SEBSET' : (SEBSET, self._add_sebset_object),
+            'SEBSET1' : (SEBSET1, self._add_sebset_object),
 
-            'SECSET' : (SECSET, self.add_secset),
-            'SECSET1' : (SECSET1, self.add_secset),
+            'SECSET' : (SECSET, self._add_secset_object),
+            'SECSET1' : (SECSET1, self._add_secset_object),
 
-            'SEQSET' : (SEQSET, self.add_seqset),
-            'SEQSET1' : (SEQSET1, self.add_seqset),
+            'SEQSET' : (SEQSET, self._add_seqset_object),
+            'SEQSET1' : (SEQSET1, self._add_seqset_object),
 
             #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
 
@@ -1977,7 +1985,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
         card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
-        self.add_bctset(card)
+        self._add_bctset_object(card)
 
     def _prepare_grdset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
@@ -1993,22 +2001,22 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def _prepare_convm(self, card, card_obj, comment=''):
         """adds a CONVM"""
         boundary_condition = CONVM.add_card(card_obj, comment=comment)
-        self.add_thermal_bc(boundary_condition, boundary_condition.eid)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
 
     def _prepare_conv(self, card, card_obj, comment=''):
         """adds a CONV"""
         boundary_condition = CONV.add_card(card_obj, comment=comment)
-        self.add_thermal_bc(boundary_condition, boundary_condition.eid)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
 
     def _prepare_radm(self, card, card_obj, comment=''):
         """adds a RADM"""
         boundary_condition = RADM.add_card(card, comment=comment)
-        self.add_thermal_bc(boundary_condition, boundary_condition.radmid)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
 
     def _prepare_radbc(self, card, card_obj, comment=''):
         """adds a RADBC"""
         boundary_condition = RADBC(card_obj, comment=comment)
-        self.add_thermal_bc(boundary_condition, boundary_condition.nodamb)
+        self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
 
     def _prepare_tempd(self, card, card_obj, comment=''):
         """adds a TEMPD"""
@@ -2065,19 +2073,19 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
     def _prepare_dmi(self, card, card_obj, comment=''):
         """adds a DMI"""
-        self._prepare_dmix(DMI, self.add_dmi, card_obj, comment=comment)
+        self._prepare_dmix(DMI, self._add_dmi_object, card_obj, comment=comment)
 
     def _prepare_dmij(self, card, card_obj, comment=''):
         """adds a DMIJ"""
-        self._prepare_dmix(DMIJ, self.add_dmij, card_obj, comment=comment)
+        self._prepare_dmix(DMIJ, self._add_dmij_object, card_obj, comment=comment)
 
     def _prepare_dmik(self, card, card_obj, comment=''):
         """adds a DMIK"""
-        self._prepare_dmix(DMIK, self.add_dmik, card_obj, comment=comment)
+        self._prepare_dmix(DMIK, self._add_dmik_object, card_obj, comment=comment)
 
     def _prepare_dmiji(self, card, card_obj, comment=''):
         """adds a DMIJI"""
-        self._prepare_dmix(DMIJI, self.add_dmiji, card_obj, comment=comment)
+        self._prepare_dmix(DMIJI, self._add_dmiji_object, card_obj, comment=comment)
 
     #def _prepare_cmass4(self, card, card_obj, comment=''):
         #"""adds a CMASS4"""
@@ -2305,7 +2313,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             nodes[ngrids+nspoints:] = self.epoint.points
         return nodes
 
-    def get_xyz_in_coord(self, cid=0, dtype='float32'):
+    def get_xyz_in_coord(self, cid=0, dtype='float64', sort_ids=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -2313,8 +2321,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         ----------
         cid : int; default=0
             the desired coordinate system
-        dtype : str; default='float32'
+        dtype : str; default='float64'
             the data type of the xyz coordinates
+        sort_ids : bool; default=True
+            sort the ids
 
         Returns
         -------
@@ -2343,6 +2353,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         else:
             assert cid == 0, cid
             assert nspoints == 0, nspoints
+        if sort_ids:
+            isort = np.argsort(all_nodes)
+            xyz_cid0 = xyz_cid0[isort, :]
+
         return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
@@ -2507,7 +2521,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'se_usets',
 
             # tables
-            'tables', 'random_tables',
+            'tables', 'tables_d', 'tables_m', 'random_tables',
 
             # methods
             'methods', 'cMethods',
@@ -2652,8 +2666,12 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         their output in coordinate systems other than the global.
         Used in combination with ``OP2.transform_displacements_to_global``
 
-        Returns
+        Parameters
         ----------
+        dtype : str
+            the type of xyz_cp
+        Returns
+        -------
         icd_transform : dict{int cd : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
@@ -2725,6 +2743,12 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 nid_cp_cd[i] = nid
                 i += 1
 
+        if sort_ids:
+            nids = nid_cp_cd[:, 0]
+            isort = nids.argsort()
+            nid_cp_cd = nid_cp_cd[isort, :]
+            xyz_cp = xyz_cp[isort, :]
+
         icp_transform = {}
         icd_transform = {}
         nids_all = np.array(sorted(self.point_ids))
@@ -2749,11 +2773,32 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """
         Working on faster method for calculating node locations
         Not validated...
+
+        Parameters
+        ----------
+        xyz_cp : (n, 3) float ndarray
+            points in the CP coordinate system
+        icp_transform : dict{int cp : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their input (`CP`) in that
+            coordinate system.
+        cid : int; default=0
+            the coordinate system to get xyz in
+        Returns
+        -------
+        xyz_cid : (n, 3) float ndarray
+            points in the CID coordinate system
         """
         coord2 = self.coords[cid]
         beta2 = coord2.beta()
 
-        xyz_cid0 = np.copy(xyz_cp)
+        assert in_place is False, 'in_place=%s' % in_place
+        if in_place:
+            xyz_cid0 = xyz_cp
+        else:
+            xyz_cid0 = np.copy(xyz_cp)
+
+        # transform the grids to the global coordinate system
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
                 continue
@@ -2790,8 +2835,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         Used in combination with ``OP2.transform_displacements_to_global``
 
         Returns
-        ----------
-        i_transform : dict{int cid : (n,) int ndarray}
+        -------
+        icd_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
@@ -2803,17 +2848,17 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # assume GRID 5 has a CD=50
         >>> model.point_ids
         [1, 2, 5]
-        >>> i_transform = model.get_displacement_index()
-        >>> i_transform[10]
+        >>> icd_transform = model.get_displacement_index()
+        >>> icd_transform[10]
         [0, 1]
 
-        >>> i_transform[50]
+        >>> icd_transform[50]
         [2]
         """
         nids_transform = defaultdict(list)
-        i_transform = {}
+        icd_transform = {}
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
-            return i_transform
+            return icd_transform
 
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
@@ -2823,8 +2868,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         nids_all = np.array(sorted(self.point_ids))
         for cid in sorted(iterkeys(nids_transform)):
             nids = np.array(nids_transform[cid])
-            i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
-        return nids_all, nids_transform, i_transform
+            icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
+        return nids_all, nids_transform, icd_transform
 
     def get_displacement_index_transforms(self):
         """
@@ -2833,8 +2878,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         Used in combination with ``OP2.transform_displacements_to_global``
 
         Returns
-        ----------
-        i_transform : dict{int cid : (n,) int ndarray}
+        -------
+        icd_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
@@ -2849,28 +2894,28 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # assume GRID 5 has a CD=50
         >>> model.point_ids
         [1, 2, 5]
-        >>> i_transform, beta_transforms = model.get_displacement_index_transforms()
-        >>> i_transform[10]
+        >>> icd_transform, beta_transforms = model.get_displacement_index_transforms()
+        >>> icd_transform[10]
         [0, 1]
         >>> beta_transforms[10]
         [1., 0., 0.]
         [0., 0., 1.]
         [0., 1., 0.]
 
-        >>> i_transform[50]
+        >>> icd_transform[50]
         [2]
         >>> beta_transforms[50]
         [1., 0., 0.]
         [0., 1., 0.]
         [0., 0., 1.]
         """
-        self.deprecated('i_transforms, model.get_displacement_index_transforms()',
-                        'itransforms, beta_transforms = model.get_displacement_index()', '0.9.0')
+        self.deprecated('icd_transform, model.get_displacement_index_transforms()',
+                        'icd_transform, beta_transforms = model.get_displacement_index()', '0.9.0')
         nids_transform = defaultdict(list)
-        i_transform = {}
+        icd_transform = {}
         beta_transforms = {}
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
-            return i_transform, beta_transforms
+            return icd_transform, beta_transforms
 
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
@@ -2880,9 +2925,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         nids_all = np.array(sorted(self.point_ids))
         for cid in sorted(iterkeys(nids_transform)):
             nids = np.array(nids_transform[cid])
-            i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
+            icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
             beta_transforms[cid] = self.coords[cid].beta()
-        return i_transform, beta_transforms
+        return icd_transform, beta_transforms
 
     def _get_card_name(self, lines):
         """
@@ -2950,7 +2995,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         Parameters
         ----------
-
         bdf_filename : str
             the main bdf_filename
         punch : bool, optional
@@ -3033,7 +3077,15 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
                     with self._open_file(bdf_filename2, basename=False) as bdf_file:
                         #print('bdf_file.name = %s' % bdf_file.name)
-                        lines2 = bdf_file.readlines()
+                        try:
+                            lines2 = bdf_file.readlines()
+                        except UnicodeDecodeError:
+                            msg = 'Invalid Encoding: encoding=%r.  Fix it by:\n' % self._encoding
+                            msg += '  1.  try a different encoding (e.g., latin1)\n'
+                            msg += "  2.  call read_bdf(...) with `encoding`'\n"
+                            msg += ("  3.  Add '$ pyNastran : encoding=latin1"
+                                    ' (or other encoding) to the top of the main file\n')
+                            raise RuntimeError(msg)
 
                     #print('lines2 = %s' % lines2)
                     nlines += len(lines2)
@@ -3056,7 +3108,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
-
         return _lines_to_decks(lines, i, punch)
 
     def _dump_file(self, bdf_dump_filename, lines, i):
@@ -3758,12 +3809,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.dvgrids)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
+        for key, cards in sorted(iteritems(self.dvgrids)):
+            for card in cards:
+                try:
+                    card._verify(xref)
+                except:
+                    print(str(card))
+                    raise
 
 
 IGNORE_COMMENTS = (
@@ -3846,6 +3898,9 @@ def _lines_to_decks(lines, i, punch):
                 break
         for line in lines[i:]:
             bulk_data_lines.append(line.rstrip())
+
+        _check_valid_deck(flag)
+
     del lines
     #for line in bulk_data_lines:
         #print(line)
@@ -3854,3 +3909,29 @@ def _lines_to_decks(lines, i, punch):
     executive_control_lines = [_clean_comment(line) for line in executive_control_lines]
     case_control_lines = [_clean_comment(line) for line in case_control_lines]
     return executive_control_lines, case_control_lines, bulk_data_lines
+
+def _check_valid_deck(flag):
+    """Crashes if the flag is set wrong"""
+    if flag != 3:
+        if flag == 1:
+            found = ' - Executive Control Deck\n'
+            missing = ' - Case Control Deck\n'
+            missing += ' - Bulk Data Deck\n'
+        elif flag == 2:
+            found = ' - Executive Control Deck\n'
+            found += ' - Case Control Deck\n'
+            missing = ' - Bulk Data Deck\n'
+        else:
+            raise RuntimeError('flag=%r is not [1, 2, 3]' % flag)
+
+        msg = 'This is not a valid BDF (a BDF capable of running Nastran).\n\n'
+        msg += 'The following sections were found:\n%s\n' % found
+        msg += 'The following sections are missing:\n%s\n' % missing
+        msg += 'If you do not have an Executive Control Deck or a Case Control Deck:\n'
+        msg += '  1.  call read_bdf(...) with `punch=True`\n'
+        msg += "  2.  Add '$ pyNastran : punch=True' to the top of the main file\n"
+        msg += '  3.  Name your file *.pch\n\n'
+        msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
+        msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
+        raise RuntimeError(msg)
+
