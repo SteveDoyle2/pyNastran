@@ -21,7 +21,7 @@ class SU2_GUI(STL_IO, GUIMethods):
         SU2_IO.__init__(self)
 
 
-class SU2_GUITest(unittest.TestCase):
+class TestSU2GUI(unittest.TestCase):
 
     def test_su2_geometry(self):
         geometry_filename = os.path.join(model_path, 'mesh_naca0012_inv.su2')
