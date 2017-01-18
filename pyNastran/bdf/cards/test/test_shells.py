@@ -32,10 +32,12 @@ class TestShells(unittest.TestCase):
         ]
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
-
         model.validate()
         model._verify_bdf(xref=False)
+        model.mass_properties_no_xref()
+
         model.cross_reference()
+        model.mass_properties()
         model._verify_bdf(xref=True)
         cquad4 = model.Element(eid)
         pshell = model.Property(pid)

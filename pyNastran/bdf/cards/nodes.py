@@ -1074,6 +1074,14 @@ class GRID(BaseCard):
         msg = ' which is required by GRID nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
 
+    def get_position_no_xref(self, model):
+        if self.cp == 0:
+            return self.xyz
+        assert isinstance(self.cp, int), self.cp
+        coord = model.Coord(self.cp)
+        xyz = coord.transform_node_to_global_no_xref(self.xyz, model)
+        return xyz
+
     def get_position(self):
         """
         Gets the point in the global XYZ coordinate system.
@@ -1109,6 +1117,21 @@ class GRID(BaseCard):
             if self.cp == 0:
                 return self.xyz
             raise
+        return xyz
+
+    def get_position_wrt_no_xref(self, model, cid):
+        """see get_position_wrt"""
+        if cid == self.cp: # same coordinate system
+            return self.xyz
+        msg = ' which is required by GRID nid=%s' % (self.nid)
+
+        # converting the xyz point arbitrary->global
+        cp_ref = model.Coord(self.cp, msg=msg)
+        p = cp_ref.transform_node_to_global_no_xref(self.xyz, model)
+
+        # a matrix global->local matrix is found
+        coord_b = model.Coord(cid, msg=msg)
+        xyz = coord_b.transform_node_to_local(p)
         return xyz
 
     def get_position_wrt(self, model, cid):

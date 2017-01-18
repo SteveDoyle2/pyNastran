@@ -339,6 +339,144 @@ class Coord(BaseCard):
         #print('cid=%s rid_trace=%s' % (self.cid, self.rid_trace))
         assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
 
+    def setup_no_xref(self, model):
+        r"""
+        .. math::
+          e_{13} = e_3 - e_1
+
+        .. math::
+          e_{12} = e_2 - e_1
+
+        .. math::
+          k = \frac{e_{12}}{\lvert e_{12} \rvert}
+
+        .. math::
+          j_{dir} = k \times e_{13}
+
+        .. math::
+          j = \frac{j_{dir}}{\lvert j_{dir} \rvert}
+
+        .. math::
+          i = j \times k
+        """
+        assert isinstance(self.rid, integer_types), self.rid
+        if self.is_resolved:
+            return
+        try:
+            assert len(self.e1) == 3, self.e1
+            assert len(self.e2) == 3, self.e2
+            assert len(self.e3) == 3, self.e3
+        except AssertionError:
+            msg = 'Invalid Vector Length\n'
+            msg += "type = %s\n" % (self.type)
+            msg += "cid  = %s\n" % (self.Cid())
+            msg += "e1 = %s\n" % str(self.e1)
+            msg += "e2 = %s\n" % str(self.e2)
+            msg += "e3 = %s\n" % str(self.e3)
+            raise RuntimeError(msg)
+
+        if self.cid == 0:
+            self.origin = np.array([0., 0., 0.], dtype='float64')
+            self.i = np.array([1., 0., 0.], dtype='float64')
+            self.j = np.array([0., 1., 0.], dtype='float64')
+            self.k = np.array([0., 0., 1.], dtype='float64')
+            return
+
+        #print('setting up cid=%s rid=%s' % (self.cid, self.Rid()))
+        rid = self.rid
+        if not self.is_resolved and self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+            rid_ref = model.Coord(self.rid)
+            rid_ref.setup_no_xref(model)
+            self.rid_trace = copy.deepcopy(rid_ref.rid_trace)
+            if rid not in self.rid_trace:
+                self.rid_trace.append(rid)
+            assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+
+        if rid == 0:
+            self.origin = copy.deepcopy(self.e1)
+            e1 = self.e1
+            e2 = self.e2
+            e3 = self.e3
+        else:
+            rid_ref = model.Coord(self.rid)
+            self.origin = rid_ref.transform_node_to_global_no_xref(self.e1, model)
+            e1 = self.origin
+            e2 = rid_ref.transform_node_to_global_no_xref(self.e2, model)
+            e3 = rid_ref.transform_node_to_global_no_xref(self.e3, model)
+
+        try:
+            # e_{13}
+            e13 = e3 - e1
+            # e_{12}
+            e12 = e2 - e1
+            #print("e13 = %s" % e13)
+            #print("e12 = %s" % e12)
+        except TypeError:
+            msg = ''
+            msg += "\ntype = %s\n" % (self.type)
+            msg += "\ncid  = %s\n" % (self.Cid())
+            msg += "e1 = %s\n" % str(e1)
+            msg += "e2 = %s\n" % str(e2)
+            msg += "e3 = %s\n" % str(e3)
+            raise TypeError(msg)
+
+        try:
+            #: k = (G3 cross G1) normalized
+            self.k = normalize(e12)
+        except RuntimeError:
+            print("---InvalidUnitVectorError---")
+            print("Cp  = %s" % (self.Cid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e1* = %s" % (e1))
+            print("e2* = %s" % (e2))
+            print("e3* = %s" % (e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
+            print("k   = normalize(e12)")
+            raise
+
+        try:
+            # j = (k cross e13) normalized
+            self.j = normalize(np.cross(self.k, e13))
+        except RuntimeError:
+            print("---InvalidUnitVectorError---")
+            print("Cp  = %s" % (self.Cid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e1* = %s" % (e1))
+            print("e2* = %s" % (e2))
+            print("e3* = %s" % (e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
+            print("k   = norm(e12)")
+            print("k   = %s\n" % (self.k))
+            print("j*  = cross(k, e13)")
+            print("j*  = %s" % (np.cross(self.k, e13)))
+            print("j   = norm(cross(k, e13))\n")
+            raise
+
+        try:
+            #: i = j cross k
+            self.i = np.cross(self.j, self.k)
+        except RuntimeError:
+            print("---InvalidUnitVectorError---")
+            print("Cp  = %s" % (self.Cid()))
+            print("Rid = %s" % (self.Rid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
+            print("k   = normalize(e12)")
+            print("k   = %s\n" % (self.k))
+            print("j   = norm(cross(k,e13))")
+            print("j   = %s" % (self.j))
+            raise
+        assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
+
     #def transform_force_to_global(self, F, M):
         #raise NotImplementedError('transform_force_to_global')
         #Fg = self.transform_vector_to_global(self, F)
@@ -385,6 +523,31 @@ class Coord(BaseCard):
                 self.rid_ref.setup()
             else:
                 self.setup()
+
+    def transform_vector_to_global_no_xref(self, p, model):
+        if self.cid == 0:
+            return p
+
+        #if not self.is_resolved:
+            #if isinstance(self.rid, int) and self.rid != 0:
+                #raise RuntimeError("BDF has not been cross referenced.")
+            #if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+                #self.rid_ref.setup()
+            #else:
+        self.setup_no_xref(model)
+
+        # the ijk axes arent resolved as R-theta-z, only points
+        p2 = self.coord_to_xyz(p)
+
+        if self.i is None:
+            msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (
+                self.type, self.cid, self.rid)
+            raise RuntimeError(msg)
+        matrix = np.vstack([self.i, self.j, self.k])
+
+        # rotate point p2 from the local frame to the global frame
+        p3 = np.dot(p2, matrix)
+        return p3
 
     def transform_vector_to_global(self, p):
         """
@@ -492,6 +655,11 @@ class Coord(BaseCard):
         if self.cid == 0:
             return xyz
         return self.transform_vector_to_global(xyz) + self.origin
+
+    def transform_node_to_global_no_xref(self, xyz, model):
+        if self.cid == 0:
+            return xyz
+        return self.transform_vector_to_global_no_xref(xyz, model) + self.origin
 
     def transform_node_to_global_assuming_rectangular(self, xyz):
         """

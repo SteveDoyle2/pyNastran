@@ -5341,7 +5341,7 @@ class TRIM(BaseCard):
                 for nid in suporti.node_ids:
                     for cs in suporti.Cs:
                         for ci in cs:
-                            #print('  nid=%s C=%s' % (nid, ci))
+                            #print('  SUPORT: nid=%r C=%r' % (nid, ci))
                             dof = (nid, ci)
                             if dof in suport_dofs:
                                 msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
@@ -5349,7 +5349,7 @@ class TRIM(BaseCard):
                             suport_dofs.add(dof)
                             nsuport_dofs += 1
 
-            suport1_dofs = {}
+            #suport1_dofs = {}
             if suport1:
                 conid = suport1.conid
                 #IDs = suport1.IDs
@@ -5358,7 +5358,12 @@ class TRIM(BaseCard):
                 #print('SUPORT1 id=%s' % conid)
                 for nid, cs in zip(nids, suport1.Cs):
                     for ci in cs:
-                        #print('  nid=%s C=%s' % (nid, ci))
+                        #print('  SUPORT1: id=%r nid=%r C=%r' % (conid, nid, ci))
+                        dof = (nid, ci)
+                        if dof in suport_dofs:
+                            msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                            raise RuntimeError(msg)
+                        suport_dofs.add(dof)
                         nsuport1_dofs += 1
 
             aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]

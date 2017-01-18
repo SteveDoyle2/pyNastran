@@ -1536,7 +1536,7 @@ class PSHELL(ShellProperty):
 
     def Mid(self):
         mid1 = self.Mid1()
-        if isinstance(mid1, int):
+        if isinstance(mid1, integer_types):
             return mid1
         return self.Mid2()
 
@@ -1575,6 +1575,20 @@ class PSHELL(ShellProperty):
 
         .. math:: \frac{m}{A} = nsm + \rho t"""
         rho = self.Rho()
+        try:
+            mass_per_area = self.nsm + rho * self.t
+        except:
+            print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
+            raise
+        return mass_per_area
+
+    def MassPerArea_no_xref(self, model):
+        """
+        Calculates mass per area.
+
+        .. math:: \frac{m}{A} = nsm + \rho t"""
+        mid_ref = model.Material(self.Mid())
+        rho = mid_ref.Rho()
         try:
             mass_per_area = self.nsm + rho * self.t
         except:

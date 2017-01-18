@@ -399,6 +399,20 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position()
         return positions
 
+    def get_node_positions_no_xref(self, model, nodes=None):
+        """returns the positions of multiple node objects"""
+        if not nodes:
+            nodes = self.nodes
+
+        nnodes = len(nodes)
+        positions = empty((nnodes, 3), dtype='float64')
+        positions.fill(nan)
+        for i, nid in enumerate(nodes):
+            if nid is not None:
+                node = model.Node(nid)
+                positions[i, :] = node.get_position_no_xref(model)
+        return positions
+
     def _nodeIDs(self, nodes=None, allow_empty_nodes=False, msg=''):
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes, allow_empty_nodes, msg)
