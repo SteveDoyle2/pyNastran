@@ -2051,7 +2051,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'MONPNT2' : (MONPNT2, self._add_monpnt_object),
             'MONPNT3' : (MONPNT3, self._add_monpnt_object),
 
-            #'NLPARM' : (NLPARM, self._add_nlparm_object),
+            'NLPARM' : (NLPARM, self._add_nlparm_object),
             'NLPCI' : (NLPCI, self._add_nlpci_object),
             'TSTEP' : (TSTEP, self._add_tstep_object),
             'TSTEP1' : (TSTEP1, self._add_tstepnl_object),
@@ -2144,7 +2144,6 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             #'SEUSET' : (SEUSET, self._add_seuset_object),
             #'SEUSET1' : (SEUSET1, self._add_seuset_object),
 
-            'NLPARM' : (NLPARM, self._add_nlparm_object),
             # BCTSET
             'ROTORG' : (ROTORG, self._add_rotor_object),
             'ROTORD' : (ROTORD, self._add_rotor_object),

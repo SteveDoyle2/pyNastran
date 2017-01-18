@@ -452,7 +452,7 @@ class AEPARM(BaseCard):
         1: 'id', 2:'label', 3:'units'
     }
 
-    def __init__(self, id, label, units, comment=''):
+    def __init__(self, aeparm_id, label, units, comment=''):
         """
         Creates an AEPARM card, which defines a new trim variable.
 
@@ -469,19 +469,19 @@ class AEPARM(BaseCard):
         """
         if comment:
             self.comment = comment
-        self.id = id
+        self.id = aeparm_id
         self.label = label
         self.units = units
 
     @classmethod
     def add_card(cls, card, comment=''):
-        id = integer(card, 1, 'id')
+        aeparm_id = integer(card, 1, 'aeparm_id')
         label = string(card, 2, 'label')
         units = card.field(3)
         units = '' if units is None else units
 
         assert len(card) <= 4, 'len(AEPARM card) = %i\ncard=%s' % (len(card), card)
-        return AEPARM(id, label, units, comment=comment)
+        return AEPARM(aeparm_id, label, units, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -532,7 +532,7 @@ class AESTAT(BaseCard):
     _field_map = {
         1: 'id', 2:'label',
     }
-    def __init__(self, id, label, comment=''):
+    def __init__(self, aestat_id, label, comment=''):
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
 
@@ -547,22 +547,22 @@ class AESTAT(BaseCard):
         """
         if comment:
             self.comment = comment
-        self.id = id
+        self.id = aestat_id
         self.label = label
 
     @classmethod
     def add_card(cls, card, comment=''):
-        id = integer(card, 1, 'ID')
+        aestat_id = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
         assert len(card) <= 3, 'len(AESTAT card) = %i\ncard=%s' % (len(card), card)
-        return AESTAT(id, label, comment=comment)
+        return AESTAT(aestat_id, label, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        id = data[0]
+        aestat_id = data[0]
         label = data[1]
         assert len(data) == 2, 'data = %s' % data
-        return AESTAT(id, label, comment=comment)
+        return AESTAT(aestat_id, label, comment=comment)
 
     #def cross_reference(self, model):
         #pass
@@ -3084,13 +3084,13 @@ class PAERO5(BaseCard):
 
 class DIVERG(BaseCard):
     """
-    +--------+-----+--------+----+----+----+----+----+---+
-    |   1    |  2  |   3    | 4  | 5  | 6  | 7  | 8  | 9 |
-    +========+=====+========+====+====+====+====+====+===+
-    | DIVERG | SID | NROOT  | M1 | M2 | M3 | M4 | M5 | M6|
-    +--------+-----+--------+----+----+----+----+----+---+
-    |        |  M7 |  etc.  |    |    |    |    |    |   |
-    +--------+-----+--------+----+----+----+----+----+---+
+    +--------+-----+--------+----+----+----+----+----+----+
+    |   1    |  2  |   3    | 4  | 5  | 6  | 7  | 8  | 9  |
+    +========+=====+========+====+====+====+====+====+====+
+    | DIVERG | SID | NROOT  | M1 | M2 | M3 | M4 | M5 | M6 |
+    +--------+-----+--------+----+----+----+----+----+----+
+    |        |  M7 |  etc.  |    |    |    |    |    |    |
+    +--------+-----+--------+----+----+----+----+----+----+
 
     Attributes
     ----------
@@ -3245,7 +3245,6 @@ class FLFACT(BaseCard):
             fnf = double(card, 4, 'fnf')
             nf = integer(card, 5, 'nf')
             fmid_default = (f1 + fnf) / 2.
-            fmid = 13.
             fmid = double_or_blank(card, 6, 'fmid', fmid_default)
             assert len(card) <= 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
             i = np.linspace(0, nf, nf, endpoint=False) + 1
