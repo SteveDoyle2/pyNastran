@@ -24,15 +24,22 @@ class SU2Reader(object):
             #Hexahedral     12
             #Wedge          13
             #Pyramid        14
-            data = f.readline().split()[1:-1]
+            data = f.readline().split()[:-1]
             Type = data[0]
             nodes = data[1:]
             if Type == '9':
+                assert len(nodes) == 4, nodes
                 quads.append(nodes)
             elif Type == '5':
+                assert len(nodes) == 3, nodes
                 tris.append(nodes)
-        tris = np.array(tris, dtype='int32')
-        quads = np.array(quads, dtype='int32')
+            else:
+                raise NotImplementedError(Type)
+
+        tris = np.asarray(tris, dtype='int32')
+        quads = np.asarray(quads, dtype='int32')
+        print('tris =', tris)
+        print('quads =', quads)
 
         nnodes = int(f.readline().split('=')[1])
         nodes = np.zeros((nelem, 2), dtype='int32')
@@ -43,21 +50,29 @@ class SU2Reader(object):
             #print(x, y, z)
             nodes[inode, :] = [float(x), float(y)]
 
+        # boundary conditions
         nmark = int(f.readline().split('=')[1])
         for imark in range(nmark):
             marker = f.readline().split('=')[1].strip()
             nelements_mark = int(f.readline().split('=')[1])
 
             if ndim == 2:
-                lines = np.zeros((nelements_mark, 2), dtype='int32')
+                lines = []
+                #np.zeros((nelements_mark, 2), dtype='int32')
                 for ne in range(nelements_mark):
                     # what are the 3 slots?
                     #Line          (2D)     3
                     #Triangle      (3D)     5
                     #Quadrilateral (3D)     9
-                    Type, n1, n2 = f.readline().split()
-                    lines[ne] = [n1, n2]
+                    sline = f.readline().split()
+                    Type = int(sline[0])
+                    if Type == 3:
+                        Type, n1, n2 = sline
+                        lines.append([n1, n2])
+                    else:
+                        raise NotImplementedError(Type)
 
+        assert len(tris) > 0 or len(quads) > 0
         elements = {
             5 : tris,
             9 : quads,
