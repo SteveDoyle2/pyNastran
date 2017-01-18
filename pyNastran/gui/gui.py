@@ -44,7 +44,7 @@ import vtk
 #from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import (NastranIO, Cart3dIO,  DegenGeomIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
-    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO,
+    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
     )
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -74,7 +74,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
                  LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, Plot3d_io, ADB_IO,
-                 FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO):
+                 FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -119,7 +119,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
 
             # no results
             'lawgs', 'stl', 'fast', 'avus', 'abaqus', #'plot3d', 'tetgen',
-            'bedge',
+            'bedge', 'su2',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
@@ -148,8 +148,9 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             Usm3dIO.__init__(self)
             UGRID_IO.__init__(self)
             AbaqusIO.__init__(self)
+            SU2_IO.__init__(self)
 
-        self.build_fmts(fmt_order, stop_on_failure=False)
+        self.build_fmts(fmt_order, stop_on_failure=True)
 
         logo = os.path.join(icon_path, 'logo.png')
         self.logo = logo

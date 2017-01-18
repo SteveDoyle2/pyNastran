@@ -6,7 +6,7 @@ from numpy import arange
 import vtk
 from vtk import vtkTriangle, vtkQuad
 
-from pyNastran.converters.dev.su2.su2_reader import SU2Reader as SU2
+from pyNastran.converters.su2.su2_reader import SU2Reader as SU2
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
@@ -36,7 +36,7 @@ class SU2_IO(object):
             nsub_elements = elems.shape[0]
             if nsub_elements:
                 nelements += nsub_elements
-                print('min of type = %s' % elems.min())
+                #print('min of type = %s' % elems.min())
         assert nnodes > 0, nnodes
         assert nelements > 0, nelements
 
@@ -44,7 +44,6 @@ class SU2_IO(object):
         self.nElements = nelements
 
         self.log.info('nnodes=%s nelements=%s' % (self.nNodes, self.nElements))
-        print('nnodes=%s nelements=%s' % (self.nNodes, self.nElements))
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
@@ -94,16 +93,16 @@ class SU2_IO(object):
         #}
         #print('dict =', elements)
         for etype, elems in iteritems(elements):
-            print(etype, elems)
+            #print(etype, elems)
             if isinstance(elems, list):
-                print('continue')
+                #print('continue')
                 continue
-            print(type(elems))
+            #print(type(elems))
             nsub_elements = elems.shape[0]
             if nsub_elements == 0:
-                print('continue')
+                #print('continue')
                 continue
-            print('eid_min =', elems.min())
+            #print('eid_min =', elems.min())
             assert nsub_elements > 0, nsub_elements
             if etype == 5:
                 for eid in range(nsub_elements):

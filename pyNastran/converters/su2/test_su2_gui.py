@@ -15,7 +15,7 @@ model_path = os.path.join(pkg_path, 'converters', 'su2')
 
 import unittest
 
-class SU2_GUI(STL_IO, GUIMethods):
+class SU2_GUI(SU2_IO, GUIMethods):
     def __init__(self):
         GUIMethods.__init__(self)
         SU2_IO.__init__(self)
