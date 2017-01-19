@@ -22,6 +22,7 @@ class Tetgen(object):
         self.tets = None
 
     def write_nastran(self, bdf_filename):
+        """writes a nastran bdf"""
         if PY2:
             wb = 'wb'
         else:
@@ -79,42 +80,53 @@ class Tetgen(object):
             f.write('ENDDATA\n')
 
     def read_tetgen(self, node_filename, smesh_filename, ele_filename, dimension_flag):
+        """reads a tetgen file"""
         self.nodes = self.read_nodes(node_filename)
         if dimension_flag == 2:
+            self.log.info('reading the *.smesh')
             self.tris = self.read_smesh(smesh_filename)
         elif dimension_flag == 3:
+            self.log.info('reading the *.ele')
             self.tets = self.read_ele(ele_filename)
         else:
             raise RuntimeError('dimension_flag = %r and must be 2 or 3.' % dimension_flag)
 
     def read_smesh(self, smesh_filename):
+        """reads the *.smesh file"""
         with open(smesh_filename, 'r') as f:
-            f.readline() # node section
-            f.readline() # 0  3  0  0 # node list is found in .node file.
-            f.readline() # blank
-            f.readline() # facet section
+            lines = f.readlines()
+            lines = clean_lines(lines)
+            #iline = 0 # 0  3  0  0 # node list is found in .node file.
 
-            nelements, zero = f.readline().strip().split() # nelements, 0
+            iline = 1
+            nelements, zero = lines[iline].split() # nelements, 0
             nelements = int(nelements)
             self.log.info('nelements = %s' % nelements)
-            f.readline() # blank
 
             # facet section
             tri_list = []
+            iline += 1
             for ielement in range(nelements):
-                sline = f.readline().split('#')[0].strip().split()
-                nnodes = sline[0]
+                sline = lines[iline].split()
+                #print(ielement, 'sline =', sline)
+                try:
+                    nnodes = sline[0]
+                except IndexError:
+                    print(sline)
+                    raise
                 element_nodes = sline[1:]
                 if nnodes == '3':
                     tri_list.append(element_nodes)
                 else:
                     raise NotImplementedError('nnodes = %s' % nnodes)
                 #print(element_nodes)
+                iline += 1
             tri = array(tri_list, 'int32') - 1 # subtract 1 so the node ids start at 0
             #print(tri)
         return tri
 
     def read_nodes(self, node_filename):
+        """reads the *.node file"""
         with open(node_filename, 'r') as f:
             nnodes, three, zero1, zero2 = f.readline().strip().split()
             assert three == '3', three
@@ -128,6 +140,7 @@ class Tetgen(object):
         return nodes
 
     def read_ele(self, ele_filename, form_flag='1'):
+        """reads the *.ele file"""
         #print("ele_filename =", ele_filename)
         with open(ele_filename, 'r') as f:
             nelements, four, form_flag_enabled = f.readline().strip().split()
@@ -158,12 +171,22 @@ class Tetgen(object):
     #self.tet = self.read_ele(ele_filename)
 
 
+def clean_lines(lines):
+    """removes blank lines and commented lines"""
+    lines2 = []
+    for line in lines:
+        line2 = line.split('#')[0].strip()
+        if line2:
+            lines2.append(line2)
+    return lines2
+
+
 def main():  # pragma: no cover
     import os
 
-    base = 'gear'
-    read_tetgen(base, dimension_flag=2)
-    return
+    #base = 'gear'
+    #read_tetgen(base, dimension_flag=2)
+    #return
 
     from pyNastran.converters.stl.stl import STL
     m1 = STL()
