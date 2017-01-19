@@ -31,19 +31,21 @@ class TestTetgenGUI(unittest.TestCase):
         test = TetgenGUI()
         test.load_tetgen_geometry(geometry_filename, dirname)
 
-    def _test_tetgen_geometry_02(self): #   # pragma: no cover
-        from pyNastran.converters.stl.stl import STL
-        m1 = STL()
-        m1.read_stl(os.path.join(STL_PATH, 'sphere.stl'))
-        #m1.flip_normals()
-        m1.write_stl('tetgen_test.stl')
-        del m1
-
-        os.system('tetgen.exe -pqcvVqY tetgen_test.stl')
+    def test_tetgen_geometry_02(self):
+        regenerate_files = False
+        if regenerate_files: # pragma: no cover
+            from pyNastran.converters.stl.stl import STL
+            m1 = STL()
+            m1.read_stl(os.path.join(STL_PATH, 'sphere.stl'))
+            #m1.flip_normals()
+            m1.write_stl('tetgen_test.stl')
+            del m1
+            os.system('tetgen.exe -pqcvVqY tetgen_test.stl')
 
         test = TetgenGUI()
         base = 'tetgen_test.1'
         test.load_tetgen_geometry(base + '.smesh', dirname=None)
+        test.load_tetgen_geometry(base + '.ele', dirname=None)
         #base = 'tetgen_test_flipped.1'
         #m.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag=3)
         #m.write_nastran(base + '.bdf')
