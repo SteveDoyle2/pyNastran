@@ -465,8 +465,8 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbush(self, pid, k, b, ge, rcv, comment=''):
-        prop = PBUSH(pid, k, b, ge, rcv, comment=comment)
+    def add_pbush(self, pid, k, b, ge, rcv, mass_fields=None, comment=''):
+        prop = PBUSH(pid, k, b, ge, rcv, mass_fields, comment=comment)
         self._add_property_object(prop)
         return prop
 

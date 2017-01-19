@@ -308,21 +308,34 @@ class EPT(GeomCommon):
     def _read_pbush(self, data, n):
         """
         The PBUSH card is different between MSC and NX Nastran.
-        The NX version has 23 fields.
-        The MSC version has 24 fields.
-        There's also an 18 field version from pre-MSC/NX 2001.
+
+        DMAP NX 11
+        ----------
+        NX has 23 fields in NX 11 (supported)
+        NX has 18 fields in the pre-2001 format (supported)
+
+        DMAP MSC 2005
+        -------------
+        MSC has 23 fields in 2005 (supported)
+        MSC has 18 fields in the pre-2001 format (supported)
+
+        DMAP MSC 2016
+        -------------
+        TODO: MSC has 24 fields in 2016.1 (not supported)
+        MSC has 18 fields in the pre-2001 format (supported)
         """
-        if self.is_nx:
-            return self._read_pbush_nx(data, n)
-        return self._read_pbush_msc(data, n)
+        n = self._read_dual_card(data, n, self._read_pbush_nx, self._read_pbush_nx,
+                                 'PBUSH', self._add_op2_property)
+        return n
 
     def _read_pbush_nx(self, data, n):
-        """PBUSH(1402,14,37)"""
+        """PBUSH(1402,14,37) - 18 fields"""
         #if self.table_name == ['EPTS', 'EPT']:
         ntotal = 72
         s = Struct(b(self._endian + 'i17f'))
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        props = []
         for i in range(nentries):
             edata = data[n:n+72]
             out = s.unpack(edata)
@@ -332,23 +345,9 @@ class EPT(GeomCommon):
             data_in = (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
                        g1, g2, g3, g4, g5, g6, sa, st, ea, et)
             prop = PBUSH.add_op2_data(data_in)
-            self._add_op2_property(prop)
+            props.append(prop)
             n += ntotal
-        #else:
-            #ntotal = 92  # 23*4
-            #s = Struct(b(self._endian + 'i22f'))
-            #nentries = (len(data) - n) // ntotal
-            #assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
-            #for i in range(nentries):
-                #edata = data[n:n+92]
-                #out = s.unpack(edata)
-                #(pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
-                 #g1, g2, g3, g4, g5, g6, sa, st, ea, et) = out
-                #prop = PBUSH.add_op2_data(out)
-                #self._add_op2_property(prop)
-                #n += ntotal
-        self.card_count['PBUSH'] = nentries
-        return n
+        return n, props
 
     def _read_pbush_msc(self, data, n):
         """PBUSH(1402,14,37)"""
@@ -356,16 +355,16 @@ class EPT(GeomCommon):
         s = Struct(b(self._endian + 'i22f'))
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        props = []
         for i in range(nentries):
             edata = data[n:n+92]
             out = s.unpack(edata)
             (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
              g1, g2, g3, g4, g5, g6, sa, st, ea, et) = out
             prop = PBUSH.add_op2_data(out)
-            self._add_op2_property(prop)
+            props.append(prop)
             n += ntotal
-        self.card_count['PBUSH'] = nentries
-        return n
+        return n, props
 
     def _read_pbush1d(self, data, n):
         self.log.info('skipping PBUSH1D in EPT\n')

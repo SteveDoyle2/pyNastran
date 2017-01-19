@@ -1,7 +1,7 @@
 #pylint: disable=C0111,C0103,W0613
 from __future__ import print_function
 from struct import unpack, Struct
-from six import b
+from six import b, integer_types
 from six.moves import range
 
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2
@@ -12,7 +12,7 @@ from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.bdf.cards.constraints import (
     SUPORT1, SUPORT, SPC, SPC1, SPCADD,
-    #MPC, SPCAX, MPCADD, SESUP, GMSPC
+    MPC, #SPCAX, MPCADD, SESUP, GMSPC
 )
 
 class GEOM4(GeomCommon):
@@ -189,38 +189,43 @@ class GEOM4(GeomCommon):
         self.log.info('skipping MPC in GEOM4\n')
         return len(data)
         #self.show_data(data)
-        #ndata = len(data)
-        #nfields = (ndata-n) // 4
-        #print('nfields = %s' % nfields)
-        #datan = data[n:]
-        #ints = unpack(b(self._endian + '%ii' % nfields), datan)
-        #floats = unpack(b(self._endian + '%if' % nfields), datan)
-        #i = 0
-        #nentries = 0
-        #mpc = []
-        #j = 0
-        #while i < nfields:
-            #if ints[i] == -1:
-                #assert ints[i+1] == -1, ints
-                #assert ints[i+2] == -1, ints
-                #mpci = MPC.add_op2_data(mpc)
-                #self.add_suport(mpci) # extracts [sid, nid, c]
-                #print(mpc)
-                #nentries += 1
-                #if self.is_debug_file:
-                    #self.binary_debug.write('  MPC=%s\n' % str(mpc))
-                #mpc = []
-                #j = 0
-                #i += 2
-                #continue
-            #if j == 0:
-                #mpc = [ints[i], ints[i+1], ints[i+2], floats[i+3]]
-                #i = 4
-            #i += 1
-            ##print(suport)
-            #assert -1 not in mpc, mpc
+        ndata = len(data)
+        nfields = (ndata-n) // 4
+        print('nfields = %s' % nfields)
+        datan = data[n:]
+        ints = unpack(b(self._endian + '%ii' % nfields), datan)
+        floats = unpack(b(self._endian + '%if' % nfields), datan)
+        i = 0
+        nentries = 0
+        mpc_data = []
+        j = 0
+        self.show_data(data, 'if')
+        while i < nfields:
+            if ints[i] == -1:
+                # starting a new configuration
+                assert ints[i+1] == -1, ints
+                assert ints[i+2] == -1, ints
+                mpci = MPC.add_op2_data(mpc_data)
+                self._add_constraint_mpc_object(mpci) # extracts [sid, nid, c]
+                print(mpc_data)
+                nentries += 1
+                if self.is_debug_file:
+                    self.binary_debug.write('  MPC=%s\n' % str(mpc))
+                mpc = []
+                j = 0
+                i += 2
+                continue
+            if j == 0:
+                mpc_data = [ints[i], ints[i+1], ints[i+2], floats[i+3]]
+                i += 4
+            i += 1
+            print(i, nfields)
+            for val in mpc_data:
+                if isinstance(val, integer_types):
+                    assert val != -1, mpc_data
 
-        #MPC.add_op2_data(data)
+        mpc = MPC.add_op2_data(mpc_data)
+
 
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""

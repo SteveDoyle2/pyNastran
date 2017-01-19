@@ -297,8 +297,11 @@ class MPC(Constraint):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         msg = '%s has not implemented data parsing' % cls.type
-        raise NotImplementedError(msg)
-        #return MPC(conid, gids, constraints, enforced, comment=comment)
+        conid = data[0]
+        gids = data[1]
+        constraints = data[2]
+        enforced = data[3]
+        return MPC(conid, gids, constraints, enforced, comment=comment)
 
     @property
     def node_ids(self):
