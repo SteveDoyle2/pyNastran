@@ -24,13 +24,11 @@ class TetgenGUI(TetgenIO, GUIMethods):
 class TestTetgenGUI(unittest.TestCase):
 
     def test_tetgen_geometry(self):
-        return
-        geometry_filename = os.path.join(model_path, 'sphere.stl')
+        geometry_filename = os.path.join(model_path, 'gear.smesh')
         dirname = None
 
-        test = STL_GUI()
-        #test.load_nastran_geometry(geometry_filename, None)
-        test.load_stl_geometry(geometry_filename, dirname)
+        test = TetgenGUI()
+        test.load_tetgen_geometry(geometry_filename, dirname)
 
 
 if __name__ == '__main__':  # pragma: no cover

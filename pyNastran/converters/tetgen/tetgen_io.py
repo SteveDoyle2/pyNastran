@@ -21,8 +21,8 @@ class TetgenIO(object):
         return data
 
     def load_tetgen_geometry(self, smesh_filename, dirname, name='main', plot=True):
-        print("load_tetgen_geometry...")
-        skip_reading = self.removeOldGeometry(smesh_filename)
+        #print("load_tetgen_geometry...")
+        skip_reading = self._remove_old_geometry(smesh_filename)
         if skip_reading:
             return
 
@@ -39,8 +39,8 @@ class TetgenIO(object):
             raise RuntimeError('unsupported extension.  Use "smesh" or "ele".')
         model.read_tetgen(node_filename, smesh_filename, ele_filename, dimension_flag)
         nodes = model.nodes
-        tris = model.tri
-        tets = model.tet
+        tris = model.tris
+        tets = model.tets
 
         self.nNodes = nodes.shape[0]
         ntris = 0
@@ -61,27 +61,13 @@ class TetgenIO(object):
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
-        #elem.SetNumberOfPoints(nNodes)
-        if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
-                self.gridResult.InsertNextValue(nid * fraction)
-                #print(str(element))
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
 
         nid = 0
-        print("nnodes=%s" % nnodes)
+        #print("nnodes=%s" % nnodes)
         for i in range(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1

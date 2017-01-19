@@ -5,6 +5,11 @@ from numpy import array, zeros
 from pyNastran.utils.log import get_logger
 from pyNastran.bdf.field_writer_8 import print_card_8
 
+def read_tetgen(base, dimension_flag=2, log=None, debug=False):
+    """simplified interface to Tetgen files"""
+    model = Tetgen(log=log, debug=debug)
+    model.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag)
+    return model
 
 class Tetgen(object):
     """
@@ -84,17 +89,20 @@ class Tetgen(object):
 
     def read_smesh(self, smesh_filename):
         with open(smesh_filename, 'r') as f:
-            for i in range(6):
-                f.readline()
+            f.readline() # node section
+            f.readline() # 0  3  0  0 # node list is found in .node file.
+            f.readline() # blank
+            f.readline() # facet section
 
             nelements, zero = f.readline().strip().split() # nelements, 0
             nelements = int(nelements)
+            self.log.info('nelements = %s' % nelements)
+            f.readline() # blank
 
-
-            #print("line =", line)
+            # facet section
             tri_list = []
             for ielement in range(nelements):
-                sline = f.readline().strip().split()
+                sline = f.readline().split('#')[0].strip().split()
                 nnodes = sline[0]
                 element_nodes = sline[1:]
                 if nnodes == '3':
@@ -103,7 +111,7 @@ class Tetgen(object):
                     raise NotImplementedError('nnodes = %s' % nnodes)
                 #print(element_nodes)
             tri = array(tri_list, 'int32') - 1 # subtract 1 so the node ids start at 0
-            print(tri)
+            #print(tri)
         return tri
 
     def read_nodes(self, node_filename):
@@ -116,7 +124,7 @@ class Tetgen(object):
             nodes = zeros((nnodes, 3), 'float64')
             for inode in range(nnodes):
                 nodes[inode] = f.readline().strip().split()[1:]
-        print("nodes =", nodes)
+        #print("nodes =", nodes)
         return nodes
 
     def read_ele(self, ele_filename, form_flag='1'):
@@ -152,8 +160,12 @@ class Tetgen(object):
 
 def main():  # pragma: no cover
     import os
-    from pyNastran.converters.stl.stl import STL
 
+    base = 'gear'
+    read_tetgen(base, dimension_flag=2)
+    return
+
+    from pyNastran.converters.stl.stl import STL
     m1 = STL()
     m1.read_stl('tetgen_test.stl')
     m1.flip_normals()
