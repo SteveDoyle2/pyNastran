@@ -1,0 +1,36 @@
+# Example of a control file < citationX.cntl > 
+#--------------------------------------------- 
+# ... Title Definition
+$_Title simple_business_jet
+ 
+# ... List of File Names
+$_ClicFileName bJet.i.triq # (optional)
+
+# ... Output Directory (optional)
+$_Output_Directory output      # %s output directory
+
+# ... Axis Definitions
+$_Model_X_axis_is -Xb 
+$_Model_Y_axis_is -Zb 
+$_Model_Z_axis_is -Yb 
+
+# ... Flight Orientation
+$_Incidence_Angle  2.81     # angle of attack 
+$_Sideslip_Angle   0.00     # angle of attack 
+
+# ... Component Name Definition
+$_ComponentName 0 fuselage 
+$_ComponentName 1 wing
+$_ComponentName 2 horizontal_tail 
+$_ComponentName 3 vertical_tail
+$_ComponentName 4 leftEngine 
+$_ComponentName 5 rightEngine 
+$_ComponentName 6 leftPylon
+$_ComponentName 7 rightPylon
+
+# ... Reference Area and Length
+$_Reference_Area    736. all 
+$_Reference_Length  1. all 
+
+# ... Force Info
+$_Force wing entire
