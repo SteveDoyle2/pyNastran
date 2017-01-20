@@ -10,10 +10,17 @@
 *.pyi text
 *.bdf text
 *.txt text
-*.tri text
 *.triq text
+*.c3d text
 *.dat text
 *.inp text
+*.smesh text
+*.ele text
+*.node text
+*.su2 text
+*.wgs text
+*.grid text
+*.mapbc text
 
 # Declare files that will always have CRLF line endings on checkout.
 *.sln text eol=crlf
@@ -23,3 +30,5 @@
 *.jpg binary
 *.op2 binary
 *.op4 binary
+*.plt binary
+*.tri binary
