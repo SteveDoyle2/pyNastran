@@ -1,3 +1,4 @@
+# coding: utf-8
 # pylint: disable=R0902,R0904,R0914,C0302,C0111
 """
 All aero cards are defined in this file.  This includes:
@@ -1974,7 +1975,7 @@ class CAERO1(BaseCard):
         self.p4 = points[3]
         self.x12 = p2[0] - self.p1[0]
         self.x43 = p3[0] - self.p4[0]
-        assert self.x12 >= 0., 'p1=%s p2=%s' % (self.p2, p2)
+        assert self.x12 >= 0., 'p1=%s p2=%s' % (self.p1, p2)
         assert self.x43 >= 0., 'p4=%s p3=%s' % (self.p4, p3)
         assert self.x12 > 0. or self.x43 > 0., 'points=%s' % (points)
 
@@ -2378,7 +2379,7 @@ class CAERO2(BaseCard):
 
     @staticmethod
     def create_ellipse(aspect_ratio, radius, thetas=None):
-        """
+        r"""
         a : major radius
         b : minor radius
 
@@ -2446,9 +2447,10 @@ class CAERO2(BaseCard):
         """
         cp = set_blank_if_default(self.Cp(), 0)
         nint = set_blank_if_default(self.nint, 0)
-        lsb = set_blank_if_default(self.lsb, 0)
+        lsb = set_blank_if_default(self.Lsb(), 0)
+        lint = set_blank_if_default(self.Lint(), 0)
         list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, nint,
-                        lsb, self.lint, self.igid, ] + list(self.p1) +
+                        lsb, lint, self.igid, ] + list(self.p1) +
                        [self.x12])
         return list_fields
 
@@ -3024,11 +3026,11 @@ class PAERO5(BaseCard):
                       comment=comment)
     @property
     def lxis_id(self):
-        return self.lxis if isinstance(self.lxis, integer_types) else self.lxis_ref.aid
+        return self.lxis if isinstance(self.lxis, integer_types) else self.lxis_ref.sid
 
     @property
     def ltaus_id(self):
-        return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.aid
+        return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.sid
 
     def cross_reference(self, model):
         """
@@ -3039,8 +3041,8 @@ class PAERO5(BaseCard):
         model : BDF()
             the BDF object
         """
-        self.lxis = model.AEFACT(self.lxis_id)
-        self.ltaus = model.AEFACT(self.ltaus_id)
+        self.lxis = model.AEFact(self.lxis_id)
+        self.ltaus = model.AEFact(self.ltaus_id)
 
         self.ltaus_ref = self.ltaus
         self.lxis_ref = self.lxis
@@ -3054,6 +3056,10 @@ class PAERO5(BaseCard):
         list_fields = ['PAERO5', self.pid, self.nalpha, self.lalpha, self.nxis,
                        self.lxis_id, self.ntaus, self.ltaus_id] + list(self.caoci)
         return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
     #def integrals(self):
         ## chord location
@@ -3550,7 +3556,7 @@ class GUST(BaseCard):
         1: 'sid', 2:'dload', 3:'wg', 4:'x0', 5:'V',
     }
 
-    def __init__(self, sid, dload, wg, x0, V, comment=''):
+    def __init__(self, sid, dload, wg, x0, V=None, comment=''):
         if comment:
             self.comment = comment
         self.sid = sid
@@ -3567,7 +3573,7 @@ class GUST(BaseCard):
         x0 = double(card, 4, 'x0')
         V = double_or_blank(card, 4, 'V')
         assert len(card) <= 6, 'len(GUST card) = %i\ncard=%s' % (len(card), card)
-        return GUST(sid, dload, wg, x0, V, comment=comment)
+        return GUST(sid, dload, wg, x0, V=V, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -3993,6 +3999,8 @@ class PAERO1(BaseCard):
     Defines associated bodies for the panels in the Doublet-Lattice method.
 
     +--------+-----+----+----+----+----+----+----+
+    |    1   |  2  |  3 |  4 |  5 |  6 |  7 |  8 |
+    +========+=====+====+====+====+====+====+====+
     | PAERO1 | PID | B1 | B2 | B3 | B4 | B5 | B6 |
     +--------+-----+----+----+----+----+----+----+
     """
@@ -4140,8 +4148,8 @@ class PAERO2(BaseCard):
         else:
             self.thn[spot] = value
 
-    def __init__(self, pid, orient, width, AR, lrsb, lrib, lth1, lth2,
-                 thi, thn, comment=''):
+    def __init__(self, pid, orient, width, AR,
+                 thi, thn, lrsb=None, lrib=None, lth1=None, lth2=None, comment=''):
         if comment:
             self.comment = comment
 
@@ -4208,8 +4216,9 @@ class PAERO2(BaseCard):
         for i in range(9, 9 + nfields, 2):
             thi.append(integer(card, i, 'lth'))
             thn.append(integer(card, i + 1, 'thn'))
-        return PAERO2(pid, orient, width, AR, lrsb, lrib, lth1, lth2,
-                      thi, thn, comment=comment)
+        return PAERO2(pid, orient, width, AR, thi, thn,
+                      lrsb=lrsb, lrib=lrib, lth1=lth1, lth2=lth2,
+                      comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by PAERO2 eid=%s' % self.pid
@@ -4911,7 +4920,8 @@ class SPLINE3(Spline):
         list_fields = [
             'SPLINE3', self.eid, self.caero, self.box_id,
             self.nids[0], self.displacement_components[0], self.coeffs[0], self.usage]
-        for nid, disp_c, coeff in zip(self.nids[1:], self.displacement_components[1:], self.coeffs[1:]):
+        for nid, disp_c, coeff in zip(self.nids[1:], self.displacement_components[1:],
+                                      self.coeffs[1:]):
             list_fields += [nid, disp_c, coeff, None]
         return list_fields
 
@@ -5296,6 +5306,27 @@ class TRIM(BaseCard):
         raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
+        """
+        Creates a TRIM card for a static aero (144) analysis.
+
+        Parameters
+        ----------
+        sid : int
+            the trim id; referenced by the Case Control TRIM field
+        mach : float
+            the mach number
+        q : float
+            dynamic pressure
+        labels : List[str]
+            names of the fixed variables
+        uxs : List[float]
+            values corresponding to labels
+        aeqr : float
+            0.0 : rigid trim analysis
+            1.0 : elastic trim analysis
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Trim set identification number. (Integer > 0)
@@ -5331,31 +5362,110 @@ class TRIM(BaseCard):
             raise RuntimeError(msg)
 
     def _verify(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
+        """
+        Magic function that makes TRIM cards not frustrating.
+
+        Warning
+        -------
+        TODO: This probably gets AELINKs/AEPARMs/AESURFSs wrong.
+
+        The TRIM equality
+        -----------------
+        ndelta = (naestat + naesurf + naeparm) - (
+               - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)
+        ndelta = 0
+        ntrim_aesurf is not included, but it might exist...
+
+        Steps to a TRIM analysis
+        ------------------------
+        1.  Define the number of independent control surfaces (naesurf)
+            Make an AESURF for each.  Dual link the AESURFs if you can
+            to avoid needing an AELINK (e.g., +roll is left aileron down,
+            right aileron up).
+            Horizontal Tail : name it DPITCH
+            Vertical Tail   : name it DYAW
+            Aileron         : name it DROLL
+        2.  Create AELINKs if necessary.
+        3.  Add the AESTAT variables.  Include one for each DOF the
+            aircraft can move in the frame of the model
+            (e.g., half/full model).
+                Half model (2.5g pullup, abrupt pitch):
+                  - 2d pitch/plunge, 1 control : URDD3, URDD5, PITCH, ANGLEA
+                Full model (2.5g pullup, abrupt pitch):
+                  - 3d pitch/plunge, 3 control : URDD3, URDD5, PITCH, ANGLEA, YAW (???)
+        4.  Add the TRIM card to lock the variables that could theoretically move
+            in the plane of the analysis that are known.
+                Half model:
+                   2.5g pullup   : lock URDD3=2.5, URDD5=0, PITCH=0
+                                   solve for ANGLEA, DPITCH
+                                   use DPITCH
+                   abrupt pitch  : lock URDD3=1.0, URDD5=0, ANGLEA=5
+                                   solve for PITCH, DPITCH
+                                   use DPITCH
+                Full model:
+                   2.5g pullup   : lock URDD3=2.5, URDD4=0, URDD5=0,  PITCH=0, YAW=0,
+                                   lock SIDES=0,  ROLL=0
+                                   solve for ANGLEA, DPITCH
+                                   use DPITCH, DYAW, DROLL
+                                   TODO: probably wrong
+                   30 degree yaw : lock URDD3=1.0, URDD4=0, ANGLEA=5, PITCH=0, YAW=30,
+                                   lock DPITCH=0, ROLL=0
+                                   solve for SIDES, URDD5
+                                   use DPITCH, DYAW, DROLL
+                                   TODO: probably wrong
+
+        5.  Note that we could have simplified our full model AESTAT/TRIM
+            cards (they can be the same as for a half model), but we'd
+            like to be able to do multiple load cases in the same deck.
+
+        6.  Add some SUPORT/SUPORT1 DOFs to ignore non-relevant motion in
+            certain DOFs (e.g., z-motion).  Add enough to satisfy the TRIM
+            equality.
+
+        Doesn't Consider
+        ----------------
+         - AELINK
+         - AEPARM
+         - AESURFS
+
+        +------------------------------------------------+
+        |                 Default AESTATs                |
+        +--------+---------+-----------------------------+
+        | ANGLEA | ur (R2) | Angle of Attack             |
+        | YAW    | ur (R3) | Yaw Rate                    |
+        | SIDES  | ur (R3) | Angle of Sideslip           |
+        +--------+---------+-----------------------------+
+        | ROLL   | ůr (R1) | Roll Rate                   |
+        | PITCH  | ůr (R2) | Pitch Rate                  |
+        +--------+---------+-----------------------------+
+        | URDD1  | ür (T1) | Longitudinal (See Remark 3) |
+        | URDD2  | ür (T2) | Lateral                     |
+        | URDD3  | ür (T3) | Vertical                    |
+        | URDD4  | ür (R1) | Roll                        |
+        | URDD5  | ür (R2) | Pitch                       |
+        | URDD6  | ür (R3) | Yaw                         |
+        +--------+---------+-----------------------------+
+        """
         if xref:
             nsuport_dofs = 0
             nsuport1_dofs = 0
             suport_dofs = set()
             assert isinstance(suport, list), type(suport)
             for suporti in suport:
-                #print(str(suporti).rstrip())
-                for nid in suporti.node_ids:
-                    for cs in suporti.Cs:
-                        for ci in cs:
-                            #print('  SUPORT: nid=%r C=%r' % (nid, ci))
-                            dof = (nid, ci)
-                            if dof in suport_dofs:
-                                msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
-                                raise RuntimeError(msg)
-                            suport_dofs.add(dof)
-                            nsuport_dofs += 1
+                for nid, cs in zip(suporti.node_ids, suporti.Cs):
+                    for ci in cs:
+                        #print('  SUPORT: nid=%r C=%r' % (nid, ci))
+                        dof = (nid, ci)
+                        if dof in suport_dofs:
+                            msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
+                                str(dof), str(suport_dofs))
+                            raise RuntimeError(msg)
+                        suport_dofs.add(dof)
+                        nsuport_dofs += 1
 
-            #suport1_dofs = {}
             if suport1:
                 conid = suport1.conid
-                #IDs = suport1.IDs
                 nids = suport1.node_ids
-                #Cs = suport1.Cs
-                #print('SUPORT1 id=%s' % conid)
                 for nid, cs in zip(nids, suport1.Cs):
                     for ci in cs:
                         #print('  SUPORT1: id=%r nid=%r C=%r' % (conid, nid, ci))
@@ -5369,17 +5479,18 @@ class TRIM(BaseCard):
             aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
             aestat_labels = [aestat.label for aestat in aestats.values()]
             aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
-            naestats = len(aestat_labels)
+            naestat = len(aestat_labels)
             ntrim = len(self.labels)
-            naesurfs = len(aesurf_names)
-            naeparms = len(aeparm_labels)
-            naelinks = 0
+            naesurf = len(aesurf_names)
+            naeparm = len(aeparm_labels)
+            naelink = 0
             if self.sid in aelinks:
-                naelinks = len(aelinks[self.sid])
+                naelink = len(aelinks[self.sid])
             if 0 in aelinks:
-                naelinks += len(aelinks[0])
+                #  TODO: what is this...is 0 the global subcase?
+                naelink += len(aelinks[0])
 
-            ntrim_aesurfs = 0
+            ntrim_aesurf = 0
             labels = aestat_labels + aesurf_names + aeparm_labels
             for label in self.labels:
                 if label not in labels:
@@ -5389,30 +5500,30 @@ class TRIM(BaseCard):
 
                 if label in aesurf_names:
                     #print('AESTAT/AESURF label = %r' % label)
-                    ntrim_aesurfs += 1
+                    ntrim_aesurf += 1
 
             # TODO: this doesn't work for multiple subcases
             #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
-            #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurfs
+            #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurf
             #if ndelta != 0:
-                #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurfs = ndelta = %s; ndelta != 0\n' % ndelta
+                #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurf = ndelta = %s; ndelta != 0\n' % ndelta
                 #msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
-                    #ntrim, nsuport_dofs, nsuport1_dofs, naesurfs)
+                    #ntrim, nsuport_dofs, nsuport1_dofs, naesurf)
                 #raise RuntimeError(msg)
 
-#            ndelta = (naestats + naesurfs + naeparms + ntrim_aesurfs) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs)
-#            if ndelta != 0:
-#                msg = '(naestats + naesurfs + naeparms + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-#                msg += ('naestats=%s naesurfs=%s naeparms=%s ntrim_aesurfs=%s\n'
-#                        'ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
-#                            naestats, naesurfs, naeparms, ntrim_aesurfs,
-#                            ntrim, naelinks, nsuport_dofs, nsuport1_dofs))
+           #ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
+           #if ndelta != 0:
+               #msg = '(naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+               #msg += ('naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
+                       #'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+                           #naestat, naesurf, naeparms, ntrim_aesurf,
+                           #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
 
-            ndelta = (naestats + naesurfs + naeparms) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
+            ndelta = (naestat + naesurf + naeparm) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
-                msg = '(naestats + naesurfs + naeparms) - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-                msg += 'naestats=%s naesurf=%s naeparms=%s ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
-                    naestats, naesurfs, naeparms, ntrim, naelinks, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
+                msg = '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+                msg += 'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+                    naestat, naesurf, naeparm, ntrim, ntrim_aesurf, naelink, nsuport_dofs, nsuport1_dofs)
                 raise RuntimeError(msg)
 
     def cross_reference(self, model):

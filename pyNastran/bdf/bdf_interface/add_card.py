@@ -1058,14 +1058,6 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pyram(self, eid, pid, nids, comment=''):
-        if len(nids) == 5:
-            elem = CPYRAM5(eid, pid, nids, comment=comment)
-        else:
-            elem = CPYRAM13(eid, pid, nids, comment=comment)
-        self._add_element_object(elem)
-        return elem
-
     def add_psolid(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                    fctn='SMECH', comment=''):
         """
@@ -1661,10 +1653,10 @@ class AddCards(AddMethods):
         self._add_paero_object(paero)
         return paero
 
-    def add_paero2(self, pid, orient, width, AR, lrsb, lrib, lth1, lth2, thi,
-                   thn, comment=''):
-        paero = PAERO2(pid, orient, width, AR, lrsb, lrib, lth1, lth2, thi,
-                       thn, comment=comment)
+    def add_paero2(self, pid, orient, width, AR, thi, thn,
+                   lrsb=None, lrib=None, lth1=None, lth2=None, comment=''):
+        paero = PAERO2(pid, orient, width, AR, thi, thn,
+                       lrsb, lrib, lth1, lth2, comment=comment)
         self._add_paero_object(paero)
         return paero
 
@@ -1728,6 +1720,27 @@ class AddCards(AddMethods):
         return spline
 
     def add_trim(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
+        """
+        Creates a TRIM card for a static aero (144) analysis.
+
+        Parameters
+        ----------
+        sid : int
+            the trim id; referenced by the Case Control TRIM field
+        mach : float
+            the mach number
+        q : float
+            dynamic pressure
+        labels : List[str]
+            names of the fixed variables
+        uxs : List[float]
+            values corresponding to labels
+        aeqr : float
+            0.0 : rigid trim analysis
+            1.0 : elastic trim analysis
+        comment : str; default=''
+            a comment for the card
+        """
         trim = TRIM(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
         self._add_trim_object(trim)
         return trim
@@ -1742,8 +1755,8 @@ class AddCards(AddMethods):
         self._add_mkaero_object(mkaero)
         return mkaero
 
-    def add_gust(self, sid, dload, wg, x0, V, comment=''):
-        gust = GUST(sid, dload, wg, x0, V, comment=comment)
+    def add_gust(self, sid, dload, wg, x0, V=None, comment=''):
+        gust = GUST(sid, dload, wg, x0, V=V, comment=comment)
         self._add_gust_object(gust)
         return gust
 
@@ -1989,7 +2002,7 @@ class AddCards(AddMethods):
         self._add_aelink_object(aelink)
         return aelink
 
-    def add_aelist(self, sid, elements, comment):
+    def add_aelist(self, sid, elements, comment=''):
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.

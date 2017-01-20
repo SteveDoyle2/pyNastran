@@ -1122,6 +1122,8 @@ class DRESP1(OptConstraint):
             self.atti_ref = self.atti
         elif self.response_type in op2_results:
             pass
+        elif self.response_type == 'ERP':
+            assert self.property_type == 'PANEL'
         else:
             msg = 'response_type=%r ptype=%r\n' % (self.response_type, self.property_type)
             msg += str(self)
@@ -1178,7 +1180,7 @@ class DRESP1(OptConstraint):
             #self.atti = model.Nodes(self.atti, msg=msg)
             data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
         elif self.response_type in ['FRFORC', 'TFORC',
-                                    'STRESS', 'ESE', 'CFAILURE']:
+                                    'STRESS', 'ESE', 'CFAILURE', 'CSTRAIN']:
             data = [elem if isinstance(elem, integer_types) else elem.eid for elem in self.atti]
         elif self.response_type in op2_results:
             data = self.atti
@@ -1188,8 +1190,13 @@ class DRESP1(OptConstraint):
             data = self.atti
             for value in data:
                 assert not isinstance(value, BaseCard), value
+        elif self.response_type in ['ERP']:
+            msg = 'response_type=%r property_type=%r atta=%r attb=%r atti=%r\n' % (self.response_type, self.property_type, self.atta, self.attb, self.atti)
+            assert self.property_type == 'PANEL', msg
+            # atta=None attb=3000.0 atti=[555]
+            data = self.atti
         else:
-            msg = 'response_type=%s property_type=%s\n' % (self.response_type, self.property_type)
+            msg = 'response_type=%r property_type=%r atta=%r attb=%r atti=%r\n' % (self.response_type, self.property_type, self.atta, self.attb, self.atti)
             #msg += str(self)
             raise NotImplementedError(msg)
         return data
@@ -1353,6 +1360,7 @@ class DRESP2(OptConstraint):
         model : BDF()
             the BDF object
         """
+        print('a', model.dtable)
         msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):
@@ -1361,7 +1369,7 @@ class DRESP2(OptConstraint):
                 j, name = key
             except:
                 raise RuntimeError(str(self))
-
+            print(j, name)
             if name in ['DRESP1', 'DRESP2']:
                 for i, val in enumerate(vals):
                     self.params[key][i] = model.DResp(val, msg)
@@ -1375,11 +1383,12 @@ class DRESP2(OptConstraint):
                 for i, val in enumerate(vals):
                     self.params[key][i] = model.Desvar(val, msg)
             elif name == 'DTABLE':
-                print('model.table =')
+                print('model.dtable =')
                 print(model.bdf_filename)
                 print(model.dtable)
+                print('dtable =', model.dtable)
                 self.dtable = model.dtable
-                print(model.dtable)
+                print('dtable =', self.dtable)
                 for i, val in enumerate(vals):
                     default_values[val] = self.dtable[val]
             else:
