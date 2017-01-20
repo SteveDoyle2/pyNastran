@@ -94,7 +94,7 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
 
     assert elements.min() > 0, elements
     cart3d.nodes = nodes
-    cart3d.elements = elements
+    cart3d.elements = elements - 1
     cart3d.regions = regions
     return cart3d
 

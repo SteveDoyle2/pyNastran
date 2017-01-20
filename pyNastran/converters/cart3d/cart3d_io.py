@@ -139,7 +139,6 @@ class Cart3dIO(object):
         points.SetData(points_array)
 
         nelements = elements.shape[0]
-        elements -= 1
         for eid in range(nelements):
             elem = vtkTriangle()
             node_ids = elements[eid, :]
@@ -416,8 +415,8 @@ class Cart3dIO(object):
 
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
-        area = model.get_area(shift_nodes=False)
-        cnormals = model.get_normals(shift_nodes=False)
+        area = model.get_area()
+        cnormals = model.get_normals()
         cnnodes = cnormals.shape[0]
         assert cnnodes == nelements, len(cnnodes)
 
@@ -455,8 +454,8 @@ class Cart3dIO(object):
         icase = 6
         return form, cases, icase
 
-        #cnormals = model.get_normals(nodes, elements, shift_nodes=False)
-        #nnormals = model.get_normals_at_nodes(nodes, elements, cnormals, shift_nodes=False)
+        #cnormals = model.get_normals(nodes, elements)
+        #nnormals = model.get_normals_at_nodes(nodes, elements, cnormals)
 
         #cases_new[i] = (ID, nnormals[:, 0], 'Normal X', 'node', '%.3f')
         #cases_new[i + 1] = (ID, nnormals[:, 1], 'Normal Y', 'node', '%.3f')
