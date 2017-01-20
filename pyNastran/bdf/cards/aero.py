@@ -1975,7 +1975,7 @@ class CAERO1(BaseCard):
         self.p4 = points[3]
         self.x12 = p2[0] - self.p1[0]
         self.x43 = p3[0] - self.p4[0]
-        assert self.x12 >= 0., 'p1=%s p2=%s' % (p2, p2)
+        assert self.x12 >= 0., 'p1=%s p2=%s' % (self.p1, p2)
         assert self.x43 >= 0., 'p4=%s p3=%s' % (self.p4, p3)
         assert self.x12 > 0. or self.x43 > 0., 'points=%s' % (points)
 
