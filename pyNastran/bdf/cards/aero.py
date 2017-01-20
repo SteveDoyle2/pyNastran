@@ -1482,24 +1482,6 @@ class CAERO1(BaseCard):
     pid : int, PAERO1
        int : PAERO1 ID
        PAERO1 : PAERO1 object (xref)
-
-    cp : int, CORDx
-       int : coordinate system
-       CORDx : Coordinate object (xref)
-    nspan : int
-       int > 0 : N spanwise boxes distributed evenly
-       int = 0 : use lchord
-    nchord : int
-       int > 0 : N chordwise boxes distributed evenly
-       int = 0 : use lchord
-    lspan : int, AEFACT
-       int > 0 : AEFACT reference for non-uniform nspan
-       int = 0 : use nspan
-       AEFACT : AEFACT object  (xref)
-    lchord : int, AEFACT
-       int > 0 : AEFACT reference for non-uniform nchord
-       int = 0 : use nchord
-       AEFACT : AEFACT object  (xref)
     igid : int
        Group number
     p1 : (1, 3) ndarray float
@@ -1510,6 +1492,26 @@ class CAERO1(BaseCard):
        distance along the flow direction from node 1 to node 2; (typically x, root chord)
     x43 : float
        distance along the flow direction from node 4 to node 3; (typically x, tip chord)
+
+    cp : int, CORDx; default=0
+       int : coordinate system
+       CORDx : Coordinate object (xref)
+    nspan : int; default=0
+       int > 0 : N spanwise boxes distributed evenly
+       int = 0 : use lchord
+    nchord : int; default=0
+       int > 0 : N chordwise boxes distributed evenly
+       int = 0 : use lchord
+    lspan : int, AEFACT; default=0
+       int > 0 : AEFACT reference for non-uniform nspan
+       int = 0 : use nspan
+       AEFACT : AEFACT object  (xref)
+    lchord : int, AEFACT; default=0
+       int > 0 : AEFACT reference for non-uniform nchord
+       int = 0 : use nchord
+       AEFACT : AEFACT object  (xref)
+        comment : str; default=''
+            a comment for the card
     """
     type = 'CAERO1'
     _field_map = {
@@ -1570,8 +1572,8 @@ class CAERO1(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, cp, nspan, lspan, nchord, lchord, igid,
-                 p1, x12, p4, x43, comment=''):
+    def __init__(self, eid, pid, igid, p1, x12, p4, x43,
+                 cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
         r"""
         ::
 
@@ -1666,12 +1668,13 @@ class CAERO1(BaseCard):
         x43 = double_or_blank(card, 16, 'x43', 0.)
 
         assert len(card) <= 17, 'len(CAERO1 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
-                      p1, x12, p4, x43, comment=comment)
+        return CAERO1(eid, pid, igid, p1, x12, p4, x43,
+                      cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                      comment=comment)
 
     @classmethod
-    def add_quad(cls, eid, pid, cp, span, chord, igid,
-                 p1, p2, p3, p4, spanwise='y', comment=''):
+    def add_quad(cls, eid, pid, span, chord, igid,
+                 p1, p2, p3, p4, cp=0, spanwise='y', comment=''):
         r"""
         ::
 
@@ -1731,8 +1734,9 @@ class CAERO1(BaseCard):
         else:
             raise TypeError(chord)
 
-        return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
-                      p1, x12, p4, x43, comment=comment)
+        return CAERO1(eid, pid, igid, p1, x12, p4, x43,
+                      cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                      comment=comment)
 
     def _init_ids(self):
         """

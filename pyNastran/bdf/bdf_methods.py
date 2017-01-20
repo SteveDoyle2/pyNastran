@@ -1973,7 +1973,7 @@ class BDFMethods(BDFAttributes):
                             loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
-                assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
+                assert load.sorl == 'SURF', 'sorl = %r' % (load.sorl)
                 assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
                 for elem in load.eids:
                     eid = elem.eid

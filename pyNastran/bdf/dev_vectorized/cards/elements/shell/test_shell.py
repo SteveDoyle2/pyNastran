@@ -262,7 +262,7 @@ class TestShells(unittest.TestCase):
         #self.nsm = data[2]
         #self.sb = data[3]
         #self.ft = data[4]
-        #self.TRef = data[5]
+        #self.tref = data[5]
         #self.ge = data[6]
         #self.lam = data[7]
         #Mid = data[8]
@@ -275,7 +275,7 @@ class TestShells(unittest.TestCase):
         nsm = 0.
         sb = 0.
         ft = 'HILL'
-        TRef = 0.
+        tref = 0.
         ge = 0.
         #lam = 'NO'  # isSymmetrical YES/NO
         lam = 'BEND'  # isSymmetrical YES/NO
@@ -284,7 +284,7 @@ class TestShells(unittest.TestCase):
         T = [.1, .2, .3]
         Sout = ['YES', 'YES', 'NO']  # 0-NO, 1-YES
         card_lines = [
-            'PCOMP', pid, z0, nsm, sb, ft, TRef, ge, lam,
+            'PCOMP', pid, z0, nsm, sb, ft, tref, ge, lam,
             Mid[0], T[0], Theta[0], Sout[0],
             Mid[1], T[1], Theta[1], Sout[1],
             Mid[2], T[2], Theta[2], Sout[2],
@@ -310,9 +310,9 @@ class TestShells(unittest.TestCase):
         Sc = None
         Ss = None
         Mcsid = None
-        mat1_a = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
-        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
-        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1_a = ['MAT1', mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
         model.add_card(mat1_a, 'MAT1', comment='', is_list=True)
         model.add_card(mat1_b, 'MAT1', comment='', is_list=True)
         model.add_card(mat1_c, 'MAT1', comment='', is_list=True)
@@ -450,14 +450,14 @@ class TestShells(unittest.TestCase):
         nsm = 0.
         sb = 0.
         ft = 'HOFF'
-        TRef = 0.
+        tref = 0.
         ge = 0.
         lam = 'SYM'  # isSymmetrical SYM
         Mid = [1, 2, 3]
         Theta = [0., 10., 20.]
         T = [.1, .2, .3]
         Sout = ['YES', 'YES', 'NO']  # 0-NO, 1-YES
-        pcomp = ['PCOMP', pid, z0, nsm, sb, ft, TRef, ge, lam,
+        pcomp = ['PCOMP', pid, z0, nsm, sb, ft, tref, ge, lam,
                 Mid[0], T[0], Theta[0], Sout[0],
                 Mid[1], T[1], Theta[1], Sout[1],
                 Mid[2], T[2], Theta[2], Sout[2]]
@@ -474,9 +474,9 @@ class TestShells(unittest.TestCase):
         Sc = None
         Ss = None
         Mcsid = None
-        mat1_a = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
-        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
-        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1_a = ['MAT1', mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
 
         card_count = {
             'PCOMP' : 1,

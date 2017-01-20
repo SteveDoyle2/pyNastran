@@ -38,7 +38,7 @@ class MATHP(Material):
             self.d1 = zeros(ncards, dtype=float_fmt)
             self.rho = zeros(ncards, dtype=float_fmt)
             self.av = zeros(ncards, dtype=float_fmt)
-            self.TRef = zeros(ncards, dtype=float_fmt)
+            self.tref = zeros(ncards, dtype=float_fmt)
             self.ge = zeros(ncards, dtype=float_fmt)
 
             self.na = zeros(ncards, dtype='int32')
@@ -90,7 +90,7 @@ class MATHP(Material):
         self.d1[i] = double_or_blank(card, 4, 'd1', (a10 + a01) * 1000)
         self.rho[i] = double_or_blank(card, 5, 'rho', 0.)
         self.av[i] = double_or_blank(card, 6, 'av', 0.)
-        self.TRef[i] = double_or_blank(card, 7, 'TRef', 0.)
+        self.tref[i] = double_or_blank(card, 7, 'tref', 0.)
         self.ge[i] = double_or_blank(card, 8, 'ge', 0.)
 
         self.na[i] = integer_or_blank(card, 10, 'na', 1)
@@ -142,7 +142,7 @@ class MATHP(Material):
             self.d1 = self.d1[i]
             self.rho = self.rho[i]
             self.av = self.av[i]
-            self.TRef = self.TRef[i]
+            self.tref = self.tref[i]
             self.ge = self.ge[i]
 
             self.na = self.na[i]
@@ -227,39 +227,39 @@ class MATHP(Material):
 
             Rho = ['' if rhoi == 0.0 else rhoi for rhoi in self.rho[i]]
             A = ['' if ai == 0.0 else ai for ai in self.a[i]]
-            TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
+            tref = ['' if trefi == 0.0 else trefi for trefi in self.tref[i]]
             ge = ['' if gei == 0.0 else gei for gei in self.ge[i]]
             St = ['' if st == 0.0 else st for st in self.St[i]]
             Sc = ['' if sc == 0.0 else sc for sc in self.Sc[i]]
             Ss = ['' if ss == 0.0 else ss for ss in self.Ss[i]]
 
-            card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
+            card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'tref', 'ge']
             bdf_file.write(print_card_8(card))
             card = ['$', 'st', 'sc', 'ss', 'mcsid']
             bdf_file.write(print_card_8(card))
-            for(mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
+            for(mid, E, G, nu, rho, a, tref, ge, st, sc, ss, mcsid) in zip(
                 self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
-                TRef, ge, St, Sc, Ss, self.mcsid[i]):
+                tref, ge, St, Sc, Ss, self.mcsid[i]):
 
                 #Gdefault = self.getG_default()
                 Gdefault = self._G_default(E, G, nu)
                 G = set_blank_if_default(G, Gdefault)
                 #rho = set_blank_if_default(rho, 0.)
                 #a = set_blank_if_default(a, 0.)
-                #TRef = set_blank_if_default(TRef, 0.)
+                #tref = set_blank_if_default(tref, 0.)
                 #ge = set_blank_if_default(ge, 0.)
                 #st = set_blank_if_default(st, 0.)
                 #sc = set_blank_if_default(sc, 0.)
                 #ss = set_blank_if_default(ss, 0.)
                 mcsid = set_blank_if_default(mcsid, 0)
-                card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
+                card = ['MAT1', mid, E, G, nu, rho, a, tref, ge, st, sc, ss, mcsid]
                 bdf_file.write(print_card_8(card))
 
     def repr_fields(self, material_id):
         i = where(self.material_id == material_id)[0]
         i = i[0]
         card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],
-                        self.rho[i], self.a[i], self.TRef[i], self.ge[i],
+                        self.rho[i], self.a[i], self.tref[i], self.ge[i],
                         self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
         return card
 
@@ -315,7 +315,7 @@ class MATHP(Material):
         obj.d1 = self.d1[i]
         obj.rho = self.rho[i]
         obj.av = self.av[i]
-        obj.TRef = self.TRef[i]
+        obj.tref = self.tref[i]
         obj.ge = self.ge[i]
 
         obj.na = self.na[i]

@@ -35,7 +35,7 @@ class MAT1(Material):
         self.G = []
         self.nu = []
         self.a = []
-        self.TRef = []
+        self.tref = []
         self.ge = []
         self.St = []
         self.Sc = []
@@ -52,7 +52,7 @@ class MAT1(Material):
             self.G = np.zeros(ncards, float_fmt)
             self.nu = np.zeros(ncards, float_fmt)
             self.a = np.zeros(ncards, float_fmt)
-            self.TRef = np.zeros(ncards, float_fmt)
+            self.tref = np.zeros(ncards, float_fmt)
             self.ge = np.zeros(ncards, float_fmt)
             self.St = np.zeros(ncards, float_fmt)
             self.Sc = np.zeros(ncards, float_fmt)
@@ -71,7 +71,7 @@ class MAT1(Material):
         self.set_E_G_nu(i, card)
         self.rho[i] = double_or_blank(card, 5, 'rho', 0.)
         self.a[i] = double_or_blank(card, 6, 'a', 0.0)
-        self.TRef[i] = double_or_blank(card, 7, 'TRef', 0.0)
+        self.tref[i] = double_or_blank(card, 7, 'tref', 0.0)
         self.ge[i] = double_or_blank(card, 8, 'ge', 0.0)
         self.St[i] = double_or_blank(card, 9, 'St', 0.0)
         self.Sc[i] = double_or_blank(card, 10, 'Sc', 0.0)
@@ -100,7 +100,7 @@ class MAT1(Material):
             self.nu = self.nu[i]
             self.rho = self.rho[i]
             self.a = self.a[i]
-            self.TRef = self.TRef[i]
+            self.tref = self.tref[i]
             self.ge = self.ge[i]
             self.St = self.St[i]
             self.Sc = self.Sc[i]
@@ -188,7 +188,7 @@ class MAT1(Material):
 
             Rho = ['' if rhoi == 0.0 else rhoi for rhoi in self.rho[i]]
             A = ['' if ai == 0.0 else ai for ai in self.a[i]]
-            TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
+            tref = ['' if trefi == 0.0 else trefi for trefi in self.tref[i]]
             ge = ['' if gei == 0.0 else gei for gei in self.ge[i]]
             St = ['' if st == 0.0 else st for st in self.St[i]]
             Sc = ['' if sc == 0.0 else sc for sc in self.Sc[i]]
@@ -196,11 +196,11 @@ class MAT1(Material):
 
             if size == 8:
                 fmt_card = print_card_8
-                bdf_file.write('$MAT1        mid       E       G      nu     rho       a    TRef      ge\n')
+                bdf_file.write('$MAT1        mid       E       G      nu     rho       a    tref      ge\n')
                 bdf_file.write('$             st      sc      ss   mcsid\n')
             else:
                 bdf_file.write('$MAT1*               mid               E               G              nu\n')
-                bdf_file.write('$*                   rho               a            TRef              ge\n')
+                bdf_file.write('$*                   rho               a            tref              ge\n')
                 bdf_file.write('$*                   st              sc              ss           mcsid\n')
                 if is_double:
                     fmt_card = print_card_double
@@ -208,7 +208,7 @@ class MAT1(Material):
                     fmt_card = print_card_16
 
 
-            for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
+            for (mid, E, G, nu, rho, a, tref, ge, st, sc, ss, mcsid) in zip(
                     self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
                     TRef, ge, St, Sc, Ss, self.mcsid[i]):
                 if mid in self._comments:
@@ -219,20 +219,20 @@ class MAT1(Material):
                 G = set_blank_if_default(G, Gdefault)
                 #rho = set_blank_if_default(rho, 0.)
                 #a = set_blank_if_default(a, 0.)
-                #TRef = set_blank_if_default(TRef, 0.)
+                #tref = set_blank_if_default(tref, 0.)
                 #ge = set_blank_if_default(ge, 0.)
                 #st = set_blank_if_default(st, 0.)
                 #sc = set_blank_if_default(sc, 0.)
                 #ss = set_blank_if_default(ss, 0.)
                 mcsid = set_blank_if_default(mcsid, 0)
-                card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
+                card = ['MAT1', mid, E, G, nu, rho, a, tref, ge, st, sc, ss, mcsid]
                 bdf_file.write(fmt_card(card))
 
     def repr_fields(self, material_id):
         i = np.where(self.material_id == material_id)[0]
         i = i[0]
         card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],
-                self.rho[i], self.a[i], self.TRef[i], self.ge[i],
+                self.rho[i], self.a[i], self.tref[i], self.ge[i],
                 self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
         return card
 
@@ -289,7 +289,7 @@ class MAT1(Material):
         obj.G = self.G[i]
         obj.nu = self.nu[i]
         obj.a = self.a[i]
-        obj.TRef = self.TRef[i]
+        obj.tref = self.tref[i]
         obj.ge = self.ge[i]
         obj.St = self.St[i]
         obj.Sc = self.Sc[i]

@@ -546,7 +546,7 @@ class PCOMPi(CompositeShellProperty):
 
     def __init__(self, pid,
                  mids, thicknesses, thetas, souts,
-                 nsm, sb, ft, TRef, ge, lam, z0, comment=''):
+                 nsm, sb, ft, tref, ge, lam, z0, comment=''):
         CompositeShellProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -564,7 +564,7 @@ class PCOMPi(CompositeShellProperty):
         self.ft = ft
 
         #: Reference Temperature (default=0.0)
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
 
         #: symmetric flag - default = No Symmetry (NO)
@@ -594,7 +594,7 @@ class PCOMPi(CompositeShellProperty):
         nsm = double_or_blank(card, 3, 'nsm', 0.0)
         sb = double_or_blank(card, 4, 'sb', 0.0)
         ft = string_or_blank(card, 5, 'ft')
-        TRef = double_or_blank(card, 6, 'TRef', 0.0)
+        tref = double_or_blank(card, 6, 'tref', 0.0)
         ge = double_or_blank(card, 7, 'ge', 0.0)
         lam = string_or_blank(card, 8, 'lam') # default=blank -> nothing
 
@@ -653,7 +653,7 @@ class PCOMPi(CompositeShellProperty):
         #    self.plies = pliesLower+plies
         #    #print str(self)
         z0 = double_or_blank(card, 2, 'z0')
-        return PCOMPi(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, TRef, ge,
+        return PCOMPi(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, tref, ge,
                       lam, z0, comment=comment)
 
     def update(self, pid_map, mid_map):
@@ -678,7 +678,7 @@ class PCOMPi(CompositeShellProperty):
         nsm = data[2]
         sb = data[3]
         ft = data[4]
-        TRef = data[5]
+        tref = data[5]
         ge = data[6]
         lam = data[7]
         Mid = data[8]
@@ -724,11 +724,11 @@ class PCOMPi(CompositeShellProperty):
             raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
                                '\nPCOMP = %s' % (pid, ft, data))
         return PCOMPi(pid, mids, thicknesses, thetas, souts,
-                      nsm, sb, ft, TRef, ge, lam, z0, comment=comment)
+                      nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
-                       self.TRef, self.ge, self.lam, ]
+                       self.tref, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iply)
@@ -738,11 +738,11 @@ class PCOMPi(CompositeShellProperty):
     def repr_fields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
         sb = set_blank_if_default(self.sb, 0.0)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         z0 = set_blank_if_default(self.z0, -0.5 * self.get_thickness())
 
-        list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
+        list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, tref, ge, self.lam]
         for (iply, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iply)

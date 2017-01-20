@@ -285,7 +285,7 @@ class Testfield_writer_8(unittest.TestCase):
         #=============================
         #                            mid   E1      E2      nu12 G12      G1z      G2z      rho
         card = print_card_8(['MAT8', 6, 1.7e+7, 1.7e+7, .98, 340000., 180000., 180000., 0.0001712,
-        #                            a1    a2    TRef
+        #                            a1    a2    tref
                                      None, 71.33])
         card_expected = ''
         card_expected += 'MAT8           6   1.7+7   1.7+7     .98 340000. 180000. 180000..0001712\n'
@@ -294,7 +294,7 @@ class Testfield_writer_8(unittest.TestCase):
 
 
         card = print_card_16(['MAT8', 6, 1.7e+7, 1.7e+7, .98, 340000., 180000., 180000., 0.0001712,
-        #                            a1    a2    TRef
+        #                            a1    a2    tref
                                      None, 71.33])
 
         card_expected = ''

@@ -44,7 +44,7 @@ class MAT8(Material):
             self.rho = zeros(ncards, dtype=float_fmt)
             self.a1 = zeros(ncards, dtype=float_fmt)
             self.a2 = zeros(ncards, dtype=float_fmt)
-            self.TRef = zeros(ncards, dtype=float_fmt)
+            self.tref = zeros(ncards, dtype=float_fmt)
             self.Xt = zeros(ncards, dtype=float_fmt)
             self.Xc = zeros(ncards, dtype=float_fmt)
             self.Yt = zeros(ncards, dtype=float_fmt)
@@ -72,7 +72,7 @@ class MAT8(Material):
         self.rho[i] = double_or_blank(card, 8, 'rho', 0.0)
         self.a1[i] = double_or_blank(card, 9, 'a1', 0.0)
         self.a2[i] = double_or_blank(card, 10, 'a2', 0.0)
-        self.TRef[i] = double_or_blank(card, 11, 'TRef', 0.0)
+        self.tref[i] = double_or_blank(card, 11, 'tref', 0.0)
         self.Xt[i] = double_or_blank(card, 12, 'Xt', 0.0)
         self.Xc[i] = double_or_blank(card, 13, 'Xc', self.Xt[i])
         self.Yt[i] = double_or_blank(card, 14, 'Yt', 0.0)
@@ -99,7 +99,7 @@ class MAT8(Material):
             self.rho = self.rho[i]
             self.a1 = self.a1[i]
             self.a2 = self.a2[i]
-            self.TRef = self.TRef[i]
+            self.tref = self.tref[i]
             self.Xt = self.Xt[i]
             self.Xc = self.Xc[i]
             self.Yt = self.Yt[i]
@@ -136,14 +136,14 @@ class MAT8(Material):
 
             assert material_id is None
 
-            #card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
+            #card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'tref', 'ge']
             #bdf_file.write(print_card_8(card))
             #card = ['$', 'st', 'sc', 'ss', 'mcsid']
             #bdf_file.write(print_card_8(card))
-            for (mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, TRef,
+            for (mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, tref,
                  Xt, Xc, Yt, Yc, S, ge, F12, strn) in zip(
                                self.material_id[i], self.e11[i], self.e22[i], self.nu12[i], self.g12[i],
-                               self.g1z[i], self.g2z[i], self.rho[i], self.a1[i], self.a2[i], self.TRef[i],
+                               self.g1z[i], self.g2z[i], self.rho[i], self.a1[i], self.a2[i], self.tref[i],
                                self.Xt[i], self.Xc[i], self.Yt[i], self.Yc[i], self.S[i], self.ge[i],
                                self.F12[i], self.strn[i]):
                 if mid in self._comments:
@@ -156,7 +156,7 @@ class MAT8(Material):
                 rho = set_blank_if_default(rho, 0.0)
                 a1 = set_blank_if_default(a1, 0.0)
                 a2 = set_blank_if_default(a2, 0.0)
-                TRef = set_blank_if_default(TRef, 0.0)
+                tref = set_blank_if_default(tref, 0.0)
 
                 Xt = set_blank_if_default(Xt, 0.)
                 Yt = set_blank_if_default(Yt, 0.)
@@ -170,7 +170,7 @@ class MAT8(Material):
                 strn = set_blank_if_default(strn, 0.0)
 
                 card = ['MAT8', mid, e11, e22, nu12, g12, g1z, g2z,
-                        rho, a1, a2, TRef,
+                        rho, a1, a2, tref,
                         Xt, Xc, Yt, Yc, S, ge, F12, strn]
                 bdf_file.write(print_card_8(card))
 
@@ -178,7 +178,7 @@ class MAT8(Material):
         i = where(self.material_id == material_id)[0]
         i = i[0]
         card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],
-                self.rho[i], self.a[i], self.TRef[i], self.ge[i],
+                self.rho[i], self.a[i], self.tref[i], self.ge[i],
                 self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
         return card
 
@@ -237,7 +237,7 @@ class MAT8(Material):
         obj.rho = self.rho[i]
         obj.a1 = self.a1[i]
         obj.a2 = self.a2[i]
-        obj.TRef = self.TRef[i]
+        obj.tref = self.tref[i]
         obj.Xt = self.Xt[i]
         obj.Xc = self.Xc[i]
         obj.Yt = self.Yt[i]

@@ -28,6 +28,12 @@ from pyNastran.bdf.field_writer_8 import is_same
 class ShellProperty(Property):
     def __init__(self):
         Property.__init__(self)
+    @property
+    def TRef(self):
+        return self.tref
+    @TRef.setter
+    def TRef(self, tref):
+        self.tref = tref
 
 
 class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
@@ -39,7 +45,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         self.souts = []
         self.z0 = 0.
         self.nsm = 0.
-        self.TRef = 0.
+        self.tref = 0.
         self.ge = 0.
         self.sb = 0.
         self.ft = None
@@ -457,8 +463,8 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:
             return False
-        fields2 = [prop.nsm, prop.sb, prop.ft, prop.TRef, prop.ge, prop.lam]
-        fields1 = [self.nsm, self.sb, self.ft, self.TRef, self.ge, self.lam]
+        fields2 = [prop.nsm, prop.sb, prop.ft, prop.tref, prop.ge, prop.lam]
+        fields1 = [self.nsm, self.sb, self.ft, self.tref, self.ge, self.lam]
 
         for ply in self.plies:
             fields1 += ply
@@ -498,7 +504,7 @@ class PCOMP(CompositeShellProperty):
     """
     type = 'PCOMP'
     _field_map = {
-        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'TRef',
+        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref',
         7: 'ge', 8:'lam',
     }
 
@@ -521,7 +527,7 @@ class PCOMP(CompositeShellProperty):
 
     def __init__(self, pid,
                  mids, thicknesses, thetas=None, souts=None,
-                 nsm=0., sb=0., ft=None, TRef=0., ge=0., lam=None, z0=None,
+                 nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None,
                  comment=''):
         """
         Creates a PCOMP card
@@ -545,7 +551,7 @@ class PCOMP(CompositeShellProperty):
             Used by the failure theory
         ft : str; default=None
             failure theory; {HILL, HOFF, TSAI, STRN, None}
-        TRef : float; default=0.
+        tref : float; default=0.
             reference temperature
         ge : float; default=0.
             structural damping
@@ -562,7 +568,7 @@ class PCOMP(CompositeShellProperty):
         if comment:
             self.comment = comment
         if thetas is None:
-            nplies = len(self.mids)
+            nplies = len(mids)
             thetas = [0.] * nplies
         if souts is None:
             souts = ['NO'] * nplies
@@ -577,12 +583,11 @@ class PCOMP(CompositeShellProperty):
         self.sb = sb
 
         #: Failure Theory
-        #:
         #:   ['HILL', 'HOFF', 'TSAI', 'STRN', None]
         self.ft = ft
 
         #: Reference Temperature (default=0.0)
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
 
         #: symmetric flag - default = No Symmetry (=None)
@@ -621,7 +626,7 @@ class PCOMP(CompositeShellProperty):
         nsm = double_or_blank(card, 3, 'nsm', 0.0)
         sb = double_or_blank(card, 4, 'sb', 0.0)
         ft = string_or_blank(card, 5, 'ft')
-        TRef = double_or_blank(card, 6, 'TRef', 0.0)
+        tref = double_or_blank(card, 6, 'tref', 0.0)
         ge = double_or_blank(card, 7, 'ge', 0.0)
         lam = string_or_blank(card, 8, 'lam') # default=blank -> nothing
 
@@ -667,7 +672,7 @@ class PCOMP(CompositeShellProperty):
                 iply += 1
             mid_last = mid
             thick_last = t
-        #print "nplies = ",nplies
+        #print("nplies = %s" % nplies)
 
         #self.plies = []
         #if self.lam == 'SYM':
@@ -680,20 +685,20 @@ class PCOMP(CompositeShellProperty):
         #    self.plies = pliesLower+plies
         #    #print str(self)
         z0 = double_or_blank(card, 2, 'z0')
-        return PCOMP(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, TRef, ge,
+        return PCOMP(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, tref, ge,
                      lam, z0, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         #data_in = [
-            #pid, z0, nsm, sb, ft, Tref, ge,
+            #pid, z0, nsm, sb, ft, tref, ge,
             #is_symmetrical, Mid, T, Theta, Sout]
         pid = data[0]
         z0 = data[1]
         nsm = data[2]
         sb = data[3]
         ft = data[4]
-        TRef = data[5]
+        tref = data[5]
         ge = data[6]
         lam = data[7]
         Mid = data[8]
@@ -739,7 +744,7 @@ class PCOMP(CompositeShellProperty):
             raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
                                '\nPCOMP = %s' % (pid, ft, data))
         return PCOMP(pid, mids, thicknesses, thetas, souts,
-                     nsm, sb, ft, TRef, ge, lam, z0, comment=comment)
+                     nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
     @property
     def plies(self):
@@ -794,7 +799,7 @@ class PCOMP(CompositeShellProperty):
 
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
-                       self.TRef, self.ge, self.lam, ]
+                       self.tref, self.ge, self.lam, ]
         for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
                                          self.thetas, self.souts):
             list_fields += [mid, t, theta, sout]
@@ -803,11 +808,11 @@ class PCOMP(CompositeShellProperty):
     def repr_fields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
         sb = set_blank_if_default(self.sb, 0.0)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         z0 = set_blank_if_default(self.z0, -0.5 * self.get_thickness())
 
-        list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
+        list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, tref, ge, self.lam]
         for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
                                          self.thetas, self.souts):
             #theta = set_blank_if_default(theta,0.0)
@@ -825,7 +830,7 @@ class PCOMP(CompositeShellProperty):
 class PCOMPG(CompositeShellProperty):
     type = 'PCOMPG'
     _field_map = {
-        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'TRef',
+        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref',
         7: 'ge', 8:'lam',
     }
 
@@ -866,12 +871,16 @@ class PCOMPG(CompositeShellProperty):
             #self.global_ply_ids[i] = global_ply_id
             #i += 1
 
-    def __init__(self, pid,
-                 global_ply_ids, mids, thicknesses, thetas, souts,
-                 nsm, sb, ft, TRef, ge, lam, z0, comment=''):
+    def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
+                 nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
         CompositeShellProperty.__init__(self)
         if comment:
             self.comment = comment
+        if thetas is None:
+            nplies = len(mids)
+            thetas = [0.] * nplies
+        if souts is None:
+            souts = ['NO'] * nplies
 
         #: Property ID
         self.pid = pid
@@ -886,7 +895,7 @@ class PCOMPG(CompositeShellProperty):
         self.ft = ft
 
         #: Reference Temperature (default=0.0)
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
 
         #: symmetric flag - default = No Symmetry (NO)
@@ -900,8 +909,22 @@ class PCOMPG(CompositeShellProperty):
             z0 = -0.5 * self.Thickness()
         self.z0 = z0
 
+    def validate(self):
+        assert isinstance(self.global_ply_ids, list), self.global_ply_ids
+        #assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft # PCOMP
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None], 'ft=%r' % self.ft
-        assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
+
+        # 'NO' is not an option!
+        allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
+        if self.lam not in allowed_lam:
+            msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(allowed_lam))
+            raise ValueError(msg)
+
+        # this is a loose requirement
+        #if self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN'] and self.sb <= 0.:
+            #msg = 'PCOMP pid=%s FT=%s sb=%s; sb must be greater than 0' % (
+                #self.pid, self.ft, self.sb)
+            #raise ValueError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -910,7 +933,7 @@ class PCOMPG(CompositeShellProperty):
         nsm = double_or_blank(card, 3, 'nsm', 0.0)
         sb = double_or_blank(card, 4, 'sb', 0.0)
         ft = string_or_blank(card, 5, 'ft')
-        TRef = double_or_blank(card, 6, 'TRef', 0.0)
+        tref = double_or_blank(card, 6, 'tref', 0.0)
         ge = double_or_blank(card, 7, 'ge', 0.0)
         lam = string_or_blank(card, 8, 'lam')
 
@@ -957,7 +980,7 @@ class PCOMPG(CompositeShellProperty):
         z0 = double_or_blank(card, 2, 'z0')
         return PCOMPG(pid,
                       global_ply_ids, mids, thicknesses, thetas, souts,
-                      nsm, sb, ft, TRef, ge, lam, z0, comment=comment)
+                      nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -995,7 +1018,7 @@ class PCOMPG(CompositeShellProperty):
     def raw_fields(self):
         list_fields = [
             'PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
-            self.TRef, self.ge, self.lam, ]
+            self.tref, self.ge, self.lam, ]
         zipi = zip(self.material_ids, self.thicknesses, self.thetas,
                    self.souts, self.global_ply_ids)
         for (mid, t, theta, sout, global_ply_id) in zipi:
@@ -1005,12 +1028,12 @@ class PCOMPG(CompositeShellProperty):
     def repr_fields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
         sb = set_blank_if_default(self.sb, 0.0)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         z0 = set_blank_if_default(self.z0, -0.5 * self.Thickness())
 
         list_fields = [
-            'PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge,
+            'PCOMPG', self.pid, z0, nsm, sb, self.ft, tref, ge,
             self.lam]
         zipi = zip(self.material_ids, self.thicknesses, self.thetas, self.souts,
                    self.global_ply_ids)
@@ -1091,11 +1114,13 @@ class PLPLANE(ShellProperty):
         return self.cid_ref.cid
 
     def raw_fields(self):
-        list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.stress_strain_output_location]
+        list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(),
+                       self.stress_strain_output_location]
         return list_fields
 
     def repr_fields(self):
-        list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.stress_strain_output_location]
+        list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(),
+                       self.stress_strain_output_location]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

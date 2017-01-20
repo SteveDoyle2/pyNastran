@@ -348,8 +348,9 @@ class TestAero(unittest.TestCase):
         caero = CAERO1.add_card(BDFCard(['CAERO1', eid, pid, None, nspan, nchord, lspan, lchord,
                                          igid, ] + p1 + [x12] + p4 + [x43]))
         caero.validate()
-        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                       x12, p4, x43, comment='caero1')
+        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                       comment='caero1')
         caero.raw_fields()
         caero.validate()
         caero.write_card()
@@ -362,15 +363,15 @@ class TestAero(unittest.TestCase):
         nspan = 5
         nchord = 10
         igid = -1
-        caeroq = CAERO1.add_quad(eid, pid, cp, nspan, nchord, igid, p1, p2, p3, p4,
-                                 spanwise='y', comment='')
+        caeroq = CAERO1.add_quad(eid, pid, nspan, nchord, igid, p1, p2, p3, p4,
+                                 cp=cp, spanwise='y', comment='')
         caeroq.validate()
 
         span = 0.1
         chord = 0.05
         igid = -1
-        caeroq = CAERO1.add_quad(eid, pid, cp, span, chord, igid, p1, p2, p3, p4,
-                                 spanwise='y', comment='')
+        caeroq = CAERO1.add_quad(eid, pid, span, chord, igid, p1, p2, p3, p4,
+                                 cp=cp, spanwise='y', comment='')
         caeroq.validate()
 
 
@@ -381,8 +382,8 @@ class TestAero(unittest.TestCase):
         span = 0.1
         chord = 0.05
         igid = -1
-        caeroq = CAERO1.add_quad(eid, pid, cp, span, chord, igid, p1, p2, p3, p4,
-                                 spanwise='z', comment='')
+        caeroq = CAERO1.add_quad(eid, pid, span, chord, igid, p1, p2, p3, p4,
+                                 cp=cp, spanwise='z', comment='')
         caeroq.validate()
 
         paero = PAERO1(pid, Bi=None, comment='')
@@ -402,8 +403,8 @@ class TestAero(unittest.TestCase):
         sref = 100.
         acsid = 0
         rcsid = 0
-        aeros = AEROS(cref, bref, sref, acsid, rcsid, sym_xz=0, sym_xy=0,
-                      comment='')
+        aeros = model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0,
+                       sym_xy=0, comment='aeros')
         aeros.validate()
         aeros.write_card()
         model.aeros = aeros
@@ -446,30 +447,34 @@ class TestAero(unittest.TestCase):
 
         nspan = None
         lspan = None
-        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                       x12, p4, x43, comment='caero1')
+        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=None,
+                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                       comment='caero1')
         with self.assertRaises(ValueError):
             caero.validate()
 
         nspan = 5
         lspan = 5
-        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                       x12, p4, x43, comment='caero1')
+        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                       comment='caero1')
         with self.assertRaises(ValueError):
             caero.validate()
 
         nspan = 5
         nchord = None
         lchord = None
-        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                       x12, p4, x43, comment='caero1')
+        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                       comment='caero1')
         with self.assertRaises(ValueError):
             caero.validate()
 
         nchord = 10
         lchord = 10
-        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                       x12, p4, x43, comment='caero1')
+        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                       comment='caero1')
         with self.assertRaises(ValueError):
             caero.validate()
 
@@ -478,15 +483,17 @@ class TestAero(unittest.TestCase):
         nspan = 10
         nchord = 10
         p1 = [0., 0., 0., 0.]
-        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                       x12, p4, x43, comment='caero1')
+        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                       comment='caero1')
         with self.assertRaises(AssertionError):
             caero.validate()
 
         p1 = [0., 0., 0.]
         p4 = [1., 2., 3., 4.]
-        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                       x12, p4, x43, comment='caero1')
+        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                       comment='caero1')
         with self.assertRaises(AssertionError):
             caero.validate()
 

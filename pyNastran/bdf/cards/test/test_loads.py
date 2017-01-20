@@ -6,7 +6,7 @@ from numpy import array, allclose, array_equal, set_printoptions
 set_printoptions(suppress=True, precision=3)
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4
+from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf
 from pyNastran.op2.op2 import OP2
 
 bdf = BDF(debug=False)
@@ -524,7 +524,7 @@ class TestLoads(unittest.TestCase):
         #mathe = model.add_mathe(mid, model, bulk, rho, texp, mus, alphas,
                                 #betas, mooney, sussbat, comment='mathe')
         mathp = model.add_mathp(mid, comment='mathp')
-
+        model.validate()
 
         ctriax.raw_fields()
         ctriax.write_card(size=8)
@@ -557,7 +557,160 @@ class TestLoads(unittest.TestCase):
         #mathe.write_card(size=8)
         mathp.write_card(size=8)
         ploadx1.write_card(size=8)
+        model.write_bdf('ploadx1.temp')
 
+        model2 = read_bdf('ploadx1.temp', debug=None)
+        model2._verify_bdf()
+        os.remove('ploadx1.temp')
+
+    def test_combo(self):
+        """
+        tests CONROD, CTRIA3-PSHELL, CQUAD4-PCOMP, CHEXA-PSOLID
+
+        4
+        +-----+3
+        |     |
+        |     |
+        +-----+
+        1     2
+        """
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+
+        model.add_grid(5, xyz=[0., 0., 1.])
+        model.add_grid(6, xyz=[1., 0., 1.])
+        model.add_grid(7, xyz=[1., 1., 1.])
+        model.add_grid(8, xyz=[0., 1., 1.])
+
+        eid = 1
+        mid = 1
+        A = 2.0
+        nids = [1, 2]
+        # L = 1; A=2
+        # mass=(rho*A + nsm) * L = (0.2*2 + 1.0) * 1 = 1.4
+        conrod = model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=1.0, comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.2, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, Mcsid=0,
+                       comment='')
+
+        eid = 2
+        pid = 2
+        nids = [1, 2, 3]
+        ctria3 = model.add_ctria3(eid, pid, nids, zoffset=0., theta_mcid=0.0, TFlag=0,
+                                  T1=1.0, T2=1.0, T3=1.0,
+                                  comment='')
+
+        # mass = (rho*t + nsm)*A = (0.2*0.5 + 0.3) * 0.5 = 0.4 * 0.5 = 0.2
+        model.add_pshell(pid, mid1=None, t=0.5, mid2=mid, twelveIt3=1.0,
+                        mid3=None, tst=0.833333,
+                        nsm=0.3, z1=None, z2=None,
+                        mid4=None, comment='')
+
+
+        eid = 3
+        pid = 3
+        nids = [1, 2, 3, 4]
+        cquad4 = model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
+                                  TFlag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
+        mids = [mid, mid, mid]
+        thicknesses = [0.1, 0.2, 0.3]
+        model.add_pcomp(pid, mids, thicknesses, thetas=None, souts=None,
+                        nsm=0., sb=0., ft=None,
+                        tref=0., ge=0., lam=None,
+                        z0=None, comment='pcomp')
+
+        #pid = 40
+        #global_ply_ids = [5, 6, 7]
+        #mids = [mid, mid, mid]
+        #thicknesses = [0.1, 0.2, 0.3]
+        #model.add_pcompg(pid, global_ply_ids, mids, thicknesses, thetas=None,
+                        #souts=None, nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0,
+                        #lam=None, z0=None, comment='pcompg')
+
+        eid = 4
+        pid = 4
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+
+        # mass = rho*V = 0.2*1
+        chexa = model.add_chexa(eid, pid, nids, comment='')
+        psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
+                                  isop=None, fctn='SMECH', comment='psolid')
+
+        #assert allclose(conrod.Mass(), 1.4)
+        #assert allclose(ctria3.Mass(), 0.2)
+        #assert allclose(chexa.Mass(), 0.2)
+
+        sid = 12
+        xyz = [2., 3., 4.]
+        node = 7
+        mag = 1.0
+        force = model.add_force(sid, node, mag, xyz, cid=0, comment='force')
+
+        node = 6
+        mag = 1.0
+        g1 = 2
+        g2 = 3
+        force1 = model.add_force1(sid, node, mag, g1, g2, comment='force1')
+
+        sid = 13
+        mag = 1.5
+        node = 7
+        g1 = 1
+        g2 = 3
+        g3 = 5
+        g4 = 7
+        #force2 = model.add_force2(sid, node, mag, g1, g2, g3, g4, comment='force2')
+        #g2, g3 = g3, g2
+        #force2 = model.add_force2(sid, node, mag, g1, g2, g3, g4, comment='force2')
+
+
+        load_id = 120
+        scale = 1.
+        scale_factors = [1.0, 2.0]
+        load_ids = [12, 13]
+        load = model.add_load(load_id, scale, scale_factors, load_ids, comment='load')
+
+        eids = [4]
+        g1 = 6
+        g34 = 8
+        pressures = [1., 1., 1., 1.]
+        pload4 = model.add_pload4(sid, eids, pressures, g1=1, g34=8,
+                                 cid=0, NVector=None, sorl='SURF', ldir='NORM', comment='pload4')
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.write_bdf('loads.temp')
+        model.cross_reference()
+        model.write_bdf('loads.temp')
+        model._verify_bdf(xref=True)
+        model.write_bdf('loads.temp')
+        model.uncross_reference()
+        model.write_bdf('loads.temp')
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model.write_bdf('loads.temp', size=8, is_double=False)
+        model.write_bdf('loads.temp', size=16, is_double=False)
+        model.write_bdf('loads.temp', size=16, is_double=True)
+
+        model2 = read_bdf('loads.temp', debug=None)
+        os.remove('loads.temp')
+        eids = list(model.elements.keys())
+        nids = list(model.nodes.keys())
+        p0 = [0., 0., 0.]
+        loadcase_id = 120
+        F1, M1 = model2.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                    include_grav=False, xyz_cid0=None)
+        F2, M2 = model2.sum_forces_moments(p0, loadcase_id, include_grav=False,
+                                           xyz_cid0=None)
+        assert allclose(F1, F2), 'F1=%s F2=%s' % (F1, F2)
+        assert allclose(M1, M2), 'M1=%s M2=%s' % (M1, M2)
 
 
 if __name__ == '__main__':  # pragma: no cover

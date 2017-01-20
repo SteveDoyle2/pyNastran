@@ -942,7 +942,7 @@ class AddCards(AddMethods):
         return prop
 
     def add_pcomp(self, pid, mids, thicknesses, thetas=None, souts=None,
-                  nsm=0., sb=0., ft=None, TRef=0., ge=0., lam=None,
+                  nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None,
                   z0=None, comment=''):
         """
         Creates a PCOMP card
@@ -966,7 +966,7 @@ class AddCards(AddMethods):
             Used by the failure theory
         ft : str; default=None
             failure theory; {HILL, HOFF, TSAI, STRN, None}
-        TRef : float; default=0.
+        tref : float; default=0.
             reference temperature
         ge : float; default=0.
             structural damping
@@ -980,16 +980,15 @@ class AddCards(AddMethods):
             a comment for the card
         """
         prop = PCOMP(pid, mids, thicknesses, thetas, souts,
-                     nsm=nsm, sb=sb, ft=ft, TRef=TRef, ge=ge, lam=lam,
+                     nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam,
                      z0=z0, comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas, souts,
-                   nsm, sb, ft, TRef, ge, lam, z0,
-                   comment=''):
-        prop = PCOMPG(pid, global_ply_ids, mids, thicknesses, thetas, souts,
-                      nsm, sb, ft, TRef, ge, lam, z0,
+    def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
+                 nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
+        prop = PCOMPG(pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
+                      nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0,
                       comment=comment)
         self._add_property_object(prop)
         return prop
@@ -1190,27 +1189,27 @@ class AddCards(AddMethods):
         self._add_creep_material_object(mat)
         return mat
 
-    def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, TRef=0.0, ge=0.0, St=0.0,
+    def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
                  Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
-        mat = MAT1(mid, E, G, nu, rho=rho, a=a, TRef=TRef, ge=ge, St=St,
+        mat = MAT1(mid, E, G, nu, rho=rho, a=a, tref=tref, ge=ge, St=St,
                    Sc=Sc, Ss=Ss, Mcsid=Mcsid, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
     def add_mat2(self, mid, G11, G12, G13, G22, G23, G33, rho, a1, a2, a3,
-                 TRef=0., ge=0., St=None, Sc=None,
+                 tref=0., ge=0., St=None, Sc=None,
                  Ss=None, Mcsid=None, comment=''):
         mat = MAT2(mid, G11, G12, G13, G22, G23, G33, rho, a1, a2, a3,
-                   TRef=TRef, ge=ge, St=St, Sc=Sc,
+                   tref=tref, ge=ge, St=St, Sc=Sc,
                    Ss=Ss, Mcsid=Mcsid, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
     def add_mat3(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
-                 ax=0., ath=0., az=0., TRef=0., ge=0.,
+                 ax=0., ath=0., az=0., tref=0., ge=0.,
                  comment=''):
         mat = MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=rho, gzx=gzx,
-                   ax=ax, ath=ath, az=az, TRef=TRef, ge=ge,
+                   ax=ax, ath=ath, az=az, tref=tref, ge=ge,
                    comment=comment)
         self._add_structural_material_object(mat)
         return mat
@@ -1232,20 +1231,20 @@ class AddCards(AddMethods):
 
     def add_mat8(self, mid, e11, e22, nu12, g12=0.0, g1z=1e8, g2z=1e8,
                  rho=0., a1=0., a2=0.,
-                 TRef=0., Xt=0., Xc=None, Yt=0., Yc=None,
+                 tref=0., Xt=0., Xc=None, Yt=0., Yc=None,
                  S=0., ge=0., F12=0., strn=0., comment=''):
         mat = MAT8(mid, e11, e22, nu12, g12, g1z, g2z, rho=rho, a1=a1, a2=a2,
-                   TRef=TRef, Xt=Xt, Xc=Xc, Yt=Yt, Yc=Yc,
+                   tref=tref, Xt=Xt, Xc=Xc, Yt=Yt, Yc=Yc,
                    S=S, ge=ge, F12=F12, strn=strn, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
     def add_mat9(self, mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25, G26,
                  G33, G34, G35, G36, G44, G45, G46, G55,
-                 G56, G66, rho, A, TRef, ge, comment=''):
+                 G56, G66, rho, A, tref, ge, comment=''):
         mat = MAT9(mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25, G26,
                    G33, G34, G35, G36, G44, G45, G46, G55,
-                   G56, G66, rho, A, TRef, ge, comment=comment)
+                   G56, G66, rho, A, tref, ge, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
@@ -1260,9 +1259,9 @@ class AddCards(AddMethods):
         return mat
 
     def add_mat11(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                  a1, a2, a3, TRef, ge, comment=''):
+                  a1, a2, a3, tref, ge, comment=''):
         mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                    a1, a2, a3, TRef, ge, comment=comment)
+                    a1, a2, a3, tref, ge, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
@@ -1273,13 +1272,13 @@ class AddCards(AddMethods):
         self._add_hyperelastic_material_object(mat)
         return mat
 
-    def add_mathp(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., TRef=0., ge=0., na=1, nd=1,
+    def add_mathp(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
                   a20=0., a11=0., a02=0., d2=0.,
                   a30=0., a21=0., a12=0., a03=0., d3=0.,
                   a40=0., a31=0., a22=0., a13=0., a04=0., d4=0.,
                   a50=0., a41=0., a32=0., a23=0., a14=0., a05=0., d5=0.,
                   tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment=''):
-        mat = MATHP(mid, a10, a01, d1, rho, av, TRef, ge, na, nd,
+        mat = MATHP(mid, a10, a01, d1, rho, av, tref, ge, na, nd,
                     a20, a11, a02, d2,
                     a30, a21, a12, a03, d3,
                     a40, a31, a22, a13, a04,
@@ -1369,7 +1368,7 @@ class AddCards(AddMethods):
         darea = DAREA(sid, p, c, scale, comment=comment)
         self._add_darea_object(darea)
 
-    def add_force(self, sid, node, mag, cid=0, xyz=None, comment=''):
+    def add_force(self, sid, node, mag, xyz, cid=0, comment=''):
         """
         Creates a FORCE card
 
@@ -1381,14 +1380,14 @@ class AddCards(AddMethods):
             the node to apply the load to
         mag : float
             the load's magnitude
+        xyz : (3, ) float ndarray
+            the load direction in the cid frame
         cid : int; default=0
             the coordinate system for the load
-        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
-            the load direction in the cid frame
         comment : str; default=''
             a comment for the card
         """
-        load = FORCE(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
+        load = FORCE(sid, node, mag, xyz, cid=cid, comment=comment)
         self._add_load_object(load)
         return load
 
@@ -1402,7 +1401,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_moment(self, sid, node, cid, mag, xyz, comment=''):
+    def add_moment(self, sid, node, mag, xyz, cid=0, comment=''):
         """
         Creates a MOMENT card
 
@@ -1416,12 +1415,12 @@ class AddCards(AddMethods):
             the load's magnitude
         cid : int; default=0
             the coordinate system for the load
-        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
+        xyz : (3, ) float ndarray; default
             the load direction in the cid frame
         comment : str; default=''
             a comment for the card
         """
-        load = MOMENT(sid, node, cid, mag, xyz, comment=comment)
+        load = MOMENT(sid, node, mag, xyz, cid=cid, comment=comment)
         self._add_load_object(load)
         return load
 
@@ -1486,11 +1485,15 @@ class AddCards(AddMethods):
         cid : int; default=0
             the coordinate system for ???
         NVector : (3, ) float ndarray
-           the local pressure vector
+           blank : load acts normal to the face
+           the local pressure vector (not supported)
         sorl : str; default='SURF'
-           ???
+           SURF : surface load
+           LINE : line load (only defined for QUADR, TRIAR)
+           not supported
         ldir : str; default='NORM'
-           ???
+           direction of the line load (see sorl); {X, Y, Z, TANG, NORM}
+           not supported
         comment : str; default=''
             a comment for the card
 
@@ -1613,10 +1616,11 @@ class AddCards(AddMethods):
         self._add_aero_object(aero)
         return aero
 
-    def add_caero1(self, eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                   x12, p4, x43, comment=''):
-        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
-                       x12, p4, x43, comment=comment)
+    def add_caero1(self, eid, pid, igid, p1, x12, p4, x43,
+                 cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
+        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                       comment=comment)
         self._add_caero_object(caero)
         return caero
 

@@ -92,7 +92,7 @@ class MPT(GeomCommon):
         for i in range(nmaterials):
             edata = data[n:n+48]
             out = s.unpack(edata)
-            (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
+            #(mid, E, G, nu, rho, A, tref, ge, St, Sc, Ss, mcsid) = out
             mat = MAT1.add_op2_data(out)
             self.add_op2_material(mat)
             n += ntotal
@@ -110,7 +110,7 @@ class MPT(GeomCommon):
             edata = data[n:n+68]
             out = s.unpack(edata)
             (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
-             TRef, ge, St, Sc, Ss, mcsid) = out
+             tref, ge, St, Sc, Ss, mcsid) = out
             #print("MAT2 = ",out)
             mat = MAT2.add_op2_data(out)
 
@@ -131,9 +131,9 @@ class MPT(GeomCommon):
         for i in range(nmaterials):
             out = s.unpack(data[n:n+64])
             (mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
-             blank, ax, ath, az, TRef, ge, blank) = out
+             blank, ax, ath, az, tref, ge, blank) = out
             mat = MAT3.add_op2_data([mid, ex, eth, ez, nuxth, nuthz,
-                                     nuzx, rho, gzx, ax, ath, az, TRef, ge])
+                                     nuzx, rho, gzx, ax, ath, az, tref, ge])
             self.add_op2_material(mat)
             n += 64
         self.card_count['MAT3'] = nmaterials
@@ -177,8 +177,8 @@ class MPT(GeomCommon):
         nmaterials = (len(data) - n) // 76
         for i in range(nmaterials):
             out = s.unpack(data[n:n+76])
-            (mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
-             TRef, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
+            #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
+            # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
             mat = MAT8.add_op2_data(out)
             self.add_op2_material(mat)
             n += 76
@@ -197,13 +197,13 @@ class MPT(GeomCommon):
             assert len(out) == 35, out
             (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
-             rho, a1, a2, a3, a4, a5, a6, TRef, ge,
+             rho, a1, a2, a3, a4, a5, a6, tref, ge,
              blank1, blank2, blank3, blank4) = out
             assert blank1 == 0, blank1
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
                        rho, [a1, a2, a3, a4, a5, a6],
-                       TRef, ge]
+                       tref, ge]
             mat = MAT9.add_op2_data(data_in)
             self.add_op2_material(mat)
             n += ntotal

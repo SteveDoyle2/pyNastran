@@ -193,12 +193,12 @@ class MAT1(IsotropicMaterial):
     """
     type = 'MAT1'
     _field_map = {
-        1: 'mid', 2:'e', 3:'g', 4:'nu', 5: 'rho', 6:'a', 7:'TRef', 8:'ge',
+        1: 'mid', 2:'e', 3:'g', 4:'nu', 5: 'rho', 6:'a', 7:'tref', 8:'ge',
         9: 'St', 10:'Sc', 11:'Ss', 12:'Mcsid',
     }
 
     def __init__(self, mid, E, G, nu,
-                 rho=0.0, a=0.0, TRef=0.0, ge=0.0,
+                 rho=0.0, a=0.0, tref=0.0, ge=0.0,
                  St=0.0, Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
         IsotropicMaterial.__init__(self)
         self.mats1 = None
@@ -213,7 +213,7 @@ class MAT1(IsotropicMaterial):
         self.nu = nu
         self.rho = rho
         self.a = a
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
         self.St = St
         self.Sc = Sc
@@ -229,14 +229,14 @@ class MAT1(IsotropicMaterial):
 
         rho = double_or_blank(card, 5, 'rho', 0.)
         a = double_or_blank(card, 6, 'a', 0.0)
-        TRef = double_or_blank(card, 7, 'TRef', 0.0)
+        tref = double_or_blank(card, 7, 'tref', 0.0)
         ge = double_or_blank(card, 8, 'ge', 0.0)
         St = double_or_blank(card, 9, 'St', 0.0)
         Sc = double_or_blank(card, 10, 'Sc', 0.0)
         Ss = double_or_blank(card, 11, 'Ss', 0.0)
         Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
         assert len(card) <= 13, 'len(MAT1 card) = %i\ncard=%s' % (len(card), card)
-        return MAT1(mid, E, G, nu, rho, a, TRef, ge,
+        return MAT1(mid, E, G, nu, rho, a, tref, ge,
                     St, Sc, Ss, Mcsid, comment=comment)
 
     @classmethod
@@ -247,13 +247,13 @@ class MAT1(IsotropicMaterial):
         nu = data[3]
         rho = data[4]
         a = data[5]
-        TRef = data[6]
+        tref = data[6]
         ge = data[7]
         St = data[8]
         Sc = data[9]
         Ss = data[10]
         Mcsid = data[11]
-        return MAT1(mid, e, g, nu, rho, a, TRef, ge,
+        return MAT1(mid, e, g, nu, rho, a, tref, ge,
                     St, Sc, Ss, Mcsid, comment=comment)
 
     def _verify(self, xref):
@@ -333,7 +333,7 @@ class MAT1(IsotropicMaterial):
 
     def _write_calculix(self, element_set='ELSetDummyMat'):
         # default value - same properties for all values
-        temperature = self.TRef
+        temperature = self.tref
         msg = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (element_set)
         msg += '** E,NU,TEMPERATURE\n'
         msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
@@ -342,9 +342,9 @@ class MAT1(IsotropicMaterial):
             msg += '*DENSITY\n'
             msg += '%s\n' % (self.rho)
         if self.a > 0:
-            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.TRef)
+            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.tref)
             msg += '** ALPHA,ALPHA*TREF\n'
-            msg += '%s,%s\n\n' % (self.a, self.a * self.TRef)
+            msg += '%s,%s\n\n' % (self.a, self.a * self.tref)
         return msg
 
     def write_code_aster(self):
@@ -379,9 +379,12 @@ class MAT1(IsotropicMaterial):
             self.matt1_ref = self.matt1
 
     def uncross_reference(self):
-        self.mats1 = self.Mats1()
-        self.matt1 = self.Matt1()
-        del self.mats1_ref, self.matt1_Ref
+        if hasattr(self, 'mats1_ref'):
+            self.mats1 = self.Mats1()
+            del self.mats1_ref
+        if hasattr(self, 'matt1_ref'):
+            self.matt1 = self.Matt1()
+            del self.matt1_Ref
 
     def Mats1(self):
         return self.mats1
@@ -391,7 +394,7 @@ class MAT1(IsotropicMaterial):
 
     def raw_fields(self):
         list_fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a,
-                       self.TRef, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
+                       self.tref, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
         return list_fields
 
     def getG_default(self):
@@ -421,7 +424,7 @@ class MAT1(IsotropicMaterial):
 
         rho = set_blank_if_default(self.rho, 0.)
         a = set_blank_if_default(self.a, 0.)
-        tref = set_blank_if_default(self.TRef, 0.)
+        tref = set_blank_if_default(self.tref, 0.)
         ge = set_blank_if_default(self.ge, 0.)
 
         if [self.St, self.Sc, self.Ss, self.Mcsid] == [0., 0., 0., 0]:
@@ -531,12 +534,12 @@ class MAT2(AnisotropicMaterial):
     type = 'MAT2'
     _field_map = {
         1: 'mid', 2:'G11', 3:'G12', 4:'G13', 5: 'G22', 6:'G23', 7:'G33',
-        8:'rho', 9:'a1', 10:'a2', 11:'a3', 12:'TRef', 13:'ge',
+        8:'rho', 9:'a1', 10:'a2', 11:'a3', 12:'tref', 13:'ge',
         14: 'St', 15:'Sc', 16:'Ss', 17:'Mcsid',
     }
 
     def __init__(self, mid, G11, G12, G13, G22, G23, G33,
-                 rho, a1, a2, a3, TRef=0., ge=0.,
+                 rho, a1, a2, a3, tref=0., ge=0.,
                  St=None, Sc=None, Ss=None, Mcsid=None, comment=''):
         AnisotropicMaterial.__init__(self)
         self.matt2 = None
@@ -553,7 +556,7 @@ class MAT2(AnisotropicMaterial):
         self.a1 = a1
         self.a2 = a2
         self.a3 = a3
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
         self.St = St
         self.Sc = Sc
@@ -574,7 +577,7 @@ class MAT2(AnisotropicMaterial):
         a1 = double_or_blank(card, 9, 'a1') # blank?
         a2 = double_or_blank(card, 10, 'a2') # blank?
         a3 = double_or_blank(card, 11, 'a3') # blank?
-        TRef = double_or_blank(card, 12, 'TRef', 0.0)
+        tref = double_or_blank(card, 12, 'tref', 0.0)
         ge = double_or_blank(card, 13, 'ge', 0.0)
         St = double_or_blank(card, 14, 'St') # or blank?
         Sc = double_or_blank(card, 15, 'Sc') # or blank?
@@ -582,7 +585,7 @@ class MAT2(AnisotropicMaterial):
         Mcsid = integer_or_blank(card, 17, 'Mcsid')
         assert len(card) <= 18, 'len(MAT2 card) = %i\ncard=%s' % (len(card), card)
         return MAT2(mid, G11, G12, G13, G22, G23, G33,
-                    rho, a1, a2, a3, TRef, ge, St, Sc, Ss, Mcsid,
+                    rho, a1, a2, a3, tref, ge, St, Sc, Ss, Mcsid,
                     comment=comment)
 
     @classmethod
@@ -599,14 +602,14 @@ class MAT2(AnisotropicMaterial):
         a1 = data[8]
         a2 = data[9]
         a3 = data[10]
-        TRef = data[11]
+        tref = data[11]
         ge = data[12]
         St = data[13]
         Sc = data[14]
         Ss = data[15]
         Mcsid = data[16]
         return MAT2(mid, G11, G12, G13, G22, G23, G33,
-                    rho, a1, a2, a3, TRef, ge, St, Sc, Ss, Mcsid,
+                    rho, a1, a2, a3, tref, ge, St, Sc, Ss, Mcsid,
                     comment=comment)
 
     def get_density(self):
@@ -704,7 +707,7 @@ class MAT2(AnisotropicMaterial):
             #D1111, D1122, D2222, D1133, D2233, D3333, D1212, D1313)
 
         ##G23
-        #temperature = self.TRef
+        #temperature = self.tref
         #msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' % (
             #self.mid)
         #msg += '** E1,E2,E3,NU12,NU13,NU23,G12,G13\n'
@@ -716,15 +719,15 @@ class MAT2(AnisotropicMaterial):
             #msg += '*DENSITY\n'
             #msg += '%s\n' % (self.rho)
         #if self.a > 0:
-            #msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.TRef)
+            #msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.tref)
             #msg += '** ALPHA,ALPHA*TREF\n'
-            #msg += '%s,%s\n\n' % (self.a, self.a * self.TRef)
+            #msg += '%s,%s\n\n' % (self.a, self.a * self.tref)
         #return msg
 
     def raw_fields(self):
         list_fields = ['MAT2', self.mid, self.G11, self.G12, self.G13, self.G22,
                        self.G23, self.G33, self.rho, self.a1, self.a2, self.a3,
-                       self.TRef, self.ge, self.St, self.Sc, self.Ss,
+                       self.tref, self.ge, self.St, self.Sc, self.Ss,
                        self.Mcsid]
         return list_fields
 
@@ -744,10 +747,10 @@ class MAT2(AnisotropicMaterial):
         G23 = set_blank_if_default(self.G23, 0.0)
         G33 = set_blank_if_default(self.G33, 0.0)
         rho = set_blank_if_default(self.rho, 0.0)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MAT2', self.mid, G11, G12, G13, G22, G23, G33, rho,
-                       self.a1, self.a2, self.a3, TRef, ge,
+                       self.a1, self.a2, self.a3, tref, ge,
                        self.St, self.Sc, self.Ss, self.Mcsid]
         return list_fields
 
@@ -774,12 +777,12 @@ class MAT3(OrthotropicMaterial):
     type = 'MAT3'
     _field_map = {
         1: 'mid', 2:'ex', 3:'eth', 4:'ez', 5: 'nuxth', 6:'nuthz', 7:'nuzx',
-        8:'rho', 11:'gzx', 12:'ax', 13:'ath', 14:'az', 15:'TRef',
+        8:'rho', 11:'gzx', 12:'ax', 13:'ath', 14:'az', 15:'tref',
         16: 'ge',
     }
 
     def __init__(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
-                 ax=0., ath=0., az=0., TRef=0., ge=0., comment=''):
+                 ax=0., ath=0., az=0., tref=0., ge=0., comment=''):
         OrthotropicMaterial.__init__(self)
         self.mats3 = None
         self.matt3 = None
@@ -797,7 +800,7 @@ class MAT3(OrthotropicMaterial):
         self.ax = ax
         self.ath = ath
         self.az = az
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
 
     @classmethod
@@ -815,11 +818,11 @@ class MAT3(OrthotropicMaterial):
         ax = double_or_blank(card, 12, 'ax', 0.0)
         ath = double_or_blank(card, 13, 'ath', 0.0)
         az = double_or_blank(card, 14, 'az', 0.0)
-        TRef = double_or_blank(card, 15, 'TRef', 0.0)
+        tref = double_or_blank(card, 15, 'tref', 0.0)
         ge = double_or_blank(card, 16, 'ge', 0.0)
         assert len(card) <= 17, 'len(MAT3 card) = %i\ncard=%s' % (len(card), card)
         return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=rho, gzx=gzx,
-                    ax=ax, ath=ath, az=az, TRef=TRef, ge=ge, comment=comment)
+                    ax=ax, ath=ath, az=az, tref=tref, ge=ge, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -836,10 +839,10 @@ class MAT3(OrthotropicMaterial):
         ax = data[9]
         ath = data[10]
         az = data[11]
-        TRef = data[12]
+        tref = data[12]
         ge = data[13]
         return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
-                    ax, ath, az, TRef, ge, comment=comment)
+                    ax, ath, az, tref, ge, comment=comment)
 
     def get_density(self):
         return self.rho
@@ -874,7 +877,7 @@ class MAT3(OrthotropicMaterial):
     def raw_fields(self):
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
                        self.nuthz, self.nuzx, self.rho, None, None, self.gzx,
-                       self.ax, self.ath, self.az, self.TRef, self.ge]
+                       self.ax, self.ath, self.az, self.tref, self.ge]
         return list_fields
 
     def repr_fields(self):
@@ -890,11 +893,11 @@ class MAT3(OrthotropicMaterial):
         ath = set_blank_if_default(self.ath, 0.0)
         az = set_blank_if_default(self.az, 0.0)
         rho = set_blank_if_default(self.rho, 0.0)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
                        self.nuthz, self.nuzx, rho, None, None, self.gzx,
-                       ax, ath, az, TRef, ge]
+                       ax, ath, az, tref, ge]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1178,12 +1181,12 @@ class MAT8(OrthotropicMaterial):
     type = 'MAT8'
     _field_map = {
         1: 'mid', 2:'e11', 3:'e22', 4:'nu12', 5: 'g12', 6:'g1z', 7:'g2z',
-        8: 'rho', 9:'a1', 10:'a2', 11:'TRef', 12:'Xt', 13:'Xc', 14:'Yt',
+        8: 'rho', 9:'a1', 10:'a2', 11:'tref', 12:'Xt', 13:'Xc', 14:'Yt',
         15:'Yc', 16: 'S', 17:'ge', 18:'F12', 19:'strn',
     }
 
     def __init__(self, mid, e11, e22, nu12, g12=0.0, g1z=1e8, g2z=1e8, rho=0.,
-                 a1=0., a2=0., TRef=0.,
+                 a1=0., a2=0., tref=0.,
                  Xt=0., Xc=None,
                  Yt=0., Yc=None, S=0.,
                  ge=0., F12=0., strn=0., comment=''):
@@ -1210,7 +1213,7 @@ class MAT8(OrthotropicMaterial):
         self.rho = rho
         self.a1 = a1
         self.a2 = a2
-        self.TRef = TRef
+        self.tref = tref
         self.Xt = Xt
         self.Xc = Xc
         self.Yt = Yt
@@ -1234,7 +1237,7 @@ class MAT8(OrthotropicMaterial):
         rho = double_or_blank(card, 8, 'rho', 0.0)
         a1 = double_or_blank(card, 9, 'a1', 0.0)
         a2 = double_or_blank(card, 10, 'a2', 0.0)
-        TRef = double_or_blank(card, 11, 'TRef', 0.0)
+        tref = double_or_blank(card, 11, 'tref', 0.0)
         Xt = double_or_blank(card, 12, 'Xt', 0.0)
         Xc = double_or_blank(card, 13, 'Xc', Xt)
         Yt = double_or_blank(card, 14, 'Yt', 0.0)
@@ -1244,7 +1247,7 @@ class MAT8(OrthotropicMaterial):
         F12 = double_or_blank(card, 18, 'F12', 0.0)
         strn = double_or_blank(card, 19, 'strn', 0.0)
         assert len(card) <= 20, 'len(MAT8 card) = %i\ncard=%s' % (len(card), card)
-        return MAT8(mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, TRef,
+        return MAT8(mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, tref,
                     Xt, Xc, Yt, Yc, S, ge, F12, strn, comment=comment)
 
     @classmethod
@@ -1260,7 +1263,7 @@ class MAT8(OrthotropicMaterial):
         rho = data[7]
         a1 = data[8]
         a2 = data[9]
-        TRef = data[10]
+        tref = data[10]
         Xt = data[11]
         Xc = data[12]
         Yt = data[13]
@@ -1269,7 +1272,7 @@ class MAT8(OrthotropicMaterial):
         ge = data[16]
         F12 = data[17]
         strn = data[18]
-        return MAT8(mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, TRef,
+        return MAT8(mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, tref,
                     Xt, Xc, Yt, Yc, S, ge, F12, strn,
                     comment=comment)
 
@@ -1344,7 +1347,7 @@ class MAT8(OrthotropicMaterial):
 
     def raw_fields(self):
         list_fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, self.g12,
-                       self.g1z, self.g2z, self.rho, self.a1, self.a2, self.TRef,
+                       self.g1z, self.g2z, self.rho, self.a1, self.a2, self.tref,
                        self.Xt, self.Xc, self.Yt, self.Yc, self.S, self.ge,
                        self.F12, self.strn]
         return list_fields
@@ -1368,7 +1371,7 @@ class MAT8(OrthotropicMaterial):
         rho = set_blank_if_default(self.rho, 0.0)
         a1 = set_blank_if_default(self.a1, 0.0)
         a2 = set_blank_if_default(self.a2, 0.0)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
 
         Xt = set_blank_if_default(self.Xt, 0.)
         Yt = set_blank_if_default(self.Yt, 0.)
@@ -1382,7 +1385,7 @@ class MAT8(OrthotropicMaterial):
         strn = set_blank_if_default(self.strn, 0.0)
 
         list_fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, G12, G1z,
-                       G2z, rho, a1, a2, TRef, Xt, Xc, Yt, Yc, S, ge, F12, strn]
+                       G2z, rho, a1, a2, tref, Xt, Xc, Yt, Yc, S, ge, F12, strn]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1416,7 +1419,7 @@ class MAT9(AnisotropicMaterial):
 
     def __init__(self, mid, G11, G12, G13, G14, G15, G16, G22, G23, G24,
                  G25, G26, G33, G34, G35, G36, G44, G45, G46, G55, G56, G66,
-                 rho, A, TRef, ge, comment=''):
+                 rho, A, tref, ge, comment=''):
         AnisotropicMaterial.__init__(self)
         self.matt9 = None
         if comment:
@@ -1446,7 +1449,7 @@ class MAT9(AnisotropicMaterial):
         self.G66 = G66
         self.rho = rho
         self.A = A
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
         assert len(self.A) == 6, A
 
@@ -1481,12 +1484,12 @@ class MAT9(AnisotropicMaterial):
              double_or_blank(card, 27, 'A4', 0.0),
              double_or_blank(card, 28, 'A5', 0.0),
              double_or_blank(card, 29, 'A6', 0.0)]
-        TRef = double_or_blank(card, 30, 'TRef', 0.0)
+        tref = double_or_blank(card, 30, 'tref', 0.0)
         ge = double_or_blank(card, 31, 'ge', 0.0)
         assert len(card) <= 32, 'len(MAT9 card) = %i\ncard=%s' % (len(card), card)
         return MAT9(mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25,
                     G26, G33, G34, G35, G36, G44, G45, G46,
-                    G55, G56, G66, rho, A, TRef, ge,
+                    G55, G56, G66, rho, A, tref, ge,
                     comment=comment)
 
     @classmethod
@@ -1562,7 +1565,7 @@ class MAT9(AnisotropicMaterial):
                         self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
                         self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
                         self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]
-                       + self.A + [self.TRef, self.ge])
+                       + self.A + [self.tref, self.ge])
         return list_fields
 
     def repr_fields(self):
@@ -1580,13 +1583,13 @@ class MAT9(AnisotropicMaterial):
             A.append(a)
 
         rho = set_blank_if_default(self.rho, 0.0)
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
                         self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
                         self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
                         self.G45, self.G46, self.G55, self.G56, self.G66, rho]
-                       + A + [TRef, ge])
+                       + A + [tref, ge])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1793,7 +1796,7 @@ class MATG(Material):
     #_field_map = {
         #1: 'mid', 2:'e1', 3:'e2', 4:'e3', 5: 'nu12', 6:'nu13', 7:'nu23',
         #8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
-        #15:'TRef', 16: 'ge',
+        #15:'tref', 16: 'ge',
     #}
     def __init__(self, mid, idmem, behav, tabld, tablu, yprs, epl, gpl,
                  gap=0., tab_yprs=None, tab_epl=None, tab_gpl=None, tab_gap=None, comment=''):
@@ -1889,10 +1892,10 @@ class MAT11(Material):
     _field_map = {
         1: 'mid', 2:'e1', 3:'e2', 4:'e3', 5: 'nu12', 6:'nu13', 7:'nu23',
         8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
-        15:'TRef', 16: 'ge',
+        15:'tref', 16: 'ge',
     }
     def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                 a1, a2, a3, TRef, ge, comment=''):
+                 a1, a2, a3, tref, ge, comment=''):
         Material.__init__(self)
         if comment:
             self.comment = comment
@@ -1914,7 +1917,7 @@ class MAT11(Material):
         self.a2 = a2
         self.a3 = a3
 
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
         self._validate_input()
 
@@ -1938,7 +1941,7 @@ class MAT11(Material):
         a2 = double_or_blank(card, 13, 'a2', 0.0)
         a3 = double_or_blank(card, 14, 'a3', 0.0)
 
-        tref = double_or_blank(card, 15, 'TRef', 0.0)
+        tref = double_or_blank(card, 15, 'tref', 0.0)
         ge = double_or_blank(card, 16, 'ge', 0.0)
         assert len(card) <= 17, 'len(MAT11 card) = %i\ncard=%s' % (len(card), card)
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
@@ -1991,7 +1994,7 @@ class MAT11(Material):
     def raw_fields(self):
         list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
                        self.nu13, self.nu23, self.g12, self.g13, self.g23, self.rho, self.a1,
-                       self.a2, self.a3, self.TRef, self.ge]
+                       self.a2, self.a3, self.tref, self.ge]
         return list_fields
 
     def repr_fields(self):
@@ -2007,13 +2010,13 @@ class MAT11(Material):
         a2 = set_blank_if_default(self.a2, 0.0)
         a3 = set_blank_if_default(self.a3, 0.0)
 
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         rho = set_blank_if_default(self.rho, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
 
         list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
                        self.nu13, self.nu23, self.g12, self.g13, self.g23, rho, a1,
-                       a2, a3, TRef, ge]
+                       a2, a3, tref, ge]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2180,7 +2183,7 @@ class MATHE(HyperelasticMaterial):
 
     def raw_fields(self):
         #list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
-                       #self.av, self.TRef, self.ge,
+                       #self.av, self.tref, self.ge,
                        #None, self.na, self.nd, None, None, None, None, None,
                        #self.a20, self.a11, self.a02, self.d2, None, None, None,
                        #None,
@@ -2236,7 +2239,7 @@ class MATHE(HyperelasticMaterial):
         #a05 = set_blank_if_default(self.a05, 0.0)
         #d5 = set_blank_if_default(self.d5, 0.0)
 
-        #TRef = set_blank_if_default(self.TRef, 0.0)
+        #tref = set_blank_if_default(self.tref, 0.0)
         #ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MATHE', self.mid, self.model, None, self.bulk, self.rho, self.texp,
                        None, None]
@@ -2282,7 +2285,7 @@ class MATHE(HyperelasticMaterial):
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
 
-    def __init__(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., TRef=0., ge=0., na=1, nd=1,
+    def __init__(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
                  a20=0., a11=0., a02=0., d2=0.,
                  a30=0., a21=0., a12=0., a03=0., d3=0.,
                  a40=0., a31=0., a22=0., a13=0., a04=0., d4=0.,
@@ -2300,7 +2303,7 @@ class MATHP(HyperelasticMaterial):
         self.d1 = d1
         self.rho = rho
         self.av = av
-        self.TRef = TRef
+        self.tref = tref
         self.ge = ge
 
         self.na = na
@@ -2346,7 +2349,7 @@ class MATHP(HyperelasticMaterial):
         d1 = double_or_blank(card, 4, 'd1', (a10 + a01) * 1000)
         rho = double_or_blank(card, 5, 'rho', 0.)
         av = double_or_blank(card, 6, 'av', 0.)
-        tref = double_or_blank(card, 7, 'TRef', 0.)
+        tref = double_or_blank(card, 7, 'tref', 0.)
         ge = double_or_blank(card, 8, 'ge', 0.)
 
         na = integer_or_blank(card, 10, 'na', 1)
@@ -2419,7 +2422,7 @@ class MATHP(HyperelasticMaterial):
 
     def raw_fields(self):
         list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
-                       self.av, self.TRef, self.ge,
+                       self.av, self.tref, self.ge,
                        None, self.na, self.nd, None, None, None, None, None,
                        self.a20, self.a11, self.a02, self.d2, None, None, None,
                        None,
@@ -2475,9 +2478,9 @@ class MATHP(HyperelasticMaterial):
         a05 = set_blank_if_default(self.a05, 0.0)
         d5 = set_blank_if_default(self.d5, 0.0)
 
-        TRef = set_blank_if_default(self.TRef, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        list_fields = ['MATHP', self.mid, a10, a01, d1, self.rho, av, TRef, ge,
+        list_fields = ['MATHP', self.mid, a10, a01, d1, self.rho, av, tref, ge,
                        None, na, nd, None, None, None, None, None,
                        a20, a11, a02, d2, None, None, None, None,
                        a30, a21, a12, a03, d3, None, None, None,

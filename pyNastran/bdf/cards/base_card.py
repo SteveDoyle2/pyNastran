@@ -323,6 +323,13 @@ class Material(BaseCard):
         """dummy init"""
         BaseCard.__init__(self)
 
+    @property
+    def TRef(self):
+        return self.tref
+    @TRef.setter
+    def TRef(self, tref):
+        self.tref = tref
+
     def cross_reference(self, model):
         """dummy cross reference method for a Material"""
         pass
