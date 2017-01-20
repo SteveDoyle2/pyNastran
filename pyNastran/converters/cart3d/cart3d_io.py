@@ -245,6 +245,8 @@ class Cart3dIO(object):
                 cases[icase + 4] = (mach_res, (ID, 'Mach'))
                 cases[icase + 5] = (pressure_res, (ID, 'Pressure'))
                 form.append(('Boundary Conditions', None, bc_form))
+        else:
+            self.log.warning('input_cntl_filename doesnt exist = %s' % input_cntl_filename)
 
 
         if os.path.exists(input_c3d_filename):
@@ -352,6 +354,8 @@ class Cart3dIO(object):
                 #for nodesi, elementsi in zip(nodes, elements):
                     #self.set_quad_grid('box_%i' % i, nodesi, elementsi, color, line_width=1, opacity=1.)
                     #i += 1
+        else:
+            self.log.warning('input_c3d_filename doesnt exist = %s' % input_c3d_filename)
         return mach, alpha, beta
 
     def _create_cart3d_free_edegs(self, model, nodes, elements):
