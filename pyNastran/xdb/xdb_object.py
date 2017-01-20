@@ -1,5 +1,6 @@
 import os
 import struct
+from enums import *
 
 
 
@@ -15,10 +16,11 @@ class XDB_obj():
         self.path_no=ints[2]
         self.subcase_id=ints[3]
         self.set_id=ints[4]
-        self.solution_code=ints[5]
+        self.solution_code= SolutionType(ints[5]) 
         self.design_cycle=ints[6]
         self.iteration_cycle=ints[7]
         self.symmetry_segment=ints[8]
+        # ints[9] - Intentionally left undefined
 
         #Second line
         self.internal_block_number=ints[10]
