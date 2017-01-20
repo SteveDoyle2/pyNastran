@@ -43,7 +43,7 @@ class TestTetgenGUI(unittest.TestCase):
             os.system('tetgen.exe -pqcvVqY tetgen_test.stl')
 
         test = TetgenGUI()
-        base = 'tetgen_test.1'
+        base = os.path.join(model_path, 'tetgen_test.1')
         test.load_tetgen_geometry(base + '.smesh', dirname=None)
         test.load_tetgen_geometry(base + '.ele', dirname=None)
         #base = 'tetgen_test_flipped.1'
