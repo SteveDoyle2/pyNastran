@@ -154,7 +154,11 @@ class SUPORT(Constraint):
         if comment:
             self.comment = comment
         self.IDs = IDs ## TODO:  IDs reference nodes???
-        self.Cs = Cs
+        self.Cs = []
+        for ci in Cs:
+            if isinstance(ci, integer_types):
+                ci = str(ci)
+            self.Cs.append(ci)
 
     def validate(self):
         assert len(self.IDs) > 0

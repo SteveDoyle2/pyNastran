@@ -1058,14 +1058,6 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pyram(self, eid, pid, nids, comment=''):
-        if len(nids) == 5:
-            elem = CPYRAM5(eid, pid, nids, comment=comment)
-        else:
-            elem = CPYRAM13(eid, pid, nids, comment=comment)
-        self._add_element_object(elem)
-        return elem
-
     def add_psolid(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                    fctn='SMECH', comment=''):
         """
@@ -1989,7 +1981,7 @@ class AddCards(AddMethods):
         self._add_aelink_object(aelink)
         return aelink
 
-    def add_aelist(self, sid, elements, comment):
+    def add_aelist(self, sid, elements, comment=''):
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.

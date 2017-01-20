@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 tests aero cards
 """
@@ -8,7 +9,7 @@ import numpy as np
 
 import pyNastran
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID
+from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID, read_bdf
 from pyNastran.bdf.cards.aero import (
     FLFACT, AEFACT, AEPARM, AERO, AEROS, AESTAT,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -1067,7 +1068,7 @@ class TestAero(unittest.TestCase):
         #diverg.validate()
         #diverg.write_card()
 
-    def test_trim(self):
+    def test_trim_01(self):
         """checks the TRIM card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
@@ -1106,6 +1107,58 @@ class TestAero(unittest.TestCase):
         trim.write_card()
 
         model.add_card(['TRIM', sid, mach, q, labels[0], uxs[0]], 'TRIM', comment='$ trim')
+        model.validate()
+        model._verify_bdf(xref=False)
+
+    def test_trim_01(self):
+        """checks the TRIM card with a 2.5g pullup"""
+        model = BDF()
+        sid = 75
+        mach = 0.75
+        q = 100.
+        labels = ['NZ']
+        uxs = [2.5]
+        trim = model.add_trim(sid, mach, q, labels, uxs, aeqr=0.0, comment='')
+        model.add_aestat(1, 'URDD1', comment='aestat')
+        model.add_aestat(2, 'URDD3', comment='aestat')
+        model.add_aestat(3, 'ANGLEA', comment='aestat')
+        model.add_aestat(4, 'DELTA', comment='aestat')
+
+        #+--------+---------+-----------------------------+
+        #| ANGLEA | ur (R2) | Angle of Attack             |
+        #| YAW    | ur (R3) | Yaw Rate                    |
+        #| SIDES  | ur (R3) | Angle of Sideslip           |
+        #+--------+---------+-----------------------------+
+        #| ROLL   | ůr (R1) | Roll Rate                   |
+        #| PITCH  | ůr (R2) | Pitch Rate                  |
+        #+--------+---------+-----------------------------+
+        #| URDD1  | ür (T1) | Longitudinal (See Remark 3) |
+        #| URDD2  | ür (T2) | Lateral                     |
+        #| URDD3  | ür (T3) | Vertical                    |
+        #| URDD4  | ür (R1) | Roll                        |
+        #| URDD5  | ür (R2) | Pitch                       |
+        #| URDD6  | ür (R3) | Yaw                         |
+        #+--------+---------+-----------------------------+
+
+        cid1 = 0
+        label = 'DELTA'
+        aesid = 5
+        alid1 = 6
+        model.add_aesurf(aesid, label, cid1, alid1)
+        suport = model.add_suport([55, 66], ['13', '1'])
+        print(suport)
+        model.add_aelist(alid1, [100, 101, 102], comment='')
+        model.add_grid(55, xyz=[0., 0., 0.])
+        model.add_grid(66, xyz=[0., 0., 0.])
+        model.validate()
+
+        # why doesn't this work?
+        with self.assertRaises(RuntimeError):
+            trim._verify(model.suport, model.suport1, model.aestats, model.aeparams,
+                         model.aelinks, model.aesurf, xref=True)
+        model.write_bdf('trim.bdf')
+        model2 = read_bdf('trim.bdf')
+        os.remove('trim.bdf')
 
     def test_gust(self):
         """checks the GUST card"""
@@ -1121,6 +1174,7 @@ class TestAero(unittest.TestCase):
         gust2 = GUST.add_card(BDFCard(['GUST', sid, dload, wg, x0, V]), comment='gust load')
         gust2.validate()
         gust2.write_card()
+
 
     def test_csschd(self):
         """checks the CSSCHD card"""

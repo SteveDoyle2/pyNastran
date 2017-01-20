@@ -5345,7 +5345,8 @@ class TRIM(BaseCard):
                             #print('  nid=%s C=%s' % (nid, ci))
                             dof = (nid, ci)
                             if dof in suport_dofs:
-                                msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                                msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
+                                    str(dof), str(suport_dofs))
                                 raise RuntimeError(msg)
                             suport_dofs.add(dof)
                             nsuport_dofs += 1
@@ -5365,17 +5366,17 @@ class TRIM(BaseCard):
             aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
             aestat_labels = [aestat.label for aestat in aestats.values()]
             aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
-            naestats = len(aestat_labels)
+            naestat = len(aestat_labels)
             ntrim = len(self.labels)
-            naesurfs = len(aesurf_names)
-            naeparms = len(aeparm_labels)
-            naelinks = 0
+            naesurf = len(aesurf_names)
+            naeparm = len(aeparm_labels)
+            naelink = 0
             if self.sid in aelinks:
-                naelinks = len(aelinks[self.sid])
+                naelink = len(aelinks[self.sid])
             if 0 in aelinks:
-                naelinks += len(aelinks[0])
+                naelink += len(aelinks[0])
 
-            ntrim_aesurfs = 0
+            ntrim_aesurf = 0
             labels = aestat_labels + aesurf_names + aeparm_labels
             for label in self.labels:
                 if label not in labels:
@@ -5385,30 +5386,30 @@ class TRIM(BaseCard):
 
                 if label in aesurf_names:
                     #print('AESTAT/AESURF label = %r' % label)
-                    ntrim_aesurfs += 1
+                    ntrim_aesurf += 1
 
             # TODO: this doesn't work for multiple subcases
             #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
-            #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurfs
+            #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurf
             #if ndelta != 0:
-                #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurfs = ndelta = %s; ndelta != 0\n' % ndelta
+                #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurf = ndelta = %s; ndelta != 0\n' % ndelta
                 #msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
-                    #ntrim, nsuport_dofs, nsuport1_dofs, naesurfs)
+                    #ntrim, nsuport_dofs, nsuport1_dofs, naesurf)
                 #raise RuntimeError(msg)
 
-#            ndelta = (naestats + naesurfs + naeparms + ntrim_aesurfs) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs)
+#            ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
 #            if ndelta != 0:
-#                msg = '(naestats + naesurfs + naeparms + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-#                msg += ('naestats=%s naesurfs=%s naeparms=%s ntrim_aesurfs=%s\n'
-#                        'ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
-#                            naestats, naesurfs, naeparms, ntrim_aesurfs,
-#                            ntrim, naelinks, nsuport_dofs, nsuport1_dofs))
+#                msg = '(naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+#                msg += ('naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
+#                        'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+#                            naestat, naesurf, naeparms, ntrim_aesurf,
+#                            ntrim, naelink, nsuport_dofs, nsuport1_dofs))
 
-            ndelta = (naestats + naesurfs + naeparms) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
+            ndelta = (naestat + naesurf + naeparm) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
-                msg = '(naestats + naesurfs + naeparms) - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-                msg += 'naestats=%s naesurf=%s naeparms=%s ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
-                    naestats, naesurfs, naeparms, ntrim, naelinks, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
+                msg = '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+                msg += 'naestat=%s naesurf=%s naeparm=%s ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurf=%s' % (
+                    naestat, naesurf, naeparm, ntrim, naelink, nsuport_dofs, nsuport1_dofs, ntrim_aesurf)
                 raise RuntimeError(msg)
 
     def cross_reference(self, model):
