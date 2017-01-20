@@ -23,6 +23,7 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
 from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
+from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 from pyNastran.bdf.mesh_utils.convert import convert
@@ -504,6 +505,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
             if os.path.exists(skin_filename):
                 os.remove(skin_filename)
             if xref:
+                extract_bodies(fem1)
+
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
                 fem1.safe_cross_reference()
@@ -1441,6 +1444,9 @@ def main():
 
 
     #print(data)
+    debug = True
+    if data['--quiet']:
+        debug = None
     if data['--profile']:
         #import cProfile
         import pstats
@@ -1451,7 +1457,7 @@ def main():
             run_bdf,
             '.',
             data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
+            debug=debug,
             xref=['--xref'],
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
@@ -1490,7 +1496,7 @@ def main():
         run_bdf(
             '.',
             data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
+            debug=debug,
             xref=data['--xref'],
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),

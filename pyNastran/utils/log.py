@@ -131,21 +131,6 @@ class SimpleLogger(object):
                 sys.stdout.write(Fore.RED + name + msg)
         sys.stdout.flush()
 
-    def debug(self, msg):
-        """
-        Log DEBUG message
-
-        Parameters
-        ----------
-        msg : str
-            message to be logged
-        """
-        if self.level != 'debug':
-            return
-        lines = str(msg).split('\n')
-        self.msg_typ('DEBUG', ''.join([lines[0]] + [' ' * 54 + line + '\n'
-                                                    for line in lines[1:]]))
-
     def msg_typ(self, typ, msg):
         """
         Log message of a given type
@@ -173,6 +158,19 @@ class SimpleLogger(object):
         """
         assert msg is not None, msg
         self.log_func(typ, msg)
+
+    def debug(self, msg):
+        """
+        Log DEBUG message
+
+        Parameters
+        ----------
+        msg : str
+            message to be logged
+        """
+        if self.level != 'debug':
+            return
+        self.msg_typ('DEBUG', msg)
 
     def info(self, msg):
         """

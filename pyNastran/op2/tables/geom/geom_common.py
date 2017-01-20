@@ -45,43 +45,57 @@ class GeomCommon(object):
     def _add_property_object(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
-    def add_constraint_spc(self, constraint):
+    def add_constraint_spc_object(self, constraint):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_rigid_element(self, constraint):
+    def _add_rigid_element_object(self, constraint):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_suport(self, constraint):
+    def _add_suport_object(self, constraint):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_thermal_load(self, load):
+    def _add_thermal_load_object(self, load):
         raise RuntimeError('this should be overwritten by the BDF class')
 
     def _add_load_object(self, load):
         raise RuntimeError('this should be overwritten by the BDF class')
 
 
-    def add_TSTEPNL(self, card, allow_overwrites=True):
+    def _add_tstepnl_object(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_NLPARM(self, card, allow_overwrites=True):
+    def _add_nlparm_object(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_material_dependence(self, material, allow_overwrites=True):
+    def _add_material_dependence_object(self, material, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_creep_material(self, material, allow_overwrites=True):
+    def _add_creep_material_object(self, material, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_structural_material(self, material, allow_overwrites=True):
+    def _add_structural_material(self, material, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_thermal_material(self, material, allow_overwrites=True):
+    def _add_thermal_material_object(self, material, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 
     def _add_gust_object(self, gust):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-    def add_table(self, table):
+    def _add_table_object(self, table):
         raise RuntimeError('this should be overwritten by the BDF class')
 
+    def _add_aset_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_bset_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_cset_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_uset_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_seqset_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')

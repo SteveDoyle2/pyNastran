@@ -194,10 +194,10 @@ class InputCntlReader(object):
             self.log.debug('#' * 80)
         return sections
 
-def main():
+def main():  # pragma: no cover
     input_cntl_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\converters\cart3d\models\bJet\input.cntl'
     cntl = InputCntlReader()
     sections = cntl.read_input_cntl(input_cntl_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

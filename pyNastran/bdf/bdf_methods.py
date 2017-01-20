@@ -377,6 +377,196 @@ class BDFMethods(BDFAttributes):
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
+    def mass_properties_no_xref(self, element_ids=None, mass_ids=None, reference_point=None,
+                                sym_axis=None, num_cpus=1, scale=None):
+        """
+        Caclulates mass properties in the global system about the
+        reference point.
+
+        Parameters
+        ----------
+        element_ids : list[int]; (n, ) ndarray, optional
+            An array of element ids.
+        mass_ids : list[int]; (n, ) ndarray, optional
+            An array of mass ids.
+        reference_point : ndarray/str/int, optional
+            type : ndarray
+                An array that defines the origin of the frame.
+                default = <0,0,0>.
+            type : str
+                'cg' is the only allowed string
+            type : int
+                the node id
+        sym_axis : str, optional
+            The axis to which the model is symmetric. If AERO cards are used, this can be left blank
+            allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
+        scale : float, optional
+            The WTMASS scaling value.
+            default=None -> PARAM, WTMASS is used
+            float > 0.0
+
+        Returns
+        -------
+        mass : float
+            The mass of the model.
+        cg : ndarray
+            The cg of the model as an array.
+        I : ndarray
+            Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
+
+        I = mass * centroid * centroid
+
+        .. math:: I_{xx} = m (dy^2 + dz^2)
+
+        .. math:: I_{yz} = -m * dy * dz
+
+        where:
+
+        .. math:: dx = x_{element} - x_{ref}
+
+        .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
+
+        .. note::
+           This doesn't use the mass matrix formulation like Nastran.
+           It assumes m*r^2 is the dominant term.
+           If you're trying to get the mass of a single element, it
+           will be wrong, but for real models will be correct.
+
+        Example 1
+        ---------
+        # mass properties of entire structure
+        mass, cg, I = model.mass_properties()
+        Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+
+
+        Example 2
+        ---------
+        # mass properties of model based on Property ID
+        pids = list(model.pids.keys())
+        pid_eids = self.get_element_ids_dict_with_pids(pids)
+
+        for pid, eids in sorted(iteritems(pid_eids)):
+            mass, cg, I = model.mass_properties(element_ids=eids)
+        """
+        if reference_point is None:
+            reference_point = array([0., 0., 0.])
+        elif isinstance(reference_point, integer_types):
+            reference_point = self.nodes[reference_point].get_position()
+
+        # if neither element_id nor mass_ids are specified, use everything
+        if element_ids is None and mass_ids is None:
+            elements = self.elements.values()
+            masses = self.masses.values()
+
+        # if either element_id or mass_ids are specified and the other is not, use only the
+        # specified ids
+        else:
+            if element_ids is None:
+                elements = []
+            else:
+                elements = [element for eid, element in self.elements.items() if eid in element_ids]
+            if mass_ids is None:
+                masses = []
+            else:
+                masses = [mass for eid, mass in self.masses.items() if eid in mass_ids]
+
+        nelements = len(elements) + len(masses)
+
+        mass, cg, I = self._mass_properties_sp_no_xref(elements, masses,
+                                                       reference_point=reference_point)
+
+        mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
+        return (mass, cg, I)
+
+    def _mass_properties_sp_no_xref(self, elements, masses, reference_point):  # pragma: no cover
+        """
+        Caclulates mass properties in the global system about the
+        reference point.
+
+        Parameters
+        ----------
+        elements : List[int]; ndarray
+            the element ids to consider
+        masses : List[int]; ndarray
+            the mass ids to consider
+        reference_point : (3, ) ndarray; default = <0,0,0>.
+            an array that defines the origin of the frame.
+
+        Returns
+        -------
+        mass : float
+            the mass of the model
+        cg : (3, ) float NDARRAY
+            the cg of the model as an array.
+        I : (6, ) float NDARRAY
+            moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+
+        .. seealso:: self.mass_properties
+        """
+        #Ixx Iyy Izz, Ixy, Ixz Iyz
+        # precompute the CG location and make it the reference point
+        I = array([0., 0., 0., 0., 0., 0., ])
+        cg = array([0., 0., 0.])
+        if isinstance(reference_point, string_types):
+            if reference_point == 'cg':
+                mass = 0.
+                for pack in [elements, masses]:
+                    for element in pack:
+                        try:
+                            p = element.Centroid_no_xref(self)
+                            m = element.Mass_no_xref(self)
+                            mass += m
+                            cg += m * p
+                        except:
+                            #pass
+                            raise
+                if mass == 0.0:
+                    return mass, cg, I
+
+                reference_point = cg / mass
+            else:
+                # reference_point = [0.,0.,0.] or user-defined array
+                pass
+
+        mass = 0.
+        cg = array([0., 0., 0.])
+        for pack in [elements, masses]:
+            for element in pack:
+                try:
+                    p = element.Centroid_no_xref(self)
+                except:
+                    #continue
+                    raise
+
+                try:
+                    m = element.Mass_no_xref(self)
+                    (x, y, z) = p - reference_point
+                    x2 = x * x
+                    y2 = y * y
+                    z2 = z * z
+                    I[0] += m * (y2 + z2)  # Ixx
+                    I[1] += m * (x2 + z2)  # Iyy
+                    I[2] += m * (x2 + y2)  # Izz
+                    I[3] += m * x * y      # Ixy
+                    I[4] += m * x * z      # Ixz
+                    I[5] += m * y * z      # Iyz
+                    mass += m
+                    cg += m * p
+                except:
+                    # PLPLANE
+                    pid_ref = self.Property(element.pid)
+                    if pid_ref.type == 'PSHELL':
+                        self.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (
+                            p, reference_point, type(reference_point)))
+                        raise
+                    self.log.warning("could not get the inertia for element/property\n%s%s" % (
+                        element, element.pid_ref))
+                    continue
+
+        if mass:
+            cg /= mass
+        return (mass, cg, I)
+
     def _mass_properties_sp(self, elements, masses, reference_point):  # pragma: no cover
         """
         Caclulates mass properties in the global system about the

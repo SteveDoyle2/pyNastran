@@ -139,7 +139,6 @@ class Cart3dIO(object):
         points.SetData(points_array)
 
         nelements = elements.shape[0]
-        elements -= 1
         for eid in range(nelements):
             elem = vtkTriangle()
             node_ids = elements[eid, :]
@@ -245,6 +244,8 @@ class Cart3dIO(object):
                 cases[icase + 4] = (mach_res, (ID, 'Mach'))
                 cases[icase + 5] = (pressure_res, (ID, 'Pressure'))
                 form.append(('Boundary Conditions', None, bc_form))
+        else:
+            self.log.warning('input_cntl_filename doesnt exist = %s' % input_cntl_filename)
 
 
         if os.path.exists(input_c3d_filename):
@@ -352,6 +353,8 @@ class Cart3dIO(object):
                 #for nodesi, elementsi in zip(nodes, elements):
                     #self.set_quad_grid('box_%i' % i, nodesi, elementsi, color, line_width=1, opacity=1.)
                     #i += 1
+        else:
+            self.log.warning('input_c3d_filename doesnt exist = %s' % input_c3d_filename)
         return mach, alpha, beta
 
     def _create_cart3d_free_edegs(self, model, nodes, elements):
@@ -412,8 +415,8 @@ class Cart3dIO(object):
 
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
-        area = model.get_area(shift_nodes=False)
-        cnormals = model.get_normals(shift_nodes=False)
+        area = model.get_area()
+        cnormals = model.get_normals()
         cnnodes = cnormals.shape[0]
         assert cnnodes == nelements, len(cnnodes)
 
@@ -451,8 +454,8 @@ class Cart3dIO(object):
         icase = 6
         return form, cases, icase
 
-        #cnormals = model.get_normals(nodes, elements, shift_nodes=False)
-        #nnormals = model.get_normals_at_nodes(nodes, elements, cnormals, shift_nodes=False)
+        #cnormals = model.get_normals(nodes, elements)
+        #nnormals = model.get_normals_at_nodes(nodes, elements, cnormals)
 
         #cases_new[i] = (ID, nnormals[:, 0], 'Normal X', 'node', '%.3f')
         #cases_new[i + 1] = (ID, nnormals[:, 1], 'Normal Y', 'node', '%.3f')

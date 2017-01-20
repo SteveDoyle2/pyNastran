@@ -168,6 +168,19 @@ class ShellElement(Element):
             msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid_ref.type)
             raise TypeError(msg)
 
+    def Mass_no_xref(self, model):
+        r"""
+        .. math:: m = \frac{m}{A} A  \f]
+        """
+        A = self.Area_no_xref(model)
+        pid_ref = model.Property(self.pid)
+        mpa = pid_ref.MassPerArea_no_xref(model)
+        try:
+            return mpa * A
+        except TypeError:
+            msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid_ref.type)
+            raise TypeError(msg)
+
     def flipNormal(self):
         raise NotImplementedError('flipNormal undefined for %s' % self.type)
 
@@ -1172,6 +1185,11 @@ class QuadShell(ShellElement):
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
+    def Centroid_no_xref(self, model):
+        n1, n2, n3, n4 = self.get_node_positions_no_xref(model)
+        centroid = (n1 + n2 + n3 + n4) / 4.
+        return centroid
+
     def get_area(self):
         return self.Area()
 
@@ -1180,6 +1198,14 @@ class QuadShell(ShellElement):
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4) = self.get_node_positions()
+        area = 0.5 * norm(cross(n3-n1, n4-n2))
+        return area
+
+    def Area_no_xref(self, model):
+        """
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
+        where a and b are the quad's cross node point vectors"""
+        (n1, n2, n3, n4) = self.get_node_positions_no_xref(model)
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         return area
 

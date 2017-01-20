@@ -1,5 +1,6 @@
 import os
 import struct
+from xdb_object import XDB_obj
 from pyNastran.op2.fortran_format import FortranFormat
 
 
@@ -16,6 +17,7 @@ class XDB(FortranFormat):
 
     def read_xdb(self, xdb_filename, etype, nsubcases, npload4s):
         self.nbytes = os.path.getsize(xdb_filename)
+        xdb_objects=[]
         with open(xdb_filename, mode='rb') as self.f:
 
             print('(4100)')
@@ -61,7 +63,8 @@ class XDB(FortranFormat):
             # SUBGRID-----
             for i in range(32 + npload4s + nsubcases):  # 26 + npload4s + nsubcases?
                 table_name = self.read_table_name()
-                self.read_table_header(table_name, etype, npload4s)
+                xdb_obj=self.read_table_header(table_name, etype, npload4s)
+                xdb_objects.append(xdb_obj)
 
             # SUPERS-----
             #self.show(1000, types='s')
@@ -425,10 +428,12 @@ class XDB(FortranFormat):
         if table_name in [b'CQD4', #Connectivity Data
                           b'CTR3', #Connectivity Data
                           b'CBAR', b'CCON', b'CELAS2', b'CONM2' ,b'CSTM',
+                          b'RBE3', b'RBEPOOL',
 
                           b'DDLFORDB', 
                           b'DISPR', # Displacements real
                           b'GRIDX', # Node locations in both reference and analysis CSs
+                          b'LOADR',
 
                           b'LIMITS',
                           b'MAT1', # Material data
@@ -456,6 +461,10 @@ class XDB(FortranFormat):
                           b'EELSR', 
                           b'EQD4R',
                           b'ETR3R',
+                            
+                          #Stress Recovery Data (Real)
+                          b'SQD4R',
+                          b'STR3R',
                           
                           #Force Recovery Data
                           b'FBARR', 
@@ -467,6 +476,9 @@ class XDB(FortranFormat):
             dn = 88
             strings, ints, floats=self.show(dn, types='i')
             
+            #Testing XDB Object Header Parsing
+            x_obj= XDB_obj(table_name, ints)
+
             pass
         elif table_name in [b'SUPERS']:
             dn=1684
@@ -477,6 +489,8 @@ class XDB(FortranFormat):
         self.n += dn
 
         print('read_table_header table_name=%r (%s)' % (table_name, dn))
+
+        return x_obj
 
     def read_table(self, table_name, etype, nsubcases):
         #print('read_table...%r' % table_name)
@@ -557,7 +571,8 @@ def test_ctria3():
     #model = read_xdb(xdb_filename, 'tri', nsubcases=1, npload4s=6)
 
     #xdb_filename = r'C:\Users\nikita.kalutskiy\Desktop\A318_FEM\Static\w1000bostat.xdb'
-    xdb_filename = r'D:\!Work\bar1.xdb'
+    xdb_filename = r'D:\!Work\access\a101x.xdb'
+    #r'D:\!Work\bar1.xdb'
     #os.path.join(model_path, 'support_structure', 'w1000bostat.xdb')
     model = read_xdb(xdb_filename, 'quad', nsubcases=3, npload4s=6)
 

@@ -38,7 +38,7 @@ class PBUSH(BushingProperty):
         1: 'pid',
     }
 
-    def __init__(self, pid, k, b, ge, rcv, comment=''):
+    def __init__(self, pid, k, b, ge, rcv, mass_fields=None, comment=''):
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -70,12 +70,18 @@ class PBUSH(BushingProperty):
             self.ea = rcv[2]
             self.et = rcv[3]
 
+        # M parameter (MSC only; in 2016, not in 2005)
+        self.Mi = mass_fields
+        if mass_fields:
+            self.vars.append('M')
+
     @classmethod
     def add_card(cls, card, comment=''):
         k_fields = []
         b_fields = []
         ge_fields = []
         rcv_fields = [None, None, None, None]
+        m_fields = []
 
         pid = integer(card, 1, 'pid')
 
@@ -91,10 +97,13 @@ class PBUSH(BushingProperty):
                 ge_fields = cls._read_ge(card, istart)
             elif pname == 'RCV':
                 rcv_fields = cls._read_rcv(card, istart)
+            elif pname == 'M':
+                m_fields = cls._read_m(card, istart)
             else:
-                break
+                raise RuntimeError('unsupported PBUSH type; pname=%r' % pname)
+                #break #  old version...
             istart += 8
-        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
+        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, m_fields,
                      comment=comment)
 
     @classmethod
@@ -105,7 +114,8 @@ class PBUSH(BushingProperty):
         b_fields = [b1, b2, b3, b4, b5, b6]
         ge_fields = [g1, g2, g3, g4, g5, g6]
         rcv_fields = [sa, st, ea, et]
-        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
+        m_fields = [0.]
+        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, m_fields,
                      comment=comment)
 
     def _verify(self, xref=False):
@@ -151,12 +161,17 @@ class PBUSH(BushingProperty):
         # Flag indicating that the next 1 to 4 fields are stress or strain
         # coefficients. (Character)
         #self.rcv = string(card, istart, 'rcv')
-
         sa = double_or_blank(card, istart + 1, 'sa', 1.)
         st = double_or_blank(card, istart + 2, 'st', 1.)
         ea = double_or_blank(card, istart + 3, 'ea', 1.)
         et = double_or_blank(card, istart + 4, 'et', 1.)
         return [sa, st, ea, et]
+
+    @classmethod
+    def _read_m(cls, card, istart):
+        # Lumped mass of the cbush; default=0.0
+        m = double_or_blank(card, istart + 1, 'sa', 0.)
+        return [m]
 
     def raw_fields(self):
         list_fields = ['PBUSH', self.pid]
@@ -169,6 +184,8 @@ class PBUSH(BushingProperty):
                 list_fields += ['GE'] + self.GEi
             elif var == 'RCV':
                 list_fields += ['RCV', self.sa, self.st, self.ea, self.et]
+            elif var == 'M':
+                list_fields += ['M'] + self.Mi
             else:
                 raise RuntimeError('not supported PBUSH field...')
             nspaces = 8 - (len(list_fields) - 1) % 8

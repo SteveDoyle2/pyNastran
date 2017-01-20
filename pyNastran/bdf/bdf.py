@@ -2051,7 +2051,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'MONPNT2' : (MONPNT2, self._add_monpnt_object),
             'MONPNT3' : (MONPNT3, self._add_monpnt_object),
 
-            #'NLPARM' : (NLPARM, self._add_nlparm_object),
+            'NLPARM' : (NLPARM, self._add_nlparm_object),
             'NLPCI' : (NLPCI, self._add_nlpci_object),
             'TSTEP' : (TSTEP, self._add_tstep_object),
             'TSTEP1' : (TSTEP1, self._add_tstepnl_object),
@@ -2144,7 +2144,6 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             #'SEUSET' : (SEUSET, self._add_seuset_object),
             #'SEUSET1' : (SEUSET1, self._add_seuset_object),
 
-            'NLPARM' : (NLPARM, self._add_nlparm_object),
             # BCTSET
             'ROTORG' : (ROTORG, self._add_rotor_object),
             'ROTORD' : (ROTORD, self._add_rotor_object),
@@ -2519,6 +2518,56 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
+    def get_xyz_in_coord_no_xref(self, cid=0, dtype='float64', sort_ids=True):
+        """see get_xyz_in_coord"""
+        npoints, nids, all_nodes = self._get_npoints_nids_allnids()
+
+        xyz_cid0 = np.zeros((npoints, 3), dtype=dtype)
+        if cid == 0:
+            for i, nid in enumerate(nids):
+                node = self.nodes[nid]
+                xyz = node.get_position_no_xref(self)
+                xyz_cid0[i, :] = xyz
+        else:
+            for i, nid in enumerate(nids):
+                node = self.nodes[nid]
+                xyz = node.get_position_wrt_no_xref(self, cid)
+                xyz_cid0[i, :] = xyz
+        if sort_ids:
+            isort = np.argsort(all_nodes)
+            xyz_cid0 = xyz_cid0[isort, :]
+
+        return xyz_cid0
+
+    def _get_npoints_nids_allnids(self):
+        """helper method for get_xyz_in_coord"""
+        nnodes = len(self.nodes)
+        nspoints = 0
+        nepoints = 0
+        nids = list(self.node_ids)
+        all_nodes = list(self.node_ids)
+        if self.spoints is not None:
+            spoints = list(self.spoints.points)
+            nspoints = len(spoints)
+            all_nodes += spoints
+        if self.epoints is not None:
+            epoints = list(self.epoints.points)
+            all_nodes += epoints
+            nepoints = len(epoints)
+        #self.log.debug('all_nodes = %s' % all_nodes)
+
+        npoints = nnodes + nspoints + nepoints
+        if len(all_nodes) != npoints:
+            msg = 'len(unique(all_nodes))=%s npoints=%s\n' % (len(np.unique(all_nodes)), npoints)
+            msg += 'npoints = nnodes+nspoints+nepoints = %s + %s + %s\n' % (
+                nnodes, nspoints, nepoints)
+            msg += 'all_nodes=%s' % (all_nodes)
+            raise RuntimeError(msg)
+        if npoints == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+            raise ValueError(msg)
+        return npoints, nids, all_nodes
+
     def get_xyz_in_coord(self, cid=0, dtype='float64', sort_ids=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
@@ -2538,31 +2587,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             the xyz points in the cid coordinate frame
         """
         #return self.get_displacement_index_xyz_cp_cd(cid=cid, dtype=dtype)[2]
-        nnodes = len(self.nodes)
-        nspoints = 0
-        nepoints = 0
-        nids = list(self.node_ids)
-        all_nodes = list(self.node_ids)
-        if self.spoints is not None:
-            spoints = list(self.spoints.points)
-            nspoints = len(spoints)
-            all_nodes += spoints
-        if self.epoints is not None:
-            epoints = list(self.epoints.points)
-            all_nodes += epoints
-            nepoints = len(epoints)
-        #self.log.debug('all_nodes = %s' % all_nodes)
-
-        npoints = nnodes + nspoints + nepoints
-        if len(all_nodes) != npoints:
-            msg = 'len(unique(all_nodes))=%s npoints=%s\n' % (len(np.unique(all_nodes)), npoints)
-            msg += 'npoints = nnodes+nspoints+nepoints = %s + %s + %s\n' % (nnodes, nspoints, nepoints)
-            msg += 'all_nodes=%s' % (all_nodes)
-            raise RuntimeError(msg)
-        if npoints == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
-            raise ValueError(msg)
-
+        npoints, nids, all_nodes = self._get_npoints_nids_allnids()
         xyz_cid0 = np.zeros((npoints, 3), dtype=dtype)
         if cid == 0:
             for i, nid in enumerate(nids):
@@ -2577,7 +2602,6 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         if sort_ids:
             isort = np.argsort(all_nodes)
             xyz_cid0 = xyz_cid0[isort, :]
-
         return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):

@@ -310,6 +310,9 @@ class TestCoords(unittest.TestCase):
         for lines in cards:
             card = model.process_card(lines)
             model.add_card(card, card[0])
+
+        xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, dtype='float64')
+        xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=12, dtype='float64')
         model.cross_reference()
 
         xyz_cid0_actual = array([
@@ -322,6 +325,7 @@ class TestCoords(unittest.TestCase):
             b = model.Node(nid).get_position()
             self.assertTrue(allclose(array([30., 40., 50.]),
                                      model.Node(nid).get_position()), str(a - b))
+
         xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float64')
         array_equal(xyz_cid0_actual, xyz_cid0)
 
@@ -372,6 +376,8 @@ class TestCoords(unittest.TestCase):
         for lines in cards:
             card = model.process_card(lines)
             model.add_card(card, card[0])
+        xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, dtype='float64')
+        xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=22, dtype='float64')
         model.cross_reference()
 
         xyz_cid0_actual = array([
@@ -435,6 +441,8 @@ class TestCoords(unittest.TestCase):
         for lines in cards:
             card = model.process_card(lines)
             model.add_card(card, card[0])
+        xyz_cid0b = model.get_xyz_in_coord_no_xref(cid=0, dtype='float64')
+        xyz_cid0c = model.get_xyz_in_coord_no_xref(cid=32, dtype='float64')
         model.cross_reference()
 
         xyz_cid0_actual = array([
