@@ -1,0 +1,81 @@
+
+#    +--------------------------------------------------------+
+#    |       Steering and Control file for "flowCart"         |
+#    |           3D Cut-Cell Cartesian Flow Solver            |
+#    +--------------------------------------------------------+
+#   
+#      NOTE:  o Start Comments in this file with the "#" character
+#             o Blocks can come in any order
+#             o info within blocks can come in any order
+#
+#  BizJet with symm plane at Z=0
+#
+
+$__Case_Information:          # ...Specify Free Stream Quantities
+
+Mach     0.84  #  (double)
+alpha    2.81  #  (double) - angle of attach
+beta     0.0   #  (double) - sideslip Angle
+
+$__File_Name_Information:
+
+MeshInfo         Mesh.c3d.Info   # Mesh information file (usually Mesh.c3d.Info)
+MeshFile           Mesh.mg.c3d   # Mesh file
+HistoryFile    convergence.his   # History file
+PlotFile       tecplotCase.dat   # tecplot formatted plot file of solution+grid
+# --NOTE:        ...surface triangulation specified in 'MeshInfo' file ------
+
+$__Solver_Control_Information:
+
+#   Runge-Kutta Stage Coefficients
+#   stageCoef    GradEval  ->to run 1st order, set GradEval to 0 in all stages
+#    --------    -------
+#RK        0.1918     0  #         van Leer 3-stage 
+#RK        0.4929     0  #         "optimally damped 2nd order scheme"
+#RK        1.0        0  #          AIAA 89-1933-CP (CFLopt = 1.5 1st order)
+RK        0.0695     1  #         van Leer 5-stage 
+RK        0.1602     0  #         "optimally damped 2nd order scheme"
+RK        0.2898     0  #          AIAA 89-1933-CP (CFLopt = 2.5 1st order)
+RK        0.5060     0  #                          (CFLopt = ~1.2 2nd order)
+RK        1.0        0  #
+                        #                          (CFLopt = 0.694)
+                        # NOTE: GradEval = 0 = no new evaluation at this stage, 
+                        #       GradEval = 1 = Yes, re-evaluate at this stage
+CFL           1.4 # CFL number 
+Limiter       2   # (int) default is 2, organized in order of increasing 
+                  #       dissipation.
+                  #         Limiter Type: 0 = no Limiter
+                  #                       1 = Barth-Jespersen
+                  #                       2 = van Leer
+                  #                       3 = sin limiter
+                  #                       4 = van Albada
+                  #                       5 = MinMod
+FluxFun       0   # (int) - Flux Function:   0 = van Leer
+                  #                          1 = Colella 1998
+                  #                          2 = HLLC (alpha test)
+Precon        0   # (int) - Preconditioning: 0 = scalar timestep
+wallBCtype    0   # Cut-Cell Boundary Condition type   0 = Agglomerated Normals
+                  #                                    1 = SubCell Resolution
+nMGlev        1   # (int) - Number of Multi-Grid levels  (1 = single grid)
+MG_cycleType  2   # (int) - MultiGrid cycletype: 1 = "V-cycle", 2 = "W-cycle"
+                  # 'sawtooth' cycle is: nPre = 1, nPost = 0
+MG_nPre       1   # (int) - no of pre-smoothing  passes in multigrid
+MG_nPost      1   # (int) - no of post-smoothing passes in multigrid
+
+    
+$__Boundary_Conditions: # BC types: 0 = FAR FIELD 
+                        #           1 = SYMMETRY
+                        #           2 = INFLOW  (specify all)
+                        #           3 = OUTFLOW (simple extrap)
+Dir_Lo_Hi     0   0 0   # (int) (0/1/2) direction  (int) Low BC   (int) Hi BC
+Dir_Lo_Hi     1   0 0   # (int) (0/1/2) direction  (int) Low BC   (int) Hi BC
+Dir_Lo_Hi     2   0 0   # (int) (0/1/2) direction  (int) Low BC   (int) Hi BC
+
+$__Convergence_History_reporting:
+iForce     1   # (int) - Report residual information every iSkip cycles.
+iHist      1   # (int) - Update 'HistoryFile' every iHist cycles.
+nOrders    8   # (int) - Num of orders of Magnitude reduction in residual.
+
+$__Post_Processing: # Pretty printed cutting planes
+Zslices -6.0
+
