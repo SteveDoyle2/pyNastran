@@ -131,13 +131,7 @@ class TestBDF(Tester):
         mass, cg, I = fem1.mass_properties(reference_point='cg')
 
     def _compare_mass_cg_I(self, fem1, reference_point=None, sym_axis=None):
-        num_cpus = 4
         mass1, cg1, I1 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis)
-        mass2, cg2, I2 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis, num_cpus=num_cpus)
-
-        assert allclose(mass1, mass2), 'mass1_sp=%s mass2_mp=%s' % (mass1, mass2)
-        assert allclose(norm((cg1 - cg2)**2), 0.0), 'cg1-cg2=%s' % (cg1 - cg2)
-        assert allclose(norm((I1  -  I2)**2), 0.0), 'I1-I2=%s' % (I1 - I2)
 
     def test_bdf_02(self):
         bdf_filename = os.path.join('plate_py', 'plate_py.dat')

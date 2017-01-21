@@ -152,14 +152,12 @@ class TestMass(unittest.TestCase):
         mass, cg, I = model.mass_properties(element_ids=None, mass_ids=None,
                                            reference_point=None,
                                            sym_axis=None,
-                                           num_cpus=1,
                                            scale=None)
 
         model.params['WTMASS'].values[0] = 1.0
         mass2, cg, I = model.mass_properties(element_ids=None, mass_ids=None,
                                              reference_point=None,
                                              sym_axis=None,
-                                             num_cpus=1,
                                              scale=None)
         assert np.allclose(mass, 0.005311658333), 'mass=%s' % mass
         assert np.allclose(mass2, 2.050833333), 'mass2=%s' % mass2
