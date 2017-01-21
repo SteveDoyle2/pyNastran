@@ -709,6 +709,9 @@ class TestLoads(unittest.TestCase):
                                                     include_grav=False, xyz_cid0=None)
         F2, M2 = model2.sum_forces_moments(p0, loadcase_id, include_grav=False,
                                            xyz_cid0=None)
+        model2.get_area_breakdown()
+        model2.get_volume_breakdown()
+        model2.get_mass_breakdown()
         assert allclose(F1, F2), 'F1=%s F2=%s' % (F1, F2)
         assert allclose(M1, M2), 'M1=%s M2=%s' % (M1, M2)
 

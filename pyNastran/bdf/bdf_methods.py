@@ -35,17 +35,6 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
-def _mass_properties_mass_mp_func(element):  # pragma: no cover
-    """helper method for mass properties multiprocessing"""
-    try:
-        cg = element.Centroid()
-        mass = element.Mass()
-    except:
-        cg = array([0., 0., 0.])
-        mass = 0.
-    return mass, cg
-
-
 def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     """
     Transforms mass moment of inertia using parallel-axis theorem.
@@ -100,7 +89,7 @@ class BDFMethods(BDFAttributes):
     """
     Has the following methods:
         mass_properties(element_ids=None, reference_point=None, sym_axis=None,
-            num_cpus=1, scale=None)
+            scale=None)
         resolve_grids(cid=0)
         unresolve_grids(model_old)
         sum_forces_moments_elements(p0, loadcase_id, eids, nids,
@@ -272,7 +261,7 @@ class BDFMethods(BDFAttributes):
         return pids_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
-                        sym_axis=None, num_cpus=1, scale=None):
+                        sym_axis=None, scale=None):
         """
         Caclulates mass properties in the global system about the
         reference point.
@@ -364,21 +353,13 @@ class BDFMethods(BDFAttributes):
             else:
                 masses = [mass for eid, mass in self.masses.items() if eid in mass_ids]
 
-        nelements = len(elements) + len(masses)
-
-        num_cpus = 1
-        if num_cpus > 1:
-            mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses, nelements,
-                                                   reference_point=reference_point)
-        else:
-            mass, cg, I = self._mass_properties_sp(elements, masses,
-                                                   reference_point=reference_point)
-
+        mass, cg, I = self._mass_properties_sp(elements, masses,
+                                               reference_point=reference_point)
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
     def mass_properties_no_xref(self, element_ids=None, mass_ids=None, reference_point=None,
-                                sym_axis=None, num_cpus=1, scale=None):
+                                sym_axis=None, scale=None):
         """
         Caclulates mass properties in the global system about the
         reference point.
@@ -939,108 +920,6 @@ class BDFMethods(BDFAttributes):
         I *= scale
         return (mass, cg, I)
 
-
-    def _mass_properties_mp(self, num_cpus, elements, masses, nelements,
-                            reference_point=None):  # pragma: no cover
-        """
-        Calculates mass properties in the global system about the
-        reference point.
-
-        Parameters
-        ----------
-        num_cpus : int
-            the number of CPUs to use; 2 < num_cpus < 20
-        elements : ???
-            ???
-        masses : ???
-            ???
-        nelements : int
-            the size of the mass array
-        reference_point : (3, ) ndarray; default = <0,0,0>.
-            an array that defines the origin of the frame.
-
-        Returns
-        -------
-        mass : float
-            the mass of the model
-        cg : (3, ) float NDARRAY
-            the cg of the model as an array.
-        I : (6, ) float NDARRAY
-            moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
-
-        .. seealso:: self.mass_properties
-        """
-        if num_cpus <= 1:
-            raise RuntimeError('num_proc must be > 1; num_cpus=%s' % num_cpus)
-        if num_cpus > 20:
-            # the user probably doesn't want 68,000 CPUs; change it if you want...
-            raise RuntimeError('num_proc must be < 20; num_cpus=%s' % num_cpus)
-
-        self.log.debug("Creating %i-process pool!" % num_cpus)
-        pool = mp.Pool(num_cpus)
-        no_mass_elements = [
-            'CBUSH', 'CBUSH1D',
-            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-        ]
-        result = pool.imap(_mass_properties_mass_mp_func,
-                           [(element) for element in elements
-                            if element.type not in no_mass_elements])
-        result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
-
-        mass = zeros((nelements), 'float64')
-        xyz = zeros((nelements, 3), 'float64')
-        i = 0
-        for i, return_values in enumerate(result):
-            #self.log.info("%.3f %% Processed" % (i*100./nelements))
-            mass[i] = return_values[0]
-            xyz[i, :] = return_values[1]
-        pool.close()
-        pool.join()
-
-        pool = mp.Pool(num_cpus)
-        for i2, return_values in enumerate(result2):
-            mass[i+i2] = return_values[0]
-            xyz[i+i2, :] = return_values[1]
-        pool.close()
-        pool.join()
-
-        massi = mass.sum()
-        #cg = (mass * xyz) / massi
-        if massi == 0.0:
-            cg = array([0., 0., 0.])
-            I = array([0., 0., 0., 0., 0., 0., ])
-            return massi, cg, I
-
-        cg = dot(mass, xyz) / massi
-        if reference_point is None:
-            x = xyz[:, 0]
-            y = xyz[:, 1]
-            z = xyz[:, 2]
-        elif isinstance(reference_point[0], float):
-            x = xyz[:, 0] - reference_point[0]
-            y = xyz[:, 1] - reference_point[1]
-            z = xyz[:, 2] - reference_point[2]
-        elif reference_point in [u'cg', 'cg']:
-            x = xyz[:, 0] - cg[0]
-            y = xyz[:, 1] - cg[1]
-            z = xyz[:, 2] - cg[2]
-
-        x2 = x ** 2
-        y2 = y ** 2
-        z2 = z ** 2
-
-        I = array([
-            mass * (y2 + z2),  # Ixx
-            mass * (x2 + z2),  # Iyy
-            mass * (x2 + y2),  # Izz
-            mass * (x * y),    # Ixy
-            mass * (x * z),    # Ixz
-            mass * (y * z),    # Iyz
-        ]).sum(axis=1)
-
-        return (massi, cg, I)
-
     def resolve_grids(self, cid=0):
         """
         Puts all nodes in a common coordinate system (mainly for cid testing)
@@ -1093,8 +972,7 @@ class BDFMethods(BDFAttributes):
         #gravity_i = self.loads[2][0]  ## .. todo:: hardcoded
         #gi = gravity_i.N * gravity_i.scale
         #p0 = array([0., 0., 0.])  ## .. todo:: hardcoded
-        #mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None,
-                                           #num_cpus=6)
+        #mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None)
 
     def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
                                     include_grav=False, xyz_cid0=None):
