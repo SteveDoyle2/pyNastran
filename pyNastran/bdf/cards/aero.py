@@ -39,7 +39,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string, double_string_or_blank,
-    interpret_value, components as parse_components)
+    interpret_value, parse_components)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 

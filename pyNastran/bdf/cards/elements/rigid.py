@@ -21,7 +21,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_double, integer_double_or_blank, integer_or_blank,
-    double_or_blank, integer_double_or_string, components, components_or_blank,
+    double_or_blank, integer_double_or_string, parse_components, components_or_blank,
     blank, string)
 from pyNastran.bdf.field_writer_16 import print_card_16
 # from pyNastran.bdf.cards.utils import build_table_lines
@@ -962,7 +962,7 @@ class RBE3(RigidElement):
                 cm_name = 'cm' + str(n)
                 gmi = integer_or_blank(card, j, gm_name)
                 if gmi is not None:
-                    cmi = components(card, j + 1, cm_name)
+                    cmi = parse_components(card, j + 1, cm_name)
                     #print("gmi=%s cmi=%s" % (gmi, cmi))
                     Gmi.append(gmi)
                     Cmi.append(cmi)

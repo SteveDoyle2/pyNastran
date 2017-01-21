@@ -603,7 +603,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_ptube(self, pid, mid, OD1, t, nsm, OD2, comment=''):
+    def add_ptube(self, pid, mid, OD1, t=None, nsm=0., OD2=None, comment=''):
         """
         Adds a PTUBE card
 
@@ -1341,6 +1341,20 @@ class AddCards(AddMethods):
         return load
 
     def add_sload(self, sid, nids, mags, comment=''):
+        """
+        Creates an SLOAD (SPOINT load)
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        nids : int; List[int]
+            the SPOINT ids
+        mags : float; List[float]
+            the SPOINT loads
+        comment : str; default=''
+            a comment for the card
+        """
         load = SLOAD(sid, nids, mags, comment=comment)
         self._add_load_object(load)
         return load
@@ -1540,8 +1554,8 @@ class AddCards(AddMethods):
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_mpc(self, conid, gids, constraints, enforced, comment=''):
-        mpc = MPC(conid, gids, constraints, enforced, comment=comment)
+    def add_mpc(self, conid, gids, components, enforced, comment=''):
+        mpc = MPC(conid, gids, components, enforced, comment=comment)
         self._add_constraint_mpc_object(mpc)
         return mpc
 

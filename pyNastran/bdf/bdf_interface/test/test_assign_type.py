@@ -4,7 +4,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_or_double, integer_double_or_blank,
     string, string_or_blank, double_or_string, double_string_or_blank,
     integer_or_string, integer_string_or_blank, integer_double_or_string,
-    blank, components, components_or_blank, integer_double_string_or_blank,
+    blank, parse_components, components_or_blank, integer_double_string_or_blank,
     _get_dtype, interpret_value)
 
 class ExtendedTestCase(unittest.TestCase):
@@ -364,71 +364,71 @@ class TestAssignType(ExtendedTestCase):
 
     def test_components(self):
         # single ints
-        val = components(BDFCard([0]), 0, 'field')
+        val = parse_components(BDFCard([0]), 0, 'field')
         self.assertEqual(val, '0')
 
-        val = components(BDFCard([1]), 0, 'field')
+        val = parse_components(BDFCard([1]), 0, 'field')
         self.assertEqual(val, '1')
 
         # single strings
-        val = components(BDFCard(['0']), 0, 'field')
+        val = parse_components(BDFCard(['0']), 0, 'field')
         self.assertEqual(val, '0')
 
-        val = components(BDFCard(['1']), 0, 'field')
+        val = parse_components(BDFCard(['1']), 0, 'field')
         self.assertEqual(val, '1')
 
         # double ints
-        val = components(BDFCard(['123']), 0, 'field')
+        val = parse_components(BDFCard(['123']), 0, 'field')
         self.assertEqual(val, '123')
 
-        val = components(BDFCard([123]), 0, 'field')
+        val = parse_components(BDFCard([123]), 0, 'field')
         self.assertEqual(val, '123')
 
-        val = components(BDFCard([321]), 0, 'field')
+        val = parse_components(BDFCard([321]), 0, 'field')
         self.assertEqual(val, '123')
 
         # embedded whiteshape
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['12 3']), 0, 'field')
+            val = parse_components(BDFCard(['12 3']), 0, 'field')
 
         # all numbers
-        val = components(BDFCard(['123456']), 0, 'field')
+        val = parse_components(BDFCard(['123456']), 0, 'field')
         self.assertEqual(val, '123456')
 
         # invalid 0's defined with numbers
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['0123456']), 0, 'field')
+            val = parse_components(BDFCard(['0123456']), 0, 'field')
 
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['01']), 0, 'field')
+            val = parse_components(BDFCard(['01']), 0, 'field')
 
         # doubles
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['4524']), 0, 'field')
+            val = parse_components(BDFCard(['4524']), 0, 'field')
 
         # only 0 to 6
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['7']), 0, 'field')
+            val = parse_components(BDFCard(['7']), 0, 'field')
 
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard([7]), 0, 'field')
+            val = parse_components(BDFCard([7]), 0, 'field')
 
         # dumb input
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['4.0']), 0, 'field')
+            val = parse_components(BDFCard(['4.0']), 0, 'field')
 
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['-4.0']), 0, 'field')
+            val = parse_components(BDFCard(['-4.0']), 0, 'field')
 
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['asdf']), 0, 'field')
+            val = parse_components(BDFCard(['asdf']), 0, 'field')
 
         with self.assertRaises(SyntaxError):
-            val = components(BDFCard(['-1']), 0, 'field')
+            val = parse_components(BDFCard(['-1']), 0, 'field')
 
         # blank
-        #components(BDFCard(['   ']), 0, 'field')
-        #components(BDFCard([None]), 0, 'field')
+        #parse_components(BDFCard(['   ']), 0, 'field')
+        #parse_components(BDFCard([None]), 0, 'field')
 
     def test_components_or_blank_01(self):
         # single ints

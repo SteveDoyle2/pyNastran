@@ -31,10 +31,6 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=False)
@@ -275,13 +271,13 @@ class CTUBE(RodElement):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        A = self.Area()
         edges = self.get_edge_ids()
         assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(A, float), 'A=%r' % A
         if xref:
+            A = self.Area()
             L = self.Length()
             nsm = self.Nsm()
+            assert isinstance(A, float), 'A=%r' % A
             assert isinstance(L, float), 'L=%r' % L
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             if self.pid_ref.mid_ref.type == 'MAT1':
@@ -294,9 +290,9 @@ class CTUBE(RodElement):
             else:
                 raise NotImplementedError('_verify does not support self.pid_ref.mid_ref.type=%s' % self.pid_ref.mid_ref.type)
 
-        c = self.Centroid()
-        for i in range(3):
-            assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
+            c = self.Centroid()
+            for i in range(3):
+                assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Mid(self):
         return self.pid_ref.Mid()

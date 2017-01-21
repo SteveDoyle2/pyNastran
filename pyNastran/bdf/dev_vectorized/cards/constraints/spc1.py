@@ -10,11 +10,11 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
-    components)
+    parse_components)
 
 def get_spc1_constraint(card):
     constraint_id = integer(card, 1, 'constraint_id')
-    dofs = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
+    dofs = parse_components(card, 2, 'constraints')  # 246 = y; dx, dz dir
 
     node_ids = card.fields(3)
     node_ids = expand_thru(node_ids)
@@ -62,7 +62,7 @@ class SPC1(object):
         #if comment:
             # self.comment = comment
         constraint_id = integer(card, 1, 'conid')
-        dofs = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
+        dofs = parse_components(card, 2, 'constraints')  # 246 = y; dx, dz dir
         node_ids = card.fields(3)
 
         assert isinstance(constraint_id, int), constraint_id

@@ -3716,6 +3716,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
                 print(str(card))
+                raise
 
                 #raise
         for key, card in sorted(iteritems(self.properties)):

@@ -613,12 +613,33 @@ class SLOAD(Load):
     type = 'SLOAD'
 
     def __init__(self, sid, nids, mags, comment=''):
+        """
+        Creates an SLOAD (SPOINT load)
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        nids : int; List[int]
+            the SPOINT ids
+        mags : float; List[float]
+            the SPOINT loads
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
+        if isinstance(nids, integer_types):
+            nids = [nids]
+        if isinstance(mags, float):
+            mags = [mags]
         #: load ID
         self.sid = sid
         self.nids = nids
         self.mags = mags
+
+    def validate(self):
+        assert len(self.nids) == len(self.mags), 'len(nids)=%s len(mags)=%s' % (len(self.nids), len(self.mags))
 
     @classmethod
     def add_card(cls, card, comment=''):

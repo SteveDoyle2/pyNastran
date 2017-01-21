@@ -16,7 +16,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, string, components, interpret_value)
+    integer, integer_or_blank, double, string, parse_components, interpret_value)
 
 
 class NastranMatrix(BaseCard):
@@ -162,7 +162,7 @@ class NastranMatrix(BaseCard):
         Gj = integer(card, 2, 'Gj')
         # Cj = integer(card, 3, 'Cj')
         Cj = integer_or_blank(card, 3, 'Cj', 0)
-        #Cj = components(card, 3, 'Cj')
+        #Cj = parse_components(card, 3, 'Cj')
         assert 0 <= Cj <= 6, 'C%i must be between [0, 6]; Cj=%s' % (0, Cj)
 
         nfields = len(card)
@@ -187,7 +187,7 @@ class NastranMatrix(BaseCard):
                     Gi = integer(card, n, 'Gi')
                     # Ci = integer(card, n + 1, 'Ci')
                     Ci = integer_or_blank(card, n + 1, 'Ci', 0)
-                    #Ci = components(card, n + 1, 'Ci')
+                    #Ci = parse_components(card, n + 1, 'Ci')
                     assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                     self.GCi.append((Gi, Ci))
                     magi = double(card, n + 2, 'ai')
@@ -202,7 +202,7 @@ class NastranMatrix(BaseCard):
                     Gi = integer(card, n, 'Gi')
                     # Ci = integer(card, n + 1, 'Ci')
                     Ci = integer_or_blank(card, n + 1, 'Ci', 0)
-                    #Ci = components(card, n + 1, 'Ci')
+                    #Ci = parse_components(card, n + 1, 'Ci')
                     assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                     self.GCi.append((Gi, Ci))
                     reali = double(card, n + 2, 'real')
@@ -216,7 +216,7 @@ class NastranMatrix(BaseCard):
                 Gi = integer(card, n, 'Gi')
                 # Ci = integer(card, n + 1, 'Ci')
                 Ci = integer_or_blank(card, n + 1, 'Ci', 0)
-                #Ci = components(card, n + 1, 'Ci')
+                #Ci = parse_components(card, n + 1, 'Ci')
                 assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                 reali = double(card, n + 2, 'real')
                 self.GCi.append((Gi, Ci))
@@ -776,7 +776,7 @@ class DMIG_UACCEL(BaseCard):
         load_seq = integer(card, 2, 'load_seq')
 
         g1 = integer(card, 5, 'nid1')
-        c1 = components(card, 6, 'c1')
+        c1 = parse_components(card, 6, 'c1')
         x1 = double(card, 7, 'x1')
         assert len(card) <= 8, 'len=%s card=%s' % (len(card), card)
 

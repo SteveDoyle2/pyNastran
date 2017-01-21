@@ -330,9 +330,14 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         where :math:`nsm_i` is the non-structural mass of the
         :math:`i^{th}` ply
 
-        :param iply:   the string 'all' (default) or the mass per area of
-                       the :math:`i^{th}` ply
-        :param method: the method to compute MassPerArea
+        Parameters
+        ----------
+        iply : str/int; default='all'
+            str : the string 'all' (default) or the mass per area of
+            the :math:`i^{th}` ply
+        method : str
+            the method to compute MassPerArea
+            {nplies, rho*t, t}
 
            * **Case 1 (iply = all)**
 
@@ -380,9 +385,13 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         where :math:`nsm_i` is the non-structural mass of the
         :math:`i^{th}` ply
 
-        :param iply:   the string 'all' (default) or the mass per area of
-                       the :math:`i^{th}` ply
-        :param method: the method to compute MassPerArea
+        Parameters
+        ----------
+        iply : str/int; default='all'
+            the mass per area of the :math:`i^{th}` ply
+        method : str
+            the method to compute MassPerArea
+            {nplies, rho*t, t}
 
            * **Case 1 (iply = all)**
 
@@ -860,17 +869,6 @@ class PCOMPG(CompositeShellProperty):
             plies.append((mid, t, theta, sout, global_ply_id))
         return plies
 
-    #@plies.setter
-    #def plies(self, plies):
-        #i = 0
-        #for mid, t, theta, sout, global_ply_id in zip(plies):
-            #self.mids[i] = mid
-            #self.thicknesses[i] = t
-            #self.thetas[i] = theta
-            #self.souts[i] = sout
-            #self.global_ply_ids[i] = global_ply_id
-            #i += 1
-
     def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
                  nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
         CompositeShellProperty.__init__(self)
@@ -996,20 +994,34 @@ class PCOMPG(CompositeShellProperty):
         assert isinstance(mids, list), 'mids=%r' % mids
 
         t = self.Thickness()
-        mpa = self.MassPerArea()
         assert isinstance(t, float), 'thickness=%r' % t
-        assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+        if xref:
+            mpa = self.MassPerArea()
+            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+
         for iply in range(nplies):
             glply = self.GlobalPlyID(iply)
             mid2 = self.Mid(iply)
             assert mids[iply] == mid2
             t = self.Thickness(iply)
-            rho = self.Rho(iply)
-            mpa = self.MassPerArea(iply)
             assert isinstance(glply, int), 'global_ply_id=%r' % glply
             assert isinstance(t, float), 'thickness=%r' % t
-            assert isinstance(rho, float), 'rho=%r' % rho
-            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+            if xref:
+                rho = self.Rho(iply)
+                mpa = self.MassPerArea(iply)
+                assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+                assert isinstance(rho, float), 'rho=%r' % rho
+
+        #@plies.setter
+        #def plies(self, plies):
+            #i = 0
+            #for mid, t, theta, sout, global_ply_id in zip(plies):
+                #self.mids[i] = mid
+                #self.thicknesses[i] = t
+                #self.thetas[i] = theta
+                #self.souts[i] = sout
+                #self.global_ply_ids[i] = global_ply_id
+                #i += 1
 
     def GlobalPlyID(self, iply):
         global_ply_id = self.global_ply_ids[iply]

@@ -308,23 +308,23 @@ class XPoints(BaseCard):
         #Node.__init__(self)
         if comment:
             self.comment = comment
-        self.points = ids
+        if isinstance(ids, integer_types):
+            ids = [ids]
+        self.points = set(expand_thru(ids))
 
     @classmethod
     def add_card(cls, card, comment=''):
-        fields = []
+        points = []
         for i in range(1, len(card)):
             field = integer_or_string(card, i, 'ID%i' % i)
-            fields.append(field)
-        points = set(expand_thru(fields))
+            points.append(field)
         return cls(points, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        fields = data
-        assert isinstance(data, list), data
-        assert isinstance(data[0], int), data
-        points = set(expand_thru(fields))
+        points = data
+        assert isinstance(points, list), points
+        assert isinstance(points[0], int), points
         return cls(points, comment=comment)
 
     def __len__(self):

@@ -13,7 +13,7 @@ else:
     integer_float_types = (int, float, float32)
 float_types = (float, float32)
 
-def components(card, ifield, fieldname):
+def parse_components(card, ifield, fieldname):
     """
     Parameters
     ----------
@@ -87,7 +87,7 @@ def components_or_blank(card, ifield, fieldname, default=None):
         svalue = svalue.strip()
 
     if svalue:
-        return components(card, ifield, fieldname)
+        return parse_components(card, ifield, fieldname)
     else:
         return default
 

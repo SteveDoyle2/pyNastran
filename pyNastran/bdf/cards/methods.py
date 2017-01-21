@@ -19,7 +19,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
-    components, components_or_blank, integer_double_string_or_blank, blank,
+    parse_components, components_or_blank, integer_double_string_or_blank, blank,
     interpret_value)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -92,7 +92,7 @@ class EIGB(Method):
         norm = string_or_blank(card, 9, 'norm', 'MAX')
         if norm == 'POINT':
             G = integer(card, 10, 'G')
-            C = components(card, 11, 'C')
+            C = parse_components(card, 11, 'C')
         else:
             G = integer_or_blank(card, 10, 'G')
             C = components_or_blank(card, 11, 'C')
@@ -210,7 +210,7 @@ class EIGC(Method):
         norm = string_or_blank(card, 3, 'norm')
         if norm == 'POINT':
             G = integer(card, 4, 'G')
-            C = components(card, 5, 'C')
+            C = parse_components(card, 5, 'C')
         else:
             G = blank(card, 4, 'G')
             C = blank(card, 5, 'C')
@@ -564,7 +564,7 @@ class EIGR(Method):
 
         if method == 'POINT':
             G = integer(card, 10, 'G')
-            C = components(card, 11, 'C')
+            C = parse_components(card, 11, 'C')
         else:
             G = blank(card, 10, 'G')
             C = blank(card, 11, 'C')

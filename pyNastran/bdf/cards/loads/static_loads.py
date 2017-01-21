@@ -651,8 +651,11 @@ class Force(Load):
         adjust the vector to a unit length
         scale up the magnitude of the vector
         """
+        assert self.mag > 0, self.mag
         if self.mag != 0.0:  # enforced displacement
             norm_xyz = norm(self.xyz)
+            if norm_xyz == 0.0:
+                raise RuntimeError('xyz=%s norm_xyz=%s' % (self.xyz, norm_xyz))
             #mag = self.mag * norm_xyz
             self.mag *= norm_xyz
             try:
@@ -1054,7 +1057,6 @@ class FORCE2(Force):
 
     def validate(self):
         assert isinstance(self.sid, integer_types), str(self)
-        assert self.mag != 0.0, self.mag
         assert self.g1 is not None, self.g1
         assert self.g2 is not None, self.g2
         assert self.g3 is not None, self.g3
@@ -1110,30 +1112,30 @@ class FORCE2(Force):
         xyz2 = self.g2_ref.get_position()
         xyz3 = self.g3_ref.get_position()
         xyz4 = self.g4_ref.get_position()
-        v12 = xyz2 - xyz1
-        v34 = xyz4 - xyz3
+        v21 = xyz2 - xyz1
+        v43 = xyz4 - xyz3
         try:
-            v12 /= norm(v12)
+            v21 /= norm(v21)
         except FloatingPointError:
-            msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
+            msg = 'v21=%s norm(v21)=%s\n' % (v21, norm(v21))
             msg += 'g1.get_position()=%s\n' % xyz1
             msg += 'g2.get_position()=%s' % xyz2
             raise FloatingPointError(msg)
 
         try:
-            v34 /= norm(v34)
+            v43 /= norm(v43)
         except FloatingPointError:
-            msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
+            msg = 'v43=%s norm(v43)=%s\n' % (v43, norm(v43))
             msg += 'g3.get_position()=%s\n' % xyz3
             msg += 'g4.get_position()=%s' % xyz4
             raise FloatingPointError(msg)
-        self.xyz = cross(v12, v34)
+        self.xyz = cross(v21, v43)
 
-        msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv12=%s v34=%s\nxyz=%s' % (
-            xyz1, xyz2, xyz3, xyz4, v12, v34, self.xyz)
-        print(msgi)
+        msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43=%s\nxyz=%s' % (
+            xyz1, xyz2, xyz3, xyz4, v21, v43, self.xyz)
+        #print(msgi)
         self.normalize(msgi)
-        print(self.xyz)
+        #print(self.xyz)
 
     def safe_cross_reference(self, model, debug=True):
         """
@@ -1156,24 +1158,24 @@ class FORCE2(Force):
         xyz2 = self.g2_ref.get_position()
         xyz3 = self.g3_ref.get_position()
         xyz4 = self.g4_ref.get_position()
-        v12 = xyz2 - xyz1
-        v34 = xyz4 - xyz3
+        v21 = xyz2 - xyz1
+        v43 = xyz4 - xyz3
         try:
-            v12 /= norm(v12)
+            v21 /= norm(v21)
         except FloatingPointError:
-            msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
+            msg = 'v21=%s norm(v21)=%s\n' % (v21, norm(v21))
             msg += 'g1.get_position()=%s\n' % xyz1
             msg += 'g2.get_position()=%s' % xyz2
             raise FloatingPointError(msg)
 
         try:
-            v34 /= norm(v34)
+            v43 /= norm(v43)
         except FloatingPointError:
-            msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
+            msg = 'v43=%s norm(v43)=%s\n' % (v43, norm(v43))
             msg += 'g3.get_position()=%s\n' % xyz3
             msg += 'g4.get_position()=%s' % xyz4
             raise FloatingPointError(msg)
-        self.xyz = cross(v12, v34)
+        self.xyz = cross(v21, v43)
         self.normalize()
 
     def uncross_reference(self):

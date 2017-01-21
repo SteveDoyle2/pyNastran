@@ -24,7 +24,7 @@ from six.moves import zip, range
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, components,
+    integer, integer_or_blank, double, double_or_blank, parse_components,
     components_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
@@ -246,7 +246,7 @@ class MPC(Constraint):
     """
     type = 'MPC'
 
-    def __init__(self, conid, gids, constraints, enforced, comment=''):
+    def __init__(self, conid, gids, components, enforced, comment=''):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
@@ -256,9 +256,16 @@ class MPC(Constraint):
         self.gids = gids
         #: Component number. (Any one of the Integers 1 through 6 for grid
         #: points; blank or zero for scalar points.)
-        self.constraints = constraints
+        self.components = components
         #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
         self.enforced = enforced
+
+    def validate(self):
+        assert isinstance(self.gids, list), type(self.gids)
+        assert isinstance(self.components, list), type(self.components)
+        assert isinstance(self.enforced, list), type(self.enforced)
+        assert len(self.gids) == len(self.components)
+        assert len(self.gids) == len(self.enforced)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -308,6 +315,13 @@ class MPC(Constraint):
         return MPC(conid, gids, constraints, enforced, comment=comment)
 
     @property
+    def constraints(self):
+        return self.components
+    @constraints.setter
+    def constraints(self, constraints):
+        self.components = constraints
+
+    @property
     def node_ids(self):
         msg = ', which is required by MPC=%s' % self.conid
         return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
@@ -331,8 +345,8 @@ class MPC(Constraint):
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
-        for i, gid, constraint, enforced in zip(count(), self.node_ids, self.constraints, self.enforced):
-            fields += [gid, constraint, enforced]
+        for i, gid, component, enforced in zip(count(), self.node_ids, self.components, self.enforced):
+            fields += [gid, component, enforced]
             if i % 2 == 1 and i > 0:
                 fields.append(None)
                 fields.append(None)
@@ -347,8 +361,8 @@ class MPC(Constraint):
 
     def write_card_8(self):
         msg = 'MPC     %8s' % self.conid
-        grids, constraints, enforceds = self.node_ids, self.constraints, self.enforced
-        for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
+        grids, components, enforceds = self.node_ids, self.components, self.enforced
+        for i, grid, component, enforced in zip(count(), grids, components, enforceds):
             msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
             if i % 2 == 1 and i > 0:
                 msg += '\n%8s%8s' % ('', '')
@@ -497,7 +511,7 @@ class GMSPC(Constraint):
     @classmethod
     def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'sid')
-        component = components(card, 2, 'components')
+        component = parse_components(card, 2, 'components')
         entity = string(card, 3, 'entity')
         entity_id = integer(card, 4, 'entity_id')
         return GMSPC(conid, component, entity, entity_id, comment=comment)
@@ -561,7 +575,7 @@ class SPCAX(Constraint):
         conid = integer(card, 1, 'conid')
         rid = integer(card, 2, 'rid')
         hid = integer(card, 3, 'hid')
-        c = components(card, 4, 'c')
+        c = parse_components(card, 4, 'c')
         d = double(card, 5, 'd')
         return SPCAX(conid, rid, hid, c, d, comment=comment)
 
@@ -626,7 +640,7 @@ class SPC1(Constraint):
     @classmethod
     def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'conid')
-        constraints = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
+        constraints = parse_components(card, 2, 'constraints')  # 246 = y; dx, dz dir
         nodes = card.fields(3)
         return SPC1(conid, constraints, nodes, comment=comment)
 

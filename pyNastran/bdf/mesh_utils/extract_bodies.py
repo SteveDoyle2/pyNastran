@@ -8,15 +8,26 @@ from six import iteritems, iterkeys
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 
-def extract_bodies(bdf_filename):
+def extract_bodies(bdf_filename, mpc_id=0):
     """
     Finds the isolated bodies
+
+    Paramters
+    ---------
+    bdf_filename : str/BDF
+        str : the path the the *.bdf file
+        BDF : a BDF() boject
+    mpc_id : int; default=0
+        0 : consider all MPCs
+        >0 : use this MPC set
+        not supported
 
     Considers:
      - elements
      - rigid_elements
 
     Doesn't consider:
+      - elements_mass
       - MPC
       - MPCADD
       - DMIx
@@ -24,6 +35,7 @@ def extract_bodies(bdf_filename):
     Doesn't support:
       - xref
       - duplicate element ids
+      - large values
     """
     if isinstance(bdf_filename, BDF):
         model = bdf_filename

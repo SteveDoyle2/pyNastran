@@ -1959,9 +1959,10 @@ class BDFMethods(BDFAttributes):
             self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
         return (F, M)
 
-    def skin_solid_elements(self, element_ids=None, allow_blank_nids=True):
+    def get_element_faces(self, element_ids=None, allow_blank_nids=True):
         """
-        Gets the elements and faces that are skinned from solid elements
+        Gets the elements and faces that are skinned from solid elements.
+        This includes internal faces, but not existing shells.
 
         Parameters
         ----------
@@ -2003,7 +2004,8 @@ class BDFMethods(BDFAttributes):
 
     def get_solid_skin_faces(self):
         """
-        Gets the elements and faces that are skinned from solid elements
+        Gets the elements and faces that are skinned from solid elements.
+        This doesn't include internal faces or existing shells.
 
         Returns
         -------
@@ -2014,7 +2016,7 @@ class BDFMethods(BDFAttributes):
            key : sorted face
            value : unsorted face
         """
-        eid_faces = self.skin_solid_elements()
+        eid_faces = self.get_element_faces()
         face_set = defaultdict(int)
         eid_set = defaultdict(list)
         face_map = {}
@@ -2067,7 +2069,8 @@ class BDFMethods(BDFAttributes):
         write_solids : bool; default=False
             write solid elements that have skinned faces
         write_shells : bool; default=False
-            write shell elements
+            write newly created shell elements
+            if there are shells in the model, doesn't write these
 
         size : int; default=8
             the field width
@@ -2106,14 +2109,17 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     pid = elem.Pid()
                     prop = self.properties[pid] # PSOLID
-                    #print(prop)
                     try:
                         #print(prop.mid)
                         mid = prop.Mid()
-                        mid_set_to_write.add(mid)
-                        #print('added eid=%s pid=%s mid=%s (b)' % (eid, pid, mid))
+                    except TypeError:
+                        self.log.warning('TypeError: skipping:%s' % prop)
+                        raise
                     except AttributeError:
+                        self.log.warning('skipping:%s' % prop)
                         continue
+                    mid_set_to_write.add(mid)
+                    #print('added eid=%s pid=%s mid=%s (b)' % (eid, pid, mid))
         else:
             raise RuntimeError('write_solids=False write_shells=False')
 
