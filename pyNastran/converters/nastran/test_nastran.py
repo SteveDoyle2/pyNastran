@@ -25,7 +25,7 @@ class TestNastran(unittest.TestCase):
         debug = True
         model = read_bdf(bdf_filename, log=None, debug=debug)
         log = model.log
-        #model.skin_solid_elements()
+        #model.get_element_faces()
         skin_bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_skin.bdf')
         model.write_skin_solid_faces(skin_bdf_filename, write_solids=True,
                                     write_shells=True,
