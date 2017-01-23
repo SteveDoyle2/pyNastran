@@ -93,16 +93,19 @@ class DisplacementResults(object):
             self.default_mins = zeros(1, dtype=self.dxyz.dtype)
             self.default_maxs = zeros(1, dtype=self.dxyz.dtype)
             normi = norm(self.dxyz, axis=1)
-            self.default_mins[0] = normi.min()
-            self.default_maxs[0] = normi.max()
+            self.default_mins[0] = normi.min().real
+            self.default_maxs[0] = normi.max().real
         elif self.dim == 3:
             ntimes = self.dxyz.shape[0]
-            self.default_mins = zeros(ntimes, dtype=self.dxyz.dtype)
-            self.default_maxs = zeros(ntimes, dtype=self.dxyz.dtype)
+            self.default_mins = zeros(ntimes)
+            self.default_maxs = zeros(ntimes)
             for itime in range(ntimes):
                 normi = norm(self.dxyz[itime, :, :], axis=1)
-                self.default_mins[itime] = normi.min()
-                self.default_maxs[itime] = normi.max()
+                self.default_mins[itime] = normi.min().real
+                self.default_maxs[itime] = normi.max().real
+
+            if not self.is_real:
+                self.phase = np.zeros(ntimes)
         else:
             raise NotImplementedError('dim=%s' % self.dim)
 
@@ -225,17 +228,18 @@ class DisplacementResults(object):
                 dxyz = self.dxyz[i, :]
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
-        #if method == 'real':
-            #return self.dxyz[i, :].real
-        #elif method == 'imag':
-            #return self.dxyz[i, :].imag
-        #elif method == 'magnitude':
-            #return abs(self.dxyz[i, :])
-        #elif method == 'phase':
-            #return angle(self.dxyz[i, :], deg=True)
-        #else:
-            #raise RuntimeError(method)
+        else:
+            dxyz = self._get_complex_displacements(i)
+
         assert len(dxyz.shape) == 2, dxyz.shape
+        return dxyz
+
+    def _get_complex_displacements(self, i):
+        """
+        Get displacements for a complex eigenvector result.
+        """
+        theta = self.phase[i]
+        dxyz = self.dxyz[i, :].real * np.cos(theta) + self.dxyz[i, :].imag * np.sin(theta)
         return dxyz
 
     def get_result(self, i, name):
@@ -252,17 +256,8 @@ class DisplacementResults(object):
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
-            raise NotImplementedError(self.is_real)
-            #if method == 'real':
-                #return self.dxyz[i, :].real
-            #elif method == 'imag':
-                #return self.dxyz[i, :].imag
-            #elif method == 'magnitude':
-                #return abs(self.dxyz[i, :])
-            #elif method == 'phase':
-                #return angle(self.dxyz[i, :], deg=True)
-            #else:
-                #raise RuntimeError(method)
+            dxyz = self._get_complex_displacements(i)
+
         assert len(dxyz.shape) == 2, dxyz.shape
         return dxyz
 
@@ -285,9 +280,9 @@ class DisplacementResults(object):
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
-            # z = x + i*y
-            #
-            phase = self.phase
+            dxyz = self._get_complex_displacements(i)
+            xyz = self.xyz + self.scales[i] * dxyz
+
         assert len(xyz.shape) == 2, xyz.shape
         return self.xyz, xyz
 
