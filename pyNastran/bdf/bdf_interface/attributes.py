@@ -349,6 +349,7 @@ class BDFAttributes(object):
         self.dmijs = {}
         self.dmijis = {}
         self.dmiks = {}
+        self.dti = {}
         self._dmig_temp = defaultdict(list)
 
         # ----------------------------------------------------------------
@@ -369,7 +370,10 @@ class BDFAttributes(object):
 
         # ----------------------------------------------------------------
         #: tables
-        self.tables = {}
+        self.tables = {} # TABLES1, ...
+        self.tables_d = {}  # TABLEDx
+        self.tables_m = {}  # TABLEMx
+
         #: random_tables
         self.random_tables = {}
         #: TABDMP1
@@ -406,7 +410,7 @@ class BDFAttributes(object):
         self.nlpcis = {}
         #: stores NLPARM
         self.nlparms = {}
-        #: stores TSTEPs
+        #: stores TSTEPs, TSTEP1s
         self.tsteps = {}
         #: stores TSTEPNL
         self.tstepnls = {}
@@ -522,7 +526,7 @@ class BDFAttributes(object):
                 'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
                 'CQUADX', 'CQUADX4', 'CQUADX8',
 
-                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1',
+                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1', 'CIHEX2',
                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
                 'CGAP',
 
@@ -550,7 +554,8 @@ class BDFAttributes(object):
             'pbusht' : ['PBUSHT',],
 
             # materials
-            'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11'],
+            'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
+                           'MATG'],
             'hyperelastic_materials' : ['MATHE', 'MATHP',],
             'creep_materials' : ['CREEP'],
             'MATT1' : ['MATT1'],
@@ -638,11 +643,12 @@ class BDFAttributes(object):
 
             # dynamic cards
             'dareas' : ['DAREA'],
+            'tics' : ['TIC'],
             'dphases' : ['DPHASE'],
             'nlparms' : ['NLPARM'],
             'nlpcis' : ['NLPCI'],
             'tsteps' : ['TSTEP'],
-            'tstepnls' : ['TSTEPNL'],
+            'tstepnls' : ['TSTEPNL', 'TSTEP1'],
             'transfer_functions' : ['TF'],
             'delays' : ['DELAY'],
             'rotors' : ['ROTORG', 'ROTORD'],
@@ -655,6 +661,7 @@ class BDFAttributes(object):
             'dmijis' : ['DMIJI'],
             'dmiks' : ['DMIK'],
             'dmis' : ['DMI'],
+            'dti' : ['DTI'],
 
             # optimzation
             'dequations' : ['DEQATN'],
@@ -690,10 +697,10 @@ class BDFAttributes(object):
 
             'tables' : [
                 'TABLEHT', 'TABRNDG',
-                'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
-                'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
                 'TABLES1', 'TABLEST',
                 ],
+            'tables_d' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5'],
+            'tables_m' : ['TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4'],
             'tables_sdamping' : ['TABDMP1'],
             'random_tables' : ['TABRND1', 'TABRNDG',],
 

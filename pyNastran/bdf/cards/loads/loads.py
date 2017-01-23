@@ -170,6 +170,60 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     Defines a sequence of static load sets
 
     .. todo:: how does this work...
+    +------+-----+----------+-----+-----+
+    |   1  |  2  |     3    |  4  |  5  |
+    +======+=====+==========+=====+=====+
+    | LSEQ | SID | EXCITEID | LID | TID |
+    +------+-----+----------+-----+-----+
+
+    ACSRCE : If there is no LOADSET Case Control command, then EXCITEID
+             may reference DAREA and SLOAD entries. If there is a LOADSET
+             Case Control command, then EXCITEID may reference DAREA
+             entries as well as SLOAD entries specified by the LID field
+             in the selected LSEQ entry corresponding to EXCITEID.
+
+    DAREA :  Refer to RLOAD1, RLOAD2, TLOAD1, TLOAD2, or ACSRCE entries
+             for the formulas that define the scale factor Ai in dynamic
+             analysis.
+
+    DPHASE :
+
+    SLOAD :  In the static solution sequences, the load set ID (SID) is
+             selected by the Case Control command LOAD. In the dynamic
+             solution sequences, SID must be referenced in the LID field
+             of an LSEQ entry, which in turn must be selected by the Case
+             Control command LOADSET.
+
+    LSEQ LID : Load set identification number of a set of static load
+               entries such as those referenced by the LOAD Case Control
+               command.
+
+
+    LSEQ,  SID, EXCITEID, LID, TID
+
+    #--------------------------------------------------------------
+    # F:\\Program Files\\Siemens\\NXNastran\\nxn10p1\\nxn10p1\\nast\\tpl\\cube_iter.dat
+
+    DLOAD       1001     1.0     1.0   55212
+    sid = 1001
+    load_id = [55212] -> RLOAD2.SID
+
+    RLOAD2,     SID, EXCITEID, DELAYID, DPHASEID,   TB,     TP,  TYPE
+    RLOAD2     55212   55120              55122   55123   55124
+    EXCITEID = 55120 -> DAREA.SID
+    DPHASEID = 55122 -> DPHASE.SID
+
+    DARA        SID      NID    COMP  SCALE
+    DAREA      55120     913    3     9.9E+9
+    SID = 55120 -> RLOAD2.SID
+
+    DPHASE      SID     POINTID   C1    TH1
+    DPHASE     55122     913       3   -90.0
+    SID = 55122
+    POINTID = 913 -> GRID.NID
+
+    GRID       NID       X     Y     Z
+    GRID       913      50.  0.19  -39.9
     """
     type = 'LSEQ'
 
@@ -207,11 +261,12 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by LSEQ=%s' % (self.sid)
+        msg = ', which is required by LSEQ=%s' % (self.sid)
         self.lid = model.Load(self.lid, msg=msg)
         self.lid_ref = self.lid
         #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
+            # TODO: temperature set, not a table?
             self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = self.tid
 
@@ -349,7 +404,7 @@ class DAREA(BaseCard):
     """
     type = 'DAREA'
 
-    def __init__(self, sid, p, c, scale, comment=''):
+    def __init__(self, sid, nodes, components, scales, comment=''):
         """
         Creates a DAREA card
 
@@ -357,26 +412,37 @@ class DAREA(BaseCard):
         ----------
         sid : int
             darea id
-        Pi : int
+        nodes : List[int]
             GRID, EPOINT, SPOINT id
-        c : str
+        components : List[int]
             Component number. (0-6; 0-EPOINT/SPOINT; 1-6 GRID)
-        scale : float
+        scales : List[float]
             Scale (area) factor
         """
         self.sid = sid
-        self.p = p
-        self.c = c
-        self.scale = scale
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        if isinstance(components, integer_types):
+            components = [components]
+        if isinstance(scales, float):
+            scales = [scales]
+
+        self.nodes = nodes
+        self.components = components
+
+        for component in components:
+            assert 0 <= component <= 6, component
+        self.scales = scales
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
         noffset = 3 * icard
         sid = integer(card, 1, 'sid')
-        p = integer(card, 2 + noffset, 'p')
-        c = components_or_blank(card, 3 + noffset, 'c', 0)
+        nid = integer(card, 2 + noffset, 'p')
+        component = int(components_or_blank(card, 3 + noffset, 'c', 0))
         scale = double(card, 4 + noffset, 'scale')
-        return DAREA(sid, p, c, scale, comment=comment)
+        return DAREA(sid, nid, component, scale, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -386,6 +452,17 @@ class DAREA(BaseCard):
         scale = data[3]
         assert len(data) == 4, 'data = %s' % data
         return DAREA(sid, p, c, scale, comment=comment)
+
+    def add(self, darea):
+        assert self.sid == darea.sid, 'sid=%s darea.sid=%s' % (self.sid, darea.sid)
+        if darea.comment:
+            if hasattr('_comment'):
+                self._comment += darea.comment
+            else:
+                self._comment = darea.comment
+        self.nodes += darea.nodes
+        self.components += darea.components
+        self.scales += darea.scales
 
     def cross_reference(self, model):
         """
@@ -397,31 +474,32 @@ class DAREA(BaseCard):
             the BDF object
         """
         msg = ', which is required by DAREA=%s' % (self.sid)
-        self.p = model.Node(self.node_id, allow_empty_nodes=False, msg=msg)
-        self.p_ref = self.p
+        self.nodes_ref = model.Nodes(self.node_ids, allow_empty_nodes=False, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by DAREA=%s' % (self.sid)
-        self.p = model.Node(self.node_id, allow_empty_nodes=False, msg=msg)
-        self.p_ref = self.p
+        self.nodes_ref = model.Nodes(self.node_ids, allow_empty_nodes=False, msg=msg)
 
     def uncross_reference(self):
-        self.p = self.node_id
-        del self.p_ref
+        self.nodes_ref = None
 
     @property
-    def node_id(self):
-        if isinstance(self.p, integer_types):
-            return self.p
-        return self.p_ref.nid
+    def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
+        msg = ', which is required by DAREA=%s' % (self.sid)
+        return _node_ids(self, nodes=self.nodes_ref, allow_empty_nodes=False, msg=msg)
 
     def raw_fields(self):
-        list_fields = ['DAREA', self.sid, self.node_id, self.c, self.scale]
+        for nid, comp, scale in zip(self.node_ids, self.components, self.scales):
+            list_fields = ['DAREA', self.sid, nid, comp, scale]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        card = self.raw_fields()
-        return self.comment + print_card_8(card)
+        msg = self.comment
+        for nid, comp, scale in zip(self.node_ids, self.components, self.scales):
+            msg += print_card_8(['DAREA', self.sid, nid, comp, scale])
+        return msg
 
 
 class TabularLoad(BaseCard):
@@ -535,12 +613,33 @@ class SLOAD(Load):
     type = 'SLOAD'
 
     def __init__(self, sid, nids, mags, comment=''):
+        """
+        Creates an SLOAD (SPOINT load)
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        nids : int; List[int]
+            the SPOINT ids
+        mags : float; List[float]
+            the SPOINT loads
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
+        if isinstance(nids, integer_types):
+            nids = [nids]
+        if isinstance(mags, float):
+            mags = [mags]
         #: load ID
         self.sid = sid
         self.nids = nids
         self.mags = mags
+
+    def validate(self):
+        assert len(self.nids) == len(self.mags), 'len(nids)=%s len(mags)=%s' % (len(self.nids), len(self.mags))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -862,9 +961,9 @@ class RFORCE1(Load):
         return self.cid_ref.cid
 
     def raw_fields(self):
-        list_fields = ['RFORCE1', self.sid, self.node_id, self.Cid(), self.scale,
-                       self.r1, self.r2, self.r3, self.method, self.racc,
-                       self.mb, self.group_id]
+        list_fields = (['RFORCE1', self.sid, self.node_id, self.Cid(), self.scale]
+                       + list(self.r123) + [self.method, self.racc,
+                                            self.mb, self.group_id])
         return list_fields
 
     def write_card(self, size=8, is_double=False):

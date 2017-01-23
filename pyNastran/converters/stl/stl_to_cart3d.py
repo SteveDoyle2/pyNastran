@@ -40,8 +40,8 @@ def stl_to_cart3d(stl_filename, cart3d_filename=None, log=None, debug=False,
         raise TypeError('stl_filename must be a string or STL; type=%s' % type(stl_filename))
 
     cart3d = Cart3D(log=log, debug=debug)
-    cart3d.nodes = stl.nodes + 1
-    cart3d.elements = stl.elements + 1
+    cart3d.nodes = stl.nodes
+    cart3d.elements = stl.elements
     nelements = len(stl.elements)
     cart3d.regions = np.zeros(nelements, dtype='int32')
     if cart3d_filename:

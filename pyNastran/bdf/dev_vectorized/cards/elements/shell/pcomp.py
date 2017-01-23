@@ -445,7 +445,7 @@ class PCOMP(Property):
             self.ft = zeros((n, nplies), dtype='|S4') # 'HILL', 'HOFF', 'TSAI', 'STRN'
 
             #: Reference Temperature (default=0.0)
-            self.TRef = zeros(n, dtype=float_fmt)
+            self.tref = zeros(n, dtype=float_fmt)
             self.ge = zeros(n, dtype=float_fmt)
 
             #: symmetric flag - default = No Symmetry (NO)
@@ -461,7 +461,7 @@ class PCOMP(Property):
                 self.nsm[i] = prop.nsm
                 self.sb[i] = prop.sb
                 self.ft[i] = prop.ft
-                self.TRef[i] = prop.TRef
+                self.tref[i] = prop.tref
                 self.ge[i] = prop.ge
                 self.lam[i] = prop.lam
                 self.z0[i] = prop.z0
@@ -527,7 +527,7 @@ class PCOMP(Property):
         obj.z0 = self.z0[i]
         obj.lam = self.lam[i]
         obj.ge = self.ge[i]
-        obj.TRef = self.TRef[i]
+        obj.tref = self.tref[i]
         obj.sb = self.sb[i]
         obj.ft = self.ft[i]
         obj.nsm = self.nsm[i]

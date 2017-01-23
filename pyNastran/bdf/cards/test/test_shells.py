@@ -32,10 +32,12 @@ class TestShells(unittest.TestCase):
         ]
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
-
         model.validate()
         model._verify_bdf(xref=False)
+        model.mass_properties_no_xref()
+
         model.cross_reference()
+        model.mass_properties()
         model._verify_bdf(xref=True)
         cquad4 = model.Element(eid)
         pshell = model.Property(pid)
@@ -282,7 +284,7 @@ class TestShells(unittest.TestCase):
         #self.nsm = data[2]
         #self.sb = data[3]
         #self.ft = data[4]
-        #self.TRef = data[5]
+        #self.tref = data[5]
         #self.ge = data[6]
         #self.lam = data[7]
         #Mid = data[8]
@@ -342,7 +344,7 @@ class TestShells(unittest.TestCase):
         #self.nu = data[3]
         #self.rho = data[4]
         #self.a = data[5]
-        #self.TRef = data[6]
+        #self.tref = data[6]
         #self.ge = data[7]
         #self.St = data[8]
         #self.Sc = data[9]

@@ -14,6 +14,7 @@ All dynamic control cards are defined in this file.  This includes:
  * TSTEPNL
  * ROTORG
  * ROTORD
+ * TIC
 
 All cards are BaseCard objects.
 """
@@ -30,7 +31,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string_or_blank, blank, fields, components_or_blank,
-    integer_string_or_blank, integer_or_double,
+    integer_string_or_blank, integer_or_double, parse_components,
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -99,7 +100,6 @@ class DELAY(BaseCard):
         """
         msg = ', which is required by DELAY sid=%s' % self.sid
         self.nodes = model.Node(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -208,6 +208,9 @@ class DPHASE(BaseCard):
     def uncross_reference(self):
         self.nodes = self.node_ids
         del self.nodes_ref
+
+    def get_dphase_at_freq(self, freq):
+        return self.nodes, self.components, self.phase_leads
 
     @property
     def node_id1(self):
@@ -741,7 +744,7 @@ class ROTORD(BaseCard):
     9 19 7.5 1 0.0 0.0 109
     10 20 1 0.0 0.0 10 110
     """
-    type = 'ROTORG'
+    type = 'ROTORD'
     def __init__(self, sid, rstart, rstep, numstep,
                  rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
                  refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
@@ -784,20 +787,26 @@ class ROTORD(BaseCard):
         self.rspeeds_ref = None
 
     def validate(self):
-        pass
+        nrsets = len(self.rsets)
+        if nrsets == 0:
+            raise RuntimeError('nrsets=0')
+        elif nrsets > 1:
+            for rset in self.rsets:
+                assert rset is not None, self.rsets
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
 
     def cross_reference(self, model):
         self.rspeeds_ref = []
         for rspeed in self.rspeeds:
-            if isinstance(rspeed, int):
-                self.rspeeds_ref.append(model.Table(rspeed))
+            if isinstance(rspeed, integer_types):
+                self.rspeeds_ref.append(model.TableD(rspeed))
             else:
                 self.rspeeds_ref.append(rspeed)
 
         for rforce in self.rforces:
             self.rspeeds_ref.append(model.DLoads(rforce))
         # ..todo ::  BRGSETi
+        # ..todo :: RSETi
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -835,7 +844,7 @@ class ROTORD(BaseCard):
         for irow in range(nrows):
             j = irow * 8 + 17
             rid = integer(card, j, 'rid_%i' % (irow + 1))
-            rset = integer(card, j+1, 'rset_%i' % (irow + 1))
+            rset = integer_or_blank(card, j+1, 'rset_%i' % (irow + 1))
             rspeed = integer_or_double(card, j+2, 'rspeed_%i' % (irow + 1))
             rcord = integer_or_blank(card, j+3, 'rcord_%i' % (irow + 1), 0)
             w3 = double_or_blank(card, j+4, 'w3_%i' % (irow + 1), 0.)
@@ -1104,15 +1113,23 @@ class TSTEP(BaseCard):
     Defines time step intervals at which a solution will be generated and
     output in transient analysis.
 
-    +-------+------+------+-----+-----+-----+-----+-----+-----+
-    |   1   |   2  |  3   |  4  |  5  |  6  |  7  |  8  |  9  |
-    +=======+======+======+=====+=====+=====+=====+=====+=====+
-    | TSTEP | SID  |  N1  | DT1 | NO1 |     |     |     |     |
-    +-------+------+------+-----+-----+-----+-----+-----+-----+
-    |       |      |  N2  | DT2 | NO2 |     |     |     |     |
-    +-------+------+------+-----+-----+-----+-----+-----+-----+
-    |       |      | etc. |     |     |     |     |     |     |
-    +-------+------+------+-----+-----+-----+-----+-----+-----+
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |   1   |   2  |  3   |  4   |  5   |  6  |  7  |  8  |  9  |
+    +=======+======+======+======+======+=====+=====+=====+=====+
+    | TSTEP | SID  |  N1  | DT1  | NO1  |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |       |      |  N2  | DT2  | NO2  |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |       |      | etc. |      |      |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
+
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |   1   |   2  |  3   |  4   |  5   |  6  |  7  |  8  |  9  |
+    +=======+======+======+======+======+=====+=====+=====+=====+
+    | TSTEP | 101  | 9000 | .001 | 9000 |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
+    |       |      | 1000 | .001 | 1    |     |     |     |     |
+    +-------+------+------+------+------+-----+-----+-----+-----+
     """
     type = 'TSTEP'
 
@@ -1164,6 +1181,75 @@ class TSTEP(BaseCard):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
+class TSTEP1(BaseCard):
+    """
+    Transient Time Step
+    Defines time step intervals at which a solution will be generated and
+    output in transient analysis.
+
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |   1    |   2  |   3   |   4   |   5   |  6  |  7  |  8  |  9  |
+    +========+======+=======+=======+=======+=====+=====+=====+=====+
+    | TSTEP1 | SID  | TEND1 | NINC1 | NOUT1 |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |        |      | TEND2 | NINC2 | NOUT2 |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |        |      | etc.  |       |       |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |   1    |   2  |   3   |   4   |   5   |  6  |  7  |  8  |  9  |
+    +========+======+=======+=======+=======+=====+=====+=====+=====+
+    | TSTEP1 |   1  | 10.0  |   5   |   2   |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |        |      | 50.0  |   4   |   3   |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    |        |      | 100   |   2   |  ALL  |     |     |     |     |
+    +--------+------+-------+-------+-------+-----+-----+-----+-----+
+    """
+    type = 'TSTEP1'
+
+    def __init__(self, sid, tend, ninc, nout, comment=''):
+        self.sid = sid
+        self.tend = tend
+        self.ninc = ninc
+        self.nout = nout
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        tend = []
+        ninc = []
+        nout = []
+
+        nrows = int(ceil((len(card) - 1.) / 8.))
+        for i in range(nrows):
+            n = 8 * i + 1
+            tendi = double_or_blank(card, n + 1, 'TEND' + str(i), 1.)
+            ninci = integer_or_blank(card, n + 2, 'NINC' + str(i), 1)
+            nouti = integer_string_or_blank(card, n + 3, 'NOUT' + str(i), 'END')
+            tend.append(tendi)
+            ninc.append(ninci)
+            nout.append(nouti)
+            if not isinstance(nouti, integer_types):
+                assert nouti in ['YES', 'END', 'ALL', 'CPLD'], nouti
+        return TSTEP1(sid, tend, ninc, nout, comment=comment)
+
+    def raw_fields(self):
+        list_fields = ['TSTEP1', self.sid]
+        for (tend, ninc, nout) in zip(self.tend, self.ninc, self.nout):
+            list_fields += [tend, ninc, nout, None, None, None, None, None]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class TSTEPNL(BaseCard):
     """
@@ -1428,3 +1514,95 @@ class TSTEPNL(BaseCard):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+class TIC(BaseCard):
+    """Transient Initial Condition"""
+    type = 'TIC'
+
+    def __init__(self, sid, nodes, components, u0, v0, comment=''):
+        """
+        Defines values for the initial conditions of variables used in
+        structural transient analysis. Both displacement and velocity
+        values may be specified at independent degrees-of-freedom. This
+        entry may not be used for heat transfer analysis.
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        if isinstance(components, integer_types):
+            components = [components]
+        if isinstance(u0, float):
+            u0 = [u0]
+        if isinstance(v0, float):
+            v0 = [v0]
+
+        self.sid = sid
+        self.nodes = nodes
+        self.components = components
+        self.u0 = u0
+        self.v0 = v0
+
+    def validate(self):
+        for nid in self.nodes:
+            assert nid > 0, self.nodes
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nid = integer(card, 2, 'G')
+        comp = parse_components(card, 3, 'C')
+        u0 = double_or_blank(card, 4, 'U0', 0.)
+        v0 = double_or_blank(card, 5, 'V0', 0.)
+        return TIC(sid, nid, comp, u0, v0, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        nid = data[1]
+        comp = data[2]
+        u0 = data[3]
+        u0 = data[4]
+        return TIC(sid, nid, comp, u0, v0, comment=comment)
+
+    @property
+    def node_ids(self):
+        #return _node_ids(self, self.nodes, )
+        return self.nodes
+
+    def add(self, tic):
+        assert self.sid == tic.sid, 'sid=%s tic.sid=%s' % (self.sid, tic.sid)
+        if tic.comment:
+            if hasattr('_comment'):
+                self._comment += tic.comment
+            else:
+                self._comment = tic.comment
+        self.nodes += tic.nodes
+        self.components += tic.components
+        self.u0 += tic.u0
+        self.v0 += tic.v0
+
+    def cross_reference(self, model):
+        pass
+
+    def raw_fields(self):
+        list_fields = []
+        for nid, comp, u0, v0 in zip(self.node_ids, self.components, self.u0, self.v0):
+            list_fields += ['TIC', self.sid, nid, comp, u0, v0]
+        return list_fields
+
+    #def repr_fields(self):
+        #return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        msg = self.comment
+        node_ids = self.node_ids
+        if size == 8:
+            for nid, comp, u0, v0 in zip(node_ids, self.components, self.u0, self.v0):
+                msg += print_card_8(['TIC', self.sid, nid, comp, u0, v0])
+        else:
+            for nid, comp, u0, v0 in zip(node_ids, self.components, self.u0, self.v0):
+                msg += print_card_16(['TIC', self.sid, nid, comp, u0, v0])
+        return msg

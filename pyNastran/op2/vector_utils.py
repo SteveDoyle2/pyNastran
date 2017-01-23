@@ -541,8 +541,8 @@ def transform_force_moment(force_in_local, moment_in_local,
     assert logger is not None
     dtype = force_in_local.dtype
     #dtype = 'float64'
-    force_out = zeros(force_in_local.shape, dtype=dtype)
-    moment_out = zeros(force_in_local.shape, dtype=dtype)
+    force_out = np.zeros(force_in_local.shape, dtype=dtype)
+    moment_out = np.zeros(force_in_local.shape, dtype=dtype)
 
     nids = nid_cd[:, 0]
     cds = nid_cd[:, 1] * 0
@@ -564,7 +564,7 @@ def transform_force_moment(force_in_local, moment_in_local,
         summation_point_cid0 = np.array([0., 0., 0.])
 
     for cd in ucds:
-        i = where(cds == cd)[0]
+        i = np.where(cds == cd)[0]
         nidsi = nids[i]
         analysis_coord = coords[cd]
         beta_cd = analysis_coord.beta()

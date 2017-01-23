@@ -646,22 +646,26 @@ class Force(Load):
     def __init__(self):
         Load.__init__(self)
 
-    def normalize(self):
+    def normalize(self, msg=''):
         """
         adjust the vector to a unit length
         scale up the magnitude of the vector
         """
+        assert self.mag > 0, self.mag
         if self.mag != 0.0:  # enforced displacement
             norm_xyz = norm(self.xyz)
+            if norm_xyz == 0.0:
+                raise RuntimeError('xyz=%s norm_xyz=%s' % (self.xyz, norm_xyz))
             #mag = self.mag * norm_xyz
             self.mag *= norm_xyz
             try:
                 self.xyz = self.xyz / norm_xyz
             except FloatingPointError:
-                msg = 'xyz = %s\n' % self.xyz
-                msg += 'norm_xyz = %s\n' % norm_xyz
-                msg += 'card =\n%s' % str(self)
-                raise FloatingPointError(msg)
+                msgi = 'xyz = %s\n' % self.xyz
+                msgi += 'norm_xyz = %s\n' % norm_xyz
+                msgi += 'card =\n%s' % str(self)
+                msgi += msg
+                raise FloatingPointError(msgi)
 
     def transform_load(self):
         xyz = self.cid_ref.transform_node_to_global(self.xyz)
@@ -775,7 +779,7 @@ class FORCE(Force):
     """
     type = 'FORCE'
 
-    def __init__(self, sid, node, mag, cid=0, xyz=None, comment=''):
+    def __init__(self, sid, node, mag, xyz, cid=0, comment=''):
         """
         Creates a FORCE card
 
@@ -787,10 +791,10 @@ class FORCE(Force):
             the node to apply the load to
         mag : float
             the load's magnitude
+        xyz : (3, ) float ndarray
+            the load direction in the cid frame
         cid : int; default=0
             the coordinate system for the load
-        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
-            the load direction in the cid frame
         comment : str; default=''
             a comment for the card
         """
@@ -801,8 +805,6 @@ class FORCE(Force):
         self.node = node
         self.cid = cid
         self.mag = mag
-        if xyz is None:
-            xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
         assert self.xyz.size == 3, self.xyz.shape
         assert isinstance(self.cid, int), self.cid
@@ -822,7 +824,7 @@ class FORCE(Force):
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(FORCE card) = %i\ncard=%s' % (len(card), card)
-        return FORCE(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
+        return FORCE(sid, node, mag, xyz, cid=cid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -831,7 +833,7 @@ class FORCE(Force):
         cid = data[2]
         mag = data[3]
         xyz = array(data[4:7])
-        return FORCE(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
+        return FORCE(sid, node, mag, xyz, cid=cid, comment=comment)
 
     @property
     def node_id(self):
@@ -1037,6 +1039,8 @@ class FORCE2(Force):
     def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         """
         +--------+-----+---+---+----+----+----+----+
+        |   1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
+        +========+=====+===+===+====+====+====+====+
         | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
         +--------+-----+---+---+----+----+----+----+
         """
@@ -1052,11 +1056,13 @@ class FORCE2(Force):
         self.g4 = g4
 
     def validate(self):
+        assert isinstance(self.sid, integer_types), str(self)
         assert self.g1 is not None, self.g1
         assert self.g2 is not None, self.g2
         assert self.g3 is not None, self.g3
         assert self.g4 is not None, self.g4
-        #print('self.node_ids = ', self.node_ids)
+        assert self.g1 != self.g2, 'g1=%s g2=%s' % (self.g1, self.g2)
+        assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1103,25 +1109,34 @@ class FORCE2(Force):
         self.g3_ref = self.g3
         self.g4_ref = self.g4
 
-        v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
-        v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
+        xyz1 = self.g1_ref.get_position()
+        xyz2 = self.g2_ref.get_position()
+        xyz3 = self.g3_ref.get_position()
+        xyz4 = self.g4_ref.get_position()
+        v21 = xyz2 - xyz1
+        v43 = xyz4 - xyz3
         try:
-            v12 /= norm(v12)
+            v21 /= norm(v21)
         except FloatingPointError:
-            msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
-            msg += 'g1.get_position()=%s\n' % self.g1_ref.get_position()
-            msg += 'g2.get_position()=%s' % self.g2_ref.get_position()
+            msg = 'v21=%s norm(v21)=%s\n' % (v21, norm(v21))
+            msg += 'g1.get_position()=%s\n' % xyz1
+            msg += 'g2.get_position()=%s' % xyz2
             raise FloatingPointError(msg)
 
         try:
-            v34 /= norm(v34)
+            v43 /= norm(v43)
         except FloatingPointError:
-            msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
-            msg += 'g3.get_position()=%s\n' % self.g3_ref.get_position()
-            msg += 'g4.get_position()=%s' % self.g4_ref.get_position()
+            msg = 'v43=%s norm(v43)=%s\n' % (v43, norm(v43))
+            msg += 'g3.get_position()=%s\n' % xyz3
+            msg += 'g4.get_position()=%s' % xyz4
             raise FloatingPointError(msg)
-        self.xyz = cross(v12, v34)
-        self.normalize()
+        self.xyz = cross(v21, v43)
+
+        msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43=%s\nxyz=%s' % (
+            xyz1, xyz2, xyz3, xyz4, v21, v43, self.xyz)
+        #print(msgi)
+        self.normalize(msgi)
+        #print(self.xyz)
 
     def safe_cross_reference(self, model, debug=True):
         """
@@ -1140,24 +1155,28 @@ class FORCE2(Force):
         self.g3_ref = self.g3
         self.g4_ref = self.g4
 
-        v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
-        v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
+        xyz1 = self.g1_ref.get_position()
+        xyz2 = self.g2_ref.get_position()
+        xyz3 = self.g3_ref.get_position()
+        xyz4 = self.g4_ref.get_position()
+        v21 = xyz2 - xyz1
+        v43 = xyz4 - xyz3
         try:
-            v12 /= norm(v12)
+            v21 /= norm(v21)
         except FloatingPointError:
-            msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
-            msg += 'g1.get_position()=%s\n' % self.g1_ref.get_position()
-            msg += 'g2.get_position()=%s' % self.g2_ref.get_position()
+            msg = 'v21=%s norm(v21)=%s\n' % (v21, norm(v21))
+            msg += 'g1.get_position()=%s\n' % xyz1
+            msg += 'g2.get_position()=%s' % xyz2
             raise FloatingPointError(msg)
 
         try:
-            v34 /= norm(v34)
+            v43 /= norm(v43)
         except FloatingPointError:
-            msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
-            msg += 'g3.get_position()=%s\n' % self.g3_ref.get_position()
-            msg += 'g4.get_position()=%s' % self.g4_ref.get_position()
+            msg = 'v43=%s norm(v43)=%s\n' % (v43, norm(v43))
+            msg += 'g3.get_position()=%s\n' % xyz3
+            msg += 'g4.get_position()=%s' % xyz4
             raise FloatingPointError(msg)
-        self.xyz = cross(v12, v34)
+        self.xyz = cross(v21, v43)
         self.normalize()
 
     def uncross_reference(self):
@@ -1230,7 +1249,7 @@ class MOMENT(Moment):
     """
     type = 'MOMENT'
 
-    def __init__(self, sid, node, mag, cid=0, xyz=None, comment=''):
+    def __init__(self, sid, node, mag, xyz, cid=0, comment=''):
         """
         Creates a MOMENT card
 
@@ -1242,10 +1261,10 @@ class MOMENT(Moment):
             the node to apply the load to
         mag : float
             the load's magnitude
+        xyz : (3, ) float ndarray
+            the load direction in the cid frame
         cid : int; default=0
             the coordinate system for the load
-        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
-            the load direction in the cid frame
         comment : str; default=''
             a comment for the card
         """
@@ -1256,8 +1275,6 @@ class MOMENT(Moment):
         self.node = node
         self.cid = cid
         self.mag = mag
-        if xyz is None:
-            xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
         assert self.xyz.size == 3, self.xyz.shape
 
@@ -1272,7 +1289,7 @@ class MOMENT(Moment):
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(MOMENT card) = %i\ncard=%s' % (len(card), card)
-        return MOMENT(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
+        return MOMENT(sid, node, mag, xyz, cid=cid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1281,7 +1298,7 @@ class MOMENT(Moment):
         cid = data[2]
         mag = data[3]
         xyz = data[4:7]
-        return MOMENT(sid, node, mag, cid=cid, xyz=xyz, comment=comment)
+        return MOMENT(sid, node, mag, xyz, cid=cid, comment=comment)
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -1495,6 +1512,8 @@ class MOMENT2(Moment):
         of a magnitude and four grid points that determine the direction.::
 
         +---------+-----+---+---+----+----+----+----+
+        |    1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
+        +=========+=====+===+===+====+====+====+====+
         | MOMENT2 | SID | G | M | G1 | G2 | G3 | G4 |
         +---------+-----+---+---+----+----+----+----+
         """
@@ -1509,6 +1528,15 @@ class MOMENT2(Moment):
         self.g3 = g3
         self.g4 = g4
         self.xyz = xyz
+
+    def validate(self):
+        assert isinstance(self.sid, integer_types), str(self)
+        assert self.g1 is not None, self.g1
+        assert self.g2 is not None, self.g2
+        assert self.g3 is not None, self.g3
+        assert self.g4 is not None, self.g4
+        assert self.g1 != self.g2, 'g1=%s g2=%s' % (self.g1, self.g2)
+        assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2170,6 +2198,15 @@ class PLOAD2(Load):
 
 
 class PLOAD4(Load):
+    """
+    +--------+-----+-----+----+----+------+------+----+-------+
+    |   1    |  2  |  3  |  4 |  5 |  6   |   7  |  8 |   9   |
+    +========+=====+=====+====+====+======+======+====+=======+
+    | PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  | G1 | G3/G4 |
+    +--------+-----+-----+----+----+------+------+----+-------+
+    |        | CID | N1  | N2 | N3 | SORL | LDIR |    |       |
+    +--------+-----+-----+----+----+------+------+----+-------+
+    """
     type = 'PLOAD4'
 
     def __init__(self, sid, eids, pressures,
@@ -2194,11 +2231,15 @@ class PLOAD4(Load):
         cid : int; default=0
             the coordinate system for ???
         NVector : (3, ) float ndarray
-           the local pressure vector
+           blank : load acts normal to the face
+           the local pressure vector (not supported)
         sorl : str; default='SURF'
-           ???
+           SURF : surface load
+           LINE : line load (only defined for QUADR, TRIAR)
+           not supported
         ldir : str; default='NORM'
-           ???
+           direction of the line load (see sorl); {X, Y, Z, TANG, NORM}
+           not supported
         comment : str; default=''
             a comment for the card
 
@@ -2228,7 +2269,14 @@ class PLOAD4(Load):
         self.NVector = NVector
         self.sorl = sorl
         self.ldir = ldir
-        self._validate_input()
+
+    def validate(self):
+        if self.sorl not in ['SURF', 'LINE']:
+            raise RuntimeError(self.sorl)
+        if self.ldir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
+            raise RuntimeError(self.ldir)
+        assert self.g1 != 0, str(self)
+        assert self.g34 != 0, str(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2289,14 +2337,6 @@ class PLOAD4(Load):
         ldir = 'NORM'
         return PLOAD4(sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=comment)
 
-    def _validate_input(self):
-        if self.sorl not in ['SURF', 'LINE']:
-            raise RuntimeError(self.sorl)
-        if self.ldir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
-            raise RuntimeError(self.ldir)
-        assert self.g1 != 0, str(self)
-        assert self.g34 != 0, str(self)
-
     def get_loads(self):
         return [self]
 
@@ -2306,10 +2346,10 @@ class PLOAD4(Load):
         .. warning:: ldir=NORM is supported (not X,Y,Z)
         """
         if  self.sorl != 'SURF':
-            msg = 'Only surface loads are supported.  required_sorl=SURF.  actual=%s' % self.sorl
+            msg = 'Only surface loads are supported.  required_sorl=SURF.  actual=%r' % self.sorl
             raise RuntimeError(msg)
         if self.ldir != 'NORM':
-            msg = 'Only normal loads are supported.   required_ldir=NORM.  actual=%s' % self.ldir
+            msg = 'Only normal loads are supported.   required_ldir=NORM.  actual=%r' % self.ldir
             raise RuntimeError(msg)
         if len(self.eids) != 1:
             msg = 'Only one load may be defined on each PLOAD4.  nLoads=%s\n%s' % (
@@ -2493,7 +2533,11 @@ class PLOAD4(Load):
 
 class PLOADX1(Load):
     """
-    cid
+    +---------+-----+-----+----+----+----+----+-------+
+    |    1    |  2  |  3  |  4 |  5 |  6 |  7 |   8   |
+    +=========+=====+=====+====+====+====+====+=======+
+    | PLOADX1 | SID | EID | PA | PB | GA | GB | THETA |
+    +---------+-----+-----+----+----+----+----+-------+
     """
     type = 'PLOADX1'
 
@@ -2510,6 +2554,12 @@ class PLOADX1(Load):
         self.gb = gb
         self.theta = theta
 
+    def validate(self):
+        assert isinstance(self.ga, integer_types), 'ga=%r' % self.ga
+        assert isinstance(self.gb, integer_types), 'gb=%r' % self.gb
+        assert isinstance(self.pa, float), 'pa=%r' % self.pa
+        assert isinstance(self.pb, float), 'pb=%r' % self.pb
+
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
@@ -2520,12 +2570,12 @@ class PLOADX1(Load):
         gb = integer(card, 6, 'gb')
         theta = double_or_blank(card, 7, 'theta', 0.)
         assert len(card) <= 8, 'len(PLOADX1 card) = %i\ncard=%s' % (len(card), card)
-        return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
+        return PLOADX1(sid, eid, pa, ga, gb, pb, theta, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid, eid, pa, pb, ga, gb, theta = data
-        return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
+        return PLOADX1(sid, eid, pa, ga, gb, pb, theta, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2559,17 +2609,17 @@ class PLOADX1(Load):
         del self.eid_ref, self.ga_ref, self.gb_ref
 
     def Eid(self):
-        if isinstance(self.eid, (integer_types)):
+        if isinstance(self.eid, integer_types):
             return self.eid
         return self.eid_ref.eid
 
     def Ga(self):
-        if isinstance(self.ga, (integer_types)):
+        if isinstance(self.ga, integer_types):
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, (integer_types)):
+        if isinstance(self.gb, integer_types):
             return self.gb
         return self.gb_ref.nid
 

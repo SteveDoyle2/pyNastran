@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 from __future__ import print_function
+from math import sqrt
 from six import string_types
 from six.moves import range
 
-from math import sqrt
 from numpy import (float32, float64, complex64, complex128, array, cross,
                    allclose, zeros, matrix, insert, diag, eye, argmax, argmin, arange)
 from numpy.linalg import norm
@@ -152,8 +152,16 @@ def build_spline(x, y):
 
     .. note:: a 1st order spline is the same as linear interpolation
     """
-    # build a linearly interpolated representation or cubic one
-    return splrep(x, y, k=1) if len(x) < 3 else splrep(x, y)
+    #return splrep(x, y, k=1) if len(x) < 3 else splrep(x, y)
+    if len(x) == 2:
+        # build a linearly interpolated spline
+        return splrep(x, y, k=1)
+    elif len(x) == 3:
+        # build a quadratic spline
+        return splrep(x, y, k=2)
+    else:
+        # build a cubic spline
+        return splrep(x, y)
 
 
 def integrate_positive_line(x, y, minValue=0.):
@@ -181,16 +189,16 @@ def integrate_positive_line(x, y, minValue=0.):
     return out[0]
 
 
-def reduce_matrix(matA, nids):
+def reduce_matrix(matrix_a, nids):
     """
     takes a list of ids and removes those rows and cols
     """
-    nRows = len(nids)
-    matB = matrix(zeros((nRows, nRows), dtype='float64'))
+    nrows = len(nids)
+    matrix_b = matrix(zeros((nrows, nrows), dtype='float64'))
     for i, irow in enumerate(nids):
         for j, jcol in enumerate(nids):
-            matB[i, j] = matA[irow, jcol]
-    return matB
+            matrix_b[i, j] = matrix_a[irow, jcol]
+    return matrix_b
 
 
 def is_list_ranged(a, List, b):
@@ -277,8 +285,8 @@ def print_matrix(A, tol=1e-8):
     return ''.join([list_print(B[i, :], tol) + '\n' for i in range(B.shape[0])])
 
 
-def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
-    if len(listA) == 0:
+def list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
+    if len(list_a) == 0:
         return '[]'
 
     def _print(a):
@@ -301,7 +309,7 @@ def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
             print("a = %r" % a)
             raise
 
-    return '[ '+ ', '.join([_print(a) for a in listA])+ ']'
+    return '[ '+ ', '.join([_print(a) for a in list_a])+ ']'
 
 
 def augmented_identity(A):

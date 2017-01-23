@@ -39,6 +39,12 @@ class AddMethods(BDFAttributes):
         self.dmiks[name] = dmik
         self._type_to_id_map[dmik.type].append(name)
 
+    def _add_dti_object(self, dti, allow_overwrites=False):
+        """adds an DTI object"""
+        name = dti.name
+        self.dti[name] = dti
+        self._type_to_id_map[dti.type].append(name)
+
     def _add_param_object(self, param, allow_overwrites=False):
         """adds a PARAM object"""
         key = param.key
@@ -253,16 +259,6 @@ class AddMethods(BDFAttributes):
         key = card.id
         self.bsurfs[key] = card
         self._type_to_id_map[card.type].append(key)
-
-    def _add_delay_object(self, delay, allow_overwrites=False):
-        """adds an DELAY object"""
-        key = delay.sid
-        assert key > 0, 'sid=%s delay=%s' % (key, delay)
-        if key in self.delays:
-            self.delays[key].add(delay)
-        else:
-            self.delays[key] = delay
-            self._type_to_id_map[delay.type].append(key)
 
     def _add_tempd_object(self, tempd, allow_overwrites=False):
         """adds an TEMPD object"""
@@ -536,27 +532,45 @@ class AddMethods(BDFAttributes):
             self.suport1[key] = suport1
             self._type_to_id_map[suport1.type].append(key)
 
+    def _add_tic_object(self, tic, allow_overwrites=False):
+        key = tic.sid
+        if key in self.tics:
+            self.tics[key].add(tic)
+        else:
+            assert tic.sid > 0
+            self.tics[key] = tic
+            self._type_to_id_map[tic.type].append(key)
+
     def _add_darea_object(self, darea, allow_overwrites=False):
-        key = (darea.sid, darea.p, darea.c)
-        if key in self.dareas and not allow_overwrites:
-            if not darea._is_same_card(self.dareas[key]):
-                assert key not in self.dareas, '\ndarea=\n%s oldDArea=\n%s' % (darea, self.dareas[key])
+        #key = (darea.sid, darea.p, darea.c)
+        key = darea.sid
+        if key in self.dareas:
+            self.dareas[key].add(darea)
         else:
             assert darea.sid > 0
             self.dareas[key] = darea
             self._type_to_id_map[darea.type].append(key)
 
     def _add_dphase_object(self, dphase, allow_overwrites=False):
-        #key = (dphase.sid, dphase.phase_leads, dphase.components)
+        #key = (dphase.sid, dphase.nid, dphase.component) # dphase.phase_lead,
         key = dphase.sid
-        if key in self.dphases and not allow_overwrites:
-            if not dphase._is_same_card(self.dphases[key]):
-                assert key not in self.dphases, '\ndphase=\n%s old_DPHASE=\n%s' % (
-                    dphase, self.dphases[key])
+        if key in self.dphases:
+            self.dphases[key].add(dphase)
         else:
-            assert dphase.sid > 0
+            assert dphase.sid > 0, key
             self.dphases[key] = dphase
             self._type_to_id_map[dphase.type].append(key)
+
+    def _add_delay_object(self, delay, allow_overwrites=False):
+        """adds an DELAY object"""
+        #key = (delay.sid, delay.nid, delay.component)
+        key = delay.sid
+        assert key > 0, 'sid=%s delay=%s' % (key, delay)
+        if key in self.delays:
+            self.delays[key].add(delay)
+        else:
+            self.delays[key] = delay
+            self._type_to_id_map[delay.type].append(key)
 
     def _add_aero_object(self, aero):
         """adds an AERO object"""
@@ -789,7 +803,7 @@ class AddMethods(BDFAttributes):
     def _add_dvcrel_object(self, dvcrel):
         """adds a DVCREL1/DVCREL2 object"""
         key = dvcrel.oid
-        assert key not in self.dvprels, 'DVCRELx=%s old\n%snew=\n%s' % (
+        assert key not in self.dvcrels, 'DVCRELx=%s old\n%snew=\n%s' % (
                     key, self.dvcrels[key], dvcrel)
         assert key > 0
         self.dvcrels[key] = dvcrel
@@ -948,10 +962,26 @@ class AddMethods(BDFAttributes):
 
     def _add_table_object(self, table):
         key = table.tid
-        assert key not in self.tables, '\nTable=\n%s oldTable=\n%s' % (
+        assert key not in self.tables, '\nTable=\n%s old_table=\n%s' % (
             table, self.tables[key])
         assert key > 0
         self.tables[key] = table
+        self._type_to_id_map[table.type].append(key)
+
+    def _add_tabled_object(self, table):
+        key = table.tid
+        assert key not in self.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
+            table, self.tables_d[key])
+        assert key > 0
+        self.tables_d[key] = table
+        self._type_to_id_map[table.type].append(key)
+
+    def _add_tablem_object(self, table):
+        key = table.tid
+        assert key not in self.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (
+            table, self.tables_m[key])
+        assert key > 0
+        self.tables_m[key] = table
         self._type_to_id_map[table.type].append(key)
 
     def _add_table_sdamping_object(self, table):

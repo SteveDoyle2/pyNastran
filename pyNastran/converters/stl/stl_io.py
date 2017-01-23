@@ -106,6 +106,7 @@ class STL_IO(object):
         self._finish_results_io2(form, cases)
 
     def _fill_stl_case(self, cases, ID, elements, nodes, normals, areas):
+        """adds the sidebar results"""
         self.iSubcaseNameMap[ID] = ('STL', '')
 
         nelements = elements.shape[0]

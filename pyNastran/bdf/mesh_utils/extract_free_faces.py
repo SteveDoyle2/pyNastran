@@ -1,6 +1,6 @@
 """
 defines:
- - skin_solid_elements(model, element_ids=None)
+ - get_element_faces(model, element_ids=None)
  - get_solid_skin_faces(model)
  - write_skin_solid_faces(model, skin_filename,
                           write_solids=False, write_shells=True,
@@ -16,9 +16,10 @@ from six import iteritems, PY2, string_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf import read_bdf
 
-def skin_solid_elements(model, element_ids=None):
+def get_element_faces(model, element_ids=None):
     """
-    Gets the elements and faces that are skinned from solid elements
+    Gets the elements and faces that are skinned from solid elements.
+    This includes internal faces.
 
     Parameters
     ----------
@@ -55,6 +56,7 @@ def skin_solid_elements(model, element_ids=None):
 def get_solid_skin_faces(model):
     """
     Gets the elements and faces that are skinned from solid elements
+    This doesn't include internal faces.
 
     Parameters
     ----------
@@ -70,7 +72,7 @@ def get_solid_skin_faces(model):
        key : sorted face
        value : unsorted face
     """
-    eid_faces = skin_solid_elements(model)
+    eid_faces = get_element_faces(model)
     face_set = defaultdict(int)
     eid_set = defaultdict(list)
     face_map = {}

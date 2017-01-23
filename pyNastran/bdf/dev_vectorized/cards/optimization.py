@@ -242,10 +242,10 @@ class DCONSTR(OptConstraint):
         #self.dresp_id = model.DResp(self.DRespID(), msg)
         #self.dresp_id_ref = self.dresp_id
         #if isinstance(self.lid, integer_types):
-            #self.lid = model.Table(self.lid, msg)
+            #self.lid = model.TableD(self.lid, msg)
             #self.lid_ref = self.lid
         #if isinstance(self.uid, integer_types):
-            #self.uid = model.Table(self.uid, msg)
+            #self.uid = model.TableD(self.uid, msg)
             #self.uid_ref = self.uid
 
     def raw_fields(self):

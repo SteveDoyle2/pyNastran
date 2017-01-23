@@ -61,6 +61,29 @@ class SimpleLogger(object):
       This is really only an issue when calling logging multiple times,
       such as in an optimization loop or testing.
     """
+
+    def __init__(self, level='debug', encoding='utf-8', log_func=None):
+        """
+        Parameters
+        ----------
+        level : str
+            level of logging: 'info' or 'debug'
+        encoding : str
+            the unicode encoding method
+        log_func : log
+          funtion that will be used to print log. It should take one argument:
+          string that is produces by a logger. Default: print messages to
+          stderr using @see stderr_logging function.
+        """
+        if log_func is None:
+            log_func = self.stderr_logging
+        assert level in ('info', 'debug', 'warning', 'error'), 'logging level=%r' % level
+        #assert encoding in ['utf-8', 'latin-1', 'ascii'], encoding
+        self.level = level
+        self.log_func = log_func
+        self.encoding = encoding
+        assert isinstance(encoding, string_types), type(encoding)
+
     def stderr_logging(self, typ, msg):
         """
         Default logging function. Takes a text and outputs to stderr.
@@ -108,43 +131,6 @@ class SimpleLogger(object):
                 sys.stdout.write(Fore.RED + name + msg)
         sys.stdout.flush()
 
-    def __init__(self, level='debug', encoding='utf-8', log_func=None):
-        """
-        Parameters
-        ----------
-        level : str
-            level of logging: 'info' or 'debug'
-        encoding : str
-            the unicode encoding method
-        log_func : log
-          funtion that will be used to print log. It should take one argument:
-          string that is produces by a logger. Default: print messages to
-          stderr using @see stderr_logging function.
-        """
-        if log_func is None:
-            log_func = self.stderr_logging
-        assert level in ('info', 'debug', 'warning', 'error'), 'logging level=%r' % level
-        #assert encoding in ['utf-8', 'latin-1', 'ascii'], encoding
-        self.level = level
-        self.log_func = log_func
-        self.encoding = encoding
-        assert isinstance(encoding, string_types), type(encoding)
-
-    def debug(self, msg):
-        """
-        Log DEBUG message
-
-        Parameters
-        ----------
-        msg : str
-            message to be logged
-        """
-        if self.level != 'debug':
-            return
-        lines = str(msg).split('\n')
-        self.msg_typ('DEBUG', ''.join([lines[0]] + [' ' * 54 + line + '\n'
-                                                    for line in lines[1:]]))
-
     def msg_typ(self, typ, msg):
         """
         Log message of a given type
@@ -172,6 +158,19 @@ class SimpleLogger(object):
         """
         assert msg is not None, msg
         self.log_func(typ, msg)
+
+    def debug(self, msg):
+        """
+        Log DEBUG message
+
+        Parameters
+        ----------
+        msg : str
+            message to be logged
+        """
+        if self.level != 'debug':
+            return
+        self.msg_typ('DEBUG', msg)
 
     def info(self, msg):
         """

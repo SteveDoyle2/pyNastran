@@ -188,7 +188,7 @@ class BaseCard(object):
             has this model been cross referenced
         """
         print('# skipping _verify (type=%s) because _verify is '
-              'not implemented\n' % self.type)
+              'not implemented' % self.type)
 
     def _is_same_fields(self, fields1, fields2):
         for (field1, field2) in zip(fields1, fields2):
@@ -323,6 +323,13 @@ class Material(BaseCard):
         """dummy init"""
         BaseCard.__init__(self)
 
+    @property
+    def TRef(self):
+        return self.tref
+    @TRef.setter
+    def TRef(self, tref):
+        self.tref = tref
+
     def cross_reference(self, model):
         """dummy cross reference method for a Material"""
         pass
@@ -397,6 +404,20 @@ class Element(BaseCard):
         for i, node in enumerate(nodes):
             if node is not None:
                 positions[i, :] = node.get_position()
+        return positions
+
+    def get_node_positions_no_xref(self, model, nodes=None):
+        """returns the positions of multiple node objects"""
+        if not nodes:
+            nodes = self.nodes
+
+        nnodes = len(nodes)
+        positions = empty((nnodes, 3), dtype='float64')
+        positions.fill(nan)
+        for i, nid in enumerate(nodes):
+            if nid is not None:
+                node = model.Node(nid)
+                positions[i, :] = node.get_position_no_xref(model)
         return positions
 
     def _nodeIDs(self, nodes=None, allow_empty_nodes=False, msg=''):

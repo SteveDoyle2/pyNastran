@@ -1,12 +1,15 @@
+from __future__ import print_function
+import os
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PELAS
+from pyNastran.bdf.bdf import BDF, BDFCard, PELAS, read_bdf, get_logger2
 
-bdf = BDF(debug=False)
 class TestSprings(unittest.TestCase):
     def test_pelas_01(self):
+        """tests PELAS"""
         lines = ['pelas, 201, 1.e+5']
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -17,6 +20,7 @@ class TestSprings(unittest.TestCase):
         self.assertEqual(elem.K(), 1e5)
 
     def test_pelas_02(self):
+        """tests PELAS"""
         fields = ['pelas', 201, 1.e+5, None, None, 202, 2.e+5]
         model = BDF(debug=False)
         #model.echo = True
@@ -24,6 +28,69 @@ class TestSprings(unittest.TestCase):
         model.add_card(fields, card_name, comment='', is_list=True,
                       has_none=True)
         assert len(model.properties) == 2, model.properties
+
+    def test_springs_03(self):
+        """tests CELAS1, CELAS2, PELAS, PELAST"""
+        model = BDF(debug=False)
+        eid = 1
+        pid = 2
+        nids = [3, 4]
+        c1 = 1
+        c2 = 1
+        celas1 = model.add_celas1(eid, pid, nids, c1, c2, comment='celas1')
+        celas1.raw_fields()
+        celas1.write_card(size=8, is_double=False)
+
+        k = 1.0e7
+        ge = 0.0
+        s = 0.
+        pelas = model.add_pelas(pid, k, ge, s, comment='pelas')
+        pelas.raw_fields()
+        pelas.write_card(size=8, is_double=False)
+
+        tkid = 10
+        tgeid = 10
+        tknid = 10
+        pelast = model.add_pelast(pid, tkid, tgeid, tknid, comment='pealst')
+        pelast.raw_fields()
+        pelast.write_card(size=8, is_double=False)
+
+        eid = 5
+        celas2 = model.add_celas2(eid, k, nids, c1=0, c2=0, ge=0., s=0., comment='celas2')
+        celas2.raw_fields()
+        celas2.write_card(size=8, is_double=False)
+
+        model.add_grid(3, xyz=[0., 0., 0.])
+        model.add_grid(4, xyz=[0., 0., 0.])
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+        model.write_bdf('spring.bdf')
+        model2 = read_bdf('spring.bdf', debug=False)
+        os.remove('spring.bdf')
+
+    def test_springs_04(self):
+        model = BDF(debug=False)
+        eid = 1
+        pid = 2
+        s1 = 3
+        s2 = 4
+        celas3 = model.add_celas3(eid, pid, [s1, s2], comment='celas3')
+        celas3.raw_fields()
+        celas3.write_card(size=8, is_double=False)
+
+        k = 1.0e7
+        ge = 0.0
+        s = 0.
+        pelas = model.add_pelas(pid, k, ge, s, comment='pelas')
+        spoints = model.add_spoint([3, 4], comment='spoints')
+        spoints.raw_fields()
+        spoints.write_card()
+
+        model.write_bdf('spring2.bdf')
+        model2 = read_bdf('spring2.bdf', debug=False)
+        os.remove('spring2.bdf')
 
 
 if __name__ == '__main__':  # pragma: no cover

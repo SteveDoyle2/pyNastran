@@ -37,7 +37,23 @@ class PELAS(SpringProperty):
         1: 'pid', 2:'k', 3:'ge', 4:'s',
     }
 
-    def __init__(self, pid, k, ge, s, comment=''):
+    def __init__(self, pid, k, ge=0., s=0., comment=''):
+        """
+        Creates a PELAS card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        k : float
+            spring stiffness
+        ge : int; default=0.0
+            damping coefficient
+        s : float; default=0.0
+            stress coefficient
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         SpringProperty.__init__(self)
@@ -54,6 +70,8 @@ class PELAS(SpringProperty):
         self.ge = ge
         #: Stress coefficient. (Real)
         self.s = s
+
+        self.pelast_ref = None
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
@@ -73,12 +91,12 @@ class PELAS(SpringProperty):
         return PELAS(pid, k, ge, s, comment=comment)
 
     def cross_reference(self, model):
-        #if self.sol in [108, 129]:
-            #self.pid = self.pelasts[self.pid]
-        pass
+        #if model.sol in [108, 129]:
+        if self.pid in model.pelast:
+            self.pelast_ref = model.pelast[self.pid]
 
     def uncross_reference(self):
-        pass
+        self.pelast_ref = None
 
     def K(self):
         return self.k
@@ -117,7 +135,23 @@ class PELAST(SpringProperty):
         1: 'pid', 2:'tkid', 3:'tgeid', 4:'tknid',
     }
 
-    def __init__(self, pid, tkid, tgeid, tknid, comment=''):
+    def __init__(self, pid, tkid=0, tgeid=0, tknid=0, comment=''):
+        """
+        Creates a PELAST card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        tkid : float
+            TABLEDx that defines k vs. frequency
+        tgeid : int; default=0
+            TABLEDx that defines ge vs. frequency
+        s : float; default=0.
+            TABLEDx that defines force vs. displacement
+        comment : str; default=''
+            a comment for the card
+        """
         SpringProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -157,13 +191,13 @@ class PELAST(SpringProperty):
         self.pid = model.Property(self.pid)
         self.pid_ref = self.pid
         if self.tkid > 0:
-            self.tkid = model.Table(self.tkid)
+            self.tkid = model.TableD(self.tkid)
             self.tkid_ref = self.tkid
         if self.tgeid > 0:
-            self.tgeid = model.Table(self.tgeid)
+            self.tgeid = model.TableD(self.tgeid)
             self.tgeid_ref = self.tgeid
         if self.tknid > 0:
-            self.tknid = model.Table(self.tknid)
+            self.tknid = model.TableD(self.tknid)
             self.tknid_ref = self.tknid
 
     def uncross_reference(self, model):

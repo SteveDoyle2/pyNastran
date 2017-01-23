@@ -23,6 +23,7 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
 from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
+from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 from pyNastran.bdf.mesh_utils.convert import convert
@@ -502,8 +503,11 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
             skin_filename = 'skin_file.bdf'
             fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
             if os.path.exists(skin_filename):
+                model = read_bdf(skin_filename)
                 os.remove(skin_filename)
             if xref:
+                extract_bodies(fem1)
+
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
                 fem1.safe_cross_reference()
@@ -706,7 +710,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), subcase
     elif sol == 103:
-        assert 'METHOD' in subcase, subcase
+        assert True in subcase.has_parameter('METHOD', 'RSMETHOD'), subcase
     elif sol == 105: # buckling
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
@@ -734,7 +738,20 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
+        #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
+        if not any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
+            subcases = fem2.subcases
+            subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
+            has_flag = False
+            for isubcase, subcasei in iteritems(fem2.subcases):
+                if any(subcasei.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
+                    has_flag = True
+            if not has_flag:
+                msg = 'sol=%r; [TIME, TSTEP, TSTEPNL] not in subcase\n' % fem2.sol
+                for isubcase, subcasei in iteritems(fem2.subcases):
+                    msg += str(subcasei)
+                raise RuntimeError(msg)
+
     elif sol == 110:  # ???
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
@@ -864,6 +881,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
             raise NotImplementedError(msg)
 
+    elif sol in [1, 5, 21, 61, 68, 76, 100, 187, 401, 601]:
+        pass
     else:
         msg = 'SOL = %s\n' % (sol)
         msg += str(subcase)
@@ -956,7 +975,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
                        108, 109, 110, 112, 144, 145, 153, 400, 601
-                      ], 'sol=%s LOAD' % sol
+                      ], 'sol=%s LOAD\n%s' % (sol, subcase)
     else:
         # print('is_load =', subcase.has_parameter('LOAD'))
         pass
@@ -988,11 +1007,13 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
 
     if 'DLOAD' in subcase:
         assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
-                       153, 159, 400, 601], 'sol=%s DLOAD' % sol
+                       153, 159, 400, 401, 601], 'sol=%s DLOAD\n%s' % (sol, subcase)
         #if 'LOADSET' in subcase:
             #raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
         if 'IC' in subcase:
-            raise NotImplementedError('IC & DLOAD -> TIC')
+            value = subcase.get_parameter('IC')[0]
+            if value != 0:
+                raise NotImplementedError('IC & DLOAD -> TIC\n%s' % subcase)
 
         # DLOAD (case)   -> dynamic loads -> DLOAD, RLOAD1, RLOAD2, TLOAD1, TLOAD2, ACSRCE
         # LOADSET (case) -> static load sequence - > LSEQ
@@ -1044,7 +1065,6 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
             for load2, scale_factor in zip(loads2, scale_factors2):
                 force = load2.get_load_at_time(0.) * scale_factor
-        ### 111
         else:
             fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
 
@@ -1238,8 +1258,9 @@ def get_element_stats(fem1, fem2, quiet=False):
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
     #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
     if not quiet:
-        print("mass =", mass)
-        print("cg   =", cg)
+        print("mass = %s" % mass)
+        print("cg   = %s" % cg)
+        print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s" % tuple(I))
         #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
         #print("mass_old =", mass)
         #print("cg_old   =", cg)
@@ -1424,6 +1445,9 @@ def main():
 
 
     #print(data)
+    debug = True
+    if data['--quiet']:
+        debug = None
     if data['--profile']:
         #import cProfile
         import pstats
@@ -1434,7 +1458,7 @@ def main():
             run_bdf,
             '.',
             data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
+            debug=debug,
             xref=['--xref'],
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
@@ -1473,7 +1497,7 @@ def main():
         run_bdf(
             '.',
             data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
+            debug=debug,
             xref=data['--xref'],
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),

@@ -192,7 +192,7 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_loadcyh(self, data, n):
-        self.log.debug('skipping LOADCYH in GEOM3\n')
+        self.log.info('skipping LOADCYH in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping LOADCYH in GEOM3\n')
         return len(data)
@@ -492,7 +492,7 @@ class GEOM3(GeomCommon):
 # QVOL
 
     def _read_rforce(self, data, n):
-        self.log.debug('skipping RFORCE in GEOM3\n')
+        self.log.info('skipping RFORCE in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping RFORCE in GEOM3\n')
 
@@ -550,13 +550,13 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_tempp2(self, data, n):
-        self.log.debug('skipping TEMPP2 in GEOM3\n')
+        self.log.info('skipping TEMPP2 in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP2 in GEOM3\n')
         return len(data)
 
     def _read_tempp3(self, data, n):
-        self.log.debug('skipping TEMPP3 in GEOM3\n')
+        self.log.info('skipping TEMPP3 in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP3 in GEOM3\n')
         return len(data)
@@ -565,11 +565,11 @@ class GEOM3(GeomCommon):
         """
         TEMPP4(4201,42,18) - the marker for Record 40
         """
-        self.log.debug('skipping TEMPP4 in GEOM3\n')
+        self.log.info('skipping TEMPP4 in GEOM3\n')
         return len(data)
 
     def _read_temprb(self, data, n):
-        self.log.debug('skipping TEMPRB in GEOM3\n')
+        self.log.info('skipping TEMPRB in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPRB in GEOM3\n')
         return len(data)

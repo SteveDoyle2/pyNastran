@@ -8,9 +8,9 @@ Defines:
      - make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001)
      - make_half_model(self, axis='y', remap_nodes=True)
      - get_free_edges(self, elements)
-     - get_area(self, shift_nodes=True)
-     - get_normals(self, shift_nodes=True)
-     - get_normals_at_nodes(self, cnormals, shift_nodes=True)
+     - get_area(self)
+     - get_normals(self)
+     - get_normals_at_nodes(self, cnormals)
 
   - comp2tri(in_filenames, out_filename,
              is_binary=False, float_fmt='%6.7f')
@@ -175,14 +175,14 @@ class Cart3dIO(object):
     def _write_elements(self, outfile, elements, is_binary, int_fmt='%6i'):
         """writes the triangles"""
         min_e = elements.min()
-        assert min_e == 1, 'min(elements)=%s' % min_e
+        assert min_e == 0, 'min(elements)=%s' % min_e
         if is_binary:
             fmt = self._endian + b('i')
             four = pack(fmt, 4)
             outfile.write(four)
             nelements = elements.shape[0]
             fmt = self._endian + b('%ii' % (nelements * 3))
-            ints = pack(fmt, *np.ravel(elements))
+            ints = pack(fmt, *np.ravel(elements+1))
 
             outfile.write(ints)
             outfile.write(four)
@@ -191,7 +191,7 @@ class Cart3dIO(object):
                 fmt_ascii = int_fmt
             else:
                 fmt_ascii = int_fmt.encode('latin1')
-            np.savetxt(outfile, elements, fmt_ascii)
+            np.savetxt(outfile, elements+1, fmt_ascii)
 
     def _write_regions(self, outfile, regions, is_binary):
         """writes the regions"""
@@ -322,7 +322,8 @@ class Cart3dIO(object):
                 n3 = int(data.pop(0))
                 elements[e] = [n1, n2, n3]
                 e += 1
-        return elements
+        assert elements.min() == 1, elements.min()
+        return elements - 1
 
     def _read_regions_ascii(self, nelements):
         regions = np.zeros(nelements, dtype='int32')
@@ -389,7 +390,8 @@ class Cart3dIO(object):
         elements = np.fromstring(data, dtype=dtype).reshape((nelements, 3))
 
         self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
-        return elements
+        assert elements.min() == 1, elements.min()
+        return elements - 1
 
     def _read_regions_binary(self, nelements):
         """reads the regions"""
@@ -984,18 +986,9 @@ class Cart3D(Cart3dIO):
         self.log.debug('---finished read_results---')
         return loads
 
-    def _get_area_vector(self, shift_nodes=True):
+    def _get_area_vector(self):
         """
         Gets the area vector (unnormalized normal vector)
-
-        Parameters
-        ----------
-        shift_nodes : boolean; default=True
-            shifts element IDs such that the
-              - node IDs start at 0 instead of 1
-                  True : nodes start at 1
-                  False : nodes start at 0
-
         Returns
         -------
         normals : (n, 3) ndarray
@@ -1003,14 +996,9 @@ class Cart3D(Cart3dIO):
         """
         elements = self.elements
         nodes = self.nodes
-        if shift_nodes:
-            p1 = nodes[elements[:, 0] - 1, :]
-            p2 = nodes[elements[:, 1] - 1, :]
-            p3 = nodes[elements[:, 2] - 1, :]
-        else:
-            p1 = nodes[elements[:, 0], :]
-            p2 = nodes[elements[:, 1], :]
-            p3 = nodes[elements[:, 2], :]
+        p1 = nodes[elements[:, 0], :]
+        p2 = nodes[elements[:, 1], :]
+        p3 = nodes[elements[:, 2], :]
 
         ne = elements.shape[0]
         avec = p2 - p1
@@ -1020,17 +1008,9 @@ class Cart3D(Cart3dIO):
 
         return n
 
-    def get_area(self, shift_nodes=True):
+    def get_area(self):
         """
         Gets the element area
-
-        Parameters
-        ----------
-        shift_nodes : boolean; default=True
-            shifts element IDs such that the
-              - node IDs start at 0 instead of 1
-                  True : nodes start at 1
-                  False : nodes start at 0
 
         Returns
         -------
@@ -1038,22 +1018,14 @@ class Cart3D(Cart3dIO):
             the element areas
         """
         ne = self.elements.shape[0]
-        n = self._get_area_vector(shift_nodes=shift_nodes)
+        n = self._get_area_vector()
         ni = np.linalg.norm(n, axis=1)
         assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
         return 0.5 * ni
 
-    def get_normals(self, shift_nodes=True):
+    def get_normals(self):
         """
         Gets the centroidal normals
-
-        Parameters
-        ----------
-        shift_nodes : boolean; default=True
-            shifts element IDs such that the
-              - node IDs start at 0 instead of 1
-                  True : nodes start at 1
-                  False : nodes start at 0
 
         Returns
         -------
@@ -1061,7 +1033,7 @@ class Cart3D(Cart3dIO):
             normalized centroidal normal vectors
         """
         ne = self.elements.shape[0]
-        n = self._get_area_vector(shift_nodes=shift_nodes)
+        n = self._get_area_vector()
         ni = np.linalg.norm(n, axis=1)
         assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
 
@@ -1069,7 +1041,7 @@ class Cart3D(Cart3dIO):
         n /= ni[:, None]  # normal vector
         return n
 
-    def get_normals_at_nodes(self, cnormals, shift_nodes=True):
+    def get_normals_at_nodes(self, cnormals):
         """
         Gets the nodal normals
 
@@ -1077,11 +1049,6 @@ class Cart3D(Cart3dIO):
         ----------
         cnormals : (n, 3) ndarray
             normalized centroidal normal vectors
-        shift_nodes : bool; default=True
-            shifts element IDs such that the node IDs start at 0
-            instead of 1
-              True : nodes start at 1
-              False : nodes start at 0
 
         Returns
         -------
@@ -1093,19 +1060,12 @@ class Cart3D(Cart3dIO):
         nnodes = self.nnodes
         nid_to_eids = defaultdict(list)
 
-        if shift_nodes:
-            for eid, element in enumerate(elements - 1):
-                n1, n2, n3 = element
-                nid_to_eids[n1].append(eid)
-                nid_to_eids[n2].append(eid)
-                nid_to_eids[n3].append(eid)
-        else:
-            # find the elements to consider for each node
-            for eid, element in enumerate(elements):
-                n1, n2, n3 = element
-                nid_to_eids[n1].append(eid)
-                nid_to_eids[n2].append(eid)
-                nid_to_eids[n3].append(eid)
+        # find the elements to consider for each node
+        for eid, element in enumerate(elements):
+            n1, n2, n3 = element
+            nid_to_eids[n1].append(eid)
+            nid_to_eids[n2].append(eid)
+            nid_to_eids[n3].append(eid)
 
         nnormals = np.zeros((nnodes, 3), dtype='float64')
         for nid in range(nnodes):

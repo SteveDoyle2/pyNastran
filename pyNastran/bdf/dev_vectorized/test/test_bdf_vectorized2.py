@@ -576,10 +576,14 @@ def main():
     else:
         size = 8
     print('is_double =', is_double)
+
+    debug = True
+    if data['--quiet']:
+        debug = None
     #model = read_bdf(data['BDF_FILENAME'])
     run_bdf('.',
             data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
+            debug=debug,
             xref=not(data['--xref']),
             check=not(data['--check']),
             punch=data['--punch'],

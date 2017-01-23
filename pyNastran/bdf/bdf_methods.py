@@ -35,17 +35,6 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
-def _mass_properties_mass_mp_func(element):  # pragma: no cover
-    """helper method for mass properties multiprocessing"""
-    try:
-        cg = element.Centroid()
-        mass = element.Mass()
-    except:
-        cg = array([0., 0., 0.])
-        mass = 0.
-    return mass, cg
-
-
 def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     """
     Transforms mass moment of inertia using parallel-axis theorem.
@@ -100,7 +89,7 @@ class BDFMethods(BDFAttributes):
     """
     Has the following methods:
         mass_properties(element_ids=None, reference_point=None, sym_axis=None,
-            num_cpus=1, scale=None)
+            scale=None)
         resolve_grids(cid=0)
         unresolve_grids(model_old)
         sum_forces_moments_elements(p0, loadcase_id, eids, nids,
@@ -272,7 +261,7 @@ class BDFMethods(BDFAttributes):
         return pids_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
-                        sym_axis=None, num_cpus=1, scale=None):
+                        sym_axis=None, scale=None):
         """
         Caclulates mass properties in the global system about the
         reference point.
@@ -283,9 +272,14 @@ class BDFMethods(BDFAttributes):
             An array of element ids.
         mass_ids : list[int]; (n, ) ndarray, optional
             An array of mass ids.
-        reference_point : ndarray, optional
-            An array that defines the origin of the frame.
-            default = <0,0,0>.
+        reference_point : ndarray/str/int, optional
+            type : ndarray
+                An array that defines the origin of the frame.
+                default = <0,0,0>.
+            type : str
+                'cg' is the only allowed string
+            type : int
+                the node id
         sym_axis : str, optional
             The axis to which the model is symmetric. If AERO cards are used, this can be left blank
             allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
@@ -339,6 +333,106 @@ class BDFMethods(BDFAttributes):
         """
         if reference_point is None:
             reference_point = array([0., 0., 0.])
+        elif isinstance(reference_point, integer_types):
+            reference_point = self.nodes[reference_point].get_position()
+
+        # if neither element_id nor mass_ids are specified, use everything
+        if element_ids is None and mass_ids is None:
+            elements = self.elements.values()
+            masses = self.masses.values()
+
+        # if either element_id or mass_ids are specified and the other is not, use only the
+        # specified ids
+        else:
+            if element_ids is None:
+                elements = []
+            else:
+                elements = [element for eid, element in self.elements.items() if eid in element_ids]
+            if mass_ids is None:
+                masses = []
+            else:
+                masses = [mass for eid, mass in self.masses.items() if eid in mass_ids]
+
+        mass, cg, I = self._mass_properties_sp(elements, masses,
+                                               reference_point=reference_point)
+        mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
+        return (mass, cg, I)
+
+    def mass_properties_no_xref(self, element_ids=None, mass_ids=None, reference_point=None,
+                                sym_axis=None, scale=None):
+        """
+        Caclulates mass properties in the global system about the
+        reference point.
+
+        Parameters
+        ----------
+        element_ids : list[int]; (n, ) ndarray, optional
+            An array of element ids.
+        mass_ids : list[int]; (n, ) ndarray, optional
+            An array of mass ids.
+        reference_point : ndarray/str/int, optional
+            type : ndarray
+                An array that defines the origin of the frame.
+                default = <0,0,0>.
+            type : str
+                'cg' is the only allowed string
+            type : int
+                the node id
+        sym_axis : str, optional
+            The axis to which the model is symmetric. If AERO cards are used, this can be left blank
+            allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
+        scale : float, optional
+            The WTMASS scaling value.
+            default=None -> PARAM, WTMASS is used
+            float > 0.0
+
+        Returns
+        -------
+        mass : float
+            The mass of the model.
+        cg : ndarray
+            The cg of the model as an array.
+        I : ndarray
+            Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
+
+        I = mass * centroid * centroid
+
+        .. math:: I_{xx} = m (dy^2 + dz^2)
+
+        .. math:: I_{yz} = -m * dy * dz
+
+        where:
+
+        .. math:: dx = x_{element} - x_{ref}
+
+        .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
+
+        .. note::
+           This doesn't use the mass matrix formulation like Nastran.
+           It assumes m*r^2 is the dominant term.
+           If you're trying to get the mass of a single element, it
+           will be wrong, but for real models will be correct.
+
+        Example 1
+        ---------
+        # mass properties of entire structure
+        mass, cg, I = model.mass_properties()
+        Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+
+
+        Example 2
+        ---------
+        # mass properties of model based on Property ID
+        pids = list(model.pids.keys())
+        pid_eids = self.get_element_ids_dict_with_pids(pids)
+
+        for pid, eids in sorted(iteritems(pid_eids)):
+            mass, cg, I = model.mass_properties(element_ids=eids)
+        """
+        if reference_point is None:
+            reference_point = array([0., 0., 0.])
+        elif isinstance(reference_point, integer_types):
+            reference_point = self.nodes[reference_point].get_position()
 
         # if neither element_id nor mass_ids are specified, use everything
         if element_ids is None and mass_ids is None:
@@ -359,15 +453,99 @@ class BDFMethods(BDFAttributes):
 
         nelements = len(elements) + len(masses)
 
-        num_cpus = 1
-        if num_cpus > 1:
-            mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses, nelements,
-                                                   reference_point=reference_point)
-        else:
-            mass, cg, I = self._mass_properties_sp(elements, masses,
-                                                   reference_point=reference_point)
+        mass, cg, I = self._mass_properties_sp_no_xref(elements, masses,
+                                                       reference_point=reference_point)
 
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
+        return (mass, cg, I)
+
+    def _mass_properties_sp_no_xref(self, elements, masses, reference_point):  # pragma: no cover
+        """
+        Caclulates mass properties in the global system about the
+        reference point.
+
+        Parameters
+        ----------
+        elements : List[int]; ndarray
+            the element ids to consider
+        masses : List[int]; ndarray
+            the mass ids to consider
+        reference_point : (3, ) ndarray; default = <0,0,0>.
+            an array that defines the origin of the frame.
+
+        Returns
+        -------
+        mass : float
+            the mass of the model
+        cg : (3, ) float NDARRAY
+            the cg of the model as an array.
+        I : (6, ) float NDARRAY
+            moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+
+        .. seealso:: self.mass_properties
+        """
+        #Ixx Iyy Izz, Ixy, Ixz Iyz
+        # precompute the CG location and make it the reference point
+        I = array([0., 0., 0., 0., 0., 0., ])
+        cg = array([0., 0., 0.])
+        if isinstance(reference_point, string_types):
+            if reference_point == 'cg':
+                mass = 0.
+                for pack in [elements, masses]:
+                    for element in pack:
+                        try:
+                            p = element.Centroid_no_xref(self)
+                            m = element.Mass_no_xref(self)
+                            mass += m
+                            cg += m * p
+                        except:
+                            #pass
+                            raise
+                if mass == 0.0:
+                    return mass, cg, I
+
+                reference_point = cg / mass
+            else:
+                # reference_point = [0.,0.,0.] or user-defined array
+                pass
+
+        mass = 0.
+        cg = array([0., 0., 0.])
+        for pack in [elements, masses]:
+            for element in pack:
+                try:
+                    p = element.Centroid_no_xref(self)
+                except:
+                    #continue
+                    raise
+
+                try:
+                    m = element.Mass_no_xref(self)
+                    (x, y, z) = p - reference_point
+                    x2 = x * x
+                    y2 = y * y
+                    z2 = z * z
+                    I[0] += m * (y2 + z2)  # Ixx
+                    I[1] += m * (x2 + z2)  # Iyy
+                    I[2] += m * (x2 + y2)  # Izz
+                    I[3] += m * x * y      # Ixy
+                    I[4] += m * x * z      # Ixz
+                    I[5] += m * y * z      # Iyz
+                    mass += m
+                    cg += m * p
+                except:
+                    # PLPLANE
+                    pid_ref = self.Property(element.pid)
+                    if pid_ref.type == 'PSHELL':
+                        self.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (
+                            p, reference_point, type(reference_point)))
+                        raise
+                    self.log.warning("could not get the inertia for element/property\n%s%s" % (
+                        element, element.pid_ref))
+                    continue
+
+        if mass:
+            cg /= mass
         return (mass, cg, I)
 
     def _mass_properties_sp(self, elements, masses, reference_point):  # pragma: no cover
@@ -741,108 +919,6 @@ class BDFMethods(BDFAttributes):
         I *= scale
         return (mass, cg, I)
 
-
-    def _mass_properties_mp(self, num_cpus, elements, masses, nelements,
-                            reference_point=None):  # pragma: no cover
-        """
-        Calculates mass properties in the global system about the
-        reference point.
-
-        Parameters
-        ----------
-        num_cpus : int
-            the number of CPUs to use; 2 < num_cpus < 20
-        elements : ???
-            ???
-        masses : ???
-            ???
-        nelements : int
-            the size of the mass array
-        reference_point : (3, ) ndarray; default = <0,0,0>.
-            an array that defines the origin of the frame.
-
-        Returns
-        -------
-        mass : float
-            the mass of the model
-        cg : (3, ) float NDARRAY
-            the cg of the model as an array.
-        I : (6, ) float NDARRAY
-            moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
-
-        .. seealso:: self.mass_properties
-        """
-        if num_cpus <= 1:
-            raise RuntimeError('num_proc must be > 1; num_cpus=%s' % num_cpus)
-        if num_cpus > 20:
-            # the user probably doesn't want 68,000 CPUs; change it if you want...
-            raise RuntimeError('num_proc must be < 20; num_cpus=%s' % num_cpus)
-
-        self.log.debug("Creating %i-process pool!" % num_cpus)
-        pool = mp.Pool(num_cpus)
-        no_mass_elements = [
-            'CBUSH', 'CBUSH1D',
-            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-        ]
-        result = pool.imap(_mass_properties_mass_mp_func,
-                           [(element) for element in elements
-                            if element.type not in no_mass_elements])
-        result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
-
-        mass = zeros((nelements), 'float64')
-        xyz = zeros((nelements, 3), 'float64')
-        i = 0
-        for i, return_values in enumerate(result):
-            #self.log.info("%.3f %% Processed" % (i*100./nelements))
-            mass[i] = return_values[0]
-            xyz[i, :] = return_values[1]
-        pool.close()
-        pool.join()
-
-        pool = mp.Pool(num_cpus)
-        for i2, return_values in enumerate(result2):
-            mass[i+i2] = return_values[0]
-            xyz[i+i2, :] = return_values[1]
-        pool.close()
-        pool.join()
-
-        massi = mass.sum()
-        #cg = (mass * xyz) / massi
-        if massi == 0.0:
-            cg = array([0., 0., 0.])
-            I = array([0., 0., 0., 0., 0., 0., ])
-            return massi, cg, I
-
-        cg = dot(mass, xyz) / massi
-        if reference_point is None:
-            x = xyz[:, 0]
-            y = xyz[:, 1]
-            z = xyz[:, 2]
-        elif isinstance(reference_point[0], float):
-            x = xyz[:, 0] - reference_point[0]
-            y = xyz[:, 1] - reference_point[1]
-            z = xyz[:, 2] - reference_point[2]
-        elif reference_point in [u'cg', 'cg']:
-            x = xyz[:, 0] - cg[0]
-            y = xyz[:, 1] - cg[1]
-            z = xyz[:, 2] - cg[2]
-
-        x2 = x ** 2
-        y2 = y ** 2
-        z2 = z ** 2
-
-        I = array([
-            mass * (y2 + z2),  # Ixx
-            mass * (x2 + z2),  # Iyy
-            mass * (x2 + y2),  # Izz
-            mass * (x * y),    # Ixy
-            mass * (x * z),    # Ixz
-            mass * (y * z),    # Iyz
-        ]).sum(axis=1)
-
-        return (massi, cg, I)
-
     def resolve_grids(self, cid=0):
         """
         Puts all nodes in a common coordinate system (mainly for cid testing)
@@ -895,8 +971,7 @@ class BDFMethods(BDFAttributes):
         #gravity_i = self.loads[2][0]  ## .. todo:: hardcoded
         #gi = gravity_i.N * gravity_i.scale
         #p0 = array([0., 0., 0.])  ## .. todo:: hardcoded
-        #mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None,
-                                           #num_cpus=6)
+        #mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None)
 
     def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
                                     include_grav=False, xyz_cid0=None):
@@ -1775,7 +1850,7 @@ class BDFMethods(BDFAttributes):
                             loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
-                assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
+                assert load.sorl == 'SURF', 'sorl = %r' % (load.sorl)
                 assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
                 for elem in load.eids:
                     eid = elem.eid
@@ -1883,9 +1958,10 @@ class BDFMethods(BDFAttributes):
             self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
         return (F, M)
 
-    def skin_solid_elements(self, element_ids=None, allow_blank_nids=True):
+    def get_element_faces(self, element_ids=None, allow_blank_nids=True):
         """
-        Gets the elements and faces that are skinned from solid elements
+        Gets the elements and faces that are skinned from solid elements.
+        This includes internal faces, but not existing shells.
 
         Parameters
         ----------
@@ -1927,7 +2003,8 @@ class BDFMethods(BDFAttributes):
 
     def get_solid_skin_faces(self):
         """
-        Gets the elements and faces that are skinned from solid elements
+        Gets the elements and faces that are skinned from solid elements.
+        This doesn't include internal faces or existing shells.
 
         Returns
         -------
@@ -1938,7 +2015,7 @@ class BDFMethods(BDFAttributes):
            key : sorted face
            value : unsorted face
         """
-        eid_faces = self.skin_solid_elements()
+        eid_faces = self.get_element_faces()
         face_set = defaultdict(int)
         eid_set = defaultdict(list)
         face_map = {}
@@ -1991,7 +2068,8 @@ class BDFMethods(BDFAttributes):
         write_solids : bool; default=False
             write solid elements that have skinned faces
         write_shells : bool; default=False
-            write shell elements
+            write newly created shell elements
+            if there are shells in the model, doesn't write these
 
         size : int; default=8
             the field width
@@ -2030,14 +2108,20 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     pid = elem.Pid()
                     prop = self.properties[pid] # PSOLID
-                    #print(prop)
-                    try:
-                        #print(prop.mid)
+                    if prop.type in ['PSOLID', 'PLSOLID']:
                         mid = prop.Mid()
-                        mid_set_to_write.add(mid)
-                        #print('added eid=%s pid=%s mid=%s (b)' % (eid, pid, mid))
-                    except AttributeError:
-                        continue
+                    elif prop.type == 'PCOMPS':
+                        mid = prop.mids[0]
+                    else:
+                        raise NotImplementedError(prop)
+                    #except TypeError:
+                        #self.log.warning('TypeError: skipping:%s' % prop)
+                        #raise
+                    #except AttributeError:
+                        #self.log.warning('skipping:%s' % prop)
+                        #continue
+                    mid_set_to_write.add(mid)
+                    #print('added eid=%s pid=%s mid=%s (b)' % (eid, pid, mid))
         else:
             raise RuntimeError('write_solids=False write_shells=False')
 

@@ -33,7 +33,7 @@ def cart3d_to_nastran_model(cart3d_filename, log=None, debug=False):
     else:
         cart3d = read_cart3d(cart3d_filename, log=log, debug=debug, result_names=None)
     nodes = cart3d.nodes
-    elements = cart3d.elements
+    elements = cart3d.elements + 1
     regions = cart3d.regions
 
     if regions.min() == 0:
@@ -98,7 +98,7 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
         cart3d = read_cart3d(cart3d_filename, log=log, debug=debug, result_names=None)
 
     nodes = cart3d.nodes
-    elements = cart3d.elements
+    elements = cart3d.elements + 1
     regions = cart3d.regions
 
     if regions.min() == 0:
@@ -126,6 +126,7 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
 
         eid = 1
         f.write('$Elements\n')
+        assert 0 not in elements
         for (n1, n2, n3), pid in zip(elements, regions):
             card = print_card_8(['CTRIA3', eid, pid, n1, n2, n3])
             f.write(card)

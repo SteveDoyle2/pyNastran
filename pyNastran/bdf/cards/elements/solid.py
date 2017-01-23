@@ -348,6 +348,40 @@ class CHEXA8(SolidElement):
         }
         return faces
 
+    def material_coordinate_system(self, xyz=None):
+        if normal is None:
+            normal = self.Normal() # k = kmat
+
+        if xyz is None:
+            x1 = self.nodes_ref[0].get_position()
+            x2 = self.nodes_ref[1].get_position()
+            x3 = self.nodes_ref[2].get_position()
+            x4 = self.nodes_ref[3].get_position()
+            x5 = self.nodes_ref[4].get_position()
+            x6 = self.nodes_ref[5].get_position()
+            x7 = self.nodes_ref[6].get_position()
+            x8 = self.nodes_ref[7].get_position()
+        else:
+            x1 = xyz[:, 0]
+            x2 = xyz[:, 1]
+            x3 = xyz[:, 2]
+            x4 = xyz[:, 3]
+            x5 = xyz[:, 4]
+            x6 = xyz[:, 5]
+            x7 = xyz[:, 6]
+            x8 = xyz[:, 7]
+
+        #CORDM=-2
+        centroid = (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8) / 8.
+        xe = (x2+x3+x6+x7)/4. - (x1+x4+x8+x5)/4.
+        xe /= np.linalg.norm(xe)
+        v = ((x3+x7+x8+x4)/4. - (x1+x2+x6+x5))/4
+        z = np.cross(xe, v)
+        z /= np.linalg.norm(z)
+        y = np.cross(z, x)
+        y /= np.linalg.norm(y)
+        return centroid, xe, y, z
+
     def _verify(self, xref=False):
         eid = self.eid
         pid = self.Pid()
@@ -378,10 +412,6 @@ class CHEXA8(SolidElement):
         (area2, c2) = area_centroid(n5, n6, n7, n8)
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -433,26 +463,6 @@ class CHEXA8(SolidElement):
             tuple(sorted([node_ids[2], node_ids[6]])),
             tuple(sorted([node_ids[3], node_ids[7]])),
         ]
-
-
-class CIHEX1(CHEXA8):
-    type = 'CIHEX1'
-
-    def write_card(self, size=8, is_double=False):
-        data = [self.eid, self.Pid()] + self.node_ids
-        msg = ('CIHEX1  %8i%8i%8i%8i%8i%8i%8i%8i\n'
-               '        %8i%8i\n' % tuple(data))
-        return self.comment + msg
-
-    def write_card_16(self, is_double=False):
-        data = [self.eid, self.Pid()] + self.node_ids
-        msg = ('CIHEX1* %16i%16i%16i%16i\n'
-               '*       %16i%16i%16i%16i\n'
-               '*       %16i%16i\n' % tuple(data))
-        return self.comment + msg
-
-    def __init__(self, eid, pid, nids, comment=''):
-        CHEXA8.__init__(self, eid, pid, nids, comment=comment)
 
 
 class CHEXA20(SolidElement):
@@ -669,6 +679,54 @@ class CHEXA20(SolidElement):
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
+
+
+class CIHEX1(CHEXA8):
+    type = 'CIHEX1'
+
+    def write_card(self, size=8, is_double=False):
+        data = [self.eid, self.Pid()] + self.node_ids
+        msg = ('CIHEX1  %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8i%8i\n' % tuple(data))
+        return self.comment + msg
+
+    def write_card_16(self, is_double=False):
+        data = [self.eid, self.Pid()] + self.node_ids
+        msg = ('CIHEX1* %16i%16i%16i%16i\n'
+               '*       %16i%16i%16i%16i\n'
+               '*       %16i%16i\n' % tuple(data))
+        return self.comment + msg
+
+    def __init__(self, eid, pid, nids, comment=''):
+        CHEXA8.__init__(self, eid, pid, nids, comment=comment)
+
+
+class CIHEX2(CHEXA20):
+    type = 'CIHEX2'
+
+    def write_card(self, size=8, is_double=False):
+        nodes = self.node_ids
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
+
+        data = [self.eid, self.Pid()] + nodes[:8] + nodes2
+        msg = ('CIHEX2  %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
+               '        %8s%8s%8s%8s%8s%8s' % tuple(data))
+        return self.comment + msg.rstrip() + '\n'
+
+    def write_card_16(self, is_double=False):
+        nodes = self.node_ids
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
+        data = [self.eid, self.Pid()] + nodes[:8] + nodes2
+        msg = ('CIHEX2* %16i%16i%16i%16i\n'
+               '*       %16i%16i%16i%16i\n'
+               '*       %16i%16i%16s%16s\n'
+               '*       %16s%16s%16s%16s\n'
+               '*       %16s%16s%16s%16s%16s%16s' % tuple(data))
+        return self.comment + msg.rstrip() + '\n'
+
+    def __init__(self, eid, pid, nids, comment=''):
+        CHEXA20.__init__(self, eid, pid, nids, comment=comment)
 
 
 class CPENTA6(SolidElement):

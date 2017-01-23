@@ -211,7 +211,7 @@ def print_float_or_int_8(value):
     if isinstance(value, (float, float32)):
         field = print_float_8(value)
     elif isinstance(value, integer_types):
-        field = "%8s" % value
+        field = "%8i" % value
     else:
         msg = 'Invalid Type:  value=%r type=%s' % (value, type(value))
         raise TypeError(msg)
@@ -232,7 +232,7 @@ def print_field_8(value):
         an 8-character string
     """
     if isinstance(value, integer_types):
-        field = "%8s" % value
+        field = "%8i" % value
     elif isinstance(value, (float, float32)):
         field = print_float_8(value)
     elif value is None:

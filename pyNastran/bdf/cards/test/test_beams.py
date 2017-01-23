@@ -475,7 +475,6 @@ class TestBeams(unittest.TestCase):
             element_ids=None, mass_ids=None,
             reference_point=None,
             sym_axis=None,
-            num_cpus=1,
             scale=None)
         #print('cg* =', cg)
         L = 1.0

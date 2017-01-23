@@ -21,7 +21,7 @@ class Cart3dGUI(Cart3dIO, GUIMethods):
 
 class TestCart3dGUI(unittest.TestCase):
 
-    def test_cart3d_geometry(self):
+    def test_cart3d_geometry_01(self):
         geometry_filename = os.path.join(model_path, 'threePlugs.a.tri')
         #out_filename = os.path.join(model_path, 'panair.out')
         dirname = None
@@ -32,6 +32,13 @@ class TestCart3dGUI(unittest.TestCase):
 
     def test_cart3d_geometry_02(self):
         geometry_filename = os.path.join(model_path, 'threePlugs.bin.tri')
+        dirname = None
+
+        test = Cart3dGUI()
+        test.load_cart3d_geometry(geometry_filename, dirname)
+
+    def test_cart3d_geometry_03(self):
+        geometry_filename = os.path.join(model_path, 'business_jet', 'bJet.a.tri')
         dirname = None
 
         test = Cart3dGUI()

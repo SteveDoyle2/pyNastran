@@ -10,7 +10,8 @@ from pyNastran.converters.stl.test_stl_gui import STL_GUITest
 from pyNastran.converters.tecplot.test_tecplot_gui import TestTecplotGUI
 from pyNastran.converters.LaWGS.test_wgs_gui import TestLawgsGUI
 from pyNastran.converters.ugrid.test_ugrid_gui import TestUgridGUI
-
+from pyNastran.converters.su2.test_su2_gui import TestSU2GUI
+from pyNastran.converters.tetgen.test_tetgen_gui import TestTetgenGUI
 
 if __name__ == '__main__':
     unittest.main()

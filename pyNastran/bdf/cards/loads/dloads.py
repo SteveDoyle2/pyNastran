@@ -11,6 +11,7 @@ All dynamic loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip, range
 import numpy as np
 
@@ -18,7 +19,7 @@ from pyNastran.utils import integer_types, integer_float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_string_or_blank,
-    integer_double_or_blank, double)
+    integer_double_or_blank, double, integer_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -29,11 +30,11 @@ class ACSRCE(BaseCard):
     r"""
     Defines acoustic source as a function of power vs. frequency.
 
-    +-----+----------+---------------+-----------------+-------+-----+---+
-    |  1  |    2     |       3       |        4        |   5   |  6  | 7 |
-    +=====+==========+===============+=================+=======+=====+===+
-    | SID | EXCITEID | DELAYI/DELAYR | DPHASEI/DPHASER | TP/RP | RHO | B |
-    +-----+----------+---------------+-----------------+-------+-----+---+
+    +--------+-----+----------+---------------+-----------------+-------+-----+---+
+    |   1    |  2  |    3     |       4       |        5        |   6   |  7  | 8 |
+    +========+=====+==========+===============+=================+=======+=====+===+
+    | ACSRCE | SID | EXCITEID | DELAYI/DELAYR | DPHASEI/DPHASER | TP/RP | RHO | B |
+    +--------+-----+----------+---------------+-----------------+-------+-----+---+
 
     ..math ::
       C = \sqrt(B ⁄ ρ)
@@ -53,6 +54,7 @@ class ACSRCE(BaseCard):
         self.power = power
         self.rho = rho
         self.b = b
+        self.sloads_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -77,16 +79,67 @@ class ACSRCE(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by ACSRCE=%s' % (self.sid)
+        cmsg = ', which is required by ACSRCE=%s' % (self.sid)
+
+        # TODO: excite_id = DAREA, FBALOAD, SLOAD
+        sloads_ref = {}
+        lseqs_ref = {}
+        for load_id, loads in iteritems(model.loads):
+            for load in loads:
+                if load.type == 'SLOAD':
+                    #if load_id not in sloads_ref:
+                        #sloads_ref[load_id] = []
+                    for nid in load.node_ids:
+                        sloads_ref[(load_id, nid, 0)] = load
+                elif load.type == 'LSEQ':
+                    load_idi = load.lid[0].sid
+                    #print(load)
+                    #print(load.lid)
+                    excite_idi = load.excite_id
+                    #print('load_idi  = %s' % load_idi)
+                    #print('excite_id = %s' % excite_idi)
+                    assert load_idi not in lseqs_ref
+                    lseqs_ref[load_idi] = load
+        if sloads_ref:
+            self.sloads_ref = sloads_ref
+            sload_keys = list(sloads_ref.keys())
+            #print('sload_keys =', sload_keys)
+        else:
+            sload_keys = []
+
+        if self.excite_id not in model.dareas and self.excite_id not in lseqs_ref:
+            darea_keys = list(model.dareas.keys())
+            dphase_keys = list(model.dphases.keys())
+            delay_keys = list(model.delays.keys())
+            msg = 'excite_id=%s delay=%s dphase=%s\n' % (
+                self.excite_id, self.delay, self.dphase)
+            msg += '  darea_keys=%s\n' % darea_keys
+            msg += '  sloads(load_id, nid, comp)=%s\n' % sload_keys
+            msg += '  dphases(sid)=%s\n' % dphase_keys
+            msg += '  delays(delay_id)=%s\n' % delay_keys
+            #raise RuntimeError(msg)
+            #print(msg)
+
         if isinstance(self.delay, integer_types) and self.delay > 0:
-            self.delay = model.DELAY(self.delay, msg=msg)
-            self.delay_ref = self.delay
+            delays_ref = {}
+            for sload_key in sload_keys:
+                nid = sload_key[1]
+                delay_key = (self.delay, nid, 0)
+                delay_ref = model.DELAY(self.delay, msg=cmsg)
+                delays_ref[sload_key] = delay_ref
+            self.delays_ref = delays_ref
+
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
-            self.dphase = model.Table(self.dphase, msg=msg)
-            self.dphase_ref = self.dphase
+            dphases_ref = {}
+            for sload_key in sload_keys:
+                nid = sload_key[1]
+                dphase_key = (self.dphase, nid, 0)
+                dphase_ref = model.DPHASE(self.dphase, msg=cmsg)
+                dphases_ref[sload_key] = dphases_ref
+            self.dphases_ref = dphases_ref
+
         if isinstance(self.power, integer_types):
-            print('power')
-            self.power = model.Table(self.power, msg=msg)
+            self.power = model.TableD(self.power, msg=cmsg)
             self.power_ref = self.power
 
         #load_ids2 = []
@@ -108,8 +161,7 @@ class ACSRCE(BaseCard):
             #return 0
         if isinstance(self.delay, integer_float_types):
             return self.delay
-        #print('self.delay =', self.delay)
-        return self.delay_ref.tid
+        return self.delay_ref.sid
 
     def DPhase(self):
         #if self.dphase in [0, 0.0]:
@@ -168,9 +220,35 @@ class ACSRCE(BaseCard):
 
 
 class DLOAD(LoadCombination):
+    """
+    +-------+-----+----+------+----+----+----+----+----+
+    |   1   |  2  |  3 |   4  |  5 |  6 |  7 |  8 |  9 |
+    +=======+=====+====+======+====+====+====+====+=====
+    | DLOAD | SID |  S |  S1  | L1 | S2 | L2 | S3 | L3 |
+    +-------+-----+----+------+----+----+----+----+----+
+    |       | S4  | L4 | etc. |    |    |    |    |    |
+    +-------+-----+----+------+----+----+----+----+----+
+    """
     type = 'DLOAD'
 
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
+        """
+        Creates a DLOAD card.
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. See Remarks 1. and 4. (Integer > 0)
+        scale : float
+            Scale factor. See Remarks 2. and 8. (Real)
+        Si : List[float]
+            Scale factors. See Remarks 2., 7. and 8. (Real)
+        load_ids : List[int]
+            Load set identification numbers of RLOAD1, RLOAD2, TLOAD1,
+            TLOAD2, and ACSRCE entries. See Remarks 3. and 7. (Integer > 0)
+        comment : str; default=''
+            the card comment
+        """
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
 
@@ -227,13 +305,27 @@ class RLOAD1(TabularLoad):
     +--------+-----+----------+-------+--------+----+----+------+
     | RLOAD1 |  5  |    3     |       |        | 1  |    |      |
     +--------+-----+----------+-------+--------+----+----+------+
+    NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD1'
 
-    def __init__(self, sid, excite_id, delay, dphase, tc, td, Type, comment=''):
+    def __init__(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0, Type='LOAD', comment=''):
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
+
+        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+            Type = 'LOAD'
+        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+            Type = 'DISP'
+        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+            Type = 'VELO'
+        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+            Type = 'ACCE'
+        else:
+            msg += 'invalid RLOAD1 type  Type=%r\n' % Type
+            raise ValueError(msg)
+
         self.sid = sid
         self.excite_id = excite_id
         self.delay = delay
@@ -246,7 +338,7 @@ class RLOAD1(TabularLoad):
         msg = ''
         is_failed = False
         if self.tc > 0 or self.td > 0:
-            msg += 'either RLOAD TC or TD > 0; tc=%s td=%s\n' % (self.tc, self.td)
+            msg += 'either RLOAD1 TC or TD > 0; tc=%s td=%s\n' % (self.tc, self.td)
 
         if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
             self.Type = 'LOAD'
@@ -287,11 +379,11 @@ class RLOAD1(TabularLoad):
             the BDF object
         """
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
-        if self.tc > 0:
-            self.tc = model.Table(self.tc, msg=msg)
+        if isinstance(self.tc, integer_types) and self.tc:
+            self.tc = model.TableD(self.tc, msg=msg)
             self.tc_ref = self.tc
-        if self.td > 0:
-            self.td = model.Table(self.td, msg=msg)
+        if isinstance(self.td, integer_types) and self.td:
+            self.td = model.TableD(self.td, msg=msg)
             self.td_ref = self.td
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
@@ -302,11 +394,11 @@ class RLOAD1(TabularLoad):
 
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
-        if self.tc > 0:
-            self.tc = model.Table(self.tc, msg=msg)
+        if isinstance(self.tc, integer_types) and self.tc:
+            self.tc = model.TableD(self.tc, msg=msg)
             self.tc_ref = self.tc
-        if self.td > 0:
-            self.td = model.Table(self.td, msg=msg)
+        if isinstance(self.td, integer_types) and self.td:
+            self.td = model.TableD(self.td, msg=msg)
             self.td_ref = self.td
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
@@ -332,6 +424,8 @@ class RLOAD1(TabularLoad):
     def Tc(self):
         if self.tc in [0, 0.0]:
             return 0
+        elif isinstance(self.tc, float):
+            return self.tc
         elif isinstance(self.tc, integer_types):
             return self.tc
         return self.tc.tid
@@ -339,15 +433,19 @@ class RLOAD1(TabularLoad):
     def Td(self):
         if self.td in [0, 0.0]:
             return 0
+        elif isinstance(self.td, float):
+            return self.td
         elif isinstance(self.td, integer_types):
             return self.td
         return self.td.tid
 
     @property
     def delay_id(self):
-        if self.delay in [0, 0.0]:
+        if self.delay in [0, 0.]:
             return 0
-        elif isinstance(self.delay, integer_float_types):
+        elif isinstance(self.delay, float):
+            return self.delay
+        elif isinstance(self.delay, integer_types):
             return self.delay
         return self.delay_ref.sid
 
@@ -380,18 +478,18 @@ class RLOAD1(TabularLoad):
         elif self.dphase == 0 or self.dphase is None:
             dphase = 0.0
         else:
-            #print('DPHASE is not supported; type=%s' % type(self.dphase))
-            #print('dphase = ', self.dphase)
             nids, comps, dphases = self.dphase_ref.get_dphase_at_freq(freq)
             assert len(dphases) == 1, dphases
             dphase = dphases[0]
 
         if isinstance(self.delay, float):
             tau = self.delay
-        elif self.delay == 0 or self.dphase is None:
+        elif self.delay == 0 or self.delay is None:
             tau = 0.0
         else:
-            tau = self.delay.get_delay_at_freq(freq)
+            nids, comps, taus = self.delay_ref.get_delay_at_freq(freq)
+            assert len(taus) == 1, taus
+            tau = taus[0]
 
         out = (c + 1.j * d) * np.exp(dphase - 2 * np.pi * freq * tau)
         return out
@@ -424,7 +522,6 @@ class RLOAD2(TabularLoad):
     .. math:: \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
         e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} }
 
-
     +--------+-----+----------+-------+--------+----+----+------+
     |   1    |  2  |     3    |   4   |    5   |  6 |  7 |  8   |
     +========+=====+==========+=======+========+====+====+======+
@@ -432,31 +529,14 @@ class RLOAD2(TabularLoad):
     +--------+-----+----------+-------+--------+----+----+------+
     | RLOAD2 |  5  |    3     |       |        | 1  |    |      |
     +--------+-----+----------+-------+--------+----+----+------+
+    NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD2'
 
-    def __init__(self, sid, excite_id, delay, dphase, tb, tp, Type, comment=''):
+    def __init__(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0, Type='LOAD', comment=''):
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
-        self.sid = sid
-        self.excite_id = excite_id
-        self.delay = delay
-        self.dphase = dphase
-        self.tb = tb
-        self.tp = tp
-        self.Type = Type
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        sid = integer(card, 1, 'sid')
-        excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0)
-        dphase = integer_double_or_blank(card, 4, 'dphase', 0)
-        tb = integer_or_blank(card, 5, 'tb', 0)
-        tp = integer_or_blank(card, 6, 'tp', 0)
-        Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
-
         if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
             Type = 'LOAD'
         elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
@@ -468,6 +548,47 @@ class RLOAD2(TabularLoad):
         else:
             msg = 'invalid RLOAD2 type  Type=%r' % Type
             raise RuntimeError(msg)
+
+        self.sid = sid
+        self.excite_id = excite_id
+        self.delay = delay
+        self.dphase = dphase
+        self.tb = tb
+        self.tp = tp
+        self.Type = Type
+
+    def validate(self):
+        msg = ''
+        is_failed = False
+        if self.tb > 0 or self.tp > 0:
+            msg += 'either RLOAD2 TB or TP > 0; tb=%s tp=%s\n' % (self.tb, self.tp)
+
+        if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+            self.Type = 'LOAD'
+        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+            self.Type = 'DISP'
+        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+            self.Type = 'VELO'
+        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+            self.Type = 'ACCE'
+        else:
+            msg += 'invalid RLOAD2 type  Type=%r\n' % self.Type
+            is_failed = True
+
+        if is_failed:
+            msg += str(self)
+            raise RuntimeError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id')
+        delay = integer_double_or_blank(card, 3, 'delay', 0)
+        dphase = integer_double_or_blank(card, 4, 'dphase', 0)
+        tb = integer_double_or_blank(card, 5, 'tb', 0)
+        tp = integer_double_or_blank(card, 6, 'tp', 0)
+        Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
+
         assert len(card) <= 8, 'len(RLOAD2 card) = %i\ncard=%s' % (len(card), card)
         return RLOAD2(sid, excite_id, delay, dphase, tb, tp, Type, comment=comment)
 
@@ -492,16 +613,15 @@ class RLOAD2(TabularLoad):
         elif self.dphase == 0 or self.dphase is None:
             dphase = 0.0
         else:
-            print('self.dphase = ', self.dphase)
-            raise NotImplementedError('DPHASE is not supported')
-            dphase = self.dphase_ref.get_dphase_at_freq(freq)
+            nids, comps, dphases = self.dphase_ref.get_dphase_at_freq(freq)
+            assert len(dphases) == 1, dphases
+            dphase = dphases[0]
 
         if isinstance(self.delay, float):
             tau = self.delay
         elif self.delay == 0:
             tau = 0.0
         else:
-            #raise NotImplementedError('DELAY is not supported')
             nids, comps, taus = self.delay_ref.get_delay_at_freq(freq)
             assert len(taus) == 1, taus
             tau = taus[0]
@@ -526,12 +646,12 @@ class RLOAD2(TabularLoad):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RLOAD2=%s' % (self.sid)
-        if self.tb:
-            self.tb = model.Table(self.tb, msg=msg)
+        msg = ', which is required by RLOAD2=%s' % (self.sid)
+        if isinstance(self.tb, integer_types) and self.tb:
+            self.tb = model.TableD(self.tb, msg=msg)
             self.tb_ref = self.tb
-        if self.tp:
-            self.tp = model.Table(self.tp, msg=msg)
+        if isinstance(self.tp, integer_types) and self.tp:
+            self.tp = model.TableD(self.tp, msg=msg)
             self.tp_ref = self.tp
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay, msg=msg)
@@ -541,17 +661,17 @@ class RLOAD2(TabularLoad):
             self.dphase_ref = self.dphase
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by RLOAD2=%s' % (self.sid)
-        if self.tb:
-            self.tb = model.Table(self.tb, msg=msg)
+        msg = ', which is required by RLOAD2=%s' % (self.sid)
+        if isinstance(self.tb, integer_types) and self.tb:
+            self.tb = model.TableD(self.tb, msg=msg)
             self.tb_ref = self.tb
-        if self.tp:
-            self.tp = model.Table(self.tp, msg=msg)
+        if isinstance(self.tp, integer_types) and self.tp:
+            self.tp = model.TableD(self.tp, msg=msg)
             self.tp_ref = self.tp
-        if self.delay > 0:
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay, msg=msg)
             self.delay_ref = self.delay
-        if self.dphase:
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase = model.DPHASE(self.dphase, msg=msg)
             self.dphase_ref = self.dphase
 
@@ -579,6 +699,8 @@ class RLOAD2(TabularLoad):
     def Tb(self):
         if self.tb == 0:
             return 0
+        elif isinstance(self.tb, float):
+            return self.tb
         elif isinstance(self.tb, integer_types):
             return self.tb
         return self.tb_ref.tid
@@ -586,6 +708,8 @@ class RLOAD2(TabularLoad):
     def Tp(self):
         if self.tp == 0:
             return 0
+        elif isinstance(self.tp, float):
+            return self.tp
         elif isinstance(self.tp, integer_types):
             return self.tp
         return self.tp_ref.tid
@@ -594,6 +718,8 @@ class RLOAD2(TabularLoad):
     def delay_id(self):
         if self.delay in [0, 0.]:
             return 0
+        elif isinstance(self.delay, float):
+            return self.delay
         elif isinstance(self.delay, integer_types):
             return self.delay
         return self.delay.sid
@@ -639,10 +765,22 @@ class TLOAD1(TabularLoad):
     """
     type = 'TLOAD1'
 
-    def __init__(self, sid, excite_id, delay, Type, tid, us0, vs0, comment=''):
+    def __init__(self, sid, excite_id, delay, Type, tid, us0=0.0, vs0=0.0, comment=''):
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
+        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+            Type = 'LOAD'
+        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+            Type = 'DISP'
+        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+            Type = 'VELO'
+        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+            Type = 'ACCE'
+        else:
+            msg = 'invalid TLOAD1 type  Type=%r' % Type
+            raise RuntimeError(msg)
+
         #: load ID
         self.sid = sid
 
@@ -681,23 +819,8 @@ class TLOAD1(TabularLoad):
         us0 = double_or_blank(card, 6, 'us0', 0.0)
         vs0 = double_or_blank(card, 7, 'vs0', 0.0)
 
-        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            Type = 'LOAD'
-        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            Type = 'DISP'
-        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            Type = 'VELO'
-        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            Type = 'ACCE'
-        else:
-            msg = 'invalid TLOAD1 type  Type=%r' % Type
-            raise RuntimeError(msg)
         assert len(card) <= 8, 'len(TLOAD1 card) = %i\ncard=%s' % (len(card), card)
         return TLOAD1(sid, excite_id, delay, Type, tid, us0, vs0, comment=comment)
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -713,7 +836,7 @@ class TLOAD1(TabularLoad):
         """
         msg = ' which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
-            self.tid = model.Table(self.tid, msg=msg)
+            self.tid = model.TableD(self.tid, msg=msg)
             self.tid_ref = self.tid
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay, msg=msg)
@@ -723,7 +846,7 @@ class TLOAD1(TabularLoad):
         msg = ' which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
             #try:
-            self.tid = model.Table(self.tid, msg=msg)
+            self.tid = model.TableD(self.tid, msg=msg)
             self.tid_ref = self.tid
             #except
         if isinstance(self.delay, integer_types) and self.delay > 0:
@@ -765,7 +888,6 @@ class TLOAD1(TabularLoad):
         elif self.delay == 0 or self.delay is None:
             tau = 0.0
         else:
-            #raise NotImplementedError('DELAY is not supported')
             tau = self.delay.get_delay_at_time(time)
 
         i = np.where(time - tau > 0)
@@ -815,11 +937,27 @@ class TLOAD2(TabularLoad):
     """
     type = 'TLOAD2'
 
-    def __init__(self, sid, excite_id, delay, Type, T1, T2,
-                 frequency, phase, c, b, us0, vs0, comment=''):
+    def __init__(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
+                 frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment=''):
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
+        if T2 is None:
+            T2 = T1
+        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+            Type = 'LOAD'
+        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+            Type = 'DISP'
+        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+            Type = 'VELO'
+        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+            Type = 'ACCE'
+        elif Type in [5, 6, 7, 12, 13]:
+            pass
+        else:
+            msg = 'invalid TLOAD2 type  Type=%r' % Type
+            raise RuntimeError(msg)
+
         #: load ID
         #: SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
         self.sid = sid
@@ -834,17 +972,23 @@ class TLOAD2(TabularLoad):
         self.T1 = T1
         #: Time constant. (Real; T2 > T1)
         self.T2 = T2
+
         #: Frequency in cycles per unit time. (Real >= 0.0; Default = 0.0)
         self.frequency = frequency
+
         #: Phase angle in degrees. (Real; Default = 0.0)
         self.phase = phase
+
         #: Exponential coefficient. (Real; Default = 0.0)
         self.c = c
+
         #: Growth coefficient. (Real; Default = 0.0)
         self.b = b
+
         #: Factor for initial displacements of the enforced degrees-of-freedom.
         #: (Real; Default = 0.0)
         self.us0 = us0
+
         #: Factor for initial velocities of the enforced degrees-of-freedom
         #: (Real; Default = 0.0)
         self.vs0 = vs0
@@ -865,19 +1009,6 @@ class TLOAD2(TabularLoad):
         us0 = double_or_blank(card, 11, 'us0', 0.)
         vs0 = double_or_blank(card, 12, 'vs0', 0.)
 
-        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            Type = 'LOAD'
-        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            Type = 'DISP'
-        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            Type = 'VELO'
-        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            Type = 'ACCE'
-        elif Type in [5, 6, 7, 12, 13]:
-            pass
-        else:
-            msg = 'invalid TLOAD2 type  Type=%r' % Type
-            raise RuntimeError(msg)
         assert len(card) <= 13, 'len(TLOAD2 card) = %i\ncard=%s' % (len(card), card)
         return TLOAD2(sid, excite_id, delay, Type, T1, T2, frequency, phase,
                       c, b, us0, vs0, comment=comment)
@@ -920,10 +1051,6 @@ class TLOAD2(TabularLoad):
         if self.Type == 'ACCE' and is_spcd:
             f[0] = self.vs0
         return f
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         return [self]

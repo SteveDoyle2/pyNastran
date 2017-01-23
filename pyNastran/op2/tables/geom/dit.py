@@ -20,11 +20,13 @@ class DIT(GeomCommon):
             (1105, 11, 133): self._read_tabled1,  # record 4
             (1205, 12, 134): self._read_tabled2,  # record 5
             (1305, 13, 140): self._read_tabled3,  # record 6
+            #(1405, 14, 141) : self._read_tabled4,  # record 7-MSC
+            #(4201, 42, 648) : self._read_tabledr, # record 8-MSC
 
-            #(105,1,93): self.readTableM1, # record 9
+            #(105, 1, 93): self._read_tablem1, # record 9
             (205, 2, 94): self._read_tablem2,  # record 10
             (305, 3, 95): self._read_tablem3,  # record 11
-            #(405,4,96): self._read_tablem4, # record 12
+            #(405, 4, 96): self._read_tablem4, # record 12
 
             (15, 21, 162): self._read_fake,
             (56, 26, 303): self._read_fake,
@@ -52,7 +54,7 @@ class DIT(GeomCommon):
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
-        #self.skippedCardsFile.write('skipping TABLED1 in DIT\n')
+        self.log.info('skipping TABLED1 in DIT\n')
         return
         #print("reading TABLED1")
         cls = TABLED1
@@ -88,12 +90,15 @@ class DIT(GeomCommon):
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
+        self.log.info('skipping TABLED2 in DIT\n')
+        #self.binary_debug.write('skipping TABLED2 in DIT\n')
         cls = TABLED2
         n = self._read_table2(cls, data)
         return n
 
     def _read_table2(self, cls, data):
         n = 0
+        self.log.info('skipping %s in DIT\n' % cls.type)
         return len(data)
         while len(data) >= 40:
             edata = data[n:n + 40]
@@ -123,6 +128,52 @@ class DIT(GeomCommon):
         n = self._read_table3(cls, data)
         return n
 
+    def _read_tabled4(self, data, n):
+        """
+        TABLED4 - the marker for Record 7
+        """
+        cls = TABLED4
+        n = self._read_table4(cls, data)
+        return n
+
+#TABLEDR
+
+    def _read_tablem1(self, data, n):
+        """
+        TABLEM1(105,1,93) - the marker for Record 9
+        """
+        self.log.info('skipping TABLEM1 in DIT\n')
+        return
+        cls = TABLEM1
+        n = self._read_table1(cls, data)
+        return n
+
+    def _read_tablem2(self, data, n):
+        """
+        TABLEM2(205,2,94) - the marker for Record 10
+        """
+        self.log.info('skipping TABLEM2 in DIT\n')
+        cls = TABLEM2
+        n = self._read_table2(cls, data)
+        return n
+
+    def _read_tablem3(self, data, n):
+        """
+        TABLEM3(305,3,95) - the marker for Record 11
+        """
+        cls = TABLEM3
+        n = self._read_table3(cls, data)
+        return n
+
+    def _read_tablem4(self, data, n):
+        """
+        TABLEM4(405,4,96) - the marker for Record 12
+        """
+        self.log.info('skipping TABLEM4 in DIT\n')
+        cls = TABLEM4
+        n = self._read_table4(cls, data)
+        return n
+
     def _read_table3(self, cls, data):
         n = 0
         ndata = len(data)
@@ -146,41 +197,9 @@ class DIT(GeomCommon):
             self._add_table_object(table)
         return len(data)
 
-#TABLEDR
+    def _read_table4(self, cls, data):
+        return len(data)
 
-    def _read_tablem1(self, data, n):
-        """
-        TABLEM1(105,1,93) - the marker for Record 9
-        """
-        self.skippedCardsFile.write('skipping TABLEM1 in DIT\n')
-        return
-        cls = TABLEM1
-        n = self._read_table1(cls, data)
-        return n
-
-    def _read_tablem2(self, data, n):
-        """
-        TABLEM2(205,2,94) - the marker for Record 10
-        """
-        cls = TABLEM2
-        n = self._read_table2(cls, data)
-        return n
-
-    def _read_tablem3(self, data, n):
-        """
-        TABLEM3(305,3,95) - the marker for Record 11
-        """
-        cls = TABLEM3
-        n = self._read_table3(cls, data)
-        return n
-
-    def _read_tablem4(self, data, n):
-        """
-        TABLEM4(405,4,96) - the marker for Record 12
-        """
-        cls = TABLEM4
-        n = self._read_table4(cls, data)
-        return n
 
 #TABLES1
 #TABLEST

@@ -1,10 +1,10 @@
 ---DONE---
 
-PyQt4 unique (PySide is broken)
-===============================
+PyQt4/PyQt5/PySide unique
+=========================
  - logger
 
- - buttons/pulldowns
+ - buttons/pulldowns for:
    - implicit pulldown for formats
    - zoom/rotate/snap to axis
    - screenshot
@@ -31,6 +31,7 @@ PyQt4 unique (PySide is broken)
    - surf
    - csv/txt elemental/nodal results for all formats
    - csv point loading with -u for all formats (multiple files allowed)
+   - csv deflection results
 
  - legend menu to edit properties for:
    - title
@@ -59,7 +60,7 @@ PyQt4 unique (PySide is broken)
    - selective editing based on representation
 
  - focal point picking (e.g. clipping)
-   - "f" key
+   - "f" key & button
    - zoom out far, press f to disable clipping
    - zoom in to desired view distance and press f  to 
      - cart3d can clip through bounding box to pick nodes/elements
@@ -92,8 +93,8 @@ PyQt4 unique (PySide is broken)
      - high resolution screenshots
      - animations
    - powerful tool for quickly creating a command line script
-   - TODO: syntax highlighting
-   - TODO: font should be courier new or something similar
+   - syntax highlighting with QScintilla (PyQt4)
+   -  - font is courier new
 
  - groups
    - create groups by Nastran properties (Nastran-specific)
@@ -105,6 +106,10 @@ PyQt4 unique (PySide is broken)
 ----------------------------------------------------
 ---Half Finished---
 
+- missing buttons/pulldowns for:
+ - background image
+
+
 ----------------------------------------------------
 ---Format Specific---
 
@@ -113,6 +118,7 @@ Nastran
  - load geometry -> .bdf/nas/dat
    - shows CAERO panels
    - change between sub-element and element using dynamic menu
+   - element quality metrics
 
  - load results -> op2/f06
    - SOL 101
@@ -143,7 +149,7 @@ Nastran
  - TODO: different nodal averaging methods (e.g.derive/avg, avg/derive)
  - TODO: interface loads
  - secondary actors
-   - CAERO, 123 SPCs, MPC/RBE, SUPORT1, SUPORT, CONM2
+   - CAERO, 123 SPCs, MPC/RBE, SUPORT1, SUPORT, CONM2, SPOINTs
    - bars orientation
 
 Cart3d
@@ -170,7 +176,7 @@ Panair
  - supports auto-reload of geometry
  - load results -> agps
    - nodal/centroidal - > Cp
- - TODO: show/hide panels based on menu/picking
+ - show/hide panels based on groups
 
 LaWGS
 =====
@@ -255,18 +261,20 @@ Surf
 
 Qt
 =======
-- cycling doesn't print out the COMMAND it used
-- probable bug in caclulation of icase during cycling
 - results selector window doesn't update on cycling
 - loading a new geometry over a result doesn't overwrite the old name
 - legend cancel doesn't return to baseline state (should it?)
-- self.cycle_results('resultName') doesn't return correct result
+- QScintilla doesn't always work (PyQt4)
+  - PySide doesn't have this
+  - PyQt5 probably doesn't have this
+- Python 3 doesn't save/reload the GUI state
+
 
 nastran
 =======
 - single results (e.g. pid) can't have their legends edited
   - is this still true?
-- the Isat model seems to have something wrong with the Pid
+- the Isat model seems to have something wrong with the Pid (in what way???)
   - is this still true?
 - elements with pid=0 corresponds to:
   - CONROD

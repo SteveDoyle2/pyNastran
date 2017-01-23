@@ -290,7 +290,7 @@ class GRID(VectorizedCard):
         return xyz
 
     def get_position_wrt_by_node_id(self, node_id=None, coord_id=0):
-        msg = 'which is required by GRIDs'
+        msg = ', which is required by GRIDs'
         i = self.get_node_index_by_node_id(node_id, msg=msg)
         self.get_position_wrt_by_node_index(i, coord_id, msg)
 

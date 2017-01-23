@@ -206,7 +206,7 @@ class PDAMPT(DamperProperty):
         model : BDF()
             the BDF object
         """
-        self.tbid = model.Table(self.tbid)
+        self.tbid = model.TableD(self.tbid)
         self.tbid_ref = self.tbid
 
     def uncross_reference(self):

@@ -131,7 +131,7 @@ class ABCQSet(Set):
         for n in range(nterms):
             i = n * 2 + 1
             idi = integer(card, i, 'ID' + str(n))
-            component = fcomponents(card, i + 1, 'component' + str(n))
+            component = parse_components(card, i + 1, 'component' + str(n))
             ids.append(idi)
             components.append(component)
         return cls(ids, components, comment=comment)
@@ -209,7 +209,7 @@ class SuperABCQSet(Set):
         for n in range(nterms):
             i = n * 2 + 2
             idi = integer(card, i, 'ID' + str(n))
-            component = fcomponents(card, i + 1, 'component' + str(n))
+            component = parse_components(card, i + 1, 'component' + str(n))
             ids.append(idi)
             components.append(component)
         return cls(seid, ids, components, comment=comment)
@@ -548,7 +548,7 @@ class CSET1(Set):
         if integer_string_or_blank(card, 2, 'C') == 'ALL':
             components = '123456'
         else:
-            components = fcomponents(card, 1, 'components')
+            components = parse_components(card, 1, 'components')
 
         ids = []
         id_count = 1
@@ -1064,7 +1064,7 @@ class USET(Set):
         for iset in range(nsets):
             i = iset * 2 + 2
             idi = integer(card, i, 'node_id' + str(iset))
-            component = fcomponents(card, i + 1, 'component' + str(iset))
+            component = parse_components(card, i + 1, 'component' + str(iset))
             components.append(component)
             ids.append(idi)
         return USET(name, components, ids, comment=comment)

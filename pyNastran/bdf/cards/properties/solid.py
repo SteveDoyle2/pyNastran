@@ -125,9 +125,17 @@ class PCOMPS(SolidProperty):
         #6:'isop', 7:'fctn',
     }
 
-    def __init__(self, pid, cordm, psdir, sb, nb, tref, ge,
-                 global_ply_ids, mids, thicknesses, thetas, failure_theories,
-                 interlaminar_failure_theories, souts, comment=''):
+    def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas,
+                 cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
+                 failure_theories=None, interlaminar_failure_theories=None,
+                 souts=None, comment=''):
+        nplies = len(mids)
+        if failure_theories is None:
+            failure_theories = [None] * nplies
+        if interlaminar_failure_theories is None:
+            interlaminar_failure_theories = [None] * nplies
+        if souts is None:
+            souts = ['NO'] * nplies
         SolidProperty.__init__(self)
         self.pid = pid
         self.cordm = cordm
@@ -183,9 +191,9 @@ class PCOMPS(SolidProperty):
             iply += 1
             ifield += 8
         assert len(card) <= ifield, 'len(PCOMPS card) = %i\ncard=%s' % (len(card), card)
-        return PCOMPS(pid, cordm, psdir, sb, nb, tref, ge,
-                      global_ply_ids, mids, thicknesses, thetas, failure_theories,
-                      interlaminar_failure_theories, souts,
+        return PCOMPS(pid, global_ply_ids, mids, thicknesses, thetas,
+                      cordm, psdir, sb, nb, tref, ge,
+                      failure_theories, interlaminar_failure_theories, souts,
                       comment=comment)
 
     def _verify(self, xref):

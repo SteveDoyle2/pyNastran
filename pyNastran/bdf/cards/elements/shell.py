@@ -168,6 +168,19 @@ class ShellElement(Element):
             msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid_ref.type)
             raise TypeError(msg)
 
+    def Mass_no_xref(self, model):
+        r"""
+        .. math:: m = \frac{m}{A} A  \f]
+        """
+        A = self.Area_no_xref(model)
+        pid_ref = model.Property(self.pid)
+        mpa = pid_ref.MassPerArea_no_xref(model)
+        try:
+            return mpa * A
+        except TypeError:
+            msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid_ref.type)
+            raise TypeError(msg)
+
     def flipNormal(self):
         raise NotImplementedError('flipNormal undefined for %s' % self.type)
 
@@ -613,7 +626,7 @@ class CPLSTN3(TriShell):
             assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid_ref.type in ['PPPLANE', 'PLPLANE', 'PGPLSN'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            assert self.pid_ref.type in ['PPLANE', 'PLPLANE', 'PGPLSN'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
             #if not self.pid_ref.type in ['PLPLANE']:
             #t = self.Thickness()
@@ -1172,6 +1185,11 @@ class QuadShell(ShellElement):
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
+    def Centroid_no_xref(self, model):
+        n1, n2, n3, n4 = self.get_node_positions_no_xref(model)
+        centroid = (n1 + n2 + n3 + n4) / 4.
+        return centroid
+
     def get_area(self):
         return self.Area()
 
@@ -1180,6 +1198,14 @@ class QuadShell(ShellElement):
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4) = self.get_node_positions()
+        area = 0.5 * norm(cross(n3-n1, n4-n2))
+        return area
+
+    def Area_no_xref(self, model):
+        """
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
+        where a and b are the quad's cross node point vectors"""
+        (n1, n2, n3, n4) = self.get_node_positions_no_xref(model)
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         return area
 
@@ -2946,8 +2972,9 @@ class CQUAD8(QuadShell):
     type = 'CQUAD8'
     aster_type = 'QUAD8'
 
-    def __init__(self, eid, pid, nids, T1=None, T2=None, T3=None, T4=None,
-                 theta_mcid=0., zoffset=0., TFlag=0, comment=''):
+    def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
+                 TFlag=0, T1=None, T2=None, T3=None, T4=None,
+                 comment=''):
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -2994,8 +3021,8 @@ class CQUAD8(QuadShell):
             T3 = 1.0
             T4 = 1.0
             TFlag = 0
-        return CQUAD8(eid, pid, nids, T1=T1, T2=T2, T3=T3, T4=T4,
-                      theta_mcid=theta_mcid, zoffset=zoffset, TFlag=TFlag,
+        return CQUAD8(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4,
                       comment=comment)
 
     @classmethod
@@ -3016,8 +3043,8 @@ class CQUAD8(QuadShell):
         theta_mcid = data[14]
         zoffset = data[14]
         TFlag = data[15]
-        return CQUAD8(eid, pid, nids, T1, T2, T3, T4, theta_mcid, zoffset, TFlag,
-                      comment=comment)
+        return CQUAD8(eid, pid, nids, theta_mcid, zoffset,
+                      TFlag, T1, T2, T3, T4, comment=comment)
 
     def cross_reference(self, model):
         """

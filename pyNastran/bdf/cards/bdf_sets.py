@@ -46,7 +46,7 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru, condense, build_thr
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
-    components as fcomponents, components_or_blank as fcomponents_or_blank,
+    parse_components, components_or_blank as fcomponents_or_blank,
     fields, string, integer_string_or_blank)
 
 
@@ -131,7 +131,7 @@ class ABCQSet(Set):
         for n in range(nterms):
             i = n * 2 + 1
             idi = integer(card, i, 'ID' + str(n))
-            component = fcomponents(card, i + 1, 'component' + str(n))
+            component = parse_components(card, i + 1, 'component' + str(n))
             ids.append(idi)
             components.append(component)
         return cls(ids, components, comment=comment)
@@ -209,7 +209,7 @@ class SuperABCQSet(Set):
         for n in range(nterms):
             i = n * 2 + 2
             idi = integer(card, i, 'ID' + str(n))
-            component = fcomponents(card, i + 1, 'component' + str(n))
+            component = parse_components(card, i + 1, 'component' + str(n))
             ids.append(idi)
             components.append(component)
         return cls(seid, ids, components, comment=comment)
@@ -548,7 +548,7 @@ class CSET1(Set):
         if integer_string_or_blank(card, 2, 'C') == 'ALL':
             components = '123456'
         else:
-            components = fcomponents(card, 1, 'components')
+            components = parse_components(card, 1, 'components')
 
         ids = []
         id_count = 1
@@ -997,40 +997,40 @@ class SEBSET(SuperABCQSet):
     """
     type = 'SEBSET'
 
-    def __init__(self, seid, IDs, components, comment=''):
-        SuperABCQSet.__init__(self, seid, IDs, components, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEBSET1(SuperABQSet1):
     type = 'SEBSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SECSET(SuperABCQSet):
     type = 'SECSET'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABCQSet.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABCQSet.__init__(self, seid, components, ids, comment)
 
 class SECSET1(SuperABQSet1):
     type = 'SECSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SEQSET(SuperABCQSet):
     type = 'SEQSET'
 
-    def __init__(self, seid, IDs, components, comment=''):
-        SuperABCQSet.__init__(self, seid, IDs, components, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEQSET1(SuperABQSet1):
     type = 'SEQSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
@@ -1140,7 +1140,7 @@ class USET(Set):
         for iset in range(nsets):
             i = iset * 2 + 2
             idi = integer(card, i, 'node_id' + str(iset))
-            component = fcomponents(card, i + 1, 'component' + str(iset))
+            component = parse_components(card, i + 1, 'component' + str(iset))
             components.append(component)
             ids.append(idi)
         return USET(name, components, ids, comment=comment)

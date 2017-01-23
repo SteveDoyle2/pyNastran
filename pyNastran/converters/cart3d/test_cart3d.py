@@ -6,6 +6,7 @@ import unittest
 import pyNastran
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
+from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
@@ -142,7 +143,6 @@ class TestCart3d(unittest.TestCase):
 
     def test_cart3d_input_c3d(self):
         """tests the input.c3d reading"""
-        from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
         input_c3d_filename = os.path.join(test_path, 'input.c3d')
         read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True)
 

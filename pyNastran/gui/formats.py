@@ -222,3 +222,10 @@ except ImportError:
     #        """dummy gui init"""
     #        pass
     #is_abaqus = False
+
+try:
+    from pyNastran.converters.su2.su2_io import SU2_IO
+    is_su2 = True
+except ImportError:
+    raise
+

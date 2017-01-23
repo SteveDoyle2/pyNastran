@@ -203,7 +203,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, write_xlsx=False,
-            is_mag_phase=False, is_sort2=False,
+            is_mag_phase=False, is_sort2=False, is_nx=None,
             delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -232,6 +232,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     is_sort2 : bool; default=False
         False : writes "transient" data is SORT1
         True : writes "transient" data is SORT2
+    is_nx : bool; default=None
+        True : use NX Nastran
+        False : use MSC Nastran
+        None : guess
     delete_f06 : bool; default=False
         deletes the F06 (assumes write_f06 is True)
     subcases : List[int, ...]; default=None
@@ -284,6 +288,17 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         op2 = OP2Geom(debug=debug)
         op2_nv = OP2Geom(debug=debug, debug_file=debug_file)
         op2_bdf = OP2Geom(debug=debug)
+        if is_nx is None:
+            pass
+        elif is_nx:
+            op2.set_as_nx()
+            op2_nv.set_as_nx()
+            op2_bdf.set_as_nx()
+        else:
+            op2.set_as_msc()
+            op2_nv.set_as_msc()
+            op2_bdf.set_as_msc()
+
         op2_bdf.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                   nxref_errors=0, stop_on_xref_error=True)
     else:
@@ -478,9 +493,9 @@ def main():
     msg = "Usage:\n"
     is_release = True
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n]      [-f]           [-z] [-w] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n]      [-f]           [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] OP2_FILENAME\n"
     else:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] OP2_FILENAME\n"
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -508,6 +523,7 @@ def main():
     msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -w, --is_sort2        Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude   Exclude specific results\n"
+    msg += "  --nx                  Assume NX Nastran\n"
 
     if not is_release:
         msg += "\n"
@@ -565,7 +581,8 @@ def main():
             binary_debug=data['--binarydebug'],
             is_sort2=data['--is_sort2'],
             compare=not data['--disablecompare'],
-            quiet=data['--quiet']
+            quiet=data['--quiet'],
+            is_nx=data['--nx'],
         )
         prof.dump_stats('op2.profile')
 
@@ -589,7 +606,9 @@ def main():
                 binary_debug=data['--binarydebug'],
                 is_sort2=data['--is_sort2'],
                 compare=not data['--disablecompare'],
-                quiet=data['--quiet'])
+                quiet=data['--quiet'],
+                is_nx=data['--nx'],
+                )
     print("dt = %f" % (time.time() - t0))
 
 if __name__ == '__main__':  # op2

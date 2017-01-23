@@ -19,7 +19,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
-    components, components_or_blank, integer_double_string_or_blank, blank,
+    parse_components, components_or_blank, integer_double_string_or_blank, blank,
     interpret_value)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -92,7 +92,7 @@ class EIGB(Method):
         norm = string_or_blank(card, 9, 'norm', 'MAX')
         if norm == 'POINT':
             G = integer(card, 10, 'G')
-            C = components(card, 11, 'C')
+            C = parse_components(card, 11, 'C')
         else:
             G = integer_or_blank(card, 10, 'G')
             C = components_or_blank(card, 11, 'C')
@@ -210,7 +210,7 @@ class EIGC(Method):
         norm = string_or_blank(card, 3, 'norm')
         if norm == 'POINT':
             G = integer(card, 4, 'G')
-            C = components(card, 5, 'C')
+            C = parse_components(card, 5, 'C')
         else:
             G = blank(card, 4, 'G')
             C = blank(card, 5, 'C')
@@ -494,10 +494,48 @@ class EIGR(Method):
     Defines data needed to perform real eigenvalue analysis
     """
     type = 'EIGR'
-    allowed_methods = ['LAN', 'AHOU', 'INV', 'SINV', 'GIV', 'MGIV',
-                       'HOU', 'MHOU', 'AGIV']
+    allowed_methods = [
+        'LAN', 'AHOU', # recommended
+        'INV', 'SINV', 'GIV', 'MGIV', 'HOU', 'MHOU', 'AGIV' # obsolete
+    ]
 
-    def __init__(self, sid, method, f1, f2, ne, nd, norm, G, C, comment=''):
+    def __init__(self, sid, method='LAN', f1=None, f2=None, ne=None, nd=None,
+                 norm='MASS', G=None, C=None, comment=''):
+        """
+        Adds a EIGR card
+
+        Parameters
+        ----------
+        sid : int
+            method id
+        method : str; default='LAN'
+            eigenvalue method
+            recommended: {LAN, AHOU}
+            obsolete : {INV, SINV, GIV, MGIV, HOU, MHOU, AGIV}
+        f1 / f2 : float; default=None
+            lower/upper bound eigenvalue
+        f2 : float; default=None
+            upper bound eigenvalue
+        ne : int; default=None
+            estimate of number of roots (used for INV)
+        nd : int; default=None
+            desired number of roots
+        msglvl : int; default=0
+            debug level; 0-4
+        maxset : int; default=None
+            Number of vectors in block or set
+        shfscl : float; default=None
+            estimate of first flexible mode natural frequency
+        norm : str; default=None
+            {MAX, MASS, AF, POINT}
+            default=MASS (NX)
+        G : int; default=None
+            node id for normalization; only for POINT
+        C : int; default=None
+            component for normalization (1-6); only for POINT
+        comment : str; default=''
+            a comment for the card
+        """
         Method.__init__(self)
         if comment:
             self.comment = comment
@@ -564,7 +602,7 @@ class EIGR(Method):
 
         if method == 'POINT':
             G = integer(card, 10, 'G')
-            C = components(card, 11, 'C')
+            C = parse_components(card, 11, 'C')
         else:
             G = blank(card, 10, 'G')
             C = blank(card, 11, 'C')
@@ -597,14 +635,54 @@ class EIGRL(Method):
     """
     Defines data needed to perform real eigenvalue (vibration or buckling)
     analysis with the Lanczos method
+
+    +-------+-----+----+----+----+--------+--------+--------+------+
+    |   1   |  2  |  3 |  4 |  5 |    6   |    7   |    8   |   9  |
+    +=======+=====+====+====+====+========+========+========+======+
+    | EIGRL | SID | V1 | V2 | ND | MSGLVL | MAXSET | SHFSCL | NORM |
+    +-------+-----+----+----+----+--------+--------+--------+------+
+    |        option_1 = value_1 option_2 = value_2, etc.           |
+    +--------------------------------------------------------------+
     """
     type = 'EIGRL'
 
-    def __init__(self, sid, v1, v2, nd, msglvl, maxset, shfscl, norm,
-                 options, values, comment=''):
+    def __init__(self, sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None, shfscl=None,
+                 norm=None, options=None, values=None, comment=''):
+        """
+        Adds an EIGRL card
+
+        Parameters
+        ----------
+        sid : int
+            method id
+        v1 : float; default=None
+            lower bound eigenvalue
+        v2 : float; default=None
+            upper bound eigenvalue
+        nd : int
+            number of roots
+        msglvl : int; default=0
+            debug level; 0-4
+        maxset : int; default=None
+            Number of vectors in block or set
+        shfscl : float; default=None
+            estimate of first flexible mode natural frequency
+        norm : str; default=None
+            {MAX, MASS, AF}
+        options : ???; default=None -> []
+            ???
+        values : ???; default=None -> []
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         Method.__init__(self)
         if comment:
             self.comment = comment
+        if options is None:
+            options = []
+        if values is None:
+            values = []
 
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
@@ -632,6 +710,22 @@ class EIGRL(Method):
         self.norm = norm
         self.options = options
         self.values = values
+
+    def validate(self):
+        assert self.norm in [None, 'MAX', 'MASS', 'AF'], 'norm=%r' % self.norm
+        assert self.msglvl in [0, 1, 2, 3, 4], 'msglvl=%r' % self.msglvl
+        assert len(self.options) == len(self.values), 'options=%s values=%s' % (self.options, self.values)
+        for option, value in zip(self.options, self.values):
+            if option == 'NORM':
+                assert value in ['MAX'], 'option=%r value=%r' % (option, value)
+            elif option == 'ALPH':
+                # float
+                pass
+            elif option == 'NUMS':
+                # integer
+                pass
+            else:
+                raise NotImplementedError('option=%r value=%r' % (option, value))
 
     @classmethod
     def add_card(cls, card, comment=''):

@@ -190,7 +190,7 @@ class XPoint(BaseCard):
         ----------
         size : int; default=8
             unused
-        size : bool; default=False
+        is_double : bool; default=False
             unused
         """
         msg = self.comment
@@ -221,18 +221,12 @@ class SPOINT(XPoint):
         """
         Creates the SPOINT card
 
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the SPOINT fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
+        Parameters
+        ----------
+        nid : int
+           the SPOINT id
+        comment : str; default=''
+            a comment for the card
         """
         XPoint.__init__(self, nid, comment)
 
@@ -245,18 +239,12 @@ class EPOINT(XPoint):
         """
         Creates the EPOINT card
 
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the SPOINT fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
+        Parameters
+        ----------
+        nid : int
+           the EPOINT id
+        comment : str; default=''
+            a comment for the card
         """
         XPoint.__init__(self, nid, comment)
 
@@ -308,23 +296,23 @@ class XPoints(BaseCard):
         #Node.__init__(self)
         if comment:
             self.comment = comment
-        self.points = ids
+        if isinstance(ids, integer_types):
+            ids = [ids]
+        self.points = set(expand_thru(ids))
 
     @classmethod
     def add_card(cls, card, comment=''):
-        fields = []
+        points = []
         for i in range(1, len(card)):
             field = integer_or_string(card, i, 'ID%i' % i)
-            fields.append(field)
-        points = set(expand_thru(fields))
+            points.append(field)
         return cls(points, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        fields = data
-        assert isinstance(data, list), data
-        assert isinstance(data[0], int), data
-        points = set(expand_thru(fields))
+        points = data
+        assert isinstance(points, list), points
+        assert isinstance(points[0], int), points
         return cls(points, comment=comment)
 
     def __len__(self):
@@ -474,7 +462,7 @@ class GRDSET(BaseCard):
     type = 'GRDSET'
 
     #: allows the get_field method and update_field methods to be used
-    _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
+    _field_map = {2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
     def __init__(self, cp, cd, ps, seid, comment=''):
         """
@@ -1074,6 +1062,14 @@ class GRID(BaseCard):
         msg = ' which is required by GRID nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
 
+    def get_position_no_xref(self, model):
+        if self.cp == 0:
+            return self.xyz
+        assert isinstance(self.cp, int), self.cp
+        coord = model.Coord(self.cp)
+        xyz = coord.transform_node_to_global_no_xref(self.xyz, model)
+        return xyz
+
     def get_position(self):
         """
         Gets the point in the global XYZ coordinate system.
@@ -1109,6 +1105,21 @@ class GRID(BaseCard):
             if self.cp == 0:
                 return self.xyz
             raise
+        return xyz
+
+    def get_position_wrt_no_xref(self, model, cid):
+        """see get_position_wrt"""
+        if cid == self.cp: # same coordinate system
+            return self.xyz
+        msg = ' which is required by GRID nid=%s' % (self.nid)
+
+        # converting the xyz point arbitrary->global
+        cp_ref = model.Coord(self.cp, msg=msg)
+        p = cp_ref.transform_node_to_global_no_xref(self.xyz, model)
+
+        # a matrix global->local matrix is found
+        coord_b = model.Coord(cid, msg=msg)
+        xyz = coord_b.transform_node_to_local(p)
         return xyz
 
     def get_position_wrt(self, model, cid):

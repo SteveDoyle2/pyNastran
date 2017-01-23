@@ -21,7 +21,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_double, integer_double_or_blank, integer_or_blank,
-    double_or_blank, integer_double_or_string, components, components_or_blank,
+    double_or_blank, integer_double_or_string, parse_components, components_or_blank,
     blank, string)
 from pyNastran.bdf.field_writer_16 import print_card_16
 # from pyNastran.bdf.cards.utils import build_table_lines
@@ -32,17 +32,40 @@ class RigidElement(Element):
         pass
 
 class RROD(RigidElement):
+    """
+    Rigid Pin-Ended Element Connection
+    Defines a pin-ended element that is rigid in translation
+
+    +------+-----+----+----+-----+-----+-------+
+    |   1  |  2  | 3  | 4  |  5  |  6  |   7   |
+    +======+=====+====+====+=====+=====+=======+
+    | RROD | EID | GA | GB | CMA | CMB | ALPHA |
+    +------+-----+----+----+-----+-----+-------+
+    | RROD | 5   | 1  |  2 |     |     | 6.5-6 |
+    +------+-----+----+----+-----+-----+-------+
+    """
     type = 'RROD'
 
-    def __init__(self, eid, ga, gb, cma, cmb, alpha, comment=''):
+    def __init__(self, eid, ga, gb, cma=None, cmb=None, alpha=0.0, comment=''):
         """
-        +------+-----+----+----+-----+-----+-------+
-        |   1  |  2  | 3  | 4  |  5  |  6  |   7   |
-        +======+=====+====+====+=====+=====+=======+
-        | RROD | EID | GA | GB | CMA | CMB | ALPHA |
-        +------+-----+----+----+-----+-----+-------+
-        | RROD | 5   | 1  |  2 |     |     | 6.5-6 |
-        +------+-----+----+----+-----+-----+-------+
+        Creates a RROD
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        ga / gb : int
+            grid points
+        #cna / cnb : str
+            #independent DOFs
+        cma / cmb : str; default=None
+            dependent DOF
+            must be in [None, '1', '2', '3']
+            one of them must be None
+        alpha : float; default=0.0
+            coefficient of thermal expansion
+        comment : str; default=''
+            a comment for the card
         """
         RigidElement.__init__(self)
         if comment:
@@ -53,6 +76,24 @@ class RROD(RigidElement):
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
+
+    def validate(self):
+        msg = ''
+        if self.cma not in [None, '1', '2', '3']:
+            msg += "  ga=%r; cma=%r must be in [None, '1', '2', '3']\n" % (
+                self.ga, self.cma)
+        if self.cmb not in [None, '1', '2', '3']:
+            msg += "  gb=%r; cmb=%r must be in [None, '1', '2', '3']\n" % (
+                self.gb, self.cmb)
+        if self.cma is None and self.cmb is None:
+            msg += 'A  ga=%s cma=%r; gb=%s cmb=%r; cma or cmb must be None (not both)' % (
+                self.ga, self.cma, self.gb, self.cmb)
+        elif self.cma is not None and self.cmb is not None:
+            msg += 'D  ga=%s cma=%r; gb=%s cmb=%r; cma or cmb must be None (not both)' % (
+                self.ga, self.cma, self.gb, self.cmb)
+
+        if msg:
+            raise RuntimeError('Invalid Dependent DOFs\n' + msg.rstrip())
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -95,9 +136,9 @@ class RROD(RigidElement):
             the BDF object
         """
         msg = ' which is required by RROD eid=%s' % (self.eid)
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
 
     def uncross_reference(self):
@@ -108,11 +149,15 @@ class RROD(RigidElement):
     @property
     def independent_nodes(self):
         """gets the independent node ids"""
-        return [self.Ga()]
+        if self.cma is None:
+            return [self.Ga()]
+        return [self.Gb()]
 
     @property
     def dependent_nodes(self):
         """gets the dependent node ids"""
+        if self.cma is not None:
+            return [self.Ga()]
         return [self.Gb()]
 
     def raw_fields(self):
@@ -134,17 +179,37 @@ class RROD(RigidElement):
 
 
 class RBAR(RigidElement):
+    """
+    Defines a rigid bar with six degrees-of-freedom at each end.
+
+    +------+-----+----+----+--------+-----+-----+-----+-------+
+    |  1   |  2  |  3 |  4 |    5   |  6  |  7  |  8  |   9   |
+    +======+=====+====+====+========+=====+=====+=====+=======+
+    | RBAR | EID | GA | GB |  CNA   | CNB | CMA | CMB | ALPHA |
+    +------+-----+----+----+--------+-----+-----+-----+-------+
+    | RBAR |  5  | 1  |  2 | 123456 |     |     |     | 6.5-6 |
+    +------+-----+----+----+--------+-----+-----+-----+-------+
+    """
     type = 'RBAR'
 
     def __init__(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
-        +------+-----+----+----+--------+-----+-----+-----+-------+
-        |  1   |  2  |  3 |  4 |    5   |  6  |  7  |  8  |   9   |
-        +======+=====+====+====+========+=====+=====+=====+=======+
-        | RBAR | EID | GA | GB |  CNA   | CNB | CMA | CMB | ALPHA |
-        +------+-----+----+----+--------+-----+-----+-----+-------+
-        | RBAR |  5  | 1  |  2 | 123456 |     |     |     | 6.5-6 |
-        +------+-----+----+----+--------+-----+-----+-----+-------+
+        Creates a RBAR
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        ga / gb : int
+            grid points
+        cna / cnb : str
+            independent DOFs
+        cma / cmb : str
+            dependent DOFs
+        alpha : float; default=0.0
+            coefficient of thermal expansion
+        comment : str; default=''
+            a comment for the card
         """
         RigidElement.__init__(self)
         if comment:
@@ -158,15 +223,32 @@ class RBAR(RigidElement):
         self.cmb = cmb
         self.alpha = alpha
 
+    def validate(self):
+        ncna = len(self.cna)
+        ncnb = len(self.cnb)
+        nindependent = ncna + ncnb
+        independent = self.cna + self.cnb
+        if nindependent != 6:
+            msg = 'nindependent=%s; cna=%s (%s) cnb=%s (%s)' % (
+                nindependent, self.cna, ncna, self.cnb, ncnb)
+            raise RuntimeError(msg)
+        for comp in '123456':
+            msgi = ''
+            if comp not in independent:
+                msgi += '  comp=%s is not nindependent\n' % (comp)
+        if msgi:
+            msg = 'cna=%s cnb=%s\n%s' % msgi
+            raise RuntimeError(msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
-        cna = components_or_blank(card, 4, 'cna')
-        cnb = components_or_blank(card, 5, 'cnb')
-        cma = components_or_blank(card, 6, 'cma')
-        cmb = components_or_blank(card, 7, 'cmb')
+        cna = components_or_blank(card, 4, 'cna', '')
+        cnb = components_or_blank(card, 5, 'cnb', '')
+        cma = components_or_blank(card, 6, 'cma', '')
+        cmb = components_or_blank(card, 7, 'cmb', '')
         alpha = double_or_blank(card, 8, 'alpha', 0.0)
         assert len(card) <= 9, 'len(RBAR card) = %i\ncard=%s' % (len(card), card)
         return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
@@ -405,7 +487,9 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         Cmi : List[str]
             the dependent components (e.g., '123456')
         alpha : float; default=0.
-            Thermal expansion coefficient
+            thermal expansion coefficient
+        comment : str; default=''
+            a comment for the card
         """
         RigidElement.__init__(self)
         if comment:
@@ -820,16 +904,37 @@ class RBE3(RigidElement):
     def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
                  Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
+        Creates an RBE3
+
+        Parameters
+        ----------
         eid : int
             element id
         refgrid : int
             dependent node
-        refc - independent
-        GiJs - independent
-        Gmi - dependent
-        Cmi - dependent
-        alpha : float
-            ???
+        refc - str
+            dependent components for refgrid???
+
+        Independent Set
+        ---------------
+          GiJs : List[int, ..., int]
+              independent nodes
+          comps : List[str, ..., str]
+              independent components
+          weights : List[float, ..., float]
+              weights for the importance of the DOF
+
+        Dependent / UM Set
+        ------------------
+          Gmi : List[int, ..., int]
+              dependent nodes
+          Cmi : List[str, ..., str]
+              dependent components
+
+        alpha : float; default=0.0
+            thermal expansion coefficient
+        comment : str; default=''
+            a comment for the card
         """
         RigidElement.__init__(self)
         if comment:
@@ -838,7 +943,6 @@ class RBE3(RigidElement):
         self.refgrid = refgrid
         self.refc = refc
 
-        #self.WtCG_groups = []
         if not len(weights) == len(comps) and len(weights) == len(Gijs):
             msg = 'len(weights)=%s len(comps)=%s len(Gijs)=%s' % (
                 len(weights), len(comps), len(Gijs))
@@ -891,7 +995,6 @@ class RBE3(RigidElement):
 
         i = ioffset
         n = 1
-        weight_cg_group = []
         weights = []
         comps = []
         Gijs = []
@@ -921,11 +1024,9 @@ class RBE3(RigidElement):
                 assert compi is not None
                 assert len(Gij) > 0, Gij
                 assert Gij[0] is not None, Gij
-                #weight_cg_group = [wt, compi, Gij]
                 weights.append(wt)
                 comps.append(compi)
                 Gijs.append(Gij)
-                #weight_cg_group.append(weight_cg_group)
                 #print('----finished a group=%r----' % weight_cg_group)
             else:
                 i += 1
@@ -943,8 +1044,8 @@ class RBE3(RigidElement):
                 cm_name = 'cm' + str(n)
                 gmi = integer_or_blank(card, j, gm_name)
                 if gmi is not None:
-                    cmi = components(card, j + 1, cm_name)
-                    #print "gmi=%s cmi=%s" % (gmi, cmi)
+                    cmi = parse_components(card, j + 1, cm_name)
+                    #print("gmi=%s cmi=%s" % (gmi, cmi))
                     Gmi.append(gmi)
                     Cmi.append(cmi)
 
@@ -1111,16 +1212,19 @@ class RSPLINE(RigidElement):
     |         |  C4 |  G5 | C5 | G6 | -etc.- |    |    |    |
     +---------+-----+-----+----+----+--------+----+----+----+
     """
-    def __init__(self, eid, nids, components, diameter_ratio=0.1, comment=''):
+    def __init__(self, eid, independent_nid, dependent_nids, dependent_components,
+                 diameter_ratio=0.1, comment=''):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
-        self.nids = nids
+        self.independent_nid = independent_nid
+        self.dependent_nids = dependent_nids
         # Components to be constrained
-        self.components = components
+        self.dependent_components = dependent_components
 
-        # Ratio of the diameter of the elastic tube to the sum of the lengths of all segments
+        # Ratio of the diameter of the elastic tube to the sum of the
+        # lengths of all segments
         self.diameter_ratio = diameter_ratio
 
     @classmethod
@@ -1130,16 +1234,18 @@ class RSPLINE(RigidElement):
         nfields = len(card)
         assert nfields % 2 == 1, 'nfields=%s card=%s'  % (nfields, card)
 
-        nids = []
-        components = []
-        j = 1
-        for i in range(3, nfields, 2):
+        dependent_nids = []
+        dependent_components = []
+        independent_nid = integer(card, 3, 'nid_1')
+        j = 2
+        for i in range(4, nfields, 2):
             nid = integer(card, i, 'nid_%s' % j)
             comp = components_or_blank(card, i+1, 'components_%i' % j)
-            nids.append(nid)
-            components.append(comp)
+            dependent_nids.append(nid)
+            dependent_components.append(comp)
             j += 1
-        return RSPLINE(eid, nids, components, diameter_ratio=diameter_ratio, comment=comment)
+        return RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
+                       diameter_ratio=diameter_ratio, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1178,7 +1284,7 @@ class RSPLINE(RigidElement):
     @property
     def independent_nodes(self):
         """gets the independent node ids"""
-        return []
+        return [self.independent_nid]
         #return self.Gni_node_ids
 
     @property
@@ -1186,11 +1292,11 @@ class RSPLINE(RigidElement):
         """gets the dependent node ids"""
         #nodes = self.Gmi_node_ids
         #return nodes
-        return self.nids
+        return self.dependent_nids
 
     def raw_fields(self):
-        list_fields = [self.type, self.eid, self.diameter_ratio]
-        for (i, gn, cn) in zip(count(), self.nids, self.components):
+        list_fields = [self.type, self.eid, self.diameter_ratio, self.independent_nid]
+        for (i, gn, cn) in zip(count(), self.dependent_nids, self.dependent_components):
             list_fields += [gn, cn]
         return list_fields
 

@@ -1,3 +1,4 @@
+# coding: utf-8
 # pylint: disable=R0902,R0904,R0914,C0302,C0111
 """
 All aero cards are defined in this file.  This includes:
@@ -38,7 +39,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string, double_string_or_blank,
-    interpret_value, components as parse_components)
+    interpret_value, parse_components)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 
@@ -186,12 +187,31 @@ class AEFACT(BaseCard):
     type = 'AEFACT'
 
     def __init__(self, sid, Di, comment=''):
+        """
+        Creates an AEFACT card, which defines the mach, dynamic_pressure,
+        velocity, and reduced frequency for an FLUTTER card
+
+        Used in flutter (145) and gust (146) analysis.
+
+        Parameters
+        ----------
+        sid : int
+            unique id
+        Di : List[float, ..., float]
+            list of:
+             - machs
+             - dynamic_pressures
+             - velocities
+             - reduced frequency
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
         #: Number (float)
-        self.Di = np.array(Di, dtype='float64')
+        self.Di = np.asarray(Di, dtype='float64')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -242,7 +262,7 @@ class AELINK(BaseCard):
     +========+=======+=======+========+====+=======+====+=======+====+
     | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
     +--------+-------+-------+--------+----+-------+----+-------+----+
-    |        | LABL4 | C4    | etc.   |    |       |    |       |    |
+    |        | LABL4 |  C4   | etc.   |    |       |    |       |    |
     +--------+-------+-------+--------+----+-------+----+-------+----+
 
     +--------+-------+-------+-------+------+
@@ -252,12 +272,29 @@ class AELINK(BaseCard):
     type = 'AELINK'
 
     def __init__(self, id, label, independent_labels, Cis, comment=''):
+        """
+        Creates an AELINK card, which defines an equation linking
+        AESTAT and AESURF cards
+
+        Parameters
+        ----------
+        id : int
+            unique id
+        label : str
+            name of the AESURF(???) card
+        independent_labels : List[str, ..., str]
+            name for the AESTAT(???) cards
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: defines the dependent variable name (string)
         self.label = label
+
         #: defines the independent variable name (string)
         self.independent_labels = independent_labels
+
         #: linking coefficient (real)
         self.Cis = Cis
 
@@ -342,6 +379,19 @@ class AELIST(BaseCard):
     type = 'AELIST'
 
     def __init__(self, sid, elements, comment=''):
+        """
+        Creates an AELIST card, which defines the aero boxes for
+        an AESURF/SPLINEx.
+
+        Parameters
+        ----------
+        sid : int
+            unique id
+        elements : List[int, ..., int]
+            list of box ids
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Set identification number. (Integer > 0)
@@ -403,22 +453,36 @@ class AEPARM(BaseCard):
         1: 'id', 2:'label', 3:'units'
     }
 
-    def __init__(self, id, label, units, comment=''):
+    def __init__(self, aeparm_id, label, units, comment=''):
+        """
+        Creates an AEPARM card, which defines a new trim variable.
+
+        Parameters
+        ----------
+        id : int
+            the unique id
+        label : str
+            the variable name
+        units : str
+            unused by Nastran
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
-        self.id = id
+        self.id = aeparm_id
         self.label = label
         self.units = units
 
     @classmethod
     def add_card(cls, card, comment=''):
-        id = integer(card, 1, 'id')
-        label = string(card, 2, 'lable')
+        aeparm_id = integer(card, 1, 'aeparm_id')
+        label = string(card, 2, 'label')
         units = card.field(3)
         units = '' if units is None else units
 
         assert len(card) <= 4, 'len(AEPARM card) = %i\ncard=%s' % (len(card), card)
-        return AEPARM(id, label, units, comment=comment)
+        return AEPARM(aeparm_id, label, units, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -428,8 +492,8 @@ class AEPARM(BaseCard):
         assert len(data) == 3, 'data = %s' % data
         return AEPARM(id, label, units, comment=comment)
 
-    #def cross_reference(self, model):
-        #pass
+    def cross_reference(self, model):
+        pass
 
     #def uncross_reference(self):
         #pass
@@ -469,7 +533,7 @@ class AESTAT(BaseCard):
     _field_map = {
         1: 'id', 2:'label',
     }
-    def __init__(self, id, label, comment=''):
+    def __init__(self, aestat_id, label, comment=''):
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
 
@@ -484,22 +548,22 @@ class AESTAT(BaseCard):
         """
         if comment:
             self.comment = comment
-        self.id = id
+        self.id = aestat_id
         self.label = label
 
     @classmethod
     def add_card(cls, card, comment=''):
-        id = integer(card, 1, 'ID')
+        aestat_id = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
         assert len(card) <= 3, 'len(AESTAT card) = %i\ncard=%s' % (len(card), card)
-        return AESTAT(id, label, comment=comment)
+        return AESTAT(aestat_id, label, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        id = data[0]
+        aestat_id = data[0]
         label = data[1]
         assert len(data) == 2, 'data = %s' % data
-        return AESTAT(id, label, comment=comment)
+        return AESTAT(aestat_id, label, comment=comment)
 
     #def cross_reference(self, model):
         #pass
@@ -552,7 +616,7 @@ class AESURF(BaseCard):
                  hmllim=None, hmulim=None, tqllim=None, tqulim=None,
                  comment=''):
         """
-        Creates an AESURF card
+        Creates an AESURF card, which defines a control surface
 
         Parameters
         ----------
@@ -560,14 +624,10 @@ class AESURF(BaseCard):
             controller number
         label : str
             controller name
-        cid1 : int
-            coordinate system id for primary control surface
-        alid1 : int
-            AELIST id for primary control surface
-        cid2 : int; default=None
-            coordinate system id for secondary control surface
-        alid2 : int; default=None
-            AELIST id for secondary control surface
+        cid1 / cid2 : int / None
+            coordinate system id for primary/secondary control surface
+        alid1 / alid2 : int / None
+            AELIST id for primary/secondary control surface
         eff : float; default=1.0
             Control surface effectiveness
         ldw : str; default='LDW'
@@ -636,6 +696,8 @@ class AESURF(BaseCard):
         #: function of the dynamic pressure. (Integer>0, Default = no limit)
         self.tqllim = tqllim
         self.tqulim = tqulim
+        self.tqllim_ref = None
+        self.tqulim_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -704,6 +766,10 @@ class AESURF(BaseCard):
         if self.alid2:
             self.alid2 = model.AELIST(self.AELIST_id2())
             self.alid2_ref = self.alid2
+        if self.tqllim is not None:
+            self.tqllim_ref = model.TableD(self.tqllim)
+        if self.tqulim is not None:
+            self.tqulim_ref = model.TableD(self.tqulim)
 
     def uncross_reference(self):
         self.cid1 = self.Cid1()
@@ -797,6 +863,21 @@ class AESURFS(BaseCard):  # not integrated
     type = 'AESURFS'
 
     def __init__(self, aesid, label, list1, list2, comment=''):
+        """
+        Creates an AESURFS card
+
+        Parameters
+        ----------
+        aesid : int
+            the unique id
+        label : str
+            the AESURF name
+        list1 / list2 : int / None
+            the list (AELIST) of node ids for the primary/secondary
+            control surface(s) on the AESURF card
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.aesid = aesid
@@ -1235,8 +1316,8 @@ class AEROS(Aero):
 
 class CSSCHD(Aero):
     """
-    Defines a scheduled control surface deflection as a function of Mach number
-    and angle of attack.
+    Defines a scheduled control surface deflection as a function of
+    Mach number and angle of attack.
 
     +--------+-----+-------+--------+-------+-------+
     |    1   |  2  |   3   |   4    |   5   |   6   |
@@ -1254,6 +1335,25 @@ class CSSCHD(Aero):
     }
 
     def __init__(self, sid, aesid, lschd, lalpha=None, lmach=None, comment=''):
+        """
+        Creates an CSSCHD card, which defines a specified control surface
+        deflection as a function of Mach and alpha (used in SOL 144/146).
+
+        Parameters
+        ----------
+        sid : int
+            the unique id
+        aesid : int
+            the control surface (AESURF) id
+        lalpha : int; default=None
+            the angle of attack profile (AEFACT) id
+        lmach : int; default=None
+            the mach profile (AEFACT) id
+        lschd : int; default=None
+            the control surface deflection profile (AEFACT) id
+        comment : str; default=''
+            a comment for the card
+        """
         Aero.__init__(self)
         if comment:
             self.comment = comment
@@ -1382,24 +1482,6 @@ class CAERO1(BaseCard):
     pid : int, PAERO1
        int : PAERO1 ID
        PAERO1 : PAERO1 object (xref)
-
-    cp : int, CORDx
-       int : coordinate system
-       CORDx : Coordinate object (xref)
-    nspan : int
-       int > 0 : N spanwise boxes distributed evenly
-       int = 0 : use lchord
-    nchord : int
-       int > 0 : N chordwise boxes distributed evenly
-       int = 0 : use lchord
-    lspan : int, AEFACT
-       int > 0 : AEFACT reference for non-uniform nspan
-       int = 0 : use nspan
-       AEFACT : AEFACT object  (xref)
-    lchord : int, AEFACT
-       int > 0 : AEFACT reference for non-uniform nchord
-       int = 0 : use nchord
-       AEFACT : AEFACT object  (xref)
     igid : int
        Group number
     p1 : (1, 3) ndarray float
@@ -1410,6 +1492,26 @@ class CAERO1(BaseCard):
        distance along the flow direction from node 1 to node 2; (typically x, root chord)
     x43 : float
        distance along the flow direction from node 4 to node 3; (typically x, tip chord)
+
+    cp : int, CORDx; default=0
+       int : coordinate system
+       CORDx : Coordinate object (xref)
+    nspan : int; default=0
+       int > 0 : N spanwise boxes distributed evenly
+       int = 0 : use lchord
+    nchord : int; default=0
+       int > 0 : N chordwise boxes distributed evenly
+       int = 0 : use lchord
+    lspan : int, AEFACT; default=0
+       int > 0 : AEFACT reference for non-uniform nspan
+       int = 0 : use nspan
+       AEFACT : AEFACT object  (xref)
+    lchord : int, AEFACT; default=0
+       int > 0 : AEFACT reference for non-uniform nchord
+       int = 0 : use nchord
+       AEFACT : AEFACT object  (xref)
+        comment : str; default=''
+            a comment for the card
     """
     type = 'CAERO1'
     _field_map = {
@@ -1470,8 +1572,8 @@ class CAERO1(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, cp, nspan, lspan, nchord, lchord, igid,
-                 p1, x12, p4, x43, comment=''):
+    def __init__(self, eid, pid, igid, p1, x12, p4, x43,
+                 cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
         r"""
         ::
 
@@ -1566,12 +1668,13 @@ class CAERO1(BaseCard):
         x43 = double_or_blank(card, 16, 'x43', 0.)
 
         assert len(card) <= 17, 'len(CAERO1 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
-                      p1, x12, p4, x43, comment=comment)
+        return CAERO1(eid, pid, igid, p1, x12, p4, x43,
+                      cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                      comment=comment)
 
     @classmethod
-    def add_quad(cls, eid, pid, cp, span, chord, igid,
-                 p1, p2, p3, p4, spanwise='y', comment=''):
+    def add_quad(cls, eid, pid, span, chord, igid,
+                 p1, p2, p3, p4, cp=0, spanwise='y', comment=''):
         r"""
         ::
 
@@ -1631,8 +1734,9 @@ class CAERO1(BaseCard):
         else:
             raise TypeError(chord)
 
-        return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
-                      p1, x12, p4, x43, comment=comment)
+        return CAERO1(eid, pid, igid, p1, x12, p4, x43,
+                      cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                      comment=comment)
 
     def _init_ids(self):
         """
@@ -1875,7 +1979,7 @@ class CAERO1(BaseCard):
         self.p4 = points[3]
         self.x12 = p2[0] - self.p1[0]
         self.x43 = p3[0] - self.p4[0]
-        assert self.x12 >= 0., 'p1=%s p2=%s' % (self.p2, p2)
+        assert self.x12 >= 0., 'p1=%s p2=%s' % (self.p1, p2)
         assert self.x43 >= 0., 'p4=%s p3=%s' % (self.p4, p3)
         assert self.x12 > 0. or self.x43 > 0., 'points=%s' % (points)
 
@@ -2279,7 +2383,7 @@ class CAERO2(BaseCard):
 
     @staticmethod
     def create_ellipse(aspect_ratio, radius, thetas=None):
-        """
+        r"""
         a : major radius
         b : minor radius
 
@@ -2347,9 +2451,10 @@ class CAERO2(BaseCard):
         """
         cp = set_blank_if_default(self.Cp(), 0)
         nint = set_blank_if_default(self.nint, 0)
-        lsb = set_blank_if_default(self.lsb, 0)
+        lsb = set_blank_if_default(self.Lsb(), 0)
+        lint = set_blank_if_default(self.Lint(), 0)
         list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, nint,
-                        lsb, self.lint, self.igid, ] + list(self.p1) +
+                        lsb, lint, self.igid, ] + list(self.p1) +
                        [self.x12])
         return list_fields
 
@@ -2925,11 +3030,11 @@ class PAERO5(BaseCard):
                       comment=comment)
     @property
     def lxis_id(self):
-        return self.lxis if isinstance(self.lxis, integer_types) else self.lxis_ref.aid
+        return self.lxis if isinstance(self.lxis, integer_types) else self.lxis_ref.sid
 
     @property
     def ltaus_id(self):
-        return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.aid
+        return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.sid
 
     def cross_reference(self, model):
         """
@@ -2940,8 +3045,8 @@ class PAERO5(BaseCard):
         model : BDF()
             the BDF object
         """
-        self.lxis = model.AEFACT(self.lxis_id)
-        self.ltaus = model.AEFACT(self.ltaus_id)
+        self.lxis = model.AEFact(self.lxis_id)
+        self.ltaus = model.AEFact(self.ltaus_id)
 
         self.ltaus_ref = self.ltaus
         self.lxis_ref = self.lxis
@@ -2955,6 +3060,10 @@ class PAERO5(BaseCard):
         list_fields = ['PAERO5', self.pid, self.nalpha, self.lalpha, self.nxis,
                        self.lxis_id, self.ntaus, self.ltaus_id] + list(self.caoci)
         return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
     #def integrals(self):
         ## chord location
@@ -2985,13 +3094,13 @@ class PAERO5(BaseCard):
 
 class DIVERG(BaseCard):
     """
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
-    |   1    |   2   |    3     |   4   |   5   |   6   |   7   |   8   |   9   |
-    +========+=======+==========+=======+=======+=======+=======+=======+=======+
-    | DIVERG |  SID  |  NROOT   |   M1  |   M2  |   M3  |   M4  |   M5  |   M6  |
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
-    |        |   M7  |  -etc.-  |       |       |       |       |       |       |
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    +--------+-----+--------+----+----+----+----+----+----+
+    |   1    |  2  |   3    | 4  | 5  | 6  | 7  | 8  | 9  |
+    +========+=====+========+====+====+====+====+====+====+
+    | DIVERG | SID | NROOT  | M1 | M2 | M3 | M4 | M5 | M6 |
+    +--------+-----+--------+----+----+----+----+----+----+
+    |        |  M7 |  etc.  |    |    |    |    |    |    |
+    +--------+-----+--------+----+----+----+----+----+----+
 
     Attributes
     ----------
@@ -2999,20 +3108,25 @@ class DIVERG(BaseCard):
         The name.
     nroots : int
         the number of roots
-    machs : List[float]
+    machs : List[float, ..., float]
         list of Mach numbers
     """
     type = 'DIVERG'
     def __init__(self, sid, nroots, machs, comment=''):
         """
-        Attributes
+        Creates an DIVERG card, which is used in divergence
+        analysis (SOL 144).
+
+        Parameters
         ----------
         sid : int
             The name
         nroots : int
             the number of roots
-        machs : List[float]
+        machs : List[float, ..., float]
             list of Mach numbers
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -3141,7 +3255,6 @@ class FLFACT(BaseCard):
             fnf = double(card, 4, 'fnf')
             nf = integer(card, 5, 'nf')
             fmid_default = (f1 + fnf) / 2.
-            fmid = 13.
             fmid = double_or_blank(card, 6, 'fmid', fmid_default)
             assert len(card) <= 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
             i = np.linspace(0, nf, nf, endpoint=False) + 1
@@ -3447,7 +3560,7 @@ class GUST(BaseCard):
         1: 'sid', 2:'dload', 3:'wg', 4:'x0', 5:'V',
     }
 
-    def __init__(self, sid, dload, wg, x0, V, comment=''):
+    def __init__(self, sid, dload, wg, x0, V=None, comment=''):
         if comment:
             self.comment = comment
         self.sid = sid
@@ -3464,7 +3577,7 @@ class GUST(BaseCard):
         x0 = double(card, 4, 'x0')
         V = double_or_blank(card, 4, 'V')
         assert len(card) <= 6, 'len(GUST card) = %i\ncard=%s' % (len(card), card)
-        return GUST(sid, dload, wg, x0, V, comment=comment)
+        return GUST(sid, dload, wg, x0, V=V, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -3890,6 +4003,8 @@ class PAERO1(BaseCard):
     Defines associated bodies for the panels in the Doublet-Lattice method.
 
     +--------+-----+----+----+----+----+----+----+
+    |    1   |  2  |  3 |  4 |  5 |  6 |  7 |  8 |
+    +========+=====+====+====+====+====+====+====+
     | PAERO1 | PID | B1 | B2 | B3 | B4 | B5 | B6 |
     +--------+-----+----+----+----+----+----+----+
     """
@@ -4037,8 +4152,8 @@ class PAERO2(BaseCard):
         else:
             self.thn[spot] = value
 
-    def __init__(self, pid, orient, width, AR, lrsb, lrib, lth1, lth2,
-                 thi, thn, comment=''):
+    def __init__(self, pid, orient, width, AR,
+                 thi, thn, lrsb=None, lrib=None, lth1=None, lth2=None, comment=''):
         if comment:
             self.comment = comment
 
@@ -4105,8 +4220,9 @@ class PAERO2(BaseCard):
         for i in range(9, 9 + nfields, 2):
             thi.append(integer(card, i, 'lth'))
             thn.append(integer(card, i + 1, 'thn'))
-        return PAERO2(pid, orient, width, AR, lrsb, lrib, lth1, lth2,
-                      thi, thn, comment=comment)
+        return PAERO2(pid, orient, width, AR, thi, thn,
+                      lrsb=lrsb, lrib=lrib, lth1=lth1, lth2=lth2,
+                      comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by PAERO2 eid=%s' % self.pid
@@ -4808,7 +4924,8 @@ class SPLINE3(Spline):
         list_fields = [
             'SPLINE3', self.eid, self.caero, self.box_id,
             self.nids[0], self.displacement_components[0], self.coeffs[0], self.usage]
-        for nid, disp_c, coeff in zip(self.nids[1:], self.displacement_components[1:], self.coeffs[1:]):
+        for nid, disp_c, coeff in zip(self.nids[1:], self.displacement_components[1:],
+                                      self.coeffs[1:]):
             list_fields += [nid, disp_c, coeff, None]
         return list_fields
 
@@ -5193,6 +5310,27 @@ class TRIM(BaseCard):
         raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
+        """
+        Creates a TRIM card for a static aero (144) analysis.
+
+        Parameters
+        ----------
+        sid : int
+            the trim id; referenced by the Case Control TRIM field
+        mach : float
+            the mach number
+        q : float
+            dynamic pressure
+        labels : List[str]
+            names of the fixed variables
+        uxs : List[float]
+            values corresponding to labels
+        aeqr : float
+            0.0 : rigid trim analysis
+            1.0 : elastic trim analysis
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Trim set identification number. (Integer > 0)
@@ -5228,50 +5366,135 @@ class TRIM(BaseCard):
             raise RuntimeError(msg)
 
     def _verify(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
+        """
+        Magic function that makes TRIM cards not frustrating.
+
+        Warning
+        -------
+        TODO: This probably gets AELINKs/AEPARMs/AESURFSs wrong.
+
+        The TRIM equality
+        -----------------
+        ndelta = (naestat + naesurf + naeparm) - (
+               - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)
+        ndelta = 0
+        ntrim_aesurf is not included, but it might exist...
+
+        Steps to a TRIM analysis
+        ------------------------
+        1.  Define the number of independent control surfaces (naesurf)
+            Make an AESURF for each.  Dual link the AESURFs if you can
+            to avoid needing an AELINK (e.g., +roll is left aileron down,
+            right aileron up).
+            Horizontal Tail : name it DPITCH
+            Vertical Tail   : name it DYAW
+            Aileron         : name it DROLL
+        2.  Create AELINKs if necessary.
+        3.  Add the AESTAT variables.  Include one for each DOF the
+            aircraft can move in the frame of the model
+            (e.g., half/full model).
+                Half model (2.5g pullup, abrupt pitch):
+                  - 2d pitch/plunge, 1 control : URDD3, URDD5, PITCH, ANGLEA
+                Full model (2.5g pullup, abrupt pitch):
+                  - 3d pitch/plunge, 3 control : URDD3, URDD5, PITCH, ANGLEA, YAW (???)
+        4.  Add the TRIM card to lock the variables that could theoretically move
+            in the plane of the analysis that are known.
+                Half model:
+                   2.5g pullup   : lock URDD3=2.5, URDD5=0, PITCH=0
+                                   solve for ANGLEA, DPITCH
+                                   use DPITCH
+                   abrupt pitch  : lock URDD3=1.0, URDD5=0, ANGLEA=5
+                                   solve for PITCH, DPITCH
+                                   use DPITCH
+                Full model:
+                   2.5g pullup   : lock URDD3=2.5, URDD4=0, URDD5=0,  PITCH=0, YAW=0,
+                                   lock SIDES=0,  ROLL=0
+                                   solve for ANGLEA, DPITCH
+                                   use DPITCH, DYAW, DROLL
+                                   TODO: probably wrong
+                   30 degree yaw : lock URDD3=1.0, URDD4=0, ANGLEA=5, PITCH=0, YAW=30,
+                                   lock DPITCH=0, ROLL=0
+                                   solve for SIDES, URDD5
+                                   use DPITCH, DYAW, DROLL
+                                   TODO: probably wrong
+
+        5.  Note that we could have simplified our full model AESTAT/TRIM
+            cards (they can be the same as for a half model), but we'd
+            like to be able to do multiple load cases in the same deck.
+
+        6.  Add some SUPORT/SUPORT1 DOFs to ignore non-relevant motion in
+            certain DOFs (e.g., z-motion).  Add enough to satisfy the TRIM
+            equality.
+
+        Doesn't Consider
+        ----------------
+         - AELINK
+         - AEPARM
+         - AESURFS
+
+        +------------------------------------------------+
+        |                 Default AESTATs                |
+        +--------+---------+-----------------------------+
+        | ANGLEA | ur (R2) | Angle of Attack             |
+        | YAW    | ur (R3) | Yaw Rate                    |
+        | SIDES  | ur (R3) | Angle of Sideslip           |
+        +--------+---------+-----------------------------+
+        | ROLL   | ůr (R1) | Roll Rate                   |
+        | PITCH  | ůr (R2) | Pitch Rate                  |
+        +--------+---------+-----------------------------+
+        | URDD1  | ür (T1) | Longitudinal (See Remark 3) |
+        | URDD2  | ür (T2) | Lateral                     |
+        | URDD3  | ür (T3) | Vertical                    |
+        | URDD4  | ür (R1) | Roll                        |
+        | URDD5  | ür (R2) | Pitch                       |
+        | URDD6  | ür (R3) | Yaw                         |
+        +--------+---------+-----------------------------+
+        """
         if xref:
             nsuport_dofs = 0
             nsuport1_dofs = 0
             suport_dofs = set()
             assert isinstance(suport, list), type(suport)
             for suporti in suport:
-                #print(str(suporti).rstrip())
-                for nid in suporti.node_ids:
-                    for cs in suporti.Cs:
-                        for ci in cs:
-                            #print('  nid=%s C=%s' % (nid, ci))
-                            dof = (nid, ci)
-                            if dof in suport_dofs:
-                                msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
-                                raise RuntimeError(msg)
-                            suport_dofs.add(dof)
-                            nsuport_dofs += 1
+                for nid, cs in zip(suporti.node_ids, suporti.Cs):
+                    for ci in cs:
+                        #print('  SUPORT: nid=%r C=%r' % (nid, ci))
+                        dof = (nid, ci)
+                        if dof in suport_dofs:
+                            msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
+                                str(dof), str(suport_dofs))
+                            raise RuntimeError(msg)
+                        suport_dofs.add(dof)
+                        nsuport_dofs += 1
 
-            suport1_dofs = {}
             if suport1:
                 conid = suport1.conid
-                #IDs = suport1.IDs
                 nids = suport1.node_ids
-                #Cs = suport1.Cs
-                #print('SUPORT1 id=%s' % conid)
                 for nid, cs in zip(nids, suport1.Cs):
                     for ci in cs:
-                        #print('  nid=%s C=%s' % (nid, ci))
+                        #print('  SUPORT1: id=%r nid=%r C=%r' % (conid, nid, ci))
+                        dof = (nid, ci)
+                        if dof in suport_dofs:
+                            msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                            raise RuntimeError(msg)
+                        suport_dofs.add(dof)
                         nsuport1_dofs += 1
 
             aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
             aestat_labels = [aestat.label for aestat in aestats.values()]
             aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
-            naestats = len(aestat_labels)
+            naestat = len(aestat_labels)
             ntrim = len(self.labels)
-            naesurfs = len(aesurf_names)
-            naeparms = len(aeparm_labels)
-            naelinks = 0
+            naesurf = len(aesurf_names)
+            naeparm = len(aeparm_labels)
+            naelink = 0
             if self.sid in aelinks:
-                naelinks = len(aelinks[self.sid])
+                naelink = len(aelinks[self.sid])
             if 0 in aelinks:
-                naelinks += len(aelinks[0])
+                #  TODO: what is this...is 0 the global subcase?
+                naelink += len(aelinks[0])
 
-            ntrim_aesurfs = 0
+            ntrim_aesurf = 0
             labels = aestat_labels + aesurf_names + aeparm_labels
             for label in self.labels:
                 if label not in labels:
@@ -5281,30 +5504,30 @@ class TRIM(BaseCard):
 
                 if label in aesurf_names:
                     #print('AESTAT/AESURF label = %r' % label)
-                    ntrim_aesurfs += 1
+                    ntrim_aesurf += 1
 
             # TODO: this doesn't work for multiple subcases
             #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
-            #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurfs
+            #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurf
             #if ndelta != 0:
-                #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurfs = ndelta = %s; ndelta != 0\n' % ndelta
+                #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurf = ndelta = %s; ndelta != 0\n' % ndelta
                 #msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
-                    #ntrim, nsuport_dofs, nsuport1_dofs, naesurfs)
+                    #ntrim, nsuport_dofs, nsuport1_dofs, naesurf)
                 #raise RuntimeError(msg)
 
-#            ndelta = (naestats + naesurfs + naeparms + ntrim_aesurfs) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs)
-#            if ndelta != 0:
-#                msg = '(naestats + naesurfs + naeparms + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-#                msg += ('naestats=%s naesurfs=%s naeparms=%s ntrim_aesurfs=%s\n'
-#                        'ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
-#                            naestats, naesurfs, naeparms, ntrim_aesurfs,
-#                            ntrim, naelinks, nsuport_dofs, nsuport1_dofs))
+           #ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
+           #if ndelta != 0:
+               #msg = '(naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+               #msg += ('naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
+                       #'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+                           #naestat, naesurf, naeparms, ntrim_aesurf,
+                           #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
 
-            ndelta = (naestats + naesurfs + naeparms) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
+            ndelta = (naestat + naesurf + naeparm) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
-                msg = '(naestats + naesurfs + naeparms) - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-                msg += 'naestats=%s naesurf=%s naeparms=%s ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
-                    naestats, naesurfs, naeparms, ntrim, naelinks, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
+                msg = '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+                msg += 'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+                    naestat, naesurf, naeparm, ntrim, ntrim_aesurf, naelink, nsuport_dofs, nsuport1_dofs)
                 raise RuntimeError(msg)
 
     def cross_reference(self, model):

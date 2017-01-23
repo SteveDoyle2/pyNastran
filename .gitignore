@@ -5,6 +5,9 @@
 *_build*
 *.js
 *.css
+*.json
+*.htm
+htmlcov
 
 # Other
 *.pyc
@@ -15,6 +18,7 @@
 *.tar.gz 
 *.zip
 *.csv
+*.pdf
 
 # C extensions
 *.so
@@ -61,6 +65,14 @@ nosetests.xml
 *.dat_out
 *.f04
 *.plt
+*.ses.*
+*.jou
+*.log.*
+*.op2.*
+*.f06.*
+*.err
+*.rej
+*.db
 
 # VTK
 *.vtu

@@ -360,7 +360,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.e *= stress_scale
             mat.g *= stress_scale
             mat.a *= a_scale
-            mat.TRef *= temp_scale
+            mat.tref *= temp_scale
             mat.rho *= density_scale
             mat.St *= stress_scale
             mat.Sc *= stress_scale
@@ -378,7 +378,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.a1 *= a_scale
             mat.a2 *= a_scale
             mat.a3 *= a_scale
-            mat.TRef *= temp_scale
+            mat.tref *= temp_scale
             mat.St *= stress_scale
             mat.Sc *= stress_scale
             mat.Ss *= stress_scale
@@ -392,7 +392,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.ax *= a_scale
             mat.ath *= a_scale
             mat.az *= a_scale
-            mat.TRef *= temp_scale
+            mat.tref *= temp_scale
 
         #elif mat_type == 'MAT4':
             #mat.k
@@ -445,7 +445,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.G66 *= stress_scale
             mat.rho *= density_scale
             mat.A *= a_scale
-            mat.TRef *= temp_scale
+            mat.tref *= temp_scale
 
         else:
             raise NotImplementedError(mat)

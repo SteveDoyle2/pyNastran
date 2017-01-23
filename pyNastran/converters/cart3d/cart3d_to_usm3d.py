@@ -15,7 +15,7 @@ def cart3d_to_usm3d_bc(cart3d, usm3d_bc_filename):
         path to the output BC file
     """
     # nodes = cart3d.points
-    elements = cart3d.elements
+    elements = cart3d.elements + 1
     regions = cart3d.regions
     #nodes = cart3d.nodes
     #elements = cart3d.elements

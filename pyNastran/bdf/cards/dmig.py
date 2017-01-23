@@ -16,7 +16,63 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, string, components, interpret_value)
+    integer, integer_or_blank, double, string, parse_components, interpret_value)
+
+
+class DTI(BaseCard):
+    """
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME |   STRESS    |
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    MSC
+
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME | TEMPERATURE |
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    NX
+    """
+    type = 'DTI'
+    def __init__(self, name, fields, comment=''):
+        self.name = name
+        self.fields = fields
+
+    @classmethod
+    def add_card(cls, card, comment):
+        name = string(card, 1, 'name')
+        if name == 'UNITS':
+            integer(card, 2, '1')
+            mass = string(card, 3, 'mass')
+            force = string(card, 3, 'force')
+            length = string(card, 3, 'length')
+            time = string(card, 3, 'time')
+            temp_stress = string(card, 3, 'stress/temperature')
+            fields = {
+                'mass' : mass,
+                'force' : force,
+                'length' : length,
+                'time' : time,
+                'temp_stress' : temp_stress
+            }
+        else:
+            print(card)
+            raise NotImplementedError(card)
+        return DTI(name, fields, comment=comment)
+
+    def raw_fields(self):
+        if self.name ==  'UNITS':
+            mass = self.fields['mass']
+            force = self.fields['force']
+            length = self.fields['length']
+            time = self.fields['time']
+            temp_stress = self.fields['temp_stress']
+            list_fields = ['DTI', self.name, '1', mass, force, length, time, temp_stress]
+        else:
+            raise NotImplementedError('DTI name=%r' % self.name)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 
 class NastranMatrix(BaseCard):
@@ -24,17 +80,31 @@ class NastranMatrix(BaseCard):
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex, comment=''):
+                 GCj, GCi, Real, Complex=None, comment=''):
         if comment:
             self.comment = comment
+        if Complex is None:
+            Complex = []
         self.name = name
+
+        #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
         self.ifo = ifo
+
+        #: 1-Real, Single Precision; 2=Real,Double Precision;
+        #  3=Complex, Single; 4=Complex, Double
         self.tin = tin
+
+        #: 0-Set by cell precision
         self.tout = tout
+
+        #: Input format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
+        #: Integer > 0 indicates amplitude, phase format.)
         self.polar = polar
+
         self.ncols = ncols
         self.GCj = GCj
         self.GCi = GCi
+
         self.Real = Real
         if self.is_complex:
             self.Complex = Complex
@@ -46,21 +116,14 @@ class NastranMatrix(BaseCard):
         name = string(card, 1, 'name')
         #zero
 
-        #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
         ifo = integer(card, 3, 'ifo')
-        #: 1-Real, Single Precision; 2=Real,Double Precision;
-        #  3=Complex, Single; 4=Complex, Double
         tin = integer(card, 4, 'tin')
-        #: 0-Set by cell precision
         tout = integer_or_blank(card, 5, 'tout', 0)
-
-        #: Input format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
-        #: Integer > 0 indicates amplitude, phase format.)
         polar = integer_or_blank(card, 6, 'polar', 0)
         if ifo == 1: # square
-            ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % (ifo))
+            ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % ifo)
         elif ifo == 6: # symmetric
-            ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % (ifo))
+            ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % ifo)
         elif ifo in [2, 9]: # rectangular
             ncols = integer(card, 8, 'ifo=%s; ncol' % (ifo))
         else:
@@ -77,9 +140,15 @@ class NastranMatrix(BaseCard):
 
     @property
     def matrix_type(self):
-        #print('ifo=%r type=%s' % (self.ifo, type(self.ifo)))
-        assert isinstance(self.ifo, integer_types), 'ifo=%r type=%s' % (self.ifo, type(self.ifo))
-        assert not isinstance(self.ifo, bool), 'ifo=%r type=%s name=%s' % (self.ifo, type(self.ifo), self.name)
+        if not isinstance(self.ifo, integer_types):
+            msg = 'ifo must be an integer; ifo=%r type=%s name=%s' % (
+                self.ifo, type(self.ifo), self.name)
+            raise TypeError(msg)
+        if isinstance(self.ifo, bool):
+            msg = 'ifo must not be a boolean; ifo=%r type=%s name=%s' % (
+                self.ifo, type(self.ifo), self.name)
+            raise TypeError(msg)
+
         if self.ifo == 1:
             matrix_type = 'square'
         elif self.ifo == 6:
@@ -149,7 +218,7 @@ class NastranMatrix(BaseCard):
         Gj = integer(card, 2, 'Gj')
         # Cj = integer(card, 3, 'Cj')
         Cj = integer_or_blank(card, 3, 'Cj', 0)
-        #Cj = components(card, 3, 'Cj')
+        #Cj = parse_components(card, 3, 'Cj')
         assert 0 <= Cj <= 6, 'C%i must be between [0, 6]; Cj=%s' % (0, Cj)
 
         nfields = len(card)
@@ -174,7 +243,7 @@ class NastranMatrix(BaseCard):
                     Gi = integer(card, n, 'Gi')
                     # Ci = integer(card, n + 1, 'Ci')
                     Ci = integer_or_blank(card, n + 1, 'Ci', 0)
-                    #Ci = components(card, n + 1, 'Ci')
+                    #Ci = parse_components(card, n + 1, 'Ci')
                     assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                     self.GCi.append((Gi, Ci))
                     magi = double(card, n + 2, 'ai')
@@ -189,7 +258,7 @@ class NastranMatrix(BaseCard):
                     Gi = integer(card, n, 'Gi')
                     # Ci = integer(card, n + 1, 'Ci')
                     Ci = integer_or_blank(card, n + 1, 'Ci', 0)
-                    #Ci = components(card, n + 1, 'Ci')
+                    #Ci = parse_components(card, n + 1, 'Ci')
                     assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                     self.GCi.append((Gi, Ci))
                     reali = double(card, n + 2, 'real')
@@ -203,7 +272,7 @@ class NastranMatrix(BaseCard):
                 Gi = integer(card, n, 'Gi')
                 # Ci = integer(card, n + 1, 'Ci')
                 Ci = integer_or_blank(card, n + 1, 'Ci', 0)
-                #Ci = components(card, n + 1, 'Ci')
+                #Ci = parse_components(card, n + 1, 'Ci')
                 assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                 reali = double(card, n + 2, 'real')
                 self.GCi.append((Gi, Ci))
@@ -329,7 +398,7 @@ class NastranMatrix(BaseCard):
     def __repr__(self):
         return self.write_card(size=8, is_double=False)
 
-    def fill_in_default_C(self, model):
+    def fill_in_default_components(self, model):
         for i, (Gi, Ci) in enumerate(self.GCi):
             if Ci is None:
                 node = model.nodes[Gi]
@@ -719,27 +788,51 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
 
 
 class DMIG_UACCEL(BaseCard):
+    """
+    Direct Matrix Input of Enforced Static Acceleration
+    Defines rigid body accelerations in the basic coordinate system.
+
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+    |   1  |   2    |  3  |  4  |  5  |  6  |  7  |   8   |       |
+    +======+========+=====+=====+=====+=====+=====+=======+=======+
+    | DMIG | UACCEL | "0" | "9" | TIN |     |     |       | NCOL  |
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+    | DMIG | UACCEL |  L  |     |     |  G1 | C1  |  X1   |       |
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+    |      |   G2   |  C2 | X2  |     |  G3 | C3  |  X3   |       |
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+    | DMIG | UACCEL |  0  |  9  |  1  |     |     |       |   4   |
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+    | DMIG | UACCEL |  2  |     |     |  2  |  3  | 386.4 |       |
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+    | DMIG | UACCEL |  3  |     |     |  2  |  4  |  3.0  |       |
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+    | DMIG | UACCEL |  4  |     |     |  2  |  6  |  1.0  |       |
+    +------+--------+-----+-----+-----+-----+-----+-------+-------+
+    """
     type = 'DMIG'
     name = 'UACCEL'
-    def __init__(self, tin, ncol, comment=''):
+    def __init__(self, tin, ncol, load_sequences, comment=''):
         if comment:
             self.comment = comment
         self.tin = tin
         self.ncol = ncol
-        self.load_sequences = {}
+        self.load_sequences = load_sequences
         #print(str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
         tin = integer(card, 4, 'tin')
         ncol = integer_or_blank(card, 8, 'ncol')
-        return DMIG_UACCEL(tin, ncol, comment=comment)
+        return DMIG_UACCEL(tin, ncol, load_sequences={}, comment=comment)
 
     def _add_column(self, card, comment=''):
         load_seq = integer(card, 2, 'load_seq')
 
         g1 = integer(card, 5, 'nid1')
-        c1 = components(card, 6, 'c1')
+        c1 = parse_components(card, 6, 'c1')
         x1 = double(card, 7, 'x1')
         assert len(card) <= 8, 'len=%s card=%s' % (len(card), card)
 
@@ -811,7 +904,7 @@ class DMIG(NastranMatrix):
     type = 'DMIG'
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex, comment=''):
+                 GCj, GCi, Real, Complex=None, comment=''):
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                GCj, GCi, Real, Complex, comment=comment)
 
@@ -831,7 +924,7 @@ class DMIJ(NastranMatrix):
     type = 'DMIJ'
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex, comment=''):
+                 GCj, GCi, Real, Complex=None, comment=''):
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                GCj, GCi, Real, Complex, comment=comment)
 
@@ -850,7 +943,7 @@ class DMIJI(NastranMatrix):
     type = 'DMIJI'
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex, comment=''):
+                 GCj, GCi, Real, Complex=None, comment=''):
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                GCj, GCi, Real, Complex, comment=comment)
 
@@ -867,7 +960,7 @@ class DMIK(NastranMatrix):
     type = 'DMIK'
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex, comment=''):
+                 GCj, GCi, Real, Complex=None, comment=''):
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                GCj, GCi, Real, Complex, comment=comment)
 
@@ -876,7 +969,7 @@ class DMI(NastranMatrix):
     type = 'DMI'
 
     def __init__(self, name, form, tin, tout, nrows, ncols,
-                 GCj, GCi, Real, Complex, comment=''):
+                 GCj, GCi, Real, Complex=None, comment=''):
         """
         +------+-------+------+------+---------+----------+-----------+-----------+------+
         |  1   |   2   |  3   |   4  |    5    |    6     |     7     | 8         |  9   |
@@ -892,6 +985,8 @@ class DMI(NastranMatrix):
                                #GCj, GCi, Real, Complex, comment='')
         if comment:
             self.comment = comment
+        if Complex is None:
+            Complex = []
         self.name = name
         self.form = form
         self.tin = tin

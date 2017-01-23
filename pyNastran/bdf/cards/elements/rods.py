@@ -31,10 +31,6 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=False)
@@ -88,6 +84,20 @@ class CROD(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CROD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PROD)
+        nids : List[int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+        """
         RodElement.__init__(self)
         if comment:
             self.comment = comment
@@ -261,13 +271,13 @@ class CTUBE(RodElement):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        A = self.Area()
         edges = self.get_edge_ids()
         assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(A, float), 'A=%r' % A
         if xref:
+            A = self.Area()
             L = self.Length()
             nsm = self.Nsm()
+            assert isinstance(A, float), 'A=%r' % A
             assert isinstance(L, float), 'L=%r' % L
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             if self.pid_ref.mid_ref.type == 'MAT1':
@@ -280,9 +290,9 @@ class CTUBE(RodElement):
             else:
                 raise NotImplementedError('_verify does not support self.pid_ref.mid_ref.type=%s' % self.pid_ref.mid_ref.type)
 
-        c = self.Centroid()
-        for i in range(3):
-            assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
+            c = self.Centroid()
+            for i in range(3):
+                assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Mid(self):
         return self.pid_ref.Mid()
@@ -349,6 +359,28 @@ class CONROD(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+        """
+        Creates a CONROD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mid : int
+            material id
+        nids : List[int, int]
+            node ids
+        A : float
+            area
+        j : float; default=0.
+            polar moment of inertia
+        c : float; default=0.
+            stress factor
+        nsm : float; default=0.
+            non-structural mass per unit length
+        comment : str; default=''
+            a comment for the card
+        """
         RodElement.__init__(self)
         if comment:
             self.comment = comment

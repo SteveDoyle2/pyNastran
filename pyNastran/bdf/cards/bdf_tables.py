@@ -15,7 +15,6 @@ All table cards are defined in this file.  This includes:
  * RandomTable
    * TABRND1
  * TABRNDG
- * TIC
 
 All tables have a self.table parameter that is a TableObj
 """
@@ -32,9 +31,9 @@ from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.cards.base_card import BaseCard
 #from pyNastran.utils.dev import list_print
-from pyNastran.bdf.bdf_interface.assign_type import (integer,
-    integer_or_blank, double, components, string, string_or_blank,
-    double_or_string)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, string, string_or_blank,
+    double_or_string, double_or_blank)
 
 def make_xy(table_id, table_type, xy):
     try:
@@ -727,7 +726,7 @@ class TABLEM4(Table):
         a = []
         j = 0
         for i in range(9, nfields):
-            ai = double(card, i, 'a%i' % (j))
+            ai = double_or_blank(card, i, 'a%i' % (j), 0.0)
             a.append(ai)
             j += 1
         string(card, nfields, 'ENDT')
@@ -796,7 +795,8 @@ class TABLES1(Table):
         xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLES1(tid, Type, x, y, comment=comment)
+        #return TABLES1(tid, Type, x, y, comment=comment)
+        raise NotImplementedError(data)
 
     def raw_fields(self):
         xy = []
@@ -986,42 +986,6 @@ class TABRNDG(RandomTable):
 
     def raw_fields(self):
         list_fields = ['TABRNDG', self.tid, self.Type, self.LU, self.WG]
-        return list_fields
-
-    def repr_fields(self):
-        return self.raw_fields()
-
-
-class TIC(Table):
-    """Transient Initial Condition"""
-    type = 'TIC'
-
-    def __init__(self, card=None, data=None, comment=''):
-        """
-        Defines values for the initial conditions of variables used in
-        structural transient analysis. Both displacement and velocity values
-        may be specified at independent degrees-of-freedom. This entry may not
-        be used for heat transfer analysis.
-        """
-        Table.__init__(self, card, data)
-        if comment:
-            self.comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.G = integer(card, 2, 'G')
-            assert self.G > 0
-            self.C = components(card, 3, 'C')
-            self.U0 = double(card, 4, 'U0')
-            self.V0 = double(card, 5, 'V0')
-        else:
-            self.sid = data[0]
-            self.G = data[1]
-            self.C = data[2]
-            self.U0 = data[3]
-            self.V0 = data[4]
-
-    def raw_fields(self):
-        list_fields = ['TIC', self.sid, self.G, self.C, self.U0, self.V0]
         return list_fields
 
     def repr_fields(self):

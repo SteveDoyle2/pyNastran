@@ -1104,13 +1104,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #print('record 3')
         self.read_markers([-3, 1, 0])
         data = self._read_record()
-        #self.show_data(data)
+        #self.show_data(data[96:108])
 
         if self.read_mode == 2:
             ndata = len(data)
             assert ndata == 108, ndata
-            n = 8 + 56 + 20 + 12 + 12
-            aero, name, comps, cp, x, y, z, coeff, word, column, cd, ind_dof = unpack(b'8s 56s 2i 3f 4s 8s 3i', data[:n])
+            aero, name, comps, cp, x, y, z, coeff, word, column, cd, ind_dof = unpack(b'8s 56s 2i 3f 4s 8s 3i', data[:108])
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
@@ -1803,7 +1802,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #           good   good   good  good  ???    ???
         matrix_num, ncols, mrows, form, tout, nvalues, g = unpack(self._endian + '7i', data)
-
+        #print('g =', g)
 
         m = Matrix(table_name)
         self.matrices[table_name.decode('utf-8')] = m
