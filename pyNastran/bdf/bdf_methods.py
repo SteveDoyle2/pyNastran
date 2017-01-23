@@ -870,11 +870,10 @@ class BDFMethods(BDFAttributes):
         for sym_axisi in sym_axis:
             assert sym_axisi.lower() in ['no', 'xy', 'yz', 'xz'], 'sym_axis=%r is invalid' % sym_axis
 
-        if sym_axis is not None:
+        if sym_axis:
             # either we figured sym_axis out from the AERO cards or the user told us
             self.log.debug('Mass/MOI sym_axis = %r' % sym_axis)
 
-        if None is not sym_axis:
             if 'xz' in sym_axis:
                 # y intertias are 0
                 cg[1] = 0.0

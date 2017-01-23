@@ -4235,9 +4235,9 @@ class NastranIO(object):
             if not hasattr(case, 'data'):
                 print('str(%s) has no data...' % case.__class.__name__)
                 continue
-            if not case.is_real():
-                print('complex results not supported...')
-                continue
+            #if not case.is_real():
+                #print('complex results not supported...')
+                #continue
             # transient
             if case.nonlinear_factor is not None:
                 #code_name = case.data_code['name']
@@ -4586,15 +4586,14 @@ class NastranIO(object):
             header = ' %s = %i' % (code_name, dt)
 
         if hasattr(case, 'mode_cycle'):
-            freq = case.eigrs[itime]
+            header += '; freq = %g Hz' % case.mode_cycles[itime]
+        elif hasattr(case, 'cycles'):
+            header += '; freq = %g Hz' % case.cycles[itime]
+        elif hasattr(case, 'eigis'):
+            freq = case.eigis[itime]
             #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-            cycle = np.sqrt(np.abs(freq)) / (2. * np.pi)
-            header += '; freq=%g' % cycle
-        elif hasattr(case, 'eigrs'):
-            freq = case.eigrs[itime]
-            #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-            cycle = np.sqrt(np.abs(freq)) / (2. * np.pi)
-            header += '; freq=%g' % cycle
+            cycle = np.abs(freq) / (2. * np.pi)
+            header += '; freq = %g Hz' % cycle
         return header.strip('; ')
 
     def _fill_op2_time_centroidal_strain_energy(self, cases, model,
