@@ -43,6 +43,165 @@ or
   >>> test_op2 -c --geometry --write_bdf fem.op2
 
 
+Example
+-------
+
+Here, we'll determine what all the tables in the OP2 are as well as a summary of the objects
+
+.. code-block:: console
+
+  >>> test_op2 -c ISat_Dploy_Sm.op2
+
+  OP2_FILENAME = 'isat_dploy_sm.op2'
+  DEBUG:     fname=op2_scalar.py             lineNo=521    set_subcases - subcases = []
+  DEBUG:     fname=op2_scalar.py             lineNo=521    set_subcases - subcases = []
+  DEBUG:     fname=op2.py                    lineNo=385    combine=True
+  DEBUG:     fname=op2.py                    lineNo=386    -------- reading op2 with read_mode=1 (array sizing) --------
+  INFO:      fname=op2_scalar.py             lineNo=1398   op2_filename = 'isat_dploy_sm.op2'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='PVT0'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='CSTM'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GPL'
+  DEBUG:     fname=op2_scalar.py             lineNo=2241   table_name = 'GPL'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GPDT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='EPT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='MPT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM2'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM4'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM1'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='BGPDT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='DYNAMICS'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='CASECC'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='LAMA'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='BOPHIG'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='OES1'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='OEF1'
+  DEBUG:     fname=op2.py                    lineNo=398    -------- reading op2 with read_mode=2 (array filling) --------
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='PVT0'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='CSTM'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GPL'
+  DEBUG:     fname=op2_scalar.py             lineNo=2241   table_name = 'GPL'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GPDT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='EPT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='MPT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM2'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM4'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM1'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='BGPDT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='DYNAMICS'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='CASECC'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='LAMA'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='BOPHIG'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='OES1'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='OEF1'
+  DEBUG:     fname=op2.py                    lineNo=534    combine_results
+  DEBUG:     fname=op2.py                    lineNo=406    finished reading op2
+  DEBUG:     fname=op2.py                    lineNo=385    combine=True
+  DEBUG:     fname=op2.py                    lineNo=386    -------- reading op2 with read_mode=1 (array sizing) --------
+  INFO:      fname=op2_scalar.py             lineNo=1398   op2_filename = 'isat_dploy_sm.op2'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='PVT0'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='CSTM'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GPL'
+  DEBUG:     fname=op2_scalar.py             lineNo=2241   table_name = 'GPL'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GPDT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='EPT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='MPT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM2'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM4'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM1'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='BGPDT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='DYNAMICS'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='CASECC'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='LAMA'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='BOPHIG'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='OES1'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='OEF1'
+  DEBUG:     fname=op2.py                    lineNo=398    -------- reading op2 with read_mode=2 (array filling) --------
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='PVT0'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='CSTM'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GPL'
+  DEBUG:     fname=op2_scalar.py             lineNo=2241   table_name = 'GPL'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GPDT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='EPT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='MPT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM2'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM4'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='GEOM1'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='BGPDT'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='DYNAMICS'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='CASECC'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='LAMA'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='BOPHIG'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='OES1'
+  DEBUG:     fname=op2_scalar.py             lineNo=1589     table_name='OEF1'
+  DEBUG:     fname=op2.py                    lineNo=534    combine_results
+  DEBUG:     fname=op2.py                    lineNo=406    finished reading op2
+
+
+  ---stats for isat_dploy_sm.op2---
+  eigenvectors[1]
+    isubcase = 1
+    type=RealEigenvectorArray ntimes=203 nnodes=5367, table_name=BOPHIG
+    data: [t1, t2, t3, r1, r2, r3] shape=[203, 5367, 6] dtype=float32
+    gridTypes
+    sort1
+    modes = [  1   2   3 ..., 201 202 203]
+    eigrs = [        0.         0.         0. ...,  11912279.  12843625.  13110797.]
+    mode_cycles = [   0.       0.       0.    ...,  549.31   570.38   576.282]
+
+  cbar_force[1]
+    type=RealCBarForceArray ntimes=203 nelements=790
+    data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torq
+  ue]
+    data.shape = (203, 790, 8)
+    element name: CBAR-34
+    sort1
+    modes = [  1   2   3 ..., 201 202 203]
+    eigrs = [        0.         0.         0. ...,  11912279.  12843625.  13110797.]
+    cycles = [   0.       0.       0.    ...,  549.31   570.38   576.282]
+
+  ctria3_stress[1]
+    type=RealPlateStressArray ntimes=203 nelements=32 nnodes_per_element=1 nlayers=2 ntotal=64
+    data: [ntimes, ntotal, 8] where 8=[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]
+    data.shape=(203L, 64L, 8L)
+    element type: CTRIA3
+    s_code: 1
+    sort1
+    modes = [  1   2   3 ..., 201 202 203]
+    eigrs = [        0.         0.         0. ...,  11912279.  12843625.  13110797.]
+    mode2s = [0 0 0 ..., 0 0 0]
+    cycles = [   0.       0.       0.    ...,  549.31   570.38   576.282]
+
+  cquad4_stress[1]
+    type=RealPlateStressArray ntimes=203 nelements=4580 nnodes_per_element=1 nlayers=2 ntotal=9160
+    data: [ntimes, ntotal, 8] where 8=[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]
+    data.shape=(203L, 9160L, 8L)
+    element type: CQUAD4
+    s_code: 1
+    sort1
+    modes = [  1   2   3 ..., 201 202 203]
+    eigrs = [        0.         0.         0. ...,  11912279.  12843625.  13110797.]
+    mode2s = [0 0 0 ..., 0 0 0]
+    cycles = [   0.       0.       0.    ...,  549.31   570.38   576.282]
+
+  eigenvalues[ISAT_SM_DEPLOYED MODES TO 400 HZ]
+    type=RealEigenvalues neigenvalues=203
+    title, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness
+
+
+  INFO:      fname=op2.py                    lineNo=639    ---self.subcase_key---
+  INFO:      fname=op2.py                    lineNo=642    subcase_id=1 : keys=[1]
+
+Alternatively, we can call it and get a shorter summary:
+
+  >>> test_op2 -ct ISat_Dploy_Sm.op2
+
+  ---stats for isat_dploy_sm.op2---
+  eigenvectors[1]
+  cbar_force[1]
+  ctria3_stress[1]
+  cquad4_stress[1]
+  eigenvalues[u'ISAT_SM_DEPLOYED MODES TO 400 HZ']
+
 
 Calling Signature
 -----------------
