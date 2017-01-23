@@ -61,7 +61,7 @@ class XDB(FortranFormat):
             # SUBCASES-----
             # SUBTITL-----
             # SUBGRID-----
-            for i in range(32 + npload4s + nsubcases):  # 26 + npload4s + nsubcases?
+            for i in range(33 + npload4s + nsubcases):  # 26 + npload4s + nsubcases?
                 table_name = self.read_table_name()
                 xdb_obj=self.read_table_header(table_name, etype, npload4s)
                 xdb_objects.append(xdb_obj)
@@ -452,7 +452,7 @@ class XDB(FortranFormat):
                           b'SUBCASE', #This field corresponds to the MSC.Nastran Case Control Section definition of SUBCASE structure
                           b'SUBCASES', 
                           b'SUBCTITL', #Contain the information from the TITLE, SUBTITLE and LABEL statements found in the Case Control Section
-                          b'SUBGRID', #Grid object presence indicator for output data recovery
+
                           b'EQEXINE', b'EQEXING',
                            
                           #Strain Recovery Data (Real)
@@ -474,19 +474,25 @@ class XDB(FortranFormat):
                           b'SUBELEM', 
                           ]:
             dn = 88
-            strings, ints, floats=self.show(dn, types='i')
-            
-            #Testing XDB Object Header Parsing
-            x_obj= XDB_obj(table_name, ints)
 
             pass
         elif table_name in [b'SUPERS']:
             dn=1684
+        
+        #Grid object presence indicator for output data recovery:        
+        elif table_name in [b'SUBGRID']: 
+            dn=148
         else:
             raise NotImplementedError('table_name=%r' % table_name)
         
         self.f.read(dn)
         self.n += dn
+
+        strings, ints, floats=self.show(dn, types='i')
+            
+        # XDB Object Header Parsing
+        x_obj= XDB_obj(table_name, ints)
+
 
         print('read_table_header table_name=%r (%s)' % (table_name, dn))
 
