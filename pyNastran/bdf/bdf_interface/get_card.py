@@ -208,7 +208,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
 
         node_ids = []
-        for card in sorted(spcs):
+        for card in spcs:
             if card.type == 'SPC':
                 nids = card.node_ids
             elif card.type == 'SPC1':
