@@ -1061,7 +1061,8 @@ class FORCE2(Force):
         assert self.g2 is not None, self.g2
         assert self.g3 is not None, self.g3
         assert self.g4 is not None, self.g4
-        #print('self.node_ids = ', self.node_ids)
+        assert self.g1 != self.g2, 'g1=%s g2=%s' % (self.g1, self.g2)
+        assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1527,6 +1528,15 @@ class MOMENT2(Moment):
         self.g3 = g3
         self.g4 = g4
         self.xyz = xyz
+
+    def validate(self):
+        assert isinstance(self.sid, integer_types), str(self)
+        assert self.g1 is not None, self.g1
+        assert self.g2 is not None, self.g2
+        assert self.g3 is not None, self.g3
+        assert self.g4 is not None, self.g4
+        assert self.g1 != self.g2, 'g1=%s g2=%s' % (self.g1, self.g2)
+        assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
     @classmethod
     def add_card(cls, card, comment=''):

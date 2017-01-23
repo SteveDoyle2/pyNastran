@@ -53,16 +53,6 @@ def normalize(v):
 class Coord(BaseCard):
     type = 'COORD'
 
-    #@property
-    #def isResolved(self):
-        #self.deprecated('isResolved', 'is_resolved', '0.8.1')
-        #return self.is_resolved
-
-    #@isResolved.setter
-    #def isResolved(self, is_resolved):
-        #self.deprecated('isResolved', 'is_resolved', '0.8.1')
-        #self.is_resolved = is_resolved
-
     def __init__(self):
         """
         Defines a general CORDxx object
@@ -1914,6 +1904,7 @@ class Cord1x(Coord):
         #print('setting up cid=%s' % self.cid)
         # call the Coord class' setup method
         super(Cord1x, self).setup()
+        self.is_resolved = True
         #print('cid=%s rid_trace=%s' % (self.cid, self.rid_trace))
 
     def G1(self):

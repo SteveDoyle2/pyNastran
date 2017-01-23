@@ -6,7 +6,7 @@ from numpy import array, allclose, array_equal, set_printoptions
 set_printoptions(suppress=True, precision=3)
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf
+from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, RROD
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2
 
@@ -578,12 +578,12 @@ class TestLoads(unittest.TestCase):
 
         ^ y
         |
-        4     3 11
+        4     3 12
         +-----+--+
-        |     |
-        |     |
-        +-----+--+--S  -> x
-        1     2  9  10
+        |     |     + 13
+        |     |     |
+        +-----+--+--+---S  -> x
+        1     2  9  10  11
         """
         model = BDF(debug=False)
         model.add_grid(1, xyz=[0., 0., 0.])
@@ -597,7 +597,9 @@ class TestLoads(unittest.TestCase):
         model.add_grid(8, xyz=[0., 1., 1.])
 
         model.add_grid(9, xyz=[5., 0., 0.])
-        model.add_grid(11, xyz=[2., 1., 0.])
+        model.add_grid(10, xyz=[6., 0., 0.])
+        model.add_grid(12, xyz=[2., 1., 0.])
+        model.add_grid(13, xyz=[2., 0.5, 0.])
 
         eid = 1
         mid = 1
@@ -610,7 +612,7 @@ class TestLoads(unittest.TestCase):
 
         eid = 2
         pid = 2
-        nids = [3, 11]
+        nids = [3, 12]
         ctube = model.add_ctube(eid, pid, nids, comment='ctube')
         ctube = model.add_ctube(eid, pid, nids, comment='ctube')
         OD1 = 0.1
@@ -713,17 +715,38 @@ class TestLoads(unittest.TestCase):
         ]
         mpc = model.add_mpc(conid, gids, components, enforced, comment='mpc')
 
+        eid = 1
+        ga = 9
+        gb = 10
+        cna = '123456'
+        cnb = ''
+        cma = ''
+        cmb = ''
+        rbar = model.add_rbar(eid, ga, gb, cna, cnb, cma, cmb, alpha=0.,
+                              comment='rbar')
+
+        eid = 2
+        ga = 10
+        gb = 13
+        rrod_a = RROD(eid, ga, gb, cma='42', cmb='33')
+        with self.assertRaises(RuntimeError):
+            rrod_a.validate()
+        rrod_b = model.add_rrod(eid, ga, gb, cma='3', cmb=None, alpha=0.0, comment='')
+
         conid = 43
-        gids = [9, 10]
+        gids = [10, 11]
         components = [1, 0]
         enforced = [1., 1.]
         mpc = model.add_mpc(conid, gids, components, enforced)
-        model.add_spoint(10, comment='spoint')
+        model.add_spoint(11, comment='spoint')
+        conid = 44
+        sets = [42, 43]
+        mpcadd = model.add_mpcadd(conid, sets, comment='mpcadd')
         #model.add_spoint([11, 'THRU', 42], comment='spoint3')
         str(model.spoints)
 
         sid = 14
-        nids = 10
+        nids = 11
         mags = 20.
         sload = model.add_sload(sid, nids, mags, comment='an sload')
 
@@ -756,6 +779,30 @@ class TestLoads(unittest.TestCase):
         load_ids = [12, 13]
         load = model.add_load(load_id, scale, scale_factors, load_ids, comment='load')
 
+        #-----------------------------------------------------------------------
+        # constraints
+        conid = 42
+        gids = [1, 2]
+        components = ['123', '123']
+        enforced = [0., 0.]
+        spc = model.add_spc(conid, gids, components, enforced, comment='spc')
+        conid = 43
+        nodes = [1, 2]
+        components = '123456'
+        spc1 = model.add_spc1(conid, components, nodes, comment='spc1')
+        conid = 44
+        sets = [42, 43]
+        spcadd = model.add_spcadd(conid, sets, comment='spcadd')
+        #-----------------------------------------------------------------------
+        model.add_eigrl(sid, v1=None, v2=None, nd=None, msglvl=0,
+                        maxset=None, shfscl=None, norm=None,
+                        options=None, values=None, comment='eigrl')
+
+        sid = 13
+        model.add_eigr(sid, method='LAN', f1=None, f2=None, ne=None, nd=20,
+                       norm='MASS', G=None, C=None,
+                       comment='')
+        #-----------------------------------------------------------------------
         model.validate()
         model._verify_bdf(xref=False)
         model.write_bdf('loads.temp')

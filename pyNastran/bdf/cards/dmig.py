@@ -19,6 +19,62 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, parse_components, interpret_value)
 
 
+class DTI(BaseCard):
+    """
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME |   STRESS    |
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    MSC
+
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME | TEMPERATURE |
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    NX
+    """
+    type = 'DTI'
+    def __init__(self, name, fields, comment=''):
+        self.name = name
+        self.fields = fields
+
+    @classmethod
+    def add_card(cls, card, comment):
+        name = string(card, 1, 'name')
+        if name == 'UNITS':
+            integer(card, 2, '1')
+            mass = string(card, 3, 'mass')
+            force = string(card, 3, 'force')
+            length = string(card, 3, 'length')
+            time = string(card, 3, 'time')
+            temp_stress = string(card, 3, 'stress/temperature')
+            fields = {
+                'mass' : mass,
+                'force' : force,
+                'length' : length,
+                'time' : time,
+                'temp_stress' : temp_stress
+            }
+        else:
+            print(card)
+            raise NotImplementedError(card)
+        return DTI(name, fields, comment=comment)
+
+    def raw_fields(self):
+        if self.name ==  'UNITS':
+            mass = self.fields['mass']
+            force = self.fields['force']
+            length = self.fields['length']
+            time = self.fields['time']
+            temp_stress = self.fields['temp_stress']
+            list_fields = ['DTI', self.name, '1', mass, force, length, time, temp_stress]
+        else:
+            raise NotImplementedError('DTI name=%r' % self.name)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
 class NastranMatrix(BaseCard):
     """
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices

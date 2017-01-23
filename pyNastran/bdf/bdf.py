@@ -117,7 +117,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     SESET, #SEQSEP
 )
 from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
+from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, RADM, RADBC)
@@ -480,7 +480,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'FREQ', 'FREQ1', 'FREQ2', #'FREQ4',
 
             # direct matrix input cards
-            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
+            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
 
             # optimization cards
             'DEQATN', 'DTABLE',
@@ -2151,6 +2151,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'DAREA' : (DAREA, self._add_darea_object),
             'DPHASE' : (DPHASE, self._add_dphase_object),
             'DELAY' : (DELAY, self._add_delay_object),
+            'DTI' : (DTI, self._add_dti_object),
         }
         self._card_parser_prepare = {
             'CORD1R' : self._prepare_cord1r,

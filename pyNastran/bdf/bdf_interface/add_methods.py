@@ -39,6 +39,12 @@ class AddMethods(BDFAttributes):
         self.dmiks[name] = dmik
         self._type_to_id_map[dmik.type].append(name)
 
+    def _add_dti_object(self, dti, allow_overwrites=False):
+        """adds an DTI object"""
+        name = dti.name
+        self.dti[name] = dti
+        self._type_to_id_map[dti.type].append(name)
+
     def _add_param_object(self, param, allow_overwrites=False):
         """adds a PARAM object"""
         key = param.key

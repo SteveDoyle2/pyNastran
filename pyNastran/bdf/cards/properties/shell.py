@@ -802,6 +802,8 @@ class PCOMP(CompositeShellProperty):
                 mpa = self.MassPerArea(iply)
                 assert isinstance(rho, float), 'rho=%r' % rho
                 assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+                mid = self.mids_ref[iply]
+                assert mid.type in ['MAT1', 'MAT2', 'MAT8'], 'PCOMP: mid.type=%r' % mid.type
 
         for ply in self.plies:
             assert len(ply) == 4, ply
@@ -1011,6 +1013,8 @@ class PCOMPG(CompositeShellProperty):
                 mpa = self.MassPerArea(iply)
                 assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
                 assert isinstance(rho, float), 'rho=%r' % rho
+                mid = self.mids_ref[iply]
+                assert mid.type in ['MAT1', 'MAT8'], 'PCOMPG: mid.type=%r' % mid.type
 
         #@plies.setter
         #def plies(self, plies):
@@ -1063,8 +1067,21 @@ class PCOMPG(CompositeShellProperty):
 
 class PLPLANE(ShellProperty):
     """
+    Fully Nonlinear Plane Element Properties (SOL 601)
+    Defines the properties of a fully nonlinear
+    (i.e., large strain and large rotation)
+    hyperelastic plane strain or axisymmetric element.
+
+    PLPLANE PID MID CID STR
+    MSC
+
+    PLPLANE PID MID CID STR T
+    NX
+
     Referenced by:
-     - CTRIAX
+     #- CQUAD, CQUAD4, CQUAD8, CQUADX, CTRIA3, CTRIA6, CTRIAX (MSC)
+     #- CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8 entries (NX 10)
+
     """
     type = 'PLPLANE'
     _field_map = {1: 'pid', 2:'mid', 6:'cid', 7:'str'}
@@ -1110,10 +1127,13 @@ class PLPLANE(ShellProperty):
         cid = self.Cid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
-            assert self.mid_ref.type in ['MATHE', 'MATHP'], 'mid_ref.type=%s' % self.mid_ref.type
+            assert self.mid_ref.type in ['MATHE', 'MATHP'], 'PLPLANE: mid_ref.type=%s' % self.mid_ref.type
 
     #def Pid(self):
         #return self.pid
+
+    #def Thickness(self):
+        #return self.t
 
     def Mid(self):
         if isinstance(self.mid, integer_types):
@@ -1184,7 +1204,7 @@ class PPLANE(ShellProperty):
         mid = self.Mid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
-            assert self.mid.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5'], 'mid.type=%s' % self.mid.type
+            assert self.mid.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5', 'MAT8'], 'PPLANE: mid.type=%s' % self.mid.type
 
     #def Pid(self):
         #return self.pid
@@ -1510,7 +1530,7 @@ class PSHELL(ShellProperty):
                         assert mid == -1, mid
                         continue
                 assert isinstance(mid, Material), 'mid=%r' % mid
-                assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'pid.type=%s mid.type=%s' % (self.type, mid.type)
+                assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'PSHELL: pid.type=%s mid.type=%s' % (self.type, mid.type)
                 if mid.type == 'MAT1':
                     E = mid.E()
                     G = mid.G()

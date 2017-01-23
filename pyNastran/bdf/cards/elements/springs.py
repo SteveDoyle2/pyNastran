@@ -195,6 +195,27 @@ class CELAS2(SpringElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, k, nids, c1=0, c2=0, ge=0., s=0., comment=''):
+        """
+        Creates a CELAS2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        k : float
+            spring stiffness
+        nids : List[int, int]
+            SPOINT ids
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        ge : int; default=0.0
+            damping coefficient
+        s : float; default=0.0
+            stress coefficient
+        comment : str; default=''
+            a comment for the card
+        """
         SpringElement.__init__(self)
         if comment:
             self.comment = comment
@@ -352,6 +373,20 @@ class CELAS3(SpringElement):
     }
 
     def __init__(self, eid, pid, nodes, comment=''):
+        """
+        Creates a CELAS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PELAS)
+        nids : List[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         SpringElement.__init__(self)
         if comment:
             self.comment = comment
@@ -399,7 +434,7 @@ class CELAS3(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.node_ids, msg=msg)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
@@ -440,6 +475,20 @@ class CELAS4(SpringElement):
     }
 
     def __init__(self, eid, k, nodes, comment=''):
+        """
+        Creates a CELAS4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        k : float
+            spring stiffness
+        nids : List[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         SpringElement.__init__(self)
         if comment:
             self.comment = comment
@@ -498,7 +547,7 @@ class CELAS4(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS4 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
 
     def uncross_reference(self):
@@ -506,7 +555,7 @@ class CELAS4(SpringElement):
         del self.nodes_ref
 
     def raw_fields(self):
-        list_fields = ['CELAS4', self.eid, self.k] + self.nodes
+        list_fields = ['CELAS4', self.eid, self.k] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):

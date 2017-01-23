@@ -1055,7 +1055,7 @@ class NastranIO(object):
                 if mpc_id is not None:
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
-                        lines += self.get_MPCx_node_ids_c1(model, mpc_id, exclude_mpcadd=False)
+                        lines += model.get_MPCx_node_ids_c1(mpc_id, exclude_mpcadd=False)
             self._fill_dependent_independent(dim_max, model, lines, nid_to_pid_map)
 
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
@@ -1064,88 +1064,13 @@ class NastranIO(object):
                     if suport_id:
                         self._fill_suport(suport_id, dim_max, model)
 
-    def get_SPCx_node_ids(self, model, spc_id, exclude_spcadd=False):
-        """
-        Get the SPC/SPCADD/SPC1/SPCAX IDs.
-
-        Parameters
-        -----------
-        exclude_spcadd : bool
-            you can exclude SPCADD if you just want a list of all the
-            SPCs in the model.  For example, apply all the SPCs when
-            there is no SPC=N in the case control deck, but you don't
-            need to apply SPCADD=N twice.
-        """
-        try:
-            spcs = model.spcs[spc_id]
-        except KeyError:
-            model.log.warning('spc_id=%s not found' % spc_id)
-            return []
-
-        node_ids = []
-        for card in sorted(spcs):
-            if card.type == 'SPC':
-                nids = card.node_ids
-            elif card.type == 'SPC1':
-                nids = card.node_ids
-            elif card.type == 'SPCADD':
-                nids = []
-                for new_spc_id in card.sets:
-                    nidsi = self.get_SPCx_node_ids(model, new_spc_id, exclude_spcadd=False)
-                    nids += nidsi
-            else:
-                self.log.warning('get_SPCx_node_ids doesnt supprt %r' % card.type)
-                continue
-            node_ids += nids
-        return node_ids
-
-    def get_SPCx_node_ids_c1(self, model, spc_id, exclude_spcadd=False):
-        """
-        Get the SPC/SPCADD/SPC1/SPCAX IDs.
-
-        Parameters
-        -----------
-        exclude_spcadd : bool
-            you can exclude SPCADD if you just want a list of all the
-            SPCs in the model.  For example, apply all the SPCs when
-            there is no SPC=N in the case control deck, but you don't
-            need to apply SPCADD=N twice.
-        """
-        try:
-            spcs = model.spcs[spc_id]
-        except KeyError:
-            model.log.warning('spc_id=%s not found' % spc_id)
-            return {}
-
-        node_ids_c1 = defaultdict(str)
-        #print('spcs = ', spcs)
-        for card in spcs:  # used to be sorted(spcs)
-            if card.type == 'SPC':
-                for nid, c1 in zip(card.gids, card.constraints):
-                    assert nid is not None, card.gids
-                    node_ids_c1[nid] += c1
-            elif card.type == 'SPC1':
-                nids = card.node_ids
-                c1 = card.constraints
-                for nid in nids:
-                    node_ids_c1[nid] += c1
-            elif card.type == 'SPCADD':
-                nids = []
-                for new_spc_id in card.sets:
-                    nids_c1i = self.get_SPCx_node_ids_c1(model, new_spc_id, exclude_spcadd=False)
-                    for nid, c1 in iteritems(nids_c1i):
-                        node_ids_c1[nid] += c1
-            else:
-                self.log.warning('get_SPCx_node_ids_c1 doesnt supprt %r' % card.type)
-                continue
-        return node_ids_c1
-
     def _fill_spc(self, spc_id, nspcs, nspc1s, nspcds, dim_max, model, nid_to_pid_map):
         self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1.,
                                        point_size=5, representation='point', is_visible=False)
 
-        # node_ids = self.get_SPCx_node_ids(model, spc_id, exclude_spcadd=False)
-        node_ids_c1 = self.get_SPCx_node_ids_c1(model, spc_id, exclude_spcadd=False)
+        # node_ids = model.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
+        node_ids_c1 = model.get_SPCx_node_ids_c1(spc_id, exclude_spcadd=False,
+                                                 stop_on_failure=False)
 
         node_ids = []
         for nid, c1 in iteritems(node_ids_c1):
@@ -1170,50 +1095,6 @@ class NastranIO(object):
 
         node_ids = np.unique(node_ids)
         self._add_nastran_nodes_to_grid('spc', node_ids, model, nid_to_pid_map)
-
-    def get_MPCx_node_ids_c1(self, model, mpc_id, exclude_mpcadd=False):
-        r"""
-        Get the MPC/MPCADD IDs.
-
-        Parameters
-        -----------
-        exclude_spcadd : bool
-            you can exclude MPCADD if you just want a list of all the
-            MPCs in the model.  For example, apply all the MPCs when
-            there is no MPC=N in the case control deck, but you don't
-            need to apply MPCADD=N twice.
-
-        I      I
-          \   /
-        I---D---I
-        """
-        lines = []
-        try:
-            mpcs = model.mpcs[mpc_id]
-        except:
-            model.log.warning('mpc_id=%s not found' % mpc_id)
-            return []
-
-        # dependent, independent
-        for card in mpcs:
-            if card.type == 'MPC':
-                nids = card.node_ids
-                nid0 = nids[0]
-                #constraint0 = card.constraints[0]
-                #enforced0 = card.enforced[0]
-                #card.constraints[1:]
-                for nid, enforced in zip(nids[1:], card.enforced[1:]):
-                    if enforced != 0.0:
-                        lines.append([nid0, nid])
-            elif card.type == 'MPCADD':
-                nids = []
-                for new_mpc_id in card.sets:
-                    linesi = self.get_MPCx_node_ids_c1(model, new_mpc_id, exclude_mpcadd=False)
-                    lines += linesi
-            else:
-                self.log.warning('get_MPCx_node_ids_c1 doesnt supprt %r' % card.type)
-                continue
-        return lines
 
     def _fill_bar_yz(self, dim_max, model, icase, cases, form, debug=False):
         """
@@ -1796,7 +1677,7 @@ class NastranIO(object):
                 nids1 = elem.Gmi_node_ids # dependent
                 for n1 in nids1:
                     lines_rigid.append([n1, n2])
-            elif elem.type in ['RBAR', 'RBAR1', 'RROD']:
+            elif elem.type in ['RBAR', 'RBAR1', 'RROD']: ## TODO: these aren't quite right
                 dependent = elem.Ga()
                 independent = elem.Gb()
                 lines_rigid.append([dependent, independent])

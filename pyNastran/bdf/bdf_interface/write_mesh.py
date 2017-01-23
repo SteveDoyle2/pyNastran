@@ -850,8 +850,11 @@ class WriteMesh(BDFAttributes):
         """
         Writes the PARAM cards
         """
-        if self.params:
+        if self.params or self.dti:
             msg = ['$PARAMS\n']
+            for name, dti in sorted(iteritems(self.dti)):
+                msg.append(dti.write_card(size=size, is_double=is_double))
+
             if self.is_long_ids:
                 for (unused_key, param) in sorted(iteritems(self.params)):
                     msg.append(param.write_card(16, is_double))

@@ -349,6 +349,7 @@ class BDFAttributes(object):
         self.dmijs = {}
         self.dmijis = {}
         self.dmiks = {}
+        self.dti = {}
         self._dmig_temp = defaultdict(list)
 
         # ----------------------------------------------------------------
@@ -660,6 +661,7 @@ class BDFAttributes(object):
             'dmijis' : ['DMIJI'],
             'dmiks' : ['DMIK'],
             'dmis' : ['DMI'],
+            'dti' : ['DTI'],
 
             # optimzation
             'dequations' : ['DEQATN'],

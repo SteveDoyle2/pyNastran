@@ -32,17 +32,40 @@ class RigidElement(Element):
         pass
 
 class RROD(RigidElement):
+    """
+    Rigid Pin-Ended Element Connection
+    Defines a pin-ended element that is rigid in translation
+
+    +------+-----+----+----+-----+-----+-------+
+    |   1  |  2  | 3  | 4  |  5  |  6  |   7   |
+    +======+=====+====+====+=====+=====+=======+
+    | RROD | EID | GA | GB | CMA | CMB | ALPHA |
+    +------+-----+----+----+-----+-----+-------+
+    | RROD | 5   | 1  |  2 |     |     | 6.5-6 |
+    +------+-----+----+----+-----+-----+-------+
+    """
     type = 'RROD'
 
-    def __init__(self, eid, ga, gb, cma, cmb, alpha, comment=''):
+    def __init__(self, eid, ga, gb, cma=None, cmb=None, alpha=0.0, comment=''):
         """
-        +------+-----+----+----+-----+-----+-------+
-        |   1  |  2  | 3  | 4  |  5  |  6  |   7   |
-        +======+=====+====+====+=====+=====+=======+
-        | RROD | EID | GA | GB | CMA | CMB | ALPHA |
-        +------+-----+----+----+-----+-----+-------+
-        | RROD | 5   | 1  |  2 |     |     | 6.5-6 |
-        +------+-----+----+----+-----+-----+-------+
+        Creates a RROD
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        ga / gb : int
+            grid points
+        #cna / cnb : str
+            #independent DOFs
+        cma / cmb : str; default=None
+            dependent DOF
+            must be in [None, '1', '2', '3']
+            one of them must be None
+        alpha : float; default=0.0
+            coefficient of thermal expansion
+        comment : str; default=''
+            a comment for the card
         """
         RigidElement.__init__(self)
         if comment:
@@ -53,6 +76,24 @@ class RROD(RigidElement):
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
+
+    def validate(self):
+        msg = ''
+        if self.cma not in [None, '1', '2', '3']:
+            msg += "  ga=%r; cma=%r must be in [None, '1', '2', '3']\n" % (
+                self.ga, self.cma)
+        if self.cmb not in [None, '1', '2', '3']:
+            msg += "  gb=%r; cmb=%r must be in [None, '1', '2', '3']\n" % (
+                self.gb, self.cmb)
+        if self.cma is None and self.cmb is None:
+            msg += 'A  ga=%s cma=%r; gb=%s cmb=%r; cma or cmb must be None (not both)' % (
+                self.ga, self.cma, self.gb, self.cmb)
+        elif self.cma is not None and self.cmb is not None:
+            msg += 'D  ga=%s cma=%r; gb=%s cmb=%r; cma or cmb must be None (not both)' % (
+                self.ga, self.cma, self.gb, self.cmb)
+
+        if msg:
+            raise RuntimeError('Invalid Dependent DOFs\n' + msg.rstrip())
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -95,9 +136,9 @@ class RROD(RigidElement):
             the BDF object
         """
         msg = ' which is required by RROD eid=%s' % (self.eid)
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
 
     def uncross_reference(self):
@@ -108,11 +149,15 @@ class RROD(RigidElement):
     @property
     def independent_nodes(self):
         """gets the independent node ids"""
-        return [self.Ga()]
+        if self.cma is None:
+            return [self.Ga()]
+        return [self.Gb()]
 
     @property
     def dependent_nodes(self):
         """gets the dependent node ids"""
+        if self.cma is not None:
+            return [self.Ga()]
         return [self.Gb()]
 
     def raw_fields(self):
@@ -134,17 +179,37 @@ class RROD(RigidElement):
 
 
 class RBAR(RigidElement):
+    """
+    Defines a rigid bar with six degrees-of-freedom at each end.
+
+    +------+-----+----+----+--------+-----+-----+-----+-------+
+    |  1   |  2  |  3 |  4 |    5   |  6  |  7  |  8  |   9   |
+    +======+=====+====+====+========+=====+=====+=====+=======+
+    | RBAR | EID | GA | GB |  CNA   | CNB | CMA | CMB | ALPHA |
+    +------+-----+----+----+--------+-----+-----+-----+-------+
+    | RBAR |  5  | 1  |  2 | 123456 |     |     |     | 6.5-6 |
+    +------+-----+----+----+--------+-----+-----+-----+-------+
+    """
     type = 'RBAR'
 
     def __init__(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
-        +------+-----+----+----+--------+-----+-----+-----+-------+
-        |  1   |  2  |  3 |  4 |    5   |  6  |  7  |  8  |   9   |
-        +======+=====+====+====+========+=====+=====+=====+=======+
-        | RBAR | EID | GA | GB |  CNA   | CNB | CMA | CMB | ALPHA |
-        +------+-----+----+----+--------+-----+-----+-----+-------+
-        | RBAR |  5  | 1  |  2 | 123456 |     |     |     | 6.5-6 |
-        +------+-----+----+----+--------+-----+-----+-----+-------+
+        Creates a RBAR
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        ga / gb : int
+            grid points
+        cna / cnb : str
+            independent DOFs
+        cma / cmb : str
+            dependent DOFs
+        alpha : float; default=0.0
+            coefficient of thermal expansion
+        comment : str; default=''
+            a comment for the card
         """
         RigidElement.__init__(self)
         if comment:
@@ -158,15 +223,32 @@ class RBAR(RigidElement):
         self.cmb = cmb
         self.alpha = alpha
 
+    def validate(self):
+        ncna = len(self.cna)
+        ncnb = len(self.cnb)
+        nindependent = ncna + ncnb
+        independent = self.cna + self.cnb
+        if nindependent != 6:
+            msg = 'nindependent=%s; cna=%s (%s) cnb=%s (%s)' % (
+                nindependent, self.cna, ncna, self.cnb, ncnb)
+            raise RuntimeError(msg)
+        for comp in '123456':
+            msgi = ''
+            if comp not in independent:
+                msgi += '  comp=%s is not nindependent\n' % (comp)
+        if msgi:
+            msg = 'cna=%s cnb=%s\n%s' % msgi
+            raise RuntimeError(msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
-        cna = components_or_blank(card, 4, 'cna')
-        cnb = components_or_blank(card, 5, 'cnb')
-        cma = components_or_blank(card, 6, 'cma')
-        cmb = components_or_blank(card, 7, 'cmb')
+        cna = components_or_blank(card, 4, 'cna', '')
+        cnb = components_or_blank(card, 5, 'cnb', '')
+        cma = components_or_blank(card, 6, 'cma', '')
+        cmb = components_or_blank(card, 7, 'cmb', '')
         alpha = double_or_blank(card, 8, 'alpha', 0.0)
         assert len(card) <= 9, 'len(RBAR card) = %i\ncard=%s' % (len(card), card)
         return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)

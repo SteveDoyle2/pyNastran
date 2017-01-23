@@ -1,8 +1,8 @@
 # pylint: disable=E1101,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, iterkeys
 from collections import defaultdict
+from six import string_types, iteritems, iterkeys
 
 import numpy as np
 from pyNastran.utils import integer_types
@@ -65,8 +65,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         for dict_name, card_names in iteritems(self._slot_to_type_map):
             print('card_names=%s dict_name=%s' % (card_names, dict_name))
             card_name0 = card_names[0]
-            if card_name0 in ['DTABLE', 'GRDSET', 'SESUP', 'DOPTPRM', 'MONPNT1', 'SUPORT', 'MKAERO1',
-                              'MATHP']:
+            if card_name0 in ['DTABLE', 'GRDSET', 'SESUP', 'DOPTPRM', 'MONPNT1', 'SUPORT',
+                              'MKAERO1', 'MATHP']:
                 pass
             else:
                 adict = getattr(self, dict_name)
@@ -76,14 +76,16 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                             alist = card
                             for cardi in alist:
                                 rslot_map[cardi.type].append(key)
-                            #raise NotImplementedError('%s; names=%s \ncard=%s' % (type(card), card_names, card))
+                            #msg = '%s; names=%s \ncard=%s' % (type(card), card_names, card)
+                            #raise NotImplementedError(msg)
                         else:
                             rslot_map[card.type].append(key)
                 elif isinstance(adict, list):
                     alist = adict
                     for value in alist:
                         if isinstance(value, list):
-                            raise NotImplementedError('%s; names=%s value=%s' % (type(value), card_names, value))
+                            msg = '%s; names=%s value=%s' % (type(value), card_names, value)
+                            raise NotImplementedError(msg)
                         else:
                             if value.type in ['CSET1', 'CSET']:
                                 pass
@@ -92,12 +94,11 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                                 raise NotImplementedError('list; names=%s' % card_names)
                 else:
                     raise NotImplementedError('%s; names=%s' % (type(adict), card_names))
-        rslot_map
         return rslot_map
 
     def get_rslot_map(self, reset_type_to_slot_map=False):
         if (reset_type_to_slot_map or self._type_to_slot_map is None or
-            len(self._type_to_slot_map) == 0):
+                len(self._type_to_slot_map) == 0):
             rslot_map = {}
             for key, values in iteritems(self._slot_to_type_map):
                 for value in values:
@@ -178,6 +179,151 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     #print('%s' % str(card).split('\n')[0])
             out[card_type] = cards
         return out
+
+
+    def get_SPCx_node_ids(self, spc_id, exclude_spcadd=False, stop_on_failure=True):
+        """
+        Get the SPC/SPCADD/SPC1/SPCAX IDs.
+
+        Parameters
+        ----------
+        spc_id : int
+            the SPC id
+        exclude_spcadd : bool
+            you can exclude SPCADD if you just want a list of all the
+            SPCs in the model.  For example, apply all the SPCs when
+            there is no SPC=N in the case control deck, but you don't
+            need to apply SPCADD=N twice.
+        stop_on_failure : bool; default=True
+            errors if parsing something new
+        """
+        try:
+            spcs = self.spcs[spc_id]
+        except KeyError:
+            self.log.warning('spc_id=%s not found' % spc_id)
+            return []
+        except TypeError:
+            print('spc_id=%r' % spc_id)
+            raise
+
+
+        node_ids = []
+        for card in sorted(spcs):
+            if card.type == 'SPC':
+                nids = card.node_ids
+            elif card.type == 'SPC1':
+                nids = card.node_ids
+            elif card.type == 'SPCADD':
+                nids = []
+                for new_spc_id in card.spc_ids:
+                    nidsi = self.get_SPCx_node_ids(new_spc_id, exclude_spcadd=False,
+                                                   stop_on_failure=stop_on_failure)
+                    nids += nidsi
+            else:
+                self.log.warning('get_SPCx_node_ids doesnt supprt %r' % card.type)
+                continue
+            node_ids += nids
+        return node_ids
+
+    def get_SPCx_node_ids_c1(self, spc_id, exclude_spcadd=False, stop_on_failure=True):
+        """
+        Get the SPC/SPCADD/SPC1/SPCAX IDs.
+
+        Parameters
+        ----------
+        spc_id : int
+            the SPC id
+        exclude_spcadd : bool
+            you can exclude SPCADD if you just want a list of all the
+            SPCs in the model.  For example, apply all the SPCs when
+            there is no SPC=N in the case control deck, but you don't
+            need to apply SPCADD=N twice.
+        stop_on_failure : bool; default=True
+            errors if parsing something new
+        """
+        try:
+            spcs = self.spcs[spc_id]
+        except KeyError:
+            self.log.warning('spc_id=%s not found' % spc_id)
+            return {}
+
+        node_ids_c1 = defaultdict(str)
+        #print('spcs = ', spcs)
+        for card in spcs:  # used to be sorted(spcs)
+            if card.type == 'SPC':
+                for nid, c1 in zip(card.node_ids, card.components):
+                    assert nid is not None, card.node_ids
+                    node_ids_c1[nid] += c1
+            elif card.type == 'SPC1':
+                nids = card.node_ids
+                c1 = card.components
+                for nid in nids:
+                    node_ids_c1[nid] += c1
+            elif card.type == 'SPCADD':
+                nids = []
+                for new_spc_id in card.spc_ids:
+                    nids_c1i = self.get_SPCx_node_ids_c1(new_spc_id, exclude_spcadd=False,
+                                                         stop_on_failure=stop_on_failure)
+                    for nid, c1 in iteritems(nids_c1i):
+                        node_ids_c1[nid] += c1
+            else:
+                msg = 'get_SPCx_node_ids_c1 doesnt supprt %r' % card.type
+                if stop_on_failure:
+                    raise RuntimeError(msg)
+                else:
+                    self.log.warning(msg)
+        return node_ids_c1
+
+    def get_MPCx_node_ids_c1(self, mpc_id, exclude_mpcadd=False, stop_on_failure=True):
+        r"""
+        Get the MPC/MPCADD IDs.
+
+        Parameters
+        ----------
+        mpc_id : int
+            the MPC id
+        exclude_mpcadd : bool
+            you can exclude MPCADD if you just want a list of all the
+            MPCs in the model.  For example, apply all the MPCs when
+            there is no MPC=N in the case control deck, but you don't
+            need to apply MPCADD=N twice.
+        stop_on_failure : bool; default=True
+            errors if parsing something new
+
+        I      I
+          \   /
+        I---D---I
+        """
+        lines = []
+        try:
+            mpcs = self.mpcs[mpc_id]
+        except:
+            self.log.warning('mpc_id=%s not found' % mpc_id)
+            return []
+
+        # dependent, independent
+        for card in mpcs:
+            if card.type == 'MPC':
+                nids = card.node_ids
+                nid0 = nids[0]
+                #constraint0 = card.constraints[0]
+                #enforced0 = card.enforced[0]
+                #card.constraints[1:]
+                for nid, enforced in zip(nids[1:], card.enforced[1:]):
+                    if enforced != 0.0:
+                        lines.append([nid0, nid])
+            elif card.type == 'MPCADD':
+                nids = []
+                for new_mpc_id in card.sets:
+                    linesi = self.get_MPCx_node_ids_c1(new_mpc_id, exclude_mpcadd=False)
+                    lines += linesi
+            else:
+                msg = 'get_MPCx_node_ids_c1 doesnt supprt %r' % card.type
+                if stop_on_failure:
+                    raise RuntimeError(msg)
+                else:
+                    self.log.warning(msg)
+        return lines
 
     def get_rigid_elements_with_node_ids(self, node_ids):
         try:
@@ -381,7 +527,13 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         else:
             assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
             nid_list = np.unique(list(self.nodes.keys()))
-            raise RuntimeError('nid=%s is not a GRID, SPOINT, or EPOINT%s\n%s' % (nid, msg, nid_list))
+            msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
+            msg += 'nids=%s\n' % nid_list
+            if self.spoints:
+                msg += 'spoints=%s\n' % list(self.spoints.points)
+            if self.epoints:
+                msg += 'epoints=%s\n' % list(self.epoints.points)
+            raise RuntimeError(msg)
 
     def Nodes(self, nids, allow_empty_nodes=False, msg=''):
         """
@@ -638,7 +790,12 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         return mid_to_pids_map
 
     def Element(self, eid, msg=''):
-        """gets an element (not rigid (RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE) or mass (CMASS1, CONM2))"""
+        """
+        Gets an element
+
+        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE)
+        or mass (CMASS1, CONM2))
+        """
         try:
             return self.elements[eid]
         except KeyError:
@@ -660,7 +817,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                            % (eid, msg, np.unique(list(self.masses.keys()))))
 
     def RigidElement(self, eid, msg=''):
-        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE)"""
+        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE)"""
         try:
             return self.rigid_elements[eid]
         except KeyError:
@@ -712,7 +869,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         return self.materials.keys()
 
     def get_material_ids(self):
-        return self.materials.keys() + self.thermal_materials.keys() + self.hyperelastic_materials.keys()
+        return (self.materials.keys() + self.thermal_materials.keys() +
+                self.hyperelastic_materials.keys())
 
     def get_thermal_material_ids(self):
         return self.thermal_materials.keys()
@@ -919,12 +1077,11 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 self.log.warning('not considering:\n%s' % str(spc))
                 #raise NotImplementedError(spc.type)
 
-        if consider_nodes and final_flag:
+        if consider_nodes:
             for nid, node in iteritems(self.nodes):
                 if node.ps:
                     nids.append(nid)
                     comps.append(node.ps)
-
         return nids, comps
 
     def get_mpcs(self, mpc_id):

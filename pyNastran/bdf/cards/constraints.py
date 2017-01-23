@@ -18,7 +18,7 @@ The ConstraintObject contain multiple constraints.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import iteritems
+from six import iteritems, string_types
 from six.moves import zip, range
 
 from pyNastran.utils import integer_types
@@ -412,22 +412,32 @@ class SPC(Constraint):
      +-----+-----+----+----+------+----+----+----+
     """
     type = 'SPC'
-
-    def __init__(self, conid, gids, constraints, enforced, comment=''):
+    def __init__(self, conid, gids, components, enforced, comment=''):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
         self.conid = conid
         self.gids = gids
-        self.constraints = constraints
+        self.components = components
         self.enforced = enforced
+
+    def validate(self):
+        assert isinstance(self.gids, list), self.gids
+        assert isinstance(self.components, list), self.components
+        assert isinstance(self.enforced, list), self.enforced
+        assert len(self.gids) == len(self.components), 'len(self.gids)=%s len(self.components)=%s' % (len(self.gids), len(self.components))
+        assert len(self.gids) == len(self.enforced), 'len(self.gids)=%s len(self.enforced)=%s' % (len(self.gids), len(self.enforced))
+        for nid, comp, enforcedi in zip(self.gids, self.components, self.enforced):
+            assert isinstance(nid, integer_types), self.gids
+            assert isinstance(comp, string_types), self.components
+            assert isinstance(enforcedi, float), self.enforced
 
     @classmethod
     def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             gids = [integer(card, 2, 'G1'),]
-            constraints = [components_or_blank(card, 3, 'C1', 0)]
+            components = [components_or_blank(card, 3, 'C1', '0')]
             enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
             gids = [
@@ -435,32 +445,40 @@ class SPC(Constraint):
                 integer_or_blank(card, 5, 'G2'),
             ]
             # :0 if scalar point 1-6 if grid
-            constraints = [components_or_blank(card, 3, 'C1', 0),
-                           components_or_blank(card, 6, 'C2', 0)]
+            components = [components_or_blank(card, 3, 'C1', '0'),
+                          components_or_blank(card, 6, 'C2', '0')]
             enforced = [double_or_blank(card, 4, 'D1', 0.0),
                         double_or_blank(card, 7, 'D2', 0.0)]
-        return SPC(conid, gids, constraints, enforced, comment=comment)
+        return SPC(conid, gids, components, enforced, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         conid = data[0]
         gids = [data[1]]
-        constraint = data[2]
-        assert 0 <= constraint <= 123456, data
+        components = data[2]
+        assert 0 <= components <= 123456, data
         enforced = [data[3]]
         assert conid > 0, data
         assert gids[0] > 0, data
-        constraint_str = str(constraint)
+        components_str = str(components)
         assert len(constraint_str) <= 6, data
-        constraints = [constraint_str]
-        #if constraints[0] == 0:
-            #constraints[0] = 0
-        #if constraints[0] == 16:
-            #constraints[0] = '16'
+        components = [constraint_str]
+        #if components[0] == 0:
+            #components[0] = 0
+        #if components[0] == 16:
+            #components[0] = '16'
         #else:
-            #raise RuntimeError('SPC; constraints=%s data=%s' % (constraints, data))
-        #assert 0 < constraints[0] > 1000, data
-        return SPC(conid, gids, constraints, enforced, comment=comment)
+            #raise RuntimeError('SPC; components=%s data=%s' % (components, data))
+        #assert 0 < components[0] > 1000, data
+        return SPC(conid, gids, components, enforced, comment=comment)
+
+    @property
+    def constraints(self):
+        return self.components
+
+    @constraints.setter
+    def constraints(self, constraints):
+        self.components = constraints
 
     @property
     def node_ids(self):
@@ -486,7 +504,7 @@ class SPC(Constraint):
 
     def raw_fields(self):
         fields = ['SPC', self.conid]
-        for (gid, constraint, enforced) in zip(self.node_ids, self.constraints,
+        for (gid, constraint, enforced) in zip(self.node_ids, self.components,
                                                self.enforced):
             fields += [gid, constraint, enforced]
         return fields
@@ -607,7 +625,7 @@ class SPC1(Constraint):
       +------+-----+----+----+--------+----+----+----+----+
       |  1   |  2  |  3 |  4 |   5    |  6 |  7 |  8 |  9 |
       +======+=====+====+====+========+====+====+====+====+
-      | SPC1 | SID | C  | G1 | G2     | G3 | G4 | G5 | G6 |
+      | SPC1 | SID | C  | G1 |   G2   | G3 | G4 | G5 | G6 |
       +------+-----+----+----+--------+----+----+----+----+
       |      |  G7 | G8 | G9 | -etc.- |    |    |    |    |
       +------+-----+----+----+--------+----+----+----+----+
@@ -628,33 +646,45 @@ class SPC1(Constraint):
     """
     type = 'SPC1'
 
-    def __init__(self, conid, constraints, nodes, comment=''):
+    def __init__(self, conid, components, nodes, comment=''):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
         self.conid = conid
-        self.constraints = constraints
+        self.components = components
         self.nodes = expand_thru(nodes)
         self.nodes.sort()
+
+    def validate(self):
+        assert isinstance(self.nodes, list), self.nodes
+        assert isinstance(self.components, string_types), self.components
 
     @classmethod
     def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'conid')
-        constraints = parse_components(card, 2, 'constraints')  # 246 = y; dx, dz dir
+        components = parse_components(card, 2, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(3)
-        return SPC1(conid, constraints, nodes, comment=comment)
+        return SPC1(conid, components, nodes, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         conid = data[0]
-        constraints = data[1]
+        components = data[1]
         nodes = data[2]
         if nodes[-1] == -1:
             nodes = nodes[:-1]
         assert conid > 0, data
         for nid in nodes:
             assert nid > 0, data
-        return SPC1(conid, constraints, nodes, comment=comment)
+        return SPC1(conid, components, nodes, comment=comment)
+
+    @property
+    def constraints(self):
+        return self.components
+
+    @constraints.setter
+    def constraints(self, constraints):
+        self.components = constraints
 
     @property
     def node_ids(self):
@@ -679,7 +709,7 @@ class SPC1(Constraint):
         del self.nodes_ref
 
     def raw_fields(self):
-        fields = ['SPC1', self.conid, self.constraints] + self.node_ids
+        fields = ['SPC1', self.conid, self.components] + self.node_ids
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -819,7 +849,7 @@ class MPCADD(ConstraintADD):
             if isinstance(mpc, integer_types):
                 mpc_ids.append(mpc)
             else:
-                mpc_ids.append(mpc.conid)
+                mpc_ids.append(mpc[0].conid)
         return mpc_ids
 
     def cross_reference(self, model):
@@ -836,13 +866,12 @@ class MPCADD(ConstraintADD):
             self.sets[i] = model.MPC(mpc, msg=msg)
         self.sets_ref = self.sets
 
+    def uncross_reference(self):
+        self.sets = self.mpc_ids
+        del self.sets_ref
+
     def raw_fields(self):
-        fields = ['MPCADD', self.conid]  # +self.sets
-        for set_id in self.sets:
-            if isinstance(set_id, integer_types):
-                fields.append(set_id)
-            else:
-                fields.append(set_id[0].conid)
+        fields = ['MPCADD', self.conid]  +self.mpc_ids
         return fields
 
     def write_card(self, size=8, is_double=False):

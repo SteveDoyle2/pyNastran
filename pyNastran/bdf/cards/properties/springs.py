@@ -47,9 +47,9 @@ class PELAS(SpringProperty):
             property id
         k : float
             spring stiffness
-        ge : int; default=0
+        ge : int; default=0.0
             damping coefficient
-        s : float; default=0.
+        s : float; default=0.0
             stress coefficient
         comment : str; default=''
             a comment for the card

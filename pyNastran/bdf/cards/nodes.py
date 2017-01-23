@@ -190,7 +190,7 @@ class XPoint(BaseCard):
         ----------
         size : int; default=8
             unused
-        size : bool; default=False
+        is_double : bool; default=False
             unused
         """
         msg = self.comment
@@ -221,18 +221,12 @@ class SPOINT(XPoint):
         """
         Creates the SPOINT card
 
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the SPOINT fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
+        Parameters
+        ----------
+        nid : int
+           the SPOINT id
+        comment : str; default=''
+            a comment for the card
         """
         XPoint.__init__(self, nid, comment)
 
@@ -245,18 +239,12 @@ class EPOINT(XPoint):
         """
         Creates the EPOINT card
 
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the SPOINT fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
+        Parameters
+        ----------
+        nid : int
+           the EPOINT id
+        comment : str; default=''
+            a comment for the card
         """
         XPoint.__init__(self, nid, comment)
 

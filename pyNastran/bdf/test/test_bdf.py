@@ -503,6 +503,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
             skin_filename = 'skin_file.bdf'
             fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
             if os.path.exists(skin_filename):
+                model = read_bdf(skin_filename)
                 os.remove(skin_filename)
             if xref:
                 extract_bodies(fem1)
@@ -974,7 +975,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
                        108, 109, 110, 112, 144, 145, 153, 400, 601
-                      ], 'sol=%s LOAD' % sol
+                      ], 'sol=%s LOAD\n%s' % (sol, subcase)
     else:
         # print('is_load =', subcase.has_parameter('LOAD'))
         pass
@@ -1006,7 +1007,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
 
     if 'DLOAD' in subcase:
         assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
-                       153, 159, 400, 601], 'sol=%s DLOAD' % sol
+                       153, 159, 400, 401, 601], 'sol=%s DLOAD\n%s' % (sol, subcase)
         #if 'LOADSET' in subcase:
             #raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
         if 'IC' in subcase:

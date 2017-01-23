@@ -2109,15 +2109,18 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     pid = elem.Pid()
                     prop = self.properties[pid] # PSOLID
-                    try:
-                        #print(prop.mid)
+                    if prop.type in ['PSOLID', 'PLSOLID']:
                         mid = prop.Mid()
-                    except TypeError:
-                        self.log.warning('TypeError: skipping:%s' % prop)
-                        raise
-                    except AttributeError:
-                        self.log.warning('skipping:%s' % prop)
-                        continue
+                    elif prop.type == 'PCOMPS':
+                        mid = prop.mids[0]
+                    else:
+                        raise NotImplementedError(prop)
+                    #except TypeError:
+                        #self.log.warning('TypeError: skipping:%s' % prop)
+                        #raise
+                    #except AttributeError:
+                        #self.log.warning('skipping:%s' % prop)
+                        #continue
                     mid_set_to_write.add(mid)
                     #print('added eid=%s pid=%s mid=%s (b)' % (eid, pid, mid))
         else:

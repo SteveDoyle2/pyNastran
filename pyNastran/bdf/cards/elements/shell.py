@@ -626,7 +626,7 @@ class CPLSTN3(TriShell):
             assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid_ref.type in ['PPPLANE', 'PLPLANE', 'PGPLSN'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            assert self.pid_ref.type in ['PPLANE', 'PLPLANE', 'PGPLSN'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
             #if not self.pid_ref.type in ['PLPLANE']:
             #t = self.Thickness()

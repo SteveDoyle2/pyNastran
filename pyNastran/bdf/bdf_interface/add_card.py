@@ -337,9 +337,9 @@ class AddCards(AddMethods):
             property id
         k : float
             spring stiffness
-        ge : int; default=0
+        ge : int; default=0.0
             damping coefficient
-        s : float; default=0.
+        s : float; default=0.0
             stress coefficient
         comment : str; default=''
             a comment for the card
@@ -370,16 +370,65 @@ class AddCards(AddMethods):
         return elem
 
     def add_celas2(self, eid, k, nids, c1=0, c2=0, ge=0., s=0., comment=''):
+        """
+        Creates a CELAS2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        k : float
+            spring stiffness
+        nids : List[int, int]
+            SPOINT ids
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        ge : int; default=0.0
+            damping coefficient
+        s : float; default=0.0
+            stress coefficient
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CELAS2(eid, k, nids, c1=c1, c2=c2, ge=ge, s=s, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_celas3(self, eid, pid, nids, comment=''):
+        """
+        Creates a CELAS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PELAS)
+        nids : List[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CELAS3(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_celas4(self, eid, k, nids, comment=''):
+        """
+        Creates a CELAS4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        k : float
+            spring stiffness
+        nids : List[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CELAS4(eid, k, nids, comment=comment)
         self._add_element_object(elem)
         return elem
@@ -993,16 +1042,14 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pcomps(self, pid, cordm, psdir, sb, nb, tref, ge, global_ply_ids,
-                   mids, thicknesses, thetas,
-                   failure_theories,
-                   interlaminar_failure_theories,
-                   souts, comment=''):
-        prop = PCOMPS(pid, cordm, psdir, sb, nb, tref, ge, global_ply_ids,
-                      mids, thicknesses, thetas,
-                      failure_theories,
-                      interlaminar_failure_theories,
-                      souts, comment=comment)
+    def add_pcomps(self, pid, global_ply_ids, mids, thicknesses, thetas,
+                   cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
+                   failure_theories=None, interlaminar_failure_theories=None,
+                   souts=None, comment=''):
+        prop = PCOMPS(pid, global_ply_ids, mids, thicknesses, thetas,
+                      cordm, psdir, sb, nb, tref, ge,
+                      failure_theories, interlaminar_failure_theories, souts,
+                      comment=comment)
         self._add_property_object(prop)
         return prop
 
@@ -1524,13 +1571,13 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_spc(self, conid, gids, constraints, enforced, comment=''):
-        spc = SPC(conid, gids, constraints, enforced, comment=comment)
+    def add_spc(self, conid, gids, components, enforced, comment=''):
+        spc = SPC(conid, gids, components, enforced, comment=comment)
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_spc1(self, conid, constraints, nodes, comment=''):
-        spc = SPC1(conid, constraints, nodes, comment=comment)
+    def add_spc1(self, conid, components, nodes, comment=''):
+        spc = SPC1(conid, components, nodes, comment=comment)
         self._add_constraint_spc_object(spc)
         return spc
 
@@ -1778,13 +1825,77 @@ class AddCards(AddMethods):
         self._add_gust_object(gust)
         return gust
 
-    def add_eigr(self, sid, method, f1, f2, ne, nd, norm, G, C, comment=''):
+    def add_eigr(self, sid, method='LAN', f1=None, f2=None, ne=None, nd=None,
+                 norm='MASS', G=None, C=None, comment=''):
+        """
+        Adds a EIGR card
+
+        Parameters
+        ----------
+        sid : int
+            method id
+        method : str; default='LAN'
+            eigenvalue method
+            recommended: {LAN, AHOU}
+            obsolete : {INV, SINV, GIV, MGIV, HOU, MHOU, AGIV}
+        f1 / f2 : float; default=None
+            lower/upper bound eigenvalue
+        f2 : float; default=None
+            upper bound eigenvalue
+        ne : int; default=None
+            estimate of number of roots (used for INV)
+        nd : int; default=None
+            desired number of roots
+        msglvl : int; default=0
+            debug level; 0-4
+        maxset : int; default=None
+            Number of vectors in block or set
+        shfscl : float; default=None
+            estimate of first flexible mode natural frequency
+        norm : str; default=None
+            {MAX, MASS, AF, POINT}
+            default=MASS (NX)
+        G : int; default=None
+            node id for normalization; only for POINT
+        C : int; default=None
+            component for normalization (1-6); only for POINT
+        comment : str; default=''
+            a comment for the card
+        """
         method = EIGR(sid, method, f1, f2, ne, nd, norm, G, C, comment=comment)
         self._add_method_object(method)
         return method
 
-    def add_eigrl(self, sid, v1, v2, nd, msglvl, maxset, shfscl, norm, options,
-                  values, comment=''):
+    def add_eigrl(self, sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None, shfscl=None,
+                 norm=None, options=None, values=None, comment=''):
+        """
+        Adds an EIGRL card
+
+        Parameters
+        ----------
+        sid : int
+            method id
+        v1 : float; default=None
+            lower bound eigenvalue
+        v2 : float; default=None
+            upper bound eigenvalue
+        nd : int
+            number of roots
+        msglvl : int; default=0
+            debug level; 0-4
+        maxset : int; default=None
+            Number of vectors in block or set
+        shfscl : float; default=None
+            estimate of first flexible mode natural frequency
+        norm : str; default=None
+            {MAX, MASS}
+        options : ???; default=None -> []
+            ???
+        values : ???; default=None -> []
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         method = EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl, norm, options,
                        values, comment=comment)
         self._add_method_object(method)
@@ -2298,8 +2409,26 @@ class AddCards(AddMethods):
         self._add_freq_object(freq)
         return freq
 
-    def add_rrod(self, eid, ga, gb, cma, cmb, alpha, comment=''):
-        elem = RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
+    def add_rrod(self, eid, ga, gb, cma='', cmb='', alpha=0.0, comment=''):
+        """
+        Creates a RROD
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        ga / gb : int
+            grid points
+        #cna / cnb : str
+            #independent DOFs
+        cma / cmb : str; default=''
+            dependent DOFs
+        alpha : float; default=0.0
+            coefficient of thermal expansion
+        comment : str; default=''
+            a comment for the card
+        """
+        elem = RROD(eid, ga, gb, cma=cma, cmb=cmb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 

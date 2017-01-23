@@ -215,12 +215,31 @@ class MATT1(MaterialDependence):
     """
     type = 'MATT1'
 
-    def __init__(self, mid, E_table, G_table, nu_table, rho_table, A_table,
-                 ge_table, st_table, sc_table, ss_table, comment=''):
+    def __init__(self, mid, E_table=None, G_table=None, nu_table=None,
+                 rho_table=None, A_table=None, ge_table=None, st_table=None,
+                 sc_table=None, ss_table=None, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment
         self.mid = mid
+        if E_table == 0:
+            E_table = None
+        if G_table == 0:
+            G_table = None
+        if nu_table == 0:
+            nu_table = None
+        if rho_table == 0:
+            rho_table = None
+        if A_table == 0:
+            A_table = None
+        if ge_table == 0:
+            ge_table = None
+        if st_table == 0:
+            st_table = None
+        if sc_table == 0:
+            sc_table = None
+        if ss_table == 0:
+            ss_table = None
         self._E_table = E_table
         self._G_table = G_table
         self._nu_table = nu_table
@@ -524,10 +543,22 @@ class MATT4(MaterialDependence):
     """
     type = 'MATT4'
 
-    def __init__(self, mid, k_table, cp_table, H_table, mu_table, Hgen_table, comment=''):
+    def __init__(self, mid, k_table=None, cp_table=None, H_table=None,
+                 mu_table=None, Hgen_table=None, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment
+        if k_table == 0:
+            k_table = None
+        if cp_table == 0:
+            cp_table = None
+        if H_table == 0:
+            H_table = None
+        if mu_table == 0:
+            mu_table = None
+        if Hgen_table == 0:
+            Hgen_table = None
+
         self.mid = mid
         self._k_table = k_table
         self._cp_table = cp_table
@@ -622,8 +653,9 @@ class MATT5(MaterialDependence):
     """
     type = 'MATT5'
 
-    def __init__(self, mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
-                 cp_table, hgen_table, comment=''):
+    def __init__(self, mid, kxx_table=None, kxy_table=None, kxz_table=None,
+                 kyy_table=None, kyz_table=None, kzz_table=None,
+                 cp_table=None, hgen_table=None, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment
@@ -747,11 +779,11 @@ class MATT8(MaterialDependence):
     """
     type = 'MATT8'
 
-    def __init__(self, mid, E1_table, E2_table, Nu12_table,
-                 G12_table, G1z_table, G2z_table, rho_table,
-                 A1_table, A2_table,
-                 Xt_table, Xc_table, Yt_table, Yc_table,
-                 S_table, GE_table, F12_table, comment=''):
+    def __init__(self, mid, E1_table=None, E2_table=None, Nu12_table=None,
+                 G12_table=None, G1z_table=None, G2z_table=None, rho_table=None,
+                 A1_table=None, A2_table=None,
+                 Xt_table=None, Xc_table=None, Yt_table=None, Yc_table=None,
+                 S_table=None, GE_table=None, F12_table=None, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment

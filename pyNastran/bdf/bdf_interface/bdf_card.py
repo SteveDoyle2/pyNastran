@@ -4,6 +4,7 @@ Defines the BDFCard class that is passed into the various Nastran cards.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.bdf.utils import deprecated
+from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_16 import print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from six.moves import range
@@ -81,17 +82,9 @@ class BDFCard(object):
         #return str(self.card)
         return '%r' % self.card
 
-    #def nFields(self):
-        #"""
-        #Gets how many fields are on the card
-
-        #Returns
-        #-------
-        #nfields : int
-            #the number of fields on the card
-        #"""
-        #self.deprecated('self.nFields()', 'self.nfields', '0.8')
-        #return self.nfields
+    def print_repr_card(self, size=8, is_double=False):
+        """prints the card in 8/16/16-double format"""
+        return print_card(self.card, size=size, is_double=is_double)
 
     def __len__(self):
         """len(card)"""

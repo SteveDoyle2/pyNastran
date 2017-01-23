@@ -744,7 +744,7 @@ class ROTORD(BaseCard):
     9 19 7.5 1 0.0 0.0 109
     10 20 1 0.0 0.0 10 110
     """
-    type = 'ROTORG'
+    type = 'ROTORD'
     def __init__(self, sid, rstart, rstep, numstep,
                  rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
                  refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
@@ -787,7 +787,12 @@ class ROTORD(BaseCard):
         self.rspeeds_ref = None
 
     def validate(self):
-        pass
+        nrsets = len(self.rsets)
+        if nrsets == 0:
+            raise RuntimeError('nrsets=0')
+        elif nrsets > 1:
+            for rset in self.rsets:
+                assert rset is not None, self.rsets
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
 
     def cross_reference(self, model):
@@ -801,6 +806,7 @@ class ROTORD(BaseCard):
         for rforce in self.rforces:
             self.rspeeds_ref.append(model.DLoads(rforce))
         # ..todo ::  BRGSETi
+        # ..todo :: RSETi
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -838,7 +844,7 @@ class ROTORD(BaseCard):
         for irow in range(nrows):
             j = irow * 8 + 17
             rid = integer(card, j, 'rid_%i' % (irow + 1))
-            rset = integer(card, j+1, 'rset_%i' % (irow + 1))
+            rset = integer_or_blank(card, j+1, 'rset_%i' % (irow + 1))
             rspeed = integer_or_double(card, j+2, 'rspeed_%i' % (irow + 1))
             rcord = integer_or_blank(card, j+3, 'rcord_%i' % (irow + 1), 0)
             w3 = double_or_blank(card, j+4, 'w3_%i' % (irow + 1), 0.)
