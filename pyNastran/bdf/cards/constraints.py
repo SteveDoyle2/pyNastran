@@ -656,8 +656,8 @@ class SPC1(Constraint):
         self.nodes.sort()
 
     def validate(self):
-        assert isinstance(self.nodes, list), self.nodes
-        assert isinstance(self.components, string_types), self.components
+        assert isinstance(self.nodes, list), 'nodes=%s\n%s' % (self.nodes, str(self))
+        assert isinstance(self.components, string_types), 'components=%s\n%s' % (self.components, str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -669,7 +669,7 @@ class SPC1(Constraint):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         conid = data[0]
-        components = data[1]
+        components = str(data[1])
         nodes = data[2]
         if nodes[-1] == -1:
             nodes = nodes[:-1]

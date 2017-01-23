@@ -802,7 +802,8 @@ class PCOMP(CompositeShellProperty):
                 mpa = self.MassPerArea(iply)
                 assert isinstance(rho, float), 'rho=%r' % rho
                 assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
-                mid = self.mids_ref[iply]
+                iplyi = self._adjust_ply_id(iply)
+                mid = self.mids_ref[iplyi]
                 assert mid.type in ['MAT1', 'MAT2', 'MAT8'], 'PCOMP: mid.type=%r' % mid.type
 
         for ply in self.plies:

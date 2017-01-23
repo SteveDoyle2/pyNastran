@@ -480,7 +480,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'FREQ', 'FREQ1', 'FREQ2', #'FREQ4',
 
             # direct matrix input cards
-            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
+            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', #'DTI',
 
             # optimization cards
             'DEQATN', 'DTABLE',
