@@ -4586,11 +4586,10 @@ class NastranIO(object):
             header = ' %s = %i' % (code_name, dt)
 
         if hasattr(case, 'mode_cycle'):
-            freq = case.eigis[itime]
-            #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
-            cycle = np.abs(freq) / (2. * np.pi)
-            header += '; freq = %g Hz' % cycle
-        elif hasattr(case, 'eigrs'):
+            header += '; freq = %g Hz' % case.mode_cycles[itime]
+        elif hasattr(case, 'cycles'):
+            header += '; freq = %g Hz' % case.cycles[itime]
+        elif hasattr(case, 'eigis'):
             freq = case.eigis[itime]
             #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
             cycle = np.abs(freq) / (2. * np.pi)
