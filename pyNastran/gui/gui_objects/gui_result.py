@@ -85,6 +85,9 @@ class GuiResult(object):
     def get_title(self, i, name):
         return self.title
 
+    def get_phase(self, i, name):
+        return None
+
     def get_nlabels_labelsize_ncolors_colormap(self, i, name):
         #self.ncolors = 1000
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
@@ -111,6 +114,9 @@ class GuiResult(object):
     def set_title(self, i, name):
         return self.title
 
+    def set_phase(self, i, name):
+        pass
+
     def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
                                                ncolors, colormap):
         self.nlabels = nlabels
@@ -128,6 +134,9 @@ class GuiResult(object):
 
     def get_default_scale(self, i, name):
         return 0.
+
+    def get_default_phase(self, i, name):
+        return None
 
     def get_default_title(self, i, name):
         return self.title_default

@@ -4631,7 +4631,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         set_legend_menu(self)
 
-    def update_legend(self, icase, name, min_value, max_value, data_format, scale,
+    def update_legend(self, icase, name, min_value, max_value, data_format, scale, phase,
                       nlabels, labelsize, ncolors, colormap,
                       is_low_to_high, is_horizontal_scalar_bar):
         if not self._legend_window_shown:
@@ -4653,16 +4653,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         default_min, default_max = obj.get_default_min_max(i, name)
         default_scale = obj.get_default_scale(i, name)
         default_title = obj.get_default_title(i, name)
+        default_phase = obj.get_default_phase(i, name)
         out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
         default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
 
         assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
             icase,
-            name, min_value, max_value, data_format, scale,
+            name, min_value, max_value, data_format, scale, phase,
             nlabels, labelsize,
             ncolors, colormap,
-            default_title, default_min, default_max, default_data_format, default_scale,
+            default_title, default_min, default_max, default_data_format, default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
             is_low_to_high, is_horizontal_scalar_bar)
@@ -4673,7 +4674,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         title = data['name']
         min_value = data['min']
         max_value = data['max']
-        scale_value = data['scale']
+        scale = data['scale']
+        phase = data['phase']
         data_format = data['format']
         is_low_to_high = data['is_low_to_high']
         is_discrete = data['is_discrete']
@@ -4687,7 +4689,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #print('is_shown1 =', is_shown)
         self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
-                              scale=scale_value, data_format=data_format,
+                              scale=scale, phase=phase, data_format=data_format,
                               is_low_to_high=is_low_to_high,
                               is_discrete=is_discrete, is_horizontal=is_horizontal,
                               nlabels=nlabels, labelsize=labelsize,
@@ -4695,6 +4697,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                               is_shown=is_shown)
 
     def on_update_legend(self, title='Title', min_value=0., max_value=1., scale=0.0,
+                         phase=0.0,
                          data_format='%.0f',
                          is_low_to_high=True, is_discrete=True, is_horizontal=True,
                          nlabels=None, labelsize=None, ncolors=None, colormap='jet',
@@ -4719,6 +4722,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #print('setting scale=%s' % scale)
             assert isinstance(scale, float), scale
             obj.set_scale(i, res_name, scale)
+            #obj.set_phase(i, res_name, phase)
         else:
             scalar_result = obj.get_scalar(i, res_name)
 
@@ -4804,10 +4808,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.is_horizontal_scalar_bar = is_horizontal
         icase = i
         msg = ('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
+               '                      scale=%r, phase=%r,\n'
                '                      data_format=%r, is_low_to_high=%s, is_discrete=%s,\n'
                '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
                '                      is_horizontal=%r, is_shown=%r)'
-               % (title, min_value, max_value, data_format, is_low_to_high, is_discrete,
+               % (title, min_value, max_value, scale, phase,
+                  data_format, is_low_to_high, is_discrete,
                   nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
         self.log_command(msg)
         #if is_shown:

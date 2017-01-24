@@ -21,7 +21,6 @@ def set_legend_menu(self):
         return
     key = self.case_keys[self.icase]
     default_format = None
-    default_scale = None
     assert isinstance(key, integer_types), key
     (obj, (i, res_name)) = self.result_cases[key]
     case = obj.get_result(i, res_name)
@@ -38,6 +37,7 @@ def set_legend_menu(self):
 
     default_title = obj.get_default_title(i, res_name)
     default_scale = obj.get_default_scale(i, res_name)
+    default_phase = obj.get_default_phase(i, res_name)
 
     min_value, max_value = obj.get_min_max(i, res_name)
     default_min, default_max = obj.get_default_min_max(i, res_name)
@@ -62,12 +62,14 @@ def set_legend_menu(self):
         'max' : max_value,
 
         'scale' : scale,
+        'phase' : phase,
         'format' : data_format,
 
         'default_min' : default_min,
         'default_max' : default_max,
         'default_title' : default_title,
         'default_scale' : default_scale,
+        'default_phase' : default_phase,
         'default_format' : default_format,
 
         'default_nlabels' : default_nlabels,

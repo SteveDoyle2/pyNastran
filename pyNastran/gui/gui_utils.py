@@ -34,3 +34,7 @@ def open_file_dialog(self, title, default_filename,
             self, title, default_filename, file_types)
         #flt = str(filt).strip()
     return fname, flt
+
+def open_directory(self, title):
+    dirname = str(QFileDialog.getExistingDirectory(self, title))
+    return dirname

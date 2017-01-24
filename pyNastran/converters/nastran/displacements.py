@@ -54,6 +54,8 @@ class DisplacementResults(object):
         scalars : (nnodes,n) float ndarray
             #the data to make a contour plot with
             does nothing
+        scales : ???
+            the deflection scale factors
         data_formats : List[str]
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         uname : str
@@ -139,6 +141,9 @@ class DisplacementResults(object):
         #return self.titles[j]
         return self.headers[i]
 
+    def get_phase(self, i, name):
+        return self.phase[i]
+
     def get_data_format(self, i, name):
         return self.data_formats[i]
 
@@ -158,8 +163,12 @@ class DisplacementResults(object):
         self.data_formats[i] = data_format
 
     def set_scale(self, i, name, scale):
-        j = self.titles_default.index(name)
+        #j = self.titles_default.index(name)
         self.scales[i] = scale
+
+    def set_phase(self, i, name, phase):
+        #j = self.titles_default.index(name)
+        self.phase[i] = phase
 
     def set_title(self, i, name, title):
         self.titles[i] = title
@@ -170,6 +179,9 @@ class DisplacementResults(object):
 
     #-------------------------------------
     # default getters
+    def get_default_phase(self, i, name):
+        return 0.0
+
     def get_default_data_format(self, i, name):
         return self.data_formats_default[i]
 
@@ -285,10 +297,6 @@ class DisplacementResults(object):
 
         assert len(xyz.shape) == 2, xyz.shape
         return self.xyz, xyz
-
-    def set_phase(self, i, name, phase):
-        j = self.titles_default.index(name)
-        self.phase[i] = phase
 
     def __repr__(self):
         msg = 'DisplacementResults\n'
