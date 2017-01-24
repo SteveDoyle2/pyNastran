@@ -2,6 +2,8 @@ import os
 import struct
 from xdb_object import XDB_obj
 from pyNastran.op2.fortran_format import FortranFormat
+from debug_output import *
+
 
 
 def read_xdb(xdb_filename, etype, nsubcases=1, npload4s=1, debug=False, log=None):
@@ -14,6 +16,7 @@ class XDB(FortranFormat):
         FortranFormat.__init__(self)
         self.n = 0
         self._endian = '<'
+        self.debug=debug
 
     def read_xdb(self, xdb_filename, etype, nsubcases, npload4s):
         self.nbytes = os.path.getsize(xdb_filename)
@@ -61,10 +64,14 @@ class XDB(FortranFormat):
             # SUBCASES-----
             # SUBTITL-----
             # SUBGRID-----
-            for i in range(33 + npload4s + nsubcases):  # 26 + npload4s + nsubcases?
+            for i in range(34 + npload4s + nsubcases):  # 26 + npload4s + nsubcases?
                 table_name = self.read_table_name()
+                
                 xdb_obj=self.read_table_header(table_name, etype, npload4s)
                 xdb_objects.append(xdb_obj)
+
+            if self.debug:
+                debug_output(xdb_objects)
 
             # SUPERS-----
             #self.show(1000, types='s')
@@ -426,53 +433,53 @@ class XDB(FortranFormat):
         """Reading control information"""
 
         if table_name in [b'CQD4', #Connectivity Data
-                          b'CTR3', #Connectivity Data
-                          b'CBAR', b'CCON', b'CELAS2', b'CONM2' ,b'CSTM',
-                          b'RBE3', b'RBEPOOL',
+                        b'CTR3', #Connectivity Data
+                        b'CBAR', b'CCON', b'CELAS2', b'CONM2' ,b'CSTM',
+                        b'RBE3', b'RBEPOOL',
 
-                          b'DDLFORDB', 
-                          b'DISPR', # Displacements real
-                          b'GRIDX', # Node locations in both reference and analysis CSs
-                          b'LOADR',
+                        b'DDLFORDB', 
+                        b'DISPR', # Displacements real
+                        b'GRIDX', # Node locations in both reference and analysis CSs
+                        b'LOADR',
 
-                          b'LIMITS',
-                          b'MAT1', # Material data
-                          b'PATHINT', # Path Attribute Field (integer)
-                          b'PATHLINK', # Qualifier data type, the number of values associated with the qualifier, and a pointer to the appropriate path value object
-                          b'PATHQUAL', # The most global data base object (utilize no attributes). Keyed object is used to obtain the valid list of qualifiers for the database.
+                        b'LIMITS',
+                        b'MAT1', # Material data
+                        b'PATHINT', # Path Attribute Field (integer)
+                        b'PATHLINK', # Qualifier data type, the number of values associated with the qualifier, and a pointer to the appropriate path value object
+                        b'PATHQUAL', # The most global data base object (utilize no attributes). Keyed object is used to obtain the valid list of qualifiers for the database.
                           
-                          b'PLOAD4',
-                          b'SPC1', 
-                          b'PRODUCT', # MSC product definition, i.e. NASTRAN
-                          b'PROJECT', # Project description. The most global data base object (utilize no attributes).
-                          b'PSHELL', # Information from the Bulk Data user input
-                          b'SID',
-                          b'SOLVE', 
-                          b'SPCFR', #SPC forces real
-                          b'SUBCASE', #This field corresponds to the MSC.Nastran Case Control Section definition of SUBCASE structure
-                          b'SUBCASES', 
-                          b'SUBCTITL', #Contain the information from the TITLE, SUBTITLE and LABEL statements found in the Case Control Section
+                        b'PLOAD4',
+                        b'SPC1', 
+                        b'PRODUCT', # MSC product definition, i.e. NASTRAN
+                        b'PROJECT', # Project description. The most global data base object (utilize no attributes).
+                        b'PSHELL', # Information from the Bulk Data user input
+                        b'SID',
+                        b'SOLVE', 
+                        b'SPCFR', #SPC forces real
+                        b'SUBCASE', #This field corresponds to the MSC.Nastran Case Control Section definition of SUBCASE structure
+                        b'SUBCASES', 
+                        b'SUBCTITL', #Contain the information from the TITLE, SUBTITLE and LABEL statements found in the Case Control Section
 
-                          b'EQEXINE', b'EQEXING',
+                        b'EQEXINE', b'EQEXING',
                            
-                          #Strain Recovery Data (Real)
-                          b'EBARR',
-                          b'ECONR',
-                          b'EELSR', 
-                          b'EQD4R',
-                          b'ETR3R',
+                        #Strain Recovery Data (Real)
+                        b'EBARR',
+                        b'ECONR',
+                        b'EELSR', 
+                        b'EQD4R',
+                        b'ETR3R',
                             
-                          #Stress Recovery Data (Real)
-                          b'SQD4R',
-                          b'STR3R',
+                        #Stress Recovery Data (Real)
+                        b'SQD4R',
+                        b'STR3R',
                           
-                          #Force Recovery Data
-                          b'FBARR', 
-                          b'FCONR', 
+                        #Force Recovery Data
+                        b'FBARR', 
+                        b'FCONR', 
 
-                          b'MPCFR', b'PATHBCD', b'PATHINT', b'FORCE', b'PBAR', b'SBARR',
-                          b'SUBELEM', 
-                          ]:
+                        b'MPCFR', b'PATHBCD', b'PATHINT', b'FORCE', b'PBAR', b'SBARR',
+                        b'SUBELEM', 
+                        ]:
             dn = 88
 
             pass
@@ -489,14 +496,15 @@ class XDB(FortranFormat):
         self.n += dn
 
         strings, ints, floats=self.show(dn, types='i')
-            
+        
+
         # XDB Object Header Parsing
         x_obj= XDB_obj(table_name, ints)
-
 
         print('read_table_header table_name=%r (%s)' % (table_name, dn))
 
         return x_obj
+
 
     def read_table(self, table_name, etype, nsubcases):
         #print('read_table...%r' % table_name)
@@ -580,7 +588,7 @@ def test_ctria3():
     xdb_filename = r'D:\!Work\access\a101x.xdb'
     #r'D:\!Work\bar1.xdb'
     #os.path.join(model_path, 'support_structure', 'w1000bostat.xdb')
-    model = read_xdb(xdb_filename, 'quad', nsubcases=3, npload4s=6)
+    model = read_xdb(xdb_filename, 'quad', nsubcases=3, npload4s=6, debug=True)
 
 
     #xdb_filename = os.path.join(model_path, 'pload4', 'cquad4_1subcase.xdb')
