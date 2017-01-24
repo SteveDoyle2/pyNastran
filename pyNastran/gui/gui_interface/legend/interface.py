@@ -34,6 +34,7 @@ def set_legend_menu(self):
     #location = obj.get_location(i, res_name)
     data_format = obj.get_data_format(i, res_name)
     scale = obj.get_scale(i, res_name)
+    phase = obj.get_phase(i, res_name)
 
     default_title = obj.get_default_title(i, res_name)
     default_scale = obj.get_default_scale(i, res_name)

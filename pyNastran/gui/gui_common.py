@@ -4722,7 +4722,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #print('setting scale=%s' % scale)
             assert isinstance(scale, float), scale
             obj.set_scale(i, res_name, scale)
-            #obj.set_phase(i, res_name, phase)
+            obj.set_phase(i, res_name, phase)
         else:
             scalar_result = obj.get_scalar(i, res_name)
 

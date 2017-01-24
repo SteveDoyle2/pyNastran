@@ -107,6 +107,7 @@ class DisplacementResults(object):
                 self.default_maxs[itime] = normi.max().real
 
             if not self.is_real:
+                #: stored in degrees
                 self.phase = np.zeros(ntimes)
         else:
             raise NotImplementedError('dim=%s' % self.dim)
@@ -250,7 +251,7 @@ class DisplacementResults(object):
         """
         Get displacements for a complex eigenvector result.
         """
-        theta = self.phase[i]
+        theta = np.radians(self.phase[i])
         dxyz = self.dxyz[i, :].real * np.cos(theta) + self.dxyz[i, :].imag * np.sin(theta)
         return dxyz
 

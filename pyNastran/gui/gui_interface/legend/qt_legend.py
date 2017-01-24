@@ -396,7 +396,7 @@ class LegendPropertiesWindow(PyDialog):
             self.scale_button.setEnabled(False)
 
         # Phase
-        self.phase = QLabel("Phase:")
+        self.phase = QLabel("Phase (deg):")
         self.phase_edit = QLineEdit(str(self._phase))
         self.phase_button = QPushButton("Default")
         if self._default_phase is None:
