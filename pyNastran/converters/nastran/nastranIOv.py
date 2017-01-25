@@ -403,6 +403,7 @@ class NastranIO(object):
         self.eid_maps[name] = {}
         self.nid_maps[name] = {}
         self.i_transform = {}
+        self.spc_names = []
         #self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
         #key = self.case_keys[self.icase]
@@ -701,7 +702,7 @@ class NastranIO(object):
         # set default representation
         self._set_caero_representation(has_control_surface)
 
-        for grid_name in ['suport', 'spc', 'mpc', 'mpc_dependent', 'mpc_independent']:
+        for grid_name in ['suport', 'mpc', 'mpc_dependent', 'mpc_independent'] + self.spc_names:
             if grid_name in self.geometry_actors:
                 self.geometry_actors[grid_name].Modified()
 
@@ -1065,7 +1066,9 @@ class NastranIO(object):
                         self._fill_suport(suport_id, dim_max, model)
 
     def _fill_spc(self, spc_id, nspcs, nspc1s, nspcds, dim_max, model, nid_to_pid_map):
-        self.create_alternate_vtk_grid('spc', color=purple, line_width=5, opacity=1.,
+        spc_name = 'spc_subcase=%i' % spc_id
+        self.spc_names.append(spc_name)
+        self.create_alternate_vtk_grid(spc_name, color=purple, line_width=5, opacity=1.,
                                        point_size=5, representation='point', is_visible=False)
 
         # node_ids = model.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
@@ -1094,7 +1097,7 @@ class NastranIO(object):
             node_ids.append(nid)
 
         node_ids = np.unique(node_ids)
-        self._add_nastran_nodes_to_grid('spc', node_ids, model, nid_to_pid_map)
+        self._add_nastran_nodes_to_grid(spc_name, node_ids, model, nid_to_pid_map)
 
     def _fill_bar_yz(self, dim_max, model, icase, cases, form, debug=False):
         """
