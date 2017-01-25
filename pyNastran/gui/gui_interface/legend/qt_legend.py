@@ -5,17 +5,17 @@ if qt_version == 4:
     from PyQt4 import QtCore#, QtGui
     from PyQt4.QtGui import (
         QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox)
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
         QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox)
 elif qt_version == 'pyside':
     from PySide import QtCore#, QtGui
     from PySide.QtGui import (
         QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
@@ -24,6 +24,158 @@ from pyNastran.gui.colormaps import colormap_keys
 
 from pyNastran.gui.gui_interface.common import PyDialog
 
+
+class AnimationWindow(PyDialog):
+    """
+    +-------------------+
+    | Animation         |
+    +------------------------+
+    | nframes ______ Default |
+    | resolu. ______ Default |
+    | Scale   ______ Default |
+    | Dir     ______ Browse  |
+    | iFrame  ______         |
+    |                        |
+    |      Step, RunAll      |
+    |                        |
+    |     Apply, Close       |
+    +------------------------+
+    """
+    def __init__(self, data, win_parent=None):
+        PyDialog.__init__(self, data, win_parent)
+        import os
+        self._icase = data['icase']
+        self._default_name = data['name']
+        self._default_seconds = data['seconds']
+        self._default_fps = data['frames/sec']
+        self._default_resolution = data['resolution']
+        self._default_dirname = os.getcwd()
+        self._default_gif_name = os.path.join(self._default_dirname, data['name'] + '.gif')
+
+        self.setWindowTitle('Animate Model')
+        self.create_widgets()
+        self.create_layout()
+        self.set_connections()
+
+    def create_widgets(self):
+        """creates the menu objects"""
+
+        self.seconds = QLabel("Total Time:")
+        self.seconds_edit = QDoubleSpinBox(self)
+        self.seconds_edit.setValue(self._default_seconds)
+        self.seconds_edit.setRange(0.1, 5.0)
+        self.seconds_edit.setDecimals(1)
+        self.seconds_edit.setSingleStep(0.1)
+        self.seconds_button = QPushButton("Default")
+
+        self.fps = QLabel("Frames/Second:")
+        self.fps_edit = QSpinBox(self)
+        self.fps_edit.setRange(10, 40)
+        self.fps_edit.setSingleStep(1)
+        self.fps_edit.setValue(self._default_fps)
+        self.fps_button = QPushButton("Default")
+
+        self.resolution = QLabel("Resolution Scale:")
+        #self.resolution_edit = QLineEdit(str(self._default_resolution))
+        self.resolution_button = QPushButton("Default")
+
+        self.resolution_edit = QSpinBox(self)
+        self.resolution_edit.setRange(1, 5)
+        self.resolution_edit.setSingleStep(1)
+        self.resolution_edit.setValue(self._default_resolution)
+
+        self.browse = QLabel("Animation File:")
+
+        self.browse = QLabel("Output Directory:")
+        self.browse_edit = QLineEdit(str(self._default_dirname))
+        self.browse_button = QPushButton("Browse")
+
+        self.step_button = QPushButton("Step")
+        self.run_button = QPushButton("Run All")
+
+        self.apply_button = QPushButton("Apply")
+        self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Close")
+
+    def set_connections(self):
+        """creates button actions"""
+        self.seconds_button.clicked.connect(self.on_default_seconds)
+        self.fps_button.clicked.connect(self.on_default_fps)
+        self.resolution_button.clicked.connect(self.on_default_resolution)
+
+        self.apply_button.clicked.connect(self.on_browse)
+        self.apply_button.clicked.connect(self.on_apply)
+        self.ok_button.clicked.connect(self.on_ok)
+        self.cancel_button.clicked.connect(self.on_cancel)
+
+    def on_default_seconds(self):
+        self.seconds_edit.setValue(self._default_seconds)
+
+    def on_default_fps(self):
+        self.fps_edit.setValue(self._default_fps)
+
+    def on_default_resolution(self):
+        self.resolution_edit.setValue(self._default_resolution)
+
+    def on_browse(self):
+        pass
+
+    def create_layout(self):
+        """displays the menu objects"""
+        grid = QGridLayout()
+
+        grid.addWidget(self.seconds, 0, 0)
+        grid.addWidget(self.seconds_edit, 0, 1)
+        grid.addWidget(self.seconds_button, 0, 2)
+
+        grid.addWidget(self.fps, 1, 0)
+        grid.addWidget(self.fps_edit, 1, 1)
+        grid.addWidget(self.fps_button, 1, 2)
+
+        grid.addWidget(self.resolution, 2, 0)
+        grid.addWidget(self.resolution_edit, 2, 1)
+        grid.addWidget(self.resolution_button, 2, 2)
+
+        grid.addWidget(self.browse, 3, 0)
+        grid.addWidget(self.browse_edit, 3, 1)
+        grid.addWidget(self.browse_button, 3, 2)
+
+        step_run_box = QHBoxLayout()
+        step_run_box.addWidget(self.step_button)
+        step_run_box.addWidget(self.run_button)
+
+        ok_cancel_box = QHBoxLayout()
+        ok_cancel_box.addWidget(self.apply_button)
+        ok_cancel_box.addWidget(self.ok_button)
+        ok_cancel_box.addWidget(self.cancel_button)
+
+        vbox = QVBoxLayout()
+        vbox.addLayout(grid)
+        #vbox.addLayout(checkboxes)
+        #vbox.addLayout(grid2)
+        vbox.addStretch()
+        vbox.addLayout(step_run_box)
+        vbox.addLayout(ok_cancel_box)
+        self.setLayout(vbox)
+
+    def on_apply(self):
+        """click the Apply button"""
+        passed = self.on_validate()
+        if passed:
+            self.win_parent._apply_legend(self.out_data)
+        return passed
+
+    def on_ok(self):
+        """click the OK button"""
+        passed = self.on_apply()
+        if passed:
+            self.close()
+            #self.destroy()
+
+    def on_cancel(self):
+        """click the Cancel button"""
+        self.out_data['close'] = True
+        self.close()
 
 class LegendPropertiesWindow(PyDialog):
     """
@@ -35,6 +187,7 @@ class LegendPropertiesWindow(PyDialog):
     | Max    ______ Default |
     | Format ______ Default |
     | Scale  ______ Default |
+    | Phase  ______ Default |
     | Number of Colors ____ |
     | Number of Labels ____ |
     | Label Size       ____ | (TODO)
@@ -46,6 +199,7 @@ class LegendPropertiesWindow(PyDialog):
     | x Vertical/Horizontal |
     | x Show/Hide           |
     |                       |
+    |        Animate        |
     |    Apply OK Cancel    |
     +-----------------------+
     """
@@ -64,6 +218,9 @@ class LegendPropertiesWindow(PyDialog):
 
         self._default_scale = data['default_scale']
         self._scale = data['scale']
+
+        self._default_phase = data['default_phase']
+        self._phase = data['phase']
 
         self._default_format = data['default_format']
         self._format = data['format']
@@ -116,12 +273,12 @@ class LegendPropertiesWindow(PyDialog):
             self._nlabels = ''
 
     def update_legend(self, icase, name,
-                      min_value, max_value, data_format, scale,
+                      min_value, max_value, data_format, scale, phase,
                       nlabels, labelsize,
                       ncolors, colormap,
 
                       default_title, default_min_value, default_max_value,
-                      default_data_format, default_scale,
+                      default_data_format, default_scale, default_phase,
                       default_nlabels, default_labelsize,
                       default_ncolors, default_colormap,
                       is_low_to_high, is_horizontal_scalar_bar):
@@ -138,6 +295,7 @@ class LegendPropertiesWindow(PyDialog):
             self._default_is_discrete = True
             self._default_is_horizontal = is_horizontal_scalar_bar
             self._default_scale = default_scale
+            self._default_phase = default_phase
             self._default_nlabels = default_nlabels
             self._default_labelsize = default_labelsize
             self._default_ncolors = default_ncolors
@@ -163,6 +321,17 @@ class LegendPropertiesWindow(PyDialog):
             else:
                 self.scale_edit.setEnabled(True)
                 self.scale_button.setEnabled(True)
+
+            if self._default_phase is None:
+                self.phase_edit.setEnabled(False)
+                self.phase_button.setEnabled(False)
+                self.phase_edit.setText('0.0')
+                self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
+            else:
+                self.phase_edit.setEnabled(True)
+                self.phase_button.setEnabled(True)
+                self.phase_edit.setText(str(phase))
+                self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
 
             #self.on_default_name()
             #self.on_default_min()
@@ -225,6 +394,15 @@ class LegendPropertiesWindow(PyDialog):
         if self._default_scale == 0.0:
             self.scale_edit.setEnabled(False)
             self.scale_button.setEnabled(False)
+
+        # Phase
+        self.phase = QLabel("Phase (deg):")
+        self.phase_edit = QLineEdit(str(self._phase))
+        self.phase_button = QPushButton("Default")
+        if self._default_phase is None:
+            self.phase_edit.setEnabled(False)
+            self.phase_button.setEnabled(False)
+            self.phase_edit.setText('0.0')
         #tip = QtGui.QToolTip()
         #tip.setTe
         #self.format_edit.toolTip(tip)
@@ -308,21 +486,25 @@ class LegendPropertiesWindow(PyDialog):
         grid.addWidget(self.scale_edit, 4, 1)
         grid.addWidget(self.scale_button, 4, 2)
 
-        grid.addWidget(self.nlabels, 5, 0)
-        grid.addWidget(self.nlabels_edit, 5, 1)
-        grid.addWidget(self.nlabels_button, 5, 2)
+        grid.addWidget(self.phase, 5, 0)
+        grid.addWidget(self.phase_edit, 5, 1)
+        grid.addWidget(self.phase_button, 5, 2)
+
+        grid.addWidget(self.nlabels, 6, 0)
+        grid.addWidget(self.nlabels_edit, 6, 1)
+        grid.addWidget(self.nlabels_button, 6, 2)
 
         #grid.addWidget(self.labelsize, 6, 0)
         #grid.addWidget(self.labelsize_edit, 6, 1)
         #grid.addWidget(self.labelsize_button, 6, 2)
 
-        grid.addWidget(self.ncolors, 6, 0)
-        grid.addWidget(self.ncolors_edit, 6, 1)
-        grid.addWidget(self.ncolors_button, 6, 2)
+        grid.addWidget(self.ncolors, 7, 0)
+        grid.addWidget(self.ncolors_edit, 7, 1)
+        grid.addWidget(self.ncolors_button, 7, 2)
 
-        grid.addWidget(self.colormap, 7, 0)
-        grid.addWidget(self.colormap_edit, 7, 1)
-        grid.addWidget(self.colormap_button, 7, 2)
+        grid.addWidget(self.colormap, 8, 0)
+        grid.addWidget(self.colormap_edit, 8, 1)
+        grid.addWidget(self.colormap_button, 8, 2)
 
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
@@ -364,6 +546,7 @@ class LegendPropertiesWindow(PyDialog):
             self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
             self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
             self.connect(self.scale_button, QtCore.SIGNAL('clicked()'), self.on_default_scale)
+            self.connect(self.phase_button, QtCore.SIGNAL('clicked()'), self.on_default_phase)
 
             self.connect(self.nlabels_button, QtCore.SIGNAL('clicked()'), self.on_default_nlabels)
             self.connect(self.labelsize_button, QtCore.SIGNAL('clicked()'), self.on_default_labelsize)
@@ -414,6 +597,10 @@ class LegendPropertiesWindow(PyDialog):
         self.scale_edit.setText(str(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
+    def on_default_phase(self):
+        self.phase_edit.setText(str(self._default_phase))
+        self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
+
     def on_default_ncolors(self):
         self.ncolors_edit.setText(str(self._default_ncolors))
         self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
@@ -461,23 +648,25 @@ class LegendPropertiesWindow(PyDialog):
         min_value, flag1 = self.check_float(self.min_edit)
         max_value, flag2 = self.check_float(self.max_edit)
         format_value, flag3 = self.check_format(self.format_edit)
-        scale_value, flag4 = self.check_float(self.scale_edit)
+        scale, flag4 = self.check_float(self.scale_edit)
+        phase, flag5 = self.check_float(self.phase_edit)
 
-        nlabels, flag5 = self.check_positive_int_or_blank(self.nlabels_edit)
-        ncolors, flag6 = self.check_positive_int_or_blank(self.ncolors_edit)
-        labelsize, flag7 = self.check_positive_int_or_blank(self.labelsize_edit)
+        nlabels, flag6 = self.check_positive_int_or_blank(self.nlabels_edit)
+        ncolors, flag7 = self.check_positive_int_or_blank(self.ncolors_edit)
+        labelsize, flag8 = self.check_positive_int_or_blank(self.labelsize_edit)
         colormap = str(self.colormap_edit.currentText())
 
-        if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7]):
+        if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8]):
             if 'i' in format_value:
                 format_value = '%i'
 
-            assert isinstance(scale_value, float), scale_value
+            assert isinstance(scale, float), scale
             self.out_data['name'] = name_value
             self.out_data['min'] = min_value
             self.out_data['max'] = max_value
             self.out_data['format'] = format_value
-            self.out_data['scale'] = scale_value
+            self.out_data['scale'] = scale
+            self.out_data['phase'] = phase
 
             self.out_data['nlabels'] = nlabels
             self.out_data['ncolors'] = ncolors
@@ -535,6 +724,9 @@ def main():
         'scale' : 1e-12,
         'default_scale' : 1.0,
 
+        'phase' : 0.0,
+        'default_phase' : 180.0,
+
         'nlabels' : 11,
         'default_nlabels' : 11,
 
@@ -556,6 +748,16 @@ def main():
         'is_shown' : True,
     }
     main_window = LegendPropertiesWindow(d)
+
+    data = {
+        'icase' : 1,
+        'name' : 'cat',
+        'seconds' : 2,
+        'frames/sec' : 30,
+        'resolution' : 1,
+        'iframe' : 0,
+    }
+    #main_window = AnimationWindow(data)
     main_window.show()
     # Enter the main loop
     app.exec_()

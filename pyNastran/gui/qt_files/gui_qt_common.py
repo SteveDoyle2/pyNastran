@@ -140,6 +140,7 @@ class GuiCommon(GuiAttributes):
         methods = obj.get_methods(i)
         data_format = obj.get_data_format(i, name)
         scale = obj.get_scale(i, name)
+        phase = obj.get_phase(i, name)
         label2 = obj.get_header(i, name)
         nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         #default_max, default_min = obj.get_default_min_max(i, name)
@@ -211,7 +212,7 @@ class GuiCommon(GuiAttributes):
                                is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
         self.update_legend(icase,
-                           result_type, min_value, max_value, data_format, scale,
+                           result_type, min_value, max_value, data_format, scale, phase,
                            nlabels, labelsize, ncolors, colormap,
                            is_low_to_high, self.is_horizontal_scalar_bar)
 
