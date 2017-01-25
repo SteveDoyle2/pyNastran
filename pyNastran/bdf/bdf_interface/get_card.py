@@ -663,7 +663,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             nid_to_eids_map[nid] = []
 
         if self.spoints:  # SPOINTs
-            for nid in sorted(self.spoints.spoints):  # SPOINTs
+            for nid in sorted(self.spoints.points):  # SPOINTs
                 nid_to_eids_map[nid] = []
 
         for (eid, element) in iteritems(self.elements):  # load the mapper

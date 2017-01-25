@@ -154,6 +154,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.fmts = fmt_order
         self.base_window_title = "pyNastran v%s"  % pyNastran.__version__
 
+        #defaults
+        self.wildcard_delimited = 'Delimited Text (*.txt; *.dat; *.csv)'
+
         # initializes tools/checkables
         self.set_tools()
 
@@ -2548,8 +2551,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         if out_filename in [None, False]:
             title = 'Select a (Nodal) Deflection Results File for %s' % (self.format)
-            wildcard = 'Delimited Text (*.txt; *.dat; *.csv)'
-            out_filename = self._create_load_file_dialog(wildcard, title)[1]
+            out_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
 
         if out_filename == '':
             return
@@ -2591,8 +2593,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         if out_filename in [None, False]:
             title = 'Select a %s Results File for %s' % (result_type, self.format)
-            wildcard = 'Delimited Text (*.txt; *.dat; *.csv)'
-            out_filename = self._create_load_file_dialog(wildcard, title)[1]
+            out_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
 
         if out_filename == '':
             return
@@ -2950,9 +2951,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             RGB values as 0.0 <= rgb <= 1.0
         """
         if csv_filename in [None, False]:
-            qt_wildcard = '*.csv'
             title = 'Load User Geometry'
-            csv_filename = self._create_load_file_dialog(qt_wildcard, title)[1]
+            csv_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
             if not csv_filename:
                 return
 
@@ -3080,11 +3080,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         1.5, 2.5, 3.5
 
         Parameters
-        ----------
+        -----------
         csv_filename : str (default=None -> load a dialog)
-           the path to the user points CSV file
+            the path to the user points CSV file
         name : str (default=None -> extract from fname)
-           the name for the user points
+            the name for the user points
         color : (float, float, float)
             RGB values as 0.0 <= rgb <= 1.0
 
@@ -3096,9 +3096,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         .. todo:: support overwriting points
         """
         if csv_filename in [None, False]:
-            qt_wildcard = '*.csv'
             title = 'Load User Points'
-            csv_filename = self._create_load_file_dialog(qt_wildcard, title)[1]
+            csv_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
             if not csv_filename:
                 return
         if color is None:
