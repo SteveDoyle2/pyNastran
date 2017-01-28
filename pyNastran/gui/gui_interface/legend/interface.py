@@ -53,9 +53,8 @@ def set_legend_menu(self):
             #normi = norm(case, axis=1)
     #else:
         #raise RuntimeError('list-based results have been removed; use numpy.array')
-
     data = {
-        'icase' : i,
+        'icase' : self.icase,
         'name' : result_type,
         #'min' : normi.min(),
         #'max' : normi.max(),

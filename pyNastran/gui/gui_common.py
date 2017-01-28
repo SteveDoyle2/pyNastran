@@ -10,8 +10,10 @@ import cgi #  html lib
 import traceback
 from copy import deepcopy
 from collections import OrderedDict
+from itertools import count
+from math import ceil
 
-from six import string_types, iteritems, itervalues, PY2
+from six import string_types, iteritems, itervalues, PY2, PY3
 from six.moves import range
 
 import numpy as np
@@ -722,16 +724,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         for tool in tools:
             (name, txt, icon, shortcut, tip, func) = tool
             if name in self.actions:
-                self.log_error('trying to create a duplicate action %r' % nam)
+                self.log_error('trying to create a duplicate action %r' % name)
                 continue
             #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
-                  #% (nam, txt, icon, shortcut, tip, func))
+                  #% (name, txt, icon, shortcut, tip, func))
             #if icon is None:
-                #print("missing_icon = %r!!!" % nam)
+                #print("missing_icon = %r!!!" % name)
                 #icon = os.path.join(icon_path, 'no.png')
 
             if icon is None:
-                print("missing_icon = %r!!!" % nam)
+                print("missing_icon = %r!!!" % name)
                 ico = None
                 #print(print_bad_path(icon))
             #elif not "/" in icon:
@@ -763,12 +765,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.actions['reswidget'].setStatusTip("Show/Hide results selection")
         return self.actions
 
-    def logg_msg(self, typ, msg):
+    def _logg_msg(self, typ, msg):
         """
         Add message to log widget trying to choose right color for it.
 
         Parameters
         ----------
+        typ : str
+            {DEBUG, INFO, GUI ERROR, COMMAND, WARNING}
         msg : str
             message to be displayed
         """
@@ -777,7 +781,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
         _fr = sys._getframe(4)  # jump to get out of the logger code
         n = _fr.f_lineno
-        fn = os.path.basename(_fr.f_globals['__file__'])
+        filename = os.path.basename(_fr.f_globals['__file__'])
 
         if typ == 'DEBUG' and not self.show_debug:
             return
@@ -789,7 +793,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
 
         if typ in ['GUI', 'COMMAND']:
-            msg = '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg)
+            msg = '   fname=%-25s lineNo=%-4s   %s\n' % (filename, n, msg)
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
@@ -820,27 +824,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_mutex.unlock()
 
     def log_info(self, msg):
-        """ Helper funtion: log a messaage msg with a 'INFO:' prefix """
+        """ Helper funtion: log a message msg with a 'INFO:' prefix """
         assert msg is not None, msg
         self.log.simple_msg(msg, 'INFO')
 
     def log_debug(self, msg):
-        """ Helper funtion: log a messaage msg with a 'DEBUG:' prefix """
+        """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
         assert msg is not None, msg
         self.log.simple_msg(msg, 'DEBUG')
 
     def log_command(self, msg):
-        """ Helper funtion: log a messaage msg with a 'COMMAND:' prefix """
+        """ Helper funtion: log a message msg with a 'COMMAND:' prefix """
         assert msg is not None, msg
         self.log.simple_msg(msg, 'COMMAND')
 
     def log_error(self, msg):
-        """ Helper funtion: log a messaage msg with a 'GUI ERROR:' prefix """
+        """ Helper funtion: log a message msg with a 'GUI ERROR:' prefix """
         assert msg is not None, msg
         self.log.simple_msg(msg, 'GUI ERROR')
 
     def log_warning(self, msg):
-        """ Helper funtion: log a messaage msg with a 'WARNING:' prefix """
+        """ Helper funtion: log a message msg with a 'WARNING:' prefix """
         assert msg is not None, msg
         self.log.simple_msg(msg, 'WARNING')
 
@@ -857,6 +861,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._change_color('text', self.text_color, self.set_text_color)
 
     def _change_color(self, msg, rgb_color_floats, call_func):
+        """
+        Common method for:
+         - change_background_color
+         - change_label_color
+         - change_text_color
+        """
         c = [int(255 * i) for i in rgb_color_floats]
         col = QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a %s color" % msg)
         if col.isValid():
@@ -995,6 +1005,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.create_coordinate_system(dim_max, label='', origin=None, matrix_3x3=None, Type='xyz')
 
     def create_corner_axis(self):
+        """creates the axes that sits in the corner"""
         if not self.run_vtk:
             return
         axes = vtk.vtkAxesActor()
@@ -1120,8 +1131,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         elif mode == 'zoom':
             assert style is not None, style
             self.vtk_interactor.SetInteractorStyle(style)
-            self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down) # on press down
-            self.vtk_interactor.AddObserver('LeftButtonReleaseEvent', left_button_up, -1) # on button up
+
+            # on press down
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
+
+            # on button up
+            self.vtk_interactor.AddObserver('LeftButtonReleaseEvent', left_button_up, -1)
             if right_button_down:
                 self.vtk_interactor.AddObserver('RightButtonPressEvent', right_button_down)
 
@@ -1157,16 +1172,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #elif mode == 'area_cell_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_area_cell_pick_event)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent',
+                                            #self.on_area_cell_pick_event)
         #elif mode == 'area_node_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_area_cell_pick_event)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent',
+                                            #self.on_area_cell_pick_event)
         #elif mode == 'polygon_cell_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_polygon_cell_pick_event)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent',
+                                            #self.on_polygon_cell_pick_event)
         #elif mode == 'polygon_node_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_polygon_cell_pick_event)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent',
+                                            #self.on_polygon_cell_pick_event)
 
         #elif mode == 'pan':
             #pass
@@ -1429,14 +1448,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
             world_position = picker.GetPickPosition()
             if 0:
                 camera = self.rend.GetActiveCamera()
-                #focal_point = world_position
                 (result_name, result_value, node_id, node_xyz) = self.get_result_by_xyz_cell_id(
                     world_position, cell_id)
-                self.log_info('focal_point = %s' % str(focal_point))
+                #focal_point = world_position
+                #self.log_info('focal_point = %s' % str(focal_point))
                 self.setup_mouse_buttons(mode='default')
 
                 # now we can actually modify the camera
-                camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+                #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
                 camera.OrthogonalizeViewUp()
                 rotation_center_button = self.actions['rotation_center']
                 rotation_center_button.setChecked(False)
@@ -2116,13 +2135,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         raise RuntimeError('cannot find name=%r' % desired_name)
 
     def show_ids_mask(self, ids_to_show):
-        flip_flag = True == self._show_flag
+        flip_flag = True is self._show_flag
         self._update_ids_mask(ids_to_show, flip_flag, show_flag=True, render=False)
         self._update_ids_mask(ids_to_show, False, show_flag=True, render=True)
         self._show_flag = True
 
     def hide_ids_mask(self, ids_to_hide):
-        flip_flag = False == self._show_flag
+        flip_flag = False is self._show_flag
         self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False, render=False)
         self._update_ids_mask(ids_to_hide, False, show_flag=False, render=True)
         self._show_flag = False
@@ -2308,7 +2327,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def start_logging(self):
         if self.html_logging:
-            log = SimpleLogger('debug', 'utf-8', lambda x, y: self.logg_msg(x, y))
+            log = SimpleLogger('debug', 'utf-8', lambda x, y: self._logg_msg(x, y))
             # logging needs synchronizing, so the messages from different
             # threads would not be interleave
             self.log_mutex = QtCore.QReadWriteLock()
@@ -3150,7 +3169,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.mark_nodes([1, 6], 'NodeID', ['max', 'min'])
         """
         if result_name not in self.label_actors:
-            msg = 'result_name=%r not in label_actors=[%s]' % (result_name, ', '.join(self.label_actors))
+            msg = 'result_name=%r not in label_actors=[%s]' % (
+                result_name, ', '.join(self.label_actors))
             self.log_error(msg)
         i = np.searchsorted(self.node_ids, nids)
         if isinstance(text, string_types):
@@ -3448,7 +3468,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         ..todo :: update the GeomeryProperties
         """
-        asdf
+        raise NotImplementedError('show_only')
 
     def hide_actors(self, except_names=None):
         """
@@ -3627,6 +3647,122 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     pass
                 else:
                     raise NotImplementedError(geom_actor)
+
+    def make_gif(self, gif_filename, icase, scales, phases,
+                 time=2.0, analysis_time=2.0, fps=30,
+                 onesided=True, nrepeat=True, delete_images=False):
+        """
+        Makes an animated gif
+
+        Parameters:
+        ----------
+        gif_filename : str
+            path to the output gif & png folder
+        icase : int
+            the result case to plot the deflection for
+        scales : List[float]; default=None
+            List[float] : the scale factors
+            None -> animate phase
+        scales : List[float]; default=None
+            List[float] : the phase angles (degrees)
+            None -> animate scale
+        time : float; default=2.0
+            the runtime of the gif (seconds)
+        analysis_time : float; default=2.0
+           the time we actually need to simulate (seconds)
+        fps : int; default=30
+            the frames/second
+        onesided : bool; default=True
+            should the animation go up and back down
+        nrepeat : bool; default=True
+            should this gif loop infinitely
+        delete_images : bool; default=False
+            cleanup the png files at the end
+
+        Other local variables
+        ---------------------
+        duration : float
+           frame time (seconds)
+
+        For one sided data
+        ------------------
+         - scales/phases should be one-sided
+         - time should be one-sided
+         - analysis_time should be one-sided
+         - set onesided=True
+
+        For two-sided data
+        ------------------
+         - scales/phases should be one-sided
+         - time should be two-sided
+         - analysis_time should be one-sided
+         - set onesided=False
+
+        TODO: change nrepeat to an int; default=0 -> endless
+        """
+        assert fps >= 1, fps
+        nframes = ceil(analysis_time * fps)
+        assert nframes >= 2, nframes
+        duration = time / nframes
+        nframes = int(nframes)
+
+        png_dirname = os.path.dirname(os.path.abspath(gif_filename))
+        if not os.path.exists(png_dirname):
+            os.makedirs(png_dirname)
+
+        if scales is not None and phases is not None:
+            pass
+        elif phases is None:
+            phases = [None] * len(scales)
+        elif scales is None:
+            scales = [None] * len(phases)
+        else:
+            msg = 'scales=None, phases=None; one must be List[floats]'
+            raise ValueError(msg)
+        if len(scales) != len(phases):
+            msg = 'nscales=%s nphases=%s' % (len(scales), len(phases))
+            raise ValueError(msg)
+
+        png_filenames = []
+        fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
+        for i, scale, phase in zip(count(), scales, phases):
+            png_filename = fmt % i
+            self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
+            self.on_take_screenshot(fname=png_filename, magnify=1)
+            png_filenames.append(png_filename)
+
+        if not onesided:
+            # drop the duplicate middle frame
+            # >>> a = [1, 2, 3, 4, 5]
+            # >>> a + a[-2::-1]
+            # [1, 2, 3, 4, 5, 4, 3, 2, 1]
+            png_filenames = png_filenames + png_filenames[-2::-1]
+
+        is_imageio = False
+        try:
+            import imageio
+            is_imageio = True
+        except ImportError:
+            pass
+
+        if is_imageio and 0:
+            images = []
+            for png_filename in png_filenames:
+                images.append(imageio.imread(png_filename))
+            imageio.mimsave(gif_filename, images, duration=duration,
+                            loop=nrepeat)
+        else:
+            from pyNastran.gui.images2gif import write_gif
+            # duration : frame time
+            write_gif(gif_filename, png_filenames, duration=duration, repeat=nrepeat,
+                      dither=False, nq=0, subRectangles=True,
+                      dispose=None)
+        if delete_images:
+            for png_filename in png_filenames:
+                try:
+                    os.remove(png_filename)
+                except OSError:
+                    pass
 
     def _update_text_size(self, magnify=1.0):
         """Internal method for updating the bottom-left text when we go to take a picture"""
@@ -4357,10 +4493,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
-                                nlabels=nlabels, labelsize=labelsize,
-                                ncolors=ncolors, colormap=colormap,
-                                is_low_to_high=is_low_to_high, is_horizontal=is_horizontal,
-                                is_shown=is_shown)
+                               nlabels=nlabels, labelsize=labelsize,
+                               ncolors=ncolors, colormap=colormap,
+                               is_low_to_high=is_low_to_high, is_horizontal=is_horizontal,
+                               is_shown=is_shown)
 
     #---------------------------------------------------------------------------------------
     # CAMERA MENU
@@ -4662,7 +4798,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             name, min_value, max_value, data_format, scale, phase,
             nlabels, labelsize,
             ncolors, colormap,
-            default_title, default_min, default_max, default_data_format, default_scale, default_phase,
+            default_title, default_min, default_max, default_data_format,
+            default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
             is_low_to_high, is_horizontal_scalar_bar)
@@ -5150,17 +5287,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         point_size : int; default=4
             the nominal point size
         """
-        assert os.path.exists(points_filename), print_bad_path(points_filename)
+        assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
         # read input file
         try:
-            user_points = np.loadtxt(points_filename, delimiter=',')
+            user_points = np.loadtxt(csv_points_filename, delimiter=',')
         except ValueError:
-            user_points = loadtxt_nice(points_filename, delimiter=',')
+            user_points = loadtxt_nice(csv_points_filename, delimiter=',')
             # can't handle leading spaces?
             #raise
-        self._add_user_points(user_points, name, color, point_size=point_size)
+        self._add_user_points(user_points, name, color, csv_points_filename, point_size=point_size)
 
-    def _add_user_points(self, user_points, name, color, point_size=4):
+    def _add_user_points(self, user_points, name, color, csv_points_filename='', point_size=4):
         """
         Helper method for adding csv nodes to the gui
 
@@ -5188,7 +5325,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         npoints = user_points.shape[0]
         if npoints == 0:
-            raise RuntimeError('npoints=0 in %r' % points_filename)
+            raise RuntimeError('npoints=0 in %r' % csv_points_filename)
         if len(user_points.shape) == 1:
             user_points = user_points.reshape(1, npoints)
 

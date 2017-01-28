@@ -108,7 +108,7 @@ class DisplacementResults(object):
 
             if not self.is_real:
                 #: stored in degrees
-                self.phase = np.zeros(ntimes)
+                self.phases = np.zeros(ntimes)
         else:
             raise NotImplementedError('dim=%s' % self.dim)
 
@@ -143,7 +143,9 @@ class DisplacementResults(object):
         return self.headers[i]
 
     def get_phase(self, i, name):
-        return self.phase[i]
+        if self.is_real:
+            return None
+        return self.phases[i]
 
     def get_data_format(self, i, name):
         return self.data_formats[i]
@@ -168,8 +170,10 @@ class DisplacementResults(object):
         self.scales[i] = scale
 
     def set_phase(self, i, name, phase):
+        if self.is_real:
+            return
         #j = self.titles_default.index(name)
-        self.phase[i] = phase
+        self.phases[i] = phase
 
     def set_title(self, i, name, title):
         self.titles[i] = title
@@ -180,9 +184,6 @@ class DisplacementResults(object):
 
     #-------------------------------------
     # default getters
-    def get_default_phase(self, i, name):
-        return 0.0
-
     def get_default_data_format(self, i, name):
         return self.data_formats_default[i]
 
@@ -203,6 +204,11 @@ class DisplacementResults(object):
 
     def get_default_scale(self, i, name):
         return self.scales_default[i]
+
+    def get_default_phase(self, i, name):
+        if self.is_real:
+            return None
+        return 0.0
 
     def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
         # TODO: do this right
@@ -247,12 +253,17 @@ class DisplacementResults(object):
         assert len(dxyz.shape) == 2, dxyz.shape
         return dxyz
 
-    def _get_complex_displacements(self, i):
+    def _get_complex_displacements_by_phase(self, i, phase=0.):
         """
         Get displacements for a complex eigenvector result.
         """
-        theta = np.radians(self.phase[i])
+        theta = np.radians(phase)
         dxyz = self.dxyz[i, :].real * np.cos(theta) + self.dxyz[i, :].imag * np.sin(theta)
+        return dxyz
+
+    def _get_complex_displacements(self, i):
+        """see ``_get_complex_displacements_by_phase``"""
+        dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         return dxyz
 
     def get_result(self, i, name):
@@ -285,19 +296,49 @@ class DisplacementResults(object):
     def get_vector_result(self, i, name):
         assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
+            xyz, deflected_xyz = self.get_vector_result_by_scale_phase(
+                i, name, self.scales[i])
+        else:
+            xyz, deflected_xyz = self.get_vector_result_by_scale_phase(
+                i, name, self.scales[i], self.phases[i])
+        return xyz, deflected_xyz
+
+    def get_vector_result_by_scale_phase(self, i, name, scale, phase=0.):
+        """
+        Gets the real/complex deflection result
+
+        Parameters
+        ----------
+        i : int
+            mode/time/loadstep number
+        name : str
+            unused; useful for debugging
+        scale : float
+            deflection scale factor
+        phase : float; default=0.0
+            phase angle (degrees); unused for real results
+
+        Returns
+        -------
+        xyz : (nnodes, 3) float ndarray
+            the nominal state
+        deflected_xyz : (nnodes, 3) float ndarray
+            the deflected state
+        """
+        assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_real:
             if self.dim == 2:
                 # single result
-                xyz = self.xyz + self.scales[i] * self.dxyz
+                deflected_xyz = self.xyz + scale * self.dxyz
             elif self.dim == 3:
-                xyz = self.xyz + self.scales[i] * self.dxyz[i, :]
+                deflected_xyz = self.xyz + scale * self.dxyz[i, :]
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
-            dxyz = self._get_complex_displacements(i)
-            xyz = self.xyz + self.scales[i] * dxyz
-
-        assert len(xyz.shape) == 2, xyz.shape
-        return self.xyz, xyz
+            dxyz = self._get_complex_displacements_by_phase(i, phase)
+            deflected_xyz = self.xyz + scale * dxyz
+        assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
+        return self.xyz, deflected_xyz
 
     def __repr__(self):
         msg = 'DisplacementResults\n'

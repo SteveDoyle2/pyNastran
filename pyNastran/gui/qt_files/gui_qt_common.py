@@ -298,6 +298,38 @@ class GuiCommon(GuiAttributes):
             )
         return grid_result
 
+    def update_grid_by_icase_scale_phase(self, icase, scale, phase=0.0):
+        """
+        Updates to the deflection state defined by the cases
+
+        Parameters
+        ----------
+        icase : int
+            result number in self.result_cases
+        scale : float
+            deflection scale factor
+        phase : float; default=0.0
+            phase angle (degrees); unused for real results
+
+        Returns
+        -------
+        xyz : (nnodes, 3) float ndarray
+            the nominal state
+        deflected_xyz : (nnodes, 3) float ndarray
+            the deflected state
+        """
+        (obj, (i, res_name)) = self.result_cases[icase]
+        xyz_nominal, vector_data = obj.get_vector_result_by_scale_phase(
+            i, res_name, scale, phase)
+
+        #grid_result1 = self.set_grid_values(name, case, 1,
+            #min_value, max_value, norm_value)
+        #point_data.AddArray(grid_result1)
+
+        self._is_displaced = True
+        self._xyz_nominal = xyz_nominal
+        self._update_grid(vector_data)
+
     def final_grid_update(self, name, grid_result,
                           name_vector, grid_result_vector,
                           key, subtitle, label):

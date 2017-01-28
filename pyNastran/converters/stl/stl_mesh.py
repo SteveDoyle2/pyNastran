@@ -112,12 +112,12 @@ def project_points_onto_stl(stl, points):
     alpha = np.linalg.norm(np.cross(p - b, pc)) / nmag
     beta = np.linalg.norm(np.cross(pc, p - a)) / nmag
     gamma = 1 - alpha - beta
-    print('alpha =', alpha)
-    print('beta =', beta)
-    print('gamma =', gamma)
+    #print('alpha =', alpha)
+    #print('beta =', beta)
+    #print('gamma =', gamma)
     #print('a*p =', alpha[:, np.newaxis] * p1)
     p_prime = alpha[:, np.newaxis] * p1 + beta[:, np.newaxis] * p2 + gamma[:, np.newaxis] * p3
-    print('p_prime =\n', p_prime)
+    #print('p_prime =\n', p_prime)
     #tree.query_ball_point(x, r, p=2., eps=0)
     #tree.query_ball_tree(other, r, p=2., eps=0)
     #tree.query_pairs(r, p=2., eps=0)

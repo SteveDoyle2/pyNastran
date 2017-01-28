@@ -45,6 +45,7 @@ PyQt4/PyQt5/PySide unique
      - horizontal/veterical
      - TODO: can't explicitly place it
    - show/hide legend
+   - animation
    - TODO: Cancel button doesn't go to original settings if you click apply
      - TODO: should maybe remove the OK button and rename Cancel to Close
 

@@ -1,5 +1,11 @@
+"""
+defines:
+ - AnimationWindow
+ - LegendPropertiesWindow
+"""
 from __future__ import print_function
 import os
+import numpy as np
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
@@ -20,7 +26,7 @@ elif qt_version == 'pyside':
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
-from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
+#from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.colormaps import colormap_keys
 
 from pyNastran.gui.gui_interface.common import PyDialog
@@ -31,30 +37,45 @@ class AnimationWindow(PyDialog):
     """
     +-------------------+
     | Animation         |
-    +------------------------+
-    | nframes ______ Default |
-    | resolu. ______ Default |
-    | Scale   ______ Default |
-    | Dir     ______ Browse  |
-    | iFrame  ______         |
-    |                        |
-    |   o Scale-animation    |
-    |   o Phase-animation    |
-    |                        |
-    |      Step, RunAll      |
-    |                        |
-    |     Apply, Close       |
-    +------------------------+
+    +-------------------------+
+    | scale   ______  Default |
+    | time    ______  Default |
+    |                         |
+    | nframes ______  Default |
+    | resolu. ______  Default |
+    | Dir     ______  Browse  |
+    | iFrame  ______          |
+    |                         |
+    | o Scale/Phase-animation |
+    | x delete images         |
+    | x repeat                |  # TODO: change to an integer
+    | x make pictures         |  # TODO: add me
+    | x make gif              |  # TODO: add me
+    |                         |
+    |      Step, RunAll       |
+    |                         |
+    |     Apply, Close        |
+    +-------------------------+
+
+    TODO: add key-frame support
     """
     def __init__(self, data, win_parent=None):
         PyDialog.__init__(self, data, win_parent)
+
+        self._updated_animation = False
         self._icase = data['icase']
         self._default_name = data['name']
-        self._default_seconds = data['seconds']
+        self._default_time = data['time']
         self._default_fps = data['frames/sec']
         self._default_resolution = data['resolution']
+
+        self._scale = data['scale']
+        self._default_scale = data['default_scale']
         self._default_is_scale = data['is_scale']
+
+        self._phase = data['phase']
         self._default_phase = data['default_phase']
+
         self._default_dirname = data['dirname']
         self._default_gif_name = os.path.join(self._default_dirname, data['name'] + '.gif')
 
@@ -66,14 +87,17 @@ class AnimationWindow(PyDialog):
 
     def create_widgets(self):
         """creates the menu objects"""
+        self.scale = QLabel("Scale:")
+        self.scale_edit = QLineEdit(str(self._scale))
+        self.scale_button = QPushButton("Default")
 
-        self.seconds = QLabel("Total Time:")
-        self.seconds_edit = QDoubleSpinBox(self)
-        self.seconds_edit.setValue(self._default_seconds)
-        self.seconds_edit.setRange(0.1, 5.0)
-        self.seconds_edit.setDecimals(1)
-        self.seconds_edit.setSingleStep(0.1)
-        self.seconds_button = QPushButton("Default")
+        self.time = QLabel("Total Time (sec):")
+        self.time_edit = QDoubleSpinBox(self)
+        self.time_edit.setValue(self._default_time)
+        self.time_edit.setRange(0.1, 10.0)
+        self.time_edit.setDecimals(1)
+        self.time_edit.setSingleStep(0.1)
+        self.time_button = QPushButton("Default")
 
         self.fps = QLabel("Frames/Second:")
         self.fps_edit = QSpinBox(self)
@@ -94,25 +118,43 @@ class AnimationWindow(PyDialog):
         self.browse_edit = QLineEdit(str(self._default_dirname))
         self.browse_button = QPushButton("Browse")
 
-        self.gif = QLabel("Filename:")
+        self.gif = QLabel("Gif Filename:")
         self.gif_edit = QLineEdit(str(self._default_name))
         self.gif_button = QPushButton("Default")
 
         # scale / phase
-        self.scale_radio = QRadioButton("Animate Scale")
-        self.phase_radio = QRadioButton("Animate Phase")
-        self.scale_radio.setChecked(self._default_is_scale)
-        self.phase_radio.setChecked(not self._default_is_scale)
+        self.animate_scale_radio = QRadioButton("Animate Scale")
+        self.animate_phase_radio = QRadioButton("Animate Phase")
+        self.animate_scale_radio.setChecked(self._default_is_scale)
+        self.animate_phase_radio.setChecked(not self._default_is_scale)
         if self._default_phase is None:
-            self.phase_radio.setDisabled(True)
+            self.animate_phase_radio.setDisabled(True)
         widget = QWidget(self)
         horizontal_vertical_group = QButtonGroup(widget)
-        horizontal_vertical_group.addButton(self.scale_radio)
-        horizontal_vertical_group.addButton(self.phase_radio)
+        horizontal_vertical_group.addButton(self.animate_scale_radio)
+        horizontal_vertical_group.addButton(self.animate_phase_radio)
+
+        # one / two sided
+        self.onesided_radio = QRadioButton("One Sided")
+        self.twosided_radio = QRadioButton("Two Sided")
+        if self._default_phase is None:
+            self.onesided_radio.setChecked(False)
+            self.twosided_radio.setChecked(True)
+        else:
+            self.onesided_radio.setChecked(True)
+            self.twosided_radio.setChecked(False)
+        widget = QWidget(self)
+        horizontal_vertical_group = QButtonGroup(widget)
+        horizontal_vertical_group.addButton(self.onesided_radio)
+        horizontal_vertical_group.addButton(self.twosided_radio)
 
         # delete images when finished
-        self.delete_images_checkbox = QCheckBox("Delete images when finished")
+        self.delete_images_checkbox = QCheckBox("Delete images when finished?")
         self.delete_images_checkbox.setChecked(True)
+
+        # endless loop
+        self.repeat_checkbox = QCheckBox("Repeat?")
+        self.repeat_checkbox.setChecked(True)
 
         # bottom buttons
         self.step_button = QPushButton("Step")
@@ -124,7 +166,9 @@ class AnimationWindow(PyDialog):
 
     def set_connections(self):
         """creates button actions"""
-        self.seconds_button.clicked.connect(self.on_default_seconds)
+        self.scale_button.clicked.connect(self.on_default_scale)
+        self.time_button.clicked.connect(self.on_default_time)
+
         self.fps_button.clicked.connect(self.on_default_fps)
         self.resolution_button.clicked.connect(self.on_default_resolution)
         self.browse_button.clicked.connect(self.on_browse)
@@ -152,8 +196,12 @@ class AnimationWindow(PyDialog):
     def on_default_name(self):
         self.gif_edit.setText(self._default_name)
 
-    def on_default_seconds(self):
-        self.seconds_edit.setValue(self._default_seconds)
+    def on_default_scale(self):
+        self.scale_edit.setText(str(self._default_scale))
+        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_default_time(self):
+        self.time_edit.setValue(self._default_time)
 
     def on_default_fps(self):
         self.fps_edit.setValue(self._default_fps)
@@ -165,31 +213,51 @@ class AnimationWindow(PyDialog):
         """displays the menu objects"""
         grid = QGridLayout()
 
-        grid.addWidget(self.seconds, 0, 0)
-        grid.addWidget(self.seconds_edit, 0, 1)
-        grid.addWidget(self.seconds_button, 0, 2)
+        grid.addWidget(self.scale, 0, 0)
+        grid.addWidget(self.scale_edit, 0, 1)
+        grid.addWidget(self.scale_button, 0, 2)
 
-        grid.addWidget(self.fps, 1, 0)
-        grid.addWidget(self.fps_edit, 1, 1)
-        grid.addWidget(self.fps_button, 1, 2)
+        grid.addWidget(self.time, 1, 0)
+        grid.addWidget(self.time_edit, 1, 1)
+        grid.addWidget(self.time_button, 1, 2)
 
-        grid.addWidget(self.resolution, 2, 0)
-        grid.addWidget(self.resolution_edit, 2, 1)
-        grid.addWidget(self.resolution_button, 2, 2)
+        # spacer
+        spacer = QLabel('')
+        #grid.addWidget(spacer, 2, 0)
 
-        grid.addWidget(self.browse, 3, 0)
-        grid.addWidget(self.browse_edit, 3, 1)
-        grid.addWidget(self.browse_button, 3, 2)
+        grid.addWidget(self.fps, 3, 0)
+        grid.addWidget(self.fps_edit, 3, 1)
+        grid.addWidget(self.fps_button, 3, 2)
 
-        grid.addWidget(self.gif, 4, 0)
-        grid.addWidget(self.gif_edit, 4, 1)
-        grid.addWidget(self.gif_button, 4, 2)
+        grid.addWidget(self.resolution, 4, 0)
+        grid.addWidget(self.resolution_edit, 4, 1)
+        grid.addWidget(self.resolution_button, 4, 2)
+
+        grid.addWidget(self.browse, 5, 0)
+        grid.addWidget(self.browse_edit, 5, 1)
+        grid.addWidget(self.browse_button, 5, 2)
+
+        grid.addWidget(self.gif, 6, 0)
+        grid.addWidget(self.gif_edit, 6, 1)
+        grid.addWidget(self.gif_button, 6, 2)
+
+        grid.addWidget(spacer, 7, 0)
 
         #grid2 = QGridLayout()
-        grid.addWidget(self.scale_radio, 5, 0)
-        grid.addWidget(self.phase_radio, 5, 1)
-        grid.addWidget(self.delete_images_checkbox, 6, 0)
+        grid.addWidget(self.animate_scale_radio, 8, 0)
+        grid.addWidget(self.animate_phase_radio, 8, 1)
 
+        grid.addWidget(self.twosided_radio, 9, 0)
+        grid.addWidget(self.onesided_radio, 9, 1)
+
+        grid.addWidget(self.repeat_checkbox, 10, 0)
+        grid.addWidget(self.delete_images_checkbox, 10, 1)
+
+        grid.addWidget(spacer, 11, 0)
+
+        #grid.addWidget(self.scale_radio, 6, 0)
+        #grid.addWidget(self.phase_radio, 6, 1)
+        #grid.addWidget(self.delete_images_checkbox, 6, 0)
 
         # bottom buttons
         step_run_box = QHBoxLayout()
@@ -210,32 +278,73 @@ class AnimationWindow(PyDialog):
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
 
-    def make_gif(self):
-        self.gif_filename
-
     def on_apply(self):
         """click the Apply button"""
         passed = self.on_validate()
         if passed:
-            self.make_gif()
+            pass
             #self.win_parent._apply_legend(self.out_data)
         return passed
 
     def on_validate(self):
-        name_value, flag0 = self.check_name(self.gif_edit)
-        output_dir, flag1 = self.check_path(self.browse_edit)
-        gifbase, flag2 = self.check_name(self.gif_edit)
+        scale, flag0 = self.check_float(self.scale_edit)
+        time, flag1 = self.check_float(self.time_edit)
+        fps, flag2 = self.check_float(self.fps_edit)
+        output_dir, flag3 = self.check_path(self.browse_edit)
+        gifbase, flag4 = self.check_name(self.gif_edit)
+        print([flag0, flag1, flag2, flag3, flag4])
+        if all([flag0, flag1, flag2, flag3, flag4]):
+            if gifbase.lower().endswith('.gif'):
+                gifbase = gifbase[:-3]
+            gif_filename = os.path.join(output_dir, gifbase + '.gif')
 
-        if all([flag0, flag1, flag2]):
-            gifbase = os.path.join(output_dir, gifbase + '.gif')
-
+            animate_scale = self.animate_scale_radio.isChecked()
             delete_images = self.delete_images_checkbox.isChecked()
-            is_scale = self.scale_radio.isChecked()
+            onesided = self.onesided_radio.isChecked()
+            nrepeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
+
             #self.out_data['is_shown'] = self.show_radio.isChecked()
+            analysis_time = self.get_analysis_time(time, onesided)
+
+
+            nframes = analysis_time * fps
+            scales = None
+            phases = None
+            if animate_scale:
+                # TODO: we could start from 0 deflection, but that's more work
+                # TODO: we could do a sine wave, but again, more work
+                scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
+            else:
+                # animate phase
+                phases = np.linspace(0., 360, num=nframes, endpoint=False)
+
             self.out_data['clicked_ok'] = True
             self.out_data['close'] = True
+            self.win_parent.win_parent.make_gif(
+                gif_filename, self._icase, scales=scales, phases=phases,
+                time=time, analysis_time=analysis_time, fps=fps,
+                onesided=onesided, nrepeat=nrepeat, delete_images=delete_images)
             return True
         return False
+
+    def get_analysis_time(self, time, onesided):
+        """
+        TODO: could we define time as 1/2-sided time so we can do less work?
+        TODO: we could be more accurate regarding dt
+              Nonesided = 5
+              Ntwosided = 2 * Nonesided - 1 = 9
+              Nonesided = (Ntwosided + 1) / 2
+
+              Nframes = int(fps * t)
+              Nonesided = Nframes
+              Ntwosided = 2 * Nonesided - 1 = 9
+              Nonesided = (Ntwosided + 1) / 2
+        """
+        if onesided:
+            analysis_time = time / 2.
+        else:
+            analysis_time = time
+        return analysis_time
 
     @staticmethod
     def check_name(cell):
@@ -269,7 +378,7 @@ class AnimationWindow(PyDialog):
         """click the OK button"""
         passed = self.on_apply()
         if passed:
-            self.win_parent.is_animate_open = False
+            self.win_parent._animation_window_shown = False
             self.close()
             #self.destroy()
 
@@ -310,7 +419,7 @@ class LegendPropertiesWindow(PyDialog):
 
         #Init the base class
         self._updated_legend = False
-        self.is_animate_open = False
+        self._animation_window_shown = False
         self._icase = data['icase']
         self._default_icase = self._icase
 
@@ -388,6 +497,7 @@ class LegendPropertiesWindow(PyDialog):
         We need to update the legend if there's been a result change request
         """
         if icase != self._default_icase:
+            self._icase = icase
             self._default_icase = icase
             self._default_name = default_title
             self._default_min = default_min_value
@@ -425,12 +535,14 @@ class LegendPropertiesWindow(PyDialog):
                 self.scale_button.setEnabled(True)
 
             if self._default_phase is None:
+                self._phase = None
                 self.phase.setEnabled(False)
                 self.phase_edit.setEnabled(False)
                 self.phase_button.setEnabled(False)
                 self.phase_edit.setText('0.0')
                 self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
             else:
+                self._phase = phase
                 self.phase.setEnabled(True)
                 self.phase_edit.setEnabled(True)
                 self.phase_button.setEnabled(True)
@@ -443,6 +555,7 @@ class LegendPropertiesWindow(PyDialog):
             #self.on_default_format()
             #self.on_default_scale()
             # reset defaults
+            self._name = name
             self.name_edit.setText(name)
             self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
@@ -455,6 +568,7 @@ class LegendPropertiesWindow(PyDialog):
             self.format_edit.setText(str(data_format))
             self.format_edit.setStyleSheet("QLineEdit{background: white;}")
 
+            self._scale = scale
             self.scale_edit.setText(str(scale))
             self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
@@ -471,6 +585,7 @@ class LegendPropertiesWindow(PyDialog):
             self.on_apply()
 
     def create_widgets(self):
+        """creates the menu objects"""
         # Name
         self.name = QLabel("Title:")
         self.name_edit = QLineEdit(str(self._default_name))
@@ -572,6 +687,7 @@ class LegendPropertiesWindow(PyDialog):
         self.cancel_button = QPushButton("Cancel")
 
     def create_layout(self):
+        """displays the menu objects"""
         grid = QGridLayout()
         grid.addWidget(self.name, 0, 0)
         grid.addWidget(self.name_edit, 0, 1)
@@ -631,7 +747,7 @@ class LegendPropertiesWindow(PyDialog):
         grid2.addWidget(self.show_radio, 1, 2)
         grid2.addWidget(self.hide_radio, 2, 2)
 
-        #grid2.addWidget(self.animate_button, 3, 1)
+        grid2.addWidget(self.animate_button, 3, 1)
 
 
         #grid2.setSpacing(0)
@@ -678,23 +794,39 @@ class LegendPropertiesWindow(PyDialog):
         name, flag0 = self.check_name(self.name_edit)
         if not flag0:
             return
-        if self.is_animate_open:
-            return
-        print('is_animate_open  = %s' % self.is_animate_open)
-        self.is_animate_open = True
         data = {
             'icase' : self._icase,
             'name' : name,
-            'seconds' : 2,
+            'time' : 2,
             'frames/sec' : 30,
             'resolution' : 1,
             'iframe' : 0,
+            'scale' : self._scale,
+            'default_scale' : self._default_scale,
+
             'is_scale' : self._default_phase is None,
+            'phase' : self._phase,
             'default_phase' : self._default_phase,
-            'dirname' : os.path.abspath(os.path.join(os.getcwd(), '..', '..')),
+            'dirname' : os.path.abspath(os.getcwd()),
+            'clicked_ok' : False,
+            'close' : False,
         }
-        window = AnimationWindow(data, win_parent=self)
-        window.show()
+        if not self._animation_window_shown:
+            self._animation_window = AnimationWindow(data, win_parent=self)
+            self._animation_window.show()
+            self._animation_window_shown = True
+            self._animation_window.exec_()
+        else:
+            self._animation_window.activateWindow()
+
+        if data['close']:
+            if not self._animation_window._updated_animation:
+                #self._apply_animation(data)
+                pass
+            self._animation_window_shown = False
+            del self._animation_window
+        else:
+            self._animation_window.activateWindow()
 
     def on_default_name(self):
         name = str(self._default_name)
@@ -872,7 +1004,7 @@ def main(): # pragma: no cover
     data = {
         'icase' : 1,
         'name' : 'cat',
-        'seconds' : 2,
+        'time' : 2,
         'frames/sec' : 30,
         'resolution' : 1,
         'iframe' : 0,

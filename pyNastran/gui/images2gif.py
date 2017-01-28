@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0103
 #   Copyright (C) 2012, Almar Klein, Ant1, Marius van Voorden
 #
 #   This code is subject to the (new) BSD license:
@@ -65,19 +66,22 @@ Usefull links
 """
 # todo: This module should be part of imageio (or at least based on)
 from __future__ import print_function
-import os, time
+import os
+import time
 
-try:
-    import PIL
-    from PIL import Image
-    from PIL.GifImagePlugin import getheader, getdata
-except ImportError:
-    PIL = None
+from six import string_types
 
-try:
-    import numpy as np
-except ImportError:
-    np = None
+#try:
+import PIL
+from PIL import Image
+from PIL.GifImagePlugin import getheader, getdata
+#except ImportError:
+    #PIL = None
+
+#try:
+import numpy as np
+#except ImportError:
+    #np = None
 
 def get_cKDTree():
     try:
@@ -102,8 +106,11 @@ def checkImages(images):
     images2 = []
 
     for im in images:
+        if isinstance(im, string_types):
+            im = PIL.Image.open(im)
+
         if PIL and isinstance(im, PIL.Image.Image):
-            # We assume PIL images are allright
+            # We assume PIL images are alright
             images2.append(im)
 
         elif np and isinstance(im, np.ndarray):
@@ -279,7 +286,7 @@ class GifWriter(object):
                 raise RuntimeError("Need Numpy to use auto-subRectangles.")
 
             # First make numpy arrays if required
-            for i in range(len(images)):
+            for i, im in enumerate(images):
                 im = images[i]
                 if isinstance(im, Image.Image):
                     tmp = im.convert() # Make without palette
@@ -334,8 +341,8 @@ class GifWriter(object):
             Y = np.argwhere(diff.sum(1))
             # Get rect coordinates
             if X.size and Y.size:
-                x0, x1 = X[0], X[-1]+1
-                y0, y1 = Y[0], Y[-1]+1
+                x0, x1 = int(X[0]), int(X[-1]+1)
+                y0, y1 = int(Y[0]), int(Y[-1]+1)
             else: # No change ... make it minimal
                 x0, x1 = 0, 2
                 y0, y1 = 0, 2
@@ -417,10 +424,8 @@ class GifWriter(object):
         # Obtain palette for all images and count each occurance
         palettes, occur = [], []
         for im in images:
-            palette = getheader(im)[1]
-            if palette is None:
-                palette = im.palette.getdata()[1]
-            palettes.append(palette)
+            # palettes.append(getheader(im)[1])        # <---- For PIL
+            palettes.append(im.palette.getdata()[1])   # <---- For Pillow
         for palette in palettes:
             occur.append(palettes.count(palette))
 
@@ -498,16 +503,22 @@ class GifWriter(object):
 
 ## Exposed functions
 
-def writeGif(filename, images, duration=0.1, repeat=True, dither=False,
+def writeGif(gif_filename, images, duration=0.1, repeat=True, dither=False,
              nq=0, subRectangles=True, dispose=None):
-    """ writeGif(filename, images, duration=0.1, repeat=True, dither=False,
+    """see write_gif"""
+    write_gif(gif_filename, images, duration, repeat, dither,
+              nq, subRectangles, dispose)
+
+def write_gif(gif_filename, images, duration=0.1, repeat=True, dither=False,
+              nq=0, subRectangles=True, dispose=None):
+    """ writeGif(gif_filename, images, duration=0.1, repeat=True, dither=False,
                  nq=0, subRectangles=True, dispose=None)
 
     Write an animated gif from the specified images.
 
     Parameters
     ----------
-    filename : string
+    gif_filename : string
         The name of the file to write the image to.
     images : list
         Should be a list consisting of PIL images or numpy arrays.
@@ -600,15 +611,15 @@ def writeGif(filename, images, duration=0.1, repeat=True, dither=False,
     images = gifWriter.convertImagesToPIL(images, dither, nq)
 
     # Write
-    fp = open(filename, 'wb')
+    fp = open(gif_filename, 'wb')
     try:
         gifWriter.writeGifToFile(fp, images, duration, loops, xy, dispose)
     finally:
         fp.close()
 
 
-def readGif(filename, asNumpy=True):
-    """ readGif(filename, asNumpy=True)
+def readGif(gif_filename, asNumpy=True):
+    """ readGif(gif_filename, asNumpy=True)
 
     Read images from an animated GIF file.  Returns a list of numpy
     arrays, or, if asNumpy is false, a list if PIL images.
@@ -624,11 +635,11 @@ def readGif(filename, asNumpy=True):
         raise RuntimeError("Need Numpy to read animated gif files.")
 
     # Check whether it exists
-    if not os.path.isfile(filename):
-        raise IOError('File not found: '+str(filename))
+    if not os.path.isfile(gif_filename):
+        raise IOError('File not found: ' + str(gif_filename))
 
     # Load file using PIL
-    pilIm = PIL.Image.open(filename)
+    pilIm = PIL.Image.open(gif_filename)
     pilIm.seek(0)
 
     # Read all images inside
@@ -841,7 +852,7 @@ class NeuQuant(object):
         except KeyError:
             length = rad * 2 - 1
             mid = length / 2
-            q = np.array(list(range(mid-1,-1,-1)) + list(range(-1,mid)))
+            q = np.array(list(range(mid-1,-1,-1)) + list(range(-1, mid)))
             a = alpha*(rad*rad - q*q)/(rad*rad)
             a[mid] = 0
             self.a_s[(alpha, rad)] = a
@@ -1090,7 +1101,7 @@ def main():
     im[-50:-40, :] = 50
 
     images = [im*1.0, im*0.8, im*0.6, im*0.4, im*0]
-    writeGif('lala3.gif', images, duration=0.5, dither=0)
+    write_gif('lala3.gif', images, duration=0.5, dither=0)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

@@ -5521,7 +5521,7 @@ class NastranIO(object):
 
             ovm_res = GuiResult(subcase_id, header=vm_word, title=vm_word,
                                 location='centroid', scalar=ovm, data_format=fmt)
-            cases[icase] = (ovm_res, (subcase_id, 'MinPrincipal'))
+            cases[icase] = (ovm_res, (subcase_id, vm_word))
             form_dict[(key, itime)].append((vm_word, icase, []))
             icase += 1
 
