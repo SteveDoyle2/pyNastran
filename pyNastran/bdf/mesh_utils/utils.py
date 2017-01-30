@@ -4,7 +4,7 @@ from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tri
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
-
+from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 
 def cmd_line_equivalence():  # pragma: no cover
     """command line interface to bdf_equivalence_nodes"""
@@ -340,28 +340,70 @@ def cmd_line_merge():  # pragma: no cover
     bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
+def cmd_line_export_mcid():  # pragma: no cover
+    """command line interface to export_mcids"""
+    import sys
+    from docopt import docopt
+    import pyNastran
+    msg = "Usage:\n"
+    msg += "  bdf export_mcids IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n"
+    msg += '  bdf export_mcids -h | --help\n'
+    msg += '  bdf export_mcids -v | --version\n'
+    msg += '\n'
+
+    msg += "Positional Arguments:\n"
+    msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+    #msg += "  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
+    msg += '\n'
+
+    msg += 'Options:\n'
+    msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+
+    msg += 'Info:\n'
+    msg += '  -h, --help      show this help message and exit\n'
+    msg += "  -v, --version   show program's version number and exit\n"
+
+    if len(sys.argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver)
+    print(data)
+    size = 16
+    bdf_filename = data['IN_BDF_FILENAME']
+    bdf_filename_out = data['--output']
+    if bdf_filename_out is None:
+        bdf_filename_out = 'mcids.bdf'
+    export_mcids(bdf_filename, bdf_filename_out)
+
 def cmd_line():  # pragma: no cover
     """command line interface to multiple other command line scripts"""
     import sys
     dev = True
     msg = 'Usage:\n'
-    msg += '  bdf merge       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
-    msg += '  bdf equivalence IN_BDF_FILENAME EQ_TOL\n'
-    msg += '  bdf renumber    IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
-    msg += '  bdf mirror      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
+    msg += '  bdf merge        (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
+    msg += '  bdf equivalence  IN_BDF_FILENAME EQ_TOL\n'
+    msg += '  bdf renumber     IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+    msg += '  bdf mirror       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
+    msg += '  bdf export_mcids IN_BDF_FILENAME [-o OUT_GEOM_FILENAME]\n'
     if dev:
-        msg += '  bdf bin         IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
+        msg += '  bdf bin          IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
     msg += '\n'
-    msg += '  bdf merge       -h | --help\n'
-    msg += '  bdf equivalence -h | --help\n'
-    msg += '  bdf renumber    -h | --help\n'
-    msg += '  bdf mirror      -h | --help\n'
+    msg += '  bdf merge        -h | --help\n'
+    msg += '  bdf equivalence  -h | --help\n'
+    msg += '  bdf renumber     -h | --help\n'
+    msg += '  bdf mirror       -h | --help\n'
+    msg += '  bdf export_mcids -h | --help\n'
 
     if dev:
-        msg += '  bdf bin         -h | --help\n'
+        msg += '  bdf bin          -h | --help\n'
     msg += '  bdf -v | --version\n'
     msg += '\n'
 
+    print('sys.argv =', sys.argv)
     if len(sys.argv) == 1:
         sys.exit(msg)
 
@@ -375,6 +417,8 @@ def cmd_line():  # pragma: no cover
         cmd_line_renumber()
     elif sys.argv[1] == 'mirror':
         cmd_line_mirror()
+    elif sys.argv[1] == 'export_mcids':
+        cmd_line_export_mcid()
     elif sys.argv[1] == 'bin' and dev:
         cmd_line_bin()
     else:
@@ -382,5 +426,7 @@ def cmd_line():  # pragma: no cover
         #raise NotImplementedError('arg1=%r' % sys.argv[1])
 
 if __name__ == '__main__':  # pragma: no cover
-    main()
+    import sys
+    sys.argv = sys.argv[1:]
+    cmd_line()
 

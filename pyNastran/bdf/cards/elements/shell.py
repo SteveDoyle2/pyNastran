@@ -1237,6 +1237,69 @@ class QuadShell(ShellElement):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
+    def material_coordinate_system(self, normal=None, xyz1234=None):
+        """
+        Determines the material coordinate system
+
+        Parameters
+        ----------
+        normal (3, ) float ndarray
+            the unit normal vector
+        xyz1234 (4, 3) float ndarray
+            the xyz coordinates
+
+        Returns
+        -------
+        centroid (3, ) float ndarray
+            the centroid of the element
+        imat (3, ) float ndarray
+            the element unit i vector
+        jmat (3, ) float ndarray
+            the element unit j vector
+        normal (3, ) float ndarray
+            the unit normal vector
+
+        TODO: rotate the coordinate system by the angle theta
+        """
+        if normal is None:
+            normal = self.Normal() # k = kmat
+
+        if xyz1234 is None:
+            xyz1 = self.nodes_ref[0].get_position()
+            xyz2 = self.nodes_ref[1].get_position()
+            xyz3 = self.nodes_ref[2].get_position()
+            xyz4 = self.nodes_ref[3].get_position()
+            #centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+            #centroid = self.Centroid()
+        else:
+            #centroid = xyz1234.sum(axis=1)
+            #assert len(centroid) == 3, centroid
+            xyz1 = xyz1234[:, 0]
+            xyz2 = xyz1234[:, 1]
+            xyz3 = xyz1234[:, 2]
+            xyz4 = xyz1234[:, 3]
+        centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+
+        if self.theta_mcid is None:
+            raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
+        if isinstance(self.theta_mcid, integer_types):
+            i = self.theta_mcid_ref.i
+            jmat = np.cross(normal, i) # k x i
+            jmat /= np.linalg.norm(jmat)
+            # we do an extra normalization here because
+            # we had to project i onto the elemental plane
+            # unlike in the next block
+            imat = np.cross(jmat, normal)
+        elif isinstance(self.theta_mcid, float):
+            # TODO: rotate by the angle theta
+            imat = xyz2 - xyz1
+            imat /= np.linalg.norm(imat)
+            jmat = np.cross(normal, imat) # k x i
+            jmat /= np.linalg.norm(jmat)
+        else:
+            raise RuntimeError(self.theta_mcid)
+        return centroid, imat, jmat, normal
+
 
 class CSHEAR(QuadShell):
     type = 'CSHEAR'
@@ -1559,37 +1622,6 @@ class CQUAD4(QuadShell):
         """deprecated"""
         self.deprecated('self.thetaMcid', 'self.theta_mcid', '0.9')
         self.theta_mcid = theta_mcid
-
-    def material_coordinate_system(self, normal=None, xyz1234=None):
-        if normal is None:
-            normal = self.Normal() # k = kmat
-
-        if xyz1234 is None:
-            xyz1 = self.nodes_ref[0].get_position()
-            xyz2 = self.nodes_ref[1].get_position()
-            xyz3 = self.nodes_ref[2].get_position()
-            xyz4 = self.nodes_ref[3].get_position()
-            #centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
-            #centroid = self.Centroid()
-        else:
-            #centroid = xyz1234.sum(axis=1)
-            #assert len(centroid) == 3, centroid
-            xyz1 = xyz1234[:, 0]
-            xyz2 = xyz1234[:, 1]
-            xyz3 = xyz1234[:, 2]
-            xyz4 = xyz1234[:, 3]
-        centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
-
-        if self.theta_mcid is None:
-            raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
-        if isinstance(self.theta_mcid, integer_types):
-            i = self.theta_mcid_ref.i
-            jmat = np.cross(normal, i) # k x i
-            jmat /= np.linalg.norm(jmat)
-            imat = np.cross(jmat, normal)
-        elif isinstance(self.theta_mcid, float):
-            raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
-        return centroid, imat, jmat, normal
 
     #def x(self, eta, xi, xs):
         #"""Calculate the x-coordinate within the element.
