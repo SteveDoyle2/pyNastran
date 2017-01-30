@@ -907,7 +907,7 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
 
 def define_coord_e123(model, Type, cid, origin, rid=0,
                       xaxis=None, yaxis=None, zaxis=None,
-                      xyplane=None, yzplane=None, xzplane=None):
+                      xyplane=None, yzplane=None, xzplane=None, add=True):
     """
     Create a coordinate system based on a defined axis and point on the
     plane.  This is the generalized version of the CORDx card.
@@ -930,6 +930,13 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
         defines the y axis (default=None)
     zaxis : (3,) ndarray
         defines the z axis (default=None)
+    add : bool; default=True
+        adds the coordinate system to the model
+
+    Returns
+    -------
+    coord : CORD2R, CORD2C, CORD2S
+        the coordinate system
 
     .. note:: one axis (xaxis, yaxis, zaxis) and one plane
               (xyplane, yzplane, xz plane) must be defined; the others
@@ -1008,10 +1015,11 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
             jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
             j = jhat / norm(jhat)
             i = np.cross(j, k)
-    define_coord_ijk(model, Type, cid, origin, rid, i, j, k)
+    return define_coord_ijk(model, Type, cid, origin, rid, i, j, k, add=add)
 
 
-def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
+def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
+                     add=True):
     """
     Create a coordinate system based on 2 or 3 perpendicular unit vectors
 
@@ -1033,8 +1041,13 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
         defines the j unit vector
     k : (3,) ndarray
         defines the k unit vector
+    add : bool; default=True
+        adds the coordinate system to the model
 
-    TODO: hasn't been tested...
+    Returns
+    -------
+    coord : CORD2R, CORD2C, CORD2S
+        the coordinate system
     """
     assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
     origin = _fix_xyz_shape(origin, 'origin')
@@ -1063,11 +1076,20 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
     e2 = rcoord.transform_node_to_local(origin + k) # point on z axis
     e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis
     card = [Type, cid, rid] + list(e1) + list(e2) + list(e3)
-    model.add_card(Type, card, is_list=True)
 
-    coord = model.Coord(cid)
-    if model.xref:
-        coord.cross_reference(model)
+    if Type == 'CORD2R':
+        coord = CORD2R(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+    elif Type == 'CORD2C':
+        coord = CORD2C(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+    elif Type == 'CORD2S':
+        coord = CORD2S(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
+    else:
+        raise NotImplementedError(card)
+    if add:
+        model._add_coord_object(coord)
+        if model.xref:
+            coord.cross_reference(model)
+    return coord
 
 
 class RectangularCoord(object):
