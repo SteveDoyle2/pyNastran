@@ -2266,92 +2266,111 @@ class NastranIO(object):
                 p3 = xyz_cid0[n3, :]
                 p4 = xyz_cid0[n4, :]
 
-                v21 = p2 - p1
-                v32 = p3 - p2
-                v43 = p4 - p3
-                v14 = p1 - p4
+                def quad_quality(p1, p2, p3, p4):
+                    v21 = p2 - p1
+                    v32 = p3 - p2
+                    v43 = p4 - p3
+                    v14 = p1 - p4
 
-                v42 = p4 - p2
-                v31 = p3 - p1
-                p12 = (p1 + p2) / 2.
-                p23 = (p2 + p3) / 2.
-                p34 = (p3 + p4) / 2.
-                p14 = (p4 + p1) / 2.
-                v31 = p3 - p1
-                v42 = p4 - p2
-                normal = np.cross(v31, v42)
-                areai = 0.5 * np.linalg.norm(normal)
+                    v42 = p4 - p2
+                    v31 = p3 - p1
+                    p12 = (p1 + p2) / 2.
+                    p23 = (p2 + p3) / 2.
+                    p34 = (p3 + p4) / 2.
+                    p14 = (p4 + p1) / 2.
+                    v31 = p3 - p1
+                    v42 = p4 - p2
+                    normal = np.cross(v31, v42)
+                    areai = 0.5 * np.linalg.norm(normal)
 
-                # still kind of in development
-                #
-                # the ratio of the ideal area to the actual area
-                # this is an hourglass check
-                areas = [
-                    np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
-                    np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
-                    np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
-                    np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
-                ]
-                #
-                # for:
-                #   area=1; area1=0.5 -> area_ratioi1=2.0; area_ratio=2.0
-                #   area=1; area1=2.0 -> area_ratioi2=2.0; area_ratio=2.0
-                area_ratioi1 = areai / min(areas)
-                area_ratioi2 = max(areas) / areai
-                area_ratioi = max(area_ratioi1, area_ratioi2)
+                    # still kind of in development
+                    #
+                    # the ratio of the ideal area to the actual area
+                    # this is an hourglass check
+                    areas = [
+                        np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
+                        np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
+                        np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
+                        np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
+                    ]
+                    #
+                    # for:
+                    #   area=1; area1=0.5 -> area_ratioi1=2.0; area_ratio=2.0
+                    #   area=1; area1=2.0 -> area_ratioi2=2.0; area_ratio=2.0
+                    area_ratioi1 = areai / min(areas)
+                    area_ratioi2 = max(areas) / areai
+                    area_ratioi = max(area_ratioi1, area_ratioi2)
 
-                area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
-                area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
-                area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
-                area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
-                aavg = (area1 + area2 + area3 + area4) / 4.
-                taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) +
-                                abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+                    area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
+                    area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
+                    area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
+                    area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
+                    aavg = (area1 + area2 + area3 + area4) / 4.
+                    taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) +
+                                    abs(area3 - aavg) + abs(area4 - aavg)) / aavg
 
-                #    e3
-                # 4-------3
-                # |       |
-                # |e4     |  e2
-                # 1-------2
-                #     e1
-                e13 = p34 - p12
-                e42 = p23 - p14
-                cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-                cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-                max_skew = np.pi / 2. - np.abs(np.arccos(
-                    np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
-                #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
-                lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
-                #assert len(lengths) == 3, lengths
-                aspect_ratio = lengths.max() / lengths.min()
+                    #    e3
+                    # 4-------3
+                    # |       |
+                    # |e4     |  e2
+                    # 1-------2
+                    #     e1
+                    e13 = p34 - p12
+                    e42 = p23 - p14
+                    cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
+                    cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
+                    max_skew = np.pi / 2. - np.abs(np.arccos(
+                        np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
+                    #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
+                    lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
+                    #assert len(lengths) == 3, lengths
+                    aspect_ratio = lengths.max() / lengths.min()
 
-                cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
-                cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-                cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
-                cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
-                #max_thetai = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
+                    cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
+                    cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+                    cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
+                    cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
+                    #max_thetai = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
 
-                # dot the local normal with the normal vector
-                # then take the norm of that to determine the angle relative to the normal
-                # then take the sign of that to see if we're pointing roughly towards the normal
+                    # dot the local normal with the normal vector
+                    # then take the norm of that to determine the angle relative to the normal
+                    # then take the sign of that to see if we're pointing roughly towards the normal
 
-                # np.sign(np.linalg.norm(np.dot(
-                # a x b = ab sin(theta)
-                # a x b / ab = sin(theta)
-                # sin(theta) < 0. -> normal is flipped
-                normal2 = np.sign(np.dot(np.cross(v21, v32), normal))
-                normal3 = np.sign(np.dot(np.cross(v32, v43), normal))
-                normal4 = np.sign(np.dot(np.cross(v43, v14), normal))
-                normal1 = np.sign(np.dot(np.cross(v14, v21), normal))
-                n = np.array([normal1, normal2, normal3, normal4])
-                theta_additional = np.where(n < 0, 2*np.pi, 0.)
+                    # np.sign(np.linalg.norm(np.dot(
+                    # a x b = ab sin(theta)
+                    # a x b / ab = sin(theta)
+                    # sin(theta) < 0. -> normal is flipped
+                    normal2 = np.sign(np.dot(np.cross(v21, v32), normal))
+                    normal3 = np.sign(np.dot(np.cross(v32, v43), normal))
+                    normal4 = np.sign(np.dot(np.cross(v43, v14), normal))
+                    normal1 = np.sign(np.dot(np.cross(v14, v21), normal))
+                    n = np.array([normal1, normal2, normal3, normal4])
+                    theta_additional = np.where(n < 0, 2*np.pi, 0.)
 
-                theta = n * np.arccos(np.clip(
-                    [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
-                min_thetai = theta.min()
-                max_thetai = theta.max()
-                dideal_thetai = max(max_thetai - piover2, piover2 - min_thetai)
-                #print('theta_max = ', theta_max)
+                    theta = n * np.arccos(np.clip(
+                        [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
+                    print('theta =', theta)
+                    min_thetai = theta.min()
+                    max_thetai = theta.max()
+                    dideal_thetai = max(max_thetai - piover2, piover2 - min_thetai)
+                    #print('theta_max = ', theta_max)
+
+                    if 0:
+                        # warp
+                        v31 = xyz_cid0[p3, :] - xyz_cid0[p1, :]
+                        n1a = np.cross(v21, v31) # v21 x v31
+                        n1b = np.cross(v31, -v14) # v31 x v41
+                        warp1 = np.dot(n1a, n1b) / (np.linalg.norm(n1a) * np.linalg.norm(n1b))
+
+                        v42 = xyz_cid0[p4, :] - xyz_cid0[p2, :]
+                        n2a = np.cross(v32, v42) # v32 x v42
+                        n2b = np.cross(v42, -v21) # v42 x v12
+                        warp2 = np.dot(n2a, n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
+                        max_warp = max(np.arccos(warp1), np.arccos(warp2))
+                    return areai, max_skew, aspect_ratio, dideal_thetai
+
+                quad_quality(p1, p2, p3, p4)
+
 
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, n1)
@@ -2359,19 +2378,6 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, n3)
                 elem.GetPointIds().SetId(3, n4)
                 self.grid.InsertNextCell(9, elem.GetPointIds())
-
-                if 0:
-                    # warp
-                    v31 = xyz_cid0[p3, :] - xyz_cid0[p1, :]
-                    n1a = np.cross(v21, v31) # v21 x v31
-                    n1b = np.cross(v31, -v14) # v31 x v41
-                    warp1 = np.dot(n1a, n1b) / (np.linalg.norm(n1a) * np.linalg.norm(n1b))
-
-                    v42 = xyz_cid0[p4, :] - xyz_cid0[p2, :]
-                    n2a = np.cross(v32, v42) # v32 x v42
-                    n2b = np.cross(v42, -v21) # v42 x v12
-                    warp2 = np.dot(n2a, n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
-                    max_warp = max(np.arccos(warp1), np.arccos(warp2))
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
@@ -2704,6 +2710,8 @@ class NastranIO(object):
                 for node in element.nodes:
                     print(str(node).rstrip())
                 max_thetai = 2 * np.pi
+            print(eid, min_thetai, max_thetai, '\n', element)
+            #asdf
             min_interior_angle[i] = min_thetai
             max_interior_angle[i] = max_thetai
             dideal_theta[i] = dideal_thetai
@@ -2781,132 +2789,11 @@ class NastranIO(object):
             icase += 1
             self.element_ids = eids
 
-        prop_types_with_mid = [
-            'PSOLID', 'PSHEAR',
-            'PROD', 'CROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
-        ]
-        upids = None
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
-
-            pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
-                                location='centroid', scalar=pids)
-            cases[icase] = (pid_res, (0, 'PropertyID'))
-            form0.append(('PropertyID', icase, []))
-            icase += 1
-
-            upids = np.unique(pids)
-            mids = np.zeros(nelements, dtype='int32')
-            thickness = np.zeros(nelements, dtype='float32')
-            mid_eids_skip = []
-            for pid in upids:
-                if pid == 0:
-                    print('skipping pid=0')
-                    continue
-                prop = model.properties[pid]
-                #try:
-                if prop.type in prop_types_with_mid:
-                    i = np.where(pids == pid)[0]
-                    #print('pid=%s i=%s' % (pid, i))
-                    #if isinstance(prop.mid, (int, int32)):
-                        #mid = prop.mid
-                    #else:
-                        #try:
-                    mid = prop.mid_ref.mid
-                        #except AttributeError:
-                            #print('pid=%s prop.type=%s' % (pid, prop.type))
-                            #raise
-                    mids[i] = mid
-                elif prop.type == 'PSHELL':
-                    # TODO: only considers mid1
-                    i = np.where(pids == pid)[0]
-                    mid = prop.Mid1()
-                    t = prop.Thickness()
-                    mids[i] = mid
-                    thickness[i] = t
-                elif prop.type in ['PCOMP', 'PCOMPG']:
-                    # TODO: only considers iply=0
-                    i = np.where(pids == pid)[0]
-                    mid = prop.Mid(0)
-                    t = prop.Thickness()
-                    mids[i] = mid
-                    thickness[i] = t
-                elif prop.type in ['PELAS', 'PBUSH']:
-                    i = np.where(pids == pid)[0]
-                    mid_eids_skip.append(i)
-                else:
-                    print('material for pid=%s type=%s not considered' % (pid, prop.type))
-
-            #print('mids =', mids)
-            if len(mid_eids_skip):
-                mid_eids_skip = np.hstack(mid_eids_skip)
-                if mids.min() == 0:
-                    i = np.where(mids == 0)[0]
-                    diff_ids = np.setdiff1d(i, mid_eids_skip)
-                    #eids_missing_material_id = eids[i]
-                    not_skipped_eids_missing_material_id = eids[diff_ids]
-                    if len(not_skipped_eids_missing_material_id):
-                        print('eids=%s dont have materials' %
-                              not_skipped_eids_missing_material_id)
-
-            e11 = np.zeros(mids.shape, dtype='float32')
-            e22 = np.zeros(mids.shape, dtype='float32')
-            for umid in np.unique(mids):
-                if umid == 0:
-                    continue
-                try:
-                    mat = model.materials[umid]
-                except KeyError:
-                    print('mids = %s' % mids)
-                    print('mids = %s' % model.materials.keys())
-                    continue
-                    #raise
-                if mat.type == 'MAT1':
-                    e11i = e22i = mat.e
-                elif mat.type == 'MAT8':
-                    e11i = mat.e11
-                    e22i = mat.e22
-                else:
-                    print('skipping %s' % mat)
-                    continue
-                    #raise NotImplementedError(mat)
-                #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))
-                i = np.where(umid == mids)[0]
-                e11[i] = e11i
-                e22[i] = e22i
-
-            if thickness.max() > 0.0:
-                t_res = GuiResult(0, header='Thickness', title='Thickness',
-                                  location='centroid', scalar=thickness)
-                cases[icase] = (t_res, (0, 'Thickness'))
-                form0.append(('Thickness', icase, []))
-                icase += 1
-
-            mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
-                                location='centroid', scalar=mids)
-            #e11_res = GuiResult(0, header='E_11', title='E_11',
-                                #location='centroid', scalar=e11)
-            cases[icase] = (mid_res, (0, 'MaterialID'))
-            form0.append(('MaterialID', icase, []))
-
-            is_orthotropic = not np.array_equal(e11, e22)
-            if is_orthotropic:
-                e11_res = GuiResult(0, header='E_11', title='E_11',
-                                    location='centroid', scalar=e11, data_format='%.3e')
-                e22_res = GuiResult(0, header='E_22', title='E_22',
-                                    location='centroid', scalar=e22, data_format='%.3e')
-                cases[icase + 1] = (e11_res, (0, 'E_11'))
-                cases[icase + 2] = (e22_res, (0, 'E_22'))
-                form0.append(('E_11', icase + 1, []))
-                form0.append(('E_22', icase + 2, []))
-                icase += 3
-            else:
-                # isotropic
-                e11_res = GuiResult(0, header='E', title='E',
-                                    location='centroid', scalar=e11, data_format='%.3e')
-                cases[icase + 1] = (e11_res, (0, 'E'))
-                form0.append(('E', icase + 1, []))
-                icase += 2
+            icase, upids, mids, thickness = self._build_properties(
+                model, nelements, eids, pids, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, cases, form0, icase)
 
         try:
             icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
@@ -2928,323 +2815,524 @@ class NastranIO(object):
 
         #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
         if self.make_offset_normals_dim and nelements:
-            #ielement = 0
-            nelements = self.element_ids.shape[0]
-            normals = np.zeros((nelements, 3), dtype='float32')
-            offset = np.zeros(nelements, dtype='float32')
-            xoffset = np.zeros(nelements, dtype='float32')
-            yoffset = np.zeros(nelements, dtype='float32')
-            zoffset = np.zeros(nelements, dtype='float32')
-            element_dim = np.zeros(nelements, dtype='int32')
-            nnodes_array = np.zeros(nelements, dtype='int32')
-            for eid, element in sorted(iteritems(model.elements)):
-                if isinstance(element, ShellElement):
-                    element_dimi = 2
-                    try:
-                        normali = element.Normal()
-                    except RuntimeError:
-                        normali = np.ones(3) * 2.
-                    #pid = element.pid
-                    pid = element.pid
-                    pid_type = pid.type
-                    if pid_type == 'PSHELL':
-                        z0 = element.pid.z1
-                    elif pid_type in ['PCOMP', 'PCOMPG']:
-                        z0 = element.pid.z0
-                    elif pid_type == 'PLPLANE':
-                        z0 = 0.
-                    elif pid_type == 'PSHEAR':
-                        z0 = 0.
-                    elif pid_type in ['PSOLID', 'PLSOLID']:
-                        z0 = 0.
-                    else:
-                        raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
-
-                    if z0 is None:
-                        if element.type in ['CTRIA3', 'CTRIAR', 'CTRIAX']:
-                            z0 = (element.T1 + element.T2 + element.T3) / 3.
-                            nnodesi = 3
-                        elif element.type in ['CTRIA6', 'CTRIAX6']:
-                            z0 = (element.T1 + element.T2 + element.T3) / 3.
-                            nnodesi = 6
-
-                        elif element.type in ['CQUAD4', 'CQUADR']:
-                            z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                            nnodesi = 4
-                        elif element.type == 'CQUAD8':
-                            z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                            nnodesi = 8
-                        elif element.type == 'CQUAD':
-                            z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                            nnodesi = 9
-                        elif element.type == 'CTRAX3':
-                            nnodesi = 3
-                            z0 = 0.
-                        elif element.type == 'CTRAX6':
-                            nnodesi = 6
-                            z0 = 0.
-                        elif element.type == 'CQUADX4':
-                            nnodesi = 4
-                            z0 = 0.
-                        elif element.type == 'CQUADX8':
-                            nnodesi = 8
-                            z0 = 0.
-                        elif element.type == 'CQUADX':
-                            nnodesi = 9
-                            z0 = 0.
-                        else:
-                            raise NotImplementedError(element.type)
-                    else:
-                        if element.type in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CTRIAX', 'CPLSTN3']:
-                            nnodesi = 3
-                        elif element.type in ['CTRIA6', 'CTRIAX6', 'CPLSTN6', 'CTRAX6']:
-                            nnodesi = 6
-
-                        elif element.type in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR', 'CQUADX4']:
-                            nnodesi = 4
-                        elif element.type in ['CQUAD8', 'CPLSTN8', 'CQUADX8']:
-                            nnodesi = 8
-                        elif element.type == ['CQUAD', 'CQUADX']:
-                            nnodesi = 9
-                        else:
-                            raise NotImplementedError(element.type)
-
-                    ie = self.eid_map[eid]
-                    normals[ie, :] = normali
-                    if element.type in ['CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8']:
-                        element_dim[ie] = element_dimi
-                        nnodes_array[ie] = nnodesi
-                        continue
-
-                    offset[ie] = z0
-                    xoffset[ie] = z0 * normali[0]
-                    yoffset[ie] = z0 * normali[1]
-                    zoffset[ie] = z0 * normali[2]
-
-                elif element.type == 'CTETRA':
-                    ie = self.eid_map[eid]
-                    element_dimi = 3
-                    nnodesi = 4
-                elif element.type == 'CPENTA':
-                    ie = self.eid_map[eid]
-                    element_dimi = 3
-                    nnodesi = 6
-                elif element.type == 'CPYRAM':
-                    ie = self.eid_map[eid]
-                    element_dimi = 3
-                    nnodesi = 5
-                elif element.type in ['CHEXA', 'CIHEX1']:
-                    ie = self.eid_map[eid]
-                    element_dimi = 3
-                    nnodesi = 8
-
-                elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP']:
-                    ie = self.eid_map[eid]
-                    element_dimi = 1
-                    nnodesi = 2
-                elif element.type in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
-                                      'CFAST', 'CVISC',
-                                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
-                    ie = self.eid_map[eid]
-                    element_dimi = 0
-                    nnodesi = 2
-                else:
-                    ie = self.eid_map[eid]
-                    element_dimi = -1
-                    nnodesi = -1
-                    print('element.type=%s doesnt have a dimension' % element.type)
-
-                element_dim[ie] = element_dimi
-                nnodes_array[ie] = nnodesi
-                #ielement += 1
-
-            # if not a flat plate
-            #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-            is_element_dim = element_dim.max() != element_dim.min()
-            is_element_dim = True
-            if is_element_dim:
-                eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
-                                        location='centroid', scalar=element_dim)
-                cases[icase] = (eid_dim_res, (0, 'ElementDim'))
-
-            is_shell = np.abs(normals).max() > 0.
-            is_solid = np.abs(max_interior_angle).max() > 0.
-            #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
-            if is_shell:
-                nx_res = GuiResult(
-                    0, header='NormalX', title='NormalX',
-                    location='centroid', scalar=normals[:, 0], data_format='%.2f')
-                ny_res = GuiResult(
-                    0, header='NormalY', title='NormalY',
-                    location='centroid', scalar=normals[:, 1], data_format='%.2f')
-                nz_res = GuiResult(
-                    0, header='NormalZ', title='NormalZ',
-                    location='centroid', scalar=normals[:, 2], data_format='%.2f')
-
-                # this is just for testing nan colors that doesn't work
-                #max_interior_angle[:1000] = np.nan
-                area_res = GuiResult(0, header='Area', title='Area',
-                                     location='centroid', scalar=area)
-                min_theta_res = GuiResult(
-                    0, header='Min Interior Angle', title='Min Interior Angle',
-                    location='centroid', scalar=np.degrees(min_interior_angle))
-                max_theta_res = GuiResult(
-                    0, header='Max Interior Angle', title='Max Interior Angle',
-                    location='centroid', scalar=np.degrees(max_interior_angle))
-                dideal_theta_res = GuiResult(
-                    0, header='Delta Ideal Angle', title='Delta Ideal Angle',
-                    location='centroid', scalar=np.degrees(dideal_theta))
-
-                skew = np.degrees(max_skew_angle)
-                skew_res = GuiResult(
-                    0, header='Max Skew Angle', title='MaxSkewAngle',
-                    location='centroid', scalar=skew)
-                aspect_res = GuiResult(
-                    0, header='Aspect Ratio', title='AspectRatio',
-                    location='centroid', scalar=max_aspect_ratio)
-
-                form_checks = []
-                form0.append(('Element Checks', None, form_checks))
-                if is_element_dim:
-                    form_checks.append(('ElementDim', icase, []))
-
-                if self.make_nnodes_result:
-                    nnodes_res = GuiResult(
-                        0, header='NNodes/Elem', title='NNodes/Elem',
-                        location='centroid', scalar=nnodes_array)
-                    form_checks.append(('NNodes', icase + 1, []))
-                    cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
-                    icase += 1
-
-                cases[icase + 1] = (nx_res, (0, 'NormalX'))
-                cases[icase + 2] = (ny_res, (0, 'NormalY'))
-                cases[icase + 3] = (nz_res, (0, 'NormalZ'))
-                cases[icase + 4] = (area_res, (0, 'Area'))
-                cases[icase + 5] = (min_theta_res, (0, 'Min Interior Angle'))
-                cases[icase + 6] = (max_theta_res, (0, 'Max Interior Angle'))
-                cases[icase + 7] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
-                cases[icase + 8] = (skew_res, (0, 'Max Skew Angle'))
-                cases[icase + 9] = (aspect_res, (0, 'Aspect Ratio'))
-
-                form_checks.append(('NormalX', icase + 1, []))
-                form_checks.append(('NormalY', icase + 2, []))
-                form_checks.append(('NormalZ', icase + 3, []))
-                form_checks.append(('Area', icase + 4, []))
-                form_checks.append(('Min Interior Angle', icase + 5, []))
-                form_checks.append(('Max Interior Angle', icase + 6, []))
-                form_checks.append(('Delta Ideal Angle', icase + 7, []))
-                form_checks.append(('Max Skew Angle', icase + 8, []))
-                form_checks.append(('Aspect Ratio', icase + 9, []))
-                icase += 10
-
-                if area_ratio.max() > 1.:
-                    arearatio_res = GuiResult(
-                        0, header='Area Ratio', title='Area Ratio',
-                        location='centroid', scalar=area_ratio)
-                    cases[icase] = (arearatio_res, (0, 'Area Ratio'))
-                    form_checks.append(('Area Ratio', icase, []))
-                    icase += 1
-
-                if taper_ratio.max() > 1.:
-                    taperratio_res = GuiResult(
-                        0, header='Taper Ratio', title='Taper Ratio',
-                        location='centroid', scalar=taper_ratio)
-                    cases[icase] = (taperratio_res, (0, 'Taper Ratio'))
-                    form_checks.append(('Taper Ratio', icase, []))
-                    icase += 1
-
-                if max_warp_angle.max() > 0.0:
-                    warp_res = GuiResult(
-                        0, header='Max Warp Angle', title='MaxWarpAngle',
-                        location='centroid', scalar=np.degrees(max_warp_angle))
-                    cases[icase + 4] = (warp_res, (0, 'Max Warp Angle'))
-                    form_checks.append(('Max Warp Angle', icase, []))
-                    icase += 1
-
-                #if (np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or
-                    #np.abs(zoffset).max() > 0.0):
-                # offsets
-                offset_res = GuiResult(
-                    0, header='Offset', title='Offset',
-                    location='centroid', scalar=offset, data_format='%g')
-                offset_x_res = GuiResult(
-                    0, header='OffsetX', title='OffsetX',
-                    location='centroid', scalar=xoffset, data_format='%g')
-                offset_y_res = GuiResult(
-                    0, header='OffsetY', title='OffsetY',
-                    location='centroid', scalar=yoffset, data_format='%g')
-                offset_z_res = GuiResult(
-                    0, header='OffsetZ', title='OffsetZ',
-                    location='centroid', scalar=zoffset, data_format='%g')
-
-                cases[icase] = (offset_res, (0, 'Offset'))
-                cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
-                cases[icase + 2] = (offset_y_res, (0, 'OffsetY'))
-                cases[icase + 3] = (offset_z_res, (0, 'OffsetZ'))
-
-                form_checks.append(('Offset', icase, []))
-                form_checks.append(('OffsetX', icase + 1, []))
-                form_checks.append(('OffsetY', icase + 2, []))
-                form_checks.append(('OffsetZ', icase + 3, []))
-                icase += 4
-
-                if self.make_xyz:
-                    x_res = GuiResult(
-                        0, header='X', title='X',
-                        location='node', scalar=xyz_cid0[:, 0], data_format='%g')
-                    y_res = GuiResult(
-                        0, header='Y', title='Y',
-                        location='node', scalar=xyz_cid0[:, 1], data_format='%g')
-                    z_res = GuiResult(
-                        0, header='Z', title='Z',
-                        location='node', scalar=xyz_cid0[:, 2], data_format='%g')
-                    cases[icase] = (x_res, (0, 'X'))
-                    cases[icase + 1] = (y_res, (0, 'Y'))
-                    cases[icase + 2] = (z_res, (0, 'Z'))
-                    form_checks.append(('X', icase + 0, []))
-                    form_checks.append(('Y', icase + 1, []))
-                    form_checks.append(('Z', icase + 2, []))
-                    icase += 3
-
-            elif is_solid:
-                # only solid elements
-                form_checks = []
-                form0.append(('Element Checks', None, form_checks))
-                min_theta_res = GuiResult(
-                    0, header='Min Interior Angle', title='Min Interior Angle',
-                    location='centroid', scalar=np.degrees(min_interior_angle))
-                max_theta_res = GuiResult(
-                    0, header='Max Interior Angle', title='Max Interior Angle',
-                    location='centroid', scalar=np.degrees(max_interior_angle))
-                #skew = 90. - np.degrees(max_skew_angle)
-                #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
-                                     #location='centroid', scalar=skew)
-                if is_element_dim:
-                    form_checks.append(('ElementDim', icase, []))
-                form_checks.append(('Min Interior Angle', icase + 1, []))
-                form_checks.append(('Max Interior Angle', icase + 2, []))
-                #form_checks.append(('Max Skew Angle', icase + 2, []))
-                cases[icase + 1] = (min_theta_res, (0, 'Min Interior Angle'))
-                cases[icase + 2] = (max_theta_res, (0, 'Max Interior Angle'))
-                #cases[icase + 3] = (skew_res, (0, 'Max Interior Angle'))
-                icase += 3
-
-            else:
-                form0.append(('ElementDim', icase, []))
-                icase += 1
-
-            if np.abs(material_coord).max() > 0:
-                material_coord_res = GuiResult(
-                    0, header='MaterialCoord', title='MaterialCoord',
-                    location='centroid',
-                    scalar=material_coord, data_format='%i')
-                cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
-                form0.append(('MaterialCoord', icase, []))
-                icase += 1
-
+            icase, normals = self._build_normals_quality(
+                model, nelements, cases, form0, icase,
+                xyz_cid0, material_coord,
+                min_interior_angle, max_interior_angle, dideal_theta,
+                area, max_skew_angle, taper_ratio,
+                max_warp_angle, area_ratio, max_aspect_ratio)
             self.normals = normals
         return nid_to_pid_map, icase, cases, form
+
+    def _build_normals_quality(self, model, nelements, cases, form0, icase,
+                               xyz_cid0, material_coord,
+                               min_interior_angle, max_interior_angle, dideal_theta,
+                               area, max_skew_angle, taper_ratio,
+                               max_warp_angle, area_ratio, max_aspect_ratio):
+        """
+        creates:
+         - ElementDim
+         - Normal X/Y/Z
+         - NNodes/Elem
+         - Area
+         - Min/Max Interior Angle
+         - Skew Angle
+         - Taper Ratio
+         - Area Ratio
+         - MaterialCoord
+        """
+        #ielement = 0
+        nelements = self.element_ids.shape[0]
+        normals = np.zeros((nelements, 3), dtype='float32')
+        offset = np.zeros(nelements, dtype='float32')
+        xoffset = np.zeros(nelements, dtype='float32')
+        yoffset = np.zeros(nelements, dtype='float32')
+        zoffset = np.zeros(nelements, dtype='float32')
+        element_dim = np.zeros(nelements, dtype='int32')
+        nnodes_array = np.zeros(nelements, dtype='int32')
+        for eid, element in sorted(iteritems(model.elements)):
+            if isinstance(element, ShellElement):
+                element_dimi = 2
+                try:
+                    normali = element.Normal()
+                except RuntimeError:
+                    normali = np.ones(3) * 2.
+                #pid = element.pid
+                pid = element.pid
+                pid_type = pid.type
+                if pid_type == 'PSHELL':
+                    z0 = element.pid.z1
+                elif pid_type in ['PCOMP', 'PCOMPG']:
+                    z0 = element.pid.z0
+                elif pid_type == 'PLPLANE':
+                    z0 = 0.
+                elif pid_type == 'PSHEAR':
+                    z0 = 0.
+                elif pid_type in ['PSOLID', 'PLSOLID']:
+                    z0 = 0.
+                else:
+                    raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
+
+                if z0 is None:
+                    if element.type in ['CTRIA3', 'CTRIAR', 'CTRIAX']:
+                        z0 = (element.T1 + element.T2 + element.T3) / 3.
+                        nnodesi = 3
+                    elif element.type in ['CTRIA6', 'CTRIAX6']:
+                        z0 = (element.T1 + element.T2 + element.T3) / 3.
+                        nnodesi = 6
+
+                    elif element.type in ['CQUAD4', 'CQUADR']:
+                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                        nnodesi = 4
+                    elif element.type == 'CQUAD8':
+                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                        nnodesi = 8
+                    elif element.type == 'CQUAD':
+                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                        nnodesi = 9
+                    elif element.type == 'CTRAX3':
+                        nnodesi = 3
+                        z0 = 0.
+                    elif element.type == 'CTRAX6':
+                        nnodesi = 6
+                        z0 = 0.
+                    elif element.type == 'CQUADX4':
+                        nnodesi = 4
+                        z0 = 0.
+                    elif element.type == 'CQUADX8':
+                        nnodesi = 8
+                        z0 = 0.
+                    elif element.type == 'CQUADX':
+                        nnodesi = 9
+                        z0 = 0.
+                    else:
+                        raise NotImplementedError(element.type)
+                else:
+                    if element.type in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CTRIAX', 'CPLSTN3']:
+                        nnodesi = 3
+                    elif element.type in ['CTRIA6', 'CTRIAX6', 'CPLSTN6', 'CTRAX6']:
+                        nnodesi = 6
+
+                    elif element.type in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR', 'CQUADX4']:
+                        nnodesi = 4
+                    elif element.type in ['CQUAD8', 'CPLSTN8', 'CQUADX8']:
+                        nnodesi = 8
+                    elif element.type == ['CQUAD', 'CQUADX']:
+                        nnodesi = 9
+                    else:
+                        raise NotImplementedError(element.type)
+
+                ie = self.eid_map[eid]
+                normals[ie, :] = normali
+                if element.type in ['CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8']:
+                    element_dim[ie] = element_dimi
+                    nnodes_array[ie] = nnodesi
+                    self.log.debug('continue...element.type=%r' % element.type)
+                    continue
+
+                offset[ie] = z0
+                xoffset[ie] = z0 * normali[0]
+                yoffset[ie] = z0 * normali[1]
+                zoffset[ie] = z0 * normali[2]
+
+            elif element.type == 'CTETRA':
+                ie = self.eid_map[eid]
+                element_dimi = 3
+                nnodesi = 4
+            elif element.type == 'CPENTA':
+                ie = self.eid_map[eid]
+                element_dimi = 3
+                nnodesi = 6
+            elif element.type == 'CPYRAM':
+                ie = self.eid_map[eid]
+                element_dimi = 3
+                nnodesi = 5
+            elif element.type in ['CHEXA', 'CIHEX1']:
+                ie = self.eid_map[eid]
+                element_dimi = 3
+                nnodesi = 8
+
+            elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP']:
+                ie = self.eid_map[eid]
+                element_dimi = 1
+                nnodesi = 2
+            elif element.type in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
+                                  'CFAST', 'CVISC',
+                                  'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                  'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
+                ie = self.eid_map[eid]
+                element_dimi = 0
+                nnodesi = 2
+            else:
+                ie = self.eid_map[eid]
+                element_dimi = -1
+                nnodesi = -1
+                print('element.type=%s doesnt have a dimension' % element.type)
+
+            element_dim[ie] = element_dimi
+            nnodes_array[ie] = nnodesi
+            #ielement += 1
+
+        # if not a flat plate
+        #if min(nxs) == max(nxs) and min(nxs) != 0.0:
+        is_element_dim = element_dim.max() != element_dim.min()
+        is_element_dim = True
+        if is_element_dim:
+            eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
+                                    location='centroid', scalar=element_dim)
+            cases[icase] = (eid_dim_res, (0, 'ElementDim'))
+
+        is_shell = np.abs(normals).max() > 0.
+        is_solid = np.abs(max_interior_angle).max() > 0.
+        #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
+        if is_shell:
+            nx_res = GuiResult(
+                0, header='NormalX', title='NormalX',
+                location='centroid', scalar=normals[:, 0], data_format='%.2f')
+            ny_res = GuiResult(
+                0, header='NormalY', title='NormalY',
+                location='centroid', scalar=normals[:, 1], data_format='%.2f')
+            nz_res = GuiResult(
+                0, header='NormalZ', title='NormalZ',
+                location='centroid', scalar=normals[:, 2], data_format='%.2f')
+
+            # this is just for testing nan colors that doesn't work
+            #max_interior_angle[:1000] = np.nan
+            area_res = GuiResult(0, header='Area', title='Area',
+                                 location='centroid', scalar=area)
+            min_theta_res = GuiResult(
+                0, header='Min Interior Angle', title='Min Interior Angle',
+                location='centroid', scalar=np.degrees(min_interior_angle))
+            max_theta_res = GuiResult(
+                0, header='Max Interior Angle', title='Max Interior Angle',
+                location='centroid', scalar=np.degrees(max_interior_angle))
+            dideal_theta_res = GuiResult(
+                0, header='Delta Ideal Angle', title='Delta Ideal Angle',
+                location='centroid', scalar=np.degrees(dideal_theta))
+
+            skew = np.degrees(max_skew_angle)
+            skew_res = GuiResult(
+                0, header='Max Skew Angle', title='MaxSkewAngle',
+                location='centroid', scalar=skew)
+            aspect_res = GuiResult(
+                0, header='Aspect Ratio', title='AspectRatio',
+                location='centroid', scalar=max_aspect_ratio)
+
+            form_checks = []
+            form0.append(('Element Checks', None, form_checks))
+            if is_element_dim:
+                form_checks.append(('ElementDim', icase, []))
+
+            if self.make_nnodes_result:
+                nnodes_res = GuiResult(
+                    0, header='NNodes/Elem', title='NNodes/Elem',
+                    location='centroid', scalar=nnodes_array)
+                form_checks.append(('NNodes', icase + 1, []))
+                cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
+                icase += 1
+
+            cases[icase + 1] = (nx_res, (0, 'NormalX'))
+            cases[icase + 2] = (ny_res, (0, 'NormalY'))
+            cases[icase + 3] = (nz_res, (0, 'NormalZ'))
+            cases[icase + 4] = (area_res, (0, 'Area'))
+            cases[icase + 5] = (min_theta_res, (0, 'Min Interior Angle'))
+            cases[icase + 6] = (max_theta_res, (0, 'Max Interior Angle'))
+            cases[icase + 7] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
+            cases[icase + 8] = (skew_res, (0, 'Max Skew Angle'))
+            cases[icase + 9] = (aspect_res, (0, 'Aspect Ratio'))
+
+            form_checks.append(('NormalX', icase + 1, []))
+            form_checks.append(('NormalY', icase + 2, []))
+            form_checks.append(('NormalZ', icase + 3, []))
+            form_checks.append(('Area', icase + 4, []))
+            form_checks.append(('Min Interior Angle', icase + 5, []))
+            form_checks.append(('Max Interior Angle', icase + 6, []))
+            form_checks.append(('Delta Ideal Angle', icase + 7, []))
+            form_checks.append(('Max Skew Angle', icase + 8, []))
+            form_checks.append(('Aspect Ratio', icase + 9, []))
+            icase += 10
+
+            if area_ratio.max() > 1.:
+                arearatio_res = GuiResult(
+                    0, header='Area Ratio', title='Area Ratio',
+                    location='centroid', scalar=area_ratio)
+                cases[icase] = (arearatio_res, (0, 'Area Ratio'))
+                form_checks.append(('Area Ratio', icase, []))
+                icase += 1
+
+            if taper_ratio.max() > 1.:
+                taperratio_res = GuiResult(
+                    0, header='Taper Ratio', title='Taper Ratio',
+                    location='centroid', scalar=taper_ratio)
+                cases[icase] = (taperratio_res, (0, 'Taper Ratio'))
+                form_checks.append(('Taper Ratio', icase, []))
+                icase += 1
+
+            if max_warp_angle.max() > 0.0:
+                warp_res = GuiResult(
+                    0, header='Max Warp Angle', title='MaxWarpAngle',
+                    location='centroid', scalar=np.degrees(max_warp_angle))
+                cases[icase + 4] = (warp_res, (0, 'Max Warp Angle'))
+                form_checks.append(('Max Warp Angle', icase, []))
+                icase += 1
+
+            #if (np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or
+                #np.abs(zoffset).max() > 0.0):
+            # offsets
+            offset_res = GuiResult(
+                0, header='Offset', title='Offset',
+                location='centroid', scalar=offset, data_format='%g')
+            offset_x_res = GuiResult(
+                0, header='OffsetX', title='OffsetX',
+                location='centroid', scalar=xoffset, data_format='%g')
+            offset_y_res = GuiResult(
+                0, header='OffsetY', title='OffsetY',
+                location='centroid', scalar=yoffset, data_format='%g')
+            offset_z_res = GuiResult(
+                0, header='OffsetZ', title='OffsetZ',
+                location='centroid', scalar=zoffset, data_format='%g')
+
+            cases[icase] = (offset_res, (0, 'Offset'))
+            cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
+            cases[icase + 2] = (offset_y_res, (0, 'OffsetY'))
+            cases[icase + 3] = (offset_z_res, (0, 'OffsetZ'))
+
+            form_checks.append(('Offset', icase, []))
+            form_checks.append(('OffsetX', icase + 1, []))
+            form_checks.append(('OffsetY', icase + 2, []))
+            form_checks.append(('OffsetZ', icase + 3, []))
+            icase += 4
+
+            if self.make_xyz:
+                x_res = GuiResult(
+                    0, header='X', title='X',
+                    location='node', scalar=xyz_cid0[:, 0], data_format='%g')
+                y_res = GuiResult(
+                    0, header='Y', title='Y',
+                    location='node', scalar=xyz_cid0[:, 1], data_format='%g')
+                z_res = GuiResult(
+                    0, header='Z', title='Z',
+                    location='node', scalar=xyz_cid0[:, 2], data_format='%g')
+                cases[icase] = (x_res, (0, 'X'))
+                cases[icase + 1] = (y_res, (0, 'Y'))
+                cases[icase + 2] = (z_res, (0, 'Z'))
+                form_checks.append(('X', icase + 0, []))
+                form_checks.append(('Y', icase + 1, []))
+                form_checks.append(('Z', icase + 2, []))
+                icase += 3
+
+        elif is_solid:
+            # only solid elements
+            form_checks = []
+            form0.append(('Element Checks', None, form_checks))
+            min_theta_res = GuiResult(
+                0, header='Min Interior Angle', title='Min Interior Angle',
+                location='centroid', scalar=np.degrees(min_interior_angle))
+            max_theta_res = GuiResult(
+                0, header='Max Interior Angle', title='Max Interior Angle',
+                location='centroid', scalar=np.degrees(max_interior_angle))
+            #skew = 90. - np.degrees(max_skew_angle)
+            #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
+                                    #location='centroid', scalar=skew)
+            if is_element_dim:
+                form_checks.append(('ElementDim', icase, []))
+            form_checks.append(('Min Interior Angle', icase + 1, []))
+            form_checks.append(('Max Interior Angle', icase + 2, []))
+            #form_checks.append(('Max Skew Angle', icase + 2, []))
+            cases[icase + 1] = (min_theta_res, (0, 'Min Interior Angle'))
+            cases[icase + 2] = (max_theta_res, (0, 'Max Interior Angle'))
+            #cases[icase + 3] = (skew_res, (0, 'Max Interior Angle'))
+            icase += 3
+
+        else:
+            form0.append(('ElementDim', icase, []))
+            icase += 1
+
+        if np.abs(material_coord).max() > 0:
+            material_coord_res = GuiResult(
+                0, header='MaterialCoord', title='MaterialCoord',
+                location='centroid',
+                scalar=material_coord, data_format='%i')
+            cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
+            form0.append(('MaterialCoord', icase, []))
+            icase += 1
+        return icase, normals
+
+    def _build_properties(self, model, nelements, eids, pids, cases, form0, icase):
+        """
+        creates:
+          - PropertyID
+        """
+        prop_types_with_mid = [
+            'PSOLID', 'PSHEAR',
+            'PROD', 'CROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
+        ]
+
+        upids = None
+        pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
+                            location='centroid', scalar=pids)
+        cases[icase] = (pid_res, (0, 'PropertyID'))
+        form0.append(('PropertyID', icase, []))
+        icase += 1
+
+        upids = np.unique(pids)
+        mids = np.zeros(nelements, dtype='int32')
+        thickness = np.zeros(nelements, dtype='float32')
+        mid_eids_skip = []
+        for pid in upids:
+            if pid == 0:
+                print('skipping pid=0')
+                continue
+            prop = model.properties[pid]
+            #try:
+            if prop.type in prop_types_with_mid:
+                i = np.where(pids == pid)[0]
+                #print('pid=%s i=%s' % (pid, i))
+                #if isinstance(prop.mid, (int, int32)):
+                    #mid = prop.mid
+                #else:
+                    #try:
+                mid = prop.mid_ref.mid
+                    #except AttributeError:
+                        #print('pid=%s prop.type=%s' % (pid, prop.type))
+                        #raise
+                mids[i] = mid
+            elif prop.type == 'PSHELL':
+                # TODO: only considers mid1
+                i = np.where(pids == pid)[0]
+                mid = prop.Mid1()
+                t = prop.Thickness()
+                mids[i] = mid
+                thickness[i] = t
+            elif prop.type in ['PCOMP', 'PCOMPG']:
+                # TODO: only considers iply=0
+                i = np.where(pids == pid)[0]
+                mid = prop.Mid(0)
+                t = prop.Thickness()
+                mids[i] = mid
+                thickness[i] = t
+            elif prop.type in ['PELAS', 'PBUSH']:
+                i = np.where(pids == pid)[0]
+                mid_eids_skip.append(i)
+            else:
+                print('material for pid=%s type=%s not considered' % (pid, prop.type))
+
+        #print('mids =', mids)
+        if len(mid_eids_skip):
+            mid_eids_skip = np.hstack(mid_eids_skip)
+            if mids.min() == 0:
+                i = np.where(mids == 0)[0]
+                diff_ids = np.setdiff1d(i, mid_eids_skip)
+                #eids_missing_material_id = eids[i]
+                not_skipped_eids_missing_material_id = eids[diff_ids]
+                if len(not_skipped_eids_missing_material_id):
+                    print('eids=%s dont have materials' %
+                          not_skipped_eids_missing_material_id)
+        return icase, upids, mids, thickness
+
+    def _build_materials(self, model, mids, thickness, cases, form0, icase):
+        """
+        creates:
+          - Material ID
+          - E_11
+          - E_22
+          - E_33
+          - Is Isotropic?
+        """
+        e11 = np.zeros(mids.shape, dtype='float32')
+        e22 = np.zeros(mids.shape, dtype='float32')
+        e33 = np.zeros(mids.shape, dtype='float32')
+
+        has_mat8 = False
+        has_mat9 = False
+        for umid in np.unique(mids):
+            if umid == 0:
+                continue
+            try:
+                mat = model.materials[umid]
+            except KeyError:
+                print('mids = %s' % mids)
+                print('mids = %s' % model.materials.keys())
+                continue
+                #raise
+            if mat.type == 'MAT1':
+                e11i = e22i = e33i = mat.e
+            elif mat.type == 'MAT8':
+                e11i = e33i = mat.e11
+                e22i = mat.e22
+                has_mat8 = True
+            elif mat.type in ['MAT11', 'MAT3D']:
+                e11i = mat.e1
+                e22i = mat.e2
+                e33i = mat.e3
+                has_mat9 = True
+            else:
+                print('skipping %s' % mat)
+                continue
+                #raise NotImplementedError(mat)
+            #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))
+            i = np.where(umid == mids)[0]
+            e11[i] = e11i
+            e22[i] = e22i
+            e33[i] = e33i
+
+        if thickness.max() > 0.0:
+            t_res = GuiResult(0, header='Thickness', title='Thickness',
+                              location='centroid', scalar=thickness)
+            cases[icase] = (t_res, (0, 'Thickness'))
+            form0.append(('Thickness', icase, []))
+            icase += 1
+
+        mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
+                            location='centroid', scalar=mids)
+        #e11_res = GuiResult(0, header='E_11', title='E_11',
+                            #location='centroid', scalar=e11)
+        cases[icase] = (mid_res, (0, 'MaterialID'))
+        form0.append(('MaterialID', icase, []))
+
+        if has_mat9: # also implicitly has_mat8
+            is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
+        elif has_mat8:
+            is_orthotropic = not np.array_equal(e11, e22)
+        else:
+            is_orthotropic = False
+
+        if is_orthotropic:
+            e11_res = GuiResult(0, header='E_11', title='E_11',
+                                location='centroid', scalar=e11, data_format='%.3e')
+            e22_res = GuiResult(0, header='E_22', title='E_22',
+                                location='centroid', scalar=e22, data_format='%.3e')
+            cases[icase + 1] = (e11_res, (0, 'E_11'))
+            cases[icase + 2] = (e22_res, (0, 'E_22'))
+            form0.append(('E_11', icase + 1, []))
+            form0.append(('E_22', icase + 2, []))
+            icase += 3
+
+            is_isotropic = np.zeros(len(e11), dtype='int8')
+            if has_mat9:
+                is_isotropic[(e11 == e22) | (e11 == e33)] = 1
+                e33_res = GuiResult(0, header='E_33', title='E_33',
+                                    location='centroid', scalar=e33, data_format='%.3e')
+                cases[icase] = (e33_res, (0, 'E_33'))
+                form0.append(('E_33', icase, []))
+                icase += 1
+            else:
+                #is_isotropic_map = e11 == e22
+                is_isotropic[e11 == e22] = 1
+
+            iso_res = GuiResult(0, header='IsIsotropic?', title='IsIsotropic?',
+                                location='centroid', scalar=is_isotropic, data_format='%i')
+            cases[icase] = (iso_res, (0, 'Is Isotropic?'))
+            form0.append(('Is Isotropic?', icase, []))
+            icase += 1
+        else:
+            # isotropic
+            e11_res = GuiResult(0, header='E', title='E',
+                                location='centroid', scalar=e11, data_format='%.3e')
+            cases[icase + 1] = (e11_res, (0, 'E'))
+            form0.append(('E', icase + 1, []))
+            icase += 2
+        return icase
 
     def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
         if upids is None:

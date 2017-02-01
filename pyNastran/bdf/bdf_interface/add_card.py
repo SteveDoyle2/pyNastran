@@ -60,8 +60,8 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, F
                                                     GMLOAD)
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
-                                           MAT8, MAT9, MAT10, MAT11, MATG,
-                                           MATHE, MATHP, CREEP, EQUIV)
+                                           MAT8, MAT9, MAT10, MAT11, MAT3D,
+                                           MATG, MATHE, MATHP, CREEP, EQUIV)
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
