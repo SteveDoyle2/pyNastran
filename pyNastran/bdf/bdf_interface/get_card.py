@@ -634,7 +634,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             pids = list(self.properties.keys())
         elif isinstance(pids, int):
             pids = [int]
-            assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
+        assert isinstance(pids, (list, tuple, np.ndarray)), 'pids=%s type=%s' % (pids, type(pids))
+
         eids2 = {}
         for pid in pids:
             eids2[pid] = []
