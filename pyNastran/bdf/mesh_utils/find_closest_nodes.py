@@ -42,8 +42,8 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None):
         tol = 2. * dxyz
 
     ieq = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
-                                      neq_max=neq_max)[1]
-    #assert len(ieq) == len(nids), 'increase the tolerance so you '
+                                      neq_max=neq_max)[2:]  # TODO: is this [2:] or [1]???
+    assert len(ieq) == len(nids), 'increase the tolerance so you '
     return nids[ieq]
 
 
