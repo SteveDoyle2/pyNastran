@@ -631,7 +631,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         What happens with CONRODs?
         """
         if pids is None:
-            pids = iterkeys(self.properties)
+            pids = list(self.properties.keys())
         elif isinstance(pids, int):
             pids = [int]
             assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))

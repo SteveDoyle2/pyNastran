@@ -737,7 +737,7 @@ class PBAR(LineProperty):
                     f1, f2, k1, k2, comment=comment)
 
     def _verify(self, xref=False):
-        pid = self.Pid()
+        pid = self.pid
         mid = self.Mid()
         A = self.Area()
         J = self.J()
@@ -987,7 +987,7 @@ class PBARL(LineProperty):
         del self.mid_ref
 
     def _verify(self, xref=False):
-        pid = self.Pid()
+        pid = self.pid
         mid = self.Mid()
         A = self.Area()
         try:
@@ -1439,7 +1439,7 @@ class PBRSECT(LineProperty):
         del self.mid_ref
 
     def _verify(self, xref=False):
-        pid = self.Pid()
+        pid = self.pid
         mid = self.Mid()
         #A = self.Area()
         #J = self.J()

@@ -2349,7 +2349,6 @@ class NastranIO(object):
 
                     theta = n * np.arccos(np.clip(
                         [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
-                    print('theta =', theta)
                     min_thetai = theta.min()
                     max_thetai = theta.max()
                     dideal_thetai = max(max_thetai - piover2, piover2 - min_thetai)
@@ -2710,7 +2709,7 @@ class NastranIO(object):
                 for node in element.nodes:
                     print(str(node).rstrip())
                 max_thetai = 2 * np.pi
-            print(eid, min_thetai, max_thetai, '\n', element)
+            #print(eid, min_thetai, max_thetai, '\n', element)
             #asdf
             min_interior_angle[i] = min_thetai
             max_interior_angle[i] = max_thetai

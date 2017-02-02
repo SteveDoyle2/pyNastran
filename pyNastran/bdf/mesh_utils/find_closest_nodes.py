@@ -33,18 +33,32 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None):
     """
     if not isinstance(neq_max, int):
         raise TypeError('neq_max=%r must be an int; type=%s' % (neq_max, type(neq_max)))
-    #ieq = find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol)
+    tol = None
     if tol is None:
-        xyz_max = nodes_xyz.amax(axis=0)
-        xyz_min = nodes_xyz.amin(axis=0)
+        xyz_max = nodes_xyz.max(axis=0)
+        xyz_min = nodes_xyz.min(axis=0)
         assert len(xyz_max) == 3, xyz_max
-        dxyz = np.linalg.norm(xyz_max - xyz_max)
+        dxyz = np.linalg.norm(xyz_max - xyz_min)
         tol = 2. * dxyz
+    #ieq = find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol)
+    ncompare = xyz_compare.shape[0]
 
+
+    # kdt, ieq, slots = _not_equal_nodes_build_tree(...)
+    # ieq = _not_equal_nodes_build_tree(...)[1]
+    # slots = _not_equal_nodes_build_tree(...)[2:]
+
+    # [2:] - similar
+    # [1]  - different
     ieq = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
                                       neq_max=neq_max)[2:]  # TODO: is this [2:] or [1]???
-    assert len(ieq) == len(nids), 'increase the tolerance so you '
-    return nids[ieq]
+    assert len(ieq) == ncompare, 'increase the tolerance; tol=%s' % tol
+    try:
+        found_nids = nids[ieq]
+    except IndexError:
+        msg = 'increase the tolerance; tol=%s' % tol
+        raise IndexError(msg)
+    return found_nids
 
 
 def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol):
