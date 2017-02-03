@@ -5,23 +5,24 @@ defines:
 """
 from __future__ import print_function
 import os
+from six import integer_types
 import numpy as np
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore#, QtGui
     from PyQt4.QtGui import (
-        QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
         QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox, QCheckBox)
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
-        QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
         QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox, QCheckBox)
 elif qt_version == 'pyside':
     from PySide import QtCore#, QtGui
     from PySide.QtGui import (
-        QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
         QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox, QCheckBox)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
@@ -46,21 +47,22 @@ class AnimationWindow(PyDialog):
     | Dir     ______  Browse  |
     | iFrame  ______          |
     |                         |
-    | o Scale/Phase-animation |
+    | Animations:             |
+    | o Scale, Phase, Time    |  # TODO: add time
+    |                         |
     | x delete images         |
     | x repeat                |  # TODO: change to an integer
-    | x make pictures         |  # TODO: add me
-    | x make gif              |  # TODO: add me
+    | x make gif              |
     |                         |
     |      Step, RunAll       |
-    |                         |
-    |     Apply, Close        |
+    |         Close           |
     +-------------------------+
 
     TODO: add key-frame support
     """
     def __init__(self, data, win_parent=None):
         PyDialog.__init__(self, data, win_parent)
+        self.istep = 0
 
         self._updated_animation = False
         self._icase = data['icase']
@@ -119,20 +121,25 @@ class AnimationWindow(PyDialog):
         self.browse_button = QPushButton("Browse")
 
         self.gif = QLabel("Gif Filename:")
-        self.gif_edit = QLineEdit(str(self._default_name))
+        self.gif_edit = QLineEdit(str(self._default_name + '.gif'))
         self.gif_button = QPushButton("Default")
 
         # scale / phase
         self.animate_scale_radio = QRadioButton("Animate Scale")
         self.animate_phase_radio = QRadioButton("Animate Phase")
+        self.animate_time_radio = QRadioButton("Animate Time")
         self.animate_scale_radio.setChecked(self._default_is_scale)
         self.animate_phase_radio.setChecked(not self._default_is_scale)
+        self.animate_time_radio.setChecked(False)
         if self._default_phase is None:
             self.animate_phase_radio.setDisabled(True)
+
+        self.animate_time_radio.setDisabled(True)
         widget = QWidget(self)
         horizontal_vertical_group = QButtonGroup(widget)
         horizontal_vertical_group.addButton(self.animate_scale_radio)
         horizontal_vertical_group.addButton(self.animate_phase_radio)
+        horizontal_vertical_group.addButton(self.animate_time_radio)
 
         # one / two sided
         self.onesided_radio = QRadioButton("One Sided")
@@ -156,12 +163,16 @@ class AnimationWindow(PyDialog):
         self.repeat_checkbox = QCheckBox("Repeat?")
         self.repeat_checkbox.setChecked(True)
 
+        # endless loop
+        self.make_gif_checkbox = QCheckBox("Make Gif?")
+        self.make_gif_checkbox.setChecked(True)
+
         # bottom buttons
         self.step_button = QPushButton("Step")
         self.run_button = QPushButton("Run All")
 
-        self.apply_button = QPushButton("Apply")
-        self.ok_button = QPushButton("OK")
+        #self.apply_button = QPushButton("Apply")
+        #self.ok_button = QPushButton("OK")
         self.cancel_button = QPushButton("Close")
 
     def set_connections(self):
@@ -177,8 +188,8 @@ class AnimationWindow(PyDialog):
         self.step_button.clicked.connect(self.on_step)
         self.run_button.clicked.connect(self.on_run)
 
-        self.apply_button.clicked.connect(self.on_apply)
-        self.ok_button.clicked.connect(self.on_ok)
+        #self.apply_button.clicked.connect(self.on_apply)
+        #self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
 
     def on_browse(self):
@@ -187,14 +198,8 @@ class AnimationWindow(PyDialog):
             return
         self.browse_edit.setText(dirname)
 
-    def on_step(self):
-        pass
-
-    def on_run(self):
-        pass
-
     def on_default_name(self):
-        self.gif_edit.setText(self._default_name)
+        self.gif_edit.setText(self._default_name + '.gif')
 
     def on_default_scale(self):
         self.scale_edit.setText(str(self._default_scale))
@@ -246,12 +251,14 @@ class AnimationWindow(PyDialog):
         #grid2 = QGridLayout()
         grid.addWidget(self.animate_scale_radio, 8, 0)
         grid.addWidget(self.animate_phase_radio, 8, 1)
+        grid.addWidget(self.animate_time_radio, 8, 2)
 
         grid.addWidget(self.twosided_radio, 9, 0)
         grid.addWidget(self.onesided_radio, 9, 1)
 
         grid.addWidget(self.repeat_checkbox, 10, 0)
         grid.addWidget(self.delete_images_checkbox, 10, 1)
+        grid.addWidget(self.make_gif_checkbox, 10, 2)
 
         grid.addWidget(spacer, 11, 0)
 
@@ -265,8 +272,8 @@ class AnimationWindow(PyDialog):
         step_run_box.addWidget(self.run_button)
 
         ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
+        #ok_cancel_box.addWidget(self.apply_button)
+        #ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
         vbox = QVBoxLayout()
@@ -278,54 +285,82 @@ class AnimationWindow(PyDialog):
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
 
-    def on_apply(self):
-        """click the Apply button"""
-        passed = self.on_validate()
+    def on_step(self):
+        """click the Step button"""
+        passed, validate_out = self.on_validate()
         if passed:
-            pass
-            #self.win_parent._apply_legend(self.out_data)
+            self._make_gif(validate_out, istep=self.istep)
+            self.istep += 1
+
+    def on_run(self):
+        """click the Run button"""
+        self.istep = 0
+        passed, validate_out = self.on_validate()
+        if passed:
+            self._make_gif(validate_out, istep=None)
         return passed
 
+    def _make_gif(self, validate_out, istep=None):
+        """interface for making the gif"""
+        scale, time, fps, output_dir, gifbase = validate_out
+        if gifbase.lower().endswith('.gif'):
+            gifbase = gifbase[:-3]
+        gif_filename = os.path.join(output_dir, gifbase + '.gif')
+
+        animate_scale = self.animate_scale_radio.isChecked()
+        animate_phase = self.animate_phase_radio.isChecked()
+        animate_time = self.animate_time_radio.isChecked()
+        delete_images = self.delete_images_checkbox.isChecked()
+        make_gif = self.make_gif_checkbox.isChecked()
+        onesided = self.onesided_radio.isChecked()
+        nrepeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
+
+        #self.out_data['is_shown'] = self.show_radio.isChecked()
+        analysis_time = self.get_analysis_time(time, onesided)
+
+
+        nframes = int(analysis_time * fps)
+        scales = None
+        phases = None
+        if animate_scale:
+            # TODO: we could start from 0 deflection, but that's more work
+            # TODO: we could do a sine wave, but again, more work
+            scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
+            isteps = np.linspace(0, nframes, endpoint=True)
+            phases = [None] * nframes
+        elif animate_phase:
+            # animate phase
+            phases = np.linspace(0., 360, num=nframes, endpoint=False)
+            isteps = np.linspace(0, nframes, endpoint=False)
+            scales = [None] * nframes
+        elif animate_time:
+            pass
+        else:
+            raise NotImplementedError()
+        if istep is not None:
+            assert isinstance(istep, integer_types), 'istep=%r' % istep
+            scales = (scales[istep],)
+            phases = (phases[istep],)
+            isteps = (istep,)
+
+        self.out_data['clicked_ok'] = True
+        self.out_data['close'] = True
+        self.win_parent.win_parent.make_gif(
+            gif_filename, self._icase, scales=scales, phases=phases,
+            isteps=isteps,
+            time=time, analysis_time=analysis_time, fps=fps,
+            onesided=onesided, nrepeat=nrepeat, delete_images=delete_images,
+            make_gif=make_gif)
+
     def on_validate(self):
+        """checks to see if the input is valid"""
         scale, flag0 = self.check_float(self.scale_edit)
         time, flag1 = self.check_float(self.time_edit)
         fps, flag2 = self.check_float(self.fps_edit)
         output_dir, flag3 = self.check_path(self.browse_edit)
         gifbase, flag4 = self.check_name(self.gif_edit)
-        print([flag0, flag1, flag2, flag3, flag4])
-        if all([flag0, flag1, flag2, flag3, flag4]):
-            if gifbase.lower().endswith('.gif'):
-                gifbase = gifbase[:-3]
-            gif_filename = os.path.join(output_dir, gifbase + '.gif')
-
-            animate_scale = self.animate_scale_radio.isChecked()
-            delete_images = self.delete_images_checkbox.isChecked()
-            onesided = self.onesided_radio.isChecked()
-            nrepeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
-
-            #self.out_data['is_shown'] = self.show_radio.isChecked()
-            analysis_time = self.get_analysis_time(time, onesided)
-
-
-            nframes = analysis_time * fps
-            scales = None
-            phases = None
-            if animate_scale:
-                # TODO: we could start from 0 deflection, but that's more work
-                # TODO: we could do a sine wave, but again, more work
-                scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
-            else:
-                # animate phase
-                phases = np.linspace(0., 360, num=nframes, endpoint=False)
-
-            self.out_data['clicked_ok'] = True
-            self.out_data['close'] = True
-            self.win_parent.win_parent.make_gif(
-                gif_filename, self._icase, scales=scales, phases=phases,
-                time=time, analysis_time=analysis_time, fps=fps,
-                onesided=onesided, nrepeat=nrepeat, delete_images=delete_images)
-            return True
-        return False
+        passed = all([flag0, flag1, flag2, flag3, flag4])
+        return passed, (scale, time, fps, output_dir, gifbase)
 
     def get_analysis_time(self, time, onesided):
         """
@@ -374,13 +409,13 @@ class AnimationWindow(PyDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
-    def on_ok(self):
-        """click the OK button"""
-        passed = self.on_apply()
-        if passed:
-            self.win_parent._animation_window_shown = False
-            self.close()
-            #self.destroy()
+    #def on_ok(self):
+        #"""click the OK button"""
+        #passed = self.on_apply()
+        #if passed:
+            #self.win_parent._animation_window_shown = False
+            #self.close()
+            ##self.destroy()
 
     def on_cancel(self):
         """click the Cancel button"""
