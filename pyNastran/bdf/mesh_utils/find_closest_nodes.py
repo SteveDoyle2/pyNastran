@@ -48,7 +48,8 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None, msg=''
 
     ieq = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
                                       neq_max=neq_max, msg=msg)[1]
-    #assert len(ieq) == len(nids), 'increase the tolerance so you '
+    ncompare = xyz_compare.shape[0]
+    assert len(ieq) == ncompare, 'increase the tolerance so you can find nodes; tol=%r' % tol
     try:
         nids_out = nids[ieq]
     except IndexError:

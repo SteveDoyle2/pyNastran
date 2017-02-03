@@ -555,7 +555,7 @@ class BDFAttributes(object):
 
             # materials
             'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-                           'MATG'],
+                           'MAT3D', 'MATG'],
             'hyperelastic_materials' : ['MATHE', 'MATHP',],
             'creep_materials' : ['CREEP'],
             'MATT1' : ['MATT1'],

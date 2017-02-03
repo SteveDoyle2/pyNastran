@@ -80,6 +80,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
         'mp60cd.dat',
         'mp60cr.dat',
         'mp70a.dat',
+        #'heli112em8.dat',  # horrible CORD1x model
     ]
 
     files = remove_marc_files(files2)

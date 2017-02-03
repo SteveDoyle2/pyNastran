@@ -2025,6 +2025,112 @@ class MAT11(Material):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+class MAT3D(Material):
+    """
+    Defines the material properties for a 3D orthotropic material for
+    isoparametric solid elements.
+
+    +-------+------+------+------+-----+------+------+------+------+
+    |   1   |  2   |  3   |  4   |  5  |   6  |  7   |  8   |  9   |
+    +=======+======+======+======+=====+======+======+======+======+
+    | MAT3D | MID  |  E1  |  E2  | E3  |  G12 | G13  | G23  | NU12 |
+    +-------+------+------+------+-----+------+------+------+------+
+    |       | NU12 | NU13 | NU23 | RHO |      |      |      |      |
+    +-------+------+------+------+-----+------+------+------+------+
+
+    This is a VABS specific card that is almost identical to the MAT11.
+    """
+    type = 'MAT3D'
+
+    def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
+                 comment=''):
+        Material.__init__(self)
+        if comment:
+            self.comment = comment
+        self.mid = mid
+        self.e1 = e1
+        self.e2 = e2
+        self.e3 = e3
+        self.nu12 = nu12
+        self.nu13 = nu13
+        self.nu23 = nu23
+        self.g12 = g12
+        self.g13 = g13
+        self.g23 = g23
+        self.rho = rho
+
+        self._validate_input()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        mid = integer(card, 1, 'mid')
+        e1 = double(card, 2, 'E1')
+        e2 = double(card, 3, 'E2')
+        e3 = double(card, 4, 'E3')
+        nu12 = double(card, 5, 'nu12')
+        nu13 = double(card, 6, 'nu13')
+        nu23 = double(card, 7, 'nu23')
+        g12 = double(card, 8, 'g12')
+        g13 = double(card, 9, 'g13')
+        g23 = double(card, 10, 'g23')
+        rho = double_or_blank(card, 11, 'rho', 0.0)
+        assert len(card) <= 17, 'len(MAT3D card) = %i\ncard=%s' % (len(card), card)
+        return MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, comment=comment)
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
+
+    def _validate_input(self):
+        msg = 'MAT11 mid=%s does not have ' % self.mid
+        assert self.e1 is not None, msg + 'E1 defined'
+        assert self.e2 is not None, msg + 'E2 defined'
+        assert self.e3 is not None, msg + 'E3 defined'
+        assert self.g12 is not None, msg + 'G12 defined'
+        assert self.g13 is not None, msg + 'G13 defined'
+        assert self.g23 is not None, msg + 'G23 defined'
+        assert self.nu12 is not None, msg + 'NU12 defined'
+        assert self.nu13 is not None, msg + 'NU13 defined'
+        assert self.nu23 is not None, msg + 'NU23 defined'
+
+    def raw_fields(self):
+        list_fields = ['MAT3D', self.mid,
+                       self.e1, self.e2, self.e3,
+                       self.nu12, self.nu13, self.nu23,
+                       self.g12, self.g13, self.g23,
+                       self.rho]
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
+        """
+        rho = set_blank_if_default(self.rho, 0.0)
+        list_fields = ['MAT3D', self.mid,
+                       self.e1, self.e2, self.e3,
+                       self.nu12, self.nu13, self.nu23,
+                       self.g12, self.g13, self.g23,
+                       rho]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
 
 class MATHE(HyperelasticMaterial):
     """
