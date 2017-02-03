@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
-from six import string_types, iteritems, iterkeys
+from six import string_types, iteritems, iterkeys, itervalues
 
 import numpy as np
 from pyNastran.utils import integer_types

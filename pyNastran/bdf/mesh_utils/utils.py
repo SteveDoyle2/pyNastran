@@ -403,7 +403,6 @@ def cmd_line():  # pragma: no cover
     msg += '  bdf -v | --version\n'
     msg += '\n'
 
-    print('sys.argv =', sys.argv)
     if len(sys.argv) == 1:
         sys.exit(msg)
 
