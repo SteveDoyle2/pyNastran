@@ -17,25 +17,51 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         BDFAttributes.__init__(self)
 
     def get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
-                                   stop_on_missing_card=False):
+                                   stop_on_missing_card=False, combine=False):
         """
         Parameters
         ----------
-        card_types : List[str]
+        card_types : str / List[str] / default=None
             the list of keys to consider (list of strings; string)
+            None : all cards
         reset_type_to_slot_map : bool
             should the mapping dictionary be rebuilt (default=False);
             set to True if you added cards
         stop_on_missing_card : bool
             crashes if you request a card and it doesn't exist
+        combine : bool; default=False
+            change out_dict into out_list
+            combine the list of cards
 
         Returns
         -------
         out_dict: dict[str]=List[ids]
             the key=card_type, value=the ID of the card object
+        out_list: List[ids]
+            value=the ID of the card object
+            useful
+
+        Example 1
+        ---------
+        out_dict = model.get_card_ids_by_card_types(
+            card_types=['GRID', 'CTRIA3', 'CQUAD4'], combine=False)
+        out_dict = {
+            'GRID' : [1, 2, 10, 42, 1000],
+            'CTRIA3' : [1, 2, 3, 5],
+            'CQUAD4' : [4],
+        }
+
+        Example 2 - Shell Elements
+        --------------------------
+        out_dict = model.get_card_ids_by_card_types(
+            card_types=['CTRIA3', 'CQUAD4'], combine=True)
+        out_dict = {
+            [1, 2, 3, 4, 5],
+        }
         """
         if card_types is None:
             card_types = list(self.cards_to_read)
+
         if isinstance(card_types, string_types):
             card_types = [card_types]
         elif not isinstance(card_types, (list, tuple)):
@@ -45,20 +71,25 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             #self._type_to_slot_map = rslot_map
         if reset_type_to_slot_map:
             self._reset_type_to_slot_map()
-        #out = {
+        #out_dict = {
             #(key) : (self._type_to_id_map[key] if key in self.card_count else [])
             #for key in card_types
         #}
-        out = {}
+        out_dict = {}
         for key in card_types:
             if key in self.card_count:
-                out[key] = sorted(self._type_to_id_map[key])
+                out_dict[key] = sorted(self._type_to_id_map[key])
             else:
                 if stop_on_missing_card:
                     raise RuntimeError('%r is not in the card_count; keys=%s' %
                                        str(sorted(self.card_count.keys())))
-                out[key] = []
-        return out
+                out_dict[key] = []
+        if combine:
+            out_list = []
+            for key, value in sorted(iteritems(out_dict)):
+                out_list += value
+            return out_list
+        return out_dict
 
     def _reset_type_to_slot_map(self):
         rslot_map = defaultdict(list)
@@ -599,7 +630,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 eids2.append(eid)
         return eids2
 
-    def get_element_ids_dict_with_pids(self, pids=None):
+    def get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True):
         """
         Gets all the element IDs with a specific property ID.
 
@@ -607,6 +638,9 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         ----------
         pids : List[int]
             list of property ID
+        stop_if_no_eids : bool; default=True
+            prevents crashing if there are no elements
+            setting this to False really doesn't make sense for non-DMIG models
 
         Returns
         -------
@@ -631,24 +665,31 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         What happens with CONRODs?
         """
         if pids is None:
-            pids = iterkeys(self.properties)
+            pids = list(self.properties)
         elif isinstance(pids, int):
             pids = [int]
-            assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
-        eids2 = {}
+
+        assert isinstance(pids, (list, tuple, np.ndarray)), 'pids=%s type=%s' % (pids, type(pids))
+        pid_to_eids_map = {}
         for pid in pids:
-            eids2[pid] = []
+            pid_to_eids_map[pid] = []
         for eid, element in iteritems(self.elements):
             try:
                 pid = element.Pid()
                 #if element.type == 'CONROD':
                     #raise RuntimeError('CONROD pid=%r' % pid)
                 if pid in pids:
-                    eids2[pid].append(eid)
+                    pid_to_eids_map[pid].append(eid)
             except AttributeError:
                 #eids2[0].append(eid)
                 pass
-        return eids2
+
+        if stop_if_no_eids:
+            for eids in itervalues(pid_to_eids_map):
+                if len(eids):
+                    return pid_to_eids_map
+            raise RuntimeError('no elements found')
+        return pid_to_eids_map
 
     def get_node_id_to_element_ids_map(self):
         """

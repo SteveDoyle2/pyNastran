@@ -83,6 +83,11 @@ import numpy as np
 #except ImportError:
     #np = None
 
+def encode(x):
+  if False:
+    return x.encode('utf-8')
+  return x
+
 def get_cKDTree():
     try:
         from scipy.spatial import cKDTree
@@ -104,10 +109,19 @@ def checkImages(images):
     """
     # Init results
     images2 = []
-
+    expected_shape = None
     for im in images:
         if isinstance(im, string_types):
-            im = PIL.Image.open(im)
+            assert os.path.exists(im), im
+            im = PIL.Image.open(im).convert('RGBA')
+
+        if expected_shape is None:
+            expected_shape = im.size
+        else:
+            if im.size != expected_shape:
+                msg = 'im.size=%s expected_shape=%s' % (
+                    str(im.size), str(expected_shape))
+                raise RuntimeError(msg)
 
         if PIL and isinstance(im, PIL.Image.Image):
             # We assume PIL images are alright
@@ -341,6 +355,10 @@ class GifWriter(object):
             Y = np.argwhere(diff.sum(1))
             # Get rect coordinates
             if X.size and Y.size:
+                #print(X.size, Y.size)
+                #x0, x1 = X[0], X[-1]+1
+                #y0, y1 = Y[0], Y[-1]+1
+                # gets rid of the deprecation warning
                 x0, x1 = int(X[0]), int(X[-1]+1)
                 y0, y1 = int(Y[0]), int(Y[-1]+1)
             else: # No change ... make it minimal
@@ -424,8 +442,12 @@ class GifWriter(object):
         # Obtain palette for all images and count each occurance
         palettes, occur = [], []
         for im in images:
+            palette = getheader(im)[1]
+            if palette is None:
+                palette = im.palette.getdata()[1]
+            palettes.append(palette)
             # palettes.append(getheader(im)[1])        # <---- For PIL
-            palettes.append(im.palette.getdata()[1])   # <---- For Pillow
+            # palettes.append(im.palette.getdata()[1])   # <---- For Pillow
         for palette in palettes:
             occur.append(palettes.count(palette))
 
@@ -447,13 +469,13 @@ class GifWriter(object):
                 appext = self.getAppExt(loops)
 
                 # Write
-                fp.write(header)
+                fp.write(encode(header))
                 try:
                     fp.write(globalPalette)
                 except TypeError:
                     print(globalPalette)
                     raise
-                fp.write(appext)
+                fp.write(encode(appext))
 
                 # Next frame is not the first
                 firstFrame = False
@@ -480,13 +502,13 @@ class GifWriter(object):
                 # Write local header
                 if (palette != globalPalette) or (disposes[frames] != 2):
                     # Use local color palette
-                    fp.write(graphext)
-                    fp.write(lid) # write suitable image descriptor
+                    fp.write(encode(graphext))
+                    fp.write(encode(lid)) # write suitable image descriptor
                     fp.write(palette) # write local color table
-                    fp.write('\x08') # LZW minimum size code
+                    fp.write(encode('\x08')) # LZW minimum size code
                 else:
                     # Use global color palette
-                    fp.write(graphext)
+                    fp.write(encode(graphext))
                     fp.write(imdes) # write suitable image descriptor
 
                 # Write image data
@@ -496,7 +518,7 @@ class GifWriter(object):
             # Prepare for next round
             frames = frames + 1
 
-        fp.write(";")  # end gif
+        fp.write(encode(";"))  # end gif
         return frames
 
 
@@ -559,7 +581,6 @@ def write_gif(gif_filename, images, duration=0.1, repeat=True, dither=False,
             2 : the background color should be restored after each frame
             3 : the decoder should restore the previous frame
         If subRectangles==False, the default is 2, otherwise it is 1.
-
     """
     # Check PIL
     if PIL is None:
@@ -851,7 +872,7 @@ class NeuQuant(object):
             return self.a_s[(alpha, rad)]
         except KeyError:
             length = rad * 2 - 1
-            mid = length / 2
+            mid = int(length//2)
             q = np.array(list(range(mid-1,-1,-1)) + list(range(-1, mid)))
             a = alpha*(rad*rad - q*q)/(rad*rad)
             a[mid] = 0

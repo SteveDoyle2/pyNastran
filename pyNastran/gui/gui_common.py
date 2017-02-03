@@ -3649,8 +3649,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     raise NotImplementedError(geom_actor)
 
     def make_gif(self, gif_filename, icase, scales, phases,
-                 time=2.0, analysis_time=2.0, fps=30,
-                 onesided=True, nrepeat=True, delete_images=False):
+                 isteps=None, time=2.0, analysis_time=2.0, fps=30,
+                 onesided=True, nrepeat=True, delete_images=False, make_gif=True):
         """
         Makes an animated gif
 
@@ -3666,6 +3666,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         scales : List[float]; default=None
             List[float] : the phase angles (degrees)
             None -> animate scale
+        isteps : List[int]
+            the png file numbers (let's you pick a subset of images)
+            useful for when you press ``Step``
         time : float; default=2.0
             the runtime of the gif (seconds)
         analysis_time : float; default=2.0
@@ -3678,6 +3681,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             should this gif loop infinitely
         delete_images : bool; default=False
             cleanup the png files at the end
+        make_gif : bool; default=True
+            actually make the gif at the end
 
         Other local variables
         ---------------------
@@ -3722,10 +3727,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if len(scales) != len(phases):
             msg = 'nscales=%s nphases=%s' % (len(scales), len(phases))
             raise ValueError(msg)
+        if isteps is None:
+            isteps = np.linspace(0, len(scales), dtype='int32')
+        assert len(scales) == len(isteps)
 
         png_filenames = []
         fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
-        for i, scale, phase in zip(count(), scales, phases):
+        for i, scale, phase in zip(isteps, scales, phases):
             png_filename = fmt % i
             self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
             self.on_take_screenshot(fname=png_filename, magnify=1)
@@ -3745,18 +3753,36 @@ class GuiCommon2(QMainWindow, GuiCommon):
         except ImportError:
             pass
 
-        if is_imageio and 0:
-            images = []
-            for png_filename in png_filenames:
-                images.append(imageio.imread(png_filename))
-            imageio.mimsave(gif_filename, images, duration=duration,
-                            loop=nrepeat)
-        else:
-            from pyNastran.gui.images2gif import write_gif
-            # duration : frame time
-            write_gif(gif_filename, png_filenames, duration=duration, repeat=nrepeat,
-                      dither=False, nq=0, subRectangles=True,
-                      dispose=None)
+        if make_gif:
+            if is_imageio and 0:
+                images = []
+                for png_filename in png_filenames:
+                    images.append(imageio.imread(png_filename))
+                imageio.mimsave(gif_filename, images, duration=duration,
+                                loop=nrepeat)
+            else:
+                if 0:
+                    from pyNastran.gui.images2gif import write_gif
+                    # duration : frame time
+                    write_gif(gif_filename, png_filenames, duration=duration, repeat=nrepeat,
+                              dither=False, nq=0, subRectangles=True,
+                              dispose=None)
+                else:
+                    with open('make_gif.py', 'w') as pyfile:
+                        pyfile.write('from pyNastran.gui.images2gif import write_gif\n')
+                        pyfile.write('png_filenames = %s\n' % png_filenames)
+                        pyfile.write('write_gif(%r, png_filenames,\n' % gif_filename)
+                        pyfile.write('          duration=%s, repeat=%i,\n' % (duration, nrepeat))
+                        pyfile.write('          dither=False, nq=0, subRectangles=False,\n')
+                        pyfile.write('          dispose=None)\n')
+                    #os.system("python make_gif.py")
+                    import subprocess
+                    subprocess.call('python make_gif.py', shell=False)
+                    #try:
+                        #os.remove('make_gif.py')
+                    #except OSError:
+                        #pass
+
         if delete_images:
             for png_filename in png_filenames:
                 try:
