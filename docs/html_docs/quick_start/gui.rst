@@ -126,7 +126,7 @@ Features
    * additional points may be added with the ``-u`` option
    * attach simplistic custom geometry
 
- * legend is more robust
+ * legend menu
  * clipping customization menu
  * save/load view menu
  * edges flippable from menu
@@ -178,12 +178,13 @@ Some of the results include:
         * normal
         * shell offset
         * PBAR/PBEAM/PBARL/PBEAML type
-        * maximum interior angle
+        * element quality (min/max interior angle, skew angle, taper ratio, area ratio)
 
-     * results (real only)
-
+     * real results
          * stress, strain
          * displacement, eigenvector, temperature, SPC forces, MPC forces, load vector
+     * complex results
+         * displacement, eigenvector
 
    * **Cart3d** ASCII/binary input (\*.tri); ASCII output (\*.triq)
 
@@ -241,6 +242,27 @@ This menu allows you to edit the max/min values of the legend as well as the ori
 number format (e.g. float precision) and deflection scale.  Defaults are stored, so
 they may always be gone back to.  The geometry will update when Apply/OK is clicked.
 OK/Cancel will close the window.
+
+Animation of Displacment/Mode Shapes
+====================================
+
+The animation menu is a sub-menu found on the Legend Menu.  It supports:
+ - Scale Factor
+ - Total Time (sec)
+ - Frames/Second
+ - Resolution Scale
+ - Output Directory
+ - Filename
+ - scale/phase animation
+ - one/two sided animations
+ - infinite looping
+ - delete images
+ - TODO: make gif
+ - TODO: animate time/frequency/loadstep
+ - TODO: progate results based on result locking
+
+You must load the animation menu when a displacement-like result is active.
+You may then change to a scalar result to show during the animation.
 
 
 Picking Results
