@@ -3064,6 +3064,8 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         # transform the grids to the global coordinate system
         xyz_cid0_correct = self.get_xyz_in_coord(dtype=xyz_cid0.dtype, cid=0)
         #self.log.debug('icp_transform = %s' % icp_transform)
+
+        do_checks = False
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
                 continue
@@ -3075,7 +3077,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             #if is_beta and is_origin:
             new = np.dot(xyzi, beta) + coord.origin
             xyz_cid0[inode, :] = new
-            if not np.array_equal(xyz_cid0_correct[inode, :], new):
+            if do_checks and not np.array_equal(xyz_cid0_correct[inode, :], new):
                 msg = ('xyz_cid0:\n%s\n'
                        'xyz_cid0_correct:\n%s\n'
                        'inode=%s' % (xyz_cid0[inode, :], xyz_cid0_correct[inode, :],
@@ -3087,7 +3089,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             #else:
                 #xyz_cid0[inode, :] = xyzi + coord.origin
 
-        if not np.allclose(xyz_cid0, xyz_cid0_correct, atol=atol):
+        if do_checks and not np.allclose(xyz_cid0, xyz_cid0_correct, atol=atol):
             #np.array_equal(xyz_cid, xyz_cid_alt):
             out = self.get_displacement_index_xyz_cp_cd(dtype=xyz_cid0.dtype, sort_ids=True)
             icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
