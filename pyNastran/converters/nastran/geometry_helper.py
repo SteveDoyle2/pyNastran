@@ -481,6 +481,141 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     node_ids.append(suport_id)
         return np.unique(node_ids)
 
+
+
+    def _get_material_arrays(self, model, mids):
+        e11 = np.zeros(mids.shape, dtype='float32')
+        e22 = np.zeros(mids.shape, dtype='float32')
+        e33 = np.zeros(mids.shape, dtype='float32')
+
+        has_mat8 = False
+        has_mat9 = False
+        for umid in np.unique(mids):
+            if umid == 0:
+                continue
+            try:
+                mat = model.materials[umid]
+            except KeyError:
+                print('mids = %s' % mids)
+                print('mids = %s' % model.materials.keys())
+                continue
+                #raise
+            if mat.type == 'MAT1':
+                e11i = e22i = e33i = mat.e
+            elif mat.type == 'MAT8':
+                e11i = e33i = mat.e11
+                e22i = mat.e22
+                has_mat8 = True
+            elif mat.type in ['MAT11', 'MAT3D']:
+                e11i = mat.e1
+                e22i = mat.e2
+                e33i = mat.e3
+                has_mat9 = True
+            else:
+                print('skipping %s' % mat)
+                continue
+                #raise NotImplementedError(mat)
+            #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))
+            i = np.where(umid == mids)[0]
+            e11[i] = e11i
+            e22[i] = e22i
+            e33[i] = e33i
+        return has_mat8, has_mat9, e11, e22, e33
+
+    def get_pressure_array(self, model, load_case):
+        eids = self.element_ids
+
+        # account for scale factors
+        loads2 = []
+        scale_factors2 = []
+        for load in load_case:
+            if isinstance(load, LOAD):
+                scale_factors, loads = load.get_reduced_loads()
+                scale_factors2 += scale_factors
+                loads2 += loads
+            else:
+                scale_factors2.append(1.)
+                loads2.append(load)
+
+        pressures = np.zeros(len(model.elements), dtype='float32')
+
+        iload = 0
+        nloads = len(loads2)
+        show_nloads = nloads > 5000
+        # loop thru scaled loads and plot the pressure
+        for load, scale in zip(loads2, scale_factors2):
+            if show_nloads and iload % 5000 == 0:
+                self.log_debug('  NastranIOv iload=%s/%s' % (iload, nloads))
+            if load.type == 'PLOAD4':
+                #print(load.object_attributes())
+                for elem in load.eids:
+                    #elem = self.model.elements[eid]
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        pressure = load.pressures[0] * scale
+
+                        # single element per PLOAD
+                        #eid = elem.eid
+                        #pressures[eids.index(eid)] = pressure
+
+                        # multiple elements
+                        #for elem in load.eids:
+                        ie = np.searchsorted(eids, elem.eid)
+                        #pressures[ie] += p  # correct; we can't assume model orientation
+                        nz = self.normals[ie, 2]  # considers normal of shell
+                        pressures[ie] += pressure * nz
+
+                    #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(
+                            #load.g34.nid, load.g1.nid)
+                        #r = centroid - p
+            iload += 1
+        return pressures
+
+    def get_load_array(self, model, subcase):
+        found_load = False
+        found_temperature = False
+
+        load_keys = (
+            'LOAD', 'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)',
+            'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)')
+        temperature_keys = (
+            'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)',
+            'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)')
+
+
+        centroidal_pressures = None
+        forces = None
+        spcd = None
+        temperature_key = None
+        temperatures = None
+        for key in load_keys:
+            try:
+                load_case_id = subcase.get_parameter(key)[0]
+            except KeyError:
+                # print('no %s for isubcase=%s' % (key, subcase_id))
+                continue
+            try:
+                load_case = model.loads[load_case_id]
+            except KeyError:
+                self.log.warning('LOAD=%s not found' % load_case_id)
+                continue
+
+            if key == 'LOAD':
+                p0 = np.array([0., 0., 0.], dtype='float32')
+                centroidal_pressures, forces, spcd = self._get_forces_moments_array(
+                    model, p0, load_case_id, include_grav=False)
+                found_load = True
+            elif key in temperature_keys:
+                temperatures = self._get_temperatures_array(model, load_case_id)
+                found_temperature = True
+                temperature_key = key
+            else:
+                raise NotImplementedError(key)
+        temperature_data = (temperature_key, temperatures)
+        load_data = (centroidal_pressures, forces, spcd)
+        return found_load, found_temperature, temperature_data, load_data
+
     def _get_dvprel_ndarrays(self, model, nelements, pids):
         """creates arrays for dvprel results"""
         dvprel_t_init = np.zeros(nelements, dtype='float32')
