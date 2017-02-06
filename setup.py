@@ -40,10 +40,10 @@ if sys.version_info <= (3,):
     except ImportError:
         py2_packages.append('vtk >= 5.10.1')
 
-    #try:  # is this still required?
+    #try:
         #import PIL
         #if PIL.VERSION < '2.7.0':
-            #print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
+            ##print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
             #py2_packages.append('pillow >= 2.7.0')
     #except ImportError:
         #py2_packages.append('pillow >= 2.7.0')
@@ -129,6 +129,13 @@ try:
 except ImportError:
     py_packages.append('docopt == 0.6.2')
 
+try:
+    import imageio
+    if imageio.__version__ < '2.1.2':
+        #print("imageio.version = %r < '2.1.2'" % imageio.__version__)
+        py_packages.append('imageio >= 2.1.2')
+except ImportError:
+    py_packages.append('imageio >= 2.1.2')
 
 #py_packages = [
 #    'numpy >= 1.9.2',
