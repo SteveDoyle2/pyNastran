@@ -399,6 +399,10 @@ MSC_MATRIX_TABLES = [
 AUTODESK_MATRIX_TABLES = [
     b'BELM', b'KELM', b'MELM',
 
+    # testing-remove this
+    'PATRN', 'IDENT', 'RANDM', 'CMPLX',
+    'MPATRN',
+
 ]
 # this will be split later
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
