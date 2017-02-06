@@ -300,6 +300,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 
     b'OUG2T',
     b'AEMONPT',
+
+    # MATPOOL
+    b'MRGGT', b'UEXPT', #b'DELTAK',
 ]
 
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
@@ -318,6 +321,9 @@ NX_MATRIX_TABLES = [
     b'RADAMPG',
     b'EFMFSMS', b'EFMASSS', b'RBMASSS', b'EFMFACS', b'MPFACS', b'MEFMASS', b'MEFWTS',
     b'K4HH', b'KELMP', b'MELMP',
+
+    # MATPOOL
+    b'DELTAK', b'DELTAM', b'RBM0', b'DELTAM0',
 ]
 
 
@@ -1626,6 +1632,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_ibulk()
             elif table_name in [b'CMODEXT']:
                 self._read_cmodext()
+
+            elif table_name in [b'MRGGT', b'UEXPT']:
+                #self._read_matpool_matrix()
+                self._skip_table(self.table_name)
             elif table_name in MATRIX_TABLES:
                 self._read_matrix()
             elif table_name in RESULT_TABLES:
@@ -1737,6 +1747,53 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             raise RuntimeError('tout = %s' % tout)
         return fmt, nfloats, nterms
+
+    def _read_matpool_matrix(self):
+        """reads a MATPOOL matrix"""
+
+        table_name = self._read_table_name(rewind=False, stop_on_failure=True)
+        self.read_markers([-1])
+        data = self._read_record()
+        self.show_data(data, types='if')
+        print('--------------------')
+        print('-2')
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        self.show_data(data, types='s')
+        print('--------------------')
+        print('-3')
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        #self.show_data(data, types='if')
+        nvalues = len(data) // 4
+
+        nwords = 5
+        nnodes = nvalues // nwords
+        #assert nvalues % 3 == 0, nvalues / 3.
+        assert len(data) % 4 == 0, len(data) / 4.
+        print('nvalues = %s' % nvalues)
+        ints = np.fromstring(data, dtype=self.idtype).reshape(nnodes, nwords)
+        floats = np.fromstring(data, dtype=self.fdtype).reshape(nnodes, nwords)
+        print('ints:')
+        if 1:
+            for line, line2 in zip(ints.tolist(), floats.tolist()):
+                print(line, line2)
+                if max(line) > 99999999:
+                    sys.exit()
+        #print('ints:\n%s' % ints)
+        print('--------------------')
+        print('-4')
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+        self.show_data(data, types='if')
+        print('--------------------')
+        print('-5')
+        #self.read_markers([-5, 1, 0])
+        #data = self._read_record()
+        #self.show_data(data, types='ifs')
+        print('--------------------')
+        self.show_ndata(200, types='ifs')
+        sys.exit()
 
     def _read_matrix(self):
         """
