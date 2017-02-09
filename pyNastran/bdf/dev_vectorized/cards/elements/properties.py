@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
 
-from pyNastran.bdf.dev_vectorized.utils import unique2d
+from pyNastran.utils.mathematics import unique2d
 #from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4
 #from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import quad_area_centroid
 #from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid

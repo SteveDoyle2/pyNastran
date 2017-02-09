@@ -7,7 +7,8 @@ import numpy as np
                    #hstack, where, vstack, ones, intersect1d, setdiff1d,
                    #nan, full, ravel, ndarray)
 #from numpy.linalg import norm
-from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
+from pyNastran.utils.mathematics import unique2d
+from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import quad_area_centroid
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid

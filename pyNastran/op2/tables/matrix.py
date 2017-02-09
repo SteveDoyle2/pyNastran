@@ -52,8 +52,10 @@ class Matrix(object):
         f06.write('\n\n')
 
     def __repr__(self):
-        class_name = str(type(self.data)).replace('<class ', '').replace('>', '')
-        msg = 'Matrix[%r]; shape=%s; type=%s; dtype=%s' % (
-            self.name, str(self.data.shape), class_name, self.data.dtype)
+        class_name = str(type(self.data)).replace('<class ', '').replace('>', '').replace("'", '') + ';'
+        header = 'Matrix[%r];' % self.name
+        shape = ' shape=%s;' % str(self.data.shape).replace('L', '')
+        msg = '%-18s %-18s type=%-33s dtype=%s' % (
+            header, shape, class_name, self.data.dtype)
         return msg
 

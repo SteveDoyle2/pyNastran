@@ -1010,7 +1010,8 @@ class OP2_F06_Common(object):
                     raise
 
         for name, matrix in iteritems(self.matrices):
-            msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
+            #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
+            msg.append(str(matrix) + '\n')
         try:
             return ''.join(msg)
         except TypeError:

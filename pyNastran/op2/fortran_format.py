@@ -56,10 +56,10 @@ class FortranFormat(object):
             i - int
             f - float
             s - string
-            d - double (float; 8 bytes)
+            d - double (float64; 8 bytes)
+            q - long long (int64; 8 bytes)
 
             l - long (int; 4 bytes)
-            q - long long (int; int; 8 bytes)
             I - unsigned int (int; 4 bytes)
             L - unsigned long (int; 4 bytes)
             Q - unsigned long long (int; 8 bytes)
@@ -82,10 +82,10 @@ class FortranFormat(object):
             i - int
             f - float
             s - string
-            d - double (float; 8 bytes)
+            d - double (float64; 8 bytes)
+            q - long long (int64; 8 bytes)
 
             l - long (int; 4 bytes)
-            q - long long (int; int; 8 bytes)
             I - unsigned int (int; 4 bytes)
             L - unsigned long (int; 4 bytes)
             Q - unsigned long long (int; 8 bytes)
@@ -104,6 +104,9 @@ class FortranFormat(object):
             endian = self._endian
             assert endian is not None, endian
 
+        for typei in types:
+            assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
+
         if 's' in types:
             strings = unpack(b('%s%is' % (endian, n)), data)
             f.write("strings = %s\n" % str(strings))
@@ -115,7 +118,7 @@ class FortranFormat(object):
             f.write("floats  = %s\n" % str(floats))
         if 'd' in types:
             doubles = unpack(b('%s%id' % (endian, ndoubles)), data[:ndoubles*8])
-            f.write("doubles  = %s\n" % str(doubles))
+            f.write("doubles (float64) = %s\n" % str(doubles))
 
         if 'l' in types:
             longs = unpack(b('%s%il' % (endian, nints)), data)
@@ -128,7 +131,7 @@ class FortranFormat(object):
             f.write("unsigned long = %s\n" % str(longs2))
         if 'q' in types:
             longs = unpack(b('%s%iq' % (endian, ndoubles)), data[:ndoubles*8])
-            f.write("long long = %s\n" % str(longs))
+            f.write("long long (int64) = %s\n" % str(longs))
         return strings, ints, floats
 
     def show_ndata(self, n, types='ifs'):

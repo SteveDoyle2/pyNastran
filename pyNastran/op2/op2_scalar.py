@@ -303,7 +303,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'AEMONPT',
 
     # MATPOOL
-    b'MRGGT', b'UEXPT', #b'DELTAK',
+    #b'MRGGT', b'UEXPT', #b'DELTAK',
 ]
 
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
@@ -323,8 +323,11 @@ NX_MATRIX_TABLES = [
     b'EFMFSMS', b'EFMASSS', b'RBMASSS', b'EFMFACS', b'MPFACS', b'MEFMASS', b'MEFWTS',
     b'K4HH', b'KELMP', b'MELMP',
 
-    # MATPOOL
+    # not-MATPOOL
     b'DELTAK', b'DELTAM', b'RBM0', b'DELTAM0',
+
+    # MATPOOL
+    b'MRGGT', b'UEXPT',
 
     # MATRIX/MATPOOL - testing-remove this
     b'PATRN', b'IDENT', b'RANDM', b'CMPLX',
@@ -1672,9 +1675,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif table_name in [b'CMODEXT']:
                 self._read_cmodext()
 
-            elif table_name in [b'MRGGT', b'UEXPT']:
-                #self._read_matpool_matrix()
-                self._skip_table(self.table_name)
+            #elif table_name in [b'MRGGT', b'UEXPT']:
+                ##self._read_matpool_matrix()
+                #self._skip_table(self.table_name)
             elif table_name in MATRIX_TABLES:
                 self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:
@@ -1800,16 +1803,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         +------+--------------------------------+
         """
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
+        utable_name = table_name.decode('utf-8')
         self.read_markers([-1])
         data = self._read_record()
-        self.show_data(data, types='if')
-        print('--------------------')
-        print('-2')
+        #self.show_data(data, types='if')
+        #print('--------------------')
+        #print('-2')
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        self.show_data(data, types='s')
-        print('--------------------')
-        print('-3')
+        #self.show_data(data, types='s')
+        #print('--------------------')
+        #print('-3')
         self.read_markers([-3, 1, 0])
         data = self._read_record()
 
@@ -1819,7 +1823,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         nnodes = nvalues // nwords
         #assert nvalues % 3 == 0, nvalues / 3.
         assert len(data) % 4 == 0, len(data) / 4.
-        print('nvalues = %s' % nvalues)
+        #self.log.debug('nvalues = %s' % nvalues)
         #header_ints = np.fromstring(data[:3*12], dtype=self.idtype)
         #assert np.array_equal(header_ints[:3], [114, 1, 120]), header_ints
 
@@ -1842,9 +1846,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #   12     number of columns in the G set (only necessary for matrix
         #                                          shape 9)
         matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
+        matrix_name = matrix_name.strip()
         #matrix_name = header[3]
         #matrix_shape = header[5]
-        print('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, is_phase=%s, junk2=%s, ncols_gset=%s' % (
+        self.log.info('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, is_phase=%s, junk2=%s, ncols_gset=%s' % (
             matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset))
 
         if tin > 2 or tout > 2:
@@ -1860,15 +1865,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             nfields = 2
             idtype = self.long_dtype
             fdtype = self.double_dtype
-            raise RuntimeError(dtype)
+            msg = '%s is not supported' % dtype
+            #self.log.error(msg)
+            #raise RuntimeError(msg)
         elif tout == 3:
             dtype = 'complex64'
             nfields = 2
-            raise RuntimeError(dtype)
+            msg = '%s is not supported' % dtype
+            self.log.error(msg)
+            raise RuntimeError(msg)
         elif tout == 4:
             dtype = 'complex128'
             nfields = 4
-            raise RuntimeError(dtype)
+            msg = '%s is not supported' % dtype
+            self.log.error(msg)
+            raise RuntimeError(msg)
         else:
             #raise RuntimeError('tout = %s' % tout)
             dtype = '???'
@@ -1876,19 +1887,29 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset)
             self.log.warning(msg)
             raise RuntimeError(msg)
-
+        #self.log.info('dtype = %r' % dtype)
         is_symmetric = matrix_shape == 6
         is_phase_flag = is_phase > 0
         #self.show_data(data[48:200], types='ifd')
 
         m = Matrix(table_name, is_matpool=True)
-        self.matrices[table_name.decode('utf-8')] = m
+        self.matrices[utable_name] = m
 
-        ints = np.fromstring(data[48:], dtype=idtype)
-        floats = np.fromstring(data[48:], dtype=fdtype)
+        if 0:
+            # works for float32
+            ints = np.fromstring(data[48:], dtype=idtype)
+            floats = np.fromstring(data[48:], dtype=fdtype)
+            temp_ints = ints
+        else:
+            # works for float32, float64
+            temp_ints = np.fromstring(data[48:], dtype=self.idtype)
+            ints = np.fromstring(data[48:], dtype=idtype)
+            floats = np.fromstring(data[48:], dtype=fdtype)  # highly questionable on float64s
+
+
 
         # find the first index with ()-1,-1)
-        iminus1 = np.where(ints[:-1] == -1)[0]
+        iminus1 = np.where(temp_ints[:-1] == -1)[0]
         double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
 
         # the field after our stop
@@ -1899,83 +1920,205 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         # add on a 0 to the beginning to account for the starting position
         # istart defines icol
         istart = np.hstack([0, istop[:-1] + 2])
-        print('iminus1 =', iminus1)
-        print('double_minus1 =', list(double_minus1))
-        print('istop =', istop)
-        print('istart =', istart)
+        #print('iminus1 =', iminus1)
+        #print('double_minus1 =', list(double_minus1))
+        #print('istop =', istop)
+        #print('istart =', istart)
 
-        cols = ints[istart]
-        rows = ints[istart+1]
-        print('cols =', cols.tolist())
-        print('rows =', rows.tolist())
-        cols -= 1
-        #rows -= 1
+        col_nids_short = temp_ints[istart]
+        col_dofs_short = temp_ints[istart+1]
+        #print('col_nids_short =', col_nids_short.tolist())
+        #print('col_dofs_short =', col_dofs_short.tolist())
 
-        gci = []
+        #gci = []
         gcj = []
+        row_nids = []
+        row_dofs = []
+        col_nids = []
+        col_dofs = []
         reals = []
-        for icol, irow, istarti, istopi in zip(cols, rows, istart + 2, istop - 1):
-            print('irow=%s icol=%s' % (irow, icol))
+        for col_nidi, col_dofi, istarti, istopi in zip(col_nids_short, col_dofs_short, istart + 2, istop - 1):
 
-            i = np.arange(istarti, istopi, step=3, dtype='int32') #[:10]
+            ## TODO: preallocate arrays
+            if dtype == 'float32':
+                i = np.arange(istarti, istopi, step=3, dtype='int32') #[:10]
+                #print('col_nidi=%s col_dofi=%s' % (col_nidi, col_dofi))
 
-            # the column index?; [1, 2, ..., 43]
-            # we subtract 1, so it's 0-based
-            gcii = ints[i] - 1
-            #gcji = ints[i+1] # the row index?; [0, 0, ..., 0.]
-            ni = len(i)
-            gcji = np.ones(ni, dtype='int32') * icol
-            real = floats[i+2]
-            #print('gcii =%s' % gcii.tolist())
-            #print('gcji =%s' % gcji.tolist())
-            print('real=%s' % real.tolist())
-            gci.append(gcii)
-            gcj.append(gcji)
+                # the row index; [1, 2, ..., 43]
+                # we subtract 1, so it's 0-based
+                row_nid = ints[i] #- 1
+
+                # the row_dof; [0, 0, ..., 0.]
+                row_dof = ints[i+1]
+                udof = np.unique(row_dof)
+                for udofi in udof:
+                    assert udofi in [0, 1, 2, 3, 4, 5, 6], udof
+
+                ni = len(i)
+                col_nid = np.ones(ni, dtype='int32') * col_nidi
+                col_dof = np.ones(ni, dtype='int32') * col_dofi
+                real = floats[i+2]
+
+            elif dtype == 'float64':
+                #print('col_nidi=%s col_dofi=%s' % (col_nidi, col_dofi))
+                datai = data[48+(istarti*4) : 48+(istopi*4)+4]
+                #self.show_data(datai, types='iqd')
+                #delta = (istopi - istarti + 9)
+                #nvals = delta // 2
+                #if delta % 2 != 0:
+                    #msg = 'istart=%s istop=%s delta=%s delta/2=%s' % (
+                        #istarti, istopi, delta, delta % 2)
+                    #raise RuntimeError(msg)
+
+                irow = np.arange(istarti, istopi, step=4, dtype='int32')
+                idof = irow + 1
+                assert len(datai) % 8 == 0, len(datai) / 8
+                real = np.fromstring(datai, dtype=fdtype)[1::2]
+                #print('real =', real)
+                assert len(irow) == len(real), real
+                #print('i =', i)
+
+
+                # the row index; [1, 2, ..., 43]
+                # we subtract 1, so it's 0-based
+                row_nidi = temp_ints[irow] #- 1
+
+                # the dof; [0, 0, ..., 0.]
+                row_dof = temp_ints[idof]
+                udof = np.unique(dof)
+                for udofi in udof:
+                    assert udofi in [0, 1, 2, 3, 4, 5, 6], np.asarray(udof, dtype='int32').tolist()
+
+                ni = len(irow)
+                col_nid = np.ones(ni, dtype='int32') * col_nidi
+                col_dof = np.ones(ni, dtype='int32') * col_dofi
+
+                #print('row_nid =%s' % row_nid.tolist())
+                #print('gcji =%s' % gcji.tolist())
+                #print('real=%s' % real.tolist())
+            else:
+                raise NotImplementedError(dtype)
+            row_nids.append(row_nid)
+            row_dofs.append(row_dof)
+            col_nids.append(col_nid)
+            col_dofs.append(col_dof)
+            #gcj.append(gcji)
             reals.append(real)
-            print()
+            #print()
+            #break
 
-        #print('hstack0...')
-        gci_array = np.hstack(gci)
-        #print('hstack1...')
-        gcj_array = np.hstack(gcj)
-        #print('hstack2...')
+        row_nids_array = np.hstack(row_nids)
+        row_dofs_array = np.hstack(row_dofs)
+
+        col_nids_array = np.hstack(col_nids)
+        col_dofs_array = np.hstack(col_dofs)
         real_array = np.hstack(reals)
-        mrows = len(np.unique(gci_array))
-        ncols = len(np.unique(gcj_array))
 
-        ncols = len(np.unique(gci_array))
-        mrows = len(np.unique(gcj_array))
-        print('gci_array =', np.unique(gci_array))
-        print('gcj_array =', np.unique(gcj_array))
+        #mrows = len(np.unique(gci_array))
+        #ncols = len(np.unique(gcj_array))
 
-        print('making coo_matrix')
-        matrix = coo_matrix((real_array, (gci_array, gcj_array)),
+        # not 100% on these, they might be flipped
+        #print('row_nids_array =', np.unique(row_nids_array))
+        #print('gcj_array =', np.unique(gcj_array))
+
+        # this is way slower than it should be
+        grids1 = col_nids_array
+        comps1 = col_dofs_array
+
+        grids2 = row_nids_array
+        comps2 = row_dofs_array
+        assert len(grids1) == len(grids2), 'ngrids1=%s ngrids2=%s' % (len(grids1), len(grids2))
+
+        j1, j2 = self.grids_comp_array_to_index(grids1, comps1, grids2, comps2)
+        assert len(j1) == len(j2), 'nj1=%s nj2=%s' % (len(j1), len(j2))
+        assert len(grids1) == len(real_array), 'ngrids1=%s nreals=%s' % (len(j1), len(real_array))
+
+        mrows = len(np.unique(j1))
+        ncols = len(np.unique(j2))
+
+        #print('making coo_matrix')
+        matrix = coo_matrix((real_array, (j1, j2)),
                             shape=(mrows, ncols), dtype=dtype)
+        m.data = matrix
+        m.col_nid = col_nids_array
+        m.col_dof = col_dofs_array
+        m.row_nid = row_nids_array
+        m.row_dof = row_dofs_array
+
         #print('matrix', matrix)
 
-        print('--------------------')
-        print('-4')
+        #print('--------------------')
+        #print('-4')
         self.read_markers([-4, 1, 0])
         data = self._read_record()
         #self.show_data(data, types='ifd')
         #asdf
-        print('--------------------')
-        print('-5')
+        #print('--------------------')
+        #print('-5')
         self.read_markers([-5, 1, 0])
 
         #data = self._read_record()
         if len(data) == 12:
-            print("returning from -5")
+            #print("returning from -5")
             self.read_markers([0])
-            self.show_ndata(200, types='ifs')
-            #adf
+            #self.show_ndata(24, types='is')
             return
 
         #self.show_data(data, types='ifs')
-        print('--------------------')
-        self.show_ndata(200, types='ifs')
+        #print('--------------------')
+        #self.show_ndata(200, types='ifs')
         #sys.exit()
         #aaa
+
+    def grids_comp_array_to_index(self, grids1, comps1, grids2, comps2):
+        """maps the dofs"""
+        #from pyNastran.utils.mathematics import unique2d
+        a = np.vstack([grids1, comps1]).T
+        b = np.vstack([grids2, comps2]).T
+        #print('grids2 =', grids2)
+        #print('comps2 =', comps2)
+        from itertools import count
+        #c = np.vstack([a, b])
+        #assert c.shape[1] == 2, c.shape
+        #urows = unique2d(c)
+        #urows = c
+
+        nid_comp_to_dof_index = {}
+        #dof_index_to_nid_comp = {}
+        j = 0
+        #print('a')
+        for (nid, dof) in a.tolist():
+            key = (int(nid), int(dof))
+            #print(key)
+            if key not in nid_comp_to_dof_index:
+                nid_comp_to_dof_index[(nid, dof)] = j
+                #dof_index_to_nid_comp[j] = (nid, dof)
+                j += 1
+        #print('b')
+        #print('b =', b)
+        for (nid, dof) in b.tolist():
+            #print(nid, type(nid))
+            #print(dof, type(dof))
+            key = (int(nid), int(dof))
+            #print(key)
+            if key not in nid_comp_to_dof_index:
+                nid_comp_to_dof_index[(nid, dof)] = j
+                #dof_index_to_nid_comp[j] = (nid, dof)
+                j += 1
+
+
+        #print('reverse')
+        #nid_comp_to_dof_index, dof_index_to_nid_comp
+        ja = np.zeros(grids1.shape, dtype='int32')
+        jb = np.zeros(grids2.shape, dtype='int32')
+        for i, (nid, dof) in zip(count(), a.tolist()):
+            #print(nid, dof)
+            ja[i] = nid_comp_to_dof_index[(nid, dof)]
+        for i, (nid, dof) in zip(count(), b.tolist()):
+            #print(nid, dof)
+            jb[i] = nid_comp_to_dof_index[(nid, dof)]
+
+        return ja, jb
 
     def _read_matrix(self, table_name):
         """
@@ -2007,6 +2150,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             try:
                 self._read_matpool_matrix()
             except:
+                #raise
                 self._goto(i)
                 self._skip_table(self.table_name)
         #else:
@@ -2109,8 +2253,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             #raise RuntimeError('tout = %s' % tout)
             dtype = '???'
-            msg = 'unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
-                matrix_num, form, mrows, ncols, tout, nvalues, g)
+            msg = 'unexpected tout for %s: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
+                table_name, matrix_num, form, mrows, ncols, tout, nvalues, g)
             self.log.warning(msg)
             raise RuntimeError(msg)
 
