@@ -20,6 +20,7 @@ from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
 from pyNastran.op2.tables.grid_point_weight import GridPointWeight
+from pyNastran.op2.tables.matrix import Matrix
 
 #============================
 
@@ -1170,7 +1171,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 'name' : name,
                 'cp' : cp,
                 'cd' : cd,
-                'xyz' : [x,y,z],
+                'xyz' : [x, y, z],
                 'comps' : comps,
             }]
 
@@ -1253,7 +1254,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #   indices above out[3] are off by +2 because of the 2 field response_label
             internal_id = out[0]
             dresp_id = out[1]
-            Type = out[2]
+            response_type = out[2]
             response_label = out[3].strip()
             # -1 for 2 field wide response_label
             region = out[4]
@@ -1261,7 +1262,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             type_flag = out[12]  # no meaning per MSC DMAP 2005
             seid = out[13]
 
-            if Type == 1:
+            if response_type == 1:
                 #                                                  -----    WEIGHT RESPONSE    -----
                 #     ---------------------------------------------------------------------------------------------------------------------------
                 #          INTERNAL    DRESP1    RESPONSE     ROW       COLUMN         LOWER          INPUT         OUTPUT          UPPER
@@ -1287,8 +1288,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #dunno_11 = out[11]
                 #dunno_12 = out[12]
                 #dunno_13 = out[13]
-                #msg = 'WEIGHT - Type=%r response_label=%r row_id=%r column_id=%r 6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
-                    #Type, response_label, row_id, column_id, dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13)
+                #msg = 'WEIGHT - response_type=%r response_label=%r row_id=%r column_id=%r 6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
+                    #response_type, response_label, row_id, column_id, dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13)
                 #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
                 #print(out)
                 msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
@@ -1298,14 +1299,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                                             row_id, column_id)
                 #print(msg)
                 #self.log.debug(msg)
-            elif Type == 5:  # DISP
+            elif response_type == 5:  # DISP
                 # out = (1, 101, 5, 'DISP1   ', 101, 1, 3, 0, 1, 0, 0, 0, 0, 0)
 
                 #print(out[6:])
                 # (3,   0,  1,    0,   0,   0,   0,   0)
                 # (???, NA, comp, ???, ???, ???, ???, ???)
                 pass
-            elif Type == 6:  # STRESS
+            elif response_type == 6:  # STRESS
                 #                                                 -----    STRESS RESPONSES    -----
                 #     ---------------------------------------------------------------------------------------------------------------------------
                 #        INTERNAL   DRESP1   RESPONSE   ELEMENT    VIEW    COMPONENT      LOWER         INPUT        OUTPUT         UPPER
@@ -1315,23 +1316,23 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 # (21, 209, 6, 'S09L    ', 30, 1011, 17, 0, 1447476, 0, 0, 0, 0, 0)
                 stress_code = out[6]
                 pid = out[8]
-                msg = 'STRESS - Type=%r label=%r region=%s subcase=%s stress_code=%s pid=%s' % (
-                    Type, response_label, region, subcase, stress_code, pid)
+                msg = 'STRESS - response_type=%r label=%r region=%s subcase=%s stress_code=%s pid=%s' % (
+                    response_type, response_label, region, subcase, stress_code, pid)
 
-            #elif Type == 5:  # DISP
+            #elif response_type == 5:  # DISP
                 #pass
-            #elif Type == 7:  # STRAIN
+            #elif response_type == 7:  # STRAIN
                 #pass
-            elif Type == 10:  # CSTRESS
+            elif response_type == 10:  # CSTRESS
                 stress_code = out[6]
                 ply = out[7]
                 pid = out[8]  # is this element id?
                 msg = 'CSTRESS - label=%r region=%s subcase=%s stress_code=%s ply=%s pid=%s' % (
                     response_label, region, subcase, stress_code, ply, pid)
                 #print(msg)
-            #elif Type == 10:  # CSTRAIN
+            #elif response_type == 10:  # CSTRAIN
                 #pass
-            elif Type == 24:  # FRSTRE
+            elif response_type == 24:  # FRSTRE
                 #8 ICODE I Stress item code
                 #9 UNDEF None
                 #10 ELID I Element identification number
@@ -1340,13 +1341,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #DRESP1.
                 #Value is -1 to -6, for SUM, AVG, SSQ,
                 pass
-            elif Type == 28:  # RMSACCL
+            elif response_type == 28:  # RMSACCL
                 #8 COMP I RMS Acceleration component
                 #9 RANDPS I RANDPS entry identification number
                 #10 GRID I Grid identification number
                 #11 DMFREQ RS Dummy frequency for internal use
                 pass
-            elif Type == 84:  # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
+            elif response_type == 84:  # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
                 out = unpack(self._endian + 'iii 8s iii fff i fff', data)
                 mode = out[6]
                 mach = out[7]
@@ -1361,8 +1362,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #print(msg)
                 #self.log.debug(msg)
             else:
-                self.log.debug('R1TABRG response Type=%s not supported' % Type)
-                #raise NotImplementedError(Type)
+                self.log.debug('R1TABRG response response_type=%s not supported' % response_type)
+                #raise NotImplementedError(response_type)
             assert len(out) == 14, len(out)
         #self.response1_table[self._count] = out
         return ndata
@@ -1791,6 +1792,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Reads a MATPOOL matrix
 
         MATPOOL matrices are always sparse
+
+        +------+--------------------------------+
+        | Form | Meaning                        |
+        +======+================================+
+        |  1   | Square                         |
+        +------+--------------------------------+
         """
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
@@ -1805,6 +1812,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         print('-3')
         self.read_markers([-3, 1, 0])
         data = self._read_record()
+
         nvalues = len(data) // 4
 
         nwords = 5
@@ -1845,12 +1853,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if tout == 1:
             dtype = 'float32'
             nfields = 1
+            idtype = self.idtype
             fdtype = self.fdtype
         elif tout == 2:
             dtype = 'float64'
             nfields = 2
             idtype = self.long_dtype
             fdtype = self.double_dtype
+            raise RuntimeError(dtype)
         elif tout == 3:
             dtype = 'complex64'
             nfields = 2
@@ -1871,94 +1881,101 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         is_phase_flag = is_phase > 0
         #self.show_data(data[48:200], types='ifd')
 
-        m = Matrix(table_name)
+        m = Matrix(table_name, is_matpool=True)
         self.matrices[table_name.decode('utf-8')] = m
 
-        @staticmethod
-        def break_by_minus1(data):
-            pass
-
-        ints = np.fromstring(data[48:], dtype=self.idtype)
+        ints = np.fromstring(data[48:], dtype=idtype)
         floats = np.fromstring(data[48:], dtype=fdtype)
-        #longs = np.fromstring(data[48:], dtype=self.long_dtype)
-        #print('longs =', longs.tolist())
-        assert np.array_equal(ints[-4:], [-1, -1, -1, -1]), ints[-4:]
 
-        if 1:
-            # include the end -1 pair
-            iminus1 = np.where(ints == -1)[0]
-            double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
-            istop = iminus1[:-2][double_minus1]
-        else:
-            # don't include the end -1 pair
-            iminus1 = np.where(ints[:-2] == -1)[0]
-            double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
-            print('iminus1 =', iminus1)
-            print('double_minus1 =', list(double_minus1))
-            istop = iminus1[:-2][double_minus1]
+        # find the first index with ()-1,-1)
+        iminus1 = np.where(ints[:-1] == -1)[0]
+        double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
 
-        # we stack a 1 on to account for the first index
-        # we start at 148 because that's what we parsed above
-        istart = np.hstack([48, istop[:-1] + 2])
+        # the field after our stop
+        # we'll handle the off by 1 later with arange
+        istop = iminus1[:-2][double_minus1]
 
-        print('istop  =', list(istop))
-        print('istart =', list(istart))
+        # 2 fields after is the start position
+        # add on a 0 to the beginning to account for the starting position
+        # istart defines icol
+        istart = np.hstack([0, istop[:-1] + 2])
+        print('iminus1 =', iminus1)
+        print('double_minus1 =', list(double_minus1))
+        print('istop =', istop)
+        print('istart =', istart)
 
-        assert len(istart) == len(istop)
-        from itertools import count
-        for i, istarti, istopi in zip(count(), istart, istop):
+        cols = ints[istart]
+        rows = ints[istart+1]
+        print('cols =', cols.tolist())
+        print('rows =', rows.tolist())
+        cols -= 1
+        #rows -= 1
 
-            if tout == 1:
-                self.show_data(data[4*istarti:4*istart[i+1]], types='if')
-            else:
-                raise NotImplementedError(dtype)
+        gci = []
+        gcj = []
+        reals = []
+        for icol, irow, istarti, istopi in zip(cols, rows, istart + 2, istop - 1):
+            print('irow=%s icol=%s' % (irow, icol))
 
-            nzeros = istopi - istarti
-            row = np.zeros(nzeros, dtype=dtype)
+            i = np.arange(istarti, istopi, step=3, dtype='int32') #[:10]
 
-            if 0:
-                icol = ints[istarti + 0]
-                irow_start = ints[istarti + 1]
-                irow_stop = ints[istarti + 2]
-                val = floats[1]
-                assert irow_stop - irow_start < 100, 'icol=%s irow_stop=%s irow_start=%s' % (icol, irow_stop, irow_start)
-                print('istarti=%s icol=%s irow_start=%s irow_stop=%s' % (istarti, icol, irow_start, irow_stop))
-                irow = np.arange(irow_start, irow_stop + 1, dtype='int32')
-            else:
-                icol = ints[istarti + 0]
-                irow_start = ints[istarti + 1]
-                val = floats[1]
-                print('istarti=%s icol=%s irow=%s val=%s' % (istarti, icol, irow_start, val))
+            # the column index?; [1, 2, ..., 43]
+            # we subtract 1, so it's 0-based
+            gcii = ints[i] - 1
+            #gcji = ints[i+1] # the row index?; [0, 0, ..., 0.]
+            ni = len(i)
+            gcji = np.ones(ni, dtype='int32') * icol
+            real = floats[i+2]
+            #print('gcii =%s' % gcii.tolist())
+            #print('gcji =%s' % gcji.tolist())
+            print('real=%s' % real.tolist())
+            gci.append(gcii)
+            gcj.append(gcji)
+            reals.append(real)
+            print()
 
-            print('----------------')
-            if i == 5:
-                sys.exit()
+        #print('hstack0...')
+        gci_array = np.hstack(gci)
+        #print('hstack1...')
+        gcj_array = np.hstack(gcj)
+        #print('hstack2...')
+        real_array = np.hstack(reals)
+        mrows = len(np.unique(gci_array))
+        ncols = len(np.unique(gcj_array))
 
+        ncols = len(np.unique(gci_array))
+        mrows = len(np.unique(gcj_array))
+        print('gci_array =', np.unique(gci_array))
+        print('gcj_array =', np.unique(gcj_array))
 
-
-
-        floats = np.fromstring(data[48:], dtype=self.ddtype)#.reshape(nnodes, nwords)
-        print('ints:')
-        if 1:
-            for line, line2 in zip(ints.tolist(), floats.tolist()):
-                print(line, line2)
-                if max(line) > 99999999:
-                    sys.exit()
-        #print('ints:\n%s' % ints)
-        self.show_data(data, types='ifd')
+        print('making coo_matrix')
+        matrix = coo_matrix((real_array, (gci_array, gcj_array)),
+                            shape=(mrows, ncols), dtype=dtype)
+        #print('matrix', matrix)
 
         print('--------------------')
         print('-4')
         self.read_markers([-4, 1, 0])
         data = self._read_record()
+        #self.show_data(data, types='ifd')
+        #asdf
         print('--------------------')
         print('-5')
-        #self.read_markers([-5, 1, 0])
+        self.read_markers([-5, 1, 0])
+
         #data = self._read_record()
+        if len(data) == 12:
+            print("returning from -5")
+            self.read_markers([0])
+            self.show_ndata(200, types='ifs')
+            #adf
+            return
+
         #self.show_data(data, types='ifs')
         print('--------------------')
         self.show_ndata(200, types='ifs')
-        sys.exit()
+        #sys.exit()
+        #aaa
 
     def _read_matrix(self, table_name):
         """
@@ -1980,20 +1997,24 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._skip_table(table_name)
             return
 
-        enable_matpool = True
-        if enable_matpool:
+        #enable_matpool = True
+        #if enable_matpool:
+        try:
+            self._read_matrix_mat()
+        except:
+            # read matpool matrix
+            self._goto(i)
             try:
-                self._read_matrix_mat()
-            except:
-                self._goto(i)
-                #self._skip_table(self.table_name)
                 self._read_matpool_matrix()
-        else:
-            try:
-                self._read_matrix_mat()
             except:
                 self._goto(i)
                 self._skip_table(self.table_name)
+        #else:
+            #try:
+                #self._read_matrix_mat()
+            #except:
+                #self._goto(i)
+                #self._skip_table(self.table_name)
 
     def _read_matrix_mat(self):
         """
@@ -2517,10 +2538,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             markers = self.get_nmarkers(1, rewind=True)
 
     def _read_extdb(self):
-        """
+        r"""
         fails if a streaming block:
          - nx_spike\extse04c_0.op2
-          """
+        """
         self.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.is_debug_file:
@@ -2554,10 +2575,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         marker_end = self.get_marker1(rewind=False)
 
     def _read_cmodext(self):
-        """
+        r"""
         fails if a streaming block???:
          - nx_spike\mnf16_0.op2
-          """
+        """
         self.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.is_debug_file:
@@ -3012,34 +3033,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.obj = None
         if hasattr(self, 'subtable_name'):
             del self.subtable_name
-
-
-class Matrix(object):
-    def __init__(self, name):
-        self.name = name
-        self.data = None
-
-    def write(self, f06, print_full=True):
-        f06.write(str(self) + '\n')
-
-        matrix = self.data
-        if isinstance(matrix, coo_matrix):
-            from pyNastran.utils import object_attributes
-            if print_full:
-                for row, col, value in zip(matrix.row, matrix.col, matrix.data):
-                    f06.write("(%i, %i) %s\n" % (row, col, value))
-            else:
-                f06.write(str(matrix))
-        else:
-            f06.write(str(matrix))
-            print('WARNING: matrix type=%s does not support writing' % type(matrix))
-        f06.write('\n\n')
-
-    def __repr__(self):
-        class_name = str(type(self.data)).replace('<class ', '').replace('>', '')
-        msg = 'Matrix[%r]; shape=%s; type=%s; dtype=%s' % (
-            self.name, str(self.data.shape), class_name, self.data.dtype)
-        return msg
 
 
 def main():  # pragma: no cover
