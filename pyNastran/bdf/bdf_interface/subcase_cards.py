@@ -452,8 +452,8 @@ class SET(CaseControlCard):
         super(SET, self).__init__()
         self.set_id = int(set_id)
 
-        values2 = expand_thru_case_control(values)
-        self.value = values2
+        #values2 = expand_thru_case_control(values)
+        self.value = values
 
     @property
     def key(self):
@@ -512,7 +512,7 @@ class SET(CaseControlCard):
 
     def __repr__(self):
         """see `write`"""
-        return write_set(self.values, self.set_id)
+        return write_set(self.value, self.set_id)
 
 class SETMC(SET):
     type = 'SETMC'

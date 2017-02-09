@@ -526,15 +526,29 @@ class CaseControlDeck(object):
             options = []
             param_type = 'STRING-type'
         elif line_upper.startswith('SET ') and equals_count == 1:
-            value = SET.add_from_case_control(line_upper, lines, i)
-            key = value.key
-            options = None
-            param_type = 'OBJ-type'
+            obj = SET.add_from_case_control(line_upper, lines, i)
+            #if 0:
+                #key = obj.key
+                #options = None
+                #value = obj
+                #param_type = 'OBJ-type'
+            #else:
+            key = obj.key
+            options = obj.set_id
+            value = obj.value
+            param_type = 'SET-type'
         elif line_upper.startswith('SETMC ') and equals_count == 1:
-            value = SETMC.add_from_case_control(line_upper, lines, i)
+            obj = SETMC.add_from_case_control(line_upper, lines, i)
+            #if 0:
+                #key = obj.key
+                #options = None
+                #value = obj
+                #param_type = 'OBJ-type'
+            #else:
             key = value.key
-            options = None
-            param_type = 'OBJ-type'
+            options = obj.set_id
+            value = obj.value
+            param_type = 'SET-type'
 
         #elif line_upper.startswith(CHECK_CARD_NAMES):
             #if '(' in line:
