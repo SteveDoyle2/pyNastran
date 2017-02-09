@@ -335,7 +335,7 @@ class CHEXA8(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         nodes = self.node_ids
         faces = {
@@ -581,7 +581,7 @@ class CHEXA20(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20 = self.node_ids
         faces = {
@@ -833,7 +833,7 @@ class CPENTA6(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         nodes = self.node_ids
         faces = {
@@ -1205,7 +1205,7 @@ class CPENTA15(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = self.node_ids
         faces = {
@@ -1383,7 +1383,7 @@ class CPYRAM5(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         nodes = self.node_ids
         faces = {
@@ -1562,7 +1562,7 @@ class CPYRAM13(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         node_ids = self.node_ids
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13 = node_ids
@@ -1668,7 +1668,7 @@ class CTETRA4(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         nodes = self.node_ids
         faces = {
@@ -1695,7 +1695,7 @@ class CTETRA4(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         nodes = self.node_ids
         faces = {
@@ -1979,7 +1979,7 @@ class CTETRA10(SolidElement):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = self.node_ids
         faces = {

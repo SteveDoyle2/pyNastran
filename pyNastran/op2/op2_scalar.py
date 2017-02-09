@@ -324,6 +324,10 @@ NX_MATRIX_TABLES = [
 
     # MATPOOL
     b'DELTAK', b'DELTAM', b'RBM0', b'DELTAM0',
+
+    # MATRIX/MATPOOL - testing-remove this
+    b'PATRN', b'IDENT', b'RANDM', b'CMPLX',
+    b'MPATRN', b'MIDENT', b'MRANDM', b'MCMPLX',
 ]
 
 
@@ -404,11 +408,6 @@ MSC_MATRIX_TABLES = [
 ]
 AUTODESK_MATRIX_TABLES = [
     b'BELM', b'KELM', b'MELM',
-
-    # testing-remove this
-    'PATRN', 'IDENT', 'RANDM', 'CMPLX',
-    'MPATRN',
-
 ]
 # this will be split later
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
@@ -420,6 +419,41 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     """
     Defines an interface for the Nastran OP2 file.
     """
+    @property
+    def total_effective_mass_matrix(self):
+        """6x6 matrix"""
+        return self.matrices['EFMFSMS']
+
+    @property
+    def effective_mass_matrix(self):
+        """6x6 matrix"""
+        return self.matrices['EFMASSS']
+
+    @property
+    def rigid_body_mass_matrix(self):
+        """6x6 matrix"""
+        return self.matrices['RBMASS']
+    @property
+
+    def modal_effective_mass_fraction(self):
+        """6xnmodes matrix"""
+        return self.matrices['EFMFACS']#.dataframe
+
+    @property
+    def modal_participation_factors(self):
+        """6xnmodes matrix"""
+        return self.matrices['MPFACS']#.dataframe
+
+    @property
+    def modal_effective_mass(self):
+        """6xnmodes matrix"""
+        return self.matrices['MEFMASS']#.dataframe
+
+    @property
+    def modal_effective_weight(self):
+        """6xnmodes matrix"""
+        return self.matrices['MEFWTS']#.dataframe
+
     def set_as_nx(self):
         self.is_nx = True
         self.is_msc = False
@@ -1641,13 +1675,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #self._read_matpool_matrix()
                 self._skip_table(self.table_name)
             elif table_name in MATRIX_TABLES:
-                self._read_matrix()
+                self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:
                 self._read_results_table()
             elif self.skip_undefined_matrices:
-                self._read_matrix()
+                self._read_matrix(table_name)
             elif table_name.strip() in self.additional_matrices:
-                self._read_matrix()
+                self._read_matrix(table_name)
             else:
                 msg = 'geom/results split: %r\n\n' % table_name
                 msg += 'If you have matrices that you want to read, see:\n'
@@ -1687,7 +1721,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.show_data(data)
         #aaaa
 
-    def _skip_matrix(self):
+    def _skip_matrix_mat(self):
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
         data = self._skip_record()
@@ -1753,8 +1787,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return fmt, nfloats, nterms
 
     def _read_matpool_matrix(self):
-        """reads a MATPOOL matrix"""
+        """
+        Reads a MATPOOL matrix
 
+        MATPOOL matrices are always sparse
+        """
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
         data = self._read_record()
@@ -1768,7 +1805,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         print('-3')
         self.read_markers([-3, 1, 0])
         data = self._read_record()
-        #self.show_data(data, types='if')
         nvalues = len(data) // 4
 
         nwords = 5
@@ -1776,8 +1812,132 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #assert nvalues % 3 == 0, nvalues / 3.
         assert len(data) % 4 == 0, len(data) / 4.
         print('nvalues = %s' % nvalues)
-        ints = np.fromstring(data, dtype=self.idtype).reshape(nnodes, nwords)
-        floats = np.fromstring(data, dtype=self.fdtype).reshape(nnodes, nwords)
+        #header_ints = np.fromstring(data[:3*12], dtype=self.idtype)
+        #assert np.array_equal(header_ints[:3], [114, 1, 120]), header_ints
+
+        import struct
+        header = struct.unpack('3i 8s 7i', data[:48]) # 48=4*12
+        assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
+
+        # ncols_gset is needed for form=9
+        #  list of header values:
+        #    4:5   matrix name
+        #    6     place holder
+        #    7     matrix shape (1 = square, 2 or 9 = rectangular, 6 = symmetric)
+        #    8     input type flag (1 = single, 2 = double, 3 = complex single,
+        #                           4 = complex double)
+        #    9     output type flag (0 = precision set by system cell,
+        #                            1 = single, 2 = double, 3 = complex single,
+        #                            4 = complex double)
+        #   10     complex flag (0 = real/imaginary, >0 = magnitude/phase)
+        #   11     place holder
+        #   12     number of columns in the G set (only necessary for matrix
+        #                                          shape 9)
+        matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
+        #matrix_name = header[3]
+        #matrix_shape = header[5]
+        print('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, is_phase=%s, junk2=%s, ncols_gset=%s' % (
+            matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset))
+
+        if tin > 2 or tout > 2:
+            raise RuntimeError('complex matrices are not supported')
+
+        if tout == 1:
+            dtype = 'float32'
+            nfields = 1
+            fdtype = self.fdtype
+        elif tout == 2:
+            dtype = 'float64'
+            nfields = 2
+            idtype = self.long_dtype
+            fdtype = self.double_dtype
+        elif tout == 3:
+            dtype = 'complex64'
+            nfields = 2
+            raise RuntimeError(dtype)
+        elif tout == 4:
+            dtype = 'complex128'
+            nfields = 4
+            raise RuntimeError(dtype)
+        else:
+            #raise RuntimeError('tout = %s' % tout)
+            dtype = '???'
+            msg = 'matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, is_phase=%s, junk2=%s, ncols_gset=%s' % (
+                matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset)
+            self.log.warning(msg)
+            raise RuntimeError(msg)
+
+        is_symmetric = matrix_shape == 6
+        is_phase_flag = is_phase > 0
+        #self.show_data(data[48:200], types='ifd')
+
+        m = Matrix(table_name)
+        self.matrices[table_name.decode('utf-8')] = m
+
+        @staticmethod
+        def break_by_minus1(data):
+            pass
+
+        ints = np.fromstring(data[48:], dtype=self.idtype)
+        floats = np.fromstring(data[48:], dtype=fdtype)
+        #longs = np.fromstring(data[48:], dtype=self.long_dtype)
+        #print('longs =', longs.tolist())
+        assert np.array_equal(ints[-4:], [-1, -1, -1, -1]), ints[-4:]
+
+        if 1:
+            # include the end -1 pair
+            iminus1 = np.where(ints == -1)[0]
+            double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
+            istop = iminus1[:-2][double_minus1]
+        else:
+            # don't include the end -1 pair
+            iminus1 = np.where(ints[:-2] == -1)[0]
+            double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
+            print('iminus1 =', iminus1)
+            print('double_minus1 =', list(double_minus1))
+            istop = iminus1[:-2][double_minus1]
+
+        # we stack a 1 on to account for the first index
+        # we start at 148 because that's what we parsed above
+        istart = np.hstack([48, istop[:-1] + 2])
+
+        print('istop  =', list(istop))
+        print('istart =', list(istart))
+
+        assert len(istart) == len(istop)
+        from itertools import count
+        for i, istarti, istopi in zip(count(), istart, istop):
+
+            if tout == 1:
+                self.show_data(data[4*istarti:4*istart[i+1]], types='if')
+            else:
+                raise NotImplementedError(dtype)
+
+            nzeros = istopi - istarti
+            row = np.zeros(nzeros, dtype=dtype)
+
+            if 0:
+                icol = ints[istarti + 0]
+                irow_start = ints[istarti + 1]
+                irow_stop = ints[istarti + 2]
+                val = floats[1]
+                assert irow_stop - irow_start < 100, 'icol=%s irow_stop=%s irow_start=%s' % (icol, irow_stop, irow_start)
+                print('istarti=%s icol=%s irow_start=%s irow_stop=%s' % (istarti, icol, irow_start, irow_stop))
+                irow = np.arange(irow_start, irow_stop + 1, dtype='int32')
+            else:
+                icol = ints[istarti + 0]
+                irow_start = ints[istarti + 1]
+                val = floats[1]
+                print('istarti=%s icol=%s irow=%s val=%s' % (istarti, icol, irow_start, val))
+
+            print('----------------')
+            if i == 5:
+                sys.exit()
+
+
+
+
+        floats = np.fromstring(data[48:], dtype=self.ddtype)#.reshape(nnodes, nwords)
         print('ints:')
         if 1:
             for line, line2 in zip(ints.tolist(), floats.tolist()):
@@ -1785,11 +1945,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 if max(line) > 99999999:
                     sys.exit()
         #print('ints:\n%s' % ints)
+        self.show_data(data, types='ifd')
+
         print('--------------------')
         print('-4')
         self.read_markers([-4, 1, 0])
         data = self._read_record()
-        self.show_data(data, types='if')
         print('--------------------')
         print('-5')
         #self.read_markers([-5, 1, 0])
@@ -1799,7 +1960,42 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.show_ndata(200, types='ifs')
         sys.exit()
 
-    def _read_matrix(self):
+    def _read_matrix(self, table_name):
+        """
+        general method for reading matrices and MATPOOL matrices
+
+        .. todo:: Doesn't support checking matrices vs. MATPOOLs
+        .. todo:: MATPOOLs are disabled because they're not parsed properly
+        """
+        i = self.f.tell()
+        # if we skip on read_mode=1, we don't get debugging
+        # if we just use read_mode=2, some tests fail
+        #
+        #if self.read_mode == 1:
+        if self.read_mode == 2 and not self.debug_file:
+            try:
+                self._skip_matrix_mat()  # doesn't work for matpools
+            except:
+                self._goto(i)
+                self._skip_table(table_name)
+            return
+
+        enable_matpool = True
+        if enable_matpool:
+            try:
+                self._read_matrix_mat()
+            except:
+                self._goto(i)
+                #self._skip_table(self.table_name)
+                self._read_matpool_matrix()
+        else:
+            try:
+                self._read_matrix_mat()
+            except:
+                self._goto(i)
+                self._skip_table(self.table_name)
+
+    def _read_matrix_mat(self):
         """
         Matrix Trailer:
         +------+---------------------------------------------------+
@@ -1845,13 +2041,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         |  4   | Complex, double precision |
         +------+---------------------------+
         """
-        # if we skip on read_mode=1, we don't get debugging
-        # if we just use read_mode=2, some tests fail
-        #
-        #if self.read_mode == 1:
-        if self.read_mode == 2 and not self.debug_file:
-            return self._skip_matrix()
-
         allowed_forms = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 13, 15]
         #self.log.debug('----------------------------------------------------------------')
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
@@ -1899,8 +2088,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             #raise RuntimeError('tout = %s' % tout)
             dtype = '???'
-            self.log.warning('unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
-                matrix_num, form, mrows, ncols, tout, nvalues, g))
+            msg = 'unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
+                matrix_num, form, mrows, ncols, tout, nvalues, g)
+            self.log.warning(msg)
+            raise RuntimeError(msg)
 
         if form == 1:
             if ncols != mrows:

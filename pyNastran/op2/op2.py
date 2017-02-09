@@ -185,18 +185,6 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     return model
 
 
-#import sys
-#class CrashObject(object):
-    #def __init__(self):
-        #pass
-    #def write(self, msg):
-        #if 'DEBUG' not in msg and 'INFO' not in msg:
-            #raise RuntimeError(msg)
-    #def flush(self):
-        #pass
-#sys.stdout = CrashObject()
-
-
 #class OP2(OP2_Scalar, OP2Writer):
 class OP2(OP2_Scalar):
 
@@ -252,7 +240,6 @@ class OP2(OP2_Scalar):
         for table_type in table_types:
             adict = getattr(self, table_type)
             bdict = getattr(op2_model, table_type)
-            # print('table_type=%s' % table_type)
             if len(adict) != len(bdict):
                 print('len(self.%s)=%s len(op2_model.%s)=%s' % (table_type, len(adict), table_type, len(bdict)))
                 return False
@@ -468,7 +455,6 @@ class OP2(OP2_Scalar):
                 #if i >= nbreak:
                     #return
 
-
     def combine_results(self, combine=True):
         """
         we want the data to be in the same format and grouped by subcase, so
@@ -624,7 +610,7 @@ class OP2(OP2_Scalar):
                         if case_key not in subcase_key2[subcasei]:
                             subcase_key2[isubcase].append(case_key)
         self.subcase_key = subcase_key2
-        #print('subcase_key =', self.subcase_key)
+        #print('subcase_key = %s' % self.subcase_key)
 
     def print_subcase_key(self):
         self.log.info('---self.subcase_key---')

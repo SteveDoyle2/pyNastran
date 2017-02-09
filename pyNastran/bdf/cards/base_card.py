@@ -480,7 +480,7 @@ class Element(BaseCard):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         faces = {}
         try:

@@ -84,7 +84,7 @@ for index in range(1, int(srange[1]) + 1):
     quality_array = triangle_cell_mesh_quality.GetOutput().GetCellData().GetArray("Quality")
 
     if point_normal_array.GetNumberOfTuples() != qualityArray.GetNumberOfTuples():
-        print ("Error! Sizes of normal array and area array dont equal!")
+        print("Error! Sizes of normal array and area array dont equal!")
         exit(1)
 
     f = open('label_stat' + "_%.4d" % index + ".dat", 'w')

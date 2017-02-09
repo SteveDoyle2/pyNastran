@@ -1899,9 +1899,17 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         return auto_return, is_vectorized
 
     def _set_structs(self):
-        """defines common struct formats"""
+        """
+        defines common struct formats
+
+        https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html#arrays-dtypes-constructing
+        """
         self.fdtype = npdtype(self._endian + 'f4')
         self.idtype = npdtype(self._endian + 'i4')
+        self.double_dtype = npdtype(self._endian + 'd')
+        self.long_dtype = npdtype(self._endian + 'i8')
+        #self.idtype = npdtype(self._endian + 'i8')
+
         #self.sdtype = npdtype(self._endian + '4s')
         self.struct_i = Struct(b(self._endian + 'i'))
         self.struct_8s = Struct(b(self._endian + '8s'))

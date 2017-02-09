@@ -106,11 +106,6 @@ class SimpleLogger(object):
                 sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
             else:
                 sys.stdout.write((name + msg) if typ else msg)
-            #try:
-                #sys.stdout.write((name + msg).encode(self.encoding))# if typ else msg.encode(self.encoding))
-            #except TypeError:
-                #print(msg, type(msg))
-                #raise
         else:
             # write to the screen
             #
@@ -143,7 +138,9 @@ class SimpleLogger(object):
             message to be logged
         """
         n, fn = properties()
-        self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
+        filename_n = '%s:%s' % (fn, n)
+        self.log_func(typ, ' %-28s %s\n' % (filename_n, msg))
+        #self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
 
     def simple_msg(self, msg, typ=None):
         """
