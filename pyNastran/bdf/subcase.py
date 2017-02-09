@@ -1212,6 +1212,7 @@ def update_param_name(param_name):
 
     .. todo:: not a complete list
     """
+    param_name = param_name.strip().upper()
     if param_name.startswith('ACCE'):
         param_name = 'ACCELERATION'
     elif param_name.startswith('DESO'):

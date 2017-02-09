@@ -536,43 +536,59 @@ class CaseControlDeck(object):
             options = None
             param_type = 'OBJ-type'
 
-        elif line_upper.startswith(INT_CARD_NAMES):
-            if '=' in line:
-                (name, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            name = name.strip()
-            obj = INT_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
-            key = obj.type
-            #if 0:
-                #value = obj.value
-                #options = []
-                #param_type = 'STRESS-type'
+        #elif line_upper.startswith(CHECK_CARD_NAMES):
+            #if '(' in line:
+                #key = line_upper.strip().split('(', 1)[0].strip()
+            #elif '=' in line:
+                #key = line_upper.strip().split('=', 1)[0].strip()
             #else:
-            value = obj
-            options = None
-            param_type = 'OBJ-type'
-            key = obj.type
+                #msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                #raise RuntimeError(msg)
 
-        elif line_upper.startswith(INTSTR_CARD_NAMES):
-            if '=' in line:
-                (name, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            name = name.strip()
-            obj = INTSTR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
-            key = obj.type
-            #if 0:
-                #value = obj.value
-                #options = []
-                #param_type = 'STRESS-type'
+            #key = update_param_name(key)
+            #obj = CHECK_CARD_DICT[key].add_from_case_control(line, line_upper, lines, i)
+            #value = obj.value
+            #options = obj.options
+            #param_type = 'STRESS-type'
+            #key = obj.type
+
+        #elif line_upper.startswith(INT_CARD_NAMES):
+            #if '=' in line:
+                #(name, value) = line_upper.strip().split('=')
             #else:
-            value = obj
-            options = None
-            param_type = 'OBJ-type'
-            key = obj.type
+                #msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                #raise RuntimeError(msg)
+            #name = update_param_name(name)
+            #obj = INT_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+            #key = obj.type
+            ##if 0:
+                ##value = obj.value
+                ##options = []
+                ##param_type = 'STRESS-type'
+            ##else:
+            #value = obj
+            #options = None
+            #param_type = 'OBJ-type'
+            #key = obj.type
+
+        #elif line_upper.startswith(INTSTR_CARD_NAMES):
+            #if '=' in line:
+                #(name, value) = line_upper.strip().split('=')
+            #else:
+                #msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                #raise RuntimeError(msg)
+            #name = name.strip()
+            #obj = INTSTR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+            #key = obj.type
+            ##if 0:
+                ##value = obj.value
+                ##options = []
+                ##param_type = 'STRESS-type'
+            ##else:
+            #value = obj
+            #options = None
+            #param_type = 'OBJ-type'
+            #key = obj.type
 
         elif line_upper.startswith('EXTSEOUT'):
             options = None
@@ -591,31 +607,19 @@ class CaseControlDeck(object):
             #param_type = 'OBJ-type'
             #value = AUXMODEL.add_from_case_control(line, line_upper, lines, i)
             #key = value.type
-        elif line_upper.startswith(STR_CARD_NAMES):
-            if '=' in line:
-                (name, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            name = name.strip()
-            obj = STR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
-            value = obj
-            options = None
-            param_type = 'OBJ-type'
-            key = obj.type
-        elif line_upper.startswith(CHECK_CARD_NAMES):
-            if '(' in line:
-                key = line_upper.strip().split('(', 1)[0].strip()
-            elif '=' in line:
-                key = line_upper.strip().split('=', 1)[0].strip()
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            obj = CHECK_CARD_DICT[key].add_from_case_control(line, line_upper, lines, i)
-            value = obj.value
-            options = obj.options
-            param_type = 'STRESS-type'
-            key = obj.type
+
+        #elif line_upper.startswith(STR_CARD_NAMES):
+            #if '=' in line:
+                #(name, value) = line_upper.strip().split('=')
+            #else:
+                #msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                #raise RuntimeError(msg)
+            #name = name.strip()
+            #obj = STR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+            #value = obj
+            #options = None
+            #param_type = 'OBJ-type'
+            #key = obj.type
 
         elif equals_count == 1:  # STRESS
             if '=' in line:
@@ -656,7 +660,7 @@ class CaseControlDeck(object):
                     key = 'TEMPERATURE'
                     options = ['BOTH']
 
-            key = update_param_name(key.strip().upper())
+            key = update_param_name(key)
             verify_card(key, value, options, line)
             assert key.upper() == key, key
         elif equals_count > 2 and '(' in line and 'FLSPOUT' not in line:

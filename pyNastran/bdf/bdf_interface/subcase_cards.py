@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pyNastran.bdf.subcase import write_set
+from pyNastran.bdf.subcase import write_set, expand_thru_case_control
 from six import string_types
 
 class CaseControlCard(object):
@@ -450,8 +450,10 @@ class SET(CaseControlCard):
     type = 'SET'
     def __init__(self, set_id, values):
         super(SET, self).__init__()
-        self.set_id = set_id
-        self.values = values
+        self.set_id = int(set_id)
+
+        values2 = expand_thru_case_control(values)
+        self.value = values2
 
     @property
     def key(self):
@@ -506,7 +508,7 @@ class SET(CaseControlCard):
              4572, 4573, 3323 THRU 3462, 3464 THRU 3603, 3605 THRU 3683,
              3910 THRU 3921, 4125 THRU 4136, 4340 THRU 4351
         """
-        return write_set(self.values, self.set_id, spaces=spaces)
+        return write_set(self.value, self.set_id, spaces=spaces)
 
     def __repr__(self):
         """see `write`"""
@@ -835,12 +837,13 @@ class DISPLACEMENT(CheckCard):
     DISPLACEMENT(SORT2, PUNCH, REAL)=ALL
     """
     type = 'DISPLACEMENT'
+    short_name = 'DISP'
     allowed_keys = [
         'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
         'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         'NOPRINT', 'RPUNCH',
     ]
-    allowed_strings = ['ALL']
+    allowed_strings = ['ALL', 'NONE']
     allowed_values = {}
     allow_ints = True
 
@@ -854,13 +857,14 @@ class VELOCITY(CheckCard):
     VELOCITY(SORT2, PUNCH, REAL)=ALL
     """
     type = 'VELOCITY'
+    short_name = 'VELO'
 
     allowed_keys = [
         'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
         'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         'NOPRINT', 'RPUNCH',
     ]
-    allowed_strings = ['ALL']
+    allowed_strings = ['ALL', 'NONE']
     allowed_values = {}
     allow_ints = True
 
@@ -874,17 +878,58 @@ class ACCELERATION(CheckCard):
     ACCELERATION(SORT2, PUNCH, REAL)=ALL
     """
     type = 'ACCELERATION'
+    short_name = 'ACCE'
     allowed_keys = [
         'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
         'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         'NOPRINT', 'RPUNCH',
     ]
-    allowed_strings = ['ALL']
+    allowed_strings = ['ALL', 'NONE']
     allowed_values = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
         super(ACCELERATION, self).__init__(key, value, options)
+
+class SPCFORCES(CheckCard):
+    """
+    SPCFORCES=5
+    SPCFORCES(REAL)=ALL
+    SPCFORCES(SORT2, PUNCH, REAL)=ALL
+    """
+    type = 'SPCFORCES'
+    short_name = 'SPCF'
+    allowed_keys = [
+        'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
+        'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
+        'NOPRINT', 'RPUNCH',
+    ]
+    allowed_strings = ['ALL', 'NONE']
+    allowed_values = {}
+    allow_ints = True
+
+    def __init__(self, key, value, options):
+        super(SPCFORCES, self).__init__(key, value, options)
+
+class MPCFORCES(CheckCard):
+    """
+    MPCFORCES=5
+    MPCFORCES(REAL)=ALL
+    MPCFORCES(SORT2, PUNCH, REAL)=ALL
+    """
+    type = 'MPCFORCES'
+    short_name = 'MPCF'
+    allowed_keys = [
+        'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
+        'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
+        'NOPRINT', 'RPUNCH',
+    ]
+    allowed_strings = ['ALL', 'NONE']
+    allowed_values = {}
+    allow_ints = True
+
+    def __init__(self, key, value, options):
+        super(MPCFORCES, self).__init__(key, value, options)
 
 class NLLOAD(CheckCard):
     """
@@ -893,6 +938,7 @@ class NLLOAD(CheckCard):
     NLLOAD(PRINT, PUNCH)=NONE
     """
     type = 'NLLOAD'
+    short_name = type
     allowed_keys = ['PRINT', 'PUNCH']
     allowed_strings = ['ALL', 'NONE']
     allowed_values = {}
@@ -908,6 +954,7 @@ class NLSTRESS(CheckCard):
     NLSTRESS(PLOT)=ALL
     """
     type = 'NLSTRESS'
+    short_name = type
     allowed_keys = ['SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT']
     allowed_strings = ['ALL', 'NONE']
     allowed_values = {}
@@ -936,6 +983,7 @@ class OLOAD(CheckCard):
     OLOAD(SORT1,PHASE)=5
     """
     type = 'OLOAD'
+    short_name = type
     allowed_keys = ['SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT',
                     'REAL', 'IMAG', 'PHASE', 'PSDF', 'ATOC', 'CRMS',
                     'RMS', 'RALL', 'RPRINT', 'NORPRINT', 'RPUNCH']
@@ -953,6 +1001,7 @@ class OPRESS(CheckCard):
     OPRESS(PRINT,PUNCH)=17
     """
     type = 'OPRESS'
+    short_name = type
     allowed_keys = ['PRINT', 'PUNCH']
     allowed_strings = ['ALL', 'NONE']
     allowed_values = {}
@@ -967,6 +1016,7 @@ class OTEMP(CheckCard):
     OTEMP(PRINT,PUNCH)=17
     """
     type = 'OTEMP'
+    short_name = type
     allowed_keys = ['PRINT', 'PUNCH']
     allowed_strings = ['ALL', 'NONE']
     allowed_values = {}
@@ -977,9 +1027,9 @@ class OTEMP(CheckCard):
 
 CHECK_CARDS = [
     DISPLACEMENT, VELOCITY, ACCELERATION, NLLOAD, NLSTRESS, OLOAD, OPRESS,
-    OTEMP,
+    OTEMP, SPCFORCES, MPCFORCES,
 ]
 CHECK_CARD_DICT = {card.type : card for card in CHECK_CARDS}
-CHECK_CARD_NAMES = tuple([card.type for card in CHECK_CARDS])
+CHECK_CARD_NAMES = tuple([card.short_name for card in CHECK_CARDS])
 
 #-------------------------------------------------------------------------------
