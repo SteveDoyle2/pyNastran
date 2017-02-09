@@ -1,6 +1,21 @@
 # pylint: disable=R0904,R0902,C0103
 """
 CaseControlDeck parsing and extraction class
+
+CaseControlDeck:
+----------------
+    get_subcase_parameter(self, isubcase, param_name)
+    has_subcase(self, isubcase)
+    create_new_subcase(self, isubcase)
+    delete_subcase(self, isubcase)
+    copy_subcase(self, i_from_subcase, i_to_subcase, overwrite_subcase=True)
+    get_subcase_list(self)
+    get_local_subcase_list(self)
+    update_solution(self, isubcase, sol)
+    add_parameter_to_global_subcase(self, param)
+    add_parameter_to_local_subcase(self, isubcase, param)
+    finish_subcases(self)
+    convert_to_sol_200(self, model)
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -10,24 +25,15 @@ from six import iteritems, itervalues
 
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
+from pyNastran.bdf.bdf_interface.subcase_cards import (
+    EXTSEOUT, SET, SETMC, WEIGHTCHECK, #AXISYMMETRIC,
+    INT_CARD_DICT, INT_CARD_NAMES,
+    INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
+    STR_CARD_DICT, STR_CARD_NAMES,
+    CHECK_CARD_DICT, CHECK_CARD_NAMES,
+)
+
 from pyNastran.utils.log import get_logger
-
-
-    #def hasParameter(self, isubcase, param_name):
-        #self.has_parameter(isubcase, param_name)
-
-    #def get_subcase_parameter(self, isubcase, param_name):
-    #def has_subcase(self, isubcase):
-    #def create_new_subcase(self, isubcase):
-    #def delete_subcase(self, isubcase):
-    #def copy_subcase(self, i_from_subcase, i_to_subcase, overwrite_subcase=True):
-    #def get_subcase_list(self):
-    #def get_local_subcase_list(self):
-    #def update_solution(self, isubcase, sol):
-    #def add_parameter_to_global_subcase(self, param):
-    #def add_parameter_to_local_subcase(self, isubcase, param):
-    #def finish_subcases(self):
-    #def convert_to_sol_200(self, model):
 
 class CaseControlDeck(object):
     """
@@ -119,7 +125,7 @@ class CaseControlDeck(object):
 
         .. warning:: most case control types are not supported
         """
-        for isubcase, subcase in iteritems(self.subcases):
+        for subcase in itervalues(self.subcases):
             # if isubcase == 0:
                 # continue
             subcase.suppress_output()
@@ -139,12 +145,11 @@ class CaseControlDeck(object):
         if self.has_subcase(isubcase):
             return any(self.subcases[isubcase].has_parameter(*param_names))
 
-    def get_subcase_parameter(self, isubcase, param_name):
+    def get_subcase_parameter(self, isubcase, param_name, obj=False):
         """
         Get the [value, options] of a subcase's parameter.  For example, for
         STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
         'POST']
-
 
         Parameters
         ----------
@@ -152,9 +157,11 @@ class CaseControlDeck(object):
             the subcase ID to check
         param_name : str
             the parameter name to look for
+        obj : bool; default=False
+            should the object be returned
         """
         if self.has_subcase(isubcase):
-            return self.subcases[isubcase].get_parameter(param_name.upper())
+            return self.subcases[isubcase].get_parameter(param_name.upper(), obj=obj)
         msg = ('isubcase=%r does not exist...subcases=%s'
                % (isubcase, str(sorted(self.subcases.keys()))))
         raise RuntimeError(msg)
@@ -272,7 +279,7 @@ class CaseControlDeck(object):
         """
         Gets the list of subcases that aren't the global subcase ID
         """
-        id_list = [id for id in self.subcases if id != 0]  # skip the global
+        id_list = [idi for idi in self.subcases if idi != 0]  # skip the global
         return sorted(id_list)
 
     def update_solution(self, isubcase, sol):
@@ -317,10 +324,10 @@ class CaseControlDeck(object):
         TITLE = DUMMY LINE
         DISP = ALL
         """
-        (j, key, value, options, paramType) = self._parse_data_from_user(param)
+        (j, key, value, options, param_type) = self._parse_data_from_user(param)
         subcase_list = self.get_subcase_list()
         for isubcase in subcase_list:
-            self._add_parameter_to_subcase(key, value, options, paramType,
+            self._add_parameter_to_subcase(key, value, options, param_type,
                                            isubcase)
 
     def add_parameter_to_local_subcase(self, isubcase, param):
@@ -379,7 +386,7 @@ class CaseControlDeck(object):
         lines = _clean_lines(lines)
         self.output_lines = []
         i = 0
-        is_output_lines = False
+        #is_output_lines = False
         while i < len(lines):
             line = lines[i] #[:72]
             #comment = lines[i][72:]
@@ -402,7 +409,7 @@ class CaseControlDeck(object):
                 self._begin_count += 1
                 continue
             elif line_upper.startswith('OUTPUT'):
-                is_output_lines = True
+                #is_output_lines = True
                 #output_line = '%s(%s) = %s\n' % (key, options, value)
                 key = 'OUTPUT'
 
@@ -412,14 +419,14 @@ class CaseControlDeck(object):
                 value = None
                 param_type = 'STRESS-type'
 
-                isubcase = self._add_parameter_to_subcase(key, value, options,
-                                                          param_type, isubcase)
+                isubcase = self._add_parameter_to_subcase(
+                    key, value, options, param_type, isubcase)
                 self.output_lines.append(line)
                 continue
             #print("key=%-12r icase=%i value=%r options=%r param_type=%r" %(
             #    key, isubcase, value, options, param_type))
-            isubcase = self._add_parameter_to_subcase(key, value, options,
-                                                      param_type, isubcase)
+            isubcase = self._add_parameter_to_subcase(
+                key, value, options, param_type, isubcase)
 
         #print(str(self))
         self.finish_subcases()
@@ -430,30 +437,30 @@ class CaseControlDeck(object):
 
         Parses a single case control deck card into 4 sections
 
-        1.  paramName - obvious
-        2.  Value     - still kind of obvious
-        3.  options   - rarely used data
-        4.  paramType - STRESS-type, SUBCASE-type, PARAM-type, SET-type, BEGIN_BULK-type
+        1.  param_name - obvious
+        2.  Value      - still kind of obvious
+        3.  options    - rarely used data
+        4.  param_type - STRESS-type, SUBCASE-type, PARAM-type, SET-type, BEGIN_BULK-type
 
         It's easier with examples:
 
-        paramType = SUBCASE-type
+        param_type = SUBCASE-type
           SUBCASE 1              ->   paramName=SUBCASE  value=1            options=[]
-        paramType = STRESS-type
+        param_type = STRESS-type
           STRESS       = ALL     ->   paramName=STRESS    value=ALL         options=[]
           STRAIN(PLOT) = 5       ->   paramName=STRAIN    value=5           options=[PLOT]
           TITLE        = stuff   ->   paramName=TITLE     value=stuff       options=[]
-        paramType = SET-type
+        param_type = SET-type
           SET 1 = 10,20,30       ->   paramName=SET       value=[10,20,30]  options = 1
-        paramType = BEGIN_BULK-type
+        param_type = BEGIN_BULK-type
           BEGIN BULK             ->   paramName=BEGIN     value=BULK        options = []
-        paramType = CSV-type
+        param_type = CSV-type
           PARAM,FIXEDB,-1        ->   paramName=PARAM     value=FIXEDB      options = [-1]
 
-        The paramType is the "macro" form of the data (similar to integer, float, string).
+        The param_type is the "macro" form of the data (similar to integer, float, string).
         The value is generally whats on the RHS of the equals sign (assuming it's there).
         Options are modifiers on the data.  Form things like the PARAM card or the SET card
-        they arent as clear, but the paramType lets the program know how to format it
+        they arent as clear, but the param_type lets the program know how to format it
         when writing it out.
 
         Parameters
@@ -469,7 +476,7 @@ class CaseControlDeck(object):
             see brief
         options : List[str/int/float]
             see brief
-        paramType : str/int/float/List
+        param_type : str/int/float/List
             see brief
         """
         i = 0
@@ -518,43 +525,97 @@ class CaseControlDeck(object):
             value = line[eindex + 1:].strip()
             options = []
             param_type = 'STRING-type'
-        elif (line_upper.startswith('SET ') or line_upper.startswith('SETMC ')
-              and equals_count == 1):
-            # would have been caught by STRESS-type
-            sline = line_upper.split('=')
-            assert len(sline) == 2, sline
+        elif line_upper.startswith('SET ') and equals_count == 1:
+            value = SET.add_from_case_control(line_upper, lines, i)
+            key = value.key
+            options = None
+            param_type = 'OBJ-type'
+        elif line_upper.startswith('SETMC ') and equals_count == 1:
+            value = SETMC.add_from_case_control(line_upper, lines, i)
+            key = value.key
+            options = None
+            param_type = 'OBJ-type'
 
-            key, value = sline
-            try:
-                (key, ID) = key.split()
-            except:
-                raise RuntimeError(key)
-            key = key + ' ' + ID
+        elif line_upper.startswith(INT_CARD_NAMES):
+            if '=' in line:
+                (name, value) = line_upper.strip().split('=')
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            name = name.strip()
+            obj = INT_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+            key = obj.type
+            #if 0:
+                #value = obj.value
+                #options = []
+                #param_type = 'STRESS-type'
+            #else:
+            value = obj
+            options = None
+            param_type = 'OBJ-type'
+            key = obj.type
 
-            assert key.upper() == key, key
-            options = int(ID)
+        elif line_upper.startswith(INTSTR_CARD_NAMES):
+            if '=' in line:
+                (name, value) = line_upper.strip().split('=')
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            name = name.strip()
+            obj = INTSTR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+            key = obj.type
+            #if 0:
+                #value = obj.value
+                #options = []
+                #param_type = 'STRESS-type'
+            #else:
+            value = obj
+            options = None
+            param_type = 'OBJ-type'
+            key = obj.type
 
-            if self.debug:
-                self.log.debug('SET-type key=%r ID=%r' % (key, ID))
-            fivalues = value.rstrip(' ,').split(',')  # float/int values
-
-            #: .. todo:: should be more efficient multiline reader...
-            # read more lines....
-            if line[-1].strip() == ',':
-                i += 1
-                #print("rawSETLine = %r" % (lines[i]))
-                while 1:
-                    if lines[i].strip()[-1] == ',':
-                        fivalues += lines[i][:-1].split(',')
-                    else:  # last case
-                        fivalues += lines[i].split(',')
-                        #print("fivalues last = i=%s %r" % (i, lines[i]))
-                        i += 1
-                        break
-                    i += 1
-            #print("len(fivalues) = ",len(fivalues))
-            value = fivalues
-            param_type = 'SET-type'
+        elif line_upper.startswith('EXTSEOUT'):
+            options = None
+            param_type = 'OBJ-type'
+            obj = EXTSEOUT(line_upper.strip())
+            value = obj
+            key = obj.type
+        elif line_upper.startswith('WEIGHTCHECK'):
+            options = None
+            param_type = 'OBJ-type'
+            obj = WEIGHTCHECK.add_from_case_control(line, line_upper, lines, i)
+            value = obj
+            key = obj.type
+        #elif line_upper.startswith('AUXMODEL'):
+            #options = None
+            #param_type = 'OBJ-type'
+            #value = AUXMODEL.add_from_case_control(line, line_upper, lines, i)
+            #key = value.type
+        elif line_upper.startswith(STR_CARD_NAMES):
+            if '=' in line:
+                (name, value) = line_upper.strip().split('=')
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            name = name.strip()
+            obj = STR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+            value = obj
+            options = None
+            param_type = 'OBJ-type'
+            key = obj.type
+        elif line_upper.startswith(CHECK_CARD_NAMES):
+            if '(' in line:
+                key = line_upper.strip().split('(', 1)[0].strip()
+            elif '=' in line:
+                key = line_upper.strip().split('=', 1)[0].strip()
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            obj = CHECK_CARD_DICT[key].add_from_case_control(line, line_upper, lines, i)
+            value = obj.value
+            options = obj.options
+            param_type = 'STRESS-type'
+            key = obj.type
 
         elif equals_count == 1:  # STRESS
             if '=' in line:
@@ -571,7 +632,7 @@ class CaseControlDeck(object):
             assert key.upper() == key, key
 
             if '(' in key:  # comma may be in line - STRESS-type
-                #paramType = 'STRESS-type'
+                #param_type = 'STRESS-type'
                 sline = key.strip(')').split('(')
                 key = sline[0]
                 options = sline[1].split(',')
@@ -583,35 +644,7 @@ class CaseControlDeck(object):
                         option = 'BOTH'
                     key = 'TEMPERATURE'
                     options = [option]
-                #print("key=%r options=%s" %(key,options))
 
-            #elif ' ' in key and ',' in value:  # SET-type
-                #(key, ID) = key.split()
-                #key = key + ' ' + ID
-
-                #if self.debug:
-                    #self.log.debug('SET-type key=%r ID=%r' % (key, ID))
-                #fivalues = value.rstrip(' ,').split(',')  # float/int values
-
-                ##: .. todo:: should be more efficient multiline reader...
-                ## read more lines....
-                #if line[-1].strip() == ',':
-                    #i += 1
-                    ##print("rawSETLine = %r" % (lines[i]))
-                    #while 1:
-                        #if ',' == lines[i].strip()[-1]:
-                            #fivalues += lines[i][:-1].split(',')
-                        #else:  # last case
-                            #fivalues += lines[i].split(',')
-                            ##print("fivalues last = i=%s %r" % (i, lines[i]))
-                            #i += 1
-                            #break
-                        #i += 1
-                ##print("len(fivalues) = ",len(fivalues))
-                #value = fivalues
-
-                #options = ID  # needed a place to put it...
-                #param_type = 'SET-type'
             elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
                 #print('A ??? line = ',line)
                 #raise RuntimeError(line)
@@ -836,8 +869,8 @@ class CaseControlDeck(object):
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
-
 def verify_card(key, value, options, line):
+    """Make sure there are no obvious errors"""
     if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD',
                'CMETHOD', 'CSSCHD', 'DEACTEL', 'DEFORM', 'DESGLB', 'DESSUB',
                'DIVERG', 'DLOAD', 'DRSPAN', 'FMETHOD', 'FREQUENCY', 'GUST',

@@ -153,8 +153,11 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
     for k in dir(obj):
         if k in keys_to_skip:
             continue
-        if check(k) and attr_type(getattr(obj, k)):
-            out.append(k)
+        try:
+            if check(k) and attr_type(getattr(obj, k)):
+                out.append(k)
+        except KeyError:
+            pass
     out.sort()
     return out
     #return sorted([k for k in dir(obj) if (check(k) and
