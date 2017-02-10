@@ -112,23 +112,24 @@ class GEOM4(GeomCommon):
         return self._read_xset(data, n, 'QSET', QSET, self._add_qset_object)
 
     def _read_xset(self, data, n, card_name, cls, add_method):
-        """common method for ASET, QSET"""
-        self.log.info('skipping %s in GEOM4\n' % card_name)
-        return len(data)
-        #s = Struct(b(self._endian + '2i'))
-        #ntotal = 8
-        #nelements = (len(data) - n) // ntotal
-        #for i in range(nelements):
-            #edata = data[n:n + ntotal]
-            #out = s.unpack(edata)
-            #if self.is_debug_file:
-                #self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
-            ##(id, component) = out
-            #elem = cls.add_op2_data(out)
-            #self.add_method(elem)
-            #n += ntotal
-            #self._increase_card_count(card_name, 1)
-        #return n
+        """common method for ASET, QSET; not USET"""
+        #self.log.info('skipping %s in GEOM4\n' % card_name)
+        #return len(data)
+        s = Struct(b(self._endian + '2i'))
+        self.show_data(data)
+        ntotal = 8
+        nelements = (len(data) - n) // ntotal
+        for i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
+            #(id, component) = out
+            set_obj = cls.add_op2_data(out)
+            add_method(set_obj)
+            n += ntotal
+            self._increase_card_count(card_name, 1)
+        return n
 
     def _read_aset1(self, data, n):
         """ASET1(5571,77,216) - Record 22"""
@@ -137,7 +138,7 @@ class GEOM4(GeomCommon):
         return self._read_xset1(data, n, 'ASET1', ASET1, self._add_aset_object)
 
     def _read_xset1(self, data, n, card_name, cls, add_method, debug=False):
-        """common method for ASET1, QSET1"""
+        """common method for ASET1, QSET1; not USET1???"""
         self.log.info('skipping %s in GEOM4\n' % card_name)
         return len(data)
         ndata = len(data)
@@ -593,15 +594,30 @@ class GEOM4(GeomCommon):
         self._add_suport_object(suporti) # extracts [sid, nid, c]
         nsuports += 1
         self.card_count['SUPOT1'] = nsuports
-
         assert n+nfields*4+8 == len(data), 'a=%s b=%s' % (n+nfields*4+8, len(data))
         return len(data)
 
 # TEMPBC
 
     def _read_uset(self, data, n):
-        """USET(2010,20,193) - Record 63"""
-        return self._read_xset(data, n, 'USET', USET, self._add_uset_object)
+        """
+        USET(2010,20,193) - Record 63
+        (sid, nid, comp), ...
+        """
+        s = Struct(b(self._endian + '3i'))
+        ntotal = 12
+        nelements = (len(data) - n) // ntotal
+        for i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
+            #(sid, id, component) = out
+            set_obj = USET.add_op2_data(out)
+            self._add_uset_object(set_obj)
+            n += ntotal
+        self._increase_card_count('USET', len(self.usets))
+        return n
 
     def _read_uset1(self, data, n):
         """USET1(2110,21,194) - Record 65"""

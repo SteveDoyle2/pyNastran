@@ -451,383 +451,6 @@ class TestOP2(Tester):
 
         #print(gpforce)
 
-    def test_op2_solid_shell_bar_01_gpforce(self):
-        folder = os.path.join(model_path, 'sol_101_elements')
-        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename, xref=False, debug=False)
-
-        i_transform, beta_transforms = op2.get_displacement_index_transforms()
-        op2.transform_displacements_to_global(i_transform, op2.coords)
-
-        gpforce = op2.grid_point_forces[1]
-
-        #bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
-        #model = BDF(debug=False)
-        #model.read_bdf(bdf_filename, xref=True)
-
-        op2.cross_reference(xref_elements=False,
-                            xref_nodes_with_elements=False,
-                            xref_properties=False,
-                            xref_masses=False,
-                            xref_materials=False,
-                            xref_loads=False,
-                            xref_constraints=False,
-                            xref_aero=False,
-                            xref_sets=False,
-                            xref_optimization=False)
-        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
-        coords = op2.coords
-
-        data = _get_gpforce_data()
-        for datai in data:
-            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
-            if cid not in coords:
-                continue
-            #op2.log.debug('*' * 30 + 'Next Test' + '*' * 30)
-            coord_out = coords[cid]
-            out = gpforce.extract_interface_loads(
-                nids, eids,
-                coord_out, coords,
-                nid_cd, i_transform,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
-            total_force_global, total_moment_global, total_force_local, total_moment_local = out
-
-            #op2.log.debug('***********')
-            #op2.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
-            #op2.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
-
-            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
-                eids, nids, cid, summation_point)
-            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s' % (
-                case, total_force_local_expected, total_force_local)
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.005), msg), msg
-
-            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s' % (
-                case, total_moment_local_expected, total_moment_local)
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
-
-    def test_op2_solid_shell_bar_01_gpforce_xyz(self):
-        folder = os.path.join(model_path, 'sol_101_elements')
-        #bdf_filename1 = os.path.join(folder, 'static_solid_shell_bar_xyz.bdf')
-        op2_filename1 = os.path.join(folder, 'static_solid_shell_bar_xyz.op2')
-        op2_1 = read_op2_geom(op2_filename1, xref=False, debug=False)
-        #print("disp_orig =\n", op2_1.displacements[1].data[0, :2, :])
-        #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
-
-        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
-        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords)
-        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, i_transform_1, op2_1.coords)
-        #print("disp_new =\n", op2_1.displacements[1].data[0, :2, :])
-        #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
-
-        gpforce = op2_1.grid_point_forces[1]
-        op2_1.cross_reference(xref_elements=False,
-                              xref_nodes_with_elements=False,
-                              xref_properties=False,
-                              xref_masses=False,
-                              xref_materials=False,
-                              xref_loads=False,
-                              xref_constraints=False,
-                              xref_aero=False,
-                              xref_sets=False,
-                              xref_optimization=False)
-        xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
-
-        #bdf_filename2 = os.path.join(folder, 'static_solid_shell_bar.bdf')
-        op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
-        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
-        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, i_transform_2, op2_2.coords)
-
-        #print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
-        #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
-        print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, :2, :])
-
-        msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
-            op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
-        #print(msg)
-        assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
-
-        msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
-            op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
-        #print(msg)
-
-        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
-        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
-        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
-        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
-
-        #-------------------------------------------------
-        return
-        data = _get_gpforce_data()
-        coords = op2_1.coords
-        used_cds = np.unique(nid_cd[:, 1])
-        #for cd in used_cds:
-            #coord = op2_1.coords[cd]
-            #print(coord)
-            #print('origin = %s' % coord.origin)
-            #print('beta =\n%s' % coord.beta())
-            #print('-----------------------------')
-
-        for datai in data:
-            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
-            coord_out = coords[cid]
-            op2_1.log.debug('*' * 30 + 'Next Test' + '*' * 30)
-            out = gpforce.extract_interface_loads(
-                nids, eids,
-                coord_out, coords,
-                nid_cd, i_transform_1,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
-            total_force_global, total_moment_global, total_force_local, total_moment_local = out
-
-            op2_1.log.debug('***********')
-            op2_1.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
-            op2_1.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
-
-            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
-                eids, nids, cid, summation_point)
-            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
-                case, total_force_local_expected, total_force_local,
-                np.abs(total_force_local_expected - total_force_local))
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
-
-            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
-                case, total_moment_local_expected, total_moment_local,
-                np.abs(total_moment_local_expected - total_moment_local))
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
-
-    @unittest.expectedFailure
-    def test_op2_solid_shell_bar_01_gpforce_radial_global_cd(self):
-        warning_log = SimpleLogger(level='warning')
-        debug_log = SimpleLogger(level='debug')
-        folder = os.path.join(model_path, 'sol_101_elements')
-        op2_filename1 = os.path.join(folder, 'static_solid_shell_bar_global_radial_cd.op2')
-        op2_1 = read_op2_geom(op2_filename1, xref=False, log=warning_log)
-        op2_1.log = debug_log
-
-        #print("disp_orig =\n", op2_1.displacements[1].data[0, :4, :])
-        #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, 2:8, :])
-
-        op2_1.cross_reference(xref_elements=False,
-                              xref_nodes_with_elements=False,
-                              xref_properties=False,
-                              xref_masses=False,
-                              xref_materials=False,
-                              xref_loads=False,
-                              xref_constraints=False,
-                              xref_aero=False,
-                              xref_sets=False,
-                              xref_optimization=False)
-        xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
-
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
-        #-------------------------------------------------
-        #coords = op2_1.coords
-        #used_cds = np.unique(nid_cd[:, 1])
-        #for cd in used_cds:
-            #coord = op2_1.coords[cd]
-            #print(coord)
-            #print('origin = %s' % coord.origin)
-            #print('beta =\n%s' % coord.beta())
-            #print('-----------------------------')
-
-        #disp = op2_1.displacements[1]
-        #for line in list(disp.data[0, :, :3]):
-            #print('%10.4e %10.4e %10.4e' % tuple(line))
-
-        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
-        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
-        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
-        #print('stuff...')
-        #disp = op2_1.displacements[1]
-        #for line in list(disp.data[0, :, :3]):
-            #print('%10.4e %10.4e %10.4e' % tuple(line))
-        #print(disp.data[0, :, :3])
-
-        #print("disp_new =\n", op2_1.displacements[1].data[0, :4, :])
-        #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, 2:8, :])
-
-        #-----------------------------------------------------------------------
-        op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
-        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
-        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, i_transform_2, op2_2.coords, xyz_cid0=xyz_cid0)
-
-        #print("disp_goal =\n", op2_2.displacements[1].data[0, :4, :])
-        #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
-        print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, 2:8, :])
-
-        #return
-        #msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
-            #op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
-        #print(msg)
-        #assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
-
-        #msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
-            #op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
-        #print(msg)
-
-        from six import StringIO
-        csv_file = StringIO()
-        op2_1.spc_forces[1].write_csv(csv_file)
-        op2_1.grid_point_forces[1].write_csv(csv_file)
-        #print(csv_file.getvalue())
-
-        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
-        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
-        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
-        #print('op2_2.grid_point_forces[1]\n', op2_2.grid_point_forces[1].data)
-        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
-        return
-        #-----------------------------------------------------------------------
-        gpforce = op2_1.grid_point_forces[1]
-        data = _get_gpforce_data()
-        for i, datai in enumerate(data):
-            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
-            coord_out = op2_1.coords[cid]
-            op2_1.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
-            out = gpforce.extract_interface_loads(
-                nids, eids,
-                coord_out, op2_1.coords,
-                nid_cd, i_transform_1,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
-            total_force_global, total_moment_global, total_force_local, total_moment_local = out
-
-            op2_1.log.debug('***********')
-            op2_1.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
-            op2_1.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
-
-            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
-                eids, nids, cid, summation_point)
-            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
-                case, total_force_local_expected, total_force_local,
-                np.abs(total_force_local_expected - total_force_local))
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
-
-            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
-                case, total_moment_local_expected, total_moment_local,
-                np.abs(total_moment_local_expected - total_moment_local))
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
-
-    #@unittest.expectedFailure
-    def test_op2_solid_shell_bar_01_gpforce_radial(self):
-        warning_log = SimpleLogger(level='warning')
-        debug_log = SimpleLogger(level='debug')
-        folder = os.path.join(model_path, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
-        op2_1 = read_op2_geom(op2_filename, xref=False, log=warning_log)
-        op2_1.log = debug_log
-
-        print("disp_orig =\n", op2_1.displacements[1].data[0, :2, :])
-        #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        #print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
-
-        op2_1.cross_reference(xref_elements=False,
-                              xref_nodes_with_elements=False,
-                              xref_properties=False,
-                              xref_masses=False,
-                              xref_materials=False,
-                              xref_loads=False,
-                              xref_constraints=False,
-                              xref_aero=False,
-                              xref_sets=False,
-                              xref_optimization=False)
-        xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
-
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
-        #-------------------------------------------------
-        #coords = op2_1.coords
-        #used_cds = np.unique(nid_cd[:, 1])
-        #for cd in used_cds:
-            #coord = op2_1.coords[cd]
-            #print(coord)
-            #print('origin = %s' % coord.origin)
-            #print('beta =\n%s' % coord.beta())
-            #print('-----------------------------')
-
-        #disp = op2_1.displacements[1]
-        #for line in list(disp.data[0, :, :3]):
-            #print('%10.4e %10.4e %10.4e' % tuple(line))
-
-        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
-        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
-        op2_1.transform_gpforce_to_global(
-            nids_all, nids_transform_1, i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
-        #print('stuff...')
-        #disp = op2_1.displacements[1]
-        #for line in list(disp.data[0, :, :3]):
-            #print('%10.4e %10.4e %10.4e' % tuple(line))
-        #print(disp.data[0, :, :3])
-
-        print("disp_new =\n", op2_1.displacements[1].data[0, :2, :])
-        #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        #print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
-
-        #-----------------------------------------------------------------------
-        op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
-        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
-        op2_2.transform_gpforce_to_global(
-            nids_all, nids_transform_2, i_transform_2, op2_2.coords)
-
-        print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
-        #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
-        #print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, :2, :])
-
-        return
-        msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
-            op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
-        #print(msg)
-        assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
-
-        msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
-            op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
-        #print(msg)
-
-        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
-        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
-        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
-        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
-        #-----------------------------------------------------------------------
-        gpforce = op2_1.grid_point_forces[1]
-        data = _get_gpforce_data()
-        for i, datai in enumerate(data):
-            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
-            coord_out = op2_1.coords[cid]
-            op2_1.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
-            out = gpforce.extract_interface_loads(
-                nids, eids,
-                coord_out, op2_1.coords,
-                nid_cd, i_transform_1,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
-            total_force_global, total_moment_global, total_force_local, total_moment_local = out
-
-            op2_1.log.debug('***********')
-            op2_1.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
-            op2_1.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
-
-            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
-                eids, nids, cid, summation_point)
-            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
-                case, total_force_local_expected, total_force_local,
-                np.abs(total_force_local_expected - total_force_local))
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
-
-            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
-                case, total_moment_local_expected, total_moment_local,
-                np.abs(total_moment_local_expected - total_moment_local))
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
-
     def test_op2_solid_shell_bar_01(self):
         op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.join(model_path, 'sol_101_elements')
@@ -1731,154 +1354,6 @@ class TestOP2(Tester):
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 
-    def test_op2_dmi_01(self):
-        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
-        op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
-        matrices = {
-            'A' : True,
-            'B' : False,
-            'ATB' : False,
-            'BTA' : False,
-            'MYDOF' : True,
-        }
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
-
-        dmi_a = model.dmis['A']
-        assert dmi_a.shape == (4, 2), 'shape=%s' % (dmi_a.shape)
-        #print('dmi_a\n', dmi_a)
-        a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
-        #print('model.dmi.A =\n%s' % dmi_a)
-        #print('model.dmi.A =\n%s' % str(a))
-        #return
-        op2 = OP2(debug=False)
-        op2.set_additional_matrices_to_read(matrices)
-        try:
-            op2.read_op2(op2_filename)
-            raise RuntimeError('this is wrong...')
-        except FatalError:
-            # the OP2 doesn't have a trailing zero marker
-            pass
-
-        # M rows, Ncols
-        A = np.array([
-            [1., 0.],
-            [3., 6.],
-            [5., 0.],
-            [0., 8.],
-        ], dtype='float32')
-        B = A
-        mydof = np.array([
-            -1.0, 1.0, 1.0, -1.0, 1.0,
-            2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
-            1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
-            -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
-            4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,
-        ])
-        BTA = np.dot(B.T, A)
-        ATB = np.dot(A.T, B)
-        ATB_expected = np.array([
-            [35., 18.],
-            [18., 100.]
-        ], dtype='float32')
-        BTA_expected = ATB_expected
-
-        expecteds = [A, ATB, B, BTA, mydof]
-        matrix_names = sorted(matrices.keys())
-
-        for table_name, expected in zip(matrix_names, expecteds):
-            assert table_name in op2.matrices, table_name
-
-
-            actual = op2.matrices[table_name].data
-            if not (np.array_equal(expected, actual) or
-                    np.array_equal(expected, np.squeeze(actual))):
-                if table_name in model.dmis:
-                    dmi = model.dmis[table_name]
-                    table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
-                    #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=True, apply_symmetry=False)
-                    print(table_array)
-                #print(stable_array)
-                msg = 'matrix %s was not read properly\n' % table_name
-                msg += 'expected shape=%s\n%s\n' % (str(expected.shape), expected)
-                msg += 'actual shape=%s\n%s' % (str(actual.shape), actual.ravel())
-                #msg += '\n%s' % actual.ravel()
-                print(msg)
-                print('==========================')
-                #raise RuntimeError(msg)
-
-    def test_op2_dmi_02(self):
-        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
-        op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
-        matrices = {
-            'A' : True,
-            'B' : False,
-            'ATB' : False,
-            'BTA' : False,
-            'MYDOF' : True,
-        }
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
-
-        dmi_a = model.dmis['A']
-        a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
-        #print('model.dmi.A =\n%s' % dmi_a)
-        #print('model.dmi.A =\n%s' % str(a))
-        #return
-        op2 = OP2()
-        try:
-            op2.read_op2(op2_filename, skip_undefined_matrices=True)
-            raise RuntimeError('this is wrong...')
-        except FatalError:
-            # the OP2 doesn't have a trailing zero marker
-            pass
-
-        # M rows, Ncols
-        A = np.array([
-            [1., 0.],
-            [3., 6.],
-            [5., 0.],
-            [0., 8.],
-        ], dtype='float32')
-        B = A
-        mydof = np.array([
-            -1.0, 1.0, 1.0, -1.0, 1.0,
-            2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
-            1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
-            -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
-            4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,
-        ])
-        BTA = dot(B.T, A)
-        ATB = dot(A.T, B)
-        ATB_expected = np.array([
-            [35., 18.],
-            [18., 100.]
-        ], dtype='float32')
-        BTA_expected = ATB_expected
-
-        expecteds = [A, ATB, B, BTA, mydof]
-        matrix_names = sorted(matrices.keys())
-
-        for table_name, expected in zip(matrix_names, expecteds):
-            assert table_name in op2.matrices, table_name
-
-            actual = op2.matrices[table_name].data
-            if not array_equal(expected, actual):
-                if table_name in model.dmis:
-                    dmi = model.dmis[table_name]
-                    table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
-                    #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=True, apply_symmetry=False)
-                    #print(table_array)
-                #print(stable_array)
-                msg = 'matrix %s was not read properly\n' % table_name
-                msg += 'expected\n%s\n' % expected
-                msg += 'actual\n%s' % actual
-                print(msg)
-                print('==========================')
-                #raise RuntimeError(msg)
-
     @unittest.expectedFailure
     def test_set_times_01(self):
         """specify the modes to extract"""
@@ -1898,6 +1373,385 @@ class TestOP2(Tester):
         #print(eigenvector)
         assert len(eigenvector.modes) == 2, eigenvector.modes
 
+
+class TestGridPointForces(unittest.TestCase):
+    """various grid point force tests"""
+    def test_op2_solid_shell_bar_01_gpforce(self):
+        folder = os.path.join(model_path, 'sol_101_elements')
+        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, xref=False, debug=False)
+
+        i_transform, beta_transforms = op2.get_displacement_index_transforms()
+        op2.transform_displacements_to_global(i_transform, op2.coords)
+
+        gpforce = op2.grid_point_forces[1]
+
+        #bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
+        #model = BDF(debug=False)
+        #model.read_bdf(bdf_filename, xref=True)
+
+        op2.cross_reference(xref_elements=False,
+                            xref_nodes_with_elements=False,
+                            xref_properties=False,
+                            xref_masses=False,
+                            xref_materials=False,
+                            xref_loads=False,
+                            xref_constraints=False,
+                            xref_aero=False,
+                            xref_sets=False,
+                            xref_optimization=False)
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+        coords = op2.coords
+
+        data = _get_gpforce_data()
+        for datai in data:
+            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
+            if cid not in coords:
+                continue
+            #op2.log.debug('*' * 30 + 'Next Test' + '*' * 30)
+            coord_out = coords[cid]
+            out = gpforce.extract_interface_loads(
+                nids, eids,
+                coord_out, coords,
+                nid_cd, i_transform,
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
+            total_force_global, total_moment_global, total_force_local, total_moment_local = out
+
+            #op2.log.debug('***********')
+            #op2.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            #op2.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+
+            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
+                eids, nids, cid, summation_point)
+            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s' % (
+                case, total_force_local_expected, total_force_local)
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.005), msg), msg
+
+            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s' % (
+                case, total_moment_local_expected, total_moment_local)
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+
+    def test_op2_solid_shell_bar_01_gpforce_xyz(self):
+        folder = os.path.join(model_path, 'sol_101_elements')
+        #bdf_filename1 = os.path.join(folder, 'static_solid_shell_bar_xyz.bdf')
+        op2_filename1 = os.path.join(folder, 'static_solid_shell_bar_xyz.op2')
+        op2_1 = read_op2_geom(op2_filename1, xref=False, debug=False)
+        #print("disp_orig =\n", op2_1.displacements[1].data[0, :2, :])
+        #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
+        print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
+
+        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
+        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords)
+        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, i_transform_1, op2_1.coords)
+        #print("disp_new =\n", op2_1.displacements[1].data[0, :2, :])
+        #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
+        print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
+
+        gpforce = op2_1.grid_point_forces[1]
+        op2_1.cross_reference(xref_elements=False,
+                              xref_nodes_with_elements=False,
+                              xref_properties=False,
+                              xref_masses=False,
+                              xref_materials=False,
+                              xref_loads=False,
+                              xref_constraints=False,
+                              xref_aero=False,
+                              xref_sets=False,
+                              xref_optimization=False)
+        xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
+
+        #bdf_filename2 = os.path.join(folder, 'static_solid_shell_bar.bdf')
+        op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2_2 = read_op2_geom(op2_filename2, debug=False)
+        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
+        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
+        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, i_transform_2, op2_2.coords)
+
+        #print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
+        #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
+        print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, :2, :])
+
+        msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
+            op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
+        #print(msg)
+        assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
+
+        msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
+            op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
+        #print(msg)
+
+        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
+        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
+        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
+        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+
+        #-------------------------------------------------
+        return
+        data = _get_gpforce_data()
+        coords = op2_1.coords
+        used_cds = np.unique(nid_cd[:, 1])
+        #for cd in used_cds:
+            #coord = op2_1.coords[cd]
+            #print(coord)
+            #print('origin = %s' % coord.origin)
+            #print('beta =\n%s' % coord.beta())
+            #print('-----------------------------')
+
+        for datai in data:
+            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
+            coord_out = coords[cid]
+            op2_1.log.debug('*' * 30 + 'Next Test' + '*' * 30)
+            out = gpforce.extract_interface_loads(
+                nids, eids,
+                coord_out, coords,
+                nid_cd, i_transform_1,
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
+            total_force_global, total_moment_global, total_force_local, total_moment_local = out
+
+            op2_1.log.debug('***********')
+            op2_1.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            op2_1.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+
+            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
+                eids, nids, cid, summation_point)
+            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
+                case, total_force_local_expected, total_force_local,
+                np.abs(total_force_local_expected - total_force_local))
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
+
+            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
+                case, total_moment_local_expected, total_moment_local,
+                np.abs(total_moment_local_expected - total_moment_local))
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+
+    @unittest.expectedFailure
+    def test_op2_solid_shell_bar_01_gpforce_radial_global_cd(self):
+        warning_log = SimpleLogger(level='warning')
+        debug_log = SimpleLogger(level='debug')
+        folder = os.path.join(model_path, 'sol_101_elements')
+        op2_filename1 = os.path.join(folder, 'static_solid_shell_bar_global_radial_cd.op2')
+        op2_1 = read_op2_geom(op2_filename1, xref=False, log=warning_log)
+        op2_1.log = debug_log
+
+        #print("disp_orig =\n", op2_1.displacements[1].data[0, :4, :])
+        #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
+        print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, 2:8, :])
+
+        op2_1.cross_reference(xref_elements=False,
+                              xref_nodes_with_elements=False,
+                              xref_properties=False,
+                              xref_masses=False,
+                              xref_materials=False,
+                              xref_loads=False,
+                              xref_constraints=False,
+                              xref_aero=False,
+                              xref_sets=False,
+                              xref_optimization=False)
+        xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
+
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
+        #-------------------------------------------------
+        #coords = op2_1.coords
+        #used_cds = np.unique(nid_cd[:, 1])
+        #for cd in used_cds:
+            #coord = op2_1.coords[cd]
+            #print(coord)
+            #print('origin = %s' % coord.origin)
+            #print('beta =\n%s' % coord.beta())
+            #print('-----------------------------')
+
+        #disp = op2_1.displacements[1]
+        #for line in list(disp.data[0, :, :3]):
+            #print('%10.4e %10.4e %10.4e' % tuple(line))
+
+        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
+        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
+        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
+        #print('stuff...')
+        #disp = op2_1.displacements[1]
+        #for line in list(disp.data[0, :, :3]):
+            #print('%10.4e %10.4e %10.4e' % tuple(line))
+        #print(disp.data[0, :, :3])
+
+        #print("disp_new =\n", op2_1.displacements[1].data[0, :4, :])
+        #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
+        print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, 2:8, :])
+
+        #-----------------------------------------------------------------------
+        op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2_2 = read_op2_geom(op2_filename2, debug=False)
+        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
+        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
+        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, i_transform_2, op2_2.coords, xyz_cid0=xyz_cid0)
+
+        #print("disp_goal =\n", op2_2.displacements[1].data[0, :4, :])
+        #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
+        print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, 2:8, :])
+
+        #return
+        #msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
+            #op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
+        #print(msg)
+        #assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
+
+        #msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
+            #op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
+        #print(msg)
+
+        from six import StringIO
+        csv_file = StringIO()
+        op2_1.spc_forces[1].write_csv(csv_file)
+        op2_1.grid_point_forces[1].write_csv(csv_file)
+        #print(csv_file.getvalue())
+
+        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
+        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
+        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
+        #print('op2_2.grid_point_forces[1]\n', op2_2.grid_point_forces[1].data)
+        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+        return
+        #-----------------------------------------------------------------------
+        gpforce = op2_1.grid_point_forces[1]
+        data = _get_gpforce_data()
+        for i, datai in enumerate(data):
+            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
+            coord_out = op2_1.coords[cid]
+            op2_1.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
+            out = gpforce.extract_interface_loads(
+                nids, eids,
+                coord_out, op2_1.coords,
+                nid_cd, i_transform_1,
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
+            total_force_global, total_moment_global, total_force_local, total_moment_local = out
+
+            op2_1.log.debug('***********')
+            op2_1.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            op2_1.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+
+            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
+                eids, nids, cid, summation_point)
+            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
+                case, total_force_local_expected, total_force_local,
+                np.abs(total_force_local_expected - total_force_local))
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
+
+            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
+                case, total_moment_local_expected, total_moment_local,
+                np.abs(total_moment_local_expected - total_moment_local))
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+
+    #@unittest.expectedFailure
+    def test_op2_solid_shell_bar_01_gpforce_radial(self):
+        warning_log = SimpleLogger(level='warning')
+        debug_log = SimpleLogger(level='debug')
+        folder = os.path.join(model_path, 'sol_101_elements')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
+        op2_1 = read_op2_geom(op2_filename, xref=False, log=warning_log)
+        op2_1.log = debug_log
+
+        print("disp_orig =\n", op2_1.displacements[1].data[0, :2, :])
+        #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
+        #print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
+
+        op2_1.cross_reference(xref_elements=False,
+                              xref_nodes_with_elements=False,
+                              xref_properties=False,
+                              xref_masses=False,
+                              xref_materials=False,
+                              xref_loads=False,
+                              xref_constraints=False,
+                              xref_aero=False,
+                              xref_sets=False,
+                              xref_optimization=False)
+        xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
+
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
+        #-------------------------------------------------
+        #coords = op2_1.coords
+        #used_cds = np.unique(nid_cd[:, 1])
+        #for cd in used_cds:
+            #coord = op2_1.coords[cd]
+            #print(coord)
+            #print('origin = %s' % coord.origin)
+            #print('beta =\n%s' % coord.beta())
+            #print('-----------------------------')
+
+        #disp = op2_1.displacements[1]
+        #for line in list(disp.data[0, :, :3]):
+            #print('%10.4e %10.4e %10.4e' % tuple(line))
+
+        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
+        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
+        op2_1.transform_gpforce_to_global(
+            nids_all, nids_transform_1, i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
+        #print('stuff...')
+        #disp = op2_1.displacements[1]
+        #for line in list(disp.data[0, :, :3]):
+            #print('%10.4e %10.4e %10.4e' % tuple(line))
+        #print(disp.data[0, :, :3])
+
+        print("disp_new =\n", op2_1.displacements[1].data[0, :2, :])
+        #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
+        #print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
+
+        #-----------------------------------------------------------------------
+        op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2_2 = read_op2_geom(op2_filename2, debug=False)
+        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
+        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
+        op2_2.transform_gpforce_to_global(
+            nids_all, nids_transform_2, i_transform_2, op2_2.coords)
+
+        print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
+        #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
+        #print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, :2, :])
+
+        return
+        msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
+            op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
+        #print(msg)
+        assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
+
+        msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
+            op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
+        #print(msg)
+
+        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
+        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
+        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
+        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+        #-----------------------------------------------------------------------
+        gpforce = op2_1.grid_point_forces[1]
+        data = _get_gpforce_data()
+        for i, datai in enumerate(data):
+            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
+            coord_out = op2_1.coords[cid]
+            op2_1.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
+            out = gpforce.extract_interface_loads(
+                nids, eids,
+                coord_out, op2_1.coords,
+                nid_cd, i_transform_1,
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
+            total_force_global, total_moment_global, total_force_local, total_moment_local = out
+
+            op2_1.log.debug('***********')
+            op2_1.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            op2_1.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+
+            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
+                eids, nids, cid, summation_point)
+            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
+                case, total_force_local_expected, total_force_local,
+                np.abs(total_force_local_expected - total_force_local))
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
+
+            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
+                case, total_moment_local_expected, total_moment_local,
+                np.abs(total_moment_local_expected - total_moment_local))
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
 def _get_gpforce_data():
     data = [

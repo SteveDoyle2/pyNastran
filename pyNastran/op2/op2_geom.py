@@ -10,7 +10,7 @@ from pyNastran.op2.tables.geom.dit import DIT
 from pyNastran.op2.tables.geom.dynamics import DYNAMICS
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
 
 def read_op2_geom(op2_filename=None, combine=True, subcases=None,
                   validate=True, xref=True,

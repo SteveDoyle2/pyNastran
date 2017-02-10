@@ -1145,6 +1145,28 @@ class USET(Set):
             ids.append(idi)
         return USET(name, components, ids, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        tested by gspc1.op2
+
+        for some reason, the setname is an integer and has bizarre rules
+        that I don't understand like:
+          - the setname is 1-4 characters, except if it's 'ZERO%i' % sid
+            ummm...odd
+        """
+        sid = data[0]
+        if sid < 0:
+            name = 'ZERO'
+        else:
+            name = str(sid)
+        nid = data[1]
+        assert nid > 0, nid
+        component = str(data[2])
+        for componenti in component:
+            assert componenti in '0123456', component
+        return USET(name, [component], [nid], comment=comment)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly

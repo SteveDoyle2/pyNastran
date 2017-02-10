@@ -23,6 +23,11 @@ def parse_components(card, ifield, fieldname):
         field number
     fieldname : str
         name of field
+
+    Returns
+    -------
+    components : str
+        a string of the dofs '0' or '123456' (not all are required)
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
