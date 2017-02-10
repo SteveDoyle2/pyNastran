@@ -20,7 +20,7 @@ class Matrix(object):
     is_matpool : bool
         is this a matpool matrix
     """
-    def __init__(self, name, is_matpool=False):
+    def __init__(self, name, form, is_matpool=False):
         """
         Initializes a Matrix
 
@@ -28,12 +28,44 @@ class Matrix(object):
         ----------
         name : str
             the name of the matrix
+        form : int
+            the matrix type
         is_matpool : bool
             is this a matpool matrix
+
+        +------+-----------------+
+        | Form | Meaning         |
+        +======+=================+
+        |  1   | Square          |
+        |  2   | Rectangular     |
+        |  6   | Symmetric       |
+        |  9   | Pseudo identity |
+        +------+-----------------+
         """
         self.name = name
         self.data = None
+        self.form = form
         self.is_matpool = is_matpool
+
+        # only exist for is_matpool = True
+        self.col_nid = None
+        self.col_dof = None
+        self.row_nid = None
+        self.row_dof = None
+
+    @property
+    def shape_str(self):
+        """gets the matrix description"""
+        if self.form == 1:
+            return 'square'
+        elif self.form == 2:
+            return 'rectangular'
+        elif self.form == 6:
+            return 'symmetric'
+        elif self.form == 9:
+            return 'pseudo-identity'
+        else:
+            raise RuntimeError('form = %s' % self.form)
 
     def write(self, f06, print_full=True):
         """writes to the F06"""
@@ -55,7 +87,8 @@ class Matrix(object):
         class_name = str(type(self.data)).replace('<class ', '').replace('>', '').replace("'", '') + ';'
         header = 'Matrix[%r];' % self.name
         shape = ' shape=%s;' % str(self.data.shape).replace('L', '')
-        msg = '%-18s %-18s type=%-33s dtype=%s' % (
-            header, shape, class_name, self.data.dtype)
+        dtype = '%s;' % self.data.dtype
+        msg = '%-18s %-18s type=%-33s dtype=%-10s desc=%s' % (
+            header, shape, class_name, dtype, self.shape_str)
         return msg
 

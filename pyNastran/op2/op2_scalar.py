@@ -5,7 +5,7 @@ Defines the OP2 class.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-import sys
+#import sys
 from struct import unpack, Struct
 from collections import Counter
 
@@ -1790,335 +1790,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             raise RuntimeError('tout = %s' % tout)
         return fmt, nfloats, nterms
 
-    def _read_matpool_matrix(self):
-        """
-        Reads a MATPOOL matrix
-
-        MATPOOL matrices are always sparse
-
-        +------+--------------------------------+
-        | Form | Meaning                        |
-        +======+================================+
-        |  1   | Square                         |
-        +------+--------------------------------+
-        """
-        table_name = self._read_table_name(rewind=False, stop_on_failure=True)
-        utable_name = table_name.decode('utf-8')
-        self.read_markers([-1])
-        data = self._read_record()
-        #self.show_data(data, types='if')
-        #print('--------------------')
-        #print('-2')
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        #self.show_data(data, types='s')
-        #print('--------------------')
-        #print('-3')
-        self.read_markers([-3, 1, 0])
-        data = self._read_record()
-
-        nvalues = len(data) // 4
-
-        nwords = 5
-        nnodes = nvalues // nwords
-        #assert nvalues % 3 == 0, nvalues / 3.
-        assert len(data) % 4 == 0, len(data) / 4.
-        #self.log.debug('nvalues = %s' % nvalues)
-        #header_ints = np.fromstring(data[:3*12], dtype=self.idtype)
-        #assert np.array_equal(header_ints[:3], [114, 1, 120]), header_ints
-
-        import struct
-        header = struct.unpack('3i 8s 7i', data[:48]) # 48=4*12
-        assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
-
-        # ncols_gset is needed for form=9
-        #  list of header values:
-        #    4:5   matrix name
-        #    6     place holder
-        #    7     matrix shape (1 = square, 2 or 9 = rectangular, 6 = symmetric)
-        #    8     input type flag (1 = single, 2 = double, 3 = complex single,
-        #                           4 = complex double)
-        #    9     output type flag (0 = precision set by system cell,
-        #                            1 = single, 2 = double, 3 = complex single,
-        #                            4 = complex double)
-        #   10     complex flag (0 = real/imaginary, >0 = magnitude/phase)
-        #   11     place holder
-        #   12     number of columns in the G set (only necessary for matrix
-        #                                          shape 9)
-        matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
-        matrix_name = matrix_name.strip()
-        #matrix_name = header[3]
-        #matrix_shape = header[5]
-        self.log.info('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, is_phase=%s, junk2=%s, ncols_gset=%s' % (
-            matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset))
-
-        if tin > 2 or tout > 2:
-            raise RuntimeError('complex matrices are not supported')
-
-        if tout == 1:
-            dtype = 'float32'
-            nfields = 1
-            idtype = self.idtype
-            fdtype = self.fdtype
-        elif tout == 2:
-            dtype = 'float64'
-            nfields = 2
-            idtype = self.long_dtype
-            fdtype = self.double_dtype
-            msg = '%s is not supported' % dtype
-            #self.log.error(msg)
-            #raise RuntimeError(msg)
-        elif tout == 3:
-            dtype = 'complex64'
-            nfields = 2
-            msg = '%s is not supported' % dtype
-            self.log.error(msg)
-            raise RuntimeError(msg)
-        elif tout == 4:
-            dtype = 'complex128'
-            nfields = 4
-            msg = '%s is not supported' % dtype
-            self.log.error(msg)
-            raise RuntimeError(msg)
-        else:
-            #raise RuntimeError('tout = %s' % tout)
-            dtype = '???'
-            msg = 'matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, is_phase=%s, junk2=%s, ncols_gset=%s' % (
-                matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset)
-            self.log.warning(msg)
-            raise RuntimeError(msg)
-        #self.log.info('dtype = %r' % dtype)
-        is_symmetric = matrix_shape == 6
-        is_phase_flag = is_phase > 0
-        #self.show_data(data[48:200], types='ifd')
-
-        m = Matrix(table_name, is_matpool=True)
-        self.matrices[utable_name] = m
-
-        if 0:
-            # works for float32
-            ints = np.fromstring(data[48:], dtype=idtype)
-            floats = np.fromstring(data[48:], dtype=fdtype)
-            temp_ints = ints
-        else:
-            # works for float32, float64
-            temp_ints = np.fromstring(data[48:], dtype=self.idtype)
-            ints = np.fromstring(data[48:], dtype=idtype)
-            floats = np.fromstring(data[48:], dtype=fdtype)  # highly questionable on float64s
-
-
-
-        # find the first index with ()-1,-1)
-        iminus1 = np.where(temp_ints[:-1] == -1)[0]
-        double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
-
-        # the field after our stop
-        # we'll handle the off by 1 later with arange
-        istop = iminus1[:-2][double_minus1]
-
-        # 2 fields after is the start position
-        # add on a 0 to the beginning to account for the starting position
-        # istart defines icol
-        istart = np.hstack([0, istop[:-1] + 2])
-        #print('iminus1 =', iminus1)
-        #print('double_minus1 =', list(double_minus1))
-        #print('istop =', istop)
-        #print('istart =', istart)
-
-        col_nids_short = temp_ints[istart]
-        col_dofs_short = temp_ints[istart+1]
-        #print('col_nids_short =', col_nids_short.tolist())
-        #print('col_dofs_short =', col_dofs_short.tolist())
-
-        #gci = []
-        gcj = []
-        row_nids = []
-        row_dofs = []
-        col_nids = []
-        col_dofs = []
-        reals = []
-        for col_nidi, col_dofi, istarti, istopi in zip(col_nids_short, col_dofs_short, istart + 2, istop - 1):
-
-            ## TODO: preallocate arrays
-            if dtype == 'float32':
-                i = np.arange(istarti, istopi, step=3, dtype='int32') #[:10]
-                #print('col_nidi=%s col_dofi=%s' % (col_nidi, col_dofi))
-
-                # the row index; [1, 2, ..., 43]
-                # we subtract 1, so it's 0-based
-                row_nid = ints[i] #- 1
-
-                # the row_dof; [0, 0, ..., 0.]
-                row_dof = ints[i+1]
-                udof = np.unique(row_dof)
-                for udofi in udof:
-                    assert udofi in [0, 1, 2, 3, 4, 5, 6], udof
-
-                ni = len(i)
-                col_nid = np.ones(ni, dtype='int32') * col_nidi
-                col_dof = np.ones(ni, dtype='int32') * col_dofi
-                real = floats[i+2]
-
-            elif dtype == 'float64':
-                #print('col_nidi=%s col_dofi=%s' % (col_nidi, col_dofi))
-                datai = data[48+(istarti*4) : 48+(istopi*4)+4]
-                #self.show_data(datai, types='iqd')
-                #delta = (istopi - istarti + 9)
-                #nvals = delta // 2
-                #if delta % 2 != 0:
-                    #msg = 'istart=%s istop=%s delta=%s delta/2=%s' % (
-                        #istarti, istopi, delta, delta % 2)
-                    #raise RuntimeError(msg)
-
-                irow = np.arange(istarti, istopi, step=4, dtype='int32')
-                idof = irow + 1
-                assert len(datai) % 8 == 0, len(datai) / 8
-                real = np.fromstring(datai, dtype=fdtype)[1::2]
-                #print('real =', real)
-                assert len(irow) == len(real), real
-                #print('i =', i)
-
-
-                # the row index; [1, 2, ..., 43]
-                # we subtract 1, so it's 0-based
-                row_nidi = temp_ints[irow] #- 1
-
-                # the dof; [0, 0, ..., 0.]
-                row_dof = temp_ints[idof]
-                udof = np.unique(dof)
-                for udofi in udof:
-                    assert udofi in [0, 1, 2, 3, 4, 5, 6], np.asarray(udof, dtype='int32').tolist()
-
-                ni = len(irow)
-                col_nid = np.ones(ni, dtype='int32') * col_nidi
-                col_dof = np.ones(ni, dtype='int32') * col_dofi
-
-                #print('row_nid =%s' % row_nid.tolist())
-                #print('gcji =%s' % gcji.tolist())
-                #print('real=%s' % real.tolist())
-            else:
-                raise NotImplementedError(dtype)
-            row_nids.append(row_nid)
-            row_dofs.append(row_dof)
-            col_nids.append(col_nid)
-            col_dofs.append(col_dof)
-            #gcj.append(gcji)
-            reals.append(real)
-            #print()
-            #break
-
-        row_nids_array = np.hstack(row_nids)
-        row_dofs_array = np.hstack(row_dofs)
-
-        col_nids_array = np.hstack(col_nids)
-        col_dofs_array = np.hstack(col_dofs)
-        real_array = np.hstack(reals)
-
-        #mrows = len(np.unique(gci_array))
-        #ncols = len(np.unique(gcj_array))
-
-        # not 100% on these, they might be flipped
-        #print('row_nids_array =', np.unique(row_nids_array))
-        #print('gcj_array =', np.unique(gcj_array))
-
-        # this is way slower than it should be
-        grids1 = col_nids_array
-        comps1 = col_dofs_array
-
-        grids2 = row_nids_array
-        comps2 = row_dofs_array
-        assert len(grids1) == len(grids2), 'ngrids1=%s ngrids2=%s' % (len(grids1), len(grids2))
-
-        j1, j2 = self.grids_comp_array_to_index(grids1, comps1, grids2, comps2)
-        assert len(j1) == len(j2), 'nj1=%s nj2=%s' % (len(j1), len(j2))
-        assert len(grids1) == len(real_array), 'ngrids1=%s nreals=%s' % (len(j1), len(real_array))
-
-        mrows = len(np.unique(j1))
-        ncols = len(np.unique(j2))
-
-        #print('making coo_matrix')
-        matrix = coo_matrix((real_array, (j1, j2)),
-                            shape=(mrows, ncols), dtype=dtype)
-        m.data = matrix
-        m.col_nid = col_nids_array
-        m.col_dof = col_dofs_array
-        m.row_nid = row_nids_array
-        m.row_dof = row_dofs_array
-
-        #print('matrix', matrix)
-
-        #print('--------------------')
-        #print('-4')
-        self.read_markers([-4, 1, 0])
-        data = self._read_record()
-        #self.show_data(data, types='ifd')
-        #asdf
-        #print('--------------------')
-        #print('-5')
-        self.read_markers([-5, 1, 0])
-
-        #data = self._read_record()
-        if len(data) == 12:
-            #print("returning from -5")
-            self.read_markers([0])
-            #self.show_ndata(24, types='is')
-            return
-
-        #self.show_data(data, types='ifs')
-        #print('--------------------')
-        #self.show_ndata(200, types='ifs')
-        #sys.exit()
-        #aaa
-
-    def grids_comp_array_to_index(self, grids1, comps1, grids2, comps2):
-        """maps the dofs"""
-        #from pyNastran.utils.mathematics import unique2d
-        a = np.vstack([grids1, comps1]).T
-        b = np.vstack([grids2, comps2]).T
-        #print('grids2 =', grids2)
-        #print('comps2 =', comps2)
-        from itertools import count
-        #c = np.vstack([a, b])
-        #assert c.shape[1] == 2, c.shape
-        #urows = unique2d(c)
-        #urows = c
-
-        nid_comp_to_dof_index = {}
-        #dof_index_to_nid_comp = {}
-        j = 0
-        #print('a')
-        for (nid, dof) in a.tolist():
-            key = (int(nid), int(dof))
-            #print(key)
-            if key not in nid_comp_to_dof_index:
-                nid_comp_to_dof_index[(nid, dof)] = j
-                #dof_index_to_nid_comp[j] = (nid, dof)
-                j += 1
-        #print('b')
-        #print('b =', b)
-        for (nid, dof) in b.tolist():
-            #print(nid, type(nid))
-            #print(dof, type(dof))
-            key = (int(nid), int(dof))
-            #print(key)
-            if key not in nid_comp_to_dof_index:
-                nid_comp_to_dof_index[(nid, dof)] = j
-                #dof_index_to_nid_comp[j] = (nid, dof)
-                j += 1
-
-
-        #print('reverse')
-        #nid_comp_to_dof_index, dof_index_to_nid_comp
-        ja = np.zeros(grids1.shape, dtype='int32')
-        jb = np.zeros(grids2.shape, dtype='int32')
-        for i, (nid, dof) in zip(count(), a.tolist()):
-            #print(nid, dof)
-            ja[i] = nid_comp_to_dof_index[(nid, dof)]
-        for i, (nid, dof) in zip(count(), b.tolist()):
-            #print(nid, dof)
-            jb[i] = nid_comp_to_dof_index[(nid, dof)]
-
-        return ja, jb
 
     def _read_matrix(self, table_name):
         """
@@ -2150,7 +1821,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             try:
                 self._read_matpool_matrix()
             except:
-                #raise
+                raise
                 self._goto(i)
                 self._skip_table(self.table_name)
         #else:
@@ -2159,6 +1830,321 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #except:
                 #self._goto(i)
                 #self._skip_table(self.table_name)
+
+    def _read_matpool_matrix(self):
+        """
+        Reads a MATPOOL matrix
+
+        MATPOOL matrices are always sparse
+
+        +------+-----------------+
+        | Form | Meaning         |
+        +======+=================+
+        |  1   | Square          |
+        |  2   | Rectangular     |
+        |  6   | Symmetric       |
+        |  9   | Pseudo identity |
+        +------+-----------------+
+        """
+        table_name = self._read_table_name(rewind=False, stop_on_failure=True)
+        utable_name = table_name.decode('utf-8')
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+
+        nvalues = len(data) // 4
+        assert len(data) % 4 == 0, len(data) / 4.
+
+        header = unpack('3i 8s 7i', data[:48]) # 48=4*12
+        assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
+
+        # ncols_gset is needed for form=9
+        #  list of header values:
+        #    4:5   matrix name
+        #    6     placeholder
+        #    7     matrix shape (1 = square, 2 or 9 = rectangular, 6 = symmetric)
+        #    8     input type flag (1 = single, 2 = double, 3 = complex single,
+        #                           4 = complex double)
+        #    9     output type flag (0 = precision set by system cell,
+        #                            1 = single, 2 = double, 3 = complex single,
+        #                            4 = complex double)
+        #   10     complex flag (0 = real/imaginary, >0 = magnitude/phase)
+        #   11     placeholder
+        #   12     number of columns in the G set (only necessary for matrix
+        #                                          shape 9)
+        matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
+        matrix_name = matrix_name.strip()
+
+        #self.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+                       #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
+                           #matrix_name, junk1, matrix_shape, tin, tout,
+                           #is_phase, junk2, ncols_gset))
+
+        is_complex = False
+        if tin > 2 or tout > 2:
+            is_complex = True
+            assert is_phase == 0, 'is_phase=%s' % is_phase
+            imags = []
+
+        if tout == 1:
+            dtype = 'float32'
+            fdtype = self.fdtype
+        elif tout == 2:
+            dtype = 'float64'
+            fdtype = self.double_dtype
+        elif tout == 3:
+            dtype = 'complex64'
+            fdtype = self.fdtype
+        elif tout == 4:
+            dtype = 'complex128'
+            fdtype = self.double_dtype
+        else:
+            dtype = '???'
+            msg = ('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+                   'is_phase=%s, junk2=%s, ncols_gset=%s' % (
+                       matrix_name, junk1, matrix_shape, tin, tout,
+                       is_phase, junk2, ncols_gset))
+            self.log.warning(msg)
+            raise RuntimeError(msg)
+
+        is_symmetric = matrix_shape == 6
+        is_phase_flag = is_phase > 0
+
+        if tout in [1, 3]:
+            # works for float32, complex64
+            ints = np.fromstring(data[48:], dtype=self.idtype)
+            floats = np.fromstring(data[48:], dtype=self.fdtype)
+            temp_ints = ints
+        else:
+            # works for float64, complex128
+            temp_ints = np.fromstring(data[48:], dtype=self.idtype)
+
+        # find the first index with ()-1,-1)
+        iminus1 = np.where(temp_ints[:-1] == -1)[0]
+        double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
+
+        # the field after our stop
+        # we'll handle the off by 1 later with arange
+        istop = iminus1[:-2][double_minus1]
+
+        # 2 fields after is the start position
+        # add on a 0 to the beginning to account for the starting position
+        # istart defines icol
+        istart = np.hstack([0, istop[:-1] + 2])
+
+        col_nids_short = temp_ints[istart]
+        col_dofs_short = temp_ints[istart+1]
+        #nj2 = len(istart)  ## TODO: why is this wrong???
+
+        row_nids = []
+        row_dofs = []
+        col_nids = []
+        col_dofs = []
+        reals = []
+        imags = []
+        for col_nidi, col_dofi, istarti, istopi in zip(
+            col_nids_short, col_dofs_short, istart + 2, istop):
+
+            ## TODO: preallocate arrays
+            imag = None
+            # The float32/complex64 blocks are really simple
+            # because we can just use the data is from the temp_ints block.
+            # We calculate istart/istop and directly access the float data.
+            #
+            # The float64/complex128 blocks are more complicated.
+            # It's easier to just use istart/istop to calculate datai
+            # case that, and then slice it.
+            #
+            # In all cases, we use istart/istop to calculate row/col nid/dof
+            # because they are always int32.  Only the real/imag types change.
+            if dtype == 'float32':
+                irow = np.arange(istarti, istopi-1, step=3, dtype='int32')
+                real = floats[irow + 2]
+            elif dtype == 'complex64':
+                irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
+                real = floats[irow + 2]
+                imag = floats[irow + 3]
+
+            elif dtype == 'float64':
+                datai = data[48+(istarti*4) : 48+(istopi*4)]
+                irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
+                assert len(datai) % 8 == 0, len(datai) / 8
+                real = np.fromstring(datai, dtype=fdtype)[1::2]
+
+            elif dtype == 'complex128':
+                datai = data[48+(istarti*4) : 48+(istopi*4)]
+
+                # iword
+                # -----
+                #   0    1    3     5   <---- iword
+                #   1    1    2     2   <---- nwords
+                # (nid, dof, real, imag)
+                irow = np.arange(istarti, istopi-1, step=6, dtype='int32')
+                assert len(datai) % 8 == 0, len(datai) / 8
+                floats = np.fromstring(datai, dtype=fdtype)
+
+                # ndoubles
+                # --------
+                #  <---0--->   1     2    <----- iword
+                #      1       1     1    <----- nwords
+                # (nid, dof, real, imag)
+                real = floats[1::3]
+                imag = floats[2::3]
+            else:
+                msg = '%s is not supported' % dtype
+                self.log.error(msg)
+                raise RuntimeError(msg)
+
+            if len(irow) != len(real):
+                msg = 'nrow=%s nreal=%s nimag=%s' % (len(irow), len(real), len(imag))
+                raise RuntimeError(msg)
+
+            # the row index; [1, 2, ..., 43]
+            row_nid = temp_ints[irow]
+
+            # the dof; [0, 0, ..., 0.]
+            row_dof = temp_ints[irow + 1]
+            urow_dof = np.unique(row_dof)
+            for udofi in urow_dof:
+                if udofi not in [0, 1, 2, 3, 4, 5, 6]:
+                    msg = 'udofi=%s is invalid; must be in [0, 1, 2, 3, 4, 5, 6]; dofs=%s' % (
+                        udofi, np.asarray(urow_dof, dtype='int32').tolist())
+                    raise ValueError(msg)
+
+            ni = len(irow)
+            col_nid = np.ones(ni, dtype='int32') * col_nidi
+            col_dof = np.ones(ni, dtype='int32') * col_dofi
+
+            row_nids.append(row_nid)
+            row_dofs.append(row_dof)
+            col_nids.append(col_nid)
+            col_dofs.append(col_dof)
+            reals.append(real)
+            imags.append(imag)
+
+        row_nids_array = np.hstack(row_nids)
+        row_dofs_array = np.hstack(row_dofs)
+
+        col_nids_array = np.hstack(col_nids)
+        col_dofs_array = np.hstack(col_dofs)
+        real_array = np.hstack(reals)
+        if is_complex:
+            complex_array = np.hstack(imags)
+            assert len(real_array) == len(complex_array)
+            real_imag_array = real_array + 1.j * complex_array
+        else:
+            real_imag_array = real_array
+
+        # TODO: this is way slower than it should be
+        #       because we didn't preallocate the data and the
+        #       horrific grids_comp_array_to_index function
+        grids1 = col_nids_array
+        comps1 = col_dofs_array
+
+        grids2 = row_nids_array
+        comps2 = row_dofs_array
+        assert len(grids1) == len(comps1), 'ngrids1=%s ncomps1=%s' % (len(grids1), len(comps1))
+        assert len(grids1) == len(grids2), 'ngrids1=%s ngrids2=%s' % (len(grids1), len(grids2))
+        assert len(comps1) == len(comps2), 'ncomps1=%s ncomps2=%s' % (len(comps1), len(comps2))
+
+        j1, j2, nj1, nj2, nj = self.grids_comp_array_to_index(grids1, comps1, grids2, comps2)
+        assert len(j1) == len(j2), 'nj1=%s nj2=%s' % (len(j1), len(j2))
+        assert len(grids1) == len(real_array), 'ngrids1=%s nreals=%s' % (len(j1), len(real_array))
+
+        # not 100% on these, they might be flipped
+        #ncols = len(np.unique(j1))
+        #mrows = len(np.unique(j2))
+
+        if is_symmetric:
+            mrows = nj
+            ncols = nj
+            #print('  j1 =', j1)
+            #print('  j2 =', j2)
+        else:
+            ncols = nj1
+            mrows = nj2
+
+        try:
+            matrix = coo_matrix((real_imag_array, (j2, j1)),
+                                shape=(mrows, ncols), dtype=dtype)
+        except ValueError:
+            msg = 'Passed all the checks; cannot build MATPOOL sparse matrix...\n'
+            spaces = '                                          '
+            msg += '%sname=%s dtype=%s nrows=%s ncols=%s nj1=%s nj2=%s nj=%s' % (
+                spaces, table_name, dtype, mrows, ncols, nj1, nj2, nj)
+            self.log.error(msg)
+            raise
+
+        m = Matrix(table_name, is_matpool=True, form=matrix_shape)
+        m.data = matrix
+        m.col_nid = col_nids_array
+        m.col_dof = col_dofs_array
+        m.row_nid = row_nids_array
+        m.row_dof = row_dofs_array
+        m.form = matrix_shape
+        self.matrices[utable_name] = m
+        self.log.debug(m)
+
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+
+        if len(data) == 12:
+            self.read_markers([-5, 1, 0, 0])
+            return
+        raise RuntimeError('failed on read_matpool_matrix')
+
+    def grids_comp_array_to_index(self, grids1, comps1, grids2, comps2):
+        """maps the dofs"""
+        #from pyNastran.utils.mathematics import unique2d
+        ai = np.vstack([grids1, comps1]).T
+        bi = np.vstack([grids2, comps2]).T
+        #print('grids2 =', grids2)
+        #print('comps2 =', comps2)
+        from itertools import count
+        #c = np.vstack([a, b])
+        #assert c.shape[1] == 2, c.shape
+        #urows = unique2d(c)
+        #urows = c
+
+        nid_comp_to_dof_index = {}
+        #dof_index_to_nid_comp = {}
+        j = 0
+        a_keys = []
+        for (nid, dof) in ai.tolist():
+            nid_dof = (int(nid), int(dof))
+            if nid_dof not in a_keys:
+                a_keys.append(nid_dof)
+                if nid_dof not in nid_comp_to_dof_index:
+                    nid_comp_to_dof_index[(nid, dof)] = j
+                    #dof_index_to_nid_comp[j] = (nid, dof)
+                    j += 1
+        b_keys = []
+        for (nid, dof) in bi.tolist():
+            nid_dof = (int(nid), int(dof))
+            if nid_dof not in b_keys:
+                b_keys.append(nid_dof)
+            if nid_dof not in nid_comp_to_dof_index:
+                nid_comp_to_dof_index[(nid, dof)] = j
+                #dof_index_to_nid_comp[j] = (nid, dof)
+                j += 1
+
+        ja = np.zeros(grids1.shape, dtype='int32')
+        jb = np.zeros(grids2.shape, dtype='int32')
+        for i, (nid, dof) in zip(count(), ai.tolist()):
+            ja[i] = nid_comp_to_dof_index[(nid, dof)]
+        for i, (nid, dof) in zip(count(), bi.tolist()):
+            jb[i] = nid_comp_to_dof_index[(nid, dof)]
+
+        #nja = len(np.unique(ja))
+        nja = len(a_keys)
+        njb = len(b_keys)
+        nj = len(nid_comp_to_dof_index)
+        return ja, jb, nja, njb, nj
 
     def _read_matrix_mat(self):
         """
@@ -2219,7 +2205,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         matrix_num, ncols, mrows, form, tout, nvalues, g = unpack(self._endian + '7i', data)
         #print('g =', g)
 
-        m = Matrix(table_name)
+        m = Matrix(table_name, form=form)
         self.matrices[table_name.decode('utf-8')] = m
 
         # matrix_num is a counter (101, 102, 103, ...)
@@ -2251,19 +2237,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         elif tout == 4:
             dtype = 'complex128'
         else:
-            #raise RuntimeError('tout = %s' % tout)
             dtype = '???'
-            msg = 'unexpected tout for %s: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
-                table_name, matrix_num, form, mrows, ncols, tout, nvalues, g)
+            msg = ('unexpected tout for %s: matrix_num=%s form=%s '
+                   'mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
+                       table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
             self.log.warning(msg)
             raise RuntimeError(msg)
 
         if form == 1:
             if ncols != mrows:
-                self.log.warning('unexpected size; form=%s mrows=%s ncols=%s' % (form, mrows, ncols))
+                self.log.warning('unexpected size for %s; form=%s mrows=%s ncols=%s' % (
+                    table_name, form, mrows, ncols))
         elif form not in allowed_forms:
-            self.log.error('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
-                table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
+            self.log.error('name=%r matrix_num=%s form=%s mrows=%s '
+                           'ncols=%s tout=%s nvalues=%s g=%s' % (
+                               table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
             raise RuntimeError('form=%s; allowed=%s' % (form, allowed_forms))
         #self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
             #table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
@@ -2335,12 +2323,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #assert max(GCj) <= ncols, 'GCi=%s GCj=%s ncols=%s' % (GCi, GCj, ncols)
                 GCi = array(GCi, dtype='int32') - 1
                 GCj = array(GCj, dtype='int32') - 1
-                #print('Gci', GCi)
-                #print('GCj', GCj)
-                #print('reals', reals)
                 try:
                     # we subtract 1 to the indicides to account for Fortran
-                    #    huh??? we dont...
+                    #    huh??? we don't...
                     if dtype == '???':
                         matrix = None
                         self.log.warning('what is the dtype?')
@@ -2374,9 +2359,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         matrix = None
                         self.log.warning('what is the dtype?')
                     else:
-                        #print('dtype =', dtype)
                         real_array = np.array(reals, dtype=dtype)
-                        self.log.debug('shape=%s mrows=%s ncols=%s' % (str(real_array.shape), mrows, ncols))
+                        self.log.debug('shape=%s mrows=%s ncols=%s' % (
+                            str(real_array.shape), mrows, ncols))
                         if len(reals) == mrows * ncols:
                             real_array = real_array.reshape(mrows, ncols)
                             self.log.info('created %s' % self.table_name)
@@ -2385,13 +2370,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                             self.log.warning(msg)
 
                         matrix = real_array
-                    #print('m =', matrix)
 
                 m.data = matrix
                 if matrix is not None:
                     self.matrices[table_name.decode('utf-8')] = m
                 #nvalues = self.get_marker1(rewind=True)
-                #self.show(100)
                 return
             itable -= 1
             niter += 1
@@ -2570,8 +2553,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.additional_matrices = matrices
         else:
             self.additional_matrices = {}
-            for matrix_name, value in iteritems(matrices):
-                self.additional_matrices[b(matrix_name)] = value
+            for matrix_name, matrix in iteritems(matrices):
+                self.additional_matrices[b(matrix_name)] = matrix
 
     def _skip_table_helper(self):
         """
