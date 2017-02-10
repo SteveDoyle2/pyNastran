@@ -255,6 +255,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         dunno???
     stop_on_failure : bool; default=True
         is this used???
+    dev : bool; default=False
+        flag that gets set to True by op2_test.py that let's us crash/ignore
+        on a different set of errors than test_op2
     """
     op2 = None
     op2_nv = None
@@ -273,8 +276,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             subcases = [int(i) for i in subcases.split('_')]
         else:
             subcases = [int(subcases)]
-    if not quiet:
-        print('subcases = %s' % subcases)
 
     debug_file = None
     model = os.path.splitext(op2_filename)[0]
@@ -306,6 +307,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         op2_nv = OP2(debug=debug, debug_file=debug_file) # have to double write this until
     op2_nv.use_vector = False
 
+    if not quiet:
+        op2.log.debug('subcases = %s' % subcases)
     op2.set_subcases(subcases)
     op2_nv.set_subcases(subcases)
     op2.remove_results(exclude)
@@ -326,11 +329,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         op2.read_op2(op2_filename)
 
         #op2a.get_op2_stats()
-        if quiet:
-            op2.get_op2_stats()
-            op2.object_attributes()
-            op2.object_methods()
-        else:
+        op2.get_op2_stats()
+        op2.get_op2_stats(short=True)
+        op2.object_attributes()
+        op2.object_methods()
+        if not quiet:
             print("---stats for %s---" % op2_filename)
             print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()

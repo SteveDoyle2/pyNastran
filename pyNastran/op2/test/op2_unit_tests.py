@@ -1,13 +1,16 @@
 from __future__ import print_function
 import os
 import unittest
+import warnings
 from six import iteritems
 import numpy as np
 from numpy import dot, array_equal
-
 try:
     import pandas
     is_pandas = True
+    # per http://stackoverflow.com/questions/35175949/ignore-pandas-warnings
+    # doesn't work...
+    #warnings.filterwarnings('ignore', '.*unorderable dtypes; returning scalar but in the future this will be an error.*')
 except ImportError:
     is_pandas = False
 
@@ -146,7 +149,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
+            quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
 
     def _test_op2_solid_bending_03(self):
@@ -179,7 +182,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
+            quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -195,7 +198,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
+            quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
         op2.get_op2_stats(short=False)
         op2.get_op2_stats(short=True)
@@ -213,7 +216,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
+            quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
 
         f06_filename = os.path.join(folder, 'buckling_solid_shell_bar.test_op2_sort2.f06')
@@ -245,8 +248,8 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
-            dev=False)
+            quiet=True, check_memory=False, stop_on_failure=True,
+            dev=True)
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
@@ -257,7 +260,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
+            quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
@@ -269,7 +272,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
+            quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
         assert len(op2.displacements) == 1, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
@@ -281,11 +284,11 @@ class TestOP2(Tester):
         f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
         op2, is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=False, write_op2=False, write_xlsx=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
+            quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -298,11 +301,11 @@ class TestOP2(Tester):
         op2 = read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=False, write_op2=False, write_xlsx=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
+            quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -364,92 +367,6 @@ class TestOP2(Tester):
         op2 = read_op2(op2_filename, debug=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
-
-    def test_gpforce_01(self):
-        nids = np.array([1, 2, 3])
-        xyz_cid0 = np.array([
-            [1., 1., 1.],
-            [4., 2., 5.],
-            [3., 3., 3.],
-        ])
-        data_code = {
-            'nonlinear_factor' : None,
-            'sort_bits' : [0, 0, 0],
-            'analysis_code' : 1,
-            'is_msc' : True,
-            'format_code' : 1,
-            'table_code' : 1,
-            'data_names' : 'cat',
-            'device_code' : 1,
-            #'tcode' : 1,
-        }
-        is_sort1 = True
-        isubcase = 1
-        dt = 0.0
-        gpforce = RealGridPointForcesArray(data_code, is_sort1, isubcase, dt)
-        gpforce.ntimes = 1
-        gpforce.ntotal = 3
-        gpforce._ntotals = [3]
-
-        gpforce.build()
-        gpforce.data[0, :, :] = np.array([
-            [3., 7., 11., 0., 0., 0.,], # fx, fy, fz, mx, my, mz
-            [3., 7., 11., 0., 0., 0.,],
-            [3., 7., 11., 0., 0., 0.,],
-        ])
-        gpforce.node_element[0, :, :] = np.array([
-            [1, 1],
-            [2, 1],
-            [3, 1],
-        ])
-        op2 = OP2()
-        summation_point = [0., 0., 0.]
-        i_transform = None
-        nid_cd = np.array([
-            [1, 0],
-            [2, 0],
-            [3, 0],
-        ])
-        from pyNastran.bdf.bdf import CORD2R
-        coord_out = CORD2R(cid=0)
-        coords = {0 : coord_out}
-
-        #eids = [1]
-        #nids = [1]
-        #gpforce.extract_interface_loads(
-            #nids, eids, coord_out, coords, nid_cd,
-            #i_transform,
-            #xyz_cid0,
-            #summation_point,
-            #itime=0,
-            #debug=True,
-            #logger=op2.log)
-
-        #print('------------')
-        #eids = [1]
-        #nids = [2]
-        #gpforce.extract_interface_loads(
-            #nids, eids, coord_out, coords, nid_cd,
-            #i_transform,
-            #xyz_cid0,
-            #summation_point,
-            #itime=0,
-            #debug=True,
-            #logger=op2.log)
-        print('------------')
-
-        eids = [1]
-        nids = [1, 2]
-        gpforce.extract_interface_loads(
-            nids, eids, coord_out, coords, nid_cd,
-            i_transform,
-            xyz_cid0,
-            summation_point,
-            itime=0,
-            debug=True,
-            logger=op2.log)
-
-        #print(gpforce)
 
     def test_op2_solid_shell_bar_01(self):
         op2_filename = os.path.join('static_solid_shell_bar.op2')
@@ -1376,6 +1293,92 @@ class TestOP2(Tester):
 
 class TestGridPointForces(unittest.TestCase):
     """various grid point force tests"""
+
+    def test_gpforce_01(self):
+        nids = np.array([1, 2, 3])
+        xyz_cid0 = np.array([
+            [1., 1., 1.],
+            [4., 2., 5.],
+            [3., 3., 3.],
+        ])
+        data_code = {
+            'nonlinear_factor' : None,
+            'sort_bits' : [0, 0, 0],
+            'analysis_code' : 1,
+            'is_msc' : True,
+            'format_code' : 1,
+            'table_code' : 1,
+            'data_names' : 'cat',
+            'device_code' : 1,
+            #'tcode' : 1,
+        }
+        is_sort1 = True
+        isubcase = 1
+        dt = 0.0
+        gpforce = RealGridPointForcesArray(data_code, is_sort1, isubcase, dt)
+        gpforce.ntimes = 1
+        gpforce.ntotal = 3
+        gpforce._ntotals = [3]
+
+        gpforce.build()
+        gpforce.data[0, :, :] = np.array([
+            [3., 7., 11., 0., 0., 0.,], # fx, fy, fz, mx, my, mz
+            [3., 7., 11., 0., 0., 0.,],
+            [3., 7., 11., 0., 0., 0.,],
+        ])
+        gpforce.node_element[0, :, :] = np.array([
+            [1, 1],
+            [2, 1],
+            [3, 1],
+        ])
+        op2 = OP2()
+        summation_point = [0., 0., 0.]
+        i_transform = None
+        nid_cd = np.array([
+            [1, 0],
+            [2, 0],
+            [3, 0],
+        ])
+        from pyNastran.bdf.bdf import CORD2R
+        coord_out = CORD2R(cid=0)
+        coords = {0 : coord_out}
+
+        #eids = [1]
+        #nids = [1]
+        #gpforce.extract_interface_loads(
+            #nids, eids, coord_out, coords, nid_cd,
+            #i_transform,
+            #xyz_cid0,
+            #summation_point,
+            #itime=0,
+            #debug=True,
+            #logger=op2.log)
+
+        #print('------------')
+        #eids = [1]
+        #nids = [2]
+        #gpforce.extract_interface_loads(
+            #nids, eids, coord_out, coords, nid_cd,
+            #i_transform,
+            #xyz_cid0,
+            #summation_point,
+            #itime=0,
+            #debug=True,
+            #logger=op2.log)
+        print('------------')
+
+        eids = [1]
+        nids = [1, 2]
+        gpforce.extract_interface_loads(
+            nids, eids, coord_out, coords, nid_cd,
+            i_transform,
+            xyz_cid0,
+            summation_point,
+            itime=0,
+            debug=True,
+            logger=op2.log)
+        #print(gpforce)
+
     def test_op2_solid_shell_bar_01_gpforce(self):
         folder = os.path.join(model_path, 'sol_101_elements')
         #bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
