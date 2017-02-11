@@ -2032,7 +2032,7 @@ class OEF(OP2Common):
                         #term= 'CEN\'
                         nid = 0
                         eid = eid_device // 10
-                        obj.add(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+                        obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                         n += 44
                         for i in range(nnodes):
                             edata = data[n : n + 36]
@@ -2041,7 +2041,7 @@ class OEF(OP2Common):
                                 self.binary_debug.write('    %s\n' % (str(out)))
                             (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                             assert nid > 0, 'nid=%s' % nid
-                            obj.add(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+                            obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                             n += 36
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag: # complex
                 ntotal = numwide_imag * 4
@@ -2121,7 +2121,8 @@ class OEF(OP2Common):
                             bmxy = complex(bmxyr, bmxyi)
                             tx = complex(txr, txi)
                             ty = complex(tyr, tyi)
-                        obj.add_new_element_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+                        obj.add_new_element_sort1(dt, eid, term, nid, mx, my, mxy,
+                                                  bmx, bmy, bmxy, tx, ty)
 
                         for i in range(nnodes):  # .. todo:: fix crash...
                             edata = data[n:n+68]
@@ -2149,7 +2150,8 @@ class OEF(OP2Common):
                                 tx = complex(txr, txi)
                                 ty = complex(tyr, tyi)
                             if self.is_debug_file:
-                                self.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (eid, nid, str(out)))
+                                self.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (
+                                    eid, nid, str(out)))
                             obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
             else:
                 msg = self.code_information()
@@ -2181,7 +2183,7 @@ class OEF(OP2Common):
                      #direct_stress_or_strain,
                      #interlaminar_stress,
                      #max_of_fb_fp_for_all_plies
-                     ) = out
+                    ) = out
                     if flag != -1:
                         out = s2.unpack(edata)
                     #print(out)
@@ -2553,8 +2555,8 @@ class OEF(OP2Common):
                         obj.element_nodes[itotal:itotal2, 1] = nids_a
                         obj.element_nodes[itotal:itotal2, 2] = nids_b
 
-                    # [nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                    #  nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
+                    # [nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
+                    #  nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b]
                     assert floats[:, 2:8].shape[1] == 6, floats[:, 2:8].shape
                     assert floats[:, 9:].shape[1] == 6, floats[:, 9:].shape
                     obj.data[obj.itime, itotal:itotal2, :6] = floats[:, 2:8]
@@ -2570,14 +2572,14 @@ class OEF(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
                         (eid_device,
-                         nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                         nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB) = out
+                         nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
+                         nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b) = out
                         eid = eid_device // 10
 
                         obj.add_sort1(
                             dt, eid,
-                            nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                            nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB)
+                            nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
+                            nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 27:  # imag
                 # TODO: vectorize
@@ -2641,44 +2643,44 @@ class OEF(OP2Common):
                         out = s.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
-                        (eid_device, nidA,
-                         bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
-                         bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
-                         nidB,
-                         bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
-                         bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi) = out
+                        (eid_device, nid_a,
+                         bm1_ar, bm2_ar, ts1_ar, ts2_ar, af_ar, trq_ar,
+                         bm1_ai, bm2_ai, ts1_ai, ts2_ai, af_ai, trq_ai,
+                         nid_b,
+                         bm1_br, bm2_br, ts1_br, ts2_br, af_br, trq_br,
+                         bm1_bi, bm2_bi, ts1_bi, ts2_bi, af_bi, trq_bi) = out
                         eid = eid_device // 10
 
                         if is_magnitude_phase:
-                            bm1A = polar_to_real_imag(bm1Ar, bm1Ai)
-                            bm1B = polar_to_real_imag(bm1Br, bm1Bi)
-                            bm2A = polar_to_real_imag(bm2Ar, bm2Ai)
-                            bm2B = polar_to_real_imag(bm2Br, bm2Bi)
-                            ts1A = polar_to_real_imag(ts1Ar, ts1Ai)
-                            ts1B = polar_to_real_imag(ts1Br, ts1Bi)
-                            ts2A = polar_to_real_imag(ts2Ar, ts2Ai)
-                            ts2B = polar_to_real_imag(ts2Br, ts2Bi)
-                            afA = polar_to_real_imag(afAr, afAi)
-                            afB = polar_to_real_imag(afBr, afBi)
-                            trqA = polar_to_real_imag(trqAr, trqAi)
-                            trqB = polar_to_real_imag(trqBr, trqBi)
+                            bm1_a = polar_to_real_imag(bm1_ar, bm1_ai)
+                            bm1_b = polar_to_real_imag(bm1_br, bm1_bi)
+                            bm2_a = polar_to_real_imag(bm2_ar, bm2_ai)
+                            bm2_b = polar_to_real_imag(bm2_br, bm2_bi)
+                            ts1_a = polar_to_real_imag(ts1_ar, ts1_ai)
+                            ts1_b = polar_to_real_imag(ts1_br, ts1_bi)
+                            ts2_a = polar_to_real_imag(ts2_ar, ts2_ai)
+                            ts2_b = polar_to_real_imag(ts2_br, ts2_bi)
+                            af_a = polar_to_real_imag(af_ar, af_ai)
+                            af_b = polar_to_real_imag(af_br, af_bi)
+                            trq_a = polar_to_real_imag(trq_ar, trq_ai)
+                            trq_b = polar_to_real_imag(trq_br, trq_bi)
                         else:
-                            bm1A = complex(bm1Ar, bm1Ai)
-                            bm1B = complex(bm1Br, bm1Bi)
-                            bm2A = complex(bm2Ar, bm2Ai)
-                            bm2B = complex(bm2Br, bm2Bi)
-                            ts1A = complex(ts1Ar, ts1Ai)
-                            ts1B = complex(ts1Br, ts1Bi)
-                            ts2A = complex(ts2Ar, ts2Ai)
-                            ts2B = complex(ts2Br, ts2Bi)
-                            afA = complex(afAr, afAi)
-                            afB = complex(afBr, afBi)
-                            trqA = complex(trqAr, trqAi)
-                            trqB = complex(trqBr, trqBi)
+                            bm1_a = complex(bm1_ar, bm1_ai)
+                            bm1_b = complex(bm1_br, bm1_bi)
+                            bm2_a = complex(bm2_ar, bm2_ai)
+                            bm2_b = complex(bm2_br, bm2_bi)
+                            ts1_a = complex(ts1_ar, ts1_ai)
+                            ts1_b = complex(ts1_br, ts1_bi)
+                            ts2_a = complex(ts2_ar, ts2_ai)
+                            ts2_b = complex(ts2_br, ts2_bi)
+                            af_a = complex(af_ar, af_ai)
+                            af_b = complex(af_br, af_bi)
+                            trq_a = complex(trq_ar, trq_ai)
+                            trq_b = complex(trq_br, trq_bi)
 
                         obj.add_sort1(dt, eid,
-                                      nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                                      nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB)
+                                      nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
+                                      nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -2977,7 +2979,8 @@ class OEF(OP2Common):
 
                     out = s1.unpack(edata)
                     if self.is_debug_file:
-                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
+                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
+                            etype, self.element_type, str(out)))
                     (eid_device, parent, coord, icord, theta, _) = out
 
                     eid = eid_device // 10
@@ -3012,7 +3015,8 @@ class OEF(OP2Common):
 
                     out = s1.unpack(edata)
                     if self.is_debug_file:
-                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
+                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
+                            etype, self.element_type, str(out)))
                     (eid_device, parent, coord, icord, theta, _) = out
 
                     eid = eid_device // 10
@@ -3024,7 +3028,8 @@ class OEF(OP2Common):
                         n += 100
                         out = s2.unpack(edata)
                         if self.is_debug_file:
-                            self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (etype, self.element_type, str(out)))
+                            self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
+                                etype, self.element_type, str(out)))
                         [vugrid, mfxr, mfyr, mfxyr, ai, bi, ci, bmxr, bmyr, bmxyr, syzr, szxr, di,
                          mfxi, mfyi, mfxyi, ai, bi, ci, bmxi, bmyi, bmxyi, syzi, szxi, di] = out
 
@@ -3124,7 +3129,8 @@ class OEF(OP2Common):
 
                     out = s1.unpack(edata)
                     if self.is_debug_file:
-                        self.binary_debug.write('OEF_Force_191-%s - %s\n' % (self.element_type, str(out)))
+                        self.binary_debug.write('OEF_Force_191-%s - %s\n' % (
+                            self.element_type, str(out)))
                     (eid_device, parent, coord, icord) = out
 
                     eid = eid_device // 10

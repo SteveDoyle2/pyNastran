@@ -932,6 +932,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         else:
         #if 1:
             n = 0
+            dt = None
             s = Struct(b(self._endian + '2i6f'))
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
@@ -939,8 +940,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                #print(out)
-                obj.add(eid, grid_type, tx, ty, tz, rx, ry, rz)
+                obj.add_sort1(None, eid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 32
         return n
 

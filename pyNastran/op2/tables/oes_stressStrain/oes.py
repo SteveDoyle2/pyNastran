@@ -447,13 +447,13 @@ class OES(OP2Common):
 
     def _read_oes1_thermal(self, data, ndata):
         """
-        Reads OES self.thermal=1 tables; uses a hackish method to just skip the table.
+        Reads OES self.thermal=1 tables; uses a hackish method to just skip the table
         """
         return ndata
 
     def _read_ostr1_thermal(self, data, ndata):
         """
-        Reads OSTR self.thermal=1 tables; uses a hackish method to just skip the table.
+        Reads OSTR self.thermal=1 tables; uses a hackish method to just skip the table
         """
         return ndata
 
@@ -1118,7 +1118,7 @@ class OES(OP2Common):
                         n += n2
                         out = s2.unpack(edata)
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-                        obj.add(dt, eid, out)
+                        obj.add_sort1(dt, eid, out)
             elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
                 # TODO: vectorize
                 if self.read_mode == 1:
@@ -1664,8 +1664,8 @@ class OES(OP2Common):
                             ints1 = ints.reshape(nelements, numwide_real)
                         except ValueError:
                             msg = 'ints.shape=%s; size=%s ' % (str(ints.shape), ints.size)
-                            msg += 'nelements=%s numwide_real=%s nelements*numwide=%s' % (nelements, numwide_real,
-                                                                                          nelements * numwide_real)
+                            msg += 'nelements=%s numwide_real=%s nelements*numwide=%s' % (
+                                nelements, numwide_real, nelements * numwide_real)
                             raise ValueError(msg)
                         eids = ints1[:, 0] // 10
                         cids = ints1[:, 1]

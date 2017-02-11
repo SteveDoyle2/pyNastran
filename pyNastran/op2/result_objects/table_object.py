@@ -373,9 +373,6 @@ class TableArray(ScalarObject):  # displacement style table
         # wb.save()
 
 
-    def add(self, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        self.add_sort1(None, node_id, grid_type, v1, v2, v3, v4, v5, v6)
-
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         # itotal - the node number
         # itime - the time/frequency step

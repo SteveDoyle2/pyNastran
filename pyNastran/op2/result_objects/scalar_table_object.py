@@ -291,11 +291,6 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         #wb.save()
         # wb.save()
 
-
-    def add(self, node_id, grid_type, v1):
-        """unvectorized method for adding static data"""
-        self.add_sort1(None, node_id, grid_type, v1)
-
     def add_sort1(self, dt, node_id, grid_type, v1):
         """unvectorized method for adding SORT1 transient data"""
         # itotal - the node number

@@ -166,9 +166,6 @@ class RealBeamArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add(self, dt, eid, out):
-        self.add_sort1(dt, eid, out)
-
     def add_sort1(self, dt, eid, out):
         """unvectorized method for adding SORT1 transient data"""
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out

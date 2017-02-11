@@ -126,9 +126,6 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux):
-        self.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
-
     def add_sort1(self, dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux):
         """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
@@ -435,7 +432,6 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
     def add(self, dt, eid, parent, grad_fluxes):
         self.parent[eid] = parent
         #self.eType[eid]    = eType
-
         self.grad[eid] = {}
         self.flux[eid] = {}
         for grad_flux in grad_fluxes:
@@ -1189,9 +1185,6 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, cntl_node, free_conv, free_conv_k):
-        self.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
-
     def add_sort1(self, dt, eid, cntl_node, free_conv, free_conv_k):
         """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
@@ -1364,9 +1357,6 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                 if i > 0:
                     raise ValueError(msg)
         return True
-
-    def add(self, dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal):
-        self.add_sort1(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
 
     def add_sort1(self, dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal):
         """unvectorized method for adding SORT1 transient data"""
