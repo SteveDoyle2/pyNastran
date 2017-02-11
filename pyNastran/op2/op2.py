@@ -153,7 +153,8 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
         a logging object to write debug messages to
         (.. seealso:: import logging)
     mode : str; default='msc'
-        'nx', 'msc', 'optistruct'
+        the version of the Nastran you're using
+        {nx, msc, optistruct}
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
     encoding : str
@@ -386,6 +387,11 @@ class OP2(OP2_Scalar):
         self.log.debug('finished reading op2')
 
     def create_objects_from_matrices(self):
+        """
+        creates the following objects:
+          - sonitor3 : MONPNT3 object from the MP3F matrix
+          - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
+          """
         if 'MP3F' in self.matrices:
             self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
 
@@ -652,6 +658,8 @@ class OP2(OP2_Scalar):
             the nodes in the global frame
             Don't use this if CD is only rectangular
             Use this if CD is not rectangular
+        debug : bool; default=False
+            developer debug
         """
         #output = {}
         disp_like_dicts = [

@@ -101,6 +101,7 @@ class ComplexCBush1DArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, tx, ty, tz, rx, ry, rz):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [tx, ty, tz, rx, ry, rz]

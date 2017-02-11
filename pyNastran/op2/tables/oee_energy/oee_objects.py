@@ -101,6 +101,7 @@ class RealStrainEnergy(ScalarObject):
         self.density[eid] = density
 
     def add_sort1(self, dt, eid, energy, percent, density):
+        """unvectorized method for adding SORT1 transient data"""
         if dt not in self.energy:
             self.add_new_transient(dt)
 
@@ -269,6 +270,7 @@ class RealStrainEnergyArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, energyi, percenti, densityi):
+        """unvectorized method for adding SORT1 transient data"""
         #itime = self.itime // self.nelement_types
         itime = self.itime
         self._times[itime] = dt

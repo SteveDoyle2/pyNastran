@@ -38,6 +38,7 @@ class GridPointStressesArray(ScalarObject):
         self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
 
     def add_sort1(self, dt, ekey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         self.times[self.itime] = dt
         self.grid_element[self.ntotal, :] = [ekey, eid]
         self.data[self.itime, self.ntotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
@@ -136,6 +137,7 @@ class GridPointStresses(ScalarObject):
         self.eids[ekey].append(eid)
 
     def add_sort1(self, dt, ekey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         if dt not in self.nx:
             self.add_new_transient(dt)
 
@@ -336,6 +338,7 @@ class GridPointStressesVolume(ScalarObject):
         #self.eids[ekey].append(eid)
 
     def add_sort1(self, dt, ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         if dt not in self.nx:
             self.add_new_transient(dt)
 

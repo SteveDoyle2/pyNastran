@@ -58,6 +58,7 @@ class AppliedLoadsVectorArray(ScalarObject):
         self.add_sort1(self, node_id, eid, source, v1, v2, v3, v4, v5, v6)
 
     def add_sort1(self, node_id, eid, source, v1, v2, v3, v4, v5, v6):
+        """unvectorized method for adding SORT1 transient data"""
         #raise NotImplementedError('AppliedLoadsVector')
         msg = "node_id=%s v1=%s v2=%s v3=%s" % (node_id, v1, v2, v3)
         assert 0 < node_id < 1000000000, msg

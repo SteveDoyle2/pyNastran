@@ -119,6 +119,7 @@ class NonlinearGapStressArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW, form1, form2):
+        """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, int)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid

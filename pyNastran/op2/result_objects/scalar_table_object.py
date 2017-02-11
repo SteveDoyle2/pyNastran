@@ -223,6 +223,9 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         #print(self.data_frame)
 
     def finalize(self):
+        """
+        Calls any OP2 objects that need to do any post matrix calcs
+        """
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
         self.gridtype_str = np.chararray((nnodes), unicode=True)
@@ -290,9 +293,11 @@ class ScalarTableArray(ScalarObject):  # displacement style table
 
 
     def add(self, node_id, grid_type, v1):
+        """unvectorized method for adding static data"""
         self.add_sort1(None, node_id, grid_type, v1)
 
     def add_sort1(self, dt, node_id, grid_type, v1):
+        """unvectorized method for adding SORT1 transient data"""
         # itotal - the node number
         # itime - the time/frequency step
 
@@ -303,6 +308,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self.itotal += 1
 
     def add_sort2(self, dt, node_id, grid_type, v1):
+        """unvectorized method for adding SORT2 transient data"""
         self._times[self.itotal] = dt
 
         if 1:  # this is needed for SORT1 tables

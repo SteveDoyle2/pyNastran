@@ -128,6 +128,7 @@ class RealTriaxArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, nid, radial, azimuthal, axial, shear, omax, oms, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, int)
         self._times[self.itime] = dt
         self.element_node[self.itotal, :] = [eid, nid]
