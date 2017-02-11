@@ -236,15 +236,18 @@ class OP2(OP2_Scalar):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model):
+        """diffs the current op2 model vs. another op2 model"""
         if not self.read_mode == op2_model.read_mode:
-            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (self.read_mode, op2_model.read_mode))
+            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
+                self.read_mode, op2_model.read_mode))
             return True
         table_types = self.get_table_types()
         for table_type in table_types:
             adict = getattr(self, table_type)
             bdict = getattr(op2_model, table_type)
             if len(adict) != len(bdict):
-                print('len(self.%s)=%s len(op2_model.%s)=%s' % (table_type, len(adict), table_type, len(bdict)))
+                print('len(self.%s)=%s len(op2_model.%s)=%s' % (
+                    table_type, len(adict), table_type, len(bdict)))
                 return False
             for key, avalue in iteritems(adict):
                 bvalue = bdict[key]
@@ -264,6 +267,9 @@ class OP2(OP2_Scalar):
         return True
 
     def set_mode(self, mode):
+        """
+        Sets the mode as 'msc' or 'nx'
+        """
         if mode.lower() == 'msc':
             self.set_as_msc()
         elif mode.lower() == 'nx':

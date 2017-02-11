@@ -778,6 +778,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj.itotal = itotal2
         else:
+            dt = None
             n = 0
             s = Struct(b(self._endian + '2i6f'))
             for inode in range(nnodes):
@@ -786,8 +787,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                #print(out)
-                obj.add(eid, grid_type, tx)
+                obj.add_sort1(dt, eid, grid_type, tx)
                 n += 32
         return n
 
