@@ -1,20 +1,20 @@
 from __future__ import print_function, unicode_literals
-from six import string_types, b
-from six.moves import range, zip
 import copy
 from struct import Struct, unpack
-
-from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
+from six import string_types, b
+from six.moves import range, zip
 
 import numpy as np
+from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
-from pyNastran.op2.op2_codes import Op2Codes, get_scode_word
 from pyNastran.op2.op2_helper import polar_to_real_imag
+from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_scode_word
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
 from pyNastran.op2.dev.xlsx_writer import XlsxWriter
+
 
 class OP2Common(Op2Codes, F06Writer, XlsxWriter):
     def __init__(self):

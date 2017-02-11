@@ -115,15 +115,15 @@ import sys
 
 import numpy as np
 
-from pyNastran.utils import object_attributes, object_methods, integer_types
-from pyNastran.op2.op2_scalar import OP2_Scalar
+from pyNastran.utils import (
+    object_attributes, object_methods, integer_types, ipython_info)
 from pyNastran.op2.tables.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
-#from pyNastran.op2.op2_writer import OP2Writer
-from pyNastran.op2.op2_f06_common import Op2F06Attributes
-from pyNastran.utils import ipython_info
+#from pyNastran.op2.op2_interface.op2_writer import OP2Writer
+from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
+from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
@@ -151,7 +151,9 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
         enables the debug log and sets the debug in the logger
     log : Log()
         a logging object to write debug messages to
-     (.. seealso:: import logging)
+        (.. seealso:: import logging)
+    mode : str; default='msc'
+        'nx', 'msc', 'optistruct'
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
     encoding : str

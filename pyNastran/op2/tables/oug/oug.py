@@ -14,7 +14,7 @@ This file defines the OUG Table, which contains:
 """
 import numpy as np
 from pyNastran import is_release
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 from pyNastran.op2.tables.oug.oug_displacements import (
     RealDisplacementArray, ComplexDisplacementArray)

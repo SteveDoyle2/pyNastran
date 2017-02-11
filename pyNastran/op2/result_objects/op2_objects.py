@@ -7,11 +7,12 @@ from struct import pack
 import numpy as np
 
 from pyNastran import is_release
-from pyNastran.op2.op2_codes import Op2Codes
 from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import list_print
-from pyNastran.op2.write_utils import write_table_header
+from pyNastran.op2.op2_interface.op2_codes import Op2Codes
+from pyNastran.op2.op2_interface.write_utils import write_table_header
+
 
 class BaseScalarObject(Op2Codes):
     def __init__(self):

@@ -8,7 +8,7 @@ This file defines the OUG Table, which contains:
    - FLUX = ALL
 """
 from six import integer_types
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
     RealSPCForcesArray, ComplexSPCForcesArray,

@@ -12,7 +12,7 @@ from numpy import fromstring, vstack, sin, cos, radians, array
 from numpy import hstack, zeros
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_common import OP2Common, apply_mag_phase
+from pyNastran.op2.op2_interface.op2_common import OP2Common, apply_mag_phase
 
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,

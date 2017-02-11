@@ -12,7 +12,7 @@ from six.moves import range
 from numpy import fromstring, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
-from pyNastran.op2.op2_common import OP2Common, apply_mag_phase
+from pyNastran.op2.op2_interface.op2_common import OP2Common, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
