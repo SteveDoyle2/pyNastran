@@ -117,10 +117,6 @@ class GEOM4(GeomCommon):
         """
         return self._read_xset1(data, n, 'ASET1', ASET1, self._add_aset_object)
 
-    def _read_secset1(self, data, n):
-        self.log.info('skipping SECSET1 in GEOM4\n')
-        return len(data)
-
     def _read_xset(self, data, n, card_name, cls, add_method):
         """common method for ASET, QSET; not USET"""
         s = Struct(b(self._endian + '2i'))
@@ -147,7 +143,7 @@ class GEOM4(GeomCommon):
         [123   0   6  10  -1]
         """
         ndata = len(data)
-        nfields = (ndata - n) // 4
+        #nfields = (ndata - n) // 4
         #fmt = '%ii' % nfields
         out = np.fromstring(data[n:], self.idtype)
         #print(out)
@@ -203,7 +199,7 @@ class GEOM4(GeomCommon):
            2   0   1 113 124]
         """
         ndata = len(data)
-        nfields = (ndata - n) // 4
+        #nfields = (ndata - n) // 4
         #fmt = '%ii' % nfields
         out = np.fromstring(data[n:], self.idtype)
         #print(out)
@@ -331,7 +327,7 @@ class GEOM4(GeomCommon):
                 if isinstance(val, integer_types):
                     assert val != -1, mpc_data
         mpc = MPC.add_op2_data(mpc_data)
-
+        return len(data)
 
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
@@ -655,11 +651,20 @@ class GEOM4(GeomCommon):
             12, 12345, 0, -1)
 
         F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_acmsnnns.op2
+
+        [1, 123456, 0, 31, 35, 39, 43, 47, 48, 53, 63, 64, 69, 70, 71, 72, -1,
+         3, 456, 1, 1]
+        TestOP2.test_op2_solid_bending_02_geom
+
+        [123456, 456, 1, 5, 13,
+         123456, 123456, 0, 22, 23, 24, 25, -1]
+        TestOP2.test_op2_solid_shell_bar_01_geom
         """
         nentries = 0
         nints = (len(data) - n) // 4
-        idata = unpack('%s%ii' % (self._endian, nints), data[n:])
         idata = np.fromstring(data[n:], self.idtype)
+        if not idata[-1] == -1:
+            idata = np.hstack([idata, -1])
         iminus1 = np.where(idata == -1)[0]
         assert len(iminus1) > 0, idata
 
@@ -667,28 +672,39 @@ class GEOM4(GeomCommon):
         j = np.hstack([iminus1[:-1], -1])
         for ii, jj in zip(i, j):
             outi = idata[ii:jj]
-            sid, components = outi[:2]
-            thru_flag = outi[2]
-            if thru_flag == 0:  # repeat 4 to end
-                nids = outi[3:].tolist()
-            elif thru_flag == 1:
-                n1, n2 = outi[3:]
-                nids = list(range(n1, n2+1))
-            else:
-                raise NotImplementedError('SPC1; thru_flag=%s' % thru_flag)
-
-            assert -1 not in outi, outi
-            if self.is_debug_file:
-                self.binary_debug.write('SPC1: sid=%s components=%s thru_flag=%s' % (
-                    sid, components, thru_flag))
-                self.binary_debug.write('   nids=%s\n' % str(nids))
-            if len(nids) == 0:
-                continue
-            in_data = [sid, components, nids]
-            constraint = SPC1.add_op2_data(in_data)
-            self._add_constraint_spc_object(constraint)
-        self._increase_card_count('SPC1', len(i))
+            self._add_spc1_card(outi)
         return len(data)
+
+    def _add_spc1_card(self, out):
+        """helper method for ``_read_spc1``"""
+        sid, components = out[:2]
+        thru_flag = out[2]
+        if thru_flag == 0:  # repeat 4 to end
+            nids = out[3:].tolist()
+            thru_check = False
+        elif thru_flag == 1:
+            n1 = out[3]
+            n2 = out[4]
+            nids = list(range(n1, n2+1))
+            thru_check = True
+        else:
+            raise NotImplementedError('SPC1; thru_flag=%s' % thru_flag)
+
+        assert -1 not in out, out.tolist()
+        if self.is_debug_file:
+            self.binary_debug.write('SPC1: sid=%s components=%s thru_flag=%s' % (
+                sid, components, thru_flag))
+            self.binary_debug.write('   nids=%s\n' % str(nids))
+        if len(nids) == 0:
+            #self.log.warning('skipping SPC1 because its empty...%s' % out)
+            return
+        in_data = [sid, components, nids]
+        constraint = SPC1.add_op2_data(in_data)
+        self._add_constraint_spc_object(constraint)
+        self._increase_card_count('SPC1', 1)
+        if thru_check and len(out) > 5:
+            card = out[5:]
+            self._add_spc1_card(out[5:])
 
     def _read_spcadd(self, data, n):
         """SPCADD(5491,59,13) - Record 46"""
