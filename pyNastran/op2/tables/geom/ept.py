@@ -61,9 +61,9 @@ class EPT(GeomCommon):
             (3201, 32, 991) : ['NSM', self._read_fake],  # record
             (3301, 33, 992) : ['NSM1', self._read_fake],  # record
             (3701, 37, 995) : ['NSML1', self._read_fake],    # record
-            (15006, 150, 604): ['PCOMPG', self._read_fake],  # record
+            (15006, 150, 604): ['PCOMPG', self._read_pcompg],  # record
 
-            (702, 7, 38): ['PBUSHT', self._read_fake],  # record 1
+            (702, 7, 38): ['PBUSHT', self._read_pbusht],  # record 1
             (3301, 33, 56): ['NSM1', self._read_fake],  # record 3
             (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
             (3501, 35, 58): ['NSML', self._read_fake],  # record 6
@@ -71,18 +71,18 @@ class EPT(GeomCommon):
             (1502, 15, 36): ['PAABSF', self._read_fake],  # record 8
             (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
             (8500, 85, 384): ['PACBAR', self._read_fake],  # record 10
-            (5403, 55, 349): ['PBCOMP', self._read_fake],  # record 13
+            (5403, 55, 349): ['PBCOMP', self._read_pbcomp],  # record 13
             (13301, 133, 509): ['PBMSECT', self._read_fake],  # record 17
-            (2902, 29, 420): ['PCONVM', self._read_fake],  # record 26
-            (1202, 12, 33): ['PDAMPT', self._read_fake],  # record 28
-            (8702, 87, 412): ['PDAMP5', self._read_fake],  # record 29
+            (2902, 29, 420): ['PCONVM', self._read_pconvm],  # record 26
+            (1202, 12, 33): ['PDAMPT', self._read_pdampt],  # record 28
+            (8702, 87, 412): ['PDAMP5', self._read_pdamp5],  # record 29
             (6802, 68, 164): ['PDUM8', self._read_fake],  # record 37
             (6902, 69, 165): ['PDUM9', self._read_fake],  # record 38
-            (1302, 13, 34): ['PELAST', self._read_fake],  # record 41
+            (1302, 13, 34): ['PELAST', self._read_pelast],  # record 41
             (12001, 120, 480): ['PINTC', self._read_fake],  # record 44
             (12101, 121, 484): ['PINTS', self._read_fake],  # record 45
-            (4606, 46, 375): ['PLPLANE', self._read_fake],  # record 46
-            (4706, 47, 376): ['PLSOLID', self._read_fake],  # record 47
+            (4606, 46, 375): ['PLPLANE', self._read_plplane],  # record 46
+            (4706, 47, 376): ['PLSOLID', self._read_plsolid],  # record 47
             (10301, 103, 399): ['PSET', self._read_fake],  # record 57
             (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
 
@@ -131,6 +131,7 @@ class EPT(GeomCommon):
 # PAABSF
 # PACABS
 # PACBAR
+
     def _read_pbar(self, data, n):
         """
         PBAR(52,20,181) - the marker for Record 11
@@ -218,7 +219,9 @@ class EPT(GeomCommon):
         #assert len(data) == n
         return n
 
-# PBCOMP
+    def _read_pbcomp(self, data, n):
+        self.log.info('skipping PBCOMP in EPT\n')
+        return len(data)
 
     def _read_pbeam(self, data, n):
         """
@@ -292,14 +295,10 @@ class EPT(GeomCommon):
 
     def _read_pbeaml(self, data, n):
         self.log.info('skipping PBEAML in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBEAML in EPT\n')
         return len(data)
 
     def _read_pbend(self, data, n):
         self.log.info('skipping PBEND in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBEND in EPT\n')
         return len(data)
 
 # PBMSECT
@@ -368,14 +367,10 @@ class EPT(GeomCommon):
 
     def _read_pbush1d(self, data, n):
         self.log.info('skipping PBUSH1D in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBUSH1D in EPT\n')
         return len(data)
 
     def _read_pbusht(self, data, n):
         self.log.info('skipping PBUSHT in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBUSHT in EPT\n')
         return len(data)
 
     def _read_pcomp(self, data, n):
@@ -433,14 +428,17 @@ class EPT(GeomCommon):
         self.card_count['PCOMP'] = nproperties
         return n
 
+    def _read_pcompg(self, data, n):
+        self.log.info('skipping PCOMPG in EPT\n')
+        return len(data)
+
 # PCOMPA
+
     def _read_pconeax(self, data, n):
         """
         (152,19,147) - Record 24
         """
         self.log.info('skipping PCONEAX in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PCONEAX\n')
         return len(data)
 
     def _read_pconv(self, data, n):
@@ -493,8 +491,6 @@ class EPT(GeomCommon):
 
     def _read_pconvm(self, data, n):  # 26
         self.log.info('skipping PCONVM in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PCONVM\n')
         return len(data)
 
     def _read_pdamp(self, data, n):
@@ -513,8 +509,14 @@ class EPT(GeomCommon):
         self.card_count['PDAMP'] = nentries
         return n
 
-# PDAMPT
-# PDAMP5
+    def _read_pdampt(self, data, n):  # 26
+        self.log.info('skipping PDAMPT in EPT\n')
+        return len(data)
+
+    def _read_pdamp5(self, data, n):  # 26
+        self.log.info('skipping PDAMP5 in EPT\n')
+        return len(data)
+
 # PDUM1
 # PDUM2
 # PDUM3
@@ -587,7 +589,10 @@ class EPT(GeomCommon):
             n += ntotal
         self.card_count['PFAST'] = nproperties
         return n
-# PELAST
+
+    def _read_pelast(self, data, n):
+        self.log.info('skipping PELAST in EPT\n')
+        return len(data)
 
     def _read_pgap(self, data, n):
         """

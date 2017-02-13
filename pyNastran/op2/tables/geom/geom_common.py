@@ -60,7 +60,6 @@ class GeomCommon(object):
     def _add_load_object(self, load):
         raise RuntimeError('this should be overwritten by the BDF class')
 
-
     def _add_tstepnl_object(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')
 

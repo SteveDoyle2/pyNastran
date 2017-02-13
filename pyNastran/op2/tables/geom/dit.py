@@ -37,10 +37,12 @@ class DIT(GeomCommon):
         """(15, 21, 162)"""
         self.log.info('skipping TABDMP1 in DIT\n')
         return
+
     def _read_tabrndg(self, data, n):
         """(56, 26, 303)"""
         self.log.info('skipping TABRNDG in DIT\n')
         return
+
     def _read_tables1(self, data, n):
         """(3105, 31, 97)"""
         self.log.info('skipping TABLES1 in DIT\n')
@@ -68,7 +70,7 @@ class DIT(GeomCommon):
         TABLED1(1105,11,133) - the marker for Record 4
         """
         self.log.info('skipping TABLED1 in DIT\n')
-        return
+        #return
         #print("reading TABLED1")
         cls = TABLED1
         n = self.read_table1(cls, data, n)
@@ -103,7 +105,7 @@ class DIT(GeomCommon):
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
-        self.log.info('skipping TABLED2 in DIT\n')
+        #self.log.info('skipping TABLED2 in DIT\n')
         #self.binary_debug.write('skipping TABLED2 in DIT\n')
         cls = TABLED2
         n = self._read_table2(cls, data)
@@ -111,8 +113,8 @@ class DIT(GeomCommon):
 
     def _read_table2(self, cls, data):
         n = 0
-        self.log.info('skipping %s in DIT\n' % cls.type)
-        return len(data)
+        #self.log.info('skipping %s in DIT\n' % cls.type)
+        #return len(data)
         while len(data) >= 40:
             edata = data[n:n + 40]
             out = unpack('ifiiiiiiff', edata)
@@ -146,7 +148,7 @@ class DIT(GeomCommon):
         TABLED4 - the marker for Record 7
         """
         cls = TABLED4
-        n = self._read_table4(cls, data)
+        n = self._read_table4(cls, data, 'TABLED4')
         return n
 
 #TABLEDR
@@ -155,8 +157,8 @@ class DIT(GeomCommon):
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
-        self.log.info('skipping TABLEM1 in DIT\n')
-        return
+        #self.log.info('skipping TABLEM1 in DIT\n')
+        #return
         cls = TABLEM1
         n = self._read_table1(cls, data)
         return n
@@ -165,7 +167,7 @@ class DIT(GeomCommon):
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
-        self.log.info('skipping TABLEM2 in DIT\n')
+        #self.log.info('skipping TABLEM2 in DIT\n')
         cls = TABLEM2
         n = self._read_table2(cls, data)
         return n
@@ -182,9 +184,9 @@ class DIT(GeomCommon):
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
-        self.log.info('skipping TABLEM4 in DIT\n')
+        #self.log.info('skipping TABLEM4 in DIT\n')
         cls = TABLEM4
-        n = self._read_table4(cls, data)
+        n = self._read_table4(cls, data, 'TABLEM4')
         return n
 
     def _read_table3(self, cls, data):
@@ -210,9 +212,9 @@ class DIT(GeomCommon):
             self._add_table_object(table)
         return len(data)
 
-    def _read_table4(self, cls, data):
+    def _read_table4(self, cls, data, table_name):
+        self.log.info('skipping %s in DIT\n' % table_name)
         return len(data)
-
 
 #TABLES1
 #TABLEST

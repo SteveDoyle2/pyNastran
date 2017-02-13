@@ -3564,8 +3564,8 @@ class OES(OP2Common):
 
             numwide_real = 4 + (25 - 4) * nnodes  # real???
             numwide_random = 2 + (18 - 2) * nnodes  # imag???
-            print("format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
-                self.format_code, self.num_wide, numwide_real, numwide_random))
+            #self.log.debug("format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
+                #self.format_code, self.num_wide, numwide_real, numwide_random))
 
             #numwide_real = 0
             #numwide_imag = 2 + 16 * nnodes
