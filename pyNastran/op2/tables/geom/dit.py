@@ -28,10 +28,23 @@ class DIT(GeomCommon):
             (305, 3, 95): self._read_tablem3,  # record 11
             #(405, 4, 96): self._read_tablem4, # record 12
 
-            (15, 21, 162): self._read_fake,
-            (56, 26, 303): self._read_fake,
-            (3105, 31, 97): self._read_fake,  # record 13 - TABLES1
+            (15, 21, 162): self._read_tabdmp1,   # NX
+            (56, 26, 303): self._read_tabrndg,   # NX
+            (3105, 31, 97): self._read_tables1,  # record 13 - TABLES1 (NX)
         }
+
+    def _read_tabdmp1(self, data, n):
+        """(15, 21, 162)"""
+        self.log.info('skipping TABDMP1 in DIT\n')
+        return
+    def _read_tabrndg(self, data, n):
+        """(56, 26, 303)"""
+        self.log.info('skipping TABRNDG in DIT\n')
+        return
+    def _read_tables1(self, data, n):
+        """(3105, 31, 97)"""
+        self.log.info('skipping TABLES1 in DIT\n')
+        return
 
     def _read_gust(self, data, n):
         """

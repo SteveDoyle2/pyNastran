@@ -342,6 +342,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             assert make_geom, 'make_geom=%s' % make_geom
             op2._nastran_format = 'msc'
             op2.executive_control_lines = ['CEND\n']
+            op2.validate()
             op2.write_bdf(bdf_filename, size=8)
             op2.log.debug('bdf_filename = %s' % bdf_filename)
             try:

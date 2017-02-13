@@ -4,7 +4,7 @@ from struct import unpack, Struct
 from six import b, integer_types
 from six.moves import range
 
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2, RROD
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, ASET1, QSET, QSET1, USET, USET1, SEQSET1 # SEQSET
 )
@@ -49,6 +49,7 @@ class GEOM4(GeomCommon):
             (5001, 50, 15) : ['OMIT', self._read_fake],           # record 19 - not done
             (4951, 63, 92) : ['OMIT1', self._read_omit1],         # record 20 - not done
             (510, 5, 315) : ['QSET', self._read_qset],            # record 21
+            #(510, 5, 315): ['QSET', self._read_fake],    # record
             (610, 6, 316) : ['QSET1', self._read_qset1],          # record 22
 
             (6601, 66, 292) : ['RBAR', self._read_rbar],          # record 23 - not done
@@ -79,9 +80,8 @@ class GEOM4(GeomCommon):
 
             (1310, 13, 247): ['RELEASE', self._read_fake],       # record
             (6210, 62, 344): ['SPCOFF1', self._read_fake],    # record
-            (510, 5, 315): ['QSET', self._read_fake],    # record
-            (2110, 21, 194) : ['USET1', self._read_fake],  # record
-            (1010, 10, 320): ['SECSET1', self._read_fake],  # record
+            (2110, 21, 194) : ['USET1', self._read_uset1],  # record
+            (1010, 10, 320): ['SECSET1', self._read_secset1],  # record
             (5001, 50, 15): ['OMIT', self._read_fake],    # record 22
 
             (4901, 49, 420017): ['', self._read_fake],    # record
@@ -91,16 +91,16 @@ class GEOM4(GeomCommon):
             (5501, 55, 620016): ['', self._read_fake],    # record
             (410, 4, 0): ['', self._read_fake],    # record
             (6701, 67, 293): ['RTRPLT', self._read_fake],    # record 34
-            (8801, 88, 9022): ['', self._read_fake],    # record
-            (9001, 90, 9024): ['', self._read_fake],    # record
+            (8801, 88, 9022): ['EGENDT', self._read_fake],    # record (NX)
+            (9001, 90, 9024): ['FCENDT', self._read_fake],    # record (NX)
             (9801, 98, 79): ['', self._read_fake],  # record
             (9901, 99, 80): ['', self._read_fake],  # record
-            (12001, 120, 601) : ['', self._read_fake],  # record
+            (12001, 120, 601) : ['BLTMPC', self._read_fake],  # record (NX)
 
             # GEOM4705 - pre MSC 2001
-            (110, 1, 584): ['BNDFIX', self._read_fake],    # record 3
-            (210, 2, 585): ['BNDFIX1', self._read_fake],    # record 4
-            (310, 3, 586) : ['BNDFREE', self._read_fake],  # record 5
+            (110, 1, 584): ['BNDFIX', self._read_fake],    # record 3 (NX)
+            (210, 2, 585): ['BNDFIX1', self._read_fake],    # record 4 (NX)
+            (310, 3, 586) : ['BNDFREE', self._read_fake],  # record 5 (NX)
         }
 
     def _read_aset(self, data, n):
@@ -136,6 +136,10 @@ class GEOM4(GeomCommon):
         #self.log.info('skipping ASET1 in GEOM4\n')
         #return len(data)
         return self._read_xset1(data, n, 'ASET1', ASET1, self._add_aset_object)
+
+    def _read_secset1(self, data, n):
+        self.log.info('skipping SECSET1 in GEOM4\n')
+        return len(data)
 
     def _read_xset1(self, data, n, card_name, cls, add_method, debug=False):
         """common method for ASET1, QSET1; not USET1???"""
@@ -338,8 +342,21 @@ class GEOM4(GeomCommon):
 # RPNOM
     def _read_rrod(self, data, n):
         """RROD(6501,65,291) - Record 30"""
-        self.log.info('skipping RROD in GEOM4\n')
-        return len(data)
+        s = Struct(b(self._endian + '5i'))
+        self.show_data(data)
+        ntotal = 20
+        nelements = (len(data) - n) // ntotal
+        for i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  RROD=%s\n' % str(out))
+            #(eid, ga, gb, cma, cmb) = out
+            elem = RROD.add_op2_data(out)
+            self._add_rigid_element_object(elem)
+            n += ntotal
+            self._increase_card_count('RROD', 1)
+        return n
 
     def _read_rspline(self, data, n):
         """RSPLINE(7001,70,186) - Record 31"""
@@ -621,4 +638,6 @@ class GEOM4(GeomCommon):
 
     def _read_uset1(self, data, n):
         """USET1(2110,21,194) - Record 65"""
-        return self._read_xset1(data, n, 'USET1', USET1, self._add_uset_object)
+        #return self._read_xset1(data, n, 'USET1', USET1, self._add_uset_object)
+        self.log.info('skipping USET1 in GEOM4\n' % card_name)
+        return len(data)

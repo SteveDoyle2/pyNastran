@@ -20,7 +20,8 @@ class CodeAsterConverter(BDF):
     Limitations:
 
      * All Case Control inputs must come from SUBCASE 1.
-     * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for loads to be written
+     * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for
+       loads to be written
      * Only SOL 101 (Static)
 
     Supported Cards:
@@ -30,7 +31,8 @@ class CodeAsterConverter(BDF):
      * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
      * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
      * MAT1
-     * GRAV (incorrect writing, but really easy to make it correct given proper format)
+     * GRAV (incorrect writing, but really easy to make it
+             correct given proper format)
 
     @todo
       PCOMP,
@@ -38,7 +40,8 @@ class CodeAsterConverter(BDF):
       RBE2, RBE3
     """
     def __init__(self, language='english'):
-        self.language = 'english'
+        self.language = language
+        assert self.language in ['english']
         BDF.__init__(self)
 
     def get_elements_by_pid(self):
@@ -113,14 +116,14 @@ class CodeAsterConverter(BDF):
     def ca_executive(self):
         comm = ''
         if self.sol == 101:
-            comm += 'MECA_STATIQUE % SOL 101 - linear statics\n'
-            comm += 'stat(MECA_STATIQUE(MODELE=model, CHAM_MATER=material, CARA_ELEM=elemcar,\n'
-
-            comm += 'ECIT=(_F(Charge=AllBoundaryConditions,),\n',
-            comm += '      _F(Charge=AllLoads,),\n',
-            comm += '      ),\n',
-
-            comm += "TITRE='My Title'\n"
+            comm += ('ecit = (\n'
+                     '    _F(Charge=AllBoundaryConditions,),\n',
+                     '    _F(Charge=AllLoads,),)\n'
+                     'MECA_STATIQUE % SOL 101 - linear statics\n'
+                     'stat(MECA_STATIQUE(MODELE=model, CHAM_MATER=material, '
+                     '                   CARA_ELEM=elemcar,\n'
+                     '                   ECIT=ecit,\n',
+                     "                   TITRE='My Title'\n")
 
         if self.sol == 101:  # [K][U] = [F] #Kx=F
             pass
@@ -129,15 +132,19 @@ class CodeAsterConverter(BDF):
         elif self.sol == 129:  # [M][\ddot U] + [C][\dot U] + [K] [U] = [F]
             pass
 
-        k = "#Calculate data for the stiffness Matrix\n"
-        k += "StiffMtx = CALC_MATR_ELEM(OPTION='RIGI_MECA', MODELE=ModelDef, CHAM_MATER=MtrlFld);\n\n"
-        m = "#Calculate data for the Mass Matrix\n"
-        m += "MassMtx = CALC_MATR_ELEM(OPTION='MASS_MECA', MODELE=ModelDef, CHAM_MATER=MtrlFld);\n\n"
+        k = ("#Calculate data for the stiffness Matrix\n"
+             "StiffMtx = CALC_MATR_ELEM(OPTION='RIGI_MECA',\n"
+             "                          MODELE=ModelDef, \n"
+             "                          CHAM_MATER=MtrlFld);\n\n")
+        m = ("#Calculate data for the Mass Matrix\n"
+             "MassMtx = CALC_MATR_ELEM(OPTION='MASS_MECA',\n"
+             "                         MODELE=ModelDef,"
+             "                         CHAM_MATER=MtrlFld);\n\n")
 
-        K = "#Assign the Stiffness Matrix to the DOFs to be solved\n"
-        K += "K = ASSE_MATRICE(MATR_ELEM=StiffMtx, NUME_DDL=NDOFs);\n\n"
-        M = "#Assign the Mass Matrix to the DOFs to be solved\n"
-        M += "M = ASSE_MATRICE(MATR_ELEM=MassMtx, NUME_DDL=NDOFs);\n"
+        k = "#Assign the Stiffness Matrix to the DOFs to be solved\n"
+        k += "K = ASSE_MATRICE(MATR_ELEM=StiffMtx, NUME_DDL=NDOFs);\n\n"
+        m = "#Assign the Mass Matrix to the DOFs to be solved\n"
+        m += "M = ASSE_MATRICE(MATR_ELEM=MassMtx, NUME_DDL=NDOFs);\n"
         return comm
 
     def ca_nodes(self, grid_word='grid'):
@@ -170,8 +177,8 @@ class CodeAsterConverter(BDF):
 
         form_e = '    %s%-' + str(self.max_eid_len) + 's '
         form_g = '%s%-' + str(self.max_nid_len) + 's '
-        for Type, eids in sorted(iteritems(elems)):
-            mail += '%s\n' % (Type)
+        for etype, eids in sorted(iteritems(elems)):
+            mail += '%s\n' % etype
             for eid in eids:
                 mail += form_e % (elem_word, eid)
                 element = self.elements[eid]
@@ -207,9 +214,9 @@ class CodeAsterConverter(BDF):
         for pid, prop in sorted(iteritems(self.properties)):
             if isinstance(prop, (PBARL, PBEAML)):
                 (py_cai, icut, iface, istart) = prop.write_code_aster(
-                    iCut, iFace, istart)
+                    icut, iface, istart)
                 py_ca += py_cai
-                isSkipped = False
+                is_skipped = False
             else:
                 prop = prop.write_code_aster()
                 is_skipped = False
@@ -257,7 +264,8 @@ class CodeAsterConverter(BDF):
         .. code-block:: ptyhon
 
           MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,
-                              AFFE=(_F(GROUP_MA=('P32','P33','P42','P43','P46','P47','P48','P49','P61','P62','P63','P64','P65','P74',
+                              AFFE=(_F(GROUP_MA=('P32','P33','P42','P43','P46','P47','P48','P49',
+                                                 'P61','P62','P63','P64','P65','P74',
                                                  'P75',),
                                        MATER=M3,),
                                     _F(GROUP_MA=('P11','P13','P14','P15','P55','P56','P59',),
@@ -310,7 +318,7 @@ class CodeAsterConverter(BDF):
                     raise RuntimeError(msg)
                 #try:
                 if 1:  # LOAD card
-                    out = load.write_code_aster_load(self, grid_word='N')
+                    out = write_code_aster_load(load, self, grid_word='N')
                     if len(out) == 3:  # LOAD card
                         (commi, load_ids, load_types) = out
                         comm += commi
@@ -413,25 +421,92 @@ class CodeAsterConverter(BDF):
 
         print('pwd=', os.getcwd())
         if comm:
-            with open(model + '.comm', 'wb') as f:
+            with open(model + '.comm', 'wb') as comm_file:
                 print("writing fname=%s" % (model + '.comm'))
-                f.write(comm)
+                comm_file.write(comm)
 
         #print(comm)
         #print(mail)
         #print(py_ca)
         if mail:
             print('mail')
-            with open(model + '.mail', 'wb') as f:
+            with open(model + '.mail', 'wb') as mail_file:
                 print("writing fname=%s" % (model + '.mail'))
-                f.write(mail)
+                mail_file.write(mail)
 
         if py_ca:
             print('py_ca')
             assert py_ca != ''
-            with open(model + '.py', 'wb') as f:
+            with open(model + '.py', 'wb') as py_file:
                 print("writing fname=%s" % (model + '.py'))
-                f.write(py_ca)
+                py_file.write(py_ca)
+
+
+def write_code_aster_load(load, model, grid_word='node'):
+    load_ids = load.get_load_ids()
+    load_types = load.get_load_types()
+
+    #msg = '# Loads\n'
+    msg = ''
+    (types_found, force_loads, moment_loads,
+     force_constraints, moment_constraints,
+     gravity_loads) = load.organize_loads(model)
+
+    nids = []
+    for nid in force_loads:
+        nids.append(nid)
+    for nid in moment_loads:
+        nids.append(nid)
+
+    if nids:
+        msg += '# types_found = %s\n' % (list(types_found))
+        msg += '# load_ids    = %s\n' % (load_ids)
+        msg += "load_bc = AFFE_CHAR_MECA(MODELE=modmod,\n"
+        #msg += "                        DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
+        msg += "                         FORCE_NODALE=(\n"
+
+    #CHAR=AFFE_CHAR_MECA(MODELE=MODE,
+    #             FORCE_NODALE=(
+    #                     _F(NOEUD='N1',
+    #                        FZ=-500.0),)
+
+    spaces = "                           "
+    for nid in sorted(nids):  # ,load in sorted(iteritems(force_loads))
+        msg += spaces + "_F(NOEUD='%s%s'," % (grid_word, nid)
+
+        if nid in force_loads:
+            force = force_loads[nid]
+            if abs(force[0]) > 0.:
+                msg += " FX=%s," % force[0]
+            if abs(force[1]) > 0.:
+                msg += " FY=%s," % force[1]
+            if abs(force[2]) > 0.:
+                msg += " FZ=%s," % force[2]
+
+        if nid in moment_loads:
+            moment = moment_loads[nid]
+            if abs(moment[0]) > 0.:
+                msg += " MX=%s," % moment[0]
+            if abs(moment[1]) > 0.:
+                msg += " MY=%s," % moment[1]
+            if abs(moment[2]) > 0.:
+                msg += " MZ=%s," % moment[2]
+        #msg = msg[:-2]
+        msg += '),\n'
+        # finish the load
+
+        #if moment in
+        #msg += "                                   DX=0.0,\n"
+        #msg += "                                   DY=0.0,\n"
+        #msg += "                                   DZ=0.0,),\n"
+        #msg += "                                _F(GROUP_MA='Lright',\n"
+        #msg += "                                   DZ=0.0,),),\n"
+    msg = msg[:-2]
+    msg += ');\n'
+
+    for gravity_load in gravity_loads:
+        msg += 'CA_GRAVITY(%s);\n' % str(gravity_load)
+    return msg, load_ids, load_types
 
 
 def main():
@@ -465,9 +540,9 @@ def main():
     bdf_filename = data['BDF_FILENAME']
     fname_base = os.path.splitext(bdf_filename)[0]
 
-    ca = CodeAsterConverter()
-    ca.read_bdf(bdf_filename, encoding='ascii')
-    ca.write_as_code_aster(fname_base)  # comm, py
+    model = CodeAsterConverter()
+    model.read_bdf(bdf_filename, encoding='ascii')
+    model.write_as_code_aster(fname_base)  # comm, py
 
 if __name__ == '__main__':  # pragma: no cover
     main()

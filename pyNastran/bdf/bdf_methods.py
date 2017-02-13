@@ -1417,13 +1417,13 @@ class BDFMethods(BDFAttributes):
 
                     elif elem.type == 'CTETRA':
                         #face = elem.get_face(load.g1.nid, load.g34.nid)
-                        face_acn = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
                         face, area, centroid, normal = face_acn
                         nface = 3
 
                     elif elem.type == 'CHEXA':
                         #face = elem.get_face(load.g1.nid, load.g34.nid)
-                        face_acn = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
                         face, area, centroid, normal = face_acn
                         nface = 4
 
@@ -1431,11 +1431,11 @@ class BDFMethods(BDFAttributes):
                         g1 = load.g1.nid
                         if load.g34 is None:
                             #face = elem.get_face(g1)
-                            face_acn = elem.getFaceAreaCentroidNormal(g1)
+                            face_acn = elem.get_face_area_centroid_normal(g1)
                             nface = 3
                         else:
                             #face = elem.get_face(load.g1.nid, load.g34.nid)
-                            face_acn = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
+                            face_acn = elem.get_face_area_centroid_normal(g1, load.g34.nid)
                             nface = 4
                         face, area, centroid, normal = face_acn
                     else:
@@ -1893,13 +1893,13 @@ class BDFMethods(BDFAttributes):
                         nface = 4
                     elif elem.type == 'CTETRA':
                         #face1 = elem.get_face(load.g1.nid, load.g34.nid)
-                        face_acn = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
                         face, area, centroid, normal = face_acn
                         #assert face == face1
                         nface = 3
                     elif elem.type == 'CHEXA':
                         #face1 = elem.get_face(load.g34.nid, load.g1.nid)
-                        face_acn = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        face_acn = elem.get_face_area_centroid_normal(load.g34.nid, load.g1.nid)
                         face, area, centroid, normal = face_acn
                         #assert face == face1
                         nface = 4
@@ -1907,11 +1907,11 @@ class BDFMethods(BDFAttributes):
                         g1 = load.g1.nid
                         if load.g34 is None:
                             #face1 = elem.get_face(g1)
-                            face_acn = elem.getFaceAreaCentroidNormal(g1)
+                            face_acn = elem.get_face_area_centroid_normal(g1)
                             nface = 3
                         else:
                             #face1 = elem.get_face(g1, load.g34.nid)
-                            face_acn = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
+                            face_acn = elem.get_face_area_centroid_normal(g1, load.g34.nid)
                             nface = 4
                         face, area, centroid, normal = face_acn
                         #assert face == face1

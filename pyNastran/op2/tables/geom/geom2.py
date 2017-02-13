@@ -155,16 +155,16 @@ class GEOM2(GeomCommon):
             (12801, 128, 417): ['RADBC', self._read_fake],
             (2708, 27, 59): ['CAABSF', self._read_fake],
             (3201, 32, 478): ['GMBNDC', self._read_fake],
-            (13900, 139, 9984): ['', self._read_fake],
-            (14000, 140, 9990): ['', self._read_fake],
-            (16000, 160, 9988): ['', self._read_fake],
-            (16100, 161, 9986): ['', self._read_fake],
-            (16300, 163, 9989): ['', self._read_fake],
-            (16700, 167, 9981): ['', self._read_fake],
-            (16800, 168, 9978): ['', self._read_fake],
-            (16500, 165, 9987): ['', self._read_fake],
+            (13900, 139, 9984): ['CQUAD4FD', self._read_fake],
+            (14000, 140, 9990): ['CHEXAFD', self._read_fake],
+            (16000, 160, 9988): ['CPENTA6FD', self._read_fake],
+            (16100, 161, 9986): ['CTETRAFD', self._read_fake],
+            (16300, 163, 9989): ['CHEXA20F', self._read_fake],
+            (16700, 167, 9981): ['CTRIA6FD', self._read_fake],
+            (16800, 168, 9978): ['CTRIAX3FD', self._read_fake],
+            (16500, 165, 9987): ['CPENT15F', self._read_fake],
             (5008, 50, 258): ['', self._read_fake],
-            (16400, 164, 9983) : ['', self._read_fake],
+            (16400, 164, 9983) : ['CQUAD9FD', self._read_fake],
             (11000, 110, 6667): ['', self._read_fake],
             (12301, 123, 9921): ['', self._read_fake],
             (12401, 124, 9922): ['', self._read_fake],
@@ -220,9 +220,6 @@ class GEOM2(GeomCommon):
             (25800, 258, 9947) : ['CPYRA13F', self._read_cpyram],
             (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram],
         }
-
-    def add_element(self, elem, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
 
     def add_op2_element(self, elem):
         if elem.eid <= 0:

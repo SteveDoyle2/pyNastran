@@ -1,7 +1,7 @@
 from __future__ import print_function
+from collections import defaultdict
 from six import iteritems
 from six.moves import zip
-from collections import defaultdict
 
 from numpy import array, zeros
 from pyNastran.bdf.bdf import BDF, PBAR, PBARL, PBEAM, PBEAML, LOAD
@@ -152,7 +152,7 @@ class CalculixConverter(BDF):
         dat = ''
         dat += '** Calculix_Elements\n'
 
-        TypeMap = {
+        etype_map = {
             'CBAR'    : 'BR32R',
             'CBEAM'   : 'BR32R',
 
@@ -175,12 +175,12 @@ class CalculixConverter(BDF):
         elsets = []
         for pid, eids in sorted(iteritems(pid_eids)):
             elems = self.get_elements_by_type(eids)
-            for Type, eids in sorted(iteritems(elems)):
-                calculix_type = TypeMap[Type]
-                elset = 'pid%i_Elements%s' % (pid, Type)
+            for etype, eids in sorted(iteritems(elems)):
+                calculix_type = etype_map[etype]
+                elset = 'pid%i_Elements%s' % (pid, etype)
                 elsets.append(elset)
 
-                dat += '** eid,n1,n2,n3,etc... for a %s\n' % Type
+                dat += '** eid,n1,n2,n3,etc... for a %s\n' % etype
                 dat += '*ELEMENT, TYPE=%s, ELSET=%s\n' % (calculix_type, elset)
                 for eid in eids:
                     dat += formE % eid
@@ -198,28 +198,29 @@ class CalculixConverter(BDF):
         inp += '** calculix_properties\n'
 
         for elset in elsets:
-            #elset = 'pid%i_Elements%i' % (pid, elType)
-            pid, elType = elset.lstrip('pid').split('_')
+            #elset = 'pid%i_Elements%i' % (pid, etype)
+            pid, etype = elset.lstrip('pid').split('_')
             pid = int(pid)
-            elType = elType[8:] # element type
+            etype = etype[8:] # element type
             prop = self.properties[pid]
 
             if prop.type == 'PSHELL':
                 mid = prop.mid
-                inp += '*SHELL SECTION,ELSET=%s,MATERIA	L=MAT%i\n' % (elset, mid.Mid())
+                inp += '*SHELL SECTION,ELSET=%s,MATERIA	L=MAT%i\n' % (elset, mid.mid)
                 inp +='%s\n' % prop.t
             elif prop.type == 'PSOLID':
                 mid = prop.mid
-                inp += '*SOLID SECTION,ELSET=%s,MATERIAL=MAT%i\n' % (elset, mid.Mid())
+                inp += '*SOLID SECTION,ELSET=%s,MATERIAL=MAT%i\n' % (elset, mid.mid)
             elif prop.type == 'PBAR':
                 mid = prop.mid
-                inp += '*BEAM SECTION,ELSET=%s,MATERIAL=MAT%i\n' % (elset, mid.Mid())
+                inp += '*BEAM SECTION,ELSET=%s,MATERIAL=MAT%i\n' % (elset, mid.mid)
             elif prop.type == 'PBARL':
                 mid = prop.mid
                 #section_name = 'SQUARE'
                 print("what is the section_name?")
                 print(" ", sorted(prop.__dict__.keys()))
-                msg += '*BEAM SECTION,ELSET=eids_pid%i,MATERIAL=MAT%i,SECTION=%s\n' % (prop.Pid(), mid.Mid(), section_name)
+                msg += '*BEAM SECTION,ELSET=eids_pid%i,MATERIAL=MAT%i,SECTION=%s\n' % (
+                    prop.pid, mid.mid, section_name)
                 if section_name == 'SQUARE':
                     msg += '%s\n' % prop.dims[0]
                 if section_name == 'RECT':
@@ -277,7 +278,7 @@ class CalculixConverter(BDF):
         #skippedLids = {}
         if self.loads:
             inp += '** LOADS\n'
-            loadKeys = self.loads.keys()
+            load_keys = self.loads.keys()
             #if isubcase in self.case_control_deck:
             if self.case_control_deck.has_subcase(isubcase):
                 loadcase_id = self.case_control_deck.get_subcase_parameter(isubcase, param_name)[0]
@@ -297,14 +298,14 @@ class CalculixConverter(BDF):
         else:
             p = array(p0)
 
-        loadCase = self.loads[loadcase_id]
-        #for (key, loadCase) in iteritems(self.loads):
+        load_case = self.loads[loadcase_id]
+        #for (key, load_case) in iteritems(self.loads):
             #if key != loadcase_id:
                 #continue
 
         scale_factors2 = []
         loads2 = []
-        for load in loadCase:
+        for load in load_case:
             if isinstance(load, LOAD):
                 scale_factors, loads = load.get_reduced_loads()
                 scale_factors2 += scale_factors
@@ -350,7 +351,8 @@ class CalculixConverter(BDF):
                     axb = cross(n1 - n3, n2 - n4)
                     centroid = (n1 + n2 + n3 + n4) / 4.
                 else:
-                    raise RuntimeError('invalid number of nodes on PLOAD card; nodes=%s' % str(nodes))
+                    msg = 'invalid number of nodes on PLOAD card; nodes=%s' % str(nodes)
+                    raise RuntimeError(msg)
 
                 nunit = norm(axb)
                 A = 0.5 * nunit
@@ -373,7 +375,8 @@ class CalculixConverter(BDF):
                 elem = load.eid
 
             elif load.type == 'PLOAD2':
-                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                # there are 4 pressures, but we assume p0
+                pressure = load.pressures[0] * scale
                 for eid in load.eids:
                     elem = self.elements[eid]
                     if elem.type in ['CTRIA3',
@@ -387,15 +390,17 @@ class CalculixConverter(BDF):
                             i = nid_to_i_map[nid]
                             F[i, :] = f
                     else:
-                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (loadcase_id, elem.type, load.type))
+                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (
+                            loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
-                pressure = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
+                # there are 4 possible pressures, but we assume p0
+                pressure = load.pressures[0] * scale
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                 assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
                 assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
                 for elem in load.eids:
                     eid = elem.eid
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIAR',]:
                         # triangles
                         nnodes = 3
                         nodes = elem.node_ids
@@ -433,10 +438,12 @@ class CalculixConverter(BDF):
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        A, centroid, normal = elem.get_face_area_centroid_normal(
+                            load.g34.nid, load.g1.nid)
                         nnodes = None
                     else:
-                        self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
+                        self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (
+                            loadcase_id, eid, elem.type, load.type))
                         continue
                     #r = centroid - p
                     f = pressure * A * n / nnodes
@@ -468,7 +475,7 @@ class CalculixConverter(BDF):
     def breaker(self):
         return '**-------------------------------------------------------------------------\n'
 
-    def buildMaxs(self):
+    def build_maxs(self):
         self.maxNIDlen = len(str(max(self.nodes)))
         self.maxEIDlen = len(str(max(self.elements)))
         self.maxPIDlen = len(str(max(self.properties)))
@@ -477,7 +484,7 @@ class CalculixConverter(BDF):
     def write_as_calculix(self, fname='fem'):
         inp = ''
         dat = ''
-        self.buildMaxs()  # gets number of nodes/elements/properties/materials
+        self.build_maxs()  # gets number of nodes/elements/properties/materials
 
         inp += '** BEGIN BULK\n'
         #inp += 'DEBUT();\n\n'
@@ -495,40 +502,34 @@ class CalculixConverter(BDF):
         #inp += "                         MODELISATION='3D',),);\n\n"
         inp += self.breaker()
 
-        fdat = open(fname + '.dat', 'wb')
-        finp = open(fname + '.inp', 'wb')
-
         print("writing fname=%s" % (fname + '.dat'))
+        with open(fname + '.dat', 'wb') as fdat:
+            self.calculix_nodes(fdat)
+            elsets = self.calculix_elements(fdat)
+            dat = self.calculix_materials()
+            fdat.write(dat)
+
         print("writing fname=%s" % (fname + '.inp'))
 
-        self.calculix_nodes(fdat)
+        with open(fname + '.inp', 'wb') as finp:
+            inpi = self.calculix_properties(elsets)
+            inp += inpi
+            inp += self.calculix_loads()
+            inp += self.calculix_constraints()
+            finp.write(inp)
 
-        elsets = self.calculix_elements(fdat)
-
-        dat = self.calculix_materials()
-        fdat.write(dat)
-        fdat.close()
-
-        inpi = self.calculix_properties(elsets)
-        inp += inpi
-        inp += self.calculix_loads()
-        inp += self.calculix_constraints()
-        finp.write(inp)
-
-        # Case Control Deck
-        inp =  '*STEP\n'
-        inp += '*STATIC\n'
-        inp += '*CLOAD\n'
-        inp += 'LAST,2,1.\n'
-        inp += '*NODE PRINT,NSET=NALL\n'
-        inp += 'U\n'
-        inp += '*EL PRINT,ELSET=EALL\n'
-        inp += 'S\n'
-        inp += '*END STEP\n'
-        inp += '** END OF DATA\n'
-        finp.write(inp)
-        finp.close()
-
+            # Case Control Deck
+            inp =  '*STEP\n'
+            inp += '*STATIC\n'
+            inp += '*CLOAD\n'
+            inp += 'LAST,2,1.\n'
+            inp += '*NODE PRINT,NSET=NALL\n'
+            inp += 'U\n'
+            inp += '*EL PRINT,ELSET=EALL\n'
+            inp += 'S\n'
+            inp += '*END STEP\n'
+            inp += '** END OF DATA\n'
+            finp.write(inp)
 
 def main():
     import sys
@@ -536,11 +537,7 @@ def main():
     #bdf_filename = 'solidBending.bdf'
     bdf_filename = sys.argv[1]
     ca.read_bdf(bdf_filename, xref=False)
-    ca.cross_reference(xref=True, xref_elements=True, xref_properties=True,
-                      xref_materials=True,
-                      xref_loads=True,
-                      xref_constraints=True,
-                      xref_aero=True)
+    ca.cross_reference()
     ca.write_as_calculix(bdf_filename + '.ca')  # inp, py
 
 if __name__ == '__main__':  # pragma: no cover

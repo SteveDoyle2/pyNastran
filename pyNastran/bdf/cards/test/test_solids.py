@@ -1,7 +1,9 @@
 from __future__ import print_function
+import os
+import copy
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, CPENTA #, GRID, CTETRA, CPENTA, CHEXA
+from pyNastran.bdf.bdf import read_bdf, BDF, BDFCard, CPENTA
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA4, CHEXA8, CPENTA6,
     #CTETRA10, CHEXA20,
@@ -261,10 +263,7 @@ class TestSolids(unittest.TestCase):
         model.add_mat1(mid, E, G, nu)
         nids = [11, 12, 13, 15]
         model.add_ctetra(eid, pid, nids, comment='ctetra')
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+        end_checks(model)
 
     def test_solids_ctetra10(self):
         """tests a CTETRA10"""
@@ -295,11 +294,8 @@ class TestSolids(unittest.TestCase):
             111, 112, 113,
             121, 122, 123
         ]
-        model.add_ctetra(eid, pid, nids, comment='ctetra')
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+        model.add_ctetra(eid, pid, nids, comment='ctetra10')
+        end_checks(model)
 
     def test_solids_cpyram5(self):
         """tests a CPYRAM5"""
@@ -318,11 +314,17 @@ class TestSolids(unittest.TestCase):
         model.add_psolid(pid, mid)
         model.add_mat1(mid, E, G, nu)
         nids = [10, 20, 30, 40, 50]
-        model.add_cpyram(eid, pid, nids, comment='cpenta')
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+        model.add_cpyram(eid, pid, nids, comment='cpyram')
+
+        nids2 = copy.deepcopy(nids)
+        nids2.append(None)
+        eid += 1
+        elem2 = model.add_cpyram(eid, pid, nids2, comment='cpyram13')
+        elem2.write_card(size=8)
+        elem2.write_card(size=16)
+        elem2.write_card_16(is_double=False)
+
+        end_checks(model)
 
     def test_solids_cpenta(self):
         """tests a CPENTA6"""
@@ -343,10 +345,15 @@ class TestSolids(unittest.TestCase):
         model.add_mat1(mid, E, G, nu)
         nids = [21, 22, 23, 24, 25, 26]
         model.add_cpenta(eid, pid, nids, comment='cpenta')
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+
+        nids2 = copy.deepcopy(nids)
+        nids2.append(None)
+        eid += 1
+        elem2 = model.add_cpenta(eid, pid, nids2, comment='cpenta15')
+        elem2.write_card(size=8)
+        elem2.write_card(size=16)
+        elem2.write_card_16(is_double=False)
+        end_checks(model)
 
     def test_solids_chexa(self):
         """tests a CHEXA8"""
@@ -372,11 +379,17 @@ class TestSolids(unittest.TestCase):
         elem = model.add_chexa(eid, pid, nids, comment='chexa')
         elem.write_card(size=8)
         elem.write_card(size=16)
+        elem.write_card_16(is_double=False)
 
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+        nids2 = copy.deepcopy(nids)
+        nids2.append(None)
+        eid += 1
+        elem2 = model.add_chexa(eid, pid, nids2, comment='chexa16')
+        elem2.write_card(size=8)
+        elem2.write_card(size=16)
+        elem2.write_card_16(is_double=False)
+
+        end_checks(model)
 
     def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, V):
         """checks that various solid methods work"""
@@ -393,6 +406,20 @@ class TestSolids(unittest.TestCase):
         self.assertEqual(element.Volume(), V)
         self.assertEqual(element.Mass(), mass)
 
+
+def end_checks(model):
+    """various checks"""
+    model.validate()
+    model._verify_bdf(xref=False)
+    model.cross_reference()
+    model._verify_bdf(xref=True)
+    model.uncross_reference()
+    model.cross_reference()
+
+    bdf_filename = 'solid_test.bdf'
+    model.write_bdf(bdf_filename)
+    model2 = read_bdf(bdf_filename, debug=False)
+    os.remove(bdf_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
