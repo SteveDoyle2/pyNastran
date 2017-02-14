@@ -777,6 +777,10 @@ class SPCADD(ConstraintADD):
                 raise TypeError('type=%s; spc=\n%s' % (type(spc), spc))
         return spc_ids
 
+    @property
+    def ids(self):
+        return self.spc_ids
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -870,8 +874,12 @@ class MPCADD(ConstraintADD):
         self.sets = self.mpc_ids
         del self.sets_ref
 
+    @property
+    def ids(self):
+        return self.mpc_ids
+
     def raw_fields(self):
-        fields = ['MPCADD', self.conid]  +self.mpc_ids
+        fields = ['MPCADD', self.conid] + self.mpc_ids
         return fields
 
     def write_card(self, size=8, is_double=False):

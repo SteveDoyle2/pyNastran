@@ -326,6 +326,10 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         I---D---I
         """
         lines = []
+        if not isinstance(mpc_id, integer_types):
+            msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
+            raise TypeError(msg)
+
         try:
             mpcs = self.mpcs[mpc_id]
         except:
@@ -345,7 +349,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                         lines.append([nid0, nid])
             elif card.type == 'MPCADD':
                 nids = []
-                for new_mpc_id in card.sets:
+                for new_mpc_id in card.mpc_ids:
                     linesi = self.get_MPCx_node_ids_c1(new_mpc_id, exclude_mpcadd=False)
                     lines += linesi
             else:
@@ -1031,7 +1035,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         mpcs2 = []
         for mpc in mpcs:
             if mpc.type == 'MPCADD':
-                for mpci in mpc.sets:
+                for mpci in mpc.mpc_ids:
                     if isinstance(mpci, list):
                         for mpcii in mpci:
                             if isinstance(mpcii, int):
@@ -1392,13 +1396,6 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         except KeyError:
             raise KeyError('sid=%s not found%s.  Allowed SETx=%s'
                            % (sid, msg, np.unique(list(self.sets.keys()))))
-
-    def SetSuper(self, seid, msg=''):
-        try:
-            return self.setsSuper[seid]
-        except KeyError:
-            raise KeyError('seid=%s not found%s.  Allowed SETx=%s'
-                           % (seid, msg, np.unique(list(self.setsSuper.keys()))))
 
     #--------------------
     # METHOD CARDS

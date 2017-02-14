@@ -791,7 +791,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 146:
         assert 'METHOD'in subcase, subcase
         assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
-        assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
+        assert any(subcase.has_parameter('GUST', 'LOAD', 'DLOAD')), subcase
         assert fem2.aero is not None, 'An AERO card is required for GUST - SOL %i' % sol
     elif sol == 153: # heat?
         if 'SPC' not in subcase:
