@@ -153,6 +153,7 @@ class ComplexPlateArray(OES_Object):
         self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
 
     def add_sort1(self, dt, eid, gridC, fdr, oxx, oyy, txy):
+        """unvectorized method for adding SORT1 transient data"""
         self.add_eid_sort1(dt, eid, gridC, fdr, oxx, oyy, txy)
 
     def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):

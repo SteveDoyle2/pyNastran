@@ -111,8 +111,8 @@ class RROD(RigidElement):
         eid = data[0]
         ga = data[1]
         gb = data[2]
-        cma = data[3]
-        cmb = data[4]
+        cma = str(data[3])
+        cmb = str(data[4])
         alpha = data[5]
         return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
 
@@ -203,9 +203,9 @@ class RBAR(RigidElement):
         ga / gb : int
             grid points
         cna / cnb : str
-            independent DOFs
+            independent DOFs in '123456'
         cma / cmb : str
-            dependent DOFs
+            dependent DOFs in '123456'
         alpha : float; default=0.0
             coefficient of thermal expansion
         comment : str; default=''
@@ -217,6 +217,14 @@ class RBAR(RigidElement):
         self.eid = eid
         self.ga = ga
         self.gb = gb
+        if cna == '0':
+            cna = ''
+        if cnb == '0':
+            cnb = ''
+        if cma == '0':
+            cma = ''
+        if cmb == '0':
+            cmb = ''
         self.cna = cna
         self.cnb = cnb
         self.cma = cma
@@ -258,10 +266,10 @@ class RBAR(RigidElement):
         eid = data[0]
         ga = data[1]
         gb = data[2]
-        cna = data[3]
-        cnb = data[4]
-        cma = data[5]
-        cmb = data[6]
+        cna = str(data[3])
+        cnb = str(data[4])
+        cma = str(data[5])
+        cmb = str(data[6])
         alpha = data[7]
         return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
 

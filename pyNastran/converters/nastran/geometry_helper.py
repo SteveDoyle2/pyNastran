@@ -587,7 +587,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                         pressures[ie] += pressure * nz
 
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(
+                        #A, centroid, normal = elem.get_face_area_centroid_normal(
                             #load.g34.nid, load.g1.nid)
                         #r = centroid - p
             iload += 1
@@ -806,13 +806,13 @@ class NastranGeometryHelper(NastranGuiAttributes):
                             elem_node_ids = elem.node_ids
                             if elem.type == 'CTETRA':
                                 #face1 = elem.get_face(load.g1.nid, load.g34.nid)
-                                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(
+                                face, area, centroid, normal = elem.get_face_area_centroid_normal(
                                     load.g1.nid, load.g34.nid)
                                 #assert face == face1
                                 nface = 3
                             elif elem.type == 'CHEXA':
                                 #face1 = elem.get_face(load.g34.nid, load.g1.nid)
-                                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(
+                                face, area, centroid, normal = elem.get_face_area_centroid_normal(
                                     load.g34.nid, load.g1.nid)
                                 #assert face == face1
                                 nface = 4
@@ -820,11 +820,11 @@ class NastranGeometryHelper(NastranGuiAttributes):
                                 g1 = load.g1.nid
                                 if load.g34 is None:
                                     #face1 = elem.get_face(g1)
-                                    face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1)
+                                    face, area, centroid, normal = elem.get_face_area_centroid_normal(g1)
                                     nface = 3
                                 else:
                                     #face1 = elem.get_face(g1, load.g34.nid)
-                                    face, area, centroid, normal = elem.getFaceAreaCentroidNormal(
+                                    face, area, centroid, normal = elem.get_face_area_centroid_normal(
                                         g1, load.g34.nid)
                                     nface = 4
                                 #assert face == face1

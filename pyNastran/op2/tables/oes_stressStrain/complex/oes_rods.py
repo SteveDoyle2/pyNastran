@@ -112,6 +112,7 @@ class ComplexRodArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, axial, torsion):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torsion]

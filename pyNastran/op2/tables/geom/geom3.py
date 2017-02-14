@@ -24,12 +24,12 @@ class GEOM3(GeomCommon):
     def __init__(self):
         GeomCommon.__init__(self)
         self._geom3_map = {
-            (11302, 113, 600): ['ACCEL', self._read_fake], # record 2 - not done
-            (11402, 114, 601): ['ACCEL1', self._read_fake], # record 3 - not done
-            (4201, 42,  18): ['FORCE', self._read_force],    # record 3
-            (4001, 40,  20): ['FORCE1', self._read_force1],  # record 4
-            (4101, 41,  22): ['FORCE2', self._read_force2],  # record 5
-            (4401, 44,  26): ['GRAV', self._read_grav],      # record 7 - buggy
+            (11302, 113, 600): ['ACCEL', self._read_accel],    # record 2 - not done
+            (11402, 114, 601): ['ACCEL1', self._read_accel1],  # record 3 - not done
+            (4201, 42,  18): ['FORCE', self._read_force],      # record 3
+            (4001, 40,  20): ['FORCE1', self._read_force1],    # record 4
+            (4101, 41,  22): ['FORCE2', self._read_force2],    # record 5
+            (4401, 44,  26): ['GRAV', self._read_grav],        # record 7 - buggy
             (4551, 61,  84): ['LOAD', self._read_load],        # record 8
             (3709, 37, 331): ['LOADCYH', self._read_loadcyh],  # record 9 - not done
             (3609, 36, 188): ['LSEQ', self._read_lseq],        # record 12 - not done
@@ -54,25 +54,30 @@ class GEOM3(GeomCommon):
             (8209, 82, 202): ['TEMPP2', self._read_tempp2],    # record 38 - not done
             (8309, 83, 203): ['TEMPP3', self._read_tempp3],    # record 39 - not done
             (8409, 84, 204): ['TEMP4', self._read_tempp4],     # record 40 - not done
-            (2309, 23, 416): ['QVOL', self._read_fake],
-            (4309, 43, 233): ['QHBDY', self._read_fake],
-            (6609, 66, 9031): ['PEDGE', self._read_fake],
+            (2309, 23, 416): ['QVOL', self._read_qvol],
+            (4309, 43, 233): ['QHBDY', self._read_qhbdy],
+            (6609, 66, 9031): ['PEDGE', self._read_pedge],
             (8100, 81, 381): ['CHACAB', self._read_fake],
-            (2209, 22, 241): ['QVECT', self._read_fake],
-            (6409, 64, 9032): ['PFACE', self._read_fake],
-            (3809, 38, 332): ['LOADCYN', self._read_fake],    # record
-            (6209, 62, 390): ['TEMPF', self._read_fake],    # record
+            (2209, 22, 241): ['QVECT', self._read_qvect],
+            (6409, 64, 9032): ['PFACE', self._read_pface],
+            (3809, 38, 332): ['LOADCYN', self._read_loadcyn],    # record
+            (6209, 62, 390): ['TEMPF', self._read_tempf],    # record
             (10901, 109, 427): ['', self._read_fake],  # record
             (10801, 108, 428): ['', self._read_fake],  # record
             (11329, 113, 9602): ['', self._read_fake],  # record
             (11429, 114, 9603): ['', self._read_fake],  # record
             (11529, 115, 9604): ['', self._read_fake],  # record
-            (7002, 70, 254) : ['BOLTFOR', self._read_fake],  # record
-            (7601, 76, 608) : ['BOLTLD', self._read_fake],  # record
+            (7002, 70, 254) : ['BOLTFOR', self._read_boltfor],  # record
+            (7601, 76, 608) : ['BOLTLD', self._read_boltld],  # record
         }
 
-# ACCEL
-# ACCEL1
+    def _read_accel(self, data, n):
+        self.log.info('skipping ACCEL in GEOM3\n')
+        return len(data)
+
+    def _read_accel1(self, data, n):
+        self.log.info('skipping ACCEL1 in GEOM3\n')
+        return len(data)
 
     def _read_force(self, data, n):
         """
@@ -129,7 +134,9 @@ class GEOM3(GeomCommon):
         self.card_count['FORCE2'] = nentries
         return n
 
-# GMLOAD
+    def _read_gmload(self, data, n):
+        self.log.info('skipping GMLOAD in GEOM3\n')
+        return len(data)
 
     def _read_grav(self, data, n):
         """
@@ -197,8 +204,13 @@ class GEOM3(GeomCommon):
             self.binary_debug.write('skipping LOADCYH in GEOM3\n')
         return len(data)
 
-# LOADCYN
-# LOADCYT
+    def _read_loadcyn(self, data, n):
+        self.log.info('skipping LOADCYN in GEOM3\n')
+        return len(data)
+
+    def _read_loadcyt(self, data, n):
+        self.log.info('skipping LOADCYT in GEOM3\n')
+        return len(data)
 
     def _read_lseq(self, data, n):
         ntotal = 20  # 5*4
@@ -487,15 +499,19 @@ class GEOM3(GeomCommon):
         self.card_count['TEMPD'] = nentries
         return n
 
-# QHBDY
-# QVECT
-# QVOL
+    def _read_qhbdy(self, data, n):
+        self.log.info('skipping QHBDY in GEOM3\n')
+        return len(data)
+
+    def _read_qvect(self, data, n):
+        self.log.info('skipping QVECT in GEOM3\n')
+        return len(data)
+
+    def _read_qvol(self, data, n):
+        self.log.info('skipping QVOL in GEOM3\n')
+        return len(data)
 
     def _read_rforce(self, data, n):
-        self.log.info('skipping RFORCE in GEOM3\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping RFORCE in GEOM3\n')
-
         ntotal =  40  # 10*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(b(self._endian + '3i 4f ifi'))
@@ -530,7 +546,9 @@ class GEOM3(GeomCommon):
 # TEMP(5701,57,27) # 32
 # TEMPD(5641,65,98) # 33
 # TEMPEST
-# TEMPF
+    def _read_tempf(self, data, n):
+        self.log.info('skipping TEMPF in GEOM3\n')
+        return len(data)
 # TEMP1C
 
     def _read_tempp1(self, data, n):
@@ -574,5 +592,18 @@ class GEOM3(GeomCommon):
             self.binary_debug.write('skipping TEMPRB in GEOM3\n')
         return len(data)
 
-# PFACE
-# PEDGE
+    def _read_pface(self, data, n):
+        self.log.info('skipping PFACE in GEOM3\n')
+        return len(data)
+
+    def _read_pedge(self, data, n):
+        self.log.info('skipping PEDGE in GEOM3\n')
+        return len(data)
+
+    def _read_boltfor(self, data, n):
+        self.log.info('skipping BOLTFOR in GEOM3\n')
+        return len(data)
+
+    def _read_boltld(self, data, n):
+        self.log.info('skipping BOLTLD in GEOM3\n')
+        return len(data)

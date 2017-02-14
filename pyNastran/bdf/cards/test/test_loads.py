@@ -80,7 +80,7 @@ class TestLoads(unittest.TestCase):
             if load.g34 is None:
                 g34 = None
                 #print(load)
-                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1)
+                face, area, centroid, normal = elem.get_face_area_centroid_normal(g1)
                 assert area == 0.5, area
                 if g1 in [21, 22, 23]:
                     assert face == (2, 1, 0), 'g1=%s face=%s' % (g1, face)
@@ -92,7 +92,7 @@ class TestLoads(unittest.TestCase):
                     assert array_equal(normal, array([0., 0., -1.])), 'aft g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
             else:
                 g34 = load.g34.nid
-                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, g34)
+                face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
                 if (g1, g34) in angles:
                     self.assertAlmostEqual(area, 2 * 2**0.5, msg='g1=%s g34=%s face=%s area=%s' % (g1, g34, face, area))
                 elif (g1, g34) in nx:
@@ -270,7 +270,7 @@ class TestLoads(unittest.TestCase):
                 # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
             g34 = load.g34.nid
-            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, g34)
+            face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
             msg = '%s%s%s\n' % (
                 elem.nodes[face[0]], elem.nodes[face[1]],
                 elem.nodes[face[2]])
@@ -376,7 +376,7 @@ class TestLoads(unittest.TestCase):
                 # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
             g34 = load.g34.nid
-            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, g34)
+            face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
             msg = '%s%s%s%s\n' % (
                 elem.nodes[face[0]], elem.nodes[face[1]],
                 elem.nodes[face[2]], elem.nodes[face[3]])

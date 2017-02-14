@@ -14,6 +14,7 @@ All solid elements are SolidElement and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
+import numpy as np
 from numpy import dot, cross
 from numpy.linalg import norm
 
@@ -155,6 +156,9 @@ class SolidElement(Element):
             print("self.pid = %s" % (self.pid))
             #print("self.pid_ref.mid_ref = %s" % (str(self.pid_ref.mid_ref)))
             raise
+
+    def get_face_area_centroid_normal(self, nid_opposite, nid=None):
+        return self.get_face_area_centroid_normal(nid_opposite, nid)
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
@@ -349,8 +353,8 @@ class CHEXA8(SolidElement):
         return faces
 
     def material_coordinate_system(self, xyz=None):
-        if normal is None:
-            normal = self.Normal() # k = kmat
+        #if normal is None:
+            #normal = self.Normal() # k = kmat
 
         if xyz is None:
             x1 = self.nodes_ref[0].get_position()
@@ -421,7 +425,7 @@ class CHEXA8(SolidElement):
         nids = self.node_ids[:8]
         return chexa_face(nid_opposite, nid, nids)
 
-    def getFaceAreaCentroidNormal(self, nid, nid_opposite):
+    def get_face_area_centroid_normal(self, nid, nid_opposite):
         """
         Parameters
         ----------
@@ -484,7 +488,6 @@ class CHEXA20(SolidElement):
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
-
         data = [self.eid, self.Pid()] + nodes[:8] + nodes2
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
                '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
@@ -511,9 +514,13 @@ class CHEXA20(SolidElement):
         self.eid = eid
         #: Property ID
         self.pid = pid
+
+        nnodes = len(nids)
+        if nnodes < 20:
+            nids.extend((20 - nnodes) * [None])
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
-        assert len(self.nodes) <= 20, msg
+        assert len(self.nodes) == 20, msg
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -583,7 +590,8 @@ class CHEXA20(SolidElement):
         =======
         >>> print(element.faces)
         """
-        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20 = self.node_ids
+        (n1, n2, n3, n4, n5, n6, n7, n8,
+         n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20) = self.node_ids
         faces = {
             1 : [n1, n2, n3, n4, n9, n10, n11, n12],
             2 : [n1, n2, n6, n5, n9, n18, n13, n17],
@@ -623,7 +631,7 @@ class CHEXA20(SolidElement):
         nids = self.node_ids[:8]
         return chexa_face(nid_opposite, nid, nids)
 
-    def getFaceAreaCentroidNormal(self, nid, nid_opposite):
+    def get_face_area_centroid_normal(self, nid, nid_opposite):
         """
         Parameters
         ----------
@@ -871,7 +879,7 @@ class CPENTA6(SolidElement):
         nids = self.node_ids[:6]
         return cpenta_face(nid, nid_opposite, nids)
 
-    def getFaceAreaCentroidNormal(self, nid, nid_opposite=None):
+    def get_face_area_centroid_normal(self, nid, nid_opposite=None):
         nids = self.node_ids[:6]
         return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:6])
 
@@ -1136,8 +1144,11 @@ class CPENTA15(SolidElement):
         self.eid = eid
         #: Property ID
         self.pid = pid
+        nnodes = len(nids)
+        if nnodes < 15:
+            nids.extend((15 - nnodes) * [None])
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) <= 15
+        assert len(self.nodes) == 15
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1221,7 +1232,7 @@ class CPENTA15(SolidElement):
         nids = self.node_ids[:6]
         return cpenta_face(nid_opposite, nid, nids)
 
-    def getFaceAreaCentroidNormal(self, nid, nid_opposite=None):
+    def get_face_area_centroid_normal(self, nid, nid_opposite=None):
         nids = self.node_ids[:6]
         return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:6])
 
@@ -1497,9 +1508,12 @@ class CPYRAM13(SolidElement):
         self.eid = eid
         #: Property ID
         self.pid = pid
+        nnodes = len(nids)
+        if nnodes < 13:
+            nids.extend((13 - nnodes) * [None])
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
-        assert len(self.nodes) <= 13, msg
+        assert len(self.nodes) == 13, msg
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1815,13 +1829,9 @@ class CTETRA4(SolidElement):
         nids = self.node_ids[:6]
         return ctetra_face(nid_opposite, nid, nids)
 
-    def getFaceAreaCentroidNormal(self, nid, nid_opposite):
+    def get_face_area_centroid_normal(self, nid, nid_opposite):
         return ctetra_face_area_centroid_normal(nid, nid_opposite,
                                                 self.node_ids, self.nodes)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1905,7 +1915,7 @@ class CTETRA10(SolidElement):
                '        %16s%16s%16s%16s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
-    def getFaceAreaCentroidNormal(self, nid_opposite, nid=None):
+    def get_face_area_centroid_normal(self, nid_opposite, nid=None):
         return ctetra_face_area_centroid_normal(nid_opposite, nid,
                                                 self.node_ids[:4], self.nodes[:4])
 
@@ -1917,8 +1927,11 @@ class CTETRA10(SolidElement):
         self.eid = eid
         #: Property ID
         self.pid = pid
+        nnodes = len(nids)
+        if nnodes < 10:
+            nids.extend((10 - nnodes) * [None])
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) <= 10
+        assert len(self.nodes) == 10
 
     @classmethod
     def add_card(cls, card, comment=''):

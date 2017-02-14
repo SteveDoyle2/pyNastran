@@ -359,13 +359,16 @@ class ABQSet1(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        components = data[0]
+        components = str(data[0])
         thru_flag = data[1]
         if thru_flag == 0:
             ids = data[2:]
-        else:
+        elif thru_flag == 1:
             assert len(data) == 4, data
-            ids = [data[2], 'THRU', data[3]]
+            #ids = [data[2], 'THRU', data[3]]
+            ids = list(range(data[2], data[3]+1))
+        else:
+            raise NotImplementedError('thru_flag=%s data=%s' % (thru_flag, data))
         return cls(components, ids, comment=comment)
 
     def cross_reference(self, model):
@@ -451,15 +454,8 @@ class SuperABQSet1(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        seid = data[0]
-        components = data[1]
-        thru_flag = data[2]
-        if thru_flag == 0:
-            ids = data[3:]
-        else:
-            assert len(data) == 5, data
-            ids = [data[3], 'THRU', data[4]]
-        return cls(seid, components, ids, comment=comment)
+        seid, components, nids = data
+        return cls(seid, components, nids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -957,7 +953,8 @@ class SESET(SetSuper):
         self.clean_ids()
 
     def raw_fields(self):
-        return ['SESET', self.seid] + collapse_thru(self.ids)
+        list_fields = ['SESET', self.seid] + collapse_thru(self.ids)
+        return list_fields
 
     def __repr__(self):
         thru_fields = collapse_thru(self.ids)
@@ -1156,11 +1153,12 @@ class USET(Set):
             ummm...odd
         """
         sid = data[0]
+        nid = data[1]
         if sid < 0:
             name = 'ZERO'
         else:
-            name = str(sid)
-        nid = data[1]
+            comment = 'sid=%s (???)' % sid
+            name = 'U%i' % nid
         assert nid > 0, nid
         component = str(data[2])
         for componenti in component:

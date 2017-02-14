@@ -3,7 +3,7 @@ from struct import unpack
 
 from numpy import array
 
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 
 class OGPWG(OP2Common):

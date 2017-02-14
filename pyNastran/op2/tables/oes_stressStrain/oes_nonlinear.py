@@ -129,6 +129,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
 
     def add_sort1(self, dt, eid, axial_stress, equiv_stress, total_strain,
                   effective_plastic_creep_strain, effective_creep_strain, linear_torsional_stress):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -348,7 +349,7 @@ class RealNonlinearPlateArray(OES_Object):
         self.add_sort1(dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy)
 
     def add_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
-        #print(etype, eid)
+        """unvectorized method for adding SORT1 transient data"""
         if isnan(fd):
             fd = 0.
         if isnan(sz):
@@ -665,6 +666,7 @@ class NonlinearQuad(StressObject):
         self.ecs[dt][eid] = [ecs]
 
     def add_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        """unvectorized method for adding SORT1 transient data"""
         self.fiberDistance[dt][eid].append(fd)
         if isnan(sz):
             sz = 0.
@@ -809,6 +811,7 @@ class HyperelasticQuad(StressObject):
         self.minorP[dt] = {eid: [minorP]}
 
     def add_sort1(self, dt, eid, ID, oxx, oyy, txy, angle, majorP, minorP):
+        """unvectorized method for adding SORT1 transient data"""
         self.oxx[dt][eid].append(oxx)
         self.oyy[dt][eid].append(oyy)
         self.txy[dt][eid].append(txy)

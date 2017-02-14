@@ -265,8 +265,16 @@ class MATT1(MaterialDependence):
 
         assert len(card) <= 12, 'len(MATT1 card) = %i\ncard=%s' % (len(card), card)
         return MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
-                     ge_table, st_table, sc_table,
-                     ss_table, comment=comment)
+                     ge_table, st_table, sc_table, ss_table, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (mid, E_table, G_table, nu_table, rho_table, A_table, ge_table,
+         st_table, sc_table, ss_table, dunno_a, dunno_b) = data
+        assert dunno_a == 0, data
+        assert dunno_b == 0, data
+        return MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
+                     ge_table, st_table, sc_table, ss_table, comment=comment)
 
     def E(self, temperature):
         """
@@ -543,8 +551,8 @@ class MATT4(MaterialDependence):
     """
     type = 'MATT4'
 
-    def __init__(self, mid, k_table=None, cp_table=None, H_table=None,
-                 mu_table=None, Hgen_table=None, comment=''):
+    def __init__(self, mid, k_table=None, cp_table=None, h_table=None,
+                 mu_table=None, hgen_table=None, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment
@@ -552,32 +560,39 @@ class MATT4(MaterialDependence):
             k_table = None
         if cp_table == 0:
             cp_table = None
-        if H_table == 0:
-            H_table = None
+        if h_table == 0:
+            h_table = None
         if mu_table == 0:
             mu_table = None
-        if Hgen_table == 0:
-            Hgen_table = None
+        if hgen_table == 0:
+            hgen_table = None
 
         self.mid = mid
         self._k_table = k_table
         self._cp_table = cp_table
-        self._H_table = H_table
+        self._h_table = h_table
         self._mu_table = mu_table
-        self._Hgen_table = Hgen_table
+        self._hgen_table = hgen_table
 
     @classmethod
     def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
         k_table = integer_or_blank(card, 2, 'T(K)')
         cp_table = integer_or_blank(card, 3, 'T(CP)')
-        H_table = integer_or_blank(card, 5, 'T(H)')
+        h_table = integer_or_blank(card, 5, 'T(H)')
         mu_table = integer_or_blank(card, 6, 'T(mu)')
-        Hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
+        hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
 
         assert len(card) <= 8, 'len(MATT4 card) = %i\ncard=%s' % (len(card), card)
-        return MATT4(mid, k_table, cp_table, H_table, mu_table,
-                     Hgen_table, comment=comment)
+        return MATT4(mid, k_table, cp_table, h_table, mu_table,
+                     hgen_table, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (mid, k_table, cp_table, null, h_table, mu_table, hgen_table) = data
+        assert null == 0, data
+        return MATT4(mid, k_table, cp_table, h_table, mu_table,
+                     hgen_table, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -595,9 +610,9 @@ class MATT4(MaterialDependence):
         ## TODO: add refs
         self._xref_table(model, '_k_table', msg=msg)
         self._xref_table(model, '_cp_table', msg=msg)
-        self._xref_table(model, '_H_table', msg=msg)
+        self._xref_table(model, '_h_table', msg=msg)
         self._xref_table(model, '_mu_table', msg=msg)
-        self._xref_table(model, '_Hgen_table', msg=msg)
+        self._xref_table(model, '_hgen_table', msg=msg)
 
         self.mid_ref = self.mid
 
@@ -613,13 +628,13 @@ class MATT4(MaterialDependence):
         return self._get_table('_cp_table')
 
     def H_table(self):
-        return self._get_table('_H_table')
+        return self._get_table('_h_table')
 
     def mu_table(self):
         return self._get_table('_mu_table')
 
     def Hgen_table(self):
-        return self._get_table('_Hgen_table')
+        return self._get_table('_hgen_table')
 
     def raw_fields(self):
         list_fields = [
@@ -637,6 +652,7 @@ class MATT4(MaterialDependence):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
 
 class MATT5(MaterialDependence):
     """
@@ -682,6 +698,15 @@ class MATT5(MaterialDependence):
         hgen_table = integer_or_blank(card, 11, 'T(HGEN)')
 
         assert len(card) <= 12, 'len(MATT5 card) = %i\ncard=%s' % (len(card), card)
+        return MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
+                     kyz_table, kzz_table, cp_table, hgen_table,
+                     comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
+         cp_table, null, hgen_table) = data
+        assert null == 0, data
         return MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
                      kyz_table, kzz_table, cp_table, hgen_table,
                      comment=comment)

@@ -12,7 +12,7 @@ from six.moves import range
 from numpy import fromstring, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
-from pyNastran.op2.op2_common import OP2Common, apply_mag_phase
+from pyNastran.op2.op2_interface.op2_common import OP2Common, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
@@ -57,7 +57,6 @@ class OES(OP2Common):
         OP2Common.__init__(self)
         self.ntotal = 0
 
-    #def _oes_cleanup():
     def _read_oes1_3(self, data, ndata):
         """
         reads OES1 subtable 3
@@ -154,7 +153,7 @@ class OES(OP2Common):
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
-        # tCode=2
+        # tcode=2
         #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
@@ -447,13 +446,13 @@ class OES(OP2Common):
 
     def _read_oes1_thermal(self, data, ndata):
         """
-        Reads OES self.thermal=1 tables; uses a hackish method to just skip the table.
+        Reads OES self.thermal=1 tables; uses a hackish method to just skip the table
         """
         return ndata
 
     def _read_ostr1_thermal(self, data, ndata):
         """
-        Reads OSTR self.thermal=1 tables; uses a hackish method to just skip the table.
+        Reads OSTR self.thermal=1 tables; uses a hackish method to just skip the table
         """
         return ndata
 
@@ -997,7 +996,8 @@ class OES(OP2Common):
                         (eid_device, axial, axial_margin, torsion, torsion_margin) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  eid=%i; C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
                         obj.add_new_eid(dt, eid, axial, axial_margin, torsion, torsion_margin)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 5: # imag
@@ -1092,7 +1092,7 @@ class OES(OP2Common):
                     self._data_factor = 11
                     return nelements * self.num_wide * 4
                 obj = self.obj
-                #s = self.struct_i
+
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
                 n1 = 44
@@ -1118,7 +1118,7 @@ class OES(OP2Common):
                         n += n2
                         out = s2.unpack(edata)
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-                        obj.add(dt, eid, out)
+                        obj.add_sort1(dt, eid, out)
             elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
                 # TODO: vectorize
                 if self.read_mode == 1:
@@ -1411,7 +1411,8 @@ class OES(OP2Common):
                             axial = complex(axial_real, axial_imag)
 
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axial_real, axial_imag))
+                            self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (
+                                eid, i, eid_device, axial_real, axial_imag))
                         obj.add_sort1(dt, eid, axial)
                         n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
@@ -1455,7 +1456,6 @@ class OES(OP2Common):
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 obj = self.obj
-                #is_vectorized = False
                 if self.use_vector and is_vectorized:
                     # self.itime = 0
                     # self.ielement = 0
@@ -1490,7 +1490,8 @@ class OES(OP2Common):
                          s1b, s2b, s3b, s4b, smaxb, sminb, margin_compression) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
+                                eid, i, ', '.join(['%r' % di for di in out])))
                         n += ntotal
                         obj.add_new_eid(dt, eid,
                                         s1a, s2a, s3a, s4a, axial, smaxa, smina, margin_tension,
@@ -1551,7 +1552,8 @@ class OES(OP2Common):
 
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
+                                eid, i, ', '.join(['%r' % di for di in out])))
                         if is_magnitude_phase:
                             s1a = polar_to_real_imag(s1ar, s1ai)
                             s1b = polar_to_real_imag(s1br, s1bi)
@@ -1578,8 +1580,6 @@ class OES(OP2Common):
                                               s1b, s2b, s3b, s4b)
             elif self.format_code == 1 and self.num_wide == 19: # random
                 raise RuntimeError(self.code_information())
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
 
@@ -1604,8 +1604,6 @@ class OES(OP2Common):
                     element_name = 'CPENTA6'
                 else:
                     raise RuntimeError(self.code_information())
-                    #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                    #return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 obj_vector_real = RealSolidStrainArray
                 obj_vector_complex = ComplexSolidStrainArray
@@ -1664,8 +1662,8 @@ class OES(OP2Common):
                             ints1 = ints.reshape(nelements, numwide_real)
                         except ValueError:
                             msg = 'ints.shape=%s; size=%s ' % (str(ints.shape), ints.size)
-                            msg += 'nelements=%s numwide_real=%s nelements*numwide=%s' % (nelements, numwide_real,
-                                                                                          nelements * numwide_real)
+                            msg += 'nelements=%s numwide_real=%s nelements*numwide=%s' % (
+                                nelements, numwide_real, nelements * numwide_real)
                             raise ValueError(msg)
                         eids = ints1[:, 0] // 10
                         cids = ints1[:, 1]
@@ -3566,8 +3564,8 @@ class OES(OP2Common):
 
             numwide_real = 4 + (25 - 4) * nnodes  # real???
             numwide_random = 2 + (18 - 2) * nnodes  # imag???
-            print("format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
-                self.format_code, self.num_wide, numwide_real, numwide_random))
+            #self.log.debug("format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
+                #self.format_code, self.num_wide, numwide_real, numwide_random))
 
             #numwide_real = 0
             #numwide_imag = 2 + 16 * nnodes

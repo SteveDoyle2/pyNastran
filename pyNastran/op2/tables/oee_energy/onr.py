@@ -6,7 +6,7 @@ from struct import Struct
 from numpy import fromstring, array
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy, RealStrainEnergyArray
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 class ONR(OP2Common):
     def __init__(self):

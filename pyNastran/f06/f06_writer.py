@@ -14,8 +14,8 @@ from traceback import print_exc
 from six import string_types, iteritems, PY2
 
 import pyNastran
-from pyNastran.op2.op2_f06_common import OP2_F06_Common
-from pyNastran.op2.result_set import ResultSet
+from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
+from pyNastran.op2.op2_interface.result_set import ResultSet
 
 def make_stamp(Title, today=None):
     if 'Title' is None:

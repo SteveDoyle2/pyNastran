@@ -25,10 +25,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import numpy as np
 from six import string_types, PY2
-if PY2:
-    u = unicode
-else:
-    u = str
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
@@ -42,6 +38,11 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
+
+if PY2:
+    u = unicode
+else:
+    u = str
 
 
 class RINGAX(BaseCard):
@@ -59,7 +60,7 @@ class RINGAX(BaseCard):
     #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
 
-    def __init__(self, card=None, data=None, comment=''):  # this card has missing fields
+    def __init__(self, nid, R, z, ps=None, comment=''):  # this card has missing fields
         """
         Creates the RINGAX card
         """
@@ -111,12 +112,12 @@ class RINGAX(BaseCard):
         comment : str; default=''
             a comment for the card
         """
-        self.nid = data[0]
-        self.R = data[1]
-        self.z = data[2]
-        self.ps = data[3]
+        nid = data[0]
+        R = data[1]
+        z = data[2]
+        ps = data[3]
         assert len(data) == 4, data
-        return RINGAX(nid, R, z, ps)
+        return RINGAX(nid, R, z, ps, comment=comment)
 
     def raw_fields(self):
         """
@@ -627,7 +628,7 @@ class GRDSET(BaseCard):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_card(self, f, size, is_double):
+    def write_card(self, f, size=8, is_double=False):
         """
         The writer method used by BDF.write_card
 
@@ -1436,23 +1437,7 @@ class POINT(BaseCard):
         nid = data[0]
         cp = data[1]
         xyz = np.array(data[2:5])
-        ps = ''
-        seid = 0
-        cd = 0
-        return POINT(nid, cp, xyz, cd, ps, seid, comment=comment)
-
-    #def Position(self):
-        #self.deprecated('Position()', 'get_position()', '0.8')
-        #return self.get_position()
-
-    #def PositionWRT(self, model, cid):
-        #self.deprecated('Position()', 'get_position_wrt()', '0.8')
-        #return self.get_position_wrt(model, cid)
-
-    #def UpdatePosition(self, model, xyz, cid=0):
-        #self.deprecated('UpdatePosition(self, model, xyz, cid)',
-                        #'set_position(model, xyz, cid)', '0.8')
-        #return self.set_position(model, xyz, cid=cid)
+        return POINT(nid, cp, xyz, comment=comment)
 
     def set_position(self, model, xyz, cid=0):
         """

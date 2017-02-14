@@ -461,8 +461,8 @@ class SPC(Constraint):
         assert conid > 0, data
         assert gids[0] > 0, data
         components_str = str(components)
-        assert len(constraint_str) <= 6, data
-        components = [constraint_str]
+        assert len(components_str) <= 6, data
+        components = [components_str]
         #if components[0] == 0:
             #components[0] = 0
         #if components[0] == 16:

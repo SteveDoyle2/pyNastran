@@ -15,7 +15,7 @@ from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
 )
 from pyNastran.op2.tables.opg_appliedLoads.opnl_force_vector import RealForceVectorArray#, ComplexForceVectorArray
 
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 
 class OPG(OP2Common):

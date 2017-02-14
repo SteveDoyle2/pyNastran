@@ -115,15 +115,15 @@ import sys
 
 import numpy as np
 
-from pyNastran.utils import object_attributes, object_methods, integer_types
-from pyNastran.op2.op2_scalar import OP2_Scalar
+from pyNastran.utils import (
+    object_attributes, object_methods, integer_types, ipython_info)
 from pyNastran.op2.tables.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
-#from pyNastran.op2.op2_writer import OP2Writer
-from pyNastran.op2.op2_f06_common import Op2F06Attributes
-from pyNastran.utils import ipython_info
+#from pyNastran.op2.op2_interface.op2_writer import OP2Writer
+from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
+from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
@@ -151,7 +151,10 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
         enables the debug log and sets the debug in the logger
     log : Log()
         a logging object to write debug messages to
-     (.. seealso:: import logging)
+        (.. seealso:: import logging)
+    mode : str; default='msc'
+        the version of the Nastran you're using
+        {nx, msc, optistruct}
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
     encoding : str
@@ -233,15 +236,18 @@ class OP2(OP2_Scalar):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model):
+        """diffs the current op2 model vs. another op2 model"""
         if not self.read_mode == op2_model.read_mode:
-            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (self.read_mode, op2_model.read_mode))
+            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
+                self.read_mode, op2_model.read_mode))
             return True
         table_types = self.get_table_types()
         for table_type in table_types:
             adict = getattr(self, table_type)
             bdict = getattr(op2_model, table_type)
             if len(adict) != len(bdict):
-                print('len(self.%s)=%s len(op2_model.%s)=%s' % (table_type, len(adict), table_type, len(bdict)))
+                print('len(self.%s)=%s len(op2_model.%s)=%s' % (
+                    table_type, len(adict), table_type, len(bdict)))
                 return False
             for key, avalue in iteritems(adict):
                 bvalue = bdict[key]
@@ -261,6 +267,9 @@ class OP2(OP2_Scalar):
         return True
 
     def set_mode(self, mode):
+        """
+        Sets the mode as 'msc' or 'nx'
+        """
         if mode.lower() == 'msc':
             self.set_as_msc()
         elif mode.lower() == 'nx':
@@ -384,6 +393,11 @@ class OP2(OP2_Scalar):
         self.log.debug('finished reading op2')
 
     def create_objects_from_matrices(self):
+        """
+        creates the following objects:
+          - sonitor3 : MONPNT3 object from the MP3F matrix
+          - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
+          """
         if 'MP3F' in self.matrices:
             self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
 
@@ -650,6 +664,8 @@ class OP2(OP2_Scalar):
             the nodes in the global frame
             Don't use this if CD is only rectangular
             Use this if CD is not rectangular
+        debug : bool; default=False
+            developer debug
         """
         #output = {}
         disp_like_dicts = [

@@ -107,6 +107,7 @@ class ComplexRodForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, axial, torque):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -325,6 +326,7 @@ class ComplexCShearForceArray(ScalarObject):
                   force41, force14, force21, force12, force32, force23, force43, force34,
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -554,6 +556,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, force):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, 0] = force
@@ -766,6 +769,7 @@ class ComplexViscForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, axial, torque):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -974,6 +978,7 @@ class ComplexPlateForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1211,6 +1216,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         self.ielement += 1
 
     def add_sort1(self, dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         #assert self.element[self.ielement - 1] == eid, eid
         self.element_node[self.itotal, :] = [eid, nid]
@@ -1454,6 +1460,7 @@ class ComplexCBarForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         self.element[self.itotal] = eid
@@ -1726,6 +1733,7 @@ class ComplexCBeamForceArray(ScalarObject):
         #return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
@@ -1973,6 +1981,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
     def add_sort1(self, dt, eid,
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
+        """unvectorized method for adding SORT1 transient data"""
         bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
         bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
 
@@ -2196,6 +2205,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, ename, ax, ay, az, vx, vy, vz, pressure):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
@@ -2417,6 +2427,7 @@ class ComplexCBushForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
+        """unvectorized method for adding SORT1 transient data"""
         #[fx, fy, fz, mx, my, mz]
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [fx, fy, fz, mx, my, mz]
@@ -2637,6 +2648,7 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingZ[eid][nid] = bendingZ
 
     def add_sort1(self, nnodes, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         [eid, parent, coord, icord, forces] = data
         if dt not in self.forceX:
             self.add_new_transient(dt)
@@ -2766,6 +2778,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             self.shearXZ[eid][nid] = shearXZ
 
     def add_sort1(self, nnodes, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         [eid, parent, coord, icord, theta, forces] = data
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 

@@ -237,11 +237,8 @@ class ElementTableArray(ScalarObject):  # displacement style table
         #wb.save()
         # wb.save()
 
-
-    #def add(self, eid, etype, v1, v2, v3, v4, v5, v6):
-        #self.add_sort1(None, eid, etype, v1, v2, v3, v4, v5, v6)
-
     def add_sort1(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
+        """unvectorized method for adding SORT1 transient data"""
         # itotal - the node number
         # itime - the time/frequency step
 

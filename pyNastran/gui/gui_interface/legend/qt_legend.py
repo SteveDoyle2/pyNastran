@@ -97,7 +97,7 @@ class AnimationWindow(PyDialog):
         self.time_edit = QDoubleSpinBox(self)
         self.time_edit.setValue(self._default_time)
         self.time_edit.setRange(0.1, 10.0)
-        self.time_edit.setDecimals(1)
+        self.time_edit.setDecimals(2)
         self.time_edit.setSingleStep(0.1)
         self.time_button = QPushButton("Default")
 
@@ -302,9 +302,9 @@ class AnimationWindow(PyDialog):
 
     def _make_gif(self, validate_out, istep=None):
         """interface for making the gif"""
-        scale, time, fps, output_dir, gifbase = validate_out
+        scale, time, fps, magnify, output_dir, gifbase = validate_out
         if gifbase.lower().endswith('.gif'):
-            gifbase = gifbase[:-3]
+            gifbase = gifbase[:-4]
         gif_filename = os.path.join(output_dir, gifbase + '.gif')
 
         animate_scale = self.animate_scale_radio.isChecked()
@@ -326,13 +326,17 @@ class AnimationWindow(PyDialog):
             # TODO: we could start from 0 deflection, but that's more work
             # TODO: we could do a sine wave, but again, more work
             scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
-            isteps = np.linspace(0, nframes, endpoint=True)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True)
             phases = [None] * nframes
+            assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+            assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
         elif animate_phase:
             # animate phase
             phases = np.linspace(0., 360, num=nframes, endpoint=False)
-            isteps = np.linspace(0, nframes, endpoint=False)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False)
             scales = [None] * nframes
+            assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
+            assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
         elif animate_time:
             pass
         else:
@@ -348,7 +352,7 @@ class AnimationWindow(PyDialog):
         self.win_parent.win_parent.make_gif(
             gif_filename, self._icase, scales=scales, phases=phases,
             isteps=isteps,
-            time=time, analysis_time=analysis_time, fps=fps,
+            time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
             onesided=onesided, nrepeat=nrepeat, delete_images=delete_images,
             make_gif=make_gif)
 
@@ -357,10 +361,11 @@ class AnimationWindow(PyDialog):
         scale, flag0 = self.check_float(self.scale_edit)
         time, flag1 = self.check_float(self.time_edit)
         fps, flag2 = self.check_float(self.fps_edit)
-        output_dir, flag3 = self.check_path(self.browse_edit)
-        gifbase, flag4 = self.check_name(self.gif_edit)
-        passed = all([flag0, flag1, flag2, flag3, flag4])
-        return passed, (scale, time, fps, output_dir, gifbase)
+        magnify, flag3 = self.check_int(self.resolution_edit)
+        output_dir, flag4 = self.check_path(self.browse_edit)
+        gifbase, flag5 = self.check_name(self.gif_edit)
+        passed = all([flag0, flag1, flag2, flag3, flag4, flag5])
+        return passed, (scale, time, fps, magnify, output_dir, gifbase)
 
     def get_analysis_time(self, time, onesided):
         """

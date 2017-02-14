@@ -301,9 +301,6 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 
     b'OUG2T',
     b'AEMONPT',
-
-    # MATPOOL
-    #b'MRGGT', b'UEXPT', #b'DELTAK',
 ]
 
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
@@ -1675,9 +1672,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif table_name in [b'CMODEXT']:
                 self._read_cmodext()
 
-            #elif table_name in [b'MRGGT', b'UEXPT']:
-                ##self._read_matpool_matrix()
-                #self._skip_table(self.table_name)
             elif table_name in MATRIX_TABLES:
                 self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:

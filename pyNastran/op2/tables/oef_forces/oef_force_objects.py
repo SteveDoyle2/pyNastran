@@ -101,10 +101,8 @@ class FailureIndices(RealForceObject):
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add(self, dt, eid, force):
-        self.add_sort1(dt, eid, force)
-
     def add_sort1(self, dt, eid, force):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
@@ -270,10 +268,8 @@ class RealSpringDamperForceArray(RealForceObject):
                 raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, force):
-        self.add_sort1(dt, eid, force)
-
     def add_sort1(self, dt, eid, force):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
@@ -497,11 +493,8 @@ class RealRodForceArray(RealForceObject):
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add(self, dt, eid, axial, torque):
-        self.add_sort1(dt, eid, axial, torque)
-
     def add_sort1(self, dt, eid, axial, torque):
-        # print('ielement=%s' % self.ielement)
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -763,6 +756,7 @@ class RealCBeamForceArray(ScalarObject):
         return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
@@ -1004,19 +998,11 @@ class RealCShearForceArray(ScalarObject):
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid,
-            force41, force14, force21, force12, force32, force23, force43, force34,
-            kick_force1, kick_force2, kick_force3, kick_force4,
-            shear12, shear23, shear34, shear41):
-        self.add_sort1(dt, eid,
-                       force41, force14, force21, force12, force32, force23, force43, force34,
-                       kick_force1, kick_force2, kick_force3, kick_force4,
-                       shear12, shear23, shear34, shear41)
-
     def add_sort1(self, dt, eid,
                   force41, force14, force21, force12, force32, force23, force43, force34,
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -1185,10 +1171,8 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add(self, dt, eid, axial, torque):
-        self.add_sort1(dt, eid, axial, torque)
-
     def add_sort1(self, dt, eid, axial, torque):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -1422,10 +1406,8 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         #self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         #self.ielement += 1
 
-    #def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        #self.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1636,10 +1618,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        self.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-
     def add_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element_node[self.itotal] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1891,10 +1871,8 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         # Define names for the row labels
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add(self, dt, data):
-        self.add_sort1(dt, data)
-
     def add_sort1(self, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         data = [eid, bending_moment_a1, bending_moment_a2,
                 bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
         self._times[self.itime] = dt
@@ -2109,10 +2087,8 @@ class RealConeAxForceArray(ScalarObject):
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
-        self.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
-
     def add_sort1(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
@@ -2280,10 +2256,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         #print(self.data_frame)
 
-    #def add(self, eid, sd, bm1, bm2, ts1, ts2, af, trq):
-        #self.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
-
     def add_sort1(self, dt, eid, sd, bm1, bm2, ts1, ts2, af, trq):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
 
@@ -2499,10 +2473,8 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
-        self.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
-
     def add_sort1(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, sfy, sfz, u, v, w, sv, sw]
@@ -2637,12 +2609,10 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
             df2.columns = headers
             self.data_frame = df1.join(df2)
 
-    #def add(self, dt, eid, axial, torque):
-        #self.add_sort1(dt, eid, axial, torque)
-
     def add_sort1(self, dt, eid,
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
+        """unvectorized method for adding SORT1 transient data"""
         bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
         bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
 
@@ -2882,10 +2852,8 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
-        self.add_sort1(dt, eid, etype, ax, ay, az, vx, vy, vz, pressure)
-
     def add_sort1(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
@@ -3113,10 +3081,8 @@ class RealCBushForceArray(ScalarObject):
                 raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, fx, fy, fz, mx, my, mz):
-        self.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
-
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
@@ -3277,6 +3243,7 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingZ[eid][nid] = bendingZ
 
     def add_sort1(self, nnodes, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         [eid, parent, coord, icord, forces] = data
         if dt not in self.forceX:
             self.add_new_transient(dt)
@@ -3408,6 +3375,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             self.shearXZ[eid][nid] = shearXZ
 
     def add_sort1(self, nnodes, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         [eid, parent, coord, icord, theta, forces] = data
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 

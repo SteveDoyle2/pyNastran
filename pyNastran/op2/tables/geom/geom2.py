@@ -140,7 +140,7 @@ class GEOM2(GeomCommon):
             (5551, 49, 105): ['SPOINT', self._read_spoint],     # record 118
             (11601, 116, 9942): ['VUBEAM', self._read_vubeam],  # record 119 - not done
             (2108, 21, 224): ['CAXIF2', self._read_fake],
-            (3101, 31, 61): ['CSHEAR', self._read_fake],
+            (3101, 31, 61): ['CSHEAR', self._read_cshear],
             (4301, 43, 28): ['GENEL', self._read_fake],
             (5601, 56, 296): ['SESET', self._read_fake],
             (6808, 68, 114): ['CDUM8', self._read_fake],
@@ -152,19 +152,19 @@ class GEOM2(GeomCommon):
             (8200, 82, 383): ['CHACBR', self._read_fake],
             (8308, 83, 405): ['CHBDYE', self._read_chbdye],
             (11201, 112, 9940): ['VUQUAD4', self._read_fake],
-            (12801, 128, 417): ['RADBC', self._read_fake],
+            (12801, 128, 417): ['RADBC', self._read_radbc],
             (2708, 27, 59): ['CAABSF', self._read_fake],
             (3201, 32, 478): ['GMBNDC', self._read_fake],
-            (13900, 139, 9984): ['', self._read_fake],
-            (14000, 140, 9990): ['', self._read_fake],
-            (16000, 160, 9988): ['', self._read_fake],
-            (16100, 161, 9986): ['', self._read_fake],
-            (16300, 163, 9989): ['', self._read_fake],
-            (16700, 167, 9981): ['', self._read_fake],
-            (16800, 168, 9978): ['', self._read_fake],
-            (16500, 165, 9987): ['', self._read_fake],
+            (13900, 139, 9984): ['CQUAD4FD', self._read_fake],
+            (14000, 140, 9990): ['CHEXAFD', self._read_fake],
+            (16000, 160, 9988): ['CPENTA6FD', self._read_fake],
+            (16100, 161, 9986): ['CTETRAFD', self._read_fake],
+            (16300, 163, 9989): ['CHEXA20F', self._read_fake],
+            (16700, 167, 9981): ['CTRIA6FD', self._read_fake],
+            (16800, 168, 9978): ['CTRIAX3FD', self._read_fake],
+            (16500, 165, 9987): ['CPENT15F', self._read_fake],
             (5008, 50, 258): ['', self._read_fake],
-            (16400, 164, 9983) : ['', self._read_fake],
+            (16400, 164, 9983) : ['CQUAD9FD', self._read_fake],
             (11000, 110, 6667): ['', self._read_fake],
             (12301, 123, 9921): ['', self._read_fake],
             (12401, 124, 9922): ['', self._read_fake],
@@ -183,7 +183,6 @@ class GEOM2(GeomCommon):
             (16900, 169, 9977) : ['', self._read_fake],  # record
             (1701, 17, 980) : ['', self._read_fake],  # record
             (1801, 18, 986) : ['', self._read_fake],  # record
-            (17200, 172, 1000) : ['CPYRAM', self._read_fake],  # record
             (23500, 235, 6662) : ['', self._read_fake],  # record
             (23800, 238, 6665) : ['', self._read_fake],  # record
             (23900, 239, 6666) : ['', self._read_fake],  # record
@@ -206,10 +205,10 @@ class GEOM2(GeomCommon):
             (5701, 57, 981) : ['CPLSTN4', self._read_fake],  # record
             (5801, 58, 982) : ['CPLSTN6', self._read_fake],  # record
             (1801, 18, 986) : ['CPLSTS6', self._read_fake],  # record
-            (6111, 61, 996) : ['CTRAX3', self._read_fake],  # record
-            (6112, 61, 997) : ['CQUADX4', self._read_fake],  # record
-            (6113, 61, 998) : ['CTRAX6', self._read_fake],  # record
-            (6114, 61, 999) : ['CQUADX8', self._read_fake],  # record
+            (6111, 61, 996) : ['CTRAX3', self._read_trax3],  # record
+            (6112, 61, 997) : ['CQUADX4', self._read_cquadx4],  # record
+            (6113, 61, 998) : ['CTRAX6', self._read_ctrax6],  # record
+            (6114, 61, 999) : ['CQUADX8', self._read_cquadx8],  # record
             (3501, 35, 1) : ['', self._read_fake],  # record
             (1001, 100, 10000) : ['', self._read_fake],  # record
             (1118, 1, 1874) : ['', self._read_fake],  # record
@@ -220,9 +219,6 @@ class GEOM2(GeomCommon):
             (25800, 258, 9947) : ['CPYRA13F', self._read_cpyram],
             (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram],
         }
-
-    def add_element(self, elem, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
 
     def add_op2_element(self, elem):
         if elem.eid <= 0:
@@ -340,8 +336,6 @@ class GEOM2(GeomCommon):
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
         self.log.info('skipping CBEAMP in GEOM2\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CBEAMP in GEOM2\n')
         return len(data)
 
     def _read_cbend(self, data, n):
@@ -349,8 +343,6 @@ class GEOM2(GeomCommon):
         CBEND(4601,46,298) - the marker for Record 12
         """
         self.log.info('skipping CBEND in GEOM2\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CBEND in GEOM2\n')
         return len(data)
 
     def _read_cbush(self, data, n):
@@ -1356,7 +1348,9 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIA3'] = nelements
         return n
 
-# CTRIAX - 100
+    def _read_ctriax(self, data, n): # 100
+        self.log.info('skipping CTRIAX in GEOM2\n')
+        return len(data)
 
     def _read_ctriax6(self, data, n):  # 101
         ntotal = 44  # 11*4
@@ -1435,7 +1429,9 @@ class GEOM2(GeomCommon):
 # TDOO: above are checked by DMAP...
 #-------------------------------
 # CWSEAM
-# GENEL
+    def _read_genel(self, data, n):
+        self.log.info('skipping GENEL in GEOM2\n')
+        return len(data)
 # GMDNDC
 # GMBNDS
 # GMINTC
@@ -1455,7 +1451,11 @@ class GEOM2(GeomCommon):
             n += ntotal
         self.card_count['PLOTEL'] = nelements
         return n
-# RADBC
+
+    def _read_radbc(self, data, n):
+        self.log.info('skipping RADBC in GEOM2\n')
+        return len(data)
+
 # RADINT
 # SINT
 
@@ -1491,3 +1491,19 @@ class GEOM2(GeomCommon):
 # VUHEXA
 # VUQUAD4
 # WELDP
+
+    def _read_trax3(self, data, n):
+        self.log.info('skipping CTRAX3 in GEOM2\n')
+        return len(data)
+
+    def _read_cquadx4(self, data, n):
+        self.log.info('skipping CQUADX4 in GEOM2\n')
+        return len(data)
+
+    def _read_ctrax6(self, data, n):
+        self.log.info('skipping CTRAX6 in GEOM2\n')
+        return len(data)
+
+    def _read_cquadx8(self, data, n):
+        self.log.info('skipping CQUADX8 in GEOM2\n')
+        return len(data)

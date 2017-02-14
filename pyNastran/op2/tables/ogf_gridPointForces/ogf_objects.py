@@ -604,11 +604,8 @@ class RealGridPointForcesArray(ScalarObject):
                 moment_sum[istation, :] = momenti_sum
         return force_sum, moment_sum
 
-    def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
-        assert isinstance(node_id, int), node_id
-        self.add_sort1(dt, eid, node_id, ename, t1, t2, t3, r1, r2, r3)
-
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
+        """unvectorized method for adding SORT1 transient data"""
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
         self._times[self.itime] = dt
@@ -1049,6 +1046,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
+        """unvectorized method for adding SORT1 transient data"""
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
 

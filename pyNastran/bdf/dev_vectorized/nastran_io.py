@@ -890,7 +890,7 @@ class NastranIO(NastranIO_xref):
                         for el in load.eids:
                             pressures[eids.index(el.eid)] += p
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(
+                        #A, centroid, normal = elem.get_face_area_centroid_normal(
                             #load.g34.nid, load.g1.nid)
                         #r = centroid - p
 

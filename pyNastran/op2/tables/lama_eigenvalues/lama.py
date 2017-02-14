@@ -3,7 +3,7 @@ from six import b
 from six.moves import range
 from struct import Struct
 
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
     RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues)
 

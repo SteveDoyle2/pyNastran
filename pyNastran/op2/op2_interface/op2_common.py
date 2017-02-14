@@ -1,20 +1,20 @@
 from __future__ import print_function, unicode_literals
-from six import string_types, b
-from six.moves import range, zip
 import copy
 from struct import Struct, unpack
-
-from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
+from six import string_types, b
+from six.moves import range, zip
 
 import numpy as np
+from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
-from pyNastran.op2.op2_codes import Op2Codes, get_scode_word
 from pyNastran.op2.op2_helper import polar_to_real_imag
+from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_scode_word
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
 from pyNastran.op2.dev.xlsx_writer import XlsxWriter
+
 
 class OP2Common(Op2Codes, F06Writer, XlsxWriter):
     def __init__(self):
@@ -778,6 +778,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj.itotal = itotal2
         else:
+            dt = None
             n = 0
             s = Struct(b(self._endian + '2i6f'))
             for inode in range(nnodes):
@@ -786,8 +787,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                #print(out)
-                obj.add(eid, grid_type, tx)
+                obj.add_sort1(dt, eid, grid_type, tx)
                 n += 32
         return n
 
@@ -932,6 +932,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         else:
         #if 1:
             n = 0
+            dt = None
             s = Struct(b(self._endian + '2i6f'))
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
@@ -939,8 +940,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                #print(out)
-                obj.add(eid, grid_type, tx, ty, tz, rx, ry, rz)
+                obj.add_sort1(None, eid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 32
         return n
 

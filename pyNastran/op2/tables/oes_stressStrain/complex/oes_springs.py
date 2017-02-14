@@ -103,10 +103,8 @@ class ComplexSpringDamperArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, stress):
-        self.add_sort1(dt, eid, stress)
-
     def add_sort1(self, dt, eid, stress):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, 0] = stress

@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import unittest
 import warnings
+
 from six import iteritems
 import numpy as np
 from numpy import dot, array_equal
@@ -18,7 +19,7 @@ import pyNastran
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
-from pyNastran.op2.op2_common import get_scode_word
+from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
 
@@ -29,8 +30,10 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointFo
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
 from pyNastran.utils.log import SimpleLogger
+
 test_path = pyNastran.__path__[0]
 model_path = os.path.abspath(os.path.join(test_path, '..', 'models'))
+
 
 class TestOP2(Tester):
     #def _spike(self):

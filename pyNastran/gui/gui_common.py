@@ -3649,7 +3649,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     raise NotImplementedError(geom_actor)
 
     def make_gif(self, gif_filename, icase, scales, phases,
-                 isteps=None, time=2.0, analysis_time=2.0, fps=30,
+                 isteps=None, time=2.0, analysis_time=2.0, fps=30, magnify=1,
                  onesided=True, nrepeat=True, delete_images=False, make_gif=True):
         """
         Makes an animated gif
@@ -3728,15 +3728,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
             msg = 'nscales=%s nphases=%s' % (len(scales), len(phases))
             raise ValueError(msg)
         if isteps is None:
-            isteps = np.linspace(0, len(scales), dtype='int32')
-        assert len(scales) == len(isteps)
+            isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
+            print("setting isteps in make_gif")
+        if len(scales) != len(isteps):
+            msg = 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+            raise ValueError(msg)
+
 
         png_filenames = []
         fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
         for i, scale, phase in zip(isteps, scales, phases):
             png_filename = fmt % i
             self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
-            self.on_take_screenshot(fname=png_filename, magnify=1)
+            self.on_take_screenshot(fname=png_filename, magnify=magnify)
             png_filenames.append(png_filename)
 
         if not onesided:
@@ -3754,7 +3758,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             pass
 
         if make_gif:
-            if is_imageio and 0:
+            if is_imageio:
                 images = []
                 for png_filename in png_filenames:
                     images.append(imageio.imread(png_filename))
