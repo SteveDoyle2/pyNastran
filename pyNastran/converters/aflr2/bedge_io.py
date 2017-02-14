@@ -27,7 +27,7 @@ class BEdge_IO(object):
         self.modelType = 'bedge'
 
         model = read_bedge(bedge_filename)
-        print('bedge_filename = %s' % bedge_filename)
+        self.log.info('bedge_filename = %s' % bedge_filename)
         nnodes = model.nodes.shape[0]
         nbars = model.bars.shape[0]
         nelements = nbars
@@ -36,8 +36,8 @@ class BEdge_IO(object):
         self.nElements = nelements
         self.nNodes = nnodes
 
-        print("nNodes = %s" % self.nNodes)
-        print("nElements = %s" % self.nElements)
+        self.log.debug("nNodes = %s" % self.nNodes)
+        self.log.debug("nElements = %s" % self.nElements)
         assert nelements > 0, nelements
 
         black = (0., 0., 0.)

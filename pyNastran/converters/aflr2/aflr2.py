@@ -381,7 +381,7 @@ class AFLR2(object):
         subcurves = hstack([self.subcurves, bedge.subcurves])
         self.log.debug('ugrid_bcs = %s' % unique(grid_bc))
 
-        export_to_bedge(bedge_filename, nodes, grid_bc, curves, subcurves, axis=2)
+        export_to_bedge(bedge_filename, nodes, grid_bc, curves, subcurves, axis=2, log=self.log)
 
 def _flip_value(lst):
     """flips a 0 to 1 and vice-versa"""
@@ -390,16 +390,16 @@ def _flip_value(lst):
         for val in lst
     ]
 
-def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1):
+def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, log=None):
     """
     Parameters
     ----------
     axis : int; default=1
         the axis to remove (nodes in Nx3)
     """
-    print('bedge_filename = %s' % bedge_filename)
-    if bedge_filename == 'farfield.bedge':
-        print(grid_bcs)
+    self.log.debug('bedge_filename = %s' % bedge_filename)
+    #if bedge_filename == 'farfield.bedge':
+        #print(grid_bcs)
 
     with open(bedge_filename, 'w') as bedge_file:
         # ncurves
@@ -410,7 +410,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1):
         # write the curves/subcurves
         nodes_pack = []
 
-        print('looping over ucurves=%s' % ucurves)
+        self.log.debug('looping over ucurves=%s' % ucurves)
         nsubcurves_list = []
 
         all_usubcurves = set([])
@@ -418,7 +418,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1):
             i = where(curves == ucurve)[0]
 
             subcurvesi = subcurves[i]
-            print('ucurve=%s i=%s subcurves[i]=%s' % (ucurve, i, subcurvesi))
+            self.log.debug('ucurve=%s i=%s subcurves[i]=%s' % (ucurve, i, subcurvesi))
 
             usubcurves = unique(subcurvesi)
             nsubcurves = len(usubcurves)
@@ -427,13 +427,13 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1):
 
             for usubcurve in usubcurves:
                 if usubcurve not in all_usubcurves:
-                    print(all_usubcurves)
+                    self.log.debug(all_usubcurves)
                     # stop???
 
                 all_usubcurves.add(usubcurve)
                 j = where(subcurvesi == usubcurve)[0]
                 nnodesi = len(j)
-                print('usubcurve=%s j=%s subcurves[j]=%s nnodes=%s' % (
+                self.log.debug('usubcurve=%s j=%s subcurves[j]=%s nnodes=%s' % (
                     usubcurve, j, subcurvesi[j], nnodesi))
                 #f.write('%s ' % nnodesi)
                 nodes_pack.append(nnodesi)
@@ -444,7 +444,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1):
             bedge_file.write('  %s' % nsubcurvesi)
         bedge_file.write('\n')
         nsubcurves = len(grid_bcs)
-        print('nsubcurves = %s?' % nsubcurves)
+        self.log.debug('nsubcurves = %s?' % nsubcurves)
         assert nsubcurves < 20
         #assert nsubcurves == len(nsubcurves_list) #  wrong check...
 

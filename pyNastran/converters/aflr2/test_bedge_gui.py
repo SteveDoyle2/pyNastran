@@ -11,6 +11,7 @@ import pyNastran
 from pyNastran.converters.aflr2.aflr2 import read_bedge
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.aflr2.bedge_io import BEdge_IO
+from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'aflr2')
@@ -29,6 +30,7 @@ class TestBEdgeGUI(unittest.TestCase):
         dirname = None
 
         test = BEdge_GUI()
+        test.log = get_logger(log=None, level='warning', encoding='utf-8')
         test.load_bedge_geometry(bedge_filename, dirname)
 
 if __name__ == '__main__':  # pragma: no cover

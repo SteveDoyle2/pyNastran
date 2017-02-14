@@ -487,12 +487,20 @@ class NastranGeometryHelper(NastranGuiAttributes):
         e11 = np.zeros(mids.shape, dtype='float32')
         e22 = np.zeros(mids.shape, dtype='float32')
         e33 = np.zeros(mids.shape, dtype='float32')
+        rho = np.zeros(mids.shape, dtype='float32')
+        bulk = np.zeros(mids.shape, dtype='float32')
+        c = np.zeros(mids.shape, dtype='float32')
 
         has_mat8 = False
         has_mat9 = False
+        has_mat10 = False
         for umid in np.unique(mids):
             if umid == 0:
                 continue
+            e11i = e22i = e33i = 0.
+            rhoi = 0.
+            bulki = 0.
+            ci = 0.
             try:
                 mat = model.materials[umid]
             except KeyError:
@@ -502,17 +510,27 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 #raise
             if mat.type == 'MAT1':
                 e11i = e22i = e33i = mat.e
+                rhoi = mat.rho
             elif mat.type == 'MAT8':
                 e11i = e33i = mat.e11
                 e22i = mat.e22
                 has_mat8 = True
+                rhoi = mat.rho
             elif mat.type in ['MAT11', 'MAT3D']:
                 e11i = mat.e1
                 e22i = mat.e2
                 e33i = mat.e3
                 has_mat9 = True
+                rhoi = mat.rho
+            elif mat.type == 'MAT10':
+                bulki = mat.bulk
+                rhoi = mat.rho
+                ci = mat.c
+                has_mat10 = True
+                self.log.info('skipping\n%s' % mat)
+                continue
             else:
-                print('skipping %s' % mat)
+                print('skipping\n%s' % mat)
                 continue
                 #raise NotImplementedError(mat)
             #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))
@@ -520,6 +538,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             e11[i] = e11i
             e22[i] = e22i
             e33[i] = e33i
+            rho[i] = rhoi
+            bulk[i] = bulki
+            c[i] = ci
         return has_mat8, has_mat9, e11, e22, e33
 
     def get_pressure_array(self, model, load_case):

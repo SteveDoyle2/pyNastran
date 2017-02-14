@@ -5,7 +5,7 @@ from pyNastran.converters.ugrid.ugrid_reader import UGRID
 from numpy import array, hstack
 
 def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
-                     check_shells=True, check_solids=True):
+                     check_shells=True, check_solids=True, log=None):
     """
     set xref=False
 
@@ -22,11 +22,14 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
         verify that there is at least one shell element
     check_solids : bool (default=True)
         verify that there is at least one solid element
+    log : Logger()
+        a Python logging object
     """
     if isinstance(bdf_filename, str):
-        bdf_model = read_bdf(bdf_filename)
+        bdf_model = read_bdf(bdf_filename, log=log)
     else:
         bdf_model = bdf_filename
+        log = bdf_model.log
 
     # pids_to_inlcude = []
     # for pid, prop in iteritems(model.properties):
@@ -68,7 +71,7 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
     xyz_cid0 = array([nodes[nid].xyz for nid in node_ids], dtype='float64')
 
     pids = []
-    model = UGRID()
+    model = UGRID(log=log)
     model.nodes = xyz_cid0
     if ntris:
         model.tris = array([elements[eid].node_ids for eid in ctria3], dtype='int32')

@@ -20,9 +20,11 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None):
         the output STL path
     is_binary : bool; default=False
         should the output file be binary
+    log : Logger()
+        a Python logging object
     """
     if isinstance(bdf_filename, str):
-        model = read_bdf(bdf_filename, log=None)
+        model = read_bdf(bdf_filename, log=log)
     else:
         model = bdf_filename
 
@@ -62,7 +64,7 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None):
         else:
             print(element.type)
     elements = array(elements, dtype='int32')
-    stl = STL()
+    stl = STL(log=model.log)
     stl.nodes = nodes
     stl.elements = elements
     stl.write_stl(stl_filename, is_binary=is_binary)

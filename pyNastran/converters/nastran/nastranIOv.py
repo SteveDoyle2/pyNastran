@@ -2588,9 +2588,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         icase += 1
 
         upids = np.unique(pids)
-        mids = np.zeros(nelements, dtype='int32')
-        thickness = np.zeros(nelements, dtype='float32')
         mid_eids_skip = []
+
+        nplies = 1
+        if 'PSHELL' in model.card_count:
+            nplies = 4
+        for pid in model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True):
+            prop = model.properties[pid]
+            nplies = max(nplies, prop.nplies)
+        if nplies > 1:
+            nplies += 1
+
+        mids = np.zeros((nelements, nplies), dtype='int32')
+        thickness = np.zeros((nelements, nplies), dtype='float32')
+        rho = np.zeros((nelements, nplies), dtype='float32')
         for pid in upids:
             if pid == 0:
                 print('skipping pid=0')
@@ -2598,31 +2609,30 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             prop = model.properties[pid]
             #try:
             if prop.type in prop_types_with_mid:
+                # simple types
                 i = np.where(pids == pid)[0]
-                #print('pid=%s i=%s' % (pid, i))
-                #if isinstance(prop.mid, (int, int32)):
-                    #mid = prop.mid
-                #else:
-                    #try:
                 mid = prop.mid_ref.mid
-                    #except AttributeError:
-                        #print('pid=%s prop.type=%s' % (pid, prop.type))
-                        #raise
                 mids[i] = mid
             elif prop.type == 'PSHELL':
                 # TODO: only considers mid1
                 i = np.where(pids == pid)[0]
-                mid = prop.Mid1()
-                t = prop.Thickness()
-                mids[i] = mid
-                thickness[i] = t
+                mid1 = prop.Mid1()
+                mid2 = prop.Mid2()
+                mid3 = prop.Mid3()
+                mid4 = prop.Mid4()
+                mids[i, 0] = mid1 if mid1 is not None else 0
+                mids[i, 1] = mid2 if mid2 is not None else 0
+                mids[i, 2] = mid3 if mid3 is not None else 0
+                mids[i, 3] = mid4 if mid4 is not None else 0
+                thickness[i, 0] = prop.Thickness()
             elif prop.type in ['PCOMP', 'PCOMPG']:
                 # TODO: only considers iply=0
                 i = np.where(pids == pid)[0]
-                mid = prop.Mid(0)
-                t = prop.Thickness()
-                mids[i] = mid
-                thickness[i] = t
+                for iply in range(prop.nplies):
+                    mids[i, iply+1] = prop.Mid(iply)
+                    thickness[i, iply+1] = prop.Thickness(iply)
+                thickness[i, 0] = thickness[i, :].sum()
+                mids[i, 0] = mids[i, 1]
             elif prop.type in ['PELAS', 'PBUSH']:
                 i = np.where(pids == pid)[0]
                 mid_eids_skip.append(i)
@@ -2630,6 +2640,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 print('material for pid=%s type=%s not considered' % (pid, prop.type))
 
         #print('mids =', mids)
+        mids = mids[0, :]
+        thickness = thickness[0, :]
         if len(mid_eids_skip):
             mid_eids_skip = np.hstack(mid_eids_skip)
             if mids.min() == 0:
