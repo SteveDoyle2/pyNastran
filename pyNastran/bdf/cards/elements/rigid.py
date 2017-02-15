@@ -699,7 +699,7 @@ class RBE2(RigidElement):
 
         #: Grid point identification numbers at which dependent
         #: degrees-of-freedom are assigned. (Integer > 0)
-        if isinstance(Gmi, int):
+        if isinstance(Gmi, integer_types):
             Gmi = [Gmi]
         self.Gmi = Gmi
         self._validate_input()
@@ -1101,7 +1101,7 @@ class RBE3(RigidElement):
 
     @property
     def ref_grid_id(self):
-        if isinstance(self.refgrid, int) or self.refgrid is None:
+        if isinstance(self.refgrid, integer_types) or self.refgrid is None:
             return self.refgrid
         return self.refgrid.nid
 
