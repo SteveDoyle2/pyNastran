@@ -66,13 +66,61 @@ class SafeXrefMesh(XrefMesh):
         if xref_aero:
             self._safe_cross_reference_aero()
         if xref_constraints:
-            self._cross_reference_constraints()
+            self._safe_cross_reference_constraints()
         if xref_loads:
             self._safe_cross_reference_loads(debug=debug)
         if xref_optimization:
             self._cross_reference_optimization()
         if xref_nodes_with_elements:
             self._cross_reference_nodes_with_elements()
+
+    def _safe_cross_reference_constraints(self):
+        """
+        Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
+        SUPORT1, SESUPORT cards.
+        """
+        for spcadd in itervalues(self.spcadds):
+            raise RuntimeError('removed')
+
+        for spcs in itervalues(self.spcs):
+            for spc in spcs:
+                if hasattr(spc, 'safe_cross_reference'):
+                    spc.safe_cross_reference(self)
+                else:
+                    spc.cross_reference(self)
+                    self.log.warning('%s - add safe_cross_reference' % spc.type)
+
+        for mpcadd in itervalues(self.mpcadds):
+            raise RuntimeError('removed')
+
+        for mpcs in itervalues(self.mpcs):
+            for mpc in mpcs:
+                if hasattr(mpc, 'safe_cross_reference'):
+                    mpc.safe_cross_reference(self)
+                else:
+                    mpc.cross_reference(self)
+                    self.log.warning('%s - add safe_cross_reference' % mpc.type)
+
+        for suport in self.suport:
+            #if hasattr(suport, 'safe_cross_reference'):
+            suport.safe_cross_reference(self)
+            #else:
+                #suport.cross_reference(self)
+                #self.log.warning('%s - add safe_cross_reference' % suport.type)
+
+        for suport1_id, suport1 in iteritems(self.suport1):
+            #if hasattr(suport1, 'safe_cross_reference'):
+            suport1.safe_cross_reference(self)
+            #else:
+                #suport1.cross_reference(self)
+                #self.log.warning('%s - add safe_cross_reference' % suport1.type)
+
+        for se_suport in self.se_suport:
+            if hasattr(se_suport, 'safe_cross_reference'):
+                se_suport.safe_cross_reference(self)
+            else:
+                se_suport.cross_reference(self)
+                self.log.warning('%s - add safe_cross_reference' % se_suport.type)
 
     def _safe_cross_reference_elements(self):
         """

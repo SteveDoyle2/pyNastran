@@ -568,7 +568,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 msg += 'spoints=%s\n' % list(self.spoints.points)
             if self.epoints:
                 msg += 'epoints=%s\n' % list(self.epoints.points)
-            raise RuntimeError(msg)
+            raise KeyError(msg)
 
     def Nodes(self, nids, allow_empty_nodes=False, msg=''):
         """
@@ -585,7 +585,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         else:
             assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
             nid_list = np.unique(list(self.points.keys()))
-            raise RuntimeError('nid=%s is not a POINT%s\n%s' % (nid, msg, nid_list))
+            raise KeyError('nid=%s is not a POINT%s\n%s' % (nid, msg, nid_list))
 
     def Points(self, nids, msg=''):
         """

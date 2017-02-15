@@ -429,86 +429,13 @@ class GEOM4(GeomCommon):
         return n
 
     def _read_rbe3(self, data, n):
-        """RBE3(7101,71,187) - Record 25
-
-        1 EID I Element identification number
-        2 REFG I Reference grid point identification number
-        3 REFC I Component numbers at the reference grid point
-        4 WT1 RS Weighting factor for components of motion at G
-        5 C I Component numbers
-        6 G I Grid point identification number
-        Word 6 repeats until -1 occurs
-        Words 4 through 6 repeat until -2 occurs
-        7 GM I Grid point identification number for dependent degrees-of-freedom
-        8 CM I Component numbers of dependent degrees-of-freedom
-        Words 7 through 8 repeat until -3 occurs
-
-        data = [61   71   123456   1.0  123   70  75  77   -1    -3
-                62   71   123456   1.0  123   58  59  72   -1    -3]
-        """
+        """RBE3(7101,71,187) - Record 25"""
         self.log.info('skipping RBE3 in GEOM4\n')
         #return len(data)
         idata = np.fromstring(data[n:], self.idtype)
         fdata = np.fromstring(data[n:], self.fdtype)
-        iminus1 = np.where(idata == -1)[0]
-        iminus2 = np.where(idata == -2)[0]
-        iminus3 = np.where(idata == -3)[0]
-        #assert len(iminus1) == 1, idata
-        #assert len(iminus2) == 1, idata
-        #assert len(iminus3) == 1, idata
-        i = np.hstack([[0], iminus3[:-1]+1])
-        j = np.hstack([iminus3[:-1], len(idata)])
-
-        #print('idata =', idata)
-        for ii, jj in zip(i, j):
-            iminus1 = np.where(idata[ii:jj] == -1)[0]
-            iminus2 = np.where(idata[ii:jj] == -2)[0]
-            assert len(iminus2) == 0, idata[ii:jj]
-            eid, refg, refc, dummy, c, g = idata[ii:ii+6]
-            wt = fdata[ii+3]
-            weights = [wt]
-            comps = [c]
-            gijs = [g]
-            #print('eid=%s refg=%s refc=%s fake=%s c=%s g=%s wt=%s' % (
-                #eid, refg, refc, dummy, c, g, wt))
-
-            idatai = idata[ii:jj]
-            p = np.hstack([[6], iminus1[:-1]+1])
-            q = np.hstack([iminus1[:-1], len(idatai)])
-            #print('p=%s q=%s' % (p, q))
-            pi = p[0]
-            qi = q[0]
-            endi = idatai[pi:qi].tolist()
-            #print('endi1 =', endi)
-            gijs += endi
-            Gijs = [gijs]
-            for pi, qi in zip(p[1:], q[1:]):
-                wt = fdata[ii+pi]
-                g = idata[ii+pi+1]
-                c = idata[ii+pi+2]
-                weights = [wt]
-                comps = [c]
-                gijs = [g]
-                endi = idatai[pi+2:qi].tolist()
-                gijs += idatai[pi:qi].tolist()
-                #print('wt=%s g=%s c=%s gijs=%s' % (
-                    #wt, g, c, str(gijs)))
-
-            if ii + q[-1] != jj:
-                msg = 'gm/cm is not supported; ii+q[0]+1=%s ii=%s jj=%s' % (ii+q[-1], ii, jj)
-                raise RuntimeError(msg)
-
-            #print('idatai =', idatai)
-            #print('iminus1 =', iminus1)
-            #print('----------')
-            gmi = []
-            cmi = []
-            alpha = 0.0
-            in_data = [refg, refc, weights, comps, gijs,
-                       gmi, cmi, alpha]
-            #RBE3.add_op2_data(in_data)
-
-        return len(data)
+        rbe3s = read_rbe3s_from_idata_fdata(self, idata, fdata)
+        return n
 
     def _read_rbjoint(self, data, n):
         self.log.info('skipping RBJOINT in GEOM4\n')
@@ -959,3 +886,113 @@ class GEOM4(GeomCommon):
     def _read_bltmpc(self, data, n):
         self.log.info('skipping BLTMPC in GEOM4\n')
         return len(data)
+
+def read_rbe3s_from_idata_fdata(self, idata, fdata):
+    """
+    1 EID   I Element identification number
+    2 REFG  I Reference grid point identification number
+    3 REFC  I Component numbers at the reference grid point
+    4 WT1  RS Weighting factor for components of motion at G
+    5 C     I Component numbers
+    6 G     I Grid point identification number
+
+    Word 6 repeats until -1 occurs
+    Words 4 through 6 repeat until -2 occurs
+
+    7 GM    I Grid point identification number for dependent degrees-of-freedom
+    8 CM    I Component numbers of dependent degrees-of-freedom
+
+    Words 7 through 8 repeat until -3 occurs
+
+    data = [99           99 123456 1.0    123    44    45  48  49  -1    -3]
+    data = [61           71 123456 1.0    123    70    75  77      -1    -3
+            62           71 123456 1.0    123    58    59  72      -1    -3]
+    data = [1001100 1001100 123456 1.0 123456 10011 10002          -1 -2 -3
+            1002500 1002500 123456 1.0 123456 10025 10020          -1 -2 -3]
+            eid     refg    refc   wt  c      g     ...
+    """
+    rbe3s = []
+    #iminus1 = np.where(idata == -1)[0]
+    #iminus2 = np.where(idata == -2)[0]
+    iminus3 = np.where(idata == -3)[0]
+    #assert len(iminus1) == 1, idata
+    #assert len(iminus2) == 1, idata
+    #assert len(iminus3) == 1, idata
+    i = np.hstack([[0], iminus3[:-1]+1])
+    j = np.hstack([iminus3[:-1], len(idata)])
+
+    #print('idata =', idata)
+    for ii, jj in zip(i, j):
+
+        eid, refg, refc, dummy, c, g = idata[ii:ii+6]
+        wt = fdata[ii+3]
+        weights = [wt]
+        comps = [c]
+        gijs = [g]
+        #print('eid=%s refg=%s refc=%s wt=%s c=%s g=%s' % (
+            #eid, refg, refc, wt, c, g))
+
+        idatai = idata[ii:jj]
+        iminus2 = np.where(idatai == -2)[0]
+        if len(iminus2):
+            p = np.hstack([[6], iminus2[:-1]+1])
+            q = np.hstack([iminus2[:-1], len(idatai)-1])
+            #print('p=%s q=%s' % (p, q))
+
+            # -2 loop (gij repeats until -2)
+            for pi, qi in zip(p, q):
+                break
+                #print('p=%s q=%s' % (p, q))
+                #idataii = idatai[pi:qi]
+                #print(idataii)
+                #iminus1 = np.where(idataii == -1)[0]
+                #r = np.hstack([[6], iminus1[:-1]+1])
+                #s = np.hstack([iminus1[:-1], len(idatai)-1])
+
+                #ri = r[0]
+                #si = s[0]
+                #idataiii = idataii[ri:si]
+                #print('idatai ', idataiii)
+
+                # -1 loop ((wt, c, gij) repeats until -1)
+                #aaa
+                #print()
+            #gijs += endi
+            #Gijs = [gijs]
+        else:
+            assert len(iminus2) == 0, '\nii:jj=%s\nall=%s' % (idatai, idata)
+            iminus1 = np.where(idatai == -1)[0]
+            r = np.hstack([[6], iminus1[:-1]+1])
+            s = np.hstack([iminus1[:-1], len(idatai)])
+            ri = r[0]
+            si = s[0]
+            endi = idatai[ri:ri].tolist()
+            #print('endi1 =', endi)
+            for ri, si in zip(r[1:], s[1:]):
+                wt = fdata[ii+ri]
+                g = idata[ii+ri+1]
+                c = idata[ii+ri+2]
+                weights = [wt]
+                comps = [c]
+                gijs = [g]
+                endi = idatai[ri+2:si].tolist()
+                gijs += idatai[ri:si].tolist()
+                #print('wt=%s g=%s c=%s gijs=%s' % (
+                    #wt, g, c, str(gijs)))
+
+            if ii + s[-1] != jj:
+                msg = 'gm/cm is not supported; ii+q[0]+1=%s ii=%s jj=%s' % (ii+s[-1], ii, jj)
+                raise RuntimeError(msg)
+
+            #print('idatai =', idatai)
+            #print('iminus1 =', iminus1)
+            #print('----------')
+            gmi = []
+            cmi = []
+            alpha = 0.0
+            in_data = [eid, refg, refc, weights, comps, gijs,
+                       gmi, cmi, alpha]
+            rbe3 = RBE3.add_op2_data(in_data)
+            self._add_rigid_element_object(rbe3)
+            rbe3s.append(rbe3)
+    return rbe3s

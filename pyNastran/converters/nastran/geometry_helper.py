@@ -481,8 +481,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     node_ids.append(suport_id)
         return np.unique(node_ids)
 
-
-
     def _get_material_arrays(self, model, mids):
         e11 = np.zeros(mids.shape, dtype='float32')
         e22 = np.zeros(mids.shape, dtype='float32')

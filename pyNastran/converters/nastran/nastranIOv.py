@@ -2633,15 +2633,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     thickness[i, iply+1] = prop.Thickness(iply)
                 thickness[i, 0] = thickness[i, :].sum()
                 mids[i, 0] = mids[i, 1]
-            elif prop.type in ['PELAS', 'PBUSH']:
+            elif prop.type in ['PELAS', 'PBUSH', 'PDAMP', 'PDAMPT']:
                 i = np.where(pids == pid)[0]
                 mid_eids_skip.append(i)
             else:
                 print('material for pid=%s type=%s not considered' % (pid, prop.type))
 
         #print('mids =', mids)
-        mids = mids[0, :]
-        thickness = thickness[0, :]
+        mids = mids[:, 0]
+        thickness = thickness[:, 0]
         if len(mid_eids_skip):
             mid_eids_skip = np.hstack(mid_eids_skip)
             if mids.min() == 0:

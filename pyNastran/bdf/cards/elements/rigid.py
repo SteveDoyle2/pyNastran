@@ -1065,6 +1065,12 @@ class RBE3(RigidElement):
         return RBE3(eid, refgrid, refc, weights, comps, Gijs,
                     Gmi=Gmi, Cmi=Cmi, alpha=alpha, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha = data
+        return RBE3(eid, refgrid, refc, weights, comps, gijs,
+                    Gmi=gmi, Cmi=cmi, alpha=alpha, comment=comment)
+
     @property
     def WtCG_groups(self):
         wt_cg_groups = []

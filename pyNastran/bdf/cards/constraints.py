@@ -124,6 +124,22 @@ class SUPORT1(Constraint):
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
 
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SUPORT1=%s' % self.conid
+        for nid in self.IDs:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SUPORT1=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.IDs = nids2
+        self.IDs_ref = self.IDs
+
     def uncross_reference(self):
         self.IDs = self.node_ids
         del self.IDs_ref
@@ -210,6 +226,21 @@ class SUPORT(Constraint):
         """
         msg = ', which is required by SUPORT'
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SUPORT'
+        for nid in self.IDs:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SUPORT' % nid
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.IDs = nids2
         self.IDs_ref = self.IDs
 
     def uncross_reference(self):
@@ -704,6 +735,21 @@ class SPC1(Constraint):
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
 
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SPC1=%s' % self.conid
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.nodes = nids2
+
     def uncross_reference(self):
         self.nodes = self.node_ids
         del self.nodes_ref
@@ -793,6 +839,22 @@ class SPCADD(ConstraintADD):
         msg = ', which is required by SPCADD=%s' % self.conid
         for i, spc in enumerate(self.sets):
             self.sets[i] = model.SPC(spc, msg=msg)
+        self.sets_ref = self.sets
+
+    def safe_cross_reference(self, model, debug=True):
+        spcs = []
+        msg = ' which is required by SPCADD=%s' % self.conid
+        for spc_id in self.sets:
+            try:
+                spc = model.SPC(spc_id, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find SPC=%i, which is required by SPCADD=%s' % (
+                        spc_id, self.conid)
+                    print(msg)
+                continue
+            spcs.append(spc)
+        self.sets = spcs
         self.sets_ref = self.sets
 
     def uncross_reference(self):
