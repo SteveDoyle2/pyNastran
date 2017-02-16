@@ -2097,6 +2097,36 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     print(str(element))
                     continue
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            elif etype == 'CHBDYG':
+                if element.Type == 'AREA6':
+                    node_ids = element.node_ids
+                    pid = element.Pid()
+                    self.eid_to_nid_map[eid] = node_ids[:3]
+                    for nid in node_ids:
+                        if nid is not None:
+                            nid_to_pid_map[nid].append(pid)
+                    if None not in node_ids:
+                        elem = vtkQuadraticTriangle()
+                        elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
+                        elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
+                        elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                    else:
+                        elem = vtkTriangle()
+
+                    n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
+                    p1 = xyz_cid0[n1, :]
+                    p2 = xyz_cid0[n2, :]
+                    p3 = xyz_cid0[n3, :]
+                    elem.GetPointIds().SetId(0, n1)
+                    elem.GetPointIds().SetId(1, n2)
+                    elem.GetPointIds().SetId(2, n3)
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                else:
+                    print('removing\n%s' % (element))
+                    print('removing eid=%s; %s' % (eid, element.type))
+                    del self.eid_map[eid]
+                    self.log_info("skipping %s" % element.type)
+                    continue
             else:
                 print('removing\n%s' % (element))
                 print('removing eid=%s; %s' % (eid, element.type))
@@ -2264,12 +2294,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nnodes_array = np.zeros(nelements, dtype='int32')
         for eid, element in sorted(iteritems(model.elements)):
             if isinstance(element, ShellElement):
+                ie = None
                 element_dimi = 2
                 try:
                     normali = element.Normal()
                 except RuntimeError:
                     normali = np.ones(3) * 2.
-                #pid = element.pid
+
                 pid = element.pid
                 pid_type = pid.type
                 if pid_type == 'PSHELL':
@@ -2375,12 +2406,34 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 ie = self.eid_map[eid]
                 element_dimi = 0
                 nnodesi = 2
+            elif element.type == 'CHBDYG':
+                ie = self.eid_map[eid]
+                if element.Type == 'AREA3':
+                    nnodesi = 3
+                    element_dimi = 2
+                elif element.Type == 'AREA4':
+                    nnodesi = 4
+                    element_dimi = 2
+                elif element.Type == 'AREA6':
+                    nnodesi = 6
+                    element_dimi = 2
+                elif element.Type == 'AREA8':
+                    nnodesi = 8
+                    element_dimi = 2
+                #elif element.Type == 'REV':
+                    #nnodesi = 2 # ???
+                    #element_dimi = 1 # ???
+                else:
+                    element_dimi = -1
+                    nnodesi = -1
+                    print('element.type=%s doesnt have a dimension' % element.type)
+
             else:
                 ie = self.eid_map[eid]
                 element_dimi = -1
                 nnodesi = -1
                 print('element.type=%s doesnt have a dimension' % element.type)
-
+            assert ie is not None
             element_dim[ie] = element_dimi
             nnodes_array[ie] = nnodesi
             #ielement += 1

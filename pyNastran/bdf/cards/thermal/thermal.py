@@ -22,9 +22,6 @@ class ThermalCard(BaseCard):
         raise NotImplementedError('%s has not defined the cross_reference '
                                   'method' % self.type)
 
-    #def _is_same_card(self, obj, debug=False):
-        #return False
-
 
 class ThermalBC(ThermalCard):
     def __init__(self):
@@ -36,10 +33,6 @@ class ThermalElement(ThermalCard):
 
     def __init__(self):
         ThermalCard.__init__(self)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return []
 
     def Pid(self):
         if isinstance(self.pid, integer_types):
@@ -224,7 +217,10 @@ class CHBDYG(ThermalElement):
     Defines a boundary condition surface element without reference to a
     property entry.
 
+
     +--------+-----+----+------+--------+--------+---------+---------+-----+
+    |    1   |  2  |  3 |   4  |    5   |    6   |    7    |    8    |  9  |
+    +========+=====+====+======+========+========+=========+=========+=====+
     | CHBDYG | EID |    | TYPE | IVIEWF | IVIEWB | RADMIDF | RADMIDB |     |
     +--------+-----+----+------+--------+--------+---------+---------+-----+
     |        | G1  | G2 |  G3  |   G4   |   G5   |   G6    |   G7    |  G8 |
@@ -300,10 +296,15 @@ class CHBDYG(ThermalElement):
             Type = 'AREA4'
         elif Type == 4:
             Type = 'AREA3'
-        #elif Type == 7:
+        #elif Type == 7: # ???
             #Type = 'AREA6'
         elif Type == 9:
             Type = 'AREA8'
+        #elif Type == ???:
+            #Type = 'REV'
+        else:
+            raise NotImplementedError('Type=%r' % Type)
+
         assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
         return CHBDYG(eid, Type, nodes,
                       iViewFront=iViewFront, iViewBack=iViewBack,
@@ -378,6 +379,8 @@ class CHBDYP(ThermalElement):
     entry
 
     +--------+---------+---------+------+--------+--------+----+----+----+
+    |    1   |    2    |    3    |   4  |    5   |    6   |  7 |  8 |  9 |
+    +========+=========+=========+======+========+========+====+====+====+
     | CHBDYP |   EID   |   PID   | TYPE | IVIEWF | IVIEWB | G1 | G2 | G0 |
     +--------+---------+---------+------+--------+--------+----+----+----+
     |        | RADMIDF | RADMIDB | GMID |   CE   |   E1   | E2 | E3 |    |
