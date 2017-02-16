@@ -383,6 +383,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.safe_cross_reference(xref=True, xref_loads=xref_loads,
                                        xref_constraints=False,
                                        xref_nodes_with_elements=False)
+        return model
 
     def load_nastran_geometry(self, bdf_filename, dirname, name='main', plot=True):
         self.eid_maps[name] = {}
@@ -410,7 +411,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.scalarBar.Modified()
 
         xref_loads = True
-        model = self._get_model(xref_loads=xref_loads)
+        model = self._get_model(bdf_filename, xref_loads=xref_loads)
 
         nnodes = len(model.nodes)
         nspoints = 0
@@ -1116,8 +1117,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
                         lines = model.get_MPCx_node_ids_c1(mpc_id, exclude_mpcadd=False)
+                        lines2 = list(lines) + rigid_lines
                         mpc_names += self._fill_dependent_independent(
-                            mpc_id, dim_max, model, lines + rigid_lines, nid_to_pid_map)
+                            mpc_id, dim_max, model, lines2, nid_to_pid_map)
 
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
                 suport_id, options = subcase.get_parameter('SUPORT1')
@@ -1404,6 +1406,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self._add_nastran_nodes_to_grid('mpc_id=%i_dependent' % mpc_id, dependent, model, nid_to_pid_map)
         self._add_nastran_nodes_to_grid('mpc_id=%i_independent' % mpc_id, independent, model, nid_to_pid_map)
         self._add_nastran_lines_to_grid('mpc_id=%i_lines' % mpc_id, lines, model, nid_to_pid_map)
+        mpc_names = [
+            'mpc_id=%i_dependent' % mpc_id,
+            'mpc_id=%i_independent' % mpc_id,
+            'mpc_id=%i_lines' % mpc_id
+        ]
+        return mpc_names
 
     def _add_nastran_nodes_to_grid(self, name, node_ids, model, nid_to_pid_map=None):
         """used to create MPC independent/dependent nodes"""
