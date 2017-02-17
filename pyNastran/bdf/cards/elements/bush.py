@@ -59,7 +59,7 @@ class CBUSH(BushElement):
                 if n == 5:
                     self.g0 = value
                 else:
-                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+                    raise KeyError('Field %r=%r is an invalid CBUSH entry.' % (n, value))
             else:
                 if n == 5:
                     self.x[0] = value
@@ -68,7 +68,7 @@ class CBUSH(BushElement):
                 elif n == 7:
                     self.x[2] = value
                 else:
-                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+                    raise KeyError('Field %r=%r is an invalid CBUSH entry.' % (n, value))
 
     def __init__(self, eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=''):
         BushElement.__init__(self)

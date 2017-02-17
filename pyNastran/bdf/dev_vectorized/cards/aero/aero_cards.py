@@ -1357,7 +1357,7 @@ class CAERO1(BaseCard):
         elif n == 15:
             return self.p4[2]
         else:
-            raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
+            raise KeyError('Field %r is an invalid CAERO1 entry.' % n)
 
     def _update_field_helper(self, n, value):
         """
@@ -1384,7 +1384,7 @@ class CAERO1(BaseCard):
         elif n == 15:
             self.p4[2] = value
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            raise KeyError('Field %r=%r is an invalid CAERO1 entry.' % (n, value))
 
     def __init__(self, eid, pid, cp, nspan, lspan, nchord, lchord, igid,
                  p1, x12, p4, x43, comment=''):
@@ -1635,9 +1635,8 @@ class CAERO1(BaseCard):
         else:
             nspan = self.nspan
         if nchord < 1 or nspan < 1:
-            msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
-                self.type, self.eid, self.nchord, self.nspan,
-                self.lchord, self.lspan)
+            msg = 'CAERO1 eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
+                self.eid, self.nchord, self.nspan, self.lchord, self.lspan)
             raise RuntimeError(msg)
         return nchord, nspan
 
@@ -1688,8 +1687,8 @@ class CAERO1(BaseCard):
             y = np.linspace(0., 1., nspan + 1)
 
         if nchord < 1 or nspan < 1:
-            msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
-                self.type, self.eid, self.nchord, self.nspan,
+            msg = 'CAERO1 eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
+                self.eid, self.nchord, self.nspan,
                 self.lchord, self.lspan)
             raise RuntimeError(msg)
         return x, y
@@ -1795,8 +1794,7 @@ class CAERO2(BaseCard):
         elif n == 11:
             return self.p1[2]
         else:
-            raise KeyError('Field %r is an invalid %s entry.' % (
-                n, self.type))
+            raise KeyError('Field %r is an invalid CAERO2 entry.' % n)
 
     def _update_field_helper(self, n, value):
         """
@@ -1816,7 +1814,7 @@ class CAERO2(BaseCard):
         elif n == 11:
             self.p1[2] = value
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            raise KeyError('Field %r=%r is an invalid CAERO2 entry.' % (n, value))
 
     def __init__(self, eid, pid, cp, nsb, nint, lsb, lint, igid,
                  p1, x12, comment=''):
@@ -2414,8 +2412,8 @@ class CAERO5(BaseCard):
         return [p1, p2, p3, p4]
 
     def get_npanel_points_elements(self, model):
-        msg = '%s eid=%s nspan=%s lspan=%s' % (
-            self.type, self.eid, self.nspan, self.lspan)
+        msg = 'CAERO5 eid=%s nspan=%s lspan=%s' % (
+            self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
             lspan_ref = model.AEFACT(self.lspan)
             y = lspan_ref.Di
@@ -2432,8 +2430,8 @@ class CAERO5(BaseCard):
     def panel_points_elements(self, model):
         p1, p2, p3, p4 = self.get_points(model)
 
-        msg = '%s eid=%s nspan=%s lspan=%s' % (
-            self.type, self.eid, self.nspan, self.lspan)
+        msg = 'CAERO5 eid=%s nspan=%s lspan=%s' % (
+            self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
             lspan_ref = model.AEFACT(self.lspan)
             y = lspan_ref.Di
@@ -2929,7 +2927,7 @@ class FLUTTER(BaseCard):
                 value = self.nvalue
             return value
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            raise KeyError('Field %r=%r is an invalid FLUTTER entry.' % (n, value))
 
     def _update_field_helper(self, n, value):
         """
@@ -2950,7 +2948,7 @@ class FLUTTER(BaseCard):
             else:
                 self.nvalue = value
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            raise KeyError('Field %r=%r is an invalid FLUTTER entry.' % (n, value))
 
     def __init__(self, sid, method, density, mach, reduced_freq_velocity,
                  imethod='L', nvalue=None, omax=None, epsilon=None, comment=''):
@@ -4794,7 +4792,7 @@ class TRIM(BaseCard):
             if i == 1:
                 #list_fields += [self.aeqr]
                 ni += 1
-        raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+        raise KeyError('Field %r=%r is an invalid TRIM entry.' % (n, value))
 
     def _update_field_helper(self, n, value):
         """
@@ -4820,7 +4818,7 @@ class TRIM(BaseCard):
             if i == 1:
                 #list_fields += [self.aeqr]
                 ni += 1
-        raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+        raise KeyError('Field %r=%r is an invalid TRIM entry.' % (n, value))
 
     def __init__(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
         if comment:

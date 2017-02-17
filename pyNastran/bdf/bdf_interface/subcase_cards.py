@@ -515,6 +515,17 @@ class SET(CaseControlCard):
         return write_set(self.value, self.set_id)
 
 class SETMC(SET):
+    """
+    SETMC 121 = ACCE/99(T3),1200(T1),1399(R2)
+    SETMC 222 = STRESS/134(22)
+    SETMC 343 = ACCE/99(T3),1200(T1),1399(R2),STRESS/134(22)
+    SETMC 122 = DISP/45(T1) 45(T2) 45(T3),
+                 38(T1) 38(T2) 38(T3),
+            VELO/45(T1) 45(T2) 45(T3),
+                 38(T1) 38(T2) 38(T3),
+            ACCE/45(T1) 45(T2) 45(T3),
+                 38(T1) 38(T2) 38(T3)
+    """
     type = 'SETMC'
     def __init__(self, set_id, values):
         super(SETMC, self).__init__(set_id, values)
@@ -533,6 +544,7 @@ class CheckCard(CaseControlCard):
     allowed_keys = []
     allowed_values = {}  # key:(type, allowed_values)
     allowed_strings = []
+    duplicate_names = {}
     allow_ints = False
     def __init__(self, key, value, options):
         """
@@ -558,6 +570,10 @@ class CheckCard(CaseControlCard):
                 key, valuei = key_value.split('=')
                 key = key.strip()
                 valuei = valuei.strip()
+
+                if key in self.duplicate_names:
+                    key = self.duplicate_names[key]
+
                 if key in self.allowed_values:
                     key_type, key_values = self.allowed_values[key]
                     try:
@@ -569,7 +585,11 @@ class CheckCard(CaseControlCard):
                     # parse the value
                     # SET=(G,N,A)
                     if key_values is not None:
-                        sline = valuei.strip('(,)').split(',')
+                        try:
+                            sline = valuei.strip('(,)').split(',')
+                        except AttributeError:
+                            msg = 'cannot make %r a %s in %r of the form SET=(G,N,A)' % (valuei, key_type, key_value)
+                            raise ValueError(msg)
                         for val in sline:
                             if val not in key_values:
                                 msg = '%s: key=%r value=%r allowed_values=[%r]' % (
@@ -584,7 +604,8 @@ class CheckCard(CaseControlCard):
                     self.type, key, ', '.join(self.allowed_keys))
                 raise KeyError(msg)
 
-        value = value.strip()
+        if isinstance(value, str):
+            value = value.strip()
         if self.allow_ints:
             try:
                 value = int(value)
@@ -760,6 +781,31 @@ class WEIGHTCHECK(CheckCard):
     def __init__(self, key, value, options):
         super(WEIGHTCHECK, self).__init__(key, value, options)
 
+class MODCON(CheckCard):
+    """
+    MODCON=123
+    MODCON(SORT1,PHASE,PRINT,PUNCH,BOTH,TOPS=5)=ALL
+    """
+    type = 'MODCON'
+    allowed_keys = ['SORT1', 'SORT2', 'REAL', 'IMAG', 'PHASE', 'PRINT', 'NOPRINT',
+                    'PUNCH', 'ABS', 'NORM', 'BOTH', 'TOPS', 'TOPF', 'SOLUTION',
+                    'PANELMC']
+    duplicate_names = {
+        'TOP' : 'TOPS',
+        'SOLU' : 'SOLUTION',
+        'PANE' : 'PANELMC',
+    }
+    allowed_strings = ['ALL', 'NONE']
+    allow_ints = True
+
+    allowed_values = {
+        'TOPS':(int, None),
+        'TOPF':(int, None),
+        'SOLUTION' : (int, None),  ## TODO: is this right???
+    }
+
+    def __init__(self, key, value, options):
+        super(MODCON, self).__init__(key, value, options)
 
 class EXTSEOUT(CaseControlCard):
     """

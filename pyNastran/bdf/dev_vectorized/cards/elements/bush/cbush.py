@@ -90,7 +90,7 @@ class CBUSH(Element):
                        double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
             self.x[i, :] = x
             if norm(x) == 0.0:
-                msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
+                msg = 'G0 vector defining plane 1 is not defined on CBUSH eid=%s.\n' % eid
                 msg += 'G0 = %s\n' % field5
                 msg += 'X  = %s\n' % x
                 msg += '%s' % card

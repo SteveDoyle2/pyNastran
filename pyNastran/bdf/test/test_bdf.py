@@ -945,7 +945,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
-        assert sol in [110], 'sol=%s CMETHOD\n%s' % (sol, subcase)
+        assert sol in [110, 145], 'sol=%s CMETHOD\n%s' % (sol, subcase)
 
     if 'RMETHOD' in subcase:
         rmethod_id = subcase.get_parameter('RMETHOD')[0]

@@ -347,19 +347,6 @@ class MAT1(IsotropicMaterial):
             msg += '%s,%s\n\n' % (self.a, self.a * self.tref)
         return msg
 
-    def write_code_aster(self):
-        pre = 'M%s = DEFI_MATRIAU(ELAS=_F(' % self.mid
-        spaces = ' ' * len(pre)
-        msg = '%sE=%g, # MAT1 mid=%s\n' % (pre, self.e, self.mid)
-        #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
-        #msg += spaces + 'E  =%g,\n'  %(self.e)
-        msg += spaces + 'NU=%g,\n' % (self.nu)
-        if '.' in '%g' % self.rho:
-            msg += spaces + 'RHO=%g));\n' % (self.rho)
-        else:
-            msg += spaces + 'RHO=%.1f));\n' % (self.rho)
-        return msg
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly

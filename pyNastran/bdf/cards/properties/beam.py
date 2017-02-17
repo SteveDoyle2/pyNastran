@@ -737,31 +737,6 @@ class PBEAM(IntegratedLineProperty):
                 self.type, self.mid_ref.type)
             #self.MassPerLength()
 
-    def _write_code_aster(self):  # PBEAM
-        a = self.Area()
-        iy = self.I11()
-        iz = self.I22()
-        j = self.J()
-        msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='P%s', # PBEAM\n" % (self.pid)
-        msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A','IY','IZ','JX'), # area, moments of inertia\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g),\n" % (a, iy, iz, j)
-
-        msg += "              ORIENTATION=_F( \n"
-        ## .. todo:: is this correct
-        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"
-        msg += "                  VALE=(1.0,0.0,0.0,)"
-
-        if [self.n1a, self.n1b] != [0., 0.]:
-            msg += "              \n),\n"
-            msg += "              CARA=('AX','AY'), # shear centers\n"
-            msg += "              VALE=(%g, %g),\n" % (self.n1a, self.n1b)
-            msg += "             ),\n"
-        else:
-            msg += " )),\n"
-        return msg
-
     def raw_fields(self):
         list_fields = ['PBEAM', self.pid, self.Mid()]
 
@@ -1113,22 +1088,6 @@ class PBEAML(IntegratedLineProperty):
         #i12 = integrate_line(self.xxb,self.i12)
         i12 = None
         return i12
-
-    def _write_code_aster(self, icut=0, iface=0, istart=0):  # PBEAML
-        msg = ''
-        msg2 = 'Cut_%s = geompy.MakeCut(' % (icut + 1)
-        for xxb, dim, nsm in zip(self.xxb, self.dim, self.nsm):
-            msg += self.CA_Section(iface, istart, self.dim)
-            msg2 += 'Face_%i, ' % (iface + 1)
-            iface += 1
-            istart += len(self.dim)
-        msg2 = msg2[-2:]
-        msg2 += ')\n'
-
-        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
-            icut + 1, icut + 1)
-        icut += 1
-        return (msg + msg2, icut, iface, istart)
 
     def raw_fields(self):
         list_fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type,

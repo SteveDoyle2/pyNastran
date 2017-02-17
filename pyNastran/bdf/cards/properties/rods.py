@@ -123,20 +123,6 @@ class PROD(Property):
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
-    def write_code_aster(self, icut, iface, istart):  # PROD
-        msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" % (self.pid)
-        msg += "              SECTION='CERCLE',  # circular section\n"
-        msg += "              CARA=('R')   # radius\n"
-        #msg += "              VALE=(%g),),\n" % (self.Radius())
-
-        msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A', 'JX')\n"
-        msg += "              VALE=(%g, %g),\n"  %(self.Area(), self.J())
-        msg += "                    CARA='VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return (msg, icut, iface, istart)
-
     def raw_fields(self):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
                        self.nsm]

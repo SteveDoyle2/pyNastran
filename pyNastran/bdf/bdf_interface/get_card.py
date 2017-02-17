@@ -297,6 +297,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                                                          stop_on_failure=stop_on_failure)
                     for nid, c1 in iteritems(nids_c1i):
                         node_ids_c1[nid] += c1
+            elif card.type == 'GMSPC':
+                self.log.warning('get_SPCx_node_ids doesnt supprt %r' % card.type)
             else:
                 msg = 'get_SPCx_node_ids_c1 doesnt supprt %r' % card.type
                 if stop_on_failure:

@@ -112,7 +112,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
             assert isinstance(load_id2, list), load_id2
             load_ids2.append(load_id2)
         self.load_ids = load_ids2
-
         self.load_ids_ref = self.load_ids
 
     def safe_cross_reference(self, model, debug=True):
@@ -129,6 +128,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
                 continue
             load_ids2.append(load_id2)
         self.load_ids = load_ids2
+        self.load_ids_ref = self.load_ids
 
     def LoadID(self, lid):
         if isinstance(lid, integer_types):
@@ -477,8 +477,19 @@ class DAREA(BaseCard):
         self.nodes_ref = model.Nodes(self.node_ids, allow_empty_nodes=False, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
+        nids2 = []
         msg = ', which is required by DAREA=%s' % (self.sid)
-        self.nodes_ref = model.Nodes(self.node_ids, allow_empty_nodes=False, msg=msg)
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by DAREA=%s' % (
+                        nid, self.sid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.nodes_ref = nids2
 
     def uncross_reference(self):
         self.nodes_ref = None
