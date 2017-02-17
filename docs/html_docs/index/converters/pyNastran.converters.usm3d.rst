@@ -1,6 +1,16 @@
 usm3d Package
 =============
 
+:mod:`bc_to_nastran` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.converters.usm3d.bc_to_nastran
+
+.. automodule:: pyNastran.converters.usm3d.bc_to_nastran
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`iface_format` Module
 --------------------------
 
@@ -22,7 +32,7 @@ usm3d Package
     :show-inheritance:
 
 :mod:`usm3d_io` Module
-----------------------------
+----------------------
 
 .. inheritance-diagram:: pyNastran.converters.usm3d.usm3d_io
 
@@ -32,7 +42,7 @@ usm3d Package
     :show-inheritance:
 
 :mod:`usm3d_reader` Module
--------------------------------
+--------------------------
 
 .. inheritance-diagram:: pyNastran.converters.usm3d.usm3d_reader
 
