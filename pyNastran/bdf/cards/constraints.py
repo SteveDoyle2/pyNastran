@@ -370,6 +370,22 @@ class MPC(Constraint):
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
 
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SPC=%s' % self.conid
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.gids = nids2
+        self.gids_ref = self.gids
+
     def uncross_reference(self):
         self.gids = self.node_ids
         del self.gids_ref
@@ -527,6 +543,22 @@ class SPC(Constraint):
         """
         msg = ', which is required by SPC=%s' % (self.conid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids_ref = self.gids
+
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SPC=%s' % self.conid
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.gids = nids2
         self.gids_ref = self.gids
 
     def uncross_reference(self):
@@ -930,6 +962,15 @@ class MPCADD(ConstraintADD):
         msg = ', which is required by MPCADD=%s' % self.conid
         for i, mpc in enumerate(self.sets):
             self.sets[i] = model.MPC(mpc, msg=msg)
+        self.sets_ref = self.sets
+
+    def safe_cross_reference(self, model, debug=False):
+        msg = ', which is required by MPCADD=%s' % self.conid
+        for i, mpc in enumerate(self.sets):
+            try:
+                self.sets[i] = model.MPC(mpc, msg=msg)
+            except KeyError:
+                pass
         self.sets_ref = self.sets
 
     def uncross_reference(self):

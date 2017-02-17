@@ -7,7 +7,7 @@ import unittest
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
-from pyNastran.bdf.subcase import write_set, collapse_thru_packs
+from pyNastran.bdf.bdf_interface.subcase_utils import write_set, collapse_thru_packs
 from codecs import open as codec_open
 
 pkg_path = pyNastran.__path__[0]
@@ -325,8 +325,8 @@ class CaseControlTest(unittest.TestCase):
             '    DISPLACEMENT = ALL',
         ]
         lines_expected = [
-            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),',
-            'THRESH=1e-2,DATAREC=NO) = YES',
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,',
+            'DATAREC=NO) = YES',
             'SUBCASE 1',
             '    DISPLACEMENT = ALL',
             'BEGIN BULK',
@@ -362,8 +362,8 @@ class CaseControlTest(unittest.TestCase):
             '    DISPLACEMENT = ALL',
         ]
         lines_expected = [
-            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),',
-            'THRESH=1e-2,DATAREC=NO,RPRINT,OTHER,OTHER2) = YES',
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,',
+            'DATAREC=NO,RPRINT,OTHER,OTHER2) = YES',
             'SUBCASE 1',
             '    DISPLACEMENT = ALL',
             'BEGIN BULK',

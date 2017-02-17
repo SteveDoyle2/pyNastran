@@ -1699,27 +1699,6 @@ class PSHELL(ShellProperty):
         msg += '%s\n\n' % (self.t)
         return msg
 
-    def write_code_aster(self):
-        """
-        * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
-        * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
-
-        The angle_rep is a direction angle, use either angle(a,b) or
-        vecteur(x,y,z)
-        coque_ncou is the number of gauss nodes along the thickness, for
-        linear analysis one node is sufficient.
-        """
-        msg = ''
-        msg += "    COQUE=_F(GROUP_MA='P%s', # COQUE=PSHELL\n" % self.pid
-        msg += "              EPAIS=%g, # EPAIS=thickness\n" % self.t
-        msg += "              ANGL_REP=(0.,90.),  # ???\n"  #: .. todo:: what is this?
-        #msg += "              VECTEUR=(1.0,0.0,0.0,)  #  local coordinate system\n"
-        msg += "              EXCENTREMENT=%g,  # offset-Z1\n" % self.z1
-        msg += "              COQUE_NCOU=1,  # Number of Integration Layers\n"
-        msg += "              CARA=('NSM'), # ???\n"  #: .. todo:: check
-        msg += "              VALE=(%g),),\n" % self.nsm
-        return msg
-
     def raw_fields(self):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                        self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,

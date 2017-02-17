@@ -119,7 +119,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         #try:
         (fem1, fem2, diff_cards) = run_bdf(folder, filename, debug=debug,
                                            xref=xref, check=check, punch=punch,
-                                           cid=cid, isFolder=True, dynamic_vars={})
+                                           cid=cid, isFolder=True, dynamic_vars={},
+                                           run_extract_bodies=False)
         del fem1
         del fem2
         diff_cards += diff_cards
@@ -161,7 +162,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
             encoding=None, sum_load=False, size=8, is_double=False,
             quiet=False,
-            reject=False, dynamic_vars=None):
+            reject=False, dynamic_vars=None, run_extract_bodies=True):
     """
     Runs a single BDF
 
@@ -590,6 +591,7 @@ def main():
             reject=data['--reject'],
             size=size,
             is_double=is_double,
+            run_extract_bodies=False,
             #sum_load=data['--loads'],
     )
     print("total time:  %.2f sec" % (time.time() - t0))

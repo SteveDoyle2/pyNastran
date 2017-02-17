@@ -92,14 +92,14 @@ class CBEAM(Element):
                        double_or_blank(card, 7, 'x3', 0.0)])
             self.x[i, :] = x
             if norm(x) == 0.0:
-                msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
+                msg = 'G0 vector defining plane 1 is not defined on CBEAM eid=%s.\n' % eid
                 msg += 'G0 = %s\n' % field5
                 msg += 'X  = %s\n' % x
                 msg += '%s' % card
                 raise RuntimeError(msg)
         else:
-            msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
-                   'type=%s' % (self.type, self.eid, field5, type(field5)))
+            msg = ('field5 on CBEAM (G0/X1) is the wrong type...id=%s field5=%s '
+                   'type=%s' % (self.eid, field5, type(field5)))
             raise RuntimeError(msg)
 
         #---------------------------------------------------------

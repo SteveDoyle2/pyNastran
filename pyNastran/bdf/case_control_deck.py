@@ -26,11 +26,13 @@ from six import iteritems, itervalues
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase_cards import (
-    EXTSEOUT, SET, SETMC, WEIGHTCHECK, #AXISYMMETRIC,
-    INT_CARD_DICT, INT_CARD_NAMES,
-    INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
-    STR_CARD_DICT, STR_CARD_NAMES,
-    CHECK_CARD_DICT, CHECK_CARD_NAMES,
+    EXTSEOUT, WEIGHTCHECK, MODCON,
+    SET, SETMC, #AXISYMMETRIC,
+    #INT_CARD_DICT, INT_CARD_NAMES,
+    #INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
+    #STR_CARD_DICT, STR_CARD_NAMES,
+    #CHECK_CARD_DICT, CHECK_CARD_NAMES,
+    split_by_mixed_commas_parentheses,
 )
 
 from pyNastran.utils.log import get_logger
@@ -607,13 +609,19 @@ class CaseControlDeck(object):
         elif line_upper.startswith('EXTSEOUT'):
             options = None
             param_type = 'OBJ-type'
-            obj = EXTSEOUT(line_upper.strip())
+            obj = EXTSEOUT.add_from_case_control(line_upper.strip())
             value = obj
             key = obj.type
         elif line_upper.startswith('WEIGHTCHECK'):
             options = None
             param_type = 'OBJ-type'
             obj = WEIGHTCHECK.add_from_case_control(line, line_upper, lines, i)
+            value = obj
+            key = obj.type
+        elif line_upper.startswith('MODCON'):
+            options = None
+            param_type = 'OBJ-type'
+            obj = MODCON.add_from_case_control(line, line_upper, lines, i)
             value = obj
             key = obj.type
         #elif line_upper.startswith('AUXMODEL'):
@@ -710,39 +718,7 @@ class CaseControlDeck(object):
             str_options = options_paren[:-1]
 
             if '(' in str_options:
-                options_start = []
-                options_end = []
-                icomma = str_options.index(',')
-                iparen = str_options.index('(')
-                #print('icomma=%s iparen=%s' % (icomma, iparen))
-                while icomma < iparen:
-                    base, str_options = str_options.split(',', 1)
-                    str_options = str_options.strip()
-                    icomma = str_options.index(',')
-                    iparen = str_options.index('(')
-                    options_start.append(base.strip())
-                    #print('  icomma=%s iparen=%s' % (icomma, iparen))
-                    #print('  options_start=%s' % options_start)
-
-                icomma = str_options.rindex(',')
-                iparen = str_options.rindex(')')
-                #print('icomma=%s iparen=%s' % (icomma, iparen))
-                while icomma > iparen:
-                    str_options, end = str_options.rsplit(')', 1)
-                    str_options = str_options.strip() + ')'
-                    #print('  str_options = %r' % str_options)
-                    icomma = str_options.rindex(',')
-                    iparen = str_options.rindex(')')
-                    options_end.append(end.strip(' ,'))
-                    #print('  icomma=%s iparen=%s' % (icomma, iparen))
-                    #print('  options_end=%s' % options_end[::-1])
-
-                #print()
-                #print('options_start=%s' % options_start)
-                #print('options_end=%s' % options_end)
-                #print('leftover = %r' % str_options)
-                options = options_start + [str_options] + options_end[::-1]
-
+                options = split_by_mixed_commas_parentheses(str_options)
             else:
                 options = str_options.split(',')
             param_type = 'STRESS-type'

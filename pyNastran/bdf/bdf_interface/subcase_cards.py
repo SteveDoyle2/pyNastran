@@ -1,9 +1,10 @@
 from __future__ import print_function
-from pyNastran.bdf.subcase import write_set, expand_thru_case_control
-from six import string_types
+from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
 class CaseControlCard(object):
+    """basic card similar to the BaseCard class for the BDF"""
     def __iter__(self):
+        """temporary method to emulate the old list access style"""
         value = self
         options = None
         param_type = 'OBJ-type'
@@ -29,6 +30,7 @@ class IntCard(CaseControlCard):
         self.value = int(value)
 
     def __iter__(self):
+        """temporary method to emulate the old list access style"""
         value = self
         options = []
         #param_type = 'STRESS-type'
@@ -457,9 +459,11 @@ class SET(CaseControlCard):
 
     @property
     def key(self):
+        """temporary method to emulate the old key attribute"""
         return '%s %s' % (self.type, self.set_id)
 
     def __iter__(self):
+        """temporary method to emulate the old list access style"""
         value = self
         options = None
         param_type = 'OBJ-type'
@@ -515,6 +519,17 @@ class SET(CaseControlCard):
         return write_set(self.value, self.set_id)
 
 class SETMC(SET):
+    """
+    SETMC 121 = ACCE/99(T3),1200(T1),1399(R2)
+    SETMC 222 = STRESS/134(22)
+    SETMC 343 = ACCE/99(T3),1200(T1),1399(R2),STRESS/134(22)
+    SETMC 122 = DISP/45(T1) 45(T2) 45(T3),
+                 38(T1) 38(T2) 38(T3),
+            VELO/45(T1) 45(T2) 45(T3),
+                 38(T1) 38(T2) 38(T3),
+            ACCE/45(T1) 45(T2) 45(T3),
+                 38(T1) 38(T2) 38(T3)
+    """
     type = 'SETMC'
     def __init__(self, set_id, values):
         super(SETMC, self).__init__(set_id, values)
@@ -533,6 +548,7 @@ class CheckCard(CaseControlCard):
     allowed_keys = []
     allowed_values = {}  # key:(type, allowed_values)
     allowed_strings = []
+    duplicate_names = {}
     allow_ints = False
     def __init__(self, key, value, options):
         """
@@ -558,6 +574,10 @@ class CheckCard(CaseControlCard):
                 key, valuei = key_value.split('=')
                 key = key.strip()
                 valuei = valuei.strip()
+
+                if key in self.duplicate_names:
+                    key = self.duplicate_names[key]
+
                 if key in self.allowed_values:
                     key_type, key_values = self.allowed_values[key]
                     try:
@@ -565,15 +585,24 @@ class CheckCard(CaseControlCard):
                     except ValueError:
                         msg = 'cannot make %r a %s in %r' % (valuei, key_type, key_value)
                         raise ValueError(msg)
+                    except TypeError:
+                        msg = 'cannot make %r a %s in %r' % (valuei, key_type, key_value)
+                        raise TypeError(msg)
 
                     # parse the value
                     # SET=(G,N,A)
                     if key_values is not None:
-                        sline = valuei.strip('(,)').split(',')
+                        try:
+                            sline = valuei.strip('(,)').split(',')
+                        except AttributeError:
+                            msg = 'cannot make %r a %s in %r of the form SET=(G,N,A)' % (
+                                valuei, key_type, key_value)
+                            raise ValueError(msg)
                         for val in sline:
                             if val not in key_values:
                                 msg = '%s: key=%r value=%r allowed_values=[%r]' % (
                                     self.type, key, val, ', '.join(key_values))
+                                msg += '\noptions = %r' % options
                                 raise ValueError(msg)
                 self.data.append((key, valuei))
             else:
@@ -584,7 +613,8 @@ class CheckCard(CaseControlCard):
                     self.type, key, ', '.join(self.allowed_keys))
                 raise KeyError(msg)
 
-        value = value.strip()
+        if isinstance(value, str):
+            value = value.strip()
         if self.allow_ints:
             try:
                 value = int(value)
@@ -612,6 +642,7 @@ class CheckCard(CaseControlCard):
 
             key = key.strip().upper()
             value = value.strip()
+            print('key=%r value=%r' % (key, value))
             #if self.debug:
                 #self.log.debug("key=%r value=%r" % (key, value))
             param_type = 'STRESS-type'
@@ -620,6 +651,7 @@ class CheckCard(CaseControlCard):
             if '(' in key:  # comma may be in line - STRESS-type
                 #param_type = 'STRESS-type'
                 sline = key.strip(')').split('(')
+                print('sline =', sline)
                 key = sline[0]
                 options = sline[1].split(',')
 
@@ -636,10 +668,13 @@ class CheckCard(CaseControlCard):
 
         elif equals_count > 2 and '(' in line:
             #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
+            #WEIGHTCHECK(PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)=YES
             assert len(lines) == 1, lines
             line = lines[0]
             try:
                 key, value_options = line.split('(', 1)
+                #GROUNDCHECK, PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
+                #WEIGHTCHECK, PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)=YES
             except ValueError:
                 msg = 'Expected a "(", but did not find one.\n'
                 msg += 'Looking for something of the form:\n'
@@ -649,6 +684,8 @@ class CheckCard(CaseControlCard):
 
             try:
                 options_paren, value = value_options.rsplit('=', 1)
+                #'GROUNDCHECK', 'PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)', 'YES'
+                #'WEIGHTCHECK', 'PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)',        'YES'
             except ValueError:
                 msg = 'Expected a "=", but did not find one.\n'
                 msg += 'Looking for something of the form:\n'
@@ -664,41 +701,11 @@ class CheckCard(CaseControlCard):
             if not options_paren.endswith(')'):
                 raise RuntimeError(line)
             str_options = options_paren[:-1]
+            #'GROUNDCHECK', 'PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO', 'YES'
+            #'WEIGHTCHECK', 'PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT',        'YES'
 
             if '(' in str_options:
-                options_start = []
-                options_end = []
-                icomma = str_options.index(',')
-                iparen = str_options.index('(')
-                #print('icomma=%s iparen=%s' % (icomma, iparen))
-                while icomma < iparen:
-                    base, str_options = str_options.split(',', 1)
-                    str_options = str_options.strip()
-                    icomma = str_options.index(',')
-                    iparen = str_options.index('(')
-                    options_start.append(base.strip())
-                    #print('  icomma=%s iparen=%s' % (icomma, iparen))
-                    #print('  options_start=%s' % options_start)
-
-                icomma = str_options.rindex(',')
-                iparen = str_options.rindex(')')
-                #print('icomma=%s iparen=%s' % (icomma, iparen))
-                while icomma > iparen:
-                    str_options, end = str_options.rsplit(')', 1)
-                    str_options = str_options.strip() + ')'
-                    #print('  str_options = %r' % str_options)
-                    icomma = str_options.rindex(',')
-                    iparen = str_options.rindex(')')
-                    options_end.append(end.strip(' ,'))
-                    #print('  icomma=%s iparen=%s' % (icomma, iparen))
-                    #print('  options_end=%s' % options_end[::-1])
-
-                #print()
-                #print('options_start=%s' % options_start)
-                #print('options_end=%s' % options_end)
-                #print('leftover = %r' % str_options)
-                options = options_start + [str_options] + options_end[::-1]
-
+                options = split_by_mixed_commas_parentheses(str_options)
             else:
                 options = str_options.split(',')
             param_type = 'STRESS-type'
@@ -723,6 +730,81 @@ class CheckCard(CaseControlCard):
             msg = msg.strip(', ') + ') = %s' % self.value
         return msg + '\n'
 
+def split_by_mixed_commas_parentheses(str_options):
+    """
+    Excessively complicated function to split something excessively
+    complicated.  Thankfully, it only has one set of parentheses
+    and no nested blocks.
+
+    Parameters
+    ----------
+    str_options : str
+        a nasty section of a case control line
+        'PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO'
+        'PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT'
+
+    Returns
+    -------
+    options : List[str]
+        something that's actually parseable
+        ['PRINT', 'SET=(G,N,N+AUTOSPC,F,A)', 'DATAREC=NO']
+        ['PRINT', 'SET=(G,N,F,A)',           'CGI=NO',    'WEIGHT']
+    """
+    options_start = []
+    options_end = []
+    options_start_new = []
+    options_end_new = []
+
+    # search for ',' until one is '(' closer to the beginning
+    # of the string; put it in options_start
+    icomma = str_options.index(',')
+    iparen = str_options.index('(')
+    #print('icomma=%s iparen=%s' % (icomma, iparen))
+    while icomma < iparen:
+        base, str_options = str_options.split(',', 1)
+        str_options = str_options.strip()
+        icomma = str_options.index(',')
+        iparen = str_options.index('(')
+        options_start.append(base.strip())
+        #print('  icomma=%s iparen=%s' % (icomma, iparen))
+        #print('  options_start=%s' % options_start)
+
+    # search for ',' until one is ')' closer to the end
+    # of the string; put it in options_end
+    icomma = str_options.rindex(',')
+    iparen = str_options.rindex(')')
+    #print('icomma=%s iparen=%s' % (icomma, iparen))
+    while icomma > iparen:
+        str_options, end = str_options.rsplit(')', 1)
+        str_options = str_options.strip() + ')'
+        #print('  str_options = %r' % str_options)
+        icomma = str_options.rindex(',')
+        iparen = str_options.rindex(')')
+        options_end.append(end.strip(' ,'))
+        #print('  icomma=%s iparen=%s' % (icomma, iparen))
+        #print('  options_end=%s' % options_end[::-1])
+
+    #print()
+    #print('options_start=%s' % options_start)
+    #print('options_end=%s' % options_end)
+    #print('leftover = %r' % str_options)
+
+    # clean up the block and make sure we didn't mess up parsing the line
+    for option in options_start:
+        assert '(' not in option, option
+        assert ')' not in option, option
+        options_start_new += [optioni.strip() for optioni in option.split(',')]
+
+    # we created options_end from right to left, so we need to reverse it
+    for option in options_end[::-1]:
+        assert '(' not in option, option
+        assert ')' not in option, option
+        options_end_new += [optioni.strip() for optioni in option.split(',')]
+
+
+    options = options_start_new + [str_options] + options_end_new
+    return options
+
 class GROUNDCHECK(CheckCard):
     """
     GROUNDCHECK=YES
@@ -732,10 +814,10 @@ class GROUNDCHECK(CheckCard):
     allowed_keys = ['GRID', 'SET', 'PRINT', 'NOPRINT', 'THRESH', 'DATAREC', 'RTHRESH']
     allowed_strings = ['YES']
     allowed_values = {
-        'CGI' : (string_types, ['YES', 'NO']),
-        'SET' : (string_types, ['G', 'N', 'AUTOSPC', 'F', 'A', 'ALL']),
+        'CGI' : (str, ['YES', 'NO']),
+        'SET' : (str, ['G', 'N', 'AUTOSPC', 'F', 'A', 'ALL']),
         'THRESH' : (float, None),
-        'DATAREC' : (string_types, ['YES', 'NO']),
+        'DATAREC' : (str, ['YES', 'NO']),
         'RTHRESH' : (float, None),
         'GRID' : (int, None),
     }
@@ -752,14 +834,39 @@ class WEIGHTCHECK(CheckCard):
     allowed_keys = ['GRID', 'SET', 'PRINT', 'NOPRINT', 'CGI', 'MASS', 'WEIGHT']
     allowed_strings = ['YES']
     allowed_values = {
-        'CGI':(string_types, ['YES', 'NO']),
-        'SET':(string_types, ['G','N','AUTOSPC','F','A','V','ALL']),
+        'CGI':(str, ['YES', 'NO']),
+        'SET':(str, ['G', 'N', 'AUTOSPC', 'F', 'A', 'V', 'ALL']),
         'GRID' : (int, None),
     }
 
     def __init__(self, key, value, options):
         super(WEIGHTCHECK, self).__init__(key, value, options)
 
+class MODCON(CheckCard):
+    """
+    MODCON=123
+    MODCON(SORT1,PHASE,PRINT,PUNCH,BOTH,TOPS=5)=ALL
+    """
+    type = 'MODCON'
+    allowed_keys = ['SORT1', 'SORT2', 'REAL', 'IMAG', 'PHASE', 'PRINT', 'NOPRINT',
+                    'PUNCH', 'ABS', 'NORM', 'BOTH', 'TOPS', 'TOPF', 'SOLUTION',
+                    'PANELMC']
+    duplicate_names = {
+        'TOP' : 'TOPS',
+        'SOLU' : 'SOLUTION',
+        'PANE' : 'PANELMC',
+    }
+    allowed_strings = ['ALL', 'NONE']
+    allow_ints = True
+
+    allowed_values = {
+        'TOPS':(int, None),
+        'TOPF':(int, None),
+        'SOLUTION' : (int, None),  ## TODO: is this right???
+    }
+
+    def __init__(self, key, value, options):
+        super(MODCON, self).__init__(key, value, options)
 
 class EXTSEOUT(CaseControlCard):
     """
@@ -782,12 +889,17 @@ class EXTSEOUT(CaseControlCard):
                     'DMIGOP2', 'DMIGPCH',
                     'MATOP4', 'MATRIXOP4']
 
-    def __init__(self, line):
+    def __init__(self, data):
         super(EXTSEOUT, self).__init__()
+        self.data = data
+
+    @classmethod
+    def add_from_case_control(cls, line):
         assert line.startswith('EXTSEOUT('), line
         assert line.endswith(')'), line
         data = line[9:-1].split(',')
-        self.data = []
+        print('data EXTSEOUT =', data)
+        data_list = []
         for key_value in data:
             key_value = key_value.strip()
             if '=' in key_value:
@@ -805,13 +917,14 @@ class EXTSEOUT(CaseControlCard):
                     key = 'K4DAMP'
                 elif key == 'LOAD':
                     key = 'LOADS'
-                self.data.append((key, value))
+                data_list.append((key, value))
             else:
                 key = key_value
-                self.data.append((key, None))
-            if key not in self.allowed_keys:
-                msg = 'key=%r allowed_keys=%r' % (key, ''.join(self.allowed_keys))
+                data_list.append((key, None))
+            if key not in cls.allowed_keys:
+                msg = 'key=%r allowed_keys=%r' % (key, ''.join(cls.allowed_keys))
                 raise KeyError(msg)
+        return EXTSEOUT(data_list)
 
     def write(self, spaces):
         msg = spaces + str(self)

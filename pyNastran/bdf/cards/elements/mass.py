@@ -1038,14 +1038,6 @@ class CONM2(PointMassElement):
             return self.cid
         return self.cid_ref.cid
 
-    def write_code_aster(self):
-        msg = ''
-        msg += "    DISCRET=_F(\n"
-        msg += "             'CARA='M_T_D_N'\n"
-        msg += "              NOEUD=N%s\n" % self.Nid()
-        msg += "              VALE=%g),\n" % self.mass
-        return msg
-
     def raw_fields(self):
         list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +
                        list(self.X) + [None] + list(self.I))

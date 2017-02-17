@@ -173,11 +173,6 @@ class BaseCard(object):
             value = self._get_field_helper(n)
         return value
 
-    def write_code_aster(self):
-        """default method for Code Aster"""
-        return ('# skipping %s because write_code_aster is not implemented\n'
-                % self.type)
-
     def _verify(self, xref):
         """
         Verifies all methods for this object work

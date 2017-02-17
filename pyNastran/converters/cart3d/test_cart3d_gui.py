@@ -7,6 +7,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
+from pyNastran.utils.log import get_logger
 
 
 pkg_path = pyNastran.__path__[0]
@@ -22,29 +23,36 @@ class Cart3dGUI(Cart3dIO, GUIMethods):
 class TestCart3dGUI(unittest.TestCase):
 
     def test_cart3d_geometry_01(self):
+        log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(model_path, 'threePlugs.a.tri')
         #out_filename = os.path.join(model_path, 'panair.out')
         dirname = None
 
         test = Cart3dGUI()
+        test.log = log
         #test.load_nastran_geometry(geometry_filename, None)
         test.load_cart3d_geometry(geometry_filename, dirname)
 
     def test_cart3d_geometry_02(self):
+        log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(model_path, 'threePlugs.bin.tri')
         dirname = None
 
         test = Cart3dGUI()
+        test.log = log
         test.load_cart3d_geometry(geometry_filename, dirname)
 
     def test_cart3d_geometry_03(self):
+        log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(model_path, 'business_jet', 'bJet.a.tri')
         dirname = None
 
         test = Cart3dGUI()
+        test.log = log
         test.load_cart3d_geometry(geometry_filename, dirname)
 
     def test_cart3d_results(self):
+        log = get_logger(level='warning', encoding='utf-8')
         lines = (
             "5 3 6\n"
             "0. 0. 0.\n"
@@ -79,10 +87,12 @@ class TestCart3dGUI(unittest.TestCase):
         dirname = None
 
         test = Cart3dGUI()
+        test.log = log
         #test.load_nastran_geometry(geometry_filename, None)
         test.load_cart3d_geometry(geometry_filename, dirname)
 
     def test_nastran_to_cart3d_01(self):
+        log = get_logger(level='warning', encoding='utf-8')
         lines = (
             'SOL 101\n'
             'CEND\n'
@@ -101,15 +111,17 @@ class TestCart3dGUI(unittest.TestCase):
         with open(bdf_filename, 'w') as f:
             f.write(lines)
 
-        nastran_to_cart3d_filename(bdf_filename, cart3d_filename)
-        model = Cart3D()
+        nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=log)
+        model = Cart3D(log=log)
         model.read_cart3d(cart3d_filename)
         model.write_cart3d(cart3d_filename_out)
 
         test = Cart3dGUI()
+        test.log = log
         test.load_cart3d_geometry(cart3d_filename, dirname=None)
 
     def test_nastran_to_cart3d_02(self):
+        log = get_logger(level='warning', encoding='utf-8')
         lines = (
             'SOL 101\n'
             'CEND\n'
@@ -128,15 +140,17 @@ class TestCart3dGUI(unittest.TestCase):
         with open(bdf_filename, 'w') as f:
             f.write(lines)
 
-        nastran_to_cart3d_filename(bdf_filename, cart3d_filename)
-        model = Cart3D()
+        nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=log)
+        model = Cart3D(log=log)
         model.read_cart3d(cart3d_filename)
         model.write_cart3d(cart3d_filename_out)
 
         test = Cart3dGUI()
+        test.log = log
         test.load_cart3d_geometry(cart3d_filename, dirname=None)
 
     def test_nastran_to_cart3d_02(self):
+        log = get_logger(level='warning', encoding='utf-8')
         lines = (
             'SOL 101\n'
             'CEND\n'
@@ -155,9 +169,9 @@ class TestCart3dGUI(unittest.TestCase):
         with open(bdf_filename, 'w') as f:
             f.write(lines)
 
-        bdf = BDF(debug=False)
+        bdf = BDF(log=log, debug=False)
         bdf.read_bdf(bdf_filename)
-        cart3d = nastran_to_cart3d(bdf)
+        cart3d = nastran_to_cart3d(bdf, log=log)
         cart3d.write_cart3d(cart3d_filename)
 
         #model = Cart3D()

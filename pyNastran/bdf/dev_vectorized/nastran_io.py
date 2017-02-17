@@ -257,12 +257,15 @@ class NastranIO(NastranIO_xref):
                 #else:
                     #self.log_info("skipping %s" % element.type)
 
-        self.mapElements(points, points2, self.nid_map, model, j, dim_max)
+        self.map_elements(points, points2, self.nid_map, model, j, dim_max)
 
     #def _get_sphere_size(self, dim_max):
         #return 0.05 * dim_max
 
-    def mapElements(self, points, points2, nidMap, model, j, dim_max):
+    def map_elements(self, points, points2, nidMap, model, j, dim_max):
+        """
+        Creates the elements
+        """
         sphere_size = self._get_sphere_size(dim_max)
         #self.eid_map = {}
 
@@ -788,7 +791,7 @@ class NastranIO(NastranIO_xref):
 
         # set to True to enable nodeIDs as an result
         nidsSet = True
-        if nidsSet and self.is_nodal:
+        if nidsSet:
             nids = model.grid.node_id
             #for (nid, nid2) in iteritems(self.nid_map):
             #    nids[nid2] = nid
@@ -798,7 +801,7 @@ class NastranIO(NastranIO_xref):
         # set to True to enable elementIDs as a result
         eidsSet = True
         Types, eids, pids = model.elements.get_element_properties()
-        if eidsSet and self.is_centroidal:
+        if eidsSet:
             #eids = zeros(nElements, dtype='int32')
             #for (eid, eid2) in iteritems(self.eid_map):
             #    eids[eid2] = eid
@@ -807,7 +810,7 @@ class NastranIO(NastranIO_xref):
             eidsSet = True
 
         # subcase_id, resultType, vectorSize, location, dataFormat
-        if len(model.properties) and self.is_centroidal:
+        if len(model.properties):
             #pids = model.elements.property_id
             cases[(0, 'Property_ID', 1, 'centroid', '%i')] = pids
 
@@ -848,10 +851,8 @@ class NastranIO(NastranIO_xref):
 
     def _plot_pressures(self, model, cases):
         """
-        does pressure act normal or antinormal?
+        pressure act normal to a shell (as opposed to anti-normal to a solid face)
         """
-        if not self.is_centroidal:
-            return
         sucaseIDs = model.case_control_deck.get_subcase_list()
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
@@ -900,8 +901,6 @@ class NastranIO(NastranIO_xref):
                 cases[(0, 'Pressure Case=%i' % subcase_id, 1, 'centroid', '%.1f')] = pressures
 
     def _plot_applied_loads(self, model, cases):
-        if not self.is_nodal:
-            return
         sucaseIDs = model.case_control_deck.get_subcase_list()
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
@@ -954,39 +953,41 @@ class NastranIO(NastranIO_xref):
                 cases[(subcase_id, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 2]
 
     def load_nastran_results(self, op2_filename, dirname):
+        """
+        Loads the Nastran results into the GUI
+        """
         #gridResult.SetNumberOfComponents(self.nElements)
         self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        print("trying to read...", op2_filename)
+        print('trying to read...%s' % op2_filename)
         if '.op2' in op2_filename:  # TODO: do this based on lower & file extension
             model = OP2(log=self.log, debug=True)
             model._results.saved = set([])
             all_results = model.get_all_results()
-            if self.is_nodal:
-                desired_results = [
-                    'displacements', 'velocities', 'accelerations', 'temperatures',
-                    'constraint_forces', 'spcForces', 'mpcForces',
+            desired_results = [
+                # nodal
+                'displacements', 'velocities', 'accelerations', 'temperatures',
+                'constraint_forces', 'spc_forces', 'mpc_forces',
 
-                    #'gridPointForces',
+                #'gridPointForces',
+                'stress', 'solidStress', 'plateStress', 'compositePlateStress',
+                'barStress', 'rodStress',
+                #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
+                #'barStrain', 'rodStrain',
+
+                # untested
+                'Load Vectors',
+                'Applied Loads',
+                'Force Vectors',
+
+                # centroidal
                     'stress', 'solidStress', 'plateStress', 'compositePlateStress',
                     'barStress', 'rodStress',
                     #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
                     #'barStrain', 'rodStrain',
-
-                    # untested
-                    'loadVectors',
-                    'appliedLoads',
-                    'forceVectors',
-                ]
-            else:
-                desired_results = [
-                    'stress', 'solidStress', 'plateStress', 'compositePlateStress',
-                    'barStress', 'rodStress',
-                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
-                    #'barStrain', 'rodStrain',
-                ]
+            ]
             for result in desired_results:
                 if result in all_results:
                     model._results.saved.add(result)
@@ -1018,78 +1019,77 @@ class NastranIO(NastranIO_xref):
         self.finish_nastran_io(cases)
 
     def fill_oug_oqg_case(self, cases, model, subcase_id):
-        if self.is_nodal: # nodal results don't work with centroidal ones
-            displacement_like = [
-                [model.displacements, 'Displacement'],
-                [model.velocities, 'Velocity'],
-                [model.accelerations, 'Acceleration'],
-                [model.spcForces, 'SPC Forces'],
-                [model.mpcForces, 'MPC Forces'],
+        displacement_like = [
+            [model.displacements, 'Displacement'],
+            [model.velocities, 'Velocity'],
+            [model.accelerations, 'Acceleration'],
+            [model.spc_forces, 'SPC Forces'],
+            [model.mpc_forces, 'MPC Forces'],
 
-                # untested
-                [model.loadVectors, 'loadVectors'],
-                [model.appliedLoads, 'appliedLoads'],
-                [model.forceVectors, 'forceVectors'],
-                #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
-            ]
-            temperature_like = [
-                [model.temperatures, 'Temperature']
-            ]
-            nnodes = self.nNodes
+            # untested
+            [model.load_vectors, 'Load Vectors'],
+            [model.applied_loads, 'Applied Loads'],
+            [model.force_vectors, 'Force Vectors'],
+            #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
+        ]
+        temperature_like = [
+            [model.temperatures, 'Temperature']
+        ]
+        nnodes = self.nNodes
 
-            # size = 3
-            for (result, name) in displacement_like:
-                if subcase_id in result:
-                    case = result[subcase_id]
+        # size = 3
+        for (result, name) in displacement_like:
+            if subcase_id in result:
+                case = result[subcase_id]
 
-                    if case.nonlinear_factor is not None: # transient
-                        return
-                    displacements = zeros((nnodes, 3), dtype='float32')
-                    x_displacements = zeros(nnodes, dtype='float32')
-                    y_displacements = zeros(nnodes, dtype='float32')
-                    z_displacements = zeros(nnodes, dtype='float32')
-                    xyz_displacements = zeros(nnodes, dtype='float32')
+                if case.nonlinear_factor is not None: # transient
+                    return
+                displacements = zeros((nnodes, 3), dtype='float32')
+                x_displacements = zeros(nnodes, dtype='float32')
+                y_displacements = zeros(nnodes, dtype='float32')
+                z_displacements = zeros(nnodes, dtype='float32')
+                xyz_displacements = zeros(nnodes, dtype='float32')
 
-                    if hasattr(case, 'translations'):
-                        word = 'translations'
-                    elif hasattr(case, 'forces'):
-                        word = 'forces'
-                    else:
-                        self.log.error('ERROR!!!!', case.__dict__.keys())
-                        raise RuntimeError(case.__dict__.keys())
+                if hasattr(case, 'translations'):
+                    word = 'translations'
+                elif hasattr(case, 'forces'):
+                    word = 'forces'
+                else:
+                    self.log.error('ERROR!!!!', case.__dict__.keys())
+                    raise RuntimeError(case.__dict__.keys())
 
-                    res = getattr(case, word)
+                res = getattr(case, word)
 
-                    self.log.debug('case.type =', case.__class__.__name__)
-                    for (nid, txyz) in iteritems(res):
-                        nid2 = self.nid_map[nid]
-                        displacements[nid2] = txyz
-                        xyz_displacements[nid2] = norm(txyz)
-                        x_displacements[nid2] = txyz[0]
-                        y_displacements[nid2] = txyz[1]
-                        z_displacements[nid2] = txyz[2]
+                self.log.debug('case.type =', case.__class__.__name__)
+                for (nid, txyz) in iteritems(res):
+                    nid2 = self.nid_map[nid]
+                    displacements[nid2] = txyz
+                    xyz_displacements[nid2] = norm(txyz)
+                    x_displacements[nid2] = txyz[0]
+                    y_displacements[nid2] = txyz[1]
+                    z_displacements[nid2] = txyz[2]
+
+                #cases[(subcase_id, name + 'Vector', 3, 'node', '%g')] = displacements
+                cases[(subcase_id, name + 'X', 1, 'node', '%g')] = x_displacements
+                cases[(subcase_id, name + 'Y', 1, 'node', '%g')] = y_displacements
+                cases[(subcase_id, name + 'Z', 1, 'node', '%g')] = z_displacements
+                cases[(subcase_id, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
+                del res, word
+
+        # size = 1
+        for (result, name) in temperature_like:
+            if subcase_id in result:
+                case = result[subcase_id]
+                if case.nonlinear_factor is not None: # transient
+                    return
+                temperatures = zeros(nnodes, dtype='float32')
+                for (nid, txyz) in iteritems(case.translations):
+                    nid2 = self.nid_map[nid]
+                    displacements[nid2] = txyz
+                    temperatures[nid2] = norm(txyz)
 
                     #cases[(subcase_id, name + 'Vector', 3, 'node', '%g')] = displacements
-                    cases[(subcase_id, name + 'X', 1, 'node', '%g')] = x_displacements
-                    cases[(subcase_id, name + 'Y', 1, 'node', '%g')] = y_displacements
-                    cases[(subcase_id, name + 'Z', 1, 'node', '%g')] = z_displacements
-                    cases[(subcase_id, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
-                    del res, word
-
-            # size = 1
-            for (result, name) in temperature_like:
-                if subcase_id in result:
-                    case = result[subcase_id]
-                    if case.nonlinear_factor is not None: # transient
-                        return
-                    temperatures = zeros(nnodes, dtype='float32')
-                    for (nid, txyz) in iteritems(case.translations):
-                        nid2 = self.nid_map[nid]
-                        displacements[nid2] = txyz
-                        temperatures[nid2] = norm(txyz)
-
-                        #cases[(subcase_id, name + 'Vector', 3, 'node', '%g')] = displacements
-                        cases[(subcase_id, name, 1, 'node', '%g')] = temperatures
+                    cases[(subcase_id, name, 1, 'node', '%g')] = temperatures
         return cases
 
     def clear_nastran(self):
@@ -1099,12 +1099,8 @@ class NastranIO(NastranIO_xref):
 
     def fill_stress_case(self, cases, model, subcase_id):
         #return cases
-        if self.is_centroidal:
-            self._fill_stress_centroidal(cases, model, subcase_id)
-        elif self.is_nodal:
-            self._fill_stress_case_nodal(cases, model, subcase_id)
-        else:
-            raise RuntimeError('this shouldnt happen...')
+        self._fill_stress_centroidal(cases, model, subcase_id)
+        self._fill_stress_case_nodal(cases, model, subcase_id)
         return cases
 
     def _fill_stress_case_nodal(self, cases, model, subcase_id):
@@ -1514,8 +1510,6 @@ def main():
 
     for bdf_filename, op2_filename in bdf_op2_filenames:
         test = NastranIO()
-        test.is_nodal = False
-        test.is_centroidal = True
         test.save_data = True
         add_dummy_gui_functions(test)
         test.load_nastran_geometry(bdf_filename, '')
@@ -1525,9 +1519,6 @@ def main():
         assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
 
         test2 = NastranIO_xref()
-        test2.is_nodal = False
-        test2.is_centroidal = True
-        test2.save_data = True
         add_dummy_gui_functions(test2)
         test2.load_nastran_geometry(bdf_filename, '')
         test2.load_nastran_results(op2_filename, '')

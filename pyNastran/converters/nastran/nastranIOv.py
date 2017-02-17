@@ -1560,6 +1560,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def map_elements(self, points, nid_map, model, j, dim_max,
                      plot=True, xref_loads=True):
         """
+        Creates the elements
+
         element checks
         http://www.altairuniversity.com/wp-content/uploads/2012/04/Student_Guide_211-233.pdf
 

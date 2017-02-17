@@ -141,33 +141,6 @@ class LineProperty(Property):
     def Nu(self):
         return self.mid_ref.nu
 
-    def CA_Section(self, iface, istart, dims):
-        """
-        ::
-
-          ---msg1---
-          H1=0.1
-          W1=0.05
-
-          ---msg2---
-          Face_1 = geompy.MakeFaceHW(H1, W1, 1)
-          geompy.addToStudy( Face_1, 'Face_1' )
-
-          ---msg---
-          H1=0.1
-          W1=0.05
-          Face_1 = geompy.MakeFaceHW(H1, W1, 1)
-          geompy.addToStudy( Face_1, 'Face_1' )
-        """
-        msg1 = ''
-        msg2 = 'Face_%s = geompy.MakeFaceHW(' % (iface + 1)
-        for (i, dim) in enumerate(dims):
-            msg1 += 'D%s = %s\n' % (istart + i, dim)
-            msg2 += 'D%s,' % (istart + i)
-        msg2 += '1)\n'
-        msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" % (iface, iface)
-        return msg1 + msg2
-
     def IAreaL(self, dim):
         if self.Type == 'ROD':
             R = dim[0]
@@ -801,21 +774,6 @@ class PBAR(LineProperty):
     def I12(self):
         return self.i12
 
-    def write_code_aster(self):  # PBAR
-        a = self.Area()
-        iy = self.I11()
-        iz = self.I22()
-        j = self.J()
-        msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='P%s', # PBAR\n" % (self.pid)
-        msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A','IY','IZ','JX')\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g,)\n" % (a, iy, iz, j)
-        msg += "              ORIENTATION=(\n"
-        msg += "                    CARA=('VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return msg
-
     def raw_fields(self):
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, self.i1, self.i2,
                        self.j, self.nsm, None, self.c1, self.c2, self.d1, self.d2,
@@ -1305,22 +1263,6 @@ class PBARL(LineProperty):
 
     def I22(self):
         return self.I2()
-
-    def write_code_aster(self, icut=0, iface=0, istart=0):  # PBARL
-        msg = '# BAR Type=%s pid=%s\n' % (self.type, self.pid)
-        msg2 = ''
-        msg += self.CA_Section(iface, istart, self.dim)
-        iface += 1
-        istart += len(self.dim)
-
-        msg += self.CA_Section(iface, istart, self.dim)
-        iface += 1
-        msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' % (
-            icut + 1, iface + 1, iface + 2)
-        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
-            icut + 1, icut + 1)
-        istart += len(self.dim)
-        return msg + msg2, icut, iface, istart
 
     def raw_fields(self):
         list_fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type,

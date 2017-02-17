@@ -184,23 +184,6 @@ class NastranMatrix(BaseCard):
             raise NotImplementedError('ifo=%s' % self.ifo)
         return shape
 
-    def write_code_aster(self):
-        """
-        assume set 1 = MAAX1,MAAX2, etc. and 100/n % on each
-        """
-        # for real combination
-        comm = 'K_Mtx_AB=COMB_MATR_ASSE(COMB_R=(\n'
-        comm += '    _F(MATR_ASSE = K_Mtx_A,COEF_R = 1.),\n'
-        comm += '    _F(MATR_ASSE = K_Mtx_B,COEF_R = 1.)));\n'
-
-        # for complex combination
-
-        comm += "K_Mtx_AB=COMB_MATR_ASSE(COMB_C=(\n"
-        comm += "_F(MATR_ASSE=K_Mtx_A,COEF_C=('RI',0.7,0.3,),)\n"
-        comm += "_F(MATR_ASSE=K_Mtx_B,COEF_C=('RI',0.7,0.3,),),),);\n"
-        comm = 'K_Mtx=ASSE_MATRICE(MATR_ELEM=ElMtx_K,NUME_DDL=%s,);'
-        return comm
-
     def _add_column_uaccel(self, comment=''):
         raise NotImplementedError('UACCEL')
 

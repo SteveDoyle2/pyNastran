@@ -4358,7 +4358,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             data.append(t)
             i += 1
         self.res_widget.update_results(data)
-        # method = 'centroid' if self.is_centroidal else 'nodal'
 
         data2 = [('node/centroid', None, [])]
         self.res_widget.update_methods(data2)

@@ -79,27 +79,13 @@ class SafeXrefMesh(XrefMesh):
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        for spcadd in itervalues(self.spcadds):
-            raise RuntimeError('removed')
-
         for spcs in itervalues(self.spcs):
             for spc in spcs:
-                if hasattr(spc, 'safe_cross_reference'):
-                    spc.safe_cross_reference(self)
-                else:
-                    spc.cross_reference(self)
-                    self.log.warning('%s - add safe_cross_reference' % spc.type)
-
-        for mpcadd in itervalues(self.mpcadds):
-            raise RuntimeError('removed')
+                spc.safe_cross_reference(self)
 
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:
-                if hasattr(mpc, 'safe_cross_reference'):
-                    mpc.safe_cross_reference(self)
-                else:
-                    mpc.cross_reference(self)
-                    self.log.warning('%s - add safe_cross_reference' % mpc.type)
+                mpc.safe_cross_reference(self)
 
         for suport in self.suport:
             #if hasattr(suport, 'safe_cross_reference'):
@@ -150,28 +136,60 @@ class SafeXrefMesh(XrefMesh):
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
-        return self._cross_reference_aero()
         for caero in itervalues(self.caeros):
-            caero.safe_cross_reference(self)
+            if hasattr(caero, 'safe_cross_reference'):
+                caero.safe_cross_reference(self)
+            else:
+                caero.cross_reference(self)
+                self.log.warning('%s - add safe_cross_reference' % caero.type)
+
         for paero in itervalues(self.paeros):
-            paero.safe_cross_reference(self)
+            if hasattr(paero, 'safe_cross_reference'):
+                paero.safe_cross_reference(self)
+            else:
+                paero.cross_reference(self)
+                self.log.warning('%s - add safe_cross_reference' % paero.type)
+
         for trim in itervalues(self.trims):
             trim.safe_cross_reference(self)
 
         for spline in itervalues(self.splines):
-            spline.safe_cross_reference(self)
+            if hasattr(spline, 'safe_cross_reference'):
+                spline.safe_cross_reference(self)
+            else:
+                spline.cross_reference(self)
+                self.log.warning('%s - add safe_cross_reference' % spline.type)
+
         for aecomp in itervalues(self.aecomps):
-            aecomp.safe_cross_reference(self)
+            if hasattr(aecomp, 'safe_cross_reference'):
+                aecomp.safe_cross_reference(self)
+            else:
+                aecomp.cross_reference(self)
+                self.log.warning('%s - add safe_cross_reference' % aecomp.type)
+
         for aelist in itervalues(self.aelists):
             aelist.safe_cross_reference(self)
+
         for aeparam in itervalues(self.aeparams):
-            aeparam.safe_cross_reference(self)
+            if hasattr(aeparam, 'safe_cross_reference'):
+                aeparam.safe_cross_reference(self)
+            else:
+                aeparam.cross_reference(self)
+                self.log.warning('%s - add safe_cross_reference' % aeparam.type)
+
         #for aestat in itervalues(self.aestats):
             #aestat.safe_cross_reference(self)
+
         for aesurf in itervalues(self.aesurf):
             aesurf.safe_cross_reference(self)
+
         for aesurfs in itervalues(self.aesurfs):
-            aesurfs.safe_cross_reference(self)
+            if hasattr(aesurfs, 'safe_cross_reference'):
+                aesurfs.safe_cross_reference(self)
+            else:
+                aesurfs.cross_reference(self)
+                self.log.warning('%s - add safe_cross_reference' % aesurfs.type)
+
         for flutter in itervalues(self.flutters):
             flutter.safe_cross_reference(self)
 

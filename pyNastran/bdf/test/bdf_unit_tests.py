@@ -26,7 +26,8 @@ class Tester(unittest.TestCase):
         return run_bdf(folder, bdf_filename, xref=xref, cid=cid, size=size,
                        is_folder=True,
                        mesh_form=mesh_form, dynamic_vars=dynamic_vars,
-                       debug=debug, quiet=quiet)
+                       debug=debug, quiet=quiet,
+                       sum_load=True, run_extract_bodies=True)
 
     def run_all_files_in_folder(self, folder, xref=False, cid=None, debug=False):
         run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)

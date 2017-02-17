@@ -38,7 +38,8 @@ def remove_marc_files(filenames):
         # names.append(os.readlink('/proc/self/fd/%d' % fd))
     # return names
 
-def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True, crash_cards=None):
+def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True,
+        crash_cards=None):
     """Runs the full BDF test suite"""
     if crash_cards is None:
         crash_cards = []
@@ -133,13 +134,13 @@ def main():
     msg += "  bdf_test -h | --help\n"
     msg += "  bdf_test -v | --version\n"
     msg += "\n"
-    msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
+    msg += "Tests to see if many BDFs will work with pyNastran %s.\n" % ver
     msg += "\n"
     #msg += "Positional Arguments:\n"
     #msg += "  OP2_FILENAME         Path to OP2 file\n"
     #msg += "\n"
     msg += "Options:\n"
-    msg += "  -r, --regenerate     Dumps the OP2 as a readable text file\n"
+    msg += "  -r, --regenerate     Resets the tests\n"
     msg += '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
     msg += "  -n, --run_nastran    Runs Nastran\n"
     msg += "  -L, --sum_loads      Disables static/dynamic loads sum\n"
