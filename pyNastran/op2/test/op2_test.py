@@ -139,7 +139,7 @@ def main():
 
     msg = "Usage:\n"
     #is_release = False
-    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-d] [-f]\n"
+    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-d] [-b]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
@@ -149,8 +149,8 @@ def main():
     #msg += "  OP2_FILENAME         Path to OP2 file\n"
     #msg += "\n"
     msg += "Options:\n"
-    msg += "  -d, --debug           debug logging\n"
-    msg += "  -r, --regenerate      Dumps the OP2 as a readable text file\n"
+    msg += "  -r, --regenerate      Resets the tests\n"
+    msg += "  -b, --binary_debug    Dumps the OP2 as a readable text file\n"
     msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
     msg += "  -t, --short_stats     Short get_op2_stats printout\n"
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
@@ -161,11 +161,13 @@ def main():
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
+    msg += "  -d, --debug           debug logging\n"
     if len(sys.argv) == 0:
         sys.exit(msg)
 
     data = docopt(msg, version=ver)
     debug = data['--debug']
+    binary_debug = data['--binary_debug']
     regenerate = data['--regenerate']
     make_geom = data['--geometry']
     write_bdf = data['--write_bdf']
