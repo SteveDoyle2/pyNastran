@@ -38,7 +38,8 @@ def remove_marc_files(filenames):
         # names.append(os.readlink('/proc/self/fd/%d' % fd))
     # return names
 
-def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True, crash_cards=None):
+def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True,
+        crash_cards=None):
     """Runs the full BDF test suite"""
     if crash_cards is None:
         crash_cards = []

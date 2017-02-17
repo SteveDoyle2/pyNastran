@@ -207,7 +207,7 @@ def memory_usage_psutil():
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
-            encoding=None, sum_load=False, size=8, is_double=False,
+            encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
             nerrors=0, dev=False, crash_cards=None):
@@ -239,7 +239,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         attach the test path and the folder to the bdf_filename
     print_stats : bool, optional
         get a nicely formatted message of all the cards in the model
-    sum_load : bool, optional
+    sum_load : bool; default=True
         Sum the static loads (doesn't work for frequency-based loads)
     size : int, optional, {8, 16}
         The field width of the model
@@ -299,7 +299,7 @@ def run_and_compare_fems(
         bdf_model, out_model, debug=False, xref=True, check=True,
         punch=False, cid=None, mesh_form='combined',
         print_stats=False, encoding=None,
-        sum_load=False, size=8, is_double=False,
+        sum_load=True, size=8, is_double=False,
         stop=False, nastran='', post=-1, dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
