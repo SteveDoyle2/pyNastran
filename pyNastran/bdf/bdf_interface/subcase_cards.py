@@ -1,6 +1,5 @@
 from __future__ import print_function
-from pyNastran.bdf.subcase import write_set, expand_thru_case_control
-
+from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
 class CaseControlCard(object):
     """basic card similar to the BaseCard class for the BDF"""
@@ -596,7 +595,8 @@ class CheckCard(CaseControlCard):
                         try:
                             sline = valuei.strip('(,)').split(',')
                         except AttributeError:
-                            msg = 'cannot make %r a %s in %r of the form SET=(G,N,A)' % (valuei, key_type, key_value)
+                            msg = 'cannot make %r a %s in %r of the form SET=(G,N,A)' % (
+                                valuei, key_type, key_value)
                             raise ValueError(msg)
                         for val in sline:
                             if val not in key_values:

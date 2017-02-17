@@ -28,10 +28,10 @@ from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase_cards import (
     EXTSEOUT, WEIGHTCHECK, MODCON,
     SET, SETMC, #AXISYMMETRIC,
-    INT_CARD_DICT, INT_CARD_NAMES,
-    INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
-    STR_CARD_DICT, STR_CARD_NAMES,
-    CHECK_CARD_DICT, CHECK_CARD_NAMES,
+    #INT_CARD_DICT, INT_CARD_NAMES,
+    #INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
+    #STR_CARD_DICT, STR_CARD_NAMES,
+    #CHECK_CARD_DICT, CHECK_CARD_NAMES,
     split_by_mixed_commas_parentheses,
 )
 
