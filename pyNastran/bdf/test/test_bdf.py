@@ -267,7 +267,6 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
     """
-    assert run_extract_bodies == True
     if not quiet:
         print('debug = %s' % debug)
     if dynamic_vars is None:
