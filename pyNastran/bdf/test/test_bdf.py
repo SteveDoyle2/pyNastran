@@ -506,7 +506,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 model = read_bdf(skin_filename)
                 os.remove(skin_filename)
             if xref:
-                extract_bodies(fem1)
+                #extract_bodies(fem1)
 
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
@@ -758,7 +758,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert subcase.has_parameter('LOAD', 'STATSUB'), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 111:  # modal frequency
         assert subcase.has_parameter('FREQUENCY'), 'sol=%s\n%s' % (sol, subcase)
-        assert any(subcase.has_parameter('METHOD')), 'sol=%s\n%s' % (sol, subcase)
+        assert any(subcase.has_parameter('METHOD', 'RMETHOD')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 112:  # modal transient
         assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 114:
@@ -957,7 +957,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             #method_ids = list(fem2.methods.keys())
             #raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
-        assert sol in [111], 'sol=%s RMETHOD\n%s' % (sol, subcase)
+        assert sol in [110, 111], 'sol=%s RMETHOD\n%s' % (sol, subcase)
 
     if 'FMETHOD' in subcase:
         method_id = subcase.get_parameter('FMETHOD')[0]

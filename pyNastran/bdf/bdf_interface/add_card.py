@@ -1692,17 +1692,17 @@ class AddCards(AddMethods):
         self._add_caero_object(caero)
         return caero
 
-    def add_caero3(self, eid, pid, cp, list_w, list_c1, list_c2, p1, x12, p4,
-                   x43, comment=''):
-        caero = CAERO3(eid, pid, cp, list_w, list_c1, list_c2, p1, x12, p4,
-                       x43, comment=comment)
+    def add_caero3(self, eid, pid, list_w, p1, x12, p4, x43,
+                       cp=0, list_c1=None, list_c2=None, comment=''):
+        caero = CAERO3(eid, pid, list_w, p1, x12, p4, x43,
+                       cp=cp, list_c1=list_c1, list_c2=list_c2, comment=comment)
         self._add_caero_object(caero)
         return caero
 
-    def add_caero4(self, eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
-                   comment=''):
-        caero = CAERO4(eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
-                       comment=comment)
+    def add_caero4(self, eid, pid, nspan, lspan, p1, x12, p4, x43,
+                   cp=0, comment=''):
+        caero = CAERO4(eid, pid, nspan, lspan, p1, x12, p4, x43,
+                       cp=cp, comment=comment)
         self._add_caero_object(caero)
         return caero
 

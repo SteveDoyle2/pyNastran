@@ -2206,6 +2206,7 @@ class CAERO2(BaseCard):
         if self.nint == 0 and self.lint == 0:
             msg = 'nint=%s lint=%s; nint or lint must be > 0' % (self.nint, self.lint)
             raise ValueError(msg)
+        assert len(self.p1) == 3, 'p1=%s' % self.p1
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2531,8 +2532,26 @@ class CAERO2(BaseCard):
 
 class CAERO3(BaseCard):
     type = 'CAERO3'
-    def __init__(self, eid, pid, cp, list_w, list_c1, list_c2,
-                 p1, x12, p4, x43, comment=''):
+    def __init__(self, eid, pid, list_w,
+                 p1, x12, p4, x43,
+                 cp=0, list_c1=None, list_c2=None,
+                 comment=''):
+        """
+        eid : int
+            element id
+        pid : int
+            PAERO3 property id
+        cp : int; default=0
+            coordinate system for locating point 1
+        list_w : int
+            ???
+        list_c1 : int; default=None
+            ???
+        list_c2 : int; default=None
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
 
@@ -2551,7 +2570,12 @@ class CAERO3(BaseCard):
         self.x12 = x12
         self.p4 = p4
         self.x43 = x43
+
+    def validate(self):
+        assert len(self.p1) == 3, 'p1=%s' % self.p1
+        assert len(self.p4) == 3, 'p4=%s' % self.p4
         assert self.x12 > 0., 'x12=%s' % self.x12
+        assert self.x43 >= 0., 'x43=%s' % self.x43
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2572,8 +2596,8 @@ class CAERO3(BaseCard):
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.0)
         assert len(card) <= 17, 'len(CAERO3 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO3(eid, pid, cp, list_w, list_c1, list_c2,
-                      p1, x12, p4, x43, comment=comment)
+        return CAERO3(eid, pid, list_w, p1, x12, p4, x43,
+                      cp=cp, list_c1=list_c1, list_c2=list_c2, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2598,47 +2622,50 @@ class CAERO3(BaseCard):
         self.ascid_ref = model.Acsid(msg=msg)
 
     def safe_cross_reference(self, model):
-        msg = ' which is required by CAERO3 eid=%s' % self.eid
+        msg = ', which is required by CAERO3 eid=%s' % self.eid
         try:
             self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
             self.pid_ref = self.pid
         except KeyError:
-            pass
+            model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
 
         try:
             self.cp = model.Coord(self.cp, msg=msg)
             self.cp_ref = self.cp
         except KeyError:
-            pass
+            model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
 
         if self.list_w is not None:
             try:
                 self.list_w = model.AEFact(self.list_w, msg=msg)
             except KeyError:
-                pass
+                model.log.warning('cannot find an AEFACT pid=%s%s' % (self.list_w, msg))
 
         if self.list_c1 is not None:
             try:
                 self.list_c1 = model.AEFact(self.list_c1, msg=msg)
             except KeyError:
-                pass
+                model.log.warning('cannot find an AEFACT pid=%s%s' % (self.list_c1, msg))
 
         if self.list_c2 is not None:
             try:
                 self.list_c2 = model.AEFact(self.list_c2, msg=msg)
             except KeyError:
-                pass
+                model.log.warning('cannot find an AEFACT list_c2=%s%s' % (self.list_c2, msg))
         try:
             self.ascid_ref = model.Acsid(msg=msg)
         except KeyError:
-            pass
+            model.log.warning('cannot find an aero coordinate system for %s' % msg)
 
     def uncross_reference(self):
         self.pid = self.Pid()
         self.cp = self.Cp()
-        #if self.list_w != self.List_w():
-        #if self.list_c1 != self.List_c1():
-        #if self.list_c2 != self.List_c2():
+        if self.list_w != self.List_w():
+            self.list_w = self.List_w()
+        if self.list_c1 != self.List_c1():
+            self.list_c1 = self.List_c1()
+        if self.list_c2 != self.List_c2():
+            self.list_c2 = self.List_c2()
         del self.pid_ref, self.cp_ref, self.ascid_ref
 
     def get_points(self):
@@ -2789,8 +2816,8 @@ class CAERO3(BaseCard):
 
 class CAERO4(BaseCard):
     type = 'CAERO4'
-    def __init__(self, eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
-                 comment=''):
+    def __init__(self, eid, pid, nspan, lspan, p1, x12, p4, x43,
+                 cp=0, comment=''):
         if comment:
             self.comment = comment
 
@@ -2808,6 +2835,16 @@ class CAERO4(BaseCard):
         self.x12 = x12
         self.p4 = p4
         self.x43 = x43
+
+    def validate(self):
+        if self.nspan == 0 and self.lspan == 0:
+            msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (
+                self.nspan, self.lspan)
+            raise RuntimeError(msg)
+        assert len(self.p1) == 3, 'p1=%s' % self.p1
+        assert len(self.p4) == 3, 'p4=%s' % self.p4
+        assert self.x12 > 0., 'x12=%s' % self.x12
+        assert self.x43 >= 0., 'x43=%s' % self.x43
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2829,8 +2866,8 @@ class CAERO4(BaseCard):
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.)
         assert len(card) <= 17, 'len(CAERO4 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO4(eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
-                      comment=comment)
+        return CAERO4(eid, pid, nspan, lspan, p1, x12, p4, x43,
+                      cp=cp, comment=comment)
 
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)

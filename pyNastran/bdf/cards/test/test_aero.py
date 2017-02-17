@@ -750,8 +750,8 @@ class TestAero(unittest.TestCase):
 
         nbox = 10
         ncontrol_surfaces = 0
-        x = None
-        y = None
+        x = []
+        y = []
 
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
@@ -759,13 +759,14 @@ class TestAero(unittest.TestCase):
                                          0., 0., 0.,
                                          0., 0., 1.,
                                          1., 0., 0.]))
-        coord = CORD2R(cp, rid=0, origin=None, zaxis=None, xzplane=None,
-                       comment='')
+        model.add_cord2r(cp, rid=0, origin=None, zaxis=None, xzplane=None,
+                         comment='cord2r')
         coord.validate()
         model.coords[cp] = coord
 
-        paero = PAERO3(pid, nbox, ncontrol_surfaces, x, y)
-        model.paeros[pid] = paero
+        paero3 = model.add_paero3(pid, nbox, ncontrol_surfaces, x, y,
+                                  comment='paero3')
+        paero3.validate()
 
         card = ['CAERO3', 2000, 20001, 0, 22, 33, None, None, None,
                 1.0, 0.0, 0., 100., 17., 130., 0., 100.]
@@ -775,9 +776,27 @@ class TestAero(unittest.TestCase):
         caero3a.write_card()
         caero3a.raw_fields()
 
-        caero3b = CAERO3(eid, pid, cp, list_w, list_c1, list_c2, p1, x12, p4,
-                         x43, comment='caero3')
-        model.caeros[pid] = caero3b
+        caero3b = model.add_caero3(eid, pid, list_w,
+                                   p1, x12, p4, x43,
+                                   cp=cp, list_c1=list_c1, list_c2=list_c2,
+                                   comment='caero3')
+        caero3b.validate()
+
+        aefact_sid = list_w
+        Di = [0., 0.5, 1.]
+        model.add_aefact(aefact_sid, Di, comment='aefact')
+
+        aefact_sid = list_c1
+        model.add_aefact(aefact_sid, Di, comment='aefact2')
+
+        aefact_sid = list_c2
+        model.add_aefact(aefact_sid, Di, comment='aefact2')
+
+        velocity = 100.
+        cref = 1.0
+        rho_ref = 1.0
+        model.add_aero(velocity, cref, rho_ref)
+        model.validate()
 
         caero3b.write_card()
         caero3b.cross_reference(model)
@@ -786,16 +805,24 @@ class TestAero(unittest.TestCase):
         caero3b.uncross_reference()
         caero3b.write_card()
         caero3a.raw_fields()
+        caero3b.safe_cross_reference(model)
+
+        caero3b.get_npanel_points_elements()
+        caero3b.get_points()
+        caero3b.panel_points_elements()
+
 
     def test_caero4_1(self):
         """checks the CAERO4/PAERO4"""
+        model = BDF()
         pid = 1001
         docs = []
         caocs = []
         gapocs = []
-        paero4 = PAERO4(pid, docs, caocs, gapocs,
-                        cla=0, lcla=0, circ=0, lcirc=0,
-                        comment='')
+        paero4 = model.add_paero4(pid, docs, caocs, gapocs,
+                                  cla=0, lcla=0, circ=0, lcirc=0,
+                                  comment='paero4')
+        paero4.validate()
 
         x1 = 0.
         y1 = 0.
@@ -821,28 +848,26 @@ class TestAero(unittest.TestCase):
 
         p1 = [x1, y1, z1]
         p4 = [x4, y4, z4]
-        caero4b = CAERO4(eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
-                         comment='msg2')
+        caero4b = model.add_caero4(eid, pid, nspan, lspan, p1, x12, p4, x43,
+                                   cp=cp, comment='caero4b')
         caero4b.validate()
         caero4b.write_card()
         caero4b.raw_fields()
-
-        model = BDF()
-        model._add_paero_object(paero4)
 
         caero4b.cross_reference(model)
         caero4b.write_card()
         caero4b.raw_fields()
         p1, p2, p3, p4 = caero4b.get_points()
 
-
     def test_caero5_1(self):
         """checks the CAERO5/PAERO5"""
+        model = BDF(debug=False)
         pid = 6001
         caoci = [0., 0.5, 1.0]
-        paero5 = PAERO5(pid, caoci,
-                        nalpha=0, lalpha=0, nxis=0, lxis=0, ntaus=0, ltaus=0,
-                        comment='msg')
+        paero5 = model.add_paero5(pid, caoci,
+                                  nalpha=0, lalpha=0, nxis=0, lxis=0,
+                                 ntaus=0, ltaus=0, comment='paero5')
+        paero5.validate()
 
         #| PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
         #+--------+-------+--------+--------+---------+-------+-------+-------+
@@ -860,8 +885,6 @@ class TestAero(unittest.TestCase):
                        has_none=True)
         paero5 = model.paeros[pid]
         paero5.raw_fields()
-
-
 
         model = BDF(debug=None)
         paero5 = model.add_paero5(pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0,
