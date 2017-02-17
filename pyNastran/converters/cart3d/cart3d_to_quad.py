@@ -225,5 +225,5 @@ def check_normals(eid, elements, normals, cdict, same_normals, rtol=1e-4, atol=1
                 same_normals.append(eid_alt)
                 check_normals(eid_alt, elements, normals, cdict, same_normals, rtol=rtol, atol=atol)
 
-
-main()
+if __name__ == '__main__':
+    main()
