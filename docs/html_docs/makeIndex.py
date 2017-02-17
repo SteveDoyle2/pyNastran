@@ -5,9 +5,9 @@ import os
 
 pkg_path = pyNastran.__path__[0]
 
-ignore_dirs = ['src', 'dmap', 'solver', '__pycache__', 'converters',
-               'op4_old', 'cart3d', 'panair', 'calculix', 'bars', 'case_control',
-               'gui', 'gui_qt', 'pch', 'mesh', 'LaWGS', 'old', 'solver', 'test']
+ignore_dirs = ['src', 'dmap', 'solver', '__pycache__',
+               'op4_old', 'calculix', 'bars', 'case_control',
+               'gui', 'gui_qt', 'pch', 'mesh', 'old', 'solver', 'test']
 mods_skip = ['spike', 'shell_backup']
 
 def get_folders_files(dirname, skip_file_sufix=('.pyc', '.pyx', '.bdf'),
@@ -26,7 +26,6 @@ def get_folders_files(dirname, skip_file_sufix=('.pyc', '.pyx', '.bdf'),
         files += [os.path.join(root, i) for i in fil
                   if not i.endswith(skip_file_sufix)]
         dirs[:] = [d for d in dirs if not d in skip_directories]
-
     return (folders, files)
 
 def get_classes(filenames):
@@ -57,6 +56,7 @@ def get_classes(filenames):
 def get_doc(filenames):
     dirs = {}
     for filename in filenames:
+        print('trying %s' % filename)
         if '.py' not in filename[-3:]:
             continue
 
@@ -99,6 +99,7 @@ def get_doc(filenames):
             continue
 
         with open(fpath, 'wb') as f:
+            print('working on %s' % fpath)
             f.write(msg)
             for fname in files:
                 if os.path.getsize(fname) == 0:
@@ -168,7 +169,7 @@ def get_sub_dirs(dirname):
     return dirs
 
 def run():
-    folders, files = get_folders_files('../pyNastran')
+    folders, files = get_folders_files('../../pyNastran')
     #c = get_classes(files)
     get_doc(files)
 
