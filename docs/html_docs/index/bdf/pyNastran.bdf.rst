@@ -80,6 +80,5 @@ This is the pyNastran.bdf.rst file.
     pyNastran.bdf.bdf_interface
     pyNastran.bdf.cards
     pyNastran.bdf.mesh_utils
-    pyNastran.bdf.dev_vectorized
     pyNastran.bdf.test
 

@@ -2,7 +2,7 @@ loads Package
 =============
 
 :mod:`dloads` Module
--------------------
+--------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.loads.dloads
 
@@ -24,7 +24,7 @@ loads Package
     :show-inheritance:
 
 :mod:`static_loads` Module
--------------------------
+--------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.loads.static_loads
 
