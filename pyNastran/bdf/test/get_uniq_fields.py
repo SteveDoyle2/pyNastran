@@ -25,12 +25,11 @@ includeDir = None
 class BDFuniqCard(BDF):
     def __init__(self, log, fingset):
         self.card_set = fingset
-        self.f = open('cards.out.bdf', 'wb')
-        #self.newBDF = newBDF
+        #self.new_bdf = new_bdf
         BDF.__init__(self, log=log)
 
     #def _parse_executive_control_deck(self):
-    #   pass
+      #pass
 
     def cross_reference(self, xref):
         pass
@@ -40,44 +39,41 @@ class BDFuniqCard(BDF):
         card = [interpret_value(val) for val in card]
         card = BDFCard(card)
 
-        #if cardName == "LOAD":
+        #if card_name == "LOAD":
         rec = []
         for item in card:
-            item_type = type(item)
-            if item_type == int:
+            if isinstance(item, int):
                 item = 1
-                #print("int")
-            elif item_type == float:
+            elif isinstance(item, float):
                 item = 1.0
-                #print("float")
             rec.append(item)
-            #print(type(c), c
+            #print(type(c), c)
         #print("*", rec)
         rec_str = str(rec)
         if not rec_str in self.card_set:
-            #self.newBDF.add_card(card, cardName, iCard, old_card_obj)
+            #self.newBDF.add_card(card, card_name, iCard, old_card_obj)
             #print(card)
             self.card_set.add(rec_str)
 
-    def is_reject(self, cardName):
+    def is_reject(self, card_name):
         """Can the card be read"""
-        if cardName.startswith('='):
+        if card_name.startswith('='):
             return False
-        elif not cardName in self.cards_to_read:
-            if cardName:
-                if cardName not in self.reject_count:
-                    self.log.info("RejectCardName = %r" % cardName)
-                    self.reject_count[cardName] = 0
-                self.reject_count[cardName] += 1
+        elif not card_name in self.cards_to_read:
+            if card_name:
+                if card_name not in self.reject_count:
+                    self.log.info("reject_card_name = %r" % card_name)
+                    self.reject_count[card_name] = 0
+                self.reject_count[card_name] += 1
         return False
 
     def write_bdf(self):
-        for card in self.card_set:
-            self.f.write(str(card) + '\n')
-        self.f.close()
+        with open('cards.out.bdf', 'wb') as bdf_file:
+            for card in self.card_set:
+                bdf_file.write(str(card) + '\n')
+        print("please see cards.out.bdf")
 
-
-if __name__ == '__main__':  # pragma: no cover
+def get_unique_bdf_cards():
     print("enter list of filenames at the command line...")
     card_fingerprint_set = set()
     infilenames = sys.argv[1:]
@@ -90,8 +86,10 @@ if __name__ == '__main__':  # pragma: no cover
             model = BDFuniqCard(log=logger,
                         fingset=card_fingerprint_set)
             model.read_bdf(infilename)
-        except BaseException as e:
+        except Exception as e:
             logger.error(e)
-    print("please see cards.out.bdf")
     model.write_bdf()
     print("done...")
+
+if __name__ == '__main__':  # pragma: no cover
+    get_unique_bdf_cards()

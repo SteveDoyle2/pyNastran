@@ -128,7 +128,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     return fname, wildcard_level
 
 
-def _main():  # pragma: no cover
+def main():  # pragma: no cover
     """helps to test the functions"""
     wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
         "All files (*.*)|*.*"
@@ -139,4 +139,4 @@ def _main():  # pragma: no cover
 
 
 if __name__ == '__main__':  # pragma: no cover
-    _main()
+    main()
