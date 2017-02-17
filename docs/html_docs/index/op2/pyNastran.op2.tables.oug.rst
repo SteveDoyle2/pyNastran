@@ -41,12 +41,12 @@ oug Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`oug_Objects` Module
+:mod:`oug_objects` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_Objects
+.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_objects
 
-.. automodule:: pyNastran.op2.tables.oug.oug_Objects
+.. automodule:: pyNastran.op2.tables.oug.oug_objects
     :members:
     :undoc-members:
     :show-inheritance:

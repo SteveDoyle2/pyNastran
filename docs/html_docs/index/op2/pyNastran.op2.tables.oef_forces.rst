@@ -11,42 +11,42 @@ oef_forces Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`oef_complexForceObjects` Module
--------------------------------------
+:mod:`oef_complex_force_objects` Module
+---------------------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_complexForceObjects
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_complex_force_objects
 
-.. automodule:: pyNastran.op2.tables.oef_forces.oef_complexForceObjects
+.. automodule:: pyNastran.op2.tables.oef_forces.oef_complex_force_objects
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`oef_forceObjects` Module
-------------------------------
+:mod:`oef_force_objects` Module
+-------------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_forceObjects
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_force_objects
 
-.. automodule:: pyNastran.op2.tables.oef_forces.oef_forceObjects
+.. automodule:: pyNastran.op2.tables.oef_forces.oef_force_objects
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`oef_Objects` Module
+:mod:`oef_objects` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_Objects
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_objects
 
-.. automodule:: pyNastran.op2.tables.oef_forces.oef_Objects
+.. automodule:: pyNastran.op2.tables.oef_forces.oef_objects
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`oef_thermalObjects` Module
---------------------------------
+:mod:`oef_thermal_objects` Module
+---------------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_thermalObjects
+.. inheritance-diagram:: pyNastran.op2.tables.oef_forces.oef_thermal_objects
 
-.. automodule:: pyNastran.op2.tables.oef_forces.oef_thermalObjects
+.. automodule:: pyNastran.op2.tables.oef_forces.oef_thermal_objects
     :members:
     :undoc-members:
     :show-inheritance:
