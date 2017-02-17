@@ -7,6 +7,7 @@ import pyNastran
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
+from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
@@ -40,7 +41,8 @@ class TestCart3d(unittest.TestCase):
         with open(infile_name, 'w') as f:
             f.write(lines)
 
-        cart3d = Cart3D(log=None, debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        cart3d = Cart3D(log=log, debug=False)
         cart3d.read_cart3d(infile_name)
         assert len(cart3d.points) == 7, 'npoints=%s' % len(cart3d.points)
         assert len(cart3d.elements) == 6, 'nelements=%s' % len(cart3d.elements)
@@ -76,7 +78,8 @@ class TestCart3d(unittest.TestCase):
         with open(infile_name, 'w') as f:
             f.write(lines)
 
-        cart3d = Cart3D(log=None, debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        cart3d = Cart3D(log=log, debug=False)
         cart3d.read_cart3d(infile_name)
 
         assert len(cart3d.points) == 5, 'npoints=%s' % len(cart3d.points)
@@ -94,21 +97,22 @@ class TestCart3d(unittest.TestCase):
 
 
     def test_cart3d_io_03(self):
+        log = get_logger(level='warning', encoding='utf-8')
         infile_name = os.path.join(test_path, 'threePlugs.bin.tri')
         outfile_name = os.path.join(test_path, 'threePlugs_out.tri')
         outfile_name_bin = os.path.join(test_path, 'threePlugs_bin2.tri')
         outfile_name_bin_out = os.path.join(test_path, 'threePlugs_bin_out.tri')
-        cart3d = Cart3D(log=None, debug=False)
+        cart3d = Cart3D(log=log, debug=False)
 
         cart3d.read_cart3d(infile_name)
         cart3d.write_cart3d(outfile_name, is_binary=False)
         cart3d.write_cart3d(outfile_name_bin, is_binary=True)
 
-        cart3d_ascii = Cart3D(log=None, debug=False)
+        cart3d_ascii = Cart3D(log=log, debug=False)
         cart3d_ascii.read_cart3d(outfile_name)
         check_array(cart3d.points, cart3d_ascii.points)
 
-        cart3d_bin = Cart3D(log=None, debug=False)
+        cart3d_bin = Cart3D(log=log, debug=False)
         cart3d_bin.read_cart3d(outfile_name_bin)
         check_array(cart3d.points, cart3d_bin.points)
 
@@ -119,14 +123,16 @@ class TestCart3d(unittest.TestCase):
         os.remove(outfile_name_bin_out)
 
     def test_cart3d_to_nastran_01(self):
+        log = get_logger(level='warning', encoding='utf-8')
         cart3d_filename = os.path.join(test_path, 'threePlugs.bin.tri')
         bdf_filename = os.path.join(test_path, 'threePlugs.bdf')
-        cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
+        cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=log)
 
     def test_cart3d_to_nastran_02(self):
+        log = get_logger(level='warning', encoding='utf-8')
         cart3d_filename = os.path.join(test_path, 'threePlugs.bin.tri')
         bdf_filename = os.path.join(test_path, 'threePlugs2.bdf')
-        model = cart3d_to_nastran_model(cart3d_filename)
+        model = cart3d_to_nastran_model(cart3d_filename, log=log)
         model.write_bdf(bdf_filename, size=16)
         self.assertAlmostEqual(model.nodes[1].xyz[0], 1.51971436,
                                msg='if this is 0.0, then the assign_type method had the float32 check removed')
@@ -143,8 +149,9 @@ class TestCart3d(unittest.TestCase):
 
     def test_cart3d_input_c3d(self):
         """tests the input.c3d reading"""
+        log = get_logger(level='warning', encoding='utf-8')
         input_c3d_filename = os.path.join(test_path, 'input.c3d')
-        read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True)
+        read_input_c3d(input_c3d_filename, log=log, debug=False, stack=True)
 
 def check_array(points, points2):
     nnodes = points.shape[0]
