@@ -150,7 +150,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                                                   nastran=nastran, size=size, is_double=is_double,
                                                   nerrors=0,
                                                   post=post, sum_load=sum_load, dev=dev,
-                                                  crash_cards=crash_cards)
+                                                  crash_cards=crash_cards,
+                                                  run_extract_bodies=False)
                 del fem1
                 del fem2
             diff_cards += diff_cards
@@ -208,8 +209,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
             encoding=None, sum_load=False, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False, nerrors=0, dev=False,
-            crash_cards=None):
+            quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
+            nerrors=0, dev=False, crash_cards=None):
     """
     Runs a single BDF
 
@@ -260,10 +261,13 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         writes pyNastran_dump.bdf
     dictsort : bool; default=False
         writes pyNastran_dict.bdf
+    run_extract_bodies : bool; default=False
+        isolate the fem bodies; typically 1 body; code is still buggy
     dev : bool; default=False
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
     """
+    assert run_extract_bodies == True
     if not quiet:
         print('debug = %s' % debug)
     if dynamic_vars is None:
@@ -287,7 +291,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         stop=stop, nastran=nastran, post=post,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
-        nerrors=nerrors, dev=dev, crash_cards=crash_cards)
+        nerrors=nerrors, dev=dev, crash_cards=crash_cards,
+        run_extract_bodies=run_extract_bodies,
+    )
     return fem1, fem2, diff_cards
 
 def run_and_compare_fems(
@@ -298,6 +304,7 @@ def run_and_compare_fems(
         stop=False, nastran='', post=-1, dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
+        run_extract_bodies=False,
     ):
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
@@ -322,6 +329,7 @@ def run_and_compare_fems(
 
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
                         size, is_double, cid,
+                        run_extract_bodies=run_extract_bodies,
                         encoding=encoding, crash_cards=crash_cards)
         if stop:
             if not quiet:
@@ -331,7 +339,7 @@ def run_and_compare_fems(
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
-                        encoding=encoding, debug=debug, log=None, quiet=quiet)
+                        encoding=encoding, debug=debug, quiet=quiet)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -456,7 +464,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
-             encoding=None, crash_cards=None):
+             run_extract_bodies=False, encoding=None, crash_cards=None):
     """
     Reads/writes the BDF
 
@@ -483,6 +491,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         double flag
     cid : int / None
         cid flag
+    run_extract_bodies : bool; default=False
+        isolate the fem bodies; typically 1 body; code is still buggy
     encoding : str; default=None
         the file encoding
     crash_cards : ???
@@ -503,10 +513,11 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
             skin_filename = 'skin_file.bdf'
             fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
             if os.path.exists(skin_filename):
-                model = read_bdf(skin_filename)
+                model = read_bdf(skin_filename, log=fem1.log)
                 os.remove(skin_filename)
             if xref:
-                #extract_bodies(fem1)
+                if run_extract_bodies:
+                    extract_bodies(fem1)
 
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
@@ -570,7 +581,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
 def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double, mesh_form,
-             encoding=None, debug=False, log=None, quiet=False):
+             encoding=None, debug=False, quiet=False):
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -738,7 +749,6 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
-        #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
         if not any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
             subcases = fem2.subcases
             subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
@@ -784,7 +794,9 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert any(subcase.has_parameter('TRIM', 'DIVERG')), subcase
         assert fem2.aeros is not None, 'An AEROS card is required for STATIC AERO - SOL %i' % sol
     elif sol == 145:
-        assert fem2.aero is not None, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
+        if fem2.aero is None:
+            msg = 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
+            raise RuntimeError(msg)
 
         assert 'METHOD'in subcase, subcase  # EIGRL
         assert 'FMETHOD' in subcase, subcase  # FLUTTER
@@ -1473,6 +1485,7 @@ def main():
             nerrors=data['--nerrors'],
             encoding=data['--encoding'],
             crash_cards=crash_cards,
+            run_extract_bodies=False,
         )
         prof.dump_stats('bdf.profile')
 
@@ -1512,6 +1525,7 @@ def main():
             nerrors=data['--nerrors'],
             encoding=data['--encoding'],
             crash_cards=crash_cards,
+            run_extract_bodies=False,
         )
     print("total time:  %.2f sec" % (time.time() - time0))
 

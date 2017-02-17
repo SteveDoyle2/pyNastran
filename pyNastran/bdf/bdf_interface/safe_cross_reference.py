@@ -79,27 +79,13 @@ class SafeXrefMesh(XrefMesh):
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        for spcadd in itervalues(self.spcadds):
-            raise RuntimeError('removed')
-
         for spcs in itervalues(self.spcs):
             for spc in spcs:
-                if hasattr(spc, 'safe_cross_reference'):
-                    spc.safe_cross_reference(self)
-                else:
-                    spc.cross_reference(self)
-                    self.log.warning('%s - add safe_cross_reference' % spc.type)
-
-        for mpcadd in itervalues(self.mpcadds):
-            raise RuntimeError('removed')
+                spc.safe_cross_reference(self)
 
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:
-                if hasattr(mpc, 'safe_cross_reference'):
-                    mpc.safe_cross_reference(self)
-                else:
-                    mpc.cross_reference(self)
-                    self.log.warning('%s - add safe_cross_reference' % mpc.type)
+                mpc.safe_cross_reference(self)
 
         for suport in self.suport:
             #if hasattr(suport, 'safe_cross_reference'):
@@ -165,11 +151,7 @@ class SafeXrefMesh(XrefMesh):
                 self.log.warning('%s - add safe_cross_reference' % paero.type)
 
         for trim in itervalues(self.trims):
-            if hasattr(trim, 'safe_cross_reference'):
-                trim.safe_cross_reference(self)
-            else:
-                trim.cross_reference(self)
-                self.log.warning('%s - add safe_cross_reference' % trim.type)
+            trim.safe_cross_reference(self)
 
         for spline in itervalues(self.splines):
             if hasattr(spline, 'safe_cross_reference'):
@@ -186,11 +168,7 @@ class SafeXrefMesh(XrefMesh):
                 self.log.warning('%s - add safe_cross_reference' % aecomp.type)
 
         for aelist in itervalues(self.aelists):
-            if hasattr(aelist, 'safe_cross_reference'):
-                aelist.safe_cross_reference(self)
-            else:
-                aelist.cross_reference(self)
-                self.log.warning('%s - add safe_cross_reference' % aelist.type)
+            aelist.safe_cross_reference(self)
 
         for aeparam in itervalues(self.aeparams):
             if hasattr(aeparam, 'safe_cross_reference'):
@@ -203,11 +181,7 @@ class SafeXrefMesh(XrefMesh):
             #aestat.safe_cross_reference(self)
 
         for aesurf in itervalues(self.aesurf):
-            if hasattr(aesurf, 'safe_cross_reference'):
-                aesurf.safe_cross_reference(self)
-            else:
-                aesurf.cross_reference(self)
-                self.log.warning('%s - add safe_cross_reference' % aesurf.type)
+            aesurf.safe_cross_reference(self)
 
         for aesurfs in itervalues(self.aesurfs):
             if hasattr(aesurfs, 'safe_cross_reference'):
@@ -217,11 +191,7 @@ class SafeXrefMesh(XrefMesh):
                 self.log.warning('%s - add safe_cross_reference' % aesurfs.type)
 
         for flutter in itervalues(self.flutters):
-            if hasattr(flutter, 'safe_cross_reference'):
-                flutter.safe_cross_reference(self)
-            else:
-                flutter.cross_reference(self)
-                self.log.warning('%s - add safe_cross_reference' % flutter.type)
+            flutter.safe_cross_reference(self)
 
         if 0:  # only support CAERO1
             ncaeros = len(self.caeros)
