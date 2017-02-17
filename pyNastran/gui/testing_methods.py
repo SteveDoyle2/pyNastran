@@ -56,8 +56,6 @@ class GuiAttributes(object):
         # inputs dict
         self.is_edges = False
         self.is_edges_black = self.is_edges
-        # self.is_nodal = inputs['is_nodal']
-        # self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
 
         #self.format = ''
@@ -113,7 +111,7 @@ class GuiAttributes(object):
 
         self.itext = 0
 
-        self.pick_state = 'node/centroid' # if self.is_centroidal else 'nodal'
+        self.pick_state = 'node/centroid'
         self.label_actors = {}
         self.label_ids = {}
         self.cameras = {}

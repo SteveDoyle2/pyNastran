@@ -191,62 +191,61 @@ class ADB_IO(object):
         is_normals = False
 
         results_form = []
-        if 1:
-            geometry_form = [
-                ('Region', 0, []),
-                ('ElementID', 1, []),
-                ('Area', 2, []),
-            ]
+        geometry_form = [
+            ('Region', 0, []),
+            ('ElementID', 1, []),
+            ('Area', 2, []),
+        ]
 
-            eids = arange(1, nelements + 1)
+        eids = arange(1, nelements + 1)
 
-            if nwake_elements and plot_wakes:
-                fzero_pad = zeros(nwake_elements, dtype='float32')
-                izero_pad = zeros(nwake_elements, dtype='int32')
-                surf_id = hstack([surf_id, izero_pad])
-                area = hstack([area, fzero_pad])
+        if nwake_elements and plot_wakes:
+            fzero_pad = zeros(nwake_elements, dtype='float32')
+            izero_pad = zeros(nwake_elements, dtype='int32')
+            surf_id = hstack([surf_id, izero_pad])
+            area = hstack([area, fzero_pad])
 
-            assert len(eids) == nelements, len(eids)
-            assert len(surf_id) == nelements, len(surf_id)
-            assert len(area) == nelements, len(area)
-            if new:
-                cases_new[0] = (ID, surf_id, 'Region', 'centroid', '%i', '')
-                cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i', '')
-                cases_new[2] = (ID, area, 'Area', 'centroid', '%.3f', '')
-            else:
-                # this one...
-                cases[(ID, 0, 'Region', 1, 'centroid', '%i', '')] = surf_id
-                cases[(ID, 1, 'ElementID', 1, 'centroid', '%i', '')] = eids
-                cases[(ID, 2, 'Area', 1, 'centroid', '%.3f', '')] = area
+        assert len(eids) == nelements, len(eids)
+        assert len(surf_id) == nelements, len(surf_id)
+        assert len(area) == nelements, len(area)
+        if new:
+            cases_new[0] = (ID, surf_id, 'Region', 'centroid', '%i', '')
+            cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i', '')
+            cases_new[2] = (ID, area, 'Area', 'centroid', '%.3f', '')
+        else:
+            # this one...
+            cases[(ID, 0, 'Region', 1, 'centroid', '%i', '')] = surf_id
+            cases[(ID, 1, 'ElementID', 1, 'centroid', '%i', '')] = eids
+            cases[(ID, 2, 'Area', 1, 'centroid', '%.3f', '')] = area
 
-            i = 3
-            if is_normals:
-                geometry_form.append(('Normal X', i, []))
-                geometry_form.append(('Normal Y', i + 1, []))
-                geometry_form.append(('Normal Z', i + 2, []))
+        i = 3
+        if is_normals:
+            geometry_form.append(('Normal X', i, []))
+            geometry_form.append(('Normal Y', i + 1, []))
+            geometry_form.append(('Normal Z', i + 2, []))
 
-                cnormals = model.get_normals(nodes, elements, shift_nodes=False)
-                cnnodes = cnormals.shape[0]
-                assert cnnodes == nelements, len(cnnodes)
-
-                if new:
-                    cases_new[i] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f', '')
-                    cases_new[i + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f', '')
-                    cases_new[i + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f', '')
-                else:
-                    cases[(ID, i, 'Normal X', 1, 'centroid', '%.3f', '')] = cnormals[:, 0]
-                    cases[(ID, i + 1, 'Normal Y', 1, 'centroid', '%.3f', '')] = cnormals[:, 1]
-                    cases[(ID, i + 2, 'Normal Z', 1, 'centroid', '%.3f', '')] = cnormals[:, 2]
-                i += 3
+            cnormals = model.get_normals(nodes, elements, shift_nodes=False)
+            cnnodes = cnormals.shape[0]
+            assert cnnodes == nelements, len(cnnodes)
 
             if new:
-                cases_new[i] = (Cp, 'Cp', 1, 'centroid', '%.3f', '')
+                cases_new[i] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f', '')
+                cases_new[i + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f', '')
+                cases_new[i + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f', '')
             else:
-                cases[(ID, 3, 'Cp', 1, 'centroid', '%.3f', '')] = Cp
-            results_form.append(('Cp', i, []))
-            i += 1
+                cases[(ID, i, 'Normal X', 1, 'centroid', '%.3f', '')] = cnormals[:, 0]
+                cases[(ID, i + 1, 'Normal Y', 1, 'centroid', '%.3f', '')] = cnormals[:, 1]
+                cases[(ID, i + 2, 'Normal Z', 1, 'centroid', '%.3f', '')] = cnormals[:, 2]
+            i += 3
 
-        elif self.is_nodal:
+        if new:
+            cases_new[i] = (Cp, 'Cp', 1, 'centroid', '%.3f', '')
+        else:
+            cases[(ID, 3, 'Cp', 1, 'centroid', '%.3f', '')] = Cp
+        results_form.append(('Cp', i, []))
+        i += 1
+
+        if 0:
             geometry_form = [
                 #('Region', 0, []),
                 ('NodeID', 0, []),
