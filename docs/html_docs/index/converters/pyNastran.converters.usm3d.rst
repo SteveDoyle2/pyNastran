@@ -1,5 +1,5 @@
-nastran Package
-===============
+usm3d Package
+=============
 
 :mod:`iface_format` Module
 --------------------------

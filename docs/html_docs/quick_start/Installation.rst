@@ -141,7 +141,8 @@ There are two ways to install the dev version of pyNastran
 
  1. Download the most recent `zip version <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_
 
- 2. Clone pyNastran (see below).  Using Git allows you to easily update to the latest dev version when you want to as well as push any commits of your own.
+ 2. Clone pyNastran (see below).  Using Git allows you to easily update to the
+    latest dev version when you want to as well as push any commits of your own.
 
 If you don't want the gui for Python 2.7, use ``setup_no_gui.py`` instead of ``setup.py``.
 
