@@ -12,8 +12,13 @@ pyNastran/op4
     :undoc-members:
     :show-inheritance:
 
+:mod:`utils` Module
+-------------------
 
-.. toctree::
+.. inheritance-diagram:: pyNastran.op4.utils
 
-    pyNastran.op4.test
+.. automodule:: pyNastran.op4.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
 

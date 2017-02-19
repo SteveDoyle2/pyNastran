@@ -22,11 +22,6 @@ velocity, acceleration, temperature, eigenvectors, eigenvalues, SPC forces,
 MPC forces, grid point forces, load vectors, applied loads, strain energy,
 as well as stress and strain.
 
-The **F06 reader/writer** works for simple problems, but it's still
-preliminary. At this point, you should just use the OP2 reader. It's faster,
-more robust, and supports more results. The F06 reader is more used as
-a verification tool for the OP2 reader.
-
 The **Python OP4** reader/writer supports reading ASCII/binary sparse and dense
 matrices, and writing ASCII matrices..
 

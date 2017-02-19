@@ -39,7 +39,18 @@ mesh_utils Package
 
 .. inheritance-diagram:: pyNastran.bdf.mesh_utils.collapse_bad_quads
 
-.. automodule:: pyNastran.bdf.mesh_utils.write_mesh
+.. automodule:: pyNastran.bdf.mesh_utils.collapse_bad_quads
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`convert` Module
+---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.convert
+
+.. automodule:: pyNastran.bdf.mesh_utils.convert
     :members:
     :private-members:
     :undoc-members:
@@ -56,12 +67,111 @@ mesh_utils Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`get_card` Module
+:mod:`export_mcids` Module
+--------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.export_mcids
+
+.. automodule:: pyNastran.bdf.mesh_utils.export_mcids
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`extract_bodies` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.extract_bodies
+
+.. automodule:: pyNastran.bdf.mesh_utils.extract_bodies
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`extract_free_faces` Module
+--------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.extract_free_faces
+
+.. automodule:: pyNastran.bdf.mesh_utils.extract_free_faces
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`find_closest_nodes` Module
+--------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.find_closest_nodes
+
+.. automodule:: pyNastran.bdf.mesh_utils.find_closest_nodes
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`find_coplanar_elements` Module
+------------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.find_coplanar_elements
+
+.. automodule:: pyNastran.bdf.mesh_utils.find_coplanar_elements
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`force_to_pressure` Module
+-------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.force_to_pressure
+
+.. automodule:: pyNastran.bdf.mesh_utils.force_to_pressure
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`get_oml` Module
 ---------------------
 
-.. inheritance-diagram:: pyNastran.bdf.mesh_utils.get_card
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.get_oml
 
-.. automodule:: pyNastran.bdf.mesh_utils.get_card
+.. automodule:: pyNastran.bdf.mesh_utils.get_oml
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`remove_unused` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.remove_unused
+
+.. automodule:: pyNastran.bdf.mesh_utils.remove_unused
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`split_elements` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.split_elements
+
+.. automodule:: pyNastran.bdf.mesh_utils.split_elements
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`utils` Module
+-------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.utils
+
+.. automodule:: pyNastran.bdf.mesh_utils.utils
     :members:
     :private-members:
     :undoc-members:

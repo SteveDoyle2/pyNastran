@@ -1,12 +1,12 @@
-resultObjects Package
-=====================
+result_objects Package
+======================
 
-:mod:`grid_point_weight` Module
--------------------------------
+:mod:`element_table_object` Module
+----------------------------------
 
-.. inheritance-diagram:: pyNastran.op2.result_objects.grid_point_weight
+.. inheritance-diagram:: pyNastran.op2.result_objects.element_table_object
 
-.. automodule:: pyNastran.op2.result_objects.grid_point_weight
+.. automodule:: pyNastran.op2.result_objects.element_table_object
     :members:
     :undoc-members:
     :show-inheritance:
@@ -21,12 +21,12 @@ resultObjects Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`element_table_object` Module
-----------------------------------
+:mod:`scalar_table_object` Module
+---------------------------------
 
-.. inheritance-diagram:: pyNastran.op2.result_objects.element_table_object
+.. inheritance-diagram:: pyNastran.op2.result_objects.scalar_table_object
 
-.. automodule:: pyNastran.op2.result_objects.element_table_object
+.. automodule:: pyNastran.op2.result_objects.scalar_table_object
     :members:
     :undoc-members:
     :show-inheritance:
@@ -40,5 +40,4 @@ resultObjects Package
     :members:
     :undoc-members:
     :show-inheritance:
-
 

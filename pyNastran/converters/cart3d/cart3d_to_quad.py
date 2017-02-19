@@ -5,11 +5,12 @@ from numpy.linalg import norm
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.bdf.field_writer_8 import print_card_8
 
-def main():
+
+def run_quad_extraction(cart3d_triq_filename):
     """tests getting the normal groups"""
     cart3d = Cart3D(log=None, debug=False)
     result_names = []  # read the mesh only
-    cart3d.read_cart3d('Cart3d_55000_2.4_10_0_0_0_0.i.triq', result_names=result_names)
+    cart3d.read_cart3d(cart3d_triq_filename, result_names=result_names)
     points = cart3d.points
     elements = cart3d.elements
 
@@ -225,5 +226,6 @@ def check_normals(eid, elements, normals, cdict, same_normals, rtol=1e-4, atol=1
                 same_normals.append(eid_alt)
                 check_normals(eid_alt, elements, normals, cdict, same_normals, rtol=rtol, atol=atol)
 
+if __name__ == '__main__': # pragma: no cover
+    run_quad_extraction('Cart3d_55000_2.4_10_0_0_0_0.i.triq')
 
-main()

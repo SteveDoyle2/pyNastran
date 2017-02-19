@@ -60,10 +60,9 @@ def docopt_types(doc, argv=None, help=True, version=None, options_first=False, t
 
     See also
     --------
-    * For video introduction see http://docopt.org
-    * Full documentation is available in README.rst as well as online
+    - For video introduction see http://docopt.org
+    - Full documentation is available in README.rst as well as online
       at https://github.com/docopt/docopt#readme
-
     """
     data = docopt(doc, argv=argv, help=help, version=version, options_first=options_first)
     if type_defaults:

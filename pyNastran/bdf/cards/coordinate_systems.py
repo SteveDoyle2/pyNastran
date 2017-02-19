@@ -717,8 +717,8 @@ class Coord(BaseCard):
         r"""
         Transforms the global point p to the local coordinate system
 
-        Parameterse
-        -----------
+        Parameters
+        ----------
         xyz : (1,3) ndarray
             the point to transform
 

@@ -36,7 +36,7 @@ class CalculixConverter(BDF):
       * MAT1
       * GRAV (incorrect writing, but really easy to make it correct given proper format)
 
-    TODO:
+    .. todo::
       * PCOMP
       * SPC, SPC1, MPC
       * RBE2, RBE3

@@ -12,6 +12,17 @@ properties Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`beam` Module
+------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.beam
+
+.. automodule:: pyNastran.bdf.cards.properties.beam
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`bush` Module
 ------------------
 
@@ -56,12 +67,34 @@ properties Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`rods` Module
+------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.rods
+
+.. automodule:: pyNastran.bdf.cards.properties.rods
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`shell` Module
 -------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.properties.shell
 
 .. automodule:: pyNastran.bdf.cards.properties.shell
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`solid` Module
+-------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.properties.solid
+
+.. automodule:: pyNastran.bdf.cards.properties.solid
     :members:
     :private-members:
     :undoc-members:
