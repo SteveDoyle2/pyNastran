@@ -259,38 +259,43 @@ class CHBDYG(ThermalElement):
         assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r' % Type
         assert len(nodes) > 0, nodes
 
+    def validate(self):
+        #assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r' % self.Type
+        if self.Type != 'REV':
+            nnodes = int(self.Type[-1])
+            assert len(self.nodes) == nnodes, 'nnodes=%s Type=%r' % (len(self.nodes), self.Type)
+
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         # no field 2
 
         Type = string(card, 3, 'Type')
-        iViewFront = integer_or_blank(card, 4, 'iViewFront', 0)
-        iViewBack = integer_or_blank(card, 8, 'iViewBack', 0)
-        radMidFront = integer_or_blank(card, 6, 'radMidFront', 0)
-        radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
+        i_view_front = integer_or_blank(card, 4, 'iViewFront', 0)
+        i_view_back = integer_or_blank(card, 8, 'iViewBack', 0)
+        rad_mid_front = integer_or_blank(card, 6, 'radMidFront', 0)
+        rad_mid_back = integer_or_blank(card, 7, 'radMidBack', 0)
         # no field 8
 
         n = 1
         nodes = []
         for i in range(9, len(card)):
             grid = integer_or_blank(card, i, 'grid%i' % n)
-            if grid is not None:
-                nodes.append(grid)
+            nodes.append(grid)  # used to have a None option
         assert len(nodes) > 0, 'card=%s' % card
         return CHBDYG(eid, Type, nodes,
-                      iViewFront=iViewFront, iViewBack=iViewBack,
-                      radMidFront=radMidFront, radMidBack=radMidBack,
+                      iViewFront=i_view_front, iViewBack=i_view_back,
+                      radMidFront=rad_mid_front, radMidBack=rad_mid_back,
                       comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         eid = data[0]
         Type = data[1]
-        iViewFront = data[2]
-        iViewBack = data[3]
-        radMidFront = data[4]
-        radMidBack = data[5]
+        i_view_front = data[2]
+        i_view_back = data[3]
+        rad_mid_front = data[4]
+        rad_mid_back = data[5]
         nodes = [datai for datai in data[6:14] if datai > 0]
         if Type == 5:
             Type = 'AREA4'
@@ -307,8 +312,8 @@ class CHBDYG(ThermalElement):
 
         assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
         return CHBDYG(eid, Type, nodes,
-                      iViewFront=iViewFront, iViewBack=iViewBack,
-                      radMidFront=radMidFront, radMidBack=radMidBack,
+                      iViewFront=i_view_front, iViewBack=i_view_back,
+                      radMidFront=rad_mid_front, radMidBack=rad_mid_back,
                       comment=comment)
 
     def _verify(self, xref=False):
@@ -357,13 +362,13 @@ class CHBDYG(ThermalElement):
         return list_fields
 
     def repr_fields(self):
-        iViewFront = set_blank_if_default(self.iViewFront, 0)
-        iViewBack = set_blank_if_default(self.iViewBack, 0)
-        radMidFront = set_blank_if_default(self.radMidFront, 0)
-        radMidBack = set_blank_if_default(self.radMidBack, 0)
+        i_view_front = set_blank_if_default(self.iViewFront, 0)
+        i_view_back = set_blank_if_default(self.iViewBack, 0)
+        rad_mid_front = set_blank_if_default(self.radMidFront, 0)
+        rad_mid_back = set_blank_if_default(self.radMidBack, 0)
 
-        list_fields = (['CHBDYG', self.eid, None, self.Type, iViewFront,
-                        iViewBack, radMidFront, radMidBack, None, ] + self.node_ids)
+        list_fields = (['CHBDYG', self.eid, None, self.Type, i_view_front,
+                        i_view_back, rad_mid_front, rad_mid_back, None, ] + self.node_ids)
         return list_fields
 
     def write_card(self, size=8, is_double=False):

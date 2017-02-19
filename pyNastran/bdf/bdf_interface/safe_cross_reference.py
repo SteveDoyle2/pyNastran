@@ -30,6 +30,7 @@ class SafeXrefMesh(XrefMesh):
             # elem.check_unique_nodes()
 
     def safe_cross_reference(self, xref=True,
+                             xref_nodes=False,
                              xref_elements=True,
                              xref_nodes_with_elements=True,
                              xref_properties=True,
@@ -49,8 +50,9 @@ class SafeXrefMesh(XrefMesh):
         if not xref:
             return
         self.log.debug("Cross Referencing...")
-        self._cross_reference_nodes()
-        self._cross_reference_coordinates()
+        if xref_nodes:
+            self._cross_reference_nodes()
+            self._cross_reference_coordinates()
 
         if xref_elements:
             self._safe_cross_reference_elements()

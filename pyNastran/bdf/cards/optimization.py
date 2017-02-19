@@ -72,11 +72,25 @@ def validate_dvprel(Type, pname_fid, validate):
         #elif Type == 'CELAS4':
             #assert pname_fid in ['K'], msg
         if Type == 'PELAS':
-            assert pname_fid in [3, 4, 'K1', 'GE1'], msg
+            if pname_fid in ['K1', 3]:
+                pname_fid = 'K1'
+            elif pname_fid in ['GE1', 4]:
+                pname_fid = 'GE1'
+            else:
+                raise NotImplementedError('PELAST pname_fid=%r is invalid' % pname_fid)
+            #assert pname_fid in [3, 4, 'K1', 'GE1'], msg
         elif Type == 'PELAST':
+            if pname_fid in ['TKID', 3]:
+                pname_fid = 'TKID'
+            else:
+                raise NotImplementedError('PELAST pname_fid=%r is invalid' % pname_fid)
             assert pname_fid in [3, 4, 'TKID'], msg
 
         elif Type == 'PROD':
+            if pname_fid in ['A', 4]:
+                pname_fid = 'A'
+            else:
+                raise NotImplementedError('PROD pname_fid=%r is invalid' % pname_fid)
             assert pname_fid in [4, 'A'], msg
         elif Type == 'PTUBE':
             assert pname_fid in [4, 5], msg
@@ -100,9 +114,13 @@ def validate_dvprel(Type, pname_fid, validate):
         #elif Type == 'CQUAD4':
             #assert pname_fid in ['T1', 'T2', 'T3', 'T4'], msg
         elif Type == 'PSHELL':
+            if pname_fid in ['T', 4]:
+                pname_fid = 'T'
+            else:
+                raise NotImplementedError('PSHELL pname_fid=%r is invalid' % pname_fid)
             #if cp_name in '12I/T**3':
                 #cp_name =
-            assert pname_fid in ['T', 4, 6], msg
+            #assert pname_fid in ['T', 4, 6], msg
         elif Type == 'PCOMP':
             if isinstance(pname_fid, str):
                 word, num = break_word_by_trailing_integer(pname_fid)
@@ -127,8 +145,7 @@ def validate_dvprel(Type, pname_fid, validate):
         elif Type == 'PBUSHT':
             assert pname_fid in ['TBID1', 'TGEID1', 'TGEID2'], msg
 
-        #elif Type == 'CGAP':
-            #assert pname_fid in ['X1', 'X2', 'X3'], msg
+        # CGAP
         elif Type == 'PGAP':
             assert pname_fid in [5], msg
         elif Type == 'PVISC':
@@ -156,6 +173,7 @@ def validate_dvprel(Type, pname_fid, validate):
             raise RuntimeError('Nastran does not support the PBEND')
         else:
             raise NotImplementedError(msg)
+    return pname_fid
 
 
 class OptConstraint(BaseCard):
@@ -2712,7 +2730,11 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             raise RuntimeError(msg)
         assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
 
-        validate_dvprel(Type, pname_fid, validate)
+        pname_fid = validate_dvprel(Type, pname_fid, validate)
+        self.pname_fid = pname_fid
+
+    def validate(self):
+        self.pname_fid = validate_dvprel(self.Type, self.pname_fid, validate=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2955,11 +2977,14 @@ class DVPREL2(OptConstraint):
         self.dequation = deqation
         self.dvids = dvids
         self.labels = labels
-        validate_dvprel(Type, pname_fid, validate)
+
+        pname_fid = validate_dvprel(Type, pname_fid, validate)
+        self.pname_fid = pname_fid
         #print(self)
 
     def validate(self):
         assert len(self.dvids) > 0 or len(self.labels) > 0
+        self.pname_fid = validate_dvprel(self.Type, self.pname_fid, validate=True)
 
     @classmethod
     def add_card(cls, card, comment=''):

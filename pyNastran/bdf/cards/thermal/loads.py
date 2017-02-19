@@ -59,10 +59,6 @@ class QVOL(ThermalLoad):
         elements = expand_thru_by(eids)
         return QVOL(sid, qvol, control_point, elements, comment=comment)
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 
@@ -111,6 +107,146 @@ class QVOL(ThermalLoad):
     def repr_fields(self):
         eids = collapse_thru_by(self.element_ids)
         list_fields = ['QVOL', self.sid, self.qvol, self.control_point] + eids
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+class QVECT(ThermalLoad):
+    """
+    Thermal Vector Flux Load
+
+    Defines thermal vector flux from a distant source into a face of one
+    or more CHBDYi boundary condition surface elements.
+
+    +-------+------+------+-------+-----+---------+---------+---------+---------+
+    |   1   |   2  |   3  |   4   |  5  |     6   |    7    |    8    |    9    |
+    +=======+======+======+=======+=====+=========+=========+=========+=========+
+    | QVECT | SID  |  Q0  | TSOUR | CE  | E1/TID1 | E2/TID2 | E3/TID3 | CNTRLND |
+    +-------+------+------+-------+-----+---------+---------+---------+---------+
+    |       | EID1 | EID2 |  etc. |     |         |         |         |         |
+    +-------+------+------+-------+-----+---------+---------+---------+---------+
+    """
+    type = 'QVECT'
+    def __init__(self, sid, q0, t_source, ce, vector_tableds, control_id, eids,
+                 comment=''):
+        """
+
+        sid : int
+            Load set identification number. (Integer > 0)
+        q0 : float; default=None
+            Magnitude of thermal flux vector into face
+        t_source : float; default=None
+            Temperature of the radiant source
+        ce : int; default=0
+            Coordinate system identification number for thermal vector flux
+        vector_tableds : List[int/float, int/float, int/float]
+            vector : float; default=0.0
+                directional cosines in coordinate system CE) of
+                the thermal vector flux
+            tabled : int
+                TABLEDi entry identification numbers defining the
+                components as a function of time
+        control_id : int; default=0
+            Control point
+        eids : List[int] or THRU
+            Element identification number of a CHBDYE, CHBDYG, or
+            CHBDYP entry
+        comment : str; default=''
+        """
+        ThermalLoad.__init__(self)
+        if comment:
+            self.comment = comment
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+        self.q0 = q0
+        self.t_source = t_source
+        self.ce = ce
+        self.vector_tables = vector_tables
+        self.eids = eids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid, q0, t_source, ce, vector_tableds, control_id, eids
+
+        sid = integer(card, 1, 'sid')
+        q0 = double(card, 2, 'q0')
+        t_source = double(card, 3, 't_source')
+        ce = integer_or_blank(card, 4, 'ce', 0)
+        vector_tableds = [
+            integer_float_or_blank(card, 5, 'e1_tabled1', 0.0),
+            integer_float_or_blank(card, 6, 'e2_tabled2', 0.0),
+            integer_float_or_blank(card, 7, 'e3_tabled3', 0.0),
+        ]
+        control_point = integer_or_blank(card, 8, 'control_id', 0)
+
+        i = 1
+        eids = []
+        for ifield in range(8, len(card)):
+            eid = integer_or_string(card, ifield, 'eid_%i' % i)
+            eids.append(eid)
+            i += 1
+        elements = expand_thru_by(eids)
+        return QVECT(sid, q0, t_source, ce, vector_tableds, control_id, eids,
+                     comment=comment)
+
+    def get_loads(self):
+        return [self]
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by QVECT sid=%s' % self.sid
+        self.elements = model.Elements(self.elements, msg=msg)
+        self.elements_ref = self.elements
+
+    def safe_cross_reference(self, model):
+        try:
+            return self.cross_reference(model)
+        except KeyError:
+            model.log.warning('failed cross-referencing\n%s' % str(self))
+
+    def uncross_reference(self):
+        self.elements = self.element_ids
+        del self.elements_ref
+
+    def _eid(self, eid):
+        if isinstance(eid, integer_types):
+            return eid
+        return eid.eid
+
+    @property
+    def element_ids(self):
+        return self.Eids()
+
+    def Eids(self):
+        eids = []
+        for eid in self.elements:
+            eids.append(self._eid(eid))
+        return eids
+
+    def raw_fields(self):
+        list_fields = [
+            'QVECT', self.sid, self.q0, self.t_source, self.ce
+            ] + self.vector_tables + [self.control_point] + self.element_ids
+        return list_fields
+
+    def repr_fields(self):
+        eids = collapse_thru_by(self.element_ids)
+        list_fields = [
+            'QVECT', self.sid, self.q0, self.t_source, self.ce
+            ] + self.vector_tables + [self.control_point] + eids
         return list_fields
 
     def write_card(self, size=8, is_double=False):

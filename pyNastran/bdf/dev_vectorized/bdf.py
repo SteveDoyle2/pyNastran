@@ -2660,7 +2660,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         else:
             return msg
 
-    def get_displacement_index_xyz_cp_cd(self, dtype='float64'):
+    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32'):
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -2668,8 +2668,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         Parameters
         ----------
-        dtype : str
+        fdtype : str
             the type of xyz_cp
+        int32 : str
+            the type of nid_cp_cd
+
         Returns
         -------
         icd_transform : dict{int cd : (n,) int ndarray}
@@ -2684,8 +2687,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             points in the CP coordinate system
         nid_cp_cd : (n, 3) int ndarray
             node id, CP, CD for each node
-        dtype : str
-            the type of xyz_cp
 
         Example
         -------
@@ -2723,8 +2724,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             raise ValueError(msg)
 
         #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype='int32')
+        xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=fdtype)
+        nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype=idtype)
         i = 0
         for nid, node in sorted(iteritems(self.nodes)):
             cd = node.Cd()

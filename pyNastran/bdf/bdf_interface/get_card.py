@@ -180,7 +180,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             try:
                 key = rslot_map[card_type]  # update attributes.py ~line 500
             except:
-                self.log.error("card_type=%r' hasn't been added to self._slot_to_type_map...check for typos")
+                self.log.error("card_type=%r' hasn't been added to "
+                               "self._slot_to_type_map...check for typos")
                 raise
             slot = getattr(self, key)
             ids = self._type_to_id_map[card_type]
@@ -210,7 +211,6 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     #print('%s' % str(card).split('\n')[0])
             out[card_type] = cards
         return out
-
 
     def get_SPCx_node_ids(self, spc_id, exclude_spcadd=False, stop_on_failure=True):
         """
@@ -320,6 +320,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             MPCs in the model.  For example, apply all the MPCs when
             there is no MPC=N in the case control deck, but you don't
             need to apply MPCADD=N twice.
+            TODO: not used
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -362,7 +363,557 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     self.log.warning(msg)
         return lines
 
+    def get_load_arrays(self, subcase_id, nid_map, eid_map, node_ids, normals):
+        """
+        Gets the following load arrays for the GUI
+
+        Loads include:
+         - Temperature
+         - Pressure (Centroidal)
+         - Forces
+         - SPCD
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        subcase_id : int
+            the subcase id
+
+        Returns
+        -------
+        found_load : bool
+            a flag that indicates if load data was found
+        found_temperature : bool
+            a flag that indicates if temperature data was found
+        temperature_data : tuple(temperature_key, temperatures)
+            temperature_key : str
+                One of the following:
+                  TEMPERATURE(MATERIAL)
+                  TEMPERATURE(INITIAL)
+                  TEMPERATURE(LOAD)
+                  TEMPERATURE(BOTH)
+            temperatures : (nnodes, 1) float ndarray
+                the temperatures
+        load_data : tuple(centroidal_pressures, forces, spcd)
+            centroidal_pressures : (nelements, 1) float ndarray
+                the pressure
+            forces : (nnodes, 3) float ndarray
+                the pressure
+            spcd : (nnodes, 3) float ndarray
+                the SPCD load application
+        """
+        subcase = self.subcases[subcase_id]
+        is_loads = False
+        is_temperatures = False
+
+        load_keys = (
+            'LOAD', 'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)',
+            'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)')
+        temperature_keys = (
+            'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)',
+            'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)')
+
+        centroidal_pressures = None
+        forces = None
+        spcd = None
+        temperature_key = None
+        temperatures = None
+        for key in load_keys:
+            try:
+                load_case_id = subcase.get_parameter(key)[0]
+            except KeyError:
+                # print('no %s for isubcase=%s' % (key, subcase_id))
+                continue
+            try:
+                load_case = self.loads[load_case_id]
+            except KeyError:
+                self.log.warning('LOAD=%s not found' % load_case_id)
+                continue
+
+            if key == 'LOAD':
+                p0 = np.array([0., 0., 0.], dtype='float32')
+                centroidal_pressures, forces, spcd = self._get_forces_moments_array(
+                    p0, load_case_id,
+                    nid_map=nid_map,
+                    eid_map=eid_map,
+                    node_ids=node_ids,
+                    normals=normals,
+                    dependents_nodes=self.node_ids,
+                    include_grav=False)
+                if centroidal_pressures is not None: # or any of the others
+                    is_loads = True
+            elif key in temperature_keys:
+                is_temperatures, temperatures = self._get_temperatures_array(load_case_id)
+                temperature_key = key
+            else:
+                raise NotImplementedError(key)
+        temperature_data = (temperature_key, temperatures)
+        load_data = (centroidal_pressures, forces, spcd)
+        return is_loads, is_temperatures, temperature_data, load_data
+
+    def _get_dvprel_ndarrays(self, nelements, pids):
+        """creates arrays for dvprel results"""
+        dvprel_t_init = np.zeros(nelements, dtype='float32')
+        dvprel_t_min = np.zeros(nelements, dtype='float32')
+        dvprel_t_max = np.zeros(nelements, dtype='float32')
+        design_region = np.zeros(nelements, dtype='int32')
+
+        for key, dvprel in iteritems(self.dvprels):
+            if dvprel.type == 'DVPREL1':
+                prop_type = dvprel.Type
+                desvars = dvprel.dvids
+                coeffs = dvprel.coeffs
+                pid = dvprel.pid.pid
+                var_to_change = dvprel.pname_fid
+                assert len(desvars) == 1, len(desvars)
+
+                if prop_type == 'PSHELL':
+                    i = np.where(pids == pid)
+                    design_region[i] = dvprel.oid
+                    assert len(i) > 0, i
+                    if var_to_change == 'T':
+                        #value = 0.
+                        lower_bound = 0.
+                        upper_bound = 0.
+                        for desvar, coeff in zip(desvars, coeffs):
+                            xiniti = desvar.xinit
+                            if desvar.xlb != -1e20:
+                                xiniti = max(xiniti, desvar.xlb)
+                                lower_bound = desvar.xlb
+                            if desvar.xub != 1e20:
+                                xiniti = min(xiniti, desvar.xub)
+                                upper_bound = desvar.xub
+
+                            # code validation
+                            if desvar.delx is not None and desvar.delx != 1e20:
+                                pass
+
+                            # TODO: haven't quite decided what to do
+                            if desvar.ddval is not None:
+                                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
+                            assert desvar.ddval is None, desvar
+                            xinit = coeff * xiniti
+                        dvprel_t_init[i] = xinit
+                        dvprel_t_min[i] = lower_bound
+                        dvprel_t_max[i] = upper_bound
+                    else:
+                        msg = 'var_to_change=%r; dvprel=\n%s' % (var_to_change, str(dvprel))
+                        raise NotImplementedError(msg)
+                else:
+                    msg = 'prop_type=%r; dvprel=\n%s' % (prop_type, str(dvprel))
+                    raise NotImplementedError(msg)
+            else:
+                msg = 'dvprel.type=%r; dvprel=\n%s' % (dvprel.type, str(dvprel))
+                raise NotImplementedError(msg)
+
+            # TODO: haven't quite decided what to do
+            if dvprel.p_max != 1e20:
+                dvprel.p_max
+
+            # TODO: haven't quite decided what to do
+            if dvprel.p_min is not None:
+                dvprel.p_min
+        return dvprel_t_init, dvprel_t_min, dvprel_t_max, design_region
+
+    def _get_forces_moments_array(self, p0, load_case_id,
+                                  nid_map, eid_map, node_ids, normals, dependents_nodes,
+                                  include_grav=False):
+        """
+        Gets the forces/moments on the nodes
+
+        Parameters
+        ----------
+        p0 : (3, ) ndarray
+            the reference location
+        load_case_id : int
+            the load id
+        nidmap : ???
+            ???
+        eidmap : ???
+            ???
+        node_ids : ???
+            ???
+        normals : ???
+            ???
+        dependents_nodes : ???
+            ???
+        include_grav : bool; default=False
+            is the mass of the elements considered; unused
+
+        Returns
+        -------
+        temperature_data : tuple(temperature_key, temperatures)
+            temperature_key : str
+                One of the following:
+                  TEMPERATURE(MATERIAL)
+                  TEMPERATURE(INITIAL)
+                  TEMPERATURE(LOAD)
+                  TEMPERATURE(BOTH)
+            temperatures : (nnodes, 1) float ndarray
+                the temperatures
+        load_data : tuple(centroidal_pressures, forces, spcd)
+            centroidal_pressures : (nelements, 1) float ndarray
+                the pressure
+            forces : (nnodes, 3) float ndarray
+                the pressure
+            spcd : (nnodes, 3) float ndarray
+                the SPCD load application
+
+        Considers
+        ---------
+        FORCE
+        PLOAD2 - CTRIA3, CQUAD4, CSHEAR
+        PLOAD4 - CTRIA3, CTRIA6, CTRIAR
+                 CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR
+                 CTETRA, CPENTA, CHEXA
+        SPCD
+        """
+        if not any(['FORCE' in self.card_count, 'PLOAD2' in self.card_count,
+                    'PLOAD4' in self.card_count, 'SPCD' in self.card_count]):
+            return None, None, None
+        nids = sorted(self.nodes.keys())
+        nnodes = len(nids)
+
+        load_case = self.loads[load_case_id]
+        loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
+
+        #eids = sorted(self.elements.keys())
+        centroidal_pressures = np.zeros(len(self.elements), dtype='float32')
+        nodal_pressures = np.zeros(len(self.node_ids), dtype='float32')
+
+        forces = np.zeros((nnodes, 3), dtype='float32')
+        spcd = np.zeros((nnodes, 3), dtype='float32')
+        # loop thru scaled loads and plot the pressure
+        cards_ignored = {}
+
+        assert normals is not None
+        fail_nids = set()
+        fail_count = 0
+        fail_count_max = 3
+        for load, scale in zip(loads2, scale_factors2):
+            if load.type == 'FORCE':
+                scale2 = load.mag * scale  # does this need a magnitude?
+                nid = load.node
+                if nid in dependents_nodes:
+                    fail_nids.add(nid)
+                    fail_count += 1
+                    if fail_count < fail_count_max:
+                        print('    nid=%s is a dependent node and has a FORCE applied\n%s' % (
+                            nid, str(load)))
+                forces[nid_map[nid]] += load.xyz * scale2
+
+            elif load.type == 'PLOAD2':
+                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                for eid in load.eids:
+                    elem = self.elements[eid]
+                    if elem.type in ['CTRIA3',
+                                     'CQUAD4', 'CSHEAR']:
+                        node_ids = elem.node_ids
+                        nnodes = len(node_ids)
+                        normal = elem.Normal()
+                        area = elem.Area()
+                        forcei = pressure * normal * area / nnodes
+                        # r = elem.Centroid() - p0
+                        # m = cross(r, f)
+                        for nid in node_ids:
+                            if nid in dependents_nodes:
+                                fail_nids.add(nid)
+                                fail_count += 1
+                                if fail_count < fail_count_max:
+                                    print('    nid=%s is a dependent node and has a PLOAD2 applied\n'
+                                          '%s' % (nid, str(load)))
+                            forces[nid_map[nid]] += forcei
+                        forces += forcei
+                        # F += f
+                        # M += m
+                    else:
+                        self.log.debug('    case=%s etype=%r loadtype=%r not supported' % (
+                            load_case_id, elem.type, load.type))
+
+            elif load.type == 'PLOAD4':
+                # single element per PLOAD
+                #eid = elem.eid
+                #pressures[eids.index(eid)] = p
+                pressure = load.pressures[0] * scale
+
+                # multiple elements
+                for elem in load.eids:
+                    ie = eid_map[elem.eid]
+                    nz = normals[ie, :]
+                    # pressures[eids.index(elem.eid)] += p
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                     # TODO: this was split in bdf_methods...
+                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        area = elem.get_area()
+                        elem_node_ids = elem.node_ids
+                        elem_nnodes = len(elem_node_ids)
+                        forcei = pressure * area / elem_nnodes
+                        for nid in elem_node_ids:
+                            if nid in dependents_nodes:
+                                fail_nids.add(nid)
+                                fail_count += 1
+                                if fail_count < fail_count_max:
+                                    print('    nid=%s is a dependent node and has a'
+                                          ' PLOAD4 applied\n%s' % (nid, str(load)))
+                            #forces[nids.index(nid)] += F
+                            i = nid_map[nid]
+                            try:
+                                forces[i, :] += forcei * nz
+                            except IndexError:
+                                print('i = %s' % i)
+                                print('normals.shape = %s' %  str(normals.shape))
+                                print('forces.shape = %s' % str(forces.shape))
+                                print('nz = ', normals[i, :])
+                                print('forces[i, :] = ', forces[i, :])
+                                raise
+                    else:
+                        elem_node_ids = elem.node_ids
+                        if elem.type == 'CTETRA':
+                            #face1 = elem.get_face(load.g1.nid, load.g34.nid)
+                            face, area, centroid, normal = elem.get_face_area_centroid_normal(
+                                load.g1.nid, load.g34.nid)
+                            #assert face == face1
+                            nface = 3
+                        elif elem.type == 'CHEXA':
+                            #face1 = elem.get_face(load.g34.nid, load.g1.nid)
+                            face, area, centroid, normal = elem.get_face_area_centroid_normal(
+                                load.g34.nid, load.g1.nid)
+                            #assert face == face1
+                            nface = 4
+                        elif elem.type == 'CPENTA':
+                            g1 = load.g1.nid
+                            if load.g34 is None:
+                                #face1 = elem.get_face(g1)
+                                face, area, centroid, normal = elem.get_face_area_centroid_normal(g1)
+                                nface = 3
+                            else:
+                                #face1 = elem.get_face(g1, load.g34.nid)
+                                face, area, centroid, normal = elem.get_face_area_centroid_normal(
+                                    g1, load.g34.nid)
+                                nface = 4
+                            #assert face == face1
+                        else:
+                            msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
+                                   % (load_case_id, eid, elem.type, load.type))
+                            self.log.debug(msg)
+                            continue
+                        pressures = load.pressures[:nface]
+                        assert len(pressures) == nface
+                        if min(pressures) != max(pressures):
+                            pressure = np.mean(pressures)
+                            #msg = ('%s%s\npressure.min=%s != pressure.max=%s using average'
+                                   #' of %%s; load=%s eid=%%s'  % (
+                                       #str(load), str(elem), min(pressures), max(pressures),
+                                       #load.sid)
+                            #print(msg % (pressure, eid))
+                        else:
+                            pressure = pressures[0]
+                        #centroidal_pressures
+                        f = pressure * area * normal * scale
+                        for inid in face:
+                            inidi = nid_map[elem_node_ids[inid]]
+                            nodal_pressures[inid] += pressure * scale / nface
+                            forces[inidi, :] += f / nface
+                        centroidal_pressures[ie] += pressure
+
+                        #r = centroid - p
+                        #load.cid.transformToGlobal()
+                        #m = cross(r, f)
+                        #M += m
+
+            #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+            elif load.type == 'SPCD':
+                #self.gids = [integer(card, 2, 'G1'),]
+                #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+                for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
+                    if nid in dependents_nodes:
+                        fail_nids.add(nid)
+                        fail_count += 1
+                        if fail_count < fail_count_max:
+                            self.log.warning('    nid=%s is a dependent node and has an'
+                                             ' SPCD applied\n%s' % (nid, str(load)))
+                    c1 = int(c1)
+                    assert c1 in [1, 2, 3, 4, 5, 6], c1
+                    if c1 < 4:
+                        spcd[nid_map[nid], c1 - 1] = d1
+            elif load.type in ['FORCE1', 'MOMENT1']:
+                pass
+            else:
+                print(load)
+                if load.type not in cards_ignored:
+                    cards_ignored[load.type] = True
+                    self.log.warning('  _get_forces_moments_array - unsupported '
+                                     'load.type = %s' % load.type)
+        if fail_count:
+            fail_nids_list = list(fail_nids)
+            fail_nids_list.sort()
+            self.log.warning('fail_nids = %s' % np.array(fail_nids_list))
+        return centroidal_pressures, forces, spcd
+
+    def get_pressure_array(self, load_case, eids, normals):
+        """
+        Gets the pressures for a load case
+
+        Parameters
+        ----------
+        load_case : ???
+        eids : ???
+        normals : (nelements, 3) float ndarray
+            the element normals
+
+        Returns
+        -------
+        is_pressure : bool
+            the pressure data
+        pressures : (nelements, 1) float ndarray
+            the centroidal pressures
+        """
+        if 'PLOAD4' not in self.card_count:
+            return False, None
+
+        # account for scale factors
+        loads2 = []
+        scale_factors2 = []
+        for load in load_case:
+            if load.type == 'LOAD':
+                scale_factors, loads = load.get_reduced_loads()
+                scale_factors2 += scale_factors
+                loads2 += loads
+            else:
+                scale_factors2.append(1.)
+                loads2.append(load)
+
+        pressures = np.zeros(len(self.elements), dtype='float32')
+
+        iload = 0
+        nloads = len(loads2)
+        show_nloads = nloads > 5000
+        # loop thru scaled loads and plot the pressure
+        for load, scale in zip(loads2, scale_factors2):
+            if show_nloads and iload % 5000 == 0:
+                self.log.debug('  NastranIOv iload=%s/%s' % (iload, nloads))
+            if load.type == 'PLOAD4':
+                #print(load.object_attributes())
+                for elem in load.eids:
+                    #elem = self.elements[eid]
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        pressure = load.pressures[0] * scale
+
+                        # single element per PLOAD
+                        #eid = elem.eid
+                        #pressures[eids.index(eid)] = pressure
+
+                        # multiple elements
+                        #for elem in load.eids:
+                        ie = np.searchsorted(eids, elem.eid)
+                        #pressures[ie] += p  # correct; we can't assume model orientation
+                        nz = normals[ie, 2]  # considers normal of shell
+                        pressures[ie] += pressure * nz
+
+                    #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        #A, centroid, normal = elem.get_face_area_centroid_normal(
+                            #load.g34.nid, load.g1.nid)
+                        #r = centroid - p
+            iload += 1
+        return True, pressures
+
+    def _get_temperatures_array(self, load_case_id):
+        """
+        Builds the temperature array based on thermal cards
+
+        Returns
+        is_temperatures : bool
+            is there temperature data
+        temperatures : (nnodes, ) float ndarray
+            the temperatures
+        """
+        if 'TEMP' not in self.card_count:
+            return False, None
+        is_temperatures = True
+        nids = sorted(self.nodes.keys())
+
+        load_case = self.loads[load_case_id]
+        loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
+        tempd = self.tempds[load_case_id].temperature if load_case_id in self.tempds else 0.
+        temperatures = np.ones(len(self.nodes), dtype='float32') * tempd
+        for load, scale in zip(loads2, scale_factors2):
+            if load.type == 'TEMP':
+                temps_dict = load.temperatures
+                for nid, val in iteritems(temps_dict):
+                    nidi = nids.index(nid)
+                    temperatures[nidi] = val
+            else:
+                print(load.type)
+        return is_temperatures, temperatures
+
+    def _get_rigid(self):
+        """
+        GUI helper function
+
+        dependent = (lines[:, 0])
+        independent = np.unique(lines[:, 1])
+        """
+        lines_rigid = []
+        for eid, elem in iteritems(self.rigid_elements):
+            if elem.type == 'RBE3':
+                if elem.Gmi != []:
+                    msg = 'UM is not supported; RBE3 eid=%s Gmi=%s' % (elem.eid, elem.Gmi)
+                    raise RuntimeError(msg)
+                #list_fields = ['RBE3', elem.eid, None, elem.ref_grid_id, elem.refc]
+                n1 = elem.ref_grid_id
+                assert isinstance(n1, int), 'RBE3 eid=%s ref_grid_id=%s' % (elem.eid, n1)
+                for (_weight, ci, Gij) in elem.WtCG_groups:
+                    Giji = elem._nodeIDs(nodes=Gij, allow_empty_nodes=True)
+                    # list_fields += [wt, ci] + Giji
+                    for n2 in Giji:
+                        assert isinstance(n2, int), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)
+                        lines_rigid.append([n1, n2])
+            elif elem.type == 'RBE2':
+                #list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm
+                               #] + elem.Gmi_node_ids + [elem.alpha]
+                n2 = elem.Gn() # independent
+                nids1 = elem.Gmi_node_ids # dependent
+                for n1 in nids1:
+                    lines_rigid.append([n1, n2])
+            elif elem.type in ['RBAR', 'RBAR1', 'RROD']: ## TODO: these aren't quite right
+                dependent = elem.Ga()
+                independent = elem.Gb()
+                lines_rigid.append([dependent, independent])
+            else:
+                print(str(elem))
+        return lines_rigid
+
+    def _get_loads_and_scale_factors(self, load_case):
+        """account for scale factors"""
+        loads2 = []
+        scale_factors2 = []
+        for load in load_case:
+            if load.type == 'LOAD':
+                scale_factors, loads = load.get_reduced_loads()
+                scale_factors2 += scale_factors
+                loads2 += loads
+            else:
+                scale_factors2.append(1.)
+                loads2.append(load)
+        return loads2, scale_factors2
+
     def get_rigid_elements_with_node_ids(self, node_ids):
+        """
+        Gets the series of rigid elements that use specific nodes
+
+        Parameters
+        ----------
+        node_ids : List[int]
+            the node ids to check
+
+        Returns
+        -------
+        rbes : List[int]
+            the set of self.rigid_elements
+        """
         try:
             nids = set(node_ids)
         except TypeError:
@@ -993,8 +1544,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         return load
 
     def DELAY(self, delay_id, msg=''):
-        assert isinstance(delay_id, integer_types), delay_id
         """gets a DELAY"""
+        assert isinstance(delay_id, integer_types), delay_id
         try:
             return self.delays[delay_id]
         except KeyError:

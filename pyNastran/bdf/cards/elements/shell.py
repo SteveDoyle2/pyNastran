@@ -231,8 +231,8 @@ class TriShell(ShellElement):
         normal : (3,) array
                the normal vector
         """
-        (n0, n1, n2) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n1, n2], self)
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def get_area(self):
         return self.Area()
@@ -242,7 +242,7 @@ class TriShell(ShellElement):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} \lvert (n_0-n_1) \times (n_0-n_2) \rvert"""
-        (n1, n2, n3) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -256,7 +256,7 @@ class TriShell(ShellElement):
           n = \frac{(n_0-n_1) \times (n_0-n_2)}
              {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
-        n1, n2, n3 = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         try:
             n = _normal(n1 - n2, n1 - n3)
         except:
@@ -1137,7 +1137,7 @@ class QuadShell(ShellElement):
 
     def Normal(self):
         try:
-            (n1, n2, n3, n4) = self.get_node_positions()
+            n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         except ValueError:
             print(str(self))
             raise

@@ -299,7 +299,8 @@ class BDFAttributes(object):
 
         # stores DLOAD entries.
         self.dloads = {}
-        # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
+        # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE,
+        #        and QVECT entries.
         self.dload_entries = {}
 
         #self.gusts  = {} # Case Control GUST = 100
@@ -600,7 +601,8 @@ class BDFAttributes(object):
                 ],
             'dloads' : ['DLOAD', ],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
-            'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
+            'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+                               'QVECT',],
 
             # aero cards
             'aero' : ['AERO'],

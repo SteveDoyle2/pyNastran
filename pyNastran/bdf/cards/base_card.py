@@ -352,10 +352,6 @@ class Element(BaseCard):
         #: the list of node IDs for an element (default=None)
         #self.nodes = None
 
-    #def nodePositions(self, nodes=None):
-        #self.deprecated('nodePositions(nodes)', 'get_node_positions(nodes)', '0.8')
-        #return self.get_node_positions(nodes=nodes)
-
     def verify_unique_node_ids(self):
         node_ids = self.node_ids
         self._verify_unique_node_ids(node_ids)
@@ -390,10 +386,10 @@ class Element(BaseCard):
 
     def get_node_positions(self, nodes=None):
         """returns the positions of multiple node objects"""
-        if not nodes:
+        if nodes is None:
             nodes = self.nodes_ref
 
-        nnodes = len(self.nodes_ref)
+        nnodes = len(nodes)
         positions = empty((nnodes, 3), dtype='float64')
         positions.fill(nan)
         for i, node in enumerate(nodes):

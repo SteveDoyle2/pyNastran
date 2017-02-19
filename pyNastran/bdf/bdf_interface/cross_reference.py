@@ -91,7 +91,9 @@ class XrefMesh(BDFAttributes):
         # for elem in model.elements:
             # elem.check_unique_nodes()
 
-    def cross_reference(self, xref=True,
+    def cross_reference(self,
+                        xref=True,
+                        xref_nodes=True,
                         xref_elements=True,
                         xref_nodes_with_elements=True,
                         xref_properties=True,
@@ -107,24 +109,26 @@ class XrefMesh(BDFAttributes):
 
         Parameters
         ----------
-        xref : bool
-           cross references the model (default=True)
-        xref_element : bool
-           set cross referencing of elements (default=True)
-        xref_properties : bool
-           set cross referencing of properties (default=True)
-        xref_masses : bool
-           set cross referencing of CMASS/PMASS (default=True)
-        xref_materials : bool
-           set cross referencing of materials (default=True)
-        xref_loads : bool
-            set cross referencing of loads (default=True)
-        xref_constraints : bool
-            set cross referencing of constraints (default=True)
-        xref_aero : bool
-            set cross referencing of CAERO/SPLINEs (default=True)
-        xref_sets : bool
-            set cross referencing of SETx (default=True)
+        xref : bool; default=True
+           cross references the model
+        xref_nodes : bool; default=True
+           set cross referencing of nodes/coords
+        xref_element : bool; default=True
+           set cross referencing of elements
+        xref_properties : bool; default=True
+           set cross referencing of properties
+        xref_masses : bool; default=True
+           set cross referencing of CMASS/PMASS
+        xref_materials : bool; default=True
+           set cross referencing of materials
+        xref_loads : bool; default=True
+            set cross referencing of loads
+        xref_constraints : bool; default=True
+            set cross referencing of constraints
+        xref_aero : bool; default=True
+            set cross referencing of CAERO/SPLINEs
+        xref_sets : bool; default=True
+            set cross referencing of SETx
 
         To only cross-reference nodes:
 
@@ -142,8 +146,9 @@ class XrefMesh(BDFAttributes):
         if not xref:
             return
         self.log.debug("Cross Referencing...")
-        self._cross_reference_nodes()
-        self._cross_reference_coordinates()
+        if xref_nodes:
+            self._cross_reference_nodes()
+            self._cross_reference_coordinates()
 
         if xref_elements:
             self._cross_reference_elements()

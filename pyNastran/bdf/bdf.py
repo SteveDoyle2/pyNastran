@@ -118,7 +118,8 @@ from pyNastran.bdf.cards.bdf_sets import (
 )
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
-from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL
+from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
+                                               QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, RADM, RADBC)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
@@ -133,7 +134,8 @@ from pyNastran.bdf.bdf_interface.add_card import AddCards
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.mirror_mesh import WriteMeshes
 from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
-from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
+from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
+                                  CardParseSyntaxError, MissingDeckSections)
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -404,19 +406,26 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             ## thermal_materials
             'MAT4', 'MAT5',
 
-            ## spcs/spcadds
+            ## spcs
             'SPC', 'SPCADD', 'SPC1', 'SPCAX',
             'GMSPC',
 
-            ## mpcs/mpcadds
+            ## mpcs
             'MPC', 'MPCADD',
 
             ## suport/suport1/se_suport
             'SUPORT', 'SUPORT1', 'SESUP',
 
+            ## dloads
+            'DLOAD',
+
+            ## dload_entries
+            'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+            'QVECT',
+
             ## loads
             'LOAD', 'LSEQ', 'LOADCYN', 'RANDPS',
-            'DLOAD', 'SLOAD', 'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+            'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'GRAV', 'ACCEL', 'ACCEL1',
@@ -491,13 +500,13 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
             #'DSCREEN',
 
+            # sets
             'SET1', 'SET3',  ## sets
             'ASET', 'ASET1',  ## asets
             'BSET', 'BSET1',  ## bsets
             'CSET', 'CSET1',  ## csets
             'QSET', 'QSET1',  ## qsets
             'USET', 'USET1',  ## usets
-
 
             # super-element sets
             'SESET',  ## se_sets
@@ -1976,6 +1985,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'GMLOAD' : (GMLOAD, self._add_load_object),
             'SPCD' : (SPCD, self._add_load_object),  # enforced displacement
             'QVOL' : (QVOL, self._add_load_object),  # thermal
+            'QVOL' : (QVECT, self._add_load_object),
 
             'DLOAD' : (DLOAD, self._add_dload_object),
             'ACSRCE' : (ACSRCE, self._add_dload_entry),
@@ -2538,7 +2548,6 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         if sort_ids:
             isort = np.argsort(all_nodes)
             xyz_cid0 = xyz_cid0[isort, :]
-
         return xyz_cid0
 
     def _get_npoints_nids_allnids(self):
@@ -2570,7 +2579,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             raise ValueError(msg)
         return npoints, nids, all_nodes
 
-    def get_xyz_in_coord(self, cid=0, dtype='float64', sort_ids=True):
+    def get_xyz_in_coord(self, cid=0, fdtype='float64', sort_ids=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -2578,7 +2587,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         ----------
         cid : int; default=0
             the desired coordinate system
-        dtype : str; default='float64'
+        fdtype : str; default='float64'
             the data type of the xyz coordinates
         sort_ids : bool; default=True
             sort the ids
@@ -2588,9 +2597,9 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         xyz : (n, 3) ndarray
             the xyz points in the cid coordinate frame
         """
-        #return self.get_displacement_index_xyz_cp_cd(cid=cid, dtype=dtype)[2]
+        #return self.get_displacement_index_xyz_cp_cd(cid=cid, fdtype=dtype)[2]
         npoints, nids, all_nodes = self._get_npoints_nids_allnids()
-        xyz_cid0 = np.zeros((npoints, 3), dtype=dtype)
+        xyz_cid0 = np.zeros((npoints, 3), dtype=fdtype)
         if cid == 0:
             for i, nid in enumerate(nids):
                 node = self.nodes[nid]
@@ -2910,10 +2919,10 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         msg.append('')
         if return_type == 'string':
             return '\n'.join(msg)
-        else:
-            return msg
+        return msg
 
-    def get_displacement_index_xyz_cp_cd(self, dtype='float64', sort_ids=True):
+    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32',
+                                         sort_ids=True):
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -2921,8 +2930,10 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
         Parameters
         ----------
-        dtype : str
+        fdtype : str
             the type of xyz_cp
+        idtype : str
+            the type of nid_cp_cd
         sort_ids : bool; default=True
             sort the ids
 
@@ -2982,8 +2993,8 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             raise ValueError(msg)
 
         i = 0
-        xyz_cp = np.zeros((nnodes + nspoints + nepoints, 3), dtype=dtype)
-        nid_cp_cd = np.zeros((nnodes + nspoints + nepoints, 3), dtype='int32')
+        xyz_cp = np.zeros((nnodes + nspoints + nepoints, 3), dtype=fdtype)
+        nid_cp_cd = np.zeros((nnodes + nspoints + nepoints, 3), dtype=idtype)
         for nid, node in sorted(iteritems(self.nodes)):
             cd = node.Cd()
             cp = node.Cp()
@@ -3055,17 +3066,18 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         coord2 = self.coords[cid]
         beta2 = coord2.beta()
 
-        assert in_place is False, 'in_place=%s' % in_place
+        #assert in_place is False, 'in_place=%s' % in_place
         if in_place:
             xyz_cid0 = xyz_cp
         else:
             xyz_cid0 = np.copy(xyz_cp)
 
-        # transform the grids to the global coordinate system
-        xyz_cid0_correct = self.get_xyz_in_coord(dtype=xyz_cid0.dtype, cid=0)
-        #self.log.debug('icp_transform = %s' % icp_transform)
-
         do_checks = False
+        if do_checks:
+            # transform the grids to the global coordinate system
+            xyz_cid0_correct = self.get_xyz_in_coord(fdtype=xyz_cid0.dtype, cid=0)
+
+        #self.log.debug('icp_transform = %s' % icp_transform)
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
                 continue
@@ -3091,7 +3103,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
         if do_checks and not np.allclose(xyz_cid0, xyz_cid0_correct, atol=atol):
             #np.array_equal(xyz_cid, xyz_cid_alt):
-            out = self.get_displacement_index_xyz_cp_cd(dtype=xyz_cid0.dtype, sort_ids=True)
+            out = self.get_displacement_index_xyz_cp_cd(fdtype=xyz_cid0.dtype, sort_ids=True)
             icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
             msg = ('xyz_cid0:\n%s\n'
                    'xyz_cid0_correct:\n%s\n'
@@ -3885,7 +3897,7 @@ def _check_valid_deck(flag):
         msg += '  3.  Name your file *.pch\n\n'
         msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
         msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
-        raise RuntimeError(msg)
+        raise MissingDeckSections(msg)
 
 def main():  # pragma: no cover
     """

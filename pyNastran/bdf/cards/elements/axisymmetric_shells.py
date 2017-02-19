@@ -61,12 +61,12 @@ class AxisymmetricTri(AxisymmetricElement):
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        n1, n2, n3 = self.get_node_positions()[:3, :]
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
     def Mass(self):
-        n1, n2, n3 = self.get_node_positions()[:3, :]
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         return 0.
 
 class CTRAX3(AxisymmetricTri):
@@ -142,7 +142,7 @@ class CTRAX3(AxisymmetricTri):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions()
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -274,7 +274,7 @@ class CTRAX6(AxisymmetricTri):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -282,7 +282,7 @@ class CTRAX6(AxisymmetricTri):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert"""
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -412,7 +412,7 @@ class CTRIAX(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -420,7 +420,7 @@ class CTRIAX(TriShell):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert"""
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -481,7 +481,8 @@ class CTRIAX6(TriShell):
     |         | THETA |       |    |    |    |    |    |     |
     +---------+-------+-------+----+----+----+----+----+-----+
 
-    Nodes are defined in a non-standard way::
+
+    NX/MSC : Nodes are defined in a non-standard way::
 
            5
           / \
@@ -573,8 +574,8 @@ class CTRIAX6(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n0, n1, n2, n3, n4, n5) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n2, n4], self)
+        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        return _triangle_area_centroid_normal([n1, n3, n5], self)
 
     def Area(self):
         r"""
@@ -794,7 +795,7 @@ class CQUADX4(QuadShell):
     | CQUADX4 |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA |
     +---------+-------+-------+----+----+----+----+-------+
 
-    CQUADX8 is an NX card only!
+    CQUADX4 is an NX card only!
     """
     type = 'CQUADX4'
 

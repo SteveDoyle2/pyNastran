@@ -519,8 +519,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                     extract_bodies(fem1)
 
                 #fem1.uncross_reference()
-                #fem1.cross_reference()
-                fem1.safe_cross_reference()
+                fem1.cross_reference()
+                #fem1.safe_cross_reference()
                 fem1._xref = True
                 spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding,
                                      debug=fem1.debug, log=fem1.log)
@@ -1022,9 +1022,30 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         #if 'LOADSET' in subcase:
             #raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
         if 'IC' in subcase:
-            value = subcase.get_parameter('IC')[0]
-            if value != 0:
-                raise NotImplementedError('IC & DLOAD -> TIC\n%s' % subcase)
+            ic_val = subcase.get_parameter('IC')[0]
+            if ic_val != 0:
+                # TIC - SOL 109, 129, 601, 701 (structural/physical)
+                #
+                # TEMP/TEMPD - SOL 159
+                #
+                # TIC - SET for modal
+                #
+                # STATSUB - IC=subcase_id (SOL 109, 112)
+                # For the PHYSICAL option, n is the set identification number
+                # of TIC bulk entries for structural analysis (SOLs 109, 129,
+                # 601, and 701) or TEMP and TEMPD bulk entries for heat
+                # transfer analysis (SOL 159). For the MODAL option, n is
+                # the set identification number of TIC bulk entries for modal
+                # transient analysis (SOL 112). For the STATSUB option, n is
+                # the ID of a static analysis subcase (SOL 109 and 112). For
+                # the TZERO option, n is not used by the software, although a
+                # dummy value must be defined. (Integer>0)
+                if sol in [109, 129, 601, 701]:
+                    raise NotImplementedError('IC & DLOAD; sol=%s -> TIC\n%s' % (sol, subcase))
+                elif sol == 159:
+                    fem2.loads[ic_val]
+                else:
+                    raise NotImplementedError('IC & DLOAD; sol=%s -> TIC\n%s' % (sol, subcase))
 
         # DLOAD (case)   -> dynamic loads -> DLOAD, RLOAD1, RLOAD2, TLOAD1, TLOAD2, ACSRCE
         # LOADSET (case) -> static load sequence - > LSEQ
