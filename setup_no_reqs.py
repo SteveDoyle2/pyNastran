@@ -36,7 +36,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -61,9 +60,10 @@ setup(
         'console_scripts': [
             'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
             'test_bdf  = pyNastran.bdf.test.test_bdf:main',
-            'test_abaqus = pyNastran.converters.dev.abaqus.test_abaqus:main',
             'test_op2  = pyNastran.op2.test.test_op2:main',
             'test_op4  = pyNastran.op4.test.test_op4:main',
+            'test_abaqus = pyNastran.converters.dev.abaqus.test_abaqus:main',
+            'test_pynastrangui = pyNastran.gui.test.test_gui:main',
 
             'format_converter = pyNastran.converters.type_converter:main',
             'pyNastranGUI = pyNastran.gui.gui:main',

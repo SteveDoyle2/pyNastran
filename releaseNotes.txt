@@ -58,6 +58,7 @@ BDF:
       # update cards similar to Nastran's optimization
       # on grid 1234, update cp (field 2) to a value of 7)
     - model.update_card('GRID', 1234, 2, 7)
+    - speed issue on CORD1x cards
 
   - other bugs:
     - fixed DIVERG bug (bad key when adding card)
@@ -94,6 +95,7 @@ BDF:
    - PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
    - CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE, MATG
    - POINT, PBRSECT, PBMSECT
+   - QVECT
    - DVGRID
    - TIC, TSTEP1
 
@@ -109,6 +111,7 @@ GUI:
    - display issue with CHEXA20 (element was ordered wrong)
    - element selection for quadratic solids no longer crashes
  - changes:
+   - significant speedups
    - cycle_results now takes an integer instead of a string, so it works
       when you call it with more than 10 results  or have transient solutions
 
@@ -122,13 +125,12 @@ OP2:
  - random tables (e.g., PSD, ATO, RMS) for OUG-style tables
 
 Other
- - cart3d legend values are now saved
+ - all legend values are now saved (e.g., the ones from cart3d)
 
 TODO:
 -----
 BDF:
  - write_path function works (Linux; low priority; 1/10)
- - fix speed of CORD1R, CORD1C, CORD1S (low priority; 6/10)
 
 GUI:
  - fix node Cd deflection issue (high priority, 4/10)
