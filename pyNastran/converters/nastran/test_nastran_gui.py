@@ -121,14 +121,6 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, None)
         test.load_nastran_results(op2_filename, None)
 
-    def test_blade_01(self):
-        dirname = os.path.join(model_path, 'blade_2dv')
-        bdf_filename = os.path.join(dirname, 'blade_2dv.bdf')
-        #op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
-
-        test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-
     def test_bwb_gui(self):
         bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
         test = NastranGUI()

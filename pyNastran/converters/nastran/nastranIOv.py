@@ -58,8 +58,6 @@ from pyNastran.bdf.bdf import (BDF,
                                CONM2)
 
 from pyNastran.bdf.cards.elements.shell import ShellElement
-#from pyNastran.bdf.cards.elements.bars import LineElement
-#from pyNastran.bdf.cards.elements.springs import SpringElement
 from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CTETRA10, CPENTA6, CPENTA15,
     CHEXA8, CHEXA20, CIHEX1, CIHEX2,
@@ -355,7 +353,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         self._add_nastran_spoints_to_grid(model)
         #print('dt_nastran_xyz =', time.time() - t0)
-        return xyz_cid0
+        return xyz_cid0, nid_cp_cd
 
     def _get_model(self, bdf_filename, xref_loads=True):
         """loads the BDF/OP2 geometry"""
@@ -499,7 +497,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.model = model
 
         #print('get_xyz_in_coord')
-        xyz_cid0 = self.get_xyz_in_coord(model, points, cid=0, fdtype='float32')
+        xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, points, cid=0, fdtype='float32')
         self.xyz_cid0 = xyz_cid0
 
         maxi = xyz_cid0.max(axis=0)
@@ -519,7 +517,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         j = 0
         nid_to_pid_map, icase, cases, form = self.map_elements(
-            points, self.nid_map, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+            points, self.nid_map, model, j, dim_max, nid_cp_cd,
+            plot=plot, xref_loads=xref_loads)
 
         #if 0:
             #nsprings = 0
@@ -1156,19 +1155,23 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print('getting rigid')
         rigid_lines = model._get_rigid()
 
+        spc_ids_used = set()
+        mpc_ids_used = set()
+        suport1_ids_used = set()
         for subcase_id, subcase in sorted(iteritems(model.subcases)):
             #print(subcase.params.keys())
             if 'SPC' in subcase:
                 #print('getting spcs')
                 spc_id = subcase.get_parameter('SPC')[0]
-                if spc_id is not None:
+                if spc_id is not None and spc_id not in spc_ids_used:
+                    spc_ids_used.add(spc_id)
                     nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
                     nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
                     nspcds = model.card_count['SPCD'] if 'SPCD' in model.card_count else 0
 
                     ## TODO: this line seems too loose...
                     ## TODO: why isn't SPCDs included?
-                    if nspcs + nspc1s:
+                    if nspcs + nspc1s + nspcds:
                         spc_names += self._fill_spc(spc_id, nspcs, nspc1s, nspcds, dim_max,
                                                     model, nid_to_pid_map)
 
@@ -1176,7 +1179,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if 'MPC' in subcase:
                 #print('getting mpc')
                 mpc_id = subcase.get_parameter('MPC')[0]
-                if mpc_id is not None:
+                if mpc_id is not None and mpc_id not in mpc_ids_used:
+                    mpc_ids_used.add(mpc_id)
+
                     ## TODO: this line seems too loose
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
@@ -1185,11 +1190,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         mpc_names += self._fill_dependent_independent(
                             mpc_id, dim_max, model, lines2, nid_to_pid_map)
 
+            # SUPORTs are node/dofs that deconstrained to allow rigid body motion
+            # SUPORT1s are subcase-specific SUPORT cards
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
                 suport_id = subcase.get_parameter('SUPORT1')[0]
                 if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:  # TODO: is this line correct???
-                    if suport_id:  # TODO: this seems unnecessary
+                    if suport_id is not None and suport_id not in suport1_ids_used:  # TODO: this seems unnecessary
                         #print('SUPORT1/SUPORT')
+                        suport1_ids_used.add(suport_id)
                         suport_name = self._fill_suport(suport_id, subcase_id, dim_max, model)
                         suport_names.append(suport_name)
 
@@ -1203,7 +1211,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 ids += idsi
             grid_name = 'SUPORT'
             self.create_alternate_vtk_grid(
-                grid_name, color=red, opacity=1.0, point_size=42,
+                grid_name, color=red, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
 
         geometry_names = spc_names + mpc_names + suport_names
@@ -1622,7 +1630,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _fill_suport(self, suport_id, subcase_id, dim_max, model):
         """creates SUPORT and SUPORT1 nodes"""
-        suport_name = 'suport=%i id=%i' % (suport_id, subcase_id)
+        suport_name = 'suport1_id=%i' % suport_id
         self.create_alternate_vtk_grid(
             suport_name, color=red, line_width=5, opacity=1., point_size=4,
             representation='point', is_visible=False)
@@ -1635,7 +1643,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return 0.01 * dim_max
 
     def map_elements(self, points, nid_map, model, j, dim_max,
-                     plot=True, xref_loads=True):
+                     nid_cp_cd, plot=True, xref_loads=True):
         """
         Creates the elements
 
@@ -1866,7 +1874,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print("map_elements...")
         for (eid, element) in sorted(iteritems(model.elements)):
             self.eid_map[eid] = i
-            if i % 5000 == 0:
+            if i % 5000 == 0 and i > 0:
                 print('  map_elements = %i' % i)
             etype = element.type
             # if element.Pid() >= 82:
@@ -2464,18 +2472,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # set to True to enable node_ids as an result
         nids_set = True
         if nids_set:
-            nids = np.zeros(self.nNodes, dtype='int32')
-            cds = np.zeros(self.nNodes, dtype='int32')
-            for (nid, nid2) in iteritems(self.nid_map):  # map node ids to index
-                nids[nid2] = nid
-                node = model.Node(nid)
-                try:
-                    cds[nid2] = node.Cd()
-                except AttributeError:
-                    # SPOINTs
-                    msg = 'nid=%s does not have a Node Cd\n%s' % (nid, node)
-                    #raise AttributeError(msg)
-                    continue
+            # this intentionally makes a deepcopy
+            nids = np.array(nid_cp_cd[:, 0])
+            cds = np.array(nid_cp_cd[:, 2])
 
             nid_res = GuiResult(0, header='NodeID', title='NodeID',
                                 location='node', scalar=nids)
@@ -2565,6 +2564,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         element_dim = np.zeros(nelements, dtype='int32')
         nnodes_array = np.zeros(nelements, dtype='int32')
         for eid, element in sorted(iteritems(model.elements)):
+            etype = element.type
             if isinstance(element, ShellElement):
                 ie = None
                 element_dimi = 2
@@ -2574,69 +2574,74 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     raise
                     normali = np.ones(3) * 2.
 
-                pid = element.pid
-                pid_type = pid.type
-                if pid_type == 'PSHELL':
-                    z0 = element.pid.z1
-                elif pid_type in ['PCOMP', 'PCOMPG']:
-                    z0 = element.pid.z0
-                elif pid_type == 'PLPLANE':
+                prop = element.pid
+                ptype = prop.type
+                if ptype == 'PSHELL':
+                    z0 = prop.z1
+                elif ptype in ['PCOMP', 'PCOMPG']:
+                    z0 = prop.z0
+                elif ptype == 'PLPLANE':
                     z0 = 0.
-                elif pid_type == 'PSHEAR':
+                elif ptype == 'PSHEAR':
                     z0 = 0.
-                elif pid_type in ['PSOLID', 'PLSOLID']:
+                elif ptype in ['PSOLID', 'PLSOLID']:
                     z0 = 0.
                 else:
-                    raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
+                    raise NotImplementedError(ptype) # PSHEAR, PCOMPG
 
                 if z0 is None:
-                    if element.type in ['CTRIA3', 'CTRIAR', 'CTRIAX']:
+                    if etype in ['CTRIA3', 'CTRIAR']:
                         z0 = (element.T1 + element.T2 + element.T3) / 3.
                         nnodesi = 3
-                    elif element.type in ['CTRIA6', 'CTRIAX6']:
+                    elif etype == 'CTRIA6':
                         z0 = (element.T1 + element.T2 + element.T3) / 3.
                         nnodesi = 6
+                    elif etype in ['CQUAD4', 'CQUADR']:
+                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                        nnodesi = 4
+                    elif etype == 'CQUAD8':
+                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                        nnodesi = 8
+                    elif etype == 'CQUAD':
+                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                        nnodesi = 9
 
-                    elif element.type in ['CQUAD4', 'CQUADR']:
-                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                        nnodesi = 4
-                    elif element.type == 'CQUAD8':
-                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                        nnodesi = 8
-                    elif element.type == 'CQUAD':
-                        z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                        nnodesi = 9
-                    elif element.type == 'CTRAX3':
+                    # axisymmetric
+                    elif etype == 'CTRAX3':
                         nnodesi = 3
                         z0 = 0.
-                    elif element.type == 'CTRAX6':
+                    elif etype == 'CTRAX6':
                         nnodesi = 6
                         z0 = 0.
-                    elif element.type == 'CQUADX4':
+                    elif etype in ['CTRIAX', 'CTRIAX6']:
+                        z0 = 0.
+                        nnodesi = 6
+                    elif etype == 'CQUADX':
+                        nnodesi = 9
+                        z0 = 0.
+                    elif etype == 'CQUADX4':
                         nnodesi = 4
                         z0 = 0.
-                    elif element.type == 'CQUADX8':
+                    elif etype == 'CQUADX8':
                         nnodesi = 8
-                        z0 = 0.
-                    elif element.type == 'CQUADX':
-                        nnodesi = 9
                         z0 = 0.
                     else:
-                        raise NotImplementedError(element.type)
+                        raise NotImplementedError(element)
                 else:
-                    if element.type in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CTRIAX', 'CPLSTN3']:
+                    if etype in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3']:
                         nnodesi = 3
-                    elif element.type in ['CTRIA6', 'CTRIAX6', 'CPLSTN6', 'CTRAX6']:
+                    elif etype in ['CTRIA6', 'CTRIAX', 'CTRIAX6', 'CPLSTN6', 'CTRAX6']:
+                        # no a CTRIAX really has 6 nodes because reasons...
                         nnodesi = 6
 
-                    elif element.type in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR', 'CQUADX4']:
+                    elif etype in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR', 'CQUADX4']:
                         nnodesi = 4
-                    elif element.type in ['CQUAD8', 'CPLSTN8', 'CQUADX8']:
+                    elif etype in ['CQUAD8', 'CPLSTN8', 'CQUADX8']:
                         nnodesi = 8
-                    elif element.type in ['CQUAD', 'CQUADX']:
+                    elif etype in ['CQUAD', 'CQUADX']:
                         nnodesi = 9
                     else:
-                        raise NotImplementedError(element.type)
+                        raise NotImplementedError(element)
 
                 ie = self.eid_map[eid]
                 normals[ie, :] = normali
@@ -2651,35 +2656,35 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 yoffset[ie] = z0 * normali[1]
                 zoffset[ie] = z0 * normali[2]
 
-            elif element.type == 'CTETRA':
+            elif etype == 'CTETRA':
                 ie = self.eid_map[eid]
                 element_dimi = 3
                 nnodesi = 4
-            elif element.type == 'CPENTA':
+            elif etype == 'CPENTA':
                 ie = self.eid_map[eid]
                 element_dimi = 3
                 nnodesi = 6
-            elif element.type == 'CPYRAM':
+            elif etype == 'CPYRAM':
                 ie = self.eid_map[eid]
                 element_dimi = 3
                 nnodesi = 5
-            elif element.type in ['CHEXA', 'CIHEX1']:
+            elif etype in ['CHEXA', 'CIHEX1', 'CIHEX2']:
                 ie = self.eid_map[eid]
                 element_dimi = 3
                 nnodesi = 8
 
-            elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE']:
+            elif etype in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE']:
                 ie = self.eid_map[eid]
                 element_dimi = 1
                 nnodesi = 2
-            elif element.type in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
-                                  'CFAST', 'CVISC',
-                                  'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                  'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
+            elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
+                           'CFAST', 'CVISC',
+                           'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                           'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
                 ie = self.eid_map[eid]
                 element_dimi = 0
                 nnodesi = 2
-            elif element.type == 'CHBDYG':
+            elif etype == 'CHBDYG':
                 ie = self.eid_map[eid]
                 if element.Type == 'AREA3':
                     nnodesi = 3

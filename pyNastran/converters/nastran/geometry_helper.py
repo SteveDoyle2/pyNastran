@@ -123,13 +123,18 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         no_axial = np.zeros(self.element_ids.shape, dtype='int32')
         no_torsion = np.zeros(self.element_ids.shape, dtype='int32')
+        no_axial_torsion = (no_axial, no_torsion)
 
+        no_shear_bending = (None, None, None, None)
         if self.make_released_dofs1:
             no_shear_y = np.zeros(self.element_ids.shape, dtype='int32')
             no_shear_z = np.zeros(self.element_ids.shape, dtype='int32')
             no_bending_y = np.zeros(self.element_ids.shape, dtype='int32')
             no_bending_z = np.zeros(self.element_ids.shape, dtype='int32')
+            no_shear_bending = (no_shear_y, no_shear_z, no_bending_y, no_bending_z)
 
+        no_dofs = (None, None, None, None, None,
+                   None, None, None)
         if self.make_released_dofs2:
             no_bending = np.zeros(self.element_ids.shape, dtype='int32')
             no_bending_bad = np.zeros(self.element_ids.shape, dtype='int32')
@@ -139,6 +144,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
             no_56_456 = np.zeros(self.element_ids.shape, dtype='int32')
             no_0_6 = np.zeros(self.element_ids.shape, dtype='int32')
             no_0_16 = np.zeros(self.element_ids.shape, dtype='int32')
+            no_dofs = (no_bending, no_bending_bad, no_6_16, no_0_56, no_0_456,
+                       no_56_456, no_0_6, no_0_16)
 
         #debug = True
         bar_nids = set([])
@@ -270,11 +277,13 @@ class NastranGeometryHelper(NastranGuiAttributes):
             else:
                 #debug = False
                 ga = model.nodes[elem.Ga()]
-                v = ga.cd_ref.transform_node_to_global(elem.x)
+                cda = ga.Cd()
+                cda_ref = model.Coord(cda)
+                v = cda_ref.transform_node_to_global(elem.x)
                 if debug:
                     print('  ga = %s' % elem.ga)
-                    if ga.Cd() != 0:
-                        print('  cd = %s' % ga.cd_ref)
+                    if cda != 0:
+                        print('  cd = %s' % cda_ref)
                     else:
                         print('  cd = 0')
 
@@ -287,11 +296,17 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 print('  offt vector,A,B=%r' % (elem.offt))
             # if offt_end_a == 'G' or (offt_end_a == 'O' and offt_vector == 'G'):
 
+            cd1 = node1.Cd()
+            cd2 = node2.Cd()
+            cd1_ref = model.Coord(cd1)
+            cd2_ref = model.Coord(cd2)
+            # node1.cd_ref, node2.cd_ref
+
             if offt_vector == 'G':
                 # end A
                 # global - cid != 0
-                if node1.Cd() != 0:
-                    v = node1.cd_ref.transform_node_to_global_assuming_rectangular(v)
+                if cd1 != 0:
+                    v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
                     #if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
                         #msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
                             #node1.cd_ref.type, node1.nid)
@@ -311,16 +326,16 @@ class NastranGeometryHelper(NastranGuiAttributes):
             # rotate wa
             wa = elem.wa
             if offt_end_a == 'G':
-                if node1.Cd() != 0:
+                if cd1 != 0:
                     #if node1.cd.type not in ['CORD2R', 'CORD1R']:
                         #continue # TODO: support CD transform
                     # TODO: fixme
-                    wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(wa)
+                    wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
             elif offt_end_a == 'B':
                 pass
             elif offt_end_a == 'O':
                 # TODO: fixme
-                wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
+                wa = cd1_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
             else:
                 msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
                 self.log.error(msg)
@@ -331,15 +346,15 @@ class NastranGeometryHelper(NastranGuiAttributes):
             # rotate wb
             wb = elem.wb
             if offt_end_b == 'G':
-                if node2.Cd() != 0:
-                    #if node2.cd_ref.type not in ['CORD2R', 'CORD1R']:
+                if cd2 != 0:
+                    #if cd2_ref.type not in ['CORD2R', 'CORD1R']:
                         #continue # TODO: MasterModelTaxi
-                    wb = node2.cd.transform_node_to_global_assuming_rectangular(wb)  # TODO: fixme
+                    wb = cd2_ref = transform_node_to_global_assuming_rectangular(wb)  # TODO: fixme
 
             elif offt_end_b == 'B':
                 pass
             elif offt_end_b == 'O':
-                wb = node1.cd.transform_node_to_global(n2 - wb)  # TODO: fixme
+                wb = cd1_ref.transform_node_to_global(n2 - wb)  # TODO: fixme
             else:
                 msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
                 model.log.error(msg)
