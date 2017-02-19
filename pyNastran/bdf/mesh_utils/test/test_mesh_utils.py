@@ -64,7 +64,7 @@ class TestMeshUtils(unittest.TestCase):
             bdf_file.write(msg)
 
         model = read_bdf(bdf_filename, log=log, xref=True)
-        xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float32')
+        xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
         nid_map = {}
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
             #xyz = node.get_position()

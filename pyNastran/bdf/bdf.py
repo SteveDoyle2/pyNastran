@@ -2530,11 +2530,11 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
-    def get_xyz_in_coord_no_xref(self, cid=0, dtype='float64', sort_ids=True):
+    def get_xyz_in_coord_no_xref(self, cid=0, fdtype='float64', sort_ids=True):
         """see get_xyz_in_coord"""
         npoints, nids, all_nodes = self._get_npoints_nids_allnids()
 
-        xyz_cid0 = np.zeros((npoints, 3), dtype=dtype)
+        xyz_cid0 = np.zeros((npoints, 3), dtype=fdtype)
         if cid == 0:
             for i, nid in enumerate(nids):
                 node = self.nodes[nid]
