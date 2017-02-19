@@ -8,55 +8,73 @@ import pyNastran
 from pyNastran.utils import print_bad_path
 #from gui.formats import format_string
 
-def determine_format(input_filename, allowed_formats):
+FORMAT_TO_EXTENSION = {
+    'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'],
+    'stl' : ['.stl'],
+    'cart3d' : ['.tri', '.triq'],
+    'tecplot' : ['.plt'],
+    'ugrid' : ['.ugrid'],
+    'plot3d' : ['.p3d', '.p3da'],
+    'surf' : ['.surf'],
+    'lawgs' : ['.wgs'],
+    'shabp' : ['.mk5'],
+    'usm3d' : ['.front'],  # .cogsg
+    'bedge' : ['.bedge'],
+    'su2' : ['.su2'],
+    'tetgen' : ['.smesh', '*.ele'],  # TODO: why does this have a *?
+
+    # no duplicates are allowed
+    #'panair' : ['.inp'],
+    #'abaqus' : ['.inp'],
+}
+
+def determine_format(input_filename, allowed_formats=None):
     """
     Tries to map the input filename to an extension.
 
     .. note :: this function will not support generic extensions (e.g. .inp, .dat)
     """
-    format_to_extension = {
-        'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'],
-        'stl' : ['.stl'],
-        'cart3d' : ['.tri', '.triq'],
-        'tecplot' : ['.plt'],
-        'ugrid' : ['.ugrid'],
-        'plot3d' : ['.p3d', '.p3da'],
-        'surf' : ['.surf'],
-        'lawgs' : ['.wgs'],
-        'shabp' : ['.mk5'],
-        'usm3d' : ['.front'],  # .cogsg
-        'bedge' : ['.bedge'],
-        'su2' : ['.su2'],
-        'tetgen' : ['.smesh', '*.ele'],
+    if allowed_formats is None:
+        # used to include None...
+        allowed_formats = [
+            'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
+            #'plot3d',
+            'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
+            'usm3d', 'bedge', 'su2', 'tetgen',
+        ]
 
-        # no duplicates are allowed
-        #'panair' : ['.inp'],
-        #'abaqus' : ['.inp'],
-    }
     ext = os.path.splitext(input_filename)[1].lower()
-    extension_to_format = {val : key for key, value in iteritems(format_to_extension)
+    extension_to_format = {val : key for key, value in iteritems(FORMAT_TO_EXTENSION)
                            for val in value}
     try:
-        format = extension_to_format[ext]
+        formati = extension_to_format[ext]
     except:
         print('allowed_formats =', allowed_formats)
         msg = 'format=%r was not found\nSpecify the format as [%s]' % (
             ext, ', '.join(allowed_formats))
         raise TypeError(msg)
-    return format
+    return formati
 
 def run_docopt():
     msg  = "Usage:\n"
+
+    # INPUT format may be explicitly or implicitly defined with or
+    # without an output file
     msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     msg += '               [-q] [--groups] [--noupdate]\n'
+
+    # You don't need to throw a -o flag
     msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     msg += '               [-q] [--groups] [--noupdate]\n'
+
+    # no input/output files
+    # can you ever have an OUTPUT, but no INPUT?
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
@@ -113,19 +131,17 @@ def run_docopt():
         assert os.path.exists(output_filename), print_bad_path(output_filename)
     debug = not(data['--quiet'])
 
-    # used to include None...
+    if input_filenames and not input_format:
+        input_format = determine_format(input_filenames[0])
+
+    # None is for custom geometry
     allowed_formats = [
         'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
         #'plot3d',
-        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus', 'usm3d', 'bedge',
-        'su2', 'tetgen',
+        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
+        'usm3d', 'bedge', 'su2', 'tetgen',
+        None,
     ]
-
-    if input_filenames and not input_format:
-        input_format = determine_format(input_filenames[0], allowed_formats)
-
-    # None is for custom geometry
-    allowed_formats.append(None)
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     shots = []
@@ -163,8 +179,8 @@ def run_docopt():
     no_update = data['--noupdate']
     #assert data['--console'] == False, data['--console']
     return (input_format, input_filenames, output_filenames, shots,
-            magnify, rotation, geom_script, post_script, debug, user_points, user_geom,
-            is_groups, no_update)
+            magnify, rotation, geom_script, post_script, debug, user_points,
+            user_geom, is_groups, no_update)
 
 
 def get_inputs():

@@ -171,7 +171,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             win = DownloadWindow(url, version_latest, win_parent=self)
             win.show()
         dt = time.time() - t0
-        print('dt = ', dt)
+        #print('dt_version_check = %.2f' % dt)
 
     def mousePressEvent(self, ev):
         if not self.run_vtk:

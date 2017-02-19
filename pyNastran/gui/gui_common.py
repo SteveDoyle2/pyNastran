@@ -5,6 +5,7 @@ from __future__ import division, unicode_literals, print_function
 # standard library
 import sys
 import os.path
+import time
 import datetime
 import cgi #  html lib
 import traceback
@@ -2489,7 +2490,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #args, varargs, keywords, defaults = inspect.getargspec(load_function)
             try:
                 #if args[-1] == 'plot':
+                t0 = time.time()
                 has_results = load_function(infile_name, self.last_dir, name=name, plot=plot)
+                dt = time.time() - t0
+                print('dt_load = %.1f sec = %.2f min' % (dt, dt / 60.))
                 #else:
                     #name = load_function.__name__
                     #self.log_error(str(args))
@@ -4194,7 +4198,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         points = cell.GetPoints()
         cell_type = cell.GetCellType()
 
-        if cell_type in [5, 9, 22, 23]:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8
+        if cell_type in [5, 9, 22, 23, 28]:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD
             node_xyz = np.zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):
                 point = points.GetPoint(ipoint)

@@ -430,7 +430,6 @@ class GEOM4(GeomCommon):
 
     def _read_rbe3(self, data, n):
         """RBE3(7101,71,187) - Record 25"""
-        self.log.info('skipping RBE3 in GEOM4\n')
         #return len(data)
         idata = np.fromstring(data[n:], self.idtype)
         fdata = np.fromstring(data[n:], self.fdtype)
@@ -935,6 +934,7 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
         idatai = idata[ii:jj]
         iminus2 = np.where(idatai == -2)[0]
         if len(iminus2):
+            self.log.info('skipping RBE3 in GEOM4\n')
             p = np.hstack([[6], iminus2[:-1]+1])
             q = np.hstack([iminus2[:-1], len(idatai)-1])
             #print('p=%s q=%s' % (p, q))

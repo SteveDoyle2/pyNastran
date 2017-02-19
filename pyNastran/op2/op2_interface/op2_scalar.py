@@ -14,7 +14,7 @@ from six.moves import range
 
 from numpy import array
 import numpy as np
-from scipy.sparse import coo_matrix
+import scipy
 
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
@@ -1510,6 +1510,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.post = -1
             self.read_markers([3])
             data = self.read_block()
+            #assert len(data) == 12, len(data)
 
             self.read_markers([7])
             data = self.read_block()
@@ -2046,7 +2047,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         assert len(grids1) == len(grids2), 'ngrids1=%s ngrids2=%s' % (len(grids1), len(grids2))
         assert len(comps1) == len(comps2), 'ncomps1=%s ncomps2=%s' % (len(comps1), len(comps2))
 
-        j1, j2, nj1, nj2, nj = self.grids_comp_array_to_index(grids1, comps1, grids2, comps2)
+        apply_symmetry = True
+        make_matrix_symmetric = apply_symmetry and matrix_shape == 'symmetric'
+        j1, j2, nj1, nj2, nj = self.grids_comp_array_to_index(
+            grids1, comps1, grids2, comps2, make_matrix_symmetric)
         assert len(j1) == len(j2), 'nj1=%s nj2=%s' % (len(j1), len(j2))
         assert len(grids1) == len(real_array), 'ngrids1=%s nreals=%s' % (len(j1), len(real_array))
 
@@ -2064,8 +2068,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             mrows = nj2
 
         try:
-            matrix = coo_matrix((real_imag_array, (j2, j1)),
-                                shape=(mrows, ncols), dtype=dtype)
+            matrix = scipy.sparse.coo_matrix(
+                (real_imag_array, (j2, j1)),
+                shape=(mrows, ncols), dtype=dtype)
         except ValueError:
             msg = 'Passed all the checks; cannot build MATPOOL sparse matrix...\n'
             spaces = '                                          '
@@ -2073,6 +2078,52 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 spaces, table_name, dtype, mrows, ncols, nj1, nj2, nj)
             self.log.error(msg)
             raise
+
+
+        # enforce symmetry if necessary
+        if make_matrix_symmetric:
+            # get the upper and lower triangular matrices
+            upper_tri = scipy.sparse.triu(matrix)
+            lower_tri = scipy.sparse.tril(matrix)
+
+            # extracts a [1, 2, 3, ..., n] off the diagonal of the matrix
+            # diagonal_array = diagional(upper_tri)
+            #
+            # make it a diagonal matrix
+            # diagi = diags(diagonal_array)
+            diagi = scipy.sparse.diags(scipy.sparse.diagional(upper_tri))
+
+            # Check to see which triangle is populated.
+            # If they both are, make sure they're equal
+            # or average them and throw a warning
+            lnnz = (lower_tri - diagi).nnz
+            unnz = (upper_tri - diagi).nnz
+            assert isinstance(lnnz, int), type(lnnz)
+            assert isinstance(unnz, int), type(unnz)
+
+            # both upper and lower triangle are populated
+            if lnnz > 0 and unnz > 0:
+                upper_tri_t = upper_tri.T
+                if lower_tri == upper_tri_t:
+                    matrix = upper_tri + upper_tri_t - diagi
+                else:
+                    self.log.warning(
+                        'Matrix marked as symmetric does not contain '
+                        'symmetric data.  Data will be symmetrized.')
+                    matrix = (matrix + matrix.T) / 2.
+            elif lnnz > 0:
+                #  lower triangle is populated
+                matrix = lower_tri + lower_tri.T - diagi
+            elif unnz > 0:
+                #  upper triangle is populated
+                matrix = upper_tri + upper_tri_t - diagi
+            else:
+                # matrix is diagonal (or null)
+                matrix = diagi
+            data = matrix
+
+            # matrix is symmetric, but is not stored as symmetric
+            matrix_shape = 'rectangular'
 
         m = Matrix(table_name, is_matpool=True, form=matrix_shape)
         m.data = matrix
@@ -2092,7 +2143,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             return
         raise RuntimeError('failed on read_matpool_matrix')
 
-    def grids_comp_array_to_index(self, grids1, comps1, grids2, comps2):
+    def grids_comp_array_to_index(self, grids1, comps1, grids2, comps2,
+                                  make_matrix_symmetric):
         """maps the dofs"""
         #from pyNastran.utils.mathematics import unique2d
         ai = np.vstack([grids1, comps1]).T
@@ -2106,39 +2158,49 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #urows = c
 
         nid_comp_to_dof_index = {}
-        #dof_index_to_nid_comp = {}
         j = 0
-        a_keys = []
-        for (nid, dof) in ai.tolist():
-            nid_dof = (int(nid), int(dof))
+        a_keys = set()
+        for nid_dof in ai:
+            #nid_dof = (int(nid), int(dof))
+            nid_dof = tuple(nid_dof)
             if nid_dof not in a_keys:
-                a_keys.append(nid_dof)
+                a_keys.add(nid_dof)
                 if nid_dof not in nid_comp_to_dof_index:
-                    nid_comp_to_dof_index[(nid, dof)] = j
-                    #dof_index_to_nid_comp[j] = (nid, dof)
+                    nid_comp_to_dof_index[nid_dof] = j
                     j += 1
-        b_keys = []
-        for (nid, dof) in bi.tolist():
-            nid_dof = (int(nid), int(dof))
-            if nid_dof not in b_keys:
-                b_keys.append(nid_dof)
-            if nid_dof not in nid_comp_to_dof_index:
-                nid_comp_to_dof_index[(nid, dof)] = j
-                #dof_index_to_nid_comp[j] = (nid, dof)
-                j += 1
-
-        ja = np.zeros(grids1.shape, dtype='int32')
-        jb = np.zeros(grids2.shape, dtype='int32')
-        for i, (nid, dof) in zip(count(), ai.tolist()):
-            ja[i] = nid_comp_to_dof_index[(nid, dof)]
-        for i, (nid, dof) in zip(count(), bi.tolist()):
-            jb[i] = nid_comp_to_dof_index[(nid, dof)]
-
-        #nja = len(np.unique(ja))
         nja = len(a_keys)
+        del a_keys
+
+        b_keys = set()
+        for nid_dof in bi:
+            nid_dof = tuple(nid_dof)
+            if nid_dof not in b_keys:
+                b_keys.add(nid_dof)
+            if nid_dof not in nid_comp_to_dof_index:
+                nid_comp_to_dof_index[nid_dof] = j
+                j += 1
         njb = len(b_keys)
+        del b_keys
+
+
         nj = len(nid_comp_to_dof_index)
-        return ja, jb, nja, njb, nj
+        if make_matrix_symmetric:
+            ja = np.zeros(nj, dtype='int32')
+            for i, nid_dof in zip(count(), ai):
+                j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+            for i, nid_dof in zip(count(), bi):
+                j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+            return j, j, nj, nj, nj
+        else:
+            ja = np.zeros(grids1.shape, dtype='int32')
+            for i, nid_dof in zip(count(), ai.tolist()):
+                ja[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+
+            jb = np.zeros(grids2.shape, dtype='int32')
+            for i, nid_dof in zip(count(), bi.tolist()):
+                jb[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+
+            return ja, jb, nja, njb, nj
 
     def _read_matrix_mat(self):
         """
@@ -2325,8 +2387,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         self.log.warning('what is the dtype?')
                     elif tout in [1, 2]:
                         real_array = np.array(reals, dtype=dtype)
-                        matrix = coo_matrix((real_array, (GCi, GCj)),
-                                            shape=(mrows, ncols), dtype=dtype)
+                        matrix = scipy.sparse.coo_matrix(
+                            (real_array, (GCi, GCj)),
+                            shape=(mrows, ncols), dtype=dtype)
                         matrix = matrix.todense()
                         #self.log.info('created %s' % self.table_name)
                     elif tout in [3, 4]:
@@ -2338,8 +2401,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                             #self.binary_debug.write('reals = %s' % real_complex[:, 0])
                             #self.binary_debug.write('imags = %s' % real_complex[:, 1])
                             self.binary_debug.write('real_imag = %s' % real_imag)
-                        matrix = coo_matrix((real_imag, (GCi, GCj)),
-                                            shape=(mrows, ncols), dtype=dtype)
+                        matrix = scipy.sparse.coo_matrix(
+                            (real_imag, (GCi, GCj)),
+                            shape=(mrows, ncols), dtype=dtype)
                         msg = 'created %s...verify the complex matrix' % self.table_name
                         self.log.warning(msg)
                         #raise RuntimeError(msg)

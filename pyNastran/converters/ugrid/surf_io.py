@@ -138,8 +138,8 @@ class SurfIO(object):
     def clear_surf(self):
         pass
 
-    def _load_surf_results(self, openfoam_filename, dirname):
-        raise NotImplementedError()
+    #def _load_surf_results(self, openfoam_filename, dirname):
+        #raise NotImplementedError()
 
     def _fill_surf_case(self, surf_filename, cases, ID, nnodes, nelements, model):
         base, ext = os.path.splitext(surf_filename)
