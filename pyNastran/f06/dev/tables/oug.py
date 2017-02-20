@@ -2,10 +2,9 @@
 from __future__ import print_function
 from six.moves import zip
 
-from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement, ComplexDisplacement
-from pyNastran.op2.tables.oug.oug_eigenvectors import (Eigenvector, ComplexEigenvector,
-                                                       RealEigenvectorArray, ComplexEigenvectorArray)
-from pyNastran.op2.tables.oug.oug_temperatures import RealTemperature
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, ComplexDisplacementArray
+from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray, ComplexEigenvectorArray
+from pyNastran.op2.tables.oug.oug_temperatures import RealTemperatureArray
 
 
 class OUG(object):
@@ -247,7 +246,7 @@ class OUG(object):
                 line1[54:69], line2[54:69],
                 line1[69:84], line2[69:84],
                 line1[84:99], line2[84:99],
-                line1[99:114],line2[99:114],
+                line1[99:114], line2[99:114],
             ]
             if grid_type in ['G', 'L']:
                 # .. todo:: are L points single DOFs?

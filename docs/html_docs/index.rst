@@ -23,10 +23,10 @@ MPC forces, grid point forces, load vectors, applied loads, strain energy,
 as well as stress and strain.
 
 The **Python OP4** reader/writer supports reading ASCII/binary sparse and dense
-matrices, and writing ASCII matrices..
+matrices, and writing ASCII matrices.
 
 A simple GUI has been developed that can view BDF models and display static/dynamic
-stress/strain/displacement/eignevectors (they must be real!) results from the OP2.
+displacement/eignevectors (real/complex) and stress/strain (real) results from the OP2.
 Additionally, AVUS, Cart3d, Usm3d, Tetgen, STL, and Panair are somewhat supported and
 included for use.
 

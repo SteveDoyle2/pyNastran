@@ -4,9 +4,9 @@ tables Package
 :mod:`lama` Module
 ------------------
 
-.. inheritance-diagram:: pyNastran.f06.tables.lama
+.. inheritance-diagram:: pyNastran.f06.dev.tables.lama
 
-.. automodule:: pyNastran.f06.tables.lama
+.. automodule:: pyNastran.f06.dev.tables.lama
     :members:
     :undoc-members:
     :show-inheritance:
@@ -14,9 +14,9 @@ tables Package
 :mod:`max_min` Module
 ---------------------
 
-.. inheritance-diagram:: pyNastran.f06.tables.max_min
+.. inheritance-diagram:: pyNastran.f06.dev.tables.max_min
 
-.. automodule:: pyNastran.f06.tables.max_min
+.. automodule:: pyNastran.f06.dev.tables.max_min
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,9 +24,9 @@ tables Package
 :mod:`oef` Module
 -----------------
 
-.. inheritance-diagram:: pyNastran.f06.tables.oef
+.. inheritance-diagram:: pyNastran.f06.dev.tables.oef
 
-.. automodule:: pyNastran.f06.tables.oef
+.. automodule:: pyNastran.f06.dev.tables.oef
     :members:
     :undoc-members:
     :show-inheritance:
@@ -34,9 +34,9 @@ tables Package
 :mod:`oes` Module
 -----------------
 
-.. inheritance-diagram:: pyNastran.f06.tables.oes
+.. inheritance-diagram:: pyNastran.f06.dev.tables.oes
 
-.. automodule:: pyNastran.f06.tables.oes
+.. automodule:: pyNastran.f06.dev.tables.oes
     :members:
     :undoc-members:
     :show-inheritance:
@@ -44,9 +44,9 @@ tables Package
 :mod:`oload_resultant` Module
 -----------------------------
 
-.. inheritance-diagram:: pyNastran.f06.tables.oload_resultant
+.. inheritance-diagram:: pyNastran.f06.dev.tables.oload_resultant
 
-.. automodule:: pyNastran.f06.tables.oload_resultant
+.. automodule:: pyNastran.f06.tables.dev.oload_resultant
     :members:
     :undoc-members:
     :show-inheritance:
@@ -54,9 +54,9 @@ tables Package
 :mod:`oqg` Module
 -----------------
 
-.. inheritance-diagram:: pyNastran.f06.tables.oqg
+.. inheritance-diagram:: pyNastran.f06.dev.tables.oqg
 
-.. automodule:: pyNastran.f06.tables.oqg
+.. automodule:: pyNastran.f06.dev.tables.oqg
     :members:
     :undoc-members:
     :show-inheritance:
@@ -64,9 +64,9 @@ tables Package
 :mod:`oug` Module
 -----------------
 
-.. inheritance-diagram:: pyNastran.f06.tables.oug
+.. inheritance-diagram:: pyNastran.f06.dev.tables.oug
 
-.. automodule:: pyNastran.f06.tables.oug
+.. automodule:: pyNastran.f06.dev.tables.oug
     :members:
     :undoc-members:
     :show-inheritance:

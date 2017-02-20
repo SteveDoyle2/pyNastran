@@ -1009,7 +1009,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
         :param Format: list of types [int,str,float,float,float] that maps to sline
 
-        .. seealso:: self.parseLine
+        .. seealso:: self.parse_line
         """
         sline = True
         data = []
@@ -1022,7 +1022,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             if 'PAGE' in sline:
                 #self.stored_lines = [line]  ## changed...
                 return data
-            sline = self.parseLine(sline, Format)
+            sline = self.parse_line(sline, Format)
             if sline is None or len(sline) == 0:
                 return data
             data.append(sline)
@@ -1041,10 +1041,16 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             data.append(sline)
         return data
 
-    def parseLine(self, sline, formats):
+    def parse_line(self, sline, formats):
         """
-        :param sline:   list of strings (split line)
-        :param formats: list of types [int,str,float,float,float] that maps to sline
+        Parses a line
+
+        Parameters
+        ----------
+        sline : List[str]
+            split line
+        formats : List[int,str,float,float,float]
+            list of types that maps to sline
         """
         out = []
         for entry, iformat in zip(sline, formats):

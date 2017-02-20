@@ -1,14 +1,14 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function
 from six.moves import range
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStress, RealRodStrain
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStress, RealBarStrain
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_beams   import RealBeamStress
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_shear   import RealShearStress
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStress, RealSolidStrain
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStress, RealPlateStrain
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import RealCompositePlateStress, RealCompositePlateStrain
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressArray, RealSolidStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealSpringStressArray, RealSpringStrainArray
 #strain...
 
 
@@ -55,7 +55,7 @@ class OES(object):
             slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            slot[isubcase] = RealRodStress(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealRodStressArray(data_code, is_sort1, isubcase, transient)
             slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -68,7 +68,7 @@ class OES(object):
             slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            slot[isubcase] = RealRodStrain(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealRodStrainArray(data_code, is_sort1, isubcase, transient)
             slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -94,7 +94,7 @@ class OES(object):
             slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            slot[isubcase] = RealCelasStress(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealSpringStressArray(data_code, is_sort1, isubcase, transient)
             slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -119,7 +119,7 @@ class OES(object):
             slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            slot[isubcase] = RealCelasStrain(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealSpringStrainArray(data_code, is_sort1, isubcase, transient)
             slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -227,7 +227,7 @@ class OES(object):
             self.cbar_stress[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.cbar_stress[isubcase] = RealBarStress(data_code, is_sort1, isubcase, dt)
+            self.cbar_stress[isubcase] = RealBarStressArray(data_code, is_sort1, isubcase, dt)
             self.cbar_stress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -240,7 +240,7 @@ class OES(object):
             self.cbar_strain[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.cbar_strain[isubcase] = RealBarStrain(data_code, is_sort1, isubcase, dt)
+            self.cbar_strain[isubcase] = RealBarStrainArray(data_code, is_sort1, isubcase, dt)
             self.cbar_strain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -370,11 +370,11 @@ class OES(object):
         data = self._read_f06_table(data_types)
 
         is_max_shear = False  # Von Mises/Max Shear
-        sHeaders = headers.rstrip()
-        if 'SHEAR' in sHeaders[-5:]:  # last 5 letters of the line to avoid 'SHEAR YZ-MAT'
+        sheaders = headers.rstrip()
+        if 'SHEAR' in sheaders[-5:]:  # last 5 letters of the line to avoid 'SHEAR YZ-MAT'
             is_max_shear = True
         else:
-            raise RuntimeError(sHeader)
+            raise RuntimeError(sheaders)
 
         is_fiber_distance = True
         (stress_bits, s_code) = make_stress_bits(is_fiber_distance=is_fiber_distance, is_max_shear=is_max_shear, is_strain=is_strain)
@@ -391,9 +391,9 @@ class OES(object):
 
         is_sort1 = True
         if is_strain:
-            class_obj = RealCompositePlateStrain
+            class_obj = RealCompositePlateStrainArray
         else:
-            class_obj = RealCompositePlateStress
+            class_obj = RealCompositePlateStressArray
 
         if isubcase in slot:
             slot[isubcase].add_f06_data(data, transient, element_name)
@@ -429,7 +429,7 @@ class OES(object):
             self.ctria3_stress[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.ctria3_stress[isubcase] = RealPlateStress(data_code, is_sort1, isubcase, transient)
+            self.ctria3_stress[isubcase] = RealPlateStressArray(data_code, is_sort1, isubcase, transient)
             self.ctria3_stress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -442,7 +442,7 @@ class OES(object):
         else:
             is_sort1 = True
             assert 'nonlinear_factor' in data_code
-            self.ctria3_strain[isubcase] = RealPlateStrain(data_code, is_sort1, isubcase, transient)
+            self.ctria3_strain[isubcase] = RealPlateStrainArray(data_code, is_sort1, isubcase, transient)
             self.ctria3_strain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -491,7 +491,7 @@ class OES(object):
             data_code['name'] = transient[0]
         return (isubcase, transient, data_code)
 
-    def _read_tri_stress(self, eType):
+    def _read_tri_stress(self, etype):
         """
         ::
 
@@ -508,7 +508,7 @@ class OES(object):
             #print line
             data_types = [int, float, float, float, float,
                           float, float, float, float]
-            sline = self.parseLine(line, data_types)  # line 1
+            sline = self.parse_line(line, data_types)  # line 1
             #print 'sline',sline
             sline = eType + sline
             data.append(sline)
@@ -516,7 +516,7 @@ class OES(object):
             #print '***',line
             data_types = [float, float, float, float,
                           float, float, float, float]
-            sline += self.parseLine(line, data_types)  # line 2
+            sline += self.parse_line(line, data_types)  # line 2
             data.append(sline)
             self.i += 2
         return data
@@ -532,7 +532,7 @@ class OES(object):
         else:
             is_sort1 = True
             assert 'nonlinear_factor' in data_code
-            self.cquad4_stress[isubcase] = RealPlateStress(data_code, is_sort1, isubcase, transient)
+            self.cquad4_stress[isubcase] = RealPlateStressArray(data_code, is_sort1, isubcase, transient)
             self.cquad4_stress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -544,7 +544,7 @@ class OES(object):
             self.cquad4_strain[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.cquad4_strain[isubcase] = RealPlateStrain(data_code, is_sort1, isubcase, transient)
+            self.cquad4_strain[isubcase] = RealPlateStrainArray(data_code, is_sort1, isubcase, transient)
             self.cquad4_strain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -577,10 +577,10 @@ class OES(object):
 
         if is_strain:
             slot = self.cquad4_strain
-            class_obj = RealPlateStrain
+            class_obj = RealPlateStrainArray
         else:
             slot = self.cquad4_stress
-            class_obj = RealPlateStress
+            class_obj = RealPlateStressArray
 
 
         if isubcase in slot:
@@ -640,7 +640,8 @@ class OES(object):
                 line = self.infile.readline()[1:].strip().split()
                 if 'PAGE' in line:
                     return data
-                sline = self.parseLine(line, [int, str, float, float, float, float, float, float, float, float])  # line 1
+                sline = self.parse_line(line, [int, str, float, float, float, float,
+                                                         float, float, float, float])  # line 1
                 if sline is None:
                     break
                 sline = ['CQUAD4'] + sline
@@ -648,7 +649,7 @@ class OES(object):
                 line = self.infile.readline()[1:].strip().split()
                 data_types = [float, float, float, float,
                               float, float, float, float]
-                sline += self.parseLine(line, data_types)  # line 2
+                sline += self.parse_line(line, data_types)  # line 2
                 data.append(sline)
                 line = self.infile.readline()  # blank line
                 self.i += 3
@@ -657,12 +658,12 @@ class OES(object):
                 line = self.infile.readline()[1:].strip().split()
                 data_types = [int, float, float, float, float,
                               float, float, float, float]
-                sline = self.parseLine(line, data_types)  # line 1
+                sline = self.parse_line(line, data_types)  # line 1
                 #data.append(sline)
                 line = self.infile.readline()[1:].strip().split()
                 data_types = [float, float, float, float,
                               float, float, float, float]
-                sline += self.parseLine(line, data_types)  # line 2
+                sline += self.parse_line(line, data_types)  # line 2
                 data.append(sline)
                 line = self.infile.readline()  # blank line
                 self.i += 3
@@ -690,7 +691,8 @@ class OES(object):
         return self._read_solid_strain('CTETRA', 39, 4, self.ctetra_strain)
 
     def _read_solid_stress(self, element_name, element_type, nnodes, slot):
-        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, nnodes, is_strain=False)
+        (isubcase, transient, data_code) = self._get_solid_header(
+            element_name, element_type, nnodes, is_strain=False)
         data_code['table_name'] = 'OES1X'
 
         data = self._read_3d_stress(element_name, nnodes, is_strain=False)
@@ -698,14 +700,15 @@ class OES(object):
             slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            slot[isubcase] = RealSolidStress(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealSolidStressArray(data_code, is_sort1, isubcase, transient)
             slot[isubcase].add_f06_data(data, transient)
-            assert slot[isubcase].is_stress() == True
-            assert slot[isubcase].is_strain() == False
+            assert slot[isubcase].is_stress() is True
+            assert slot[isubcase].is_strain() is False
         self.iSubcases.append(isubcase)
 
     def _read_solid_strain(self, element_name, element_type, nnodes, slot):
-        (isubcase, transient, data_code) = self._get_solid_header(element_name, element_type, nnodes, is_strain=True)
+        (isubcase, transient, data_code) = self._get_solid_header(
+            element_name, element_type, nnodes, is_strain=True)
         data_code['table_name'] = 'OSTR1X'
 
         data = self._read_3d_stress(element_name, nnodes, is_strain=True)
@@ -713,10 +716,10 @@ class OES(object):
             slot[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            slot[isubcase] = RealSolidStrain(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealSolidStrainArray(data_code, is_sort1, isubcase, transient)
             slot[isubcase].add_f06_data(data, transient)
-            assert slot[isubcase].is_stress() == False
-            assert slot[isubcase].is_strain() == True
+            assert slot[isubcase].is_stress() is False
+            assert slot[isubcase].is_strain() is True
         self.iSubcases.append(isubcase)
 
     def _get_solid_header(self, element_name, element_type, n, is_strain=True):
