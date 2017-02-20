@@ -1985,7 +1985,6 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'GMLOAD' : (GMLOAD, self._add_load_object),
             'SPCD' : (SPCD, self._add_load_object),  # enforced displacement
             'QVOL' : (QVOL, self._add_load_object),  # thermal
-            'QVOL' : (QVECT, self._add_load_object),
 
             'DLOAD' : (DLOAD, self._add_dload_object),
             'ACSRCE' : (ACSRCE, self._add_dload_entry),
@@ -1993,6 +1992,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'TLOAD2' : (TLOAD2, self._add_dload_entry),
             'RLOAD1' : (RLOAD1, self._add_dload_entry),
             'RLOAD2' : (RLOAD2, self._add_dload_entry),
+            'QVECT' : (QVECT, self._add_dload_entry),
 
             'FREQ' : (FREQ, self._add_freq_object),
             'FREQ1' : (FREQ1, self._add_freq_object),
