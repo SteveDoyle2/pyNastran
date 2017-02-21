@@ -2239,13 +2239,13 @@ class PLOAD4(Load):
             g34 = integer_or_blank(card, 8, 'g34')
 
         cid = integer_or_blank(card, 9, 'cid', 0)
-        NVector = array([double_or_blank(card, 10, 'N1', 0.0),
+        nvector = array([double_or_blank(card, 10, 'N1', 0.0),
                          double_or_blank(card, 11, 'N2', 0.0),
                          double_or_blank(card, 12, 'N3', 0.0)])
         sorl = string_or_blank(card, 13, 'sorl', 'SURF')
         ldir = string_or_blank(card, 14, 'ldir', 'NORM')
         assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
-        return PLOAD4(sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=comment)
+        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector, sorl, ldir, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2260,7 +2260,7 @@ class PLOAD4(Load):
         if g34 == 0:
             g34 = None
         cid = data[5]
-        NVector = data[6]
+        nvector = data[6]
 
         sorl = data[7]
         #self.ldir = data[8]
@@ -2269,7 +2269,7 @@ class PLOAD4(Load):
         eids = [eid]
         sorl = 'SURF'
         ldir = 'NORM'
-        return PLOAD4(sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=comment)
+        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector, sorl, ldir, comment=comment)
 
     def get_loads(self):
         return [self]

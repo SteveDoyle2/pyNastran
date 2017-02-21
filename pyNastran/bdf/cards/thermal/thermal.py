@@ -957,7 +957,10 @@ class CONV(ThermalBC):
         #: Ambient points used for convection 0's are allowed for TA2 and
         #: higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
         #: Default for TA2 through TA8 is TA1.)
-        self.ta = ta
+        if isinstance(ta, integer_types):
+            self.ta = [ta]
+        else:
+            self.ta = ta
         assert self.eid > 0, 'eid=%s\n%s' % (eid, str(self))
 
     @classmethod
@@ -1145,7 +1148,10 @@ class RADM(ThermalBC):
         self.radmid = radmid
 
         self.absorb = absorb
-        self.emissivity = emissivity
+        if isinstance(emissivity, float):
+            self.emissivity = [emissivity]
+        else:
+            self.emissivity = emissivity
 
         assert self.radmid > 0, str(self)
         assert 0. <= self.absorb <= 1.0, str(self)
@@ -1168,6 +1174,10 @@ class RADM(ThermalBC):
 
     #def cross_reference(self, model):
         #pass
+
+    def raw_fields(self):
+        list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
+        return list_fields
 
     def repr_fields(self):
         list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity

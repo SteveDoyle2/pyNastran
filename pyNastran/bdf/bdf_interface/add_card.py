@@ -2819,6 +2819,21 @@ class AddCards(AddMethods):
         return rotor
 
     def add_temp(self, sid, temperatures, comment=''):
+        """
+        Creates a TEMP card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number
+        temperatures : dict[nid] : temperature
+            nid : int
+                node id
+            temperature : float
+                the nodal temperature
+        comment : str; default=''
+            a comment for the card
+        """
         temp = TEMP(sid, temperatures, comment=comment)
         self._add_thermal_load_object(temp)
         return temp
@@ -2833,13 +2848,13 @@ class AddCards(AddMethods):
         self._add_tempd_object(tempd)
         return tempd
 
-    def add_qhbdy(self, sid, flag, Q0, af, grids, comment=''):
-        load = QHBDY(sid, flag, Q0, af, grids, comment=comment)
+    def add_qhbdy(self, sid, flag, q0, grids, af=None, comment=''):
+        load = QHBDY(sid, flag, q0, grids, af=af, comment=comment)
         self._add_thermal_load_object(load)
         return load
 
-    def add_qbdy1(self, sid, qFlux, eids, comment=''):
-        load = QBDY1(sid, qFlux, eids, comment=comment)
+    def add_qbdy1(self, sid, qflux, eids, comment=''):
+        load = QBDY1(sid, qflux, eids, comment=comment)
         self._add_thermal_load_object(load)
         return load
 
@@ -2856,6 +2871,42 @@ class AddCards(AddMethods):
     def add_qvol(self, sid, qvol, control_point, elements, comment=''):
         load = QVOL(sid, qvol, control_point, elements, comment=comment)
         self._add_load_object(load)
+        return load
+
+    def add_qvect(self, sid, q0, t_source, eids,
+                     ce=0, vector_tableds=None, control_id=0, comment=''):
+        """
+        Creates a QVECT card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. (Integer > 0)
+        q0 : float; default=None
+            Magnitude of thermal flux vector into face
+        t_source : float; default=None
+            Temperature of the radiant source
+        ce : int; default=0
+            Coordinate system identification number for thermal vector flux
+        vector_tableds : List[int/float, int/float, int/float]
+            vector : float; default=0.0
+                directional cosines in coordinate system CE) of
+                the thermal vector flux
+            tabled : int
+                TABLEDi entry identification numbers defining the
+                components as a function of time
+        control_id : int; default=0
+            Control point
+        eids : List[int] or THRU
+            Element identification number of a CHBDYE, CHBDYG, or
+            CHBDYP entry
+        comment : str; default=''
+            a comment for the card
+        """
+        load = QVECT(sid, q0, t_source, eids, ce=ce,
+                     vector_tableds=vector_tableds, control_id=control_id,
+                     comment=comment)
+        self._add_dload_entry(load)
         return load
 
     def add_chbdyg(self, eid, Type, nodes,

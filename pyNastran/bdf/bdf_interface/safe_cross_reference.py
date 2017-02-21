@@ -49,7 +49,7 @@ class SafeXrefMesh(XrefMesh):
         """
         if not xref:
             return
-        self.log.debug("Cross Referencing...")
+        self.log.debug("Safe Cross Referencing...")
         if xref_nodes:
             self._cross_reference_nodes()
             self._cross_reference_coordinates()

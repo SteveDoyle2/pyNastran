@@ -15,7 +15,7 @@ from pyNastran.bdf.cards.base_card import expand_thru, expand_thru_by, BaseCard
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
-    string, fields)
+    integer_double_or_blank, string, fields)
 
 
 class ThermalLoadDefault(ThermalCard):
@@ -30,6 +30,14 @@ class ThermalLoad(ThermalCard):
 class QVOL(ThermalLoad):
     """
     Defines a rate of volumetric heat addition in a conduction element.
+
+    +------+------+------+---------+------+------+------+------+------+
+    |  1   |   2  |   3  |    4    |   5  |   6  |   7  |   8  |   9  |
+    +======+======+======+=========+======+======+======+======+======+
+    | QVOL | SID  | QVOL | CNTRLND | EID1 | EID2 | EID3 | EID4 | EID5 |
+    +------+------+------+---------+------+------+------+------+------+
+    |      | EID6 | etc. |         |      |      |      |      |      |
+    +------+------+------+---------+------+------+------+------+------+
     """
     type = 'QVOL'
 
@@ -80,6 +88,7 @@ class QVOL(ThermalLoad):
             return self.cross_reference(model)
         except KeyError:
             model.log.warning('failed cross-referencing\n%s' % str(self))
+            raise
 
     def uncross_reference(self):
         self.elements = self.element_ids
@@ -133,10 +142,13 @@ class QVECT(ThermalLoad):
     +-------+------+------+-------+-----+---------+---------+---------+---------+
     """
     type = 'QVECT'
-    def __init__(self, sid, q0, t_source, ce, vector_tableds, control_id, eids,
-                 comment=''):
+    def __init__(self, sid, q0, t_source, eids,
+                     ce=0, vector_tableds=None, control_id=0, comment=''):
         """
+        Creates a QVECT card
 
+        Parameters
+        ----------
         sid : int
             Load set identification number. (Integer > 0)
         q0 : float; default=None
@@ -146,9 +158,10 @@ class QVECT(ThermalLoad):
         ce : int; default=0
             Coordinate system identification number for thermal vector flux
         vector_tableds : List[int/float, int/float, int/float]
-            vector : float; default=0.0
+            vector : float; default=None
                 directional cosines in coordinate system CE) of
                 the thermal vector flux
+                None : [0.0, 0.0, 0.0]
             tabled : int
                 TABLEDi entry identification numbers defining the
                 components as a function of time
@@ -158,6 +171,7 @@ class QVECT(ThermalLoad):
             Element identification number of a CHBDYE, CHBDYG, or
             CHBDYP entry
         comment : str; default=''
+            a comment for the card
         """
         ThermalLoad.__init__(self)
         if comment:
@@ -167,32 +181,37 @@ class QVECT(ThermalLoad):
         self.q0 = q0
         self.t_source = t_source
         self.ce = ce
-        self.vector_tables = vector_tables
+        self.control_id = control_id
+
+        if vector_tableds is None:
+            self.vector_tableds = [0., 0., 0.]
+        else:
+            self.vector_tableds = vector_tableds
         self.eids = eids
 
     @classmethod
     def add_card(cls, card, comment=''):
-        sid, q0, t_source, ce, vector_tableds, control_id, eids
-
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
         t_source = double(card, 3, 't_source')
         ce = integer_or_blank(card, 4, 'ce', 0)
         vector_tableds = [
-            integer_float_or_blank(card, 5, 'e1_tabled1', 0.0),
-            integer_float_or_blank(card, 6, 'e2_tabled2', 0.0),
-            integer_float_or_blank(card, 7, 'e3_tabled3', 0.0),
+            integer_double_or_blank(card, 5, 'e1_tabled1', 0.0),
+            integer_double_or_blank(card, 6, 'e2_tabled2', 0.0),
+            integer_double_or_blank(card, 7, 'e3_tabled3', 0.0),
         ]
-        control_point = integer_or_blank(card, 8, 'control_id', 0)
+        control_id = integer_or_blank(card, 8, 'control_id', 0)
 
         i = 1
         eids = []
-        for ifield in range(8, len(card)):
+        for ifield in range(9, len(card)):
             eid = integer_or_string(card, ifield, 'eid_%i' % i)
             eids.append(eid)
+            assert eid != 0, card
             i += 1
         elements = expand_thru_by(eids)
-        return QVECT(sid, q0, t_source, ce, vector_tableds, control_id, eids,
+        return QVECT(sid, q0, t_source, elements,
+                     ce=ce, vector_tableds=vector_tableds, control_id=control_id,
                      comment=comment)
 
     def get_loads(self):
@@ -208,8 +227,8 @@ class QVECT(ThermalLoad):
             the BDF object
         """
         msg = ' which is required by QVECT sid=%s' % self.sid
-        self.elements = model.Elements(self.elements, msg=msg)
-        self.elements_ref = self.elements
+        self.eids = model.Elements(self.eids, msg=msg)
+        self.eidss_ref = self.eids
 
     def safe_cross_reference(self, model):
         try:
@@ -218,7 +237,7 @@ class QVECT(ThermalLoad):
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self):
-        self.elements = self.element_ids
+        self.eids = self.element_ids
         del self.elements_ref
 
     def _eid(self, eid):
@@ -232,21 +251,21 @@ class QVECT(ThermalLoad):
 
     def Eids(self):
         eids = []
-        for eid in self.elements:
+        for eid in self.eids:
             eids.append(self._eid(eid))
         return eids
 
     def raw_fields(self):
         list_fields = [
             'QVECT', self.sid, self.q0, self.t_source, self.ce
-            ] + self.vector_tables + [self.control_point] + self.element_ids
+            ] + self.vector_tableds + [self.control_id] + self.element_ids
         return list_fields
 
     def repr_fields(self):
         eids = collapse_thru_by(self.element_ids)
         list_fields = [
             'QVECT', self.sid, self.q0, self.t_source, self.ce
-            ] + self.vector_tables + [self.control_point] + eids
+            ] + self.vector_tableds + [self.control_id] + eids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -264,14 +283,14 @@ class QBDY1(ThermalLoad):
     """
     type = 'QBDY1'
 
-    def __init__(self, sid, qFlux, eids, comment=''):
+    def __init__(self, sid, qflux, eids, comment=''):
         ThermalLoad.__init__(self)
         if comment:
             self.comment = comment
         #: Load set identification number. (Integer > 0)
         self.sid = sid
         #: Heat flux into element (FLOAT)
-        self.qFlux = qFlux
+        self.qflux = qflux
         #: CHBDYj element identification numbers (Integer)
         #: .. todo:: use expand_thru_by ???
         assert len(eids) > 0
@@ -280,25 +299,21 @@ class QBDY1(ThermalLoad):
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
-        qFlux = double(card, 2, 'qFlux')
+        qflux = double(card, 2, 'qflux')
         eids = []
         j = 1
         for i in range(3, len(card)):
             eid = integer_or_string(card, i, 'eid%i' % j)
             eids.append(eid)
             j += 1
-        return QBDY1(sid, qFlux, eids, comment=comment)
+        return QBDY1(sid, qflux, eids, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid = data[0]
-        qFlux = data[1]
+        qflux = data[1]
         eids = data[2:]
-        return QBDY1(sid, qFlux, eids, comment=comment)
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
+        return QBDY1(sid, qflux, eids, comment=comment)
 
     def get_loads(self):
         return [self]
@@ -332,7 +347,7 @@ class QBDY1(ThermalLoad):
         return eid.eid
 
     def nQFluxTerms(self):
-        return len(self.qFlux)
+        return len(self.qflux)
 
     @property
     def element_ids(self):
@@ -345,12 +360,12 @@ class QBDY1(ThermalLoad):
         return eids
 
     def raw_fields(self):
-        list_fields = ['QBDY1', self.sid, self.qFlux] + self.element_ids
+        list_fields = ['QBDY1', self.sid, self.qflux] + self.element_ids
         return list_fields
 
     def repr_fields(self):
         eids = collapse_thru_by(self.element_ids)
-        list_fields = ['QBDY1', self.sid, self.qFlux] + eids
+        list_fields = ['QBDY1', self.sid, self.qflux] + eids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -379,7 +394,9 @@ class QBDY2(ThermalLoad):  # not tested
         self.eid = eid
         #: Heat flux at the i-th grid point on the referenced CHBDYj
         #: element. (Real or blank)
-        self.qFlux = qfluxs
+        if isinstance(qfluxs, float):
+            qfluxs = [qfluxs]
+        self.qfluxs = qfluxs
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -403,10 +420,6 @@ class QBDY2(ThermalLoad):  # not tested
         eid = data[1]
         qfluxs = [data[2]]
         return QBDY2(sid, eid, qfluxs, comment=comment)
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -440,10 +453,10 @@ class QBDY2(ThermalLoad):  # not tested
         return self.eid.eid
 
     def nQFluxTerms(self):
-        return len(self.qFlux)
+        return len(self.qfluxs)
 
     def raw_fields(self):
-        list_fields = ['QBDY2', self.sid, self.Eid()] + self.qFlux
+        list_fields = ['QBDY2', self.sid, self.Eid()] + self.qfluxs
         return list_fields
 
     def repr_fields(self):
@@ -582,7 +595,7 @@ class QHBDY(ThermalLoad):
         'AREA8' : 8,
     }
 
-    def __init__(self, sid, flag, Q0, af, grids, comment=''):
+    def __init__(self, sid, flag, q0, grids, af=None, comment=''):
         ThermalLoad.__init__(self)
         if comment:
             self.comment = comment
@@ -590,12 +603,11 @@ class QHBDY(ThermalLoad):
         #: Load set identification number. (Integer > 0)
         self.sid = sid
         self.flag = flag
-        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
-                        'AREA6', 'AREA8']
+        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8']
 
         #: Magnitude of thermal flux into face. Q0 is positive for heat
         #: into the surface. (Real)
-        self.Q0 = Q0
+        self.q0 = q0
 
         #: Area factor depends on type. (Real > 0.0 or blank)
         self.af = af
@@ -612,7 +624,7 @@ class QHBDY(ThermalLoad):
         assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
                         'AREA6', 'AREA8']
 
-        Q0 = double(card, 3, 'Q0')
+        q0 = double(card, 3, 'q0')
         af = double_or_blank(card, 4, 'af')
         nnodes = cls.flag_to_nnodes[flag]
 
@@ -620,20 +632,16 @@ class QHBDY(ThermalLoad):
         for i in range(nnodes):
             grid = integer(card, 5 + i, 'grid%i' % (i + 1))
             grids.append(grid)
-        return QHBDY(sid, flag, Q0, af, grids, comment=comment)
+        return QHBDY(sid, flag, q0, grids, af=af, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid = data[0]
         flag = data[1]
-        Q0 = data[2]
+        q0 = data[2]
         af = data[3]
         grids = data[4:]
-        return QHBDY(sid, flag, Q0, af, grids, comment=comment)
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
+        return QHBDY(sid, flag, q0, grids, af=af, comment=comment)
 
     def get_loads(self):
         return [self]
@@ -651,7 +659,7 @@ class QHBDY(ThermalLoad):
         pass
 
     def raw_fields(self):
-        list_fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids
+        list_fields = ['QHBDY', self.sid, self.flag, self.q0, self.af] + self.grids
         return list_fields
 
     def repr_fields(self):
@@ -682,6 +690,21 @@ class TEMP(ThermalLoad):
     type = 'TEMP'
 
     def __init__(self, sid, temperatures, comment=''):
+        """
+        Creates a TEMP card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number
+        temperatures : dict[nid] : temperature
+            nid : int
+                node id
+            temperature : float
+                the nodal temperature
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalLoad.__init__(self)
         if comment:
             self.comment = comment

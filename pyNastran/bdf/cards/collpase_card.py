@@ -4,8 +4,12 @@ from collections import Counter
 
 def collapse_thru_by(fields, get_packs=False):
     """
-    :param fields:    the list of fields to collapse
-    :param get_packs: get the list of packs so "special" formatting can be done
+    Parameters
+    ----------
+    fields : List[int]
+        the list of fields to collapse
+    get_packs : bool; default=False
+        get the list of packs so "special" formatting can be done
 
     fields              packs
     [1, 2, 3...150]  -> [1, 150, 1]
