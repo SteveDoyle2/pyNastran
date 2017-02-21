@@ -92,7 +92,7 @@ from pyNastran.bdf.cards.bdf_sets import (
 )
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
-from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL
+from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL, QVECT
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, RADM, RADBC)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
@@ -2859,37 +2859,59 @@ class AddCards(AddMethods):
         return load
 
     def add_chbdyg(self, eid, Type, nodes,
-                   iViewFront=0, iViewBack=0,
-                   radMidFront=0, radMidBack=0, comment=''):
+                   iview_front=0, ivew_back=0,
+                   rad_mid_front=0, rad_mid_back=0, comment=''):
         elem = CHBDYG(eid, Type, nodes,
-                      iViewFront=iViewFront, iViewBack=iViewBack,
-                      radMidFront=radMidFront, radMidBack=radMidBack,
+                      iview_front=iview_front, ivew_back=ivew_back,
+                      rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
         self._add_thermal_element_object(elem)
         return elem
 
     def add_chbdyp(self, eid, pid, Type, g1, g2,
                    g0=0, gmid=None, ce=0,
-                   iViewFront=0, iViewBack=0,
-                   radMidFront=0, radMidBack=0,
+                   iview_front=0, ivew_back=0,
+                   rad_mid_front=0, rad_mid_back=0,
                    e1=None, e2=None, e3=None,
                    comment=''):
         elem = CHBDYP(eid, pid, Type, g1, g2,
                       g0=g0, gmid=gmid, ce=ce,
-                      iViewFront=iViewFront, iViewBack=iViewBack,
-                      radMidFront=radMidFront, radMidBack=radMidBack,
+                      iview_front=iview_front, ivew_back=ivew_back,
+                      rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       e1=e1, e2=e2, e3=e3,
                       comment=comment)
         self._add_thermal_element_object(elem)
         return elem
 
-    def add_cpbdye(self, eid, eid2, side,
-                   iViewFront=0, iViewBack=0,
-                   radMidFront=0, radMidBack=0,
+    def add_chbdye(self, eid, eid2, side,
+                   iview_front=0, ivew_back=0,
+                   rad_mid_front=0, rad_mid_back=0,
                    comment=''):
+        """
+        Creates a CHBDYE card
+
+        Parameters
+        ----------
+        eid : int
+            surface element ID number for a side of an element
+        eid2: int
+            a heat conduction element identification
+        side: int
+            a consistent element side identification number (1-6)
+        iview_front: int; default=0
+            a VIEW entry identification number for the front face
+        ivew_back: int; default=0
+            a VIEW entry identification number for the back face
+        rad_mid_front: int; default=0
+            RADM identification number for front face of surface element
+        rad_mid_back: int; default=0
+            RADM identification number for back face of surface element
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CHBDYE(eid, eid2, side,
-                      iViewFront=iViewFront, iViewBack=iViewBack,
-                      radMidFront=radMidFront, radMidBack=radMidBack,
+                      iview_front=iview_front, ivew_back=ivew_back,
+                      rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
         self._add_thermal_element_object(elem)
         return elem

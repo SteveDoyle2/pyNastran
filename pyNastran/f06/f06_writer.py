@@ -778,7 +778,7 @@ class F06Writer(OP2_F06_Common):
             self.ctria3_thermal_load,
             self.ctria6_thermal_load,
             self.ctetra_thermal_load,
-            self.cthexa_thermal_load,
+            self.chexa_thermal_load,
             self.cpenta_thermal_load,
 
 

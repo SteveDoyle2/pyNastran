@@ -8,7 +8,7 @@ from numpy.linalg import norm
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.nastran.geometry_helper import NastranGuiAttributes
-from pyNastran.converters.nastran.displacements import DisplacementResults
+from pyNastran.converters.nastran.displacements import DisplacementResults, TransientElementResults
 
 class NastranGuiResults(NastranGuiAttributes):
     """
@@ -145,7 +145,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     rz_res = GuiResult(subcase_idi, header=name + 'Rz', title=name + 'Rz',
                                        location='node', scalar=loads[:, 5])
                     txyz_res = GuiResult(subcase_idi, header=name + 'Txyz',
-                                         title=name + name + 'Txyz', location='node', scalar=nxyz)
+                                         title=name + 'Txyz', location='node', scalar=nxyz)
 
                     cases[icase] = (tx_res, (0, name + 'Tx'))
                     cases[icase + 1] = (ty_res, (0, name + 'Ty'))
@@ -183,12 +183,122 @@ class NastranGuiResults(NastranGuiAttributes):
                 assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
                     len(nxyz), nnodes)
 
-                temp_res = GuiResult(subcase_idi, header=name, title=name + name,
+                temp_res = GuiResult(subcase_idi, header=name, title=name,
                                      location='node', scalar=loads[:, 0])
                 cases[icase] = (temp_res, (0, name))
                 form_dict[(key, itime)].append((name, icase, []))
                 icase += 1
         return icase
+
+    def _fill_op2_force2(self, cases, model, key, icase, itime,
+                         form_dict, header_dict, is_static):
+        """creates the thermal loads"""
+        thermal_loads = [
+            # 3D
+            model.chexa_thermal_load, model.ctetra_thermal_load,
+            model.cpenta_thermal_load,
+        ]
+        eids = self.element_ids
+        name = 'thermal_load'
+        for result in thermal_loads:
+            if key not in result:
+                continue
+
+            title = name + 'XYZ'
+            case = result[key]
+            subcase_idi = case.isubcase
+            if not hasattr(case, 'data'):
+                print('str(%s) has no data...' % case.__class.__name__)
+                continue
+            #if not case.is_real():
+                #print('complex results not supported...')
+                #continue
+            # transient
+            if case.nonlinear_factor is not None:
+                #code_name = case.data_code['name']
+                has_cycle = hasattr(case, 'mode_cycle')
+            else:
+                has_cycle = False
+                code_name = None
+            assert case.is_sort1(), case.is_sort1()
+
+            itime0 = 0
+            t1 = case.data[itime0, :, 0]
+            ndata = t1.shape[0]
+            if nelements != ndata:
+                eidsi = case.elements
+                assert len(eidsi) == nelements
+                j = np.searchsorted(eids, eidsi)  # searching for eidsi
+
+                try:
+                    if not np.allclose(eids[j], eidsi):
+                        msg = 'nids[j]=%s eidsi=%s' % (eids[j], eidsi)
+                        raise RuntimeError(msg)
+                except IndexError:
+                    msg = 'element_ids = %s\n' % list(eids)
+                    msg += 'eidsi in force = %s\n' % list(eidsi)
+                    raise IndexError(msg)
+
+            # (itime, nelements, xyz)
+            t123 = case.data[:, :, :3]
+            if nelements != ndata:
+                t123i = np.zeros((nelements, 3), dtype='float32')
+                t123i[j, :] = t123
+                t123 = t123i
+            tnorm = norm(t123, axis=1)
+            assert len(tnorm) == t123.shape[0]
+            ntimes = case.ntimes
+            titles = []
+            scales = []
+            headers = []
+            for itime in range(ntimes):
+                dt = case._times[itime]
+                header = self._get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
+
+                loads = case.data[itime, :, :]
+                txyz = norm(loads[:, :3], axis=1)
+                rxyz = norm(loads[:, 3:6], axis=1)
+                assert loads[:, :3].shape[1] == 3, loads.shape
+                assert loads[:, 3:6].shape[1] == 3, loads.shape
+                assert len(txyz) == nelements, 'len(txyz)=%s nnodes=%s' % (
+                    len(txyz), nnodes)
+
+                tx_res = GuiResult(subcase_idi, header=name + 'Tx', title=name + 'Tx',
+                                   location='node', scalar=loads[:, 0])
+                ty_res = GuiResult(subcase_idi, header=name + 'Ty', title=name + 'Ty',
+                                   location='node', scalar=loads[:, 1])
+                tz_res = GuiResult(subcase_idi, header=name + 'Tz', title=name + 'Tz',
+                                   location='node', scalar=loads[:, 2])
+                rx_res = GuiResult(subcase_idi, header=name + 'Rx', title=name + 'Rx',
+                                   location='node', scalar=loads[:, 3])
+                ry_res = GuiResult(subcase_idi, header=name + 'Ry', title=name + 'Ry',
+                                   location='node', scalar=loads[:, 4])
+                rz_res = GuiResult(subcase_idi, header=name + 'Rz', title=name + 'Rz',
+                                   location='node', scalar=loads[:, 5])
+                txyz_res = GuiResult(subcase_idi, header=name + 'Txyz',
+                                     title=name + 'Txyz', location='node', scalar=txyz)
+                rxyz_res = GuiResult(subcase_idi, header=name + 'Rxyz',
+                                     title=name + 'Rxyz', location='node', scalar=rxyz)
+
+                cases[icase] = (tx_res, (0, name + 'Tx'))
+                cases[icase + 1] = (ty_res, (0, name + 'Ty'))
+                cases[icase + 2] = (tz_res, (0, name + 'Tz'))
+                cases[icase + 3] = (txyz_res, (0, name  + 'Txyz'))
+                cases[icase + 4] = (rx_res, (0, name + 'Rx'))
+                cases[icase + 5] = (ry_res, (0, name + 'Ry'))
+                cases[icase + 6] = (rz_res, (0, name + 'Rz'))
+                cases[icase + 7] = (rxyz_res, (0, name  + 'Rxyz'))
+
+                form_dict[(key, itime)].append((name + 'Tx', icase, []))
+                form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
+                form_dict[(key, itime)].append((name + 'Tz', icase + 2, []))
+                form_dict[(key, itime)].append((name + 'Txyz', icase + 3, []))
+                form_dict[(key, itime)].append((name + 'Rx', icase + 4, []))
+                form_dict[(key, itime)].append((name + 'Ry', icase + 5, []))
+                form_dict[(key, itime)].append((name + 'Rz', icase + 6, []))
+                form_dict[(key, itime)].append((name + 'Rxyz', icase + 7, []))
+                icase += 7
 
     def _fill_op2_force(self, cases, model, key, icase, itime,
                         form_dict, header_dict, is_static):
@@ -480,6 +590,11 @@ class NastranGuiResults(NastranGuiAttributes):
         #is_static)
 
     def _create_op2_time_centroidal_force_arrays(self, model, nelements, key, itime, header_dict):
+        """
+        creates the following force outputs:
+         - fx, fy, fz, mx, my, mz
+         - thermal_load
+        """
         fx = np.zeros(nelements, dtype='float32') # axial
         fy = np.zeros(nelements, dtype='float32') # shear_y
         fz = np.zeros(nelements, dtype='float32') # shear_z
@@ -662,7 +777,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict[(key, itime)].append(('Force - IsElementOn', icase, []))
                 #num_on -= num_off
                 icase += 1
-
 
             if fx.min() != fx.max() or rx.min() != rx.max() and not num_off == nelements:
                 fx_res = GuiResult(subcase_id, header='Axial', title='Axial',

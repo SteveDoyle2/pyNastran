@@ -359,7 +359,7 @@ class OP2_F06_Common(object):
         self.ctria3_thermal_load = {}
         self.ctria6_thermal_load = {}
         self.ctetra_thermal_load = {}
-        self.cthexa_thermal_load = {}
+        self.chexa_thermal_load = {}
         self.cpenta_thermal_load = {}
 
         self.thermalLoad_VU = {}
@@ -765,7 +765,7 @@ class OP2_F06_Common(object):
             'ctria3_thermal_load',
             'ctria6_thermal_load',
             'ctetra_thermal_load',
-            'cthexa_thermal_load',
+            'chexa_thermal_load',
             'cpenta_thermal_load',
 
             'thermalLoad_VU',

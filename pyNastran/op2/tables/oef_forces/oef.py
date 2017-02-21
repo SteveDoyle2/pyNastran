@@ -441,7 +441,7 @@ class OEF(OP2Common):
             elif self.element_type == 39:
                 result_name = 'ctetra_thermal_load'
             elif self.element_type == 67:
-                result_name = 'cthexa_thermal_load'
+                result_name = 'chexa_thermal_load'
             elif self.element_type == 68:
                 result_name = 'cpenta_thermal_load'
             else:

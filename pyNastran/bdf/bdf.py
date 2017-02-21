@@ -10,11 +10,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
+import io
 import traceback
 from codecs import open as codec_open
 from collections import defaultdict
 
-from six import string_types, iteritems, itervalues, iterkeys
+from six import string_types, iteritems, itervalues, iterkeys, StringIO
 from six.moves.cPickle import load, dump
 
 import numpy as np
@@ -1115,6 +1116,10 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         if encoding is None:
             encoding = sys.getdefaultencoding()
         self._encoding = encoding
+
+        self.read_includes = read_includes
+        self.active_filenames = []
+
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch, *.ecd)|" \
@@ -1124,6 +1129,15 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             title = 'Please select a BDF/DAT/PCH/ECD to load'
             bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
             assert bdf_filename is not None, bdf_filename
+
+        elif isinstance(bdf_filename, string_types):
+            pass
+        elif isinstance(bdf_filename, (StringIO, io.IOBase)):
+            self.bdf_filename = bdf_filename
+            self.punch = punch
+            return
+        else:
+            raise NotImplementedError(bdf_filename)
 
         if not os.path.exists(bdf_filename):
             msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
@@ -1136,8 +1150,6 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
         #: is this a punch file (no executive control deck)
         self.punch = punch
-        self.read_includes = read_includes
-        self.active_filenames = []
 
     def fill_dmigs(self):
         """fills the DMIx cards with the column data that's been stored"""
@@ -3302,8 +3314,10 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         ----------
         bdf_filename : str
             the main bdf_filename
-        punch : bool, optional
-            is this a punch file (default=False; no executive/case control decks)
+        punch : bool; default=False
+            is this a punch file
+            True : no executive/case control decks
+            False : executive/case control decks exist
 
         Returns
         -------
@@ -3314,6 +3328,11 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         bulk_data_lines : list[str]
             the bulk data deck as a list of strings
         """
+        if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
+            lines = bdf_filename.readlines()
+            assert len(lines) > 0, lines
+            return self._lines_to_deck_lines(lines, punch=punch)
+
         #: the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = os.path.dirname(os.path.abspath(bdf_filename))
 
@@ -3322,7 +3341,24 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
                 lines = bdf_file.readlines()
             except:
                 self._show_bad_file(bdf_filename)
+        return self._lines_to_deck_lines(lines, punch=punch)
 
+    def _lines_to_deck_lines(self, lines, punch=False):
+        """
+        Splits the BDF lines into:
+         - executive control deck
+         - case control deck
+         - bulk data deck
+
+        Parameters
+        ----------
+        lines : List[str]
+            the lines
+        punch : bool; default=False
+            is this a punch file
+            True : no executive/case control decks
+            False : executive/case control decks exist
+        """
         nlines = len(lines)
 
         i = 0
@@ -3654,6 +3690,8 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
         ..warning :: pyNastran lines must be at the top of the file
         """
+        if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
+            return
         with open(bdf_filename, 'r') as bdf_file:
             check_header = True
             while check_header:

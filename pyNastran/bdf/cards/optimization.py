@@ -386,6 +386,9 @@ class DDVAL(OptConstraint):
         self.oid = oid
         self.ddvals = ddvals
 
+    def validate(self):
+        pass
+
     @classmethod
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'oid')

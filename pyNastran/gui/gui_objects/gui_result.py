@@ -6,6 +6,7 @@ INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']
 
 class GuiResult(object):
+    deflects = False
     def __init__(self, subcase_id, header, title, location, scalar,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  data_format=None, uname='GuiResult'):
@@ -28,7 +29,6 @@ class GuiResult(object):
         self.subcase_id = subcase_id
         #assert self.subcase_id > 0, self.subcase_id
 
-        self.deflects = False
         self.title = title
         self.header = header
         #self.scale = scale
