@@ -101,7 +101,8 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
 
     model.log.debug('ugrid_filename_out = %r' % ugrid_filename_out)
     if ugrid_filename_out is not None:
-        model.write_ugrid(ugrid_filename_out, check_shells=check_shells)
+        model.write_ugrid(ugrid_filename_out,
+                          check_shells=check_shells, check_solids=check_solids)
     return model
 
 #def merge_ugrids(a_model, b_model):

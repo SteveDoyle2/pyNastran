@@ -376,7 +376,7 @@ class UGRID(object):
         if nhexas:
             nids.append(unique(hexas.flatten()))
         if len(nids) == 0:
-            raise RuntimeError(nids)
+            raise RuntimeError('there are no solid nodes; nids=%s' % nids)
         elif len(nids) == 1:
             nids = nids[0]
         else:
@@ -413,7 +413,7 @@ class UGRID(object):
             assert len(unique(hexa)) == 8, hexa
         return diff
 
-    def write_ugrid(self, ugrid_filename_out, check_shells=True):
+    def write_ugrid(self, ugrid_filename_out, check_shells=True, check_solids=True):
         """writes a UGrid model"""
         outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename_out)
         ndarray_float, float_fmt, nfloat, endian, ugrid_filename = outi
@@ -440,7 +440,7 @@ class UGRID(object):
         nsolids = ntets + npyramids + npentas + nhexas
         if check_shells:
             assert nshells > 0, 'nquads=%s ntris=%s' % (nquads, ntris)
-        if nsolids == 0:
+        if nsolids == 0 and check_solids:
             msg = 'ntets=%s npyramids=%s npentas=%s nhexas=%s' % (
                 ntets, npyramids, npentas, nhexas)
             raise RuntimeError(msg)

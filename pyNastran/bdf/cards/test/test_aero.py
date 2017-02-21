@@ -580,6 +580,10 @@ class TestAero(unittest.TestCase):
         spline_b.cross_reference(model)
         spline_b.write_card()
 
+        #model.cross_reference()
+        #model.uncross_reference()
+        #model.safe_cross_reference()
+
 
     def test_caero2_1(self):
         """checks the CAERO2/PAERO2/AERO/AEFACT card"""
@@ -735,6 +739,10 @@ class TestAero(unittest.TestCase):
         caero2.cross_reference(model)
         caero2.write_card()
 
+        #model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+
     def test_caero3_1(self):
         """checks the CAERO3/PAERO3"""
         eid = 100
@@ -859,6 +867,10 @@ class TestAero(unittest.TestCase):
         caero4b.raw_fields()
         p1, p2, p3, p4 = caero4b.get_points()
 
+        #model.cross_reference()
+        model.uncross_reference()
+        #model.safe_cross_reference()
+
     def test_caero5_1(self):
         """checks the CAERO5/PAERO5"""
         model = BDF(debug=False)
@@ -929,6 +941,9 @@ class TestAero(unittest.TestCase):
         model.uncross_reference()
         caero5.write_card()
         model.cross_reference()
+        model.uncross_reference()
+        #model.safe_cross_reference()
+
         model.write_bdf('caero5.temp')
         os.remove('caero5.temp')
         #caero5.raw_fields()
@@ -986,7 +1001,7 @@ class TestAero(unittest.TestCase):
         aesurf2.validate()
         log = SimpleLogger(level='warning')
 
-        model = BDF()
+        model = BDF(debug=False)
         model._add_coord_object(coord)
         model._add_aesurf_object(aesurf1)
 
@@ -1013,6 +1028,9 @@ class TestAero(unittest.TestCase):
         aesurf2.write_card()
         aesurf2.cross_reference(model)
         aesurf2.raw_fields()
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
 
     def test_flutter(self):
         """checks the FLUTTER/FLFACT cards"""
@@ -1091,8 +1109,9 @@ class TestAero(unittest.TestCase):
         flutter = model.Flutter(85)
         assert flutter.headers == ['density', 'mach', 'reduced_frequency'], flutter.headers
         flutter.write_card()
-        #model.uncross_reference()
-        #model.safe_cross_reference()
+
+        model.uncross_reference()
+        model.safe_cross_reference()
 
     def test_mkaero1(self):
         """checks the MKAERO1 card"""
@@ -1265,6 +1284,9 @@ class TestAero(unittest.TestCase):
         model2._verify_bdf(xref=True)
         os.remove('trim.bdf')
 
+        model2.uncross_reference()
+        model2.safe_cross_reference()
+
     def test_gust(self):
         """checks the GUST card"""
         sid = 100
@@ -1339,6 +1361,8 @@ class TestAero(unittest.TestCase):
         #csshcd1.write_card()
         model.uncross_reference()
         model.write_bdf('csschd.temp')
+
+        model.safe_cross_reference()
 
         #-----------
         csshcd3 = CSSCHD(sid, aesid, lschd, lalpha=None, lmach=None, comment='cssch card')

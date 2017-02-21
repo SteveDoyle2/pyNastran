@@ -2122,57 +2122,73 @@ class MAT3D(Material):
 class MATHE(HyperelasticMaterial):
     """
     model = MOONEY (default)
+    +-------+-----+-----+-------+---+-----+------+
     | MATHE | MID |     | Model | K | RHO | TEXP |
     |  C10  | C01 |     |       |   |     |      |
     |  C20  | C11 | C02 |       |   |     |      |
     |  C30  | C21 | C12 |  C03  |   |     |      |
+    +-------+-----+-----+-------+---+-----+------+
     NX version
 
     model = OGDEN, FOAM
+    +-------+-------+--------+-------+-----+--------+-------+
     | MATHE | MID   | Model  |       |  K  |  RHO   |  TEXP |
     |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
     |       |  MU2  | ALPHA2 | BETA2 | MU3 | ALPHA3 | BETA3 |
     |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |
     |       |  MU6  | ALPHA6 | BETA6 | MU7 | ALPHA7 | BETA7 | # NX only line
     |       |  MU8  | ALPHA8 | BETA8 | MU9 | ALPHA9 | BETA9 | # NX only line
+    +-------+-------+--------+-------+-----+--------+-------+
     NX version
 
     model = ABOYCE
+    +-------+-----+-------+----+----+-----+------+
     | MATHE | MID | Model |    | K  | RHO | TEXP |
     |       | NKT |   N1  |    |    |     |      |
     |       |  D1 |   D2  | D3 | D4 | D5  |      |  # MSC only line
+    +-------+-----+-------+----+----+-----+------+
     NX version
 
     model = SUSSBAT
+    +-------+------+--------+--------+---+-----+------+
     | MATHE | MID  | Model  |        | K | RHO | TEXP |
     |       | TAB1 | SSTYPE | RELERR |   |     |      |
+    +-------+------+--------+--------+---+-----+------+
     NX version
 
     model = MOONEY (default)
+    +-------+-----+-----+-------+------+------+------+------+----+
     | MATHE | MID |     | Model | K    | RHO  | TEXP | TREF | GE |
     |  C10  | C01 |  D1 |  TAB1 | TAB2 | TAB3 | TAB4 | TABD |    |
     |  C20  | C11 | C02 |  D2   | NA   |      |      |      |    |
     |  C30  | C21 | C12 |  C03  | D3   |      |      |      |    |
     |  C40  | C31 | C22 |  C13  | C04  |  D4  |      |      |    |
     |  C50  | C41 | C32 |  C23  | C14  | C05  |  D5  |      |    |
+    +-------+-----+-----+-------+------+------+------+------+----+
     MSC version
 
     model = OGDEN, FOAM
+    +-------+-------+--------+-------+-----+--------+-------+
     | MATHE | MID   | Model  |  NOT  |  K  |  RHO   |  TEXP |  # NOT is MSC only
     |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
     |       |  MU2  | ALPHA2 | BETA2 | MU3 | ALPHA3 | BETA3 |
     |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |
     |       |  D1   |   D2   |  D3   |  D4 |   D5   |       |  # MSC only line
+    +-------+-------+--------+-------+-----+--------+-------+
     MSC version
 
     model = ABOYCE, GENT
+    +-------+-----+-------+----+----+-----+------+
     | MATHE | MID | Model |    | K  | RHO | TEXP |
     |       | NKT | N1    |    |    |     |      |
     |       |  D1 |   D2  | D3 | D4 | D5  |      |  # MSC only line
+    +-------+-----+-------+----+----+-----+------+
     MSC version
 
     model = GHEMi
+    +-------+-----+-------+---+-----+------+------+----+
     | MATHE | MID | Model | K | RHO | Texp | Tref | GE |
+    +-------+-----+-------+---+-----+------+------+----+
     MSC version
     """
     type = 'MATHE'

@@ -127,17 +127,19 @@ OP2:
 Other
  - all legend values are now saved (e.g., the ones from cart3d)
 
-TODO:
------
+
+Known Issues
+------------
 BDF:
- - write_path function works (Linux; low priority; 1/10)
+ - CBEAMs wa/wb NSMs lead to incorrect mass properties
+ - write_path function has problems on Linux (low priority; 1/10)
 
 GUI:
- - fix node Cd deflection issue (high priority, 4/10)
+ - node Cd deflection issue for results (high priority, 4/10)
  - is this a solid element issue?
    - fix Min Interior angle (moderate priority; 1/10; see optistruct model - quad?)
    - fix Aspect Ratio (moderate priority; 1/10; see optistruct model - quad?)
- - fix issue with picking/focusing on a CAERO/CONM2 grid, which doesn't have a result
+ - issue with picking/focusing on a CAERO/CONM2 grid, which doesn't have a result
    it causes a segfault (high priority; 4/10)
  - fix bar Cd frame for cylindrical/spherical coords (low priority; 4/10)
    - see femap_exhaust

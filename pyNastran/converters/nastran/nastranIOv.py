@@ -387,7 +387,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.safe_cross_reference(
             #model.cross_reference(
                 xref=True,
-                xref_nodes=False,
+                xref_nodes=True,
                 xref_elements=True,
                 xref_nodes_with_elements=False,
                 xref_properties=True,
@@ -2568,11 +2568,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if isinstance(element, ShellElement):
                 ie = None
                 element_dimi = 2
-                try:
-                    normali = element.Normal()
-                except RuntimeError:
-                    raise
-                    normali = np.ones(3) * 2.
+                #try:
+                normali = element.Normal()
+                #except AttributeError:
+                    #raise
+                #except RuntimeError:
+                    #raise
+                    #normali = np.ones(3) * 2.
 
                 prop = element.pid
                 ptype = prop.type
@@ -2591,38 +2593,50 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 if z0 is None:
                     if etype in ['CTRIA3', 'CTRIAR']:
+                        #node_ids = self.nodes[3:]
                         z0 = (element.T1 + element.T2 + element.T3) / 3.
                         nnodesi = 3
                     elif etype == 'CTRIA6':
+                        #node_ids = self.nodes[3:]
                         z0 = (element.T1 + element.T2 + element.T3) / 3.
                         nnodesi = 6
                     elif etype in ['CQUAD4', 'CQUADR']:
+                        #node_ids = self.nodes[4:]
                         z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                         nnodesi = 4
                     elif etype == 'CQUAD8':
+                        #node_ids = self.nodes[4:]
                         z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                         nnodesi = 8
                     elif etype == 'CQUAD':
+                        #node_ids = self.nodes[4:]
                         z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                         nnodesi = 9
 
                     # axisymmetric
                     elif etype == 'CTRAX3':
+                        #node_ids = self.nodes[3:]
                         nnodesi = 3
                         z0 = 0.
                     elif etype == 'CTRAX6':
+                        #node_ids = self.nodes[3:]
                         nnodesi = 6
                         z0 = 0.
                     elif etype in ['CTRIAX', 'CTRIAX6']:
+                        # the CTRIAX6 uses a non-standard node orientation
+                        #node_ids = self.nodes[3:]
                         z0 = 0.
                         nnodesi = 6
                     elif etype == 'CQUADX':
+                        #node_ids = self.nodes[4:]
                         nnodesi = 9
                         z0 = 0.
                     elif etype == 'CQUADX4':
+                        #node_ids = self.nodes[4:]
                         nnodesi = 4
                         z0 = 0.
                     elif etype == 'CQUADX8':
+                        #node_ids = self.nodes[4:]
                         nnodesi = 8
                         z0 = 0.
                     else:

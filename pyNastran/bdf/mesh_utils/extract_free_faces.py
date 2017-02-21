@@ -116,7 +116,7 @@ def get_solid_skin_faces(model):
 def write_skin_solid_faces(model, skin_filename,
                            write_solids=False, write_shells=True,
                            size=8, is_double=False, encoding=None,
-                           punch=False):
+                           punch=False, log=None):
     """
     Writes the skinned elements
 
@@ -138,6 +138,8 @@ def write_skin_solid_faces(model, skin_filename,
         double precision flag
     encoding : str; default=None -> system default
         the string encoding
+    log : logger; default=None
+        a python logging object
 
     Unused Parameters
     -----------------
@@ -145,7 +147,7 @@ def write_skin_solid_faces(model, skin_filename,
         is this a punch file; should  be used by the read_bdf if model is a string
     """
     if isinstance(model, string_types):
-        model = read_bdf(model)
+        model = read_bdf(model, log=log)
     if(len(model.element_ids) == 0 or len(model.material_ids) == 0 or
        len(model.property_ids) == 0):
         msg = 'returning due to no elements/materials/properties\n'
@@ -343,7 +345,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
         #model.read_bdf(skin_filename)
 
 
-def main():
+def main():  # pragma: no cover
     """docopt interface"""
     encoding = sys.getdefaultencoding()
     import pyNastran
@@ -421,5 +423,5 @@ def main():
     )
     print("total time:  %.2f sec" % (time.time() - time0))
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

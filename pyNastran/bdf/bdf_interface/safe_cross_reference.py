@@ -30,7 +30,7 @@ class SafeXrefMesh(XrefMesh):
             # elem.check_unique_nodes()
 
     def safe_cross_reference(self, xref=True,
-                             xref_nodes=False,
+                             xref_nodes=True,
                              xref_elements=True,
                              xref_nodes_with_elements=True,
                              xref_properties=True,
@@ -139,28 +139,16 @@ class SafeXrefMesh(XrefMesh):
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
         for caero in itervalues(self.caeros):
-            if hasattr(caero, 'safe_cross_reference'):
-                caero.safe_cross_reference(self)
-            else:
-                caero.cross_reference(self)
-                self.log.warning('%s - add safe_cross_reference' % caero.type)
+            caero.safe_cross_reference(self)
 
         for paero in itervalues(self.paeros):
-            if hasattr(paero, 'safe_cross_reference'):
-                paero.safe_cross_reference(self)
-            else:
-                paero.cross_reference(self)
-                self.log.warning('%s - add safe_cross_reference' % paero.type)
+            paero.safe_cross_reference(self)
 
         for trim in itervalues(self.trims):
             trim.safe_cross_reference(self)
 
         for spline in itervalues(self.splines):
-            if hasattr(spline, 'safe_cross_reference'):
-                spline.safe_cross_reference(self)
-            else:
-                spline.cross_reference(self)
-                self.log.warning('%s - add safe_cross_reference' % spline.type)
+            spline.safe_cross_reference(self)
 
         for aecomp in itervalues(self.aecomps):
             if hasattr(aecomp, 'safe_cross_reference'):

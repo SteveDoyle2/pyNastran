@@ -19,7 +19,7 @@ from pyNastran.utils import integer_types, integer_float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_string_or_blank,
-    integer_double_or_blank, double, integer_double_or_blank)
+    integer_double_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -765,7 +765,7 @@ class TLOAD1(TabularLoad):
     """
     type = 'TLOAD1'
 
-    def __init__(self, sid, excite_id, delay, Type, tid, us0=0.0, vs0=0.0, comment=''):
+    def __init__(self, sid, excite_id, delay, tid, Type='LOAD', us0=0.0, vs0=0.0, comment=''):
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
@@ -820,7 +820,7 @@ class TLOAD1(TabularLoad):
         vs0 = double_or_blank(card, 7, 'vs0', 0.0)
 
         assert len(card) <= 8, 'len(TLOAD1 card) = %i\ncard=%s' % (len(card), card)
-        return TLOAD1(sid, excite_id, delay, Type, tid, us0, vs0, comment=comment)
+        return TLOAD1(sid, excite_id, delay, tid, Type=Type, us0=us0, vs0=vs0, comment=comment)
 
     def get_loads(self):
         return [self]

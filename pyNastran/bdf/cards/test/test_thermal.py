@@ -161,6 +161,7 @@ class TestThermal(unittest.TestCase):
         bdf_filename = StringIO()
         bdf_filename2 = StringIO()
         bdf_filename3 = StringIO()
+        bdf_filename4 = StringIO()
 
         model.validate()
         model._verify_bdf(xref=False)
@@ -181,6 +182,11 @@ class TestThermal(unittest.TestCase):
                         is_double=True,
                         interspersed=False,
                         enddata=None, close=False)
+        model.write_bdf_symmetric(bdf_filename4, encoding=None, size=8,
+                                 is_double=False,
+                                 enddata=None,
+                                 close=False,
+                                 plane='xz')
         #model.cross_reference()
 
         #print(bdf_filename.getvalue())

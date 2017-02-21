@@ -143,7 +143,7 @@ class QVECT(ThermalLoad):
     """
     type = 'QVECT'
     def __init__(self, sid, q0, t_source, eids,
-                     ce=0, vector_tableds=None, control_id=0, comment=''):
+                 ce=0, vector_tableds=None, control_id=0, comment=''):
         """
         Creates a QVECT card
 

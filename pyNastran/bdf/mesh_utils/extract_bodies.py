@@ -58,7 +58,7 @@ def extract_bodies(bdf_filename, mpc_id=0):
     nid_to_eid_map = defaultdict(list)
     eid_to_nid_map = defaultdict(list)
     for eid, elem in iteritems(model.elements):
-        if debug:
+        if debug:  # pragma: no cover
             print(print_card_16(elem.repr_fields()))
         node_ids = elem.node_ids
         eid_to_nid_map[eid] = node_ids
@@ -71,7 +71,7 @@ def extract_bodies(bdf_filename, mpc_id=0):
     if len(model.elements):
         rigid_offset = max(model.elements)
     for eid, elem in iteritems(model.rigid_elements):
-        if debug:
+        if debug:  # pragma: no cover
             print(print_card_16(elem.repr_fields()))
         eid += rigid_offset
         assert eid not in model.rigid_elements, 'eid=%s cannot be used twice' % eid
@@ -86,44 +86,44 @@ def extract_bodies(bdf_filename, mpc_id=0):
 
     if len(nid_to_eid_map) == 0:
         raise RuntimeError(model.get_bdf_stats())
-        return {}
+        #return {}
 
     nids_used = set([])
     eids_used = set([])
     ibody = 0
     all_nids_to_check = set(list(nid_to_eid_map.keys()))
     nids_to_check = set([next(iterkeys(nid_to_eid_map))])
-    if debug:
+    if debug:  # pragma: no cover
         print('all_nids_to_check= ', all_nids_to_check)
     body_eids = {ibody : set([])}
     nbodies_max = 3
     while all_nids_to_check:
-        if debug:
+        if debug:  # pragma: no cover
             print(all_nids_to_check)
         while nids_to_check:
             #if len(nids_to_check) < 10:
                 #print('nids_to_check =', nids_to_check)
             nid = nids_to_check.pop()
-            if debug:
+            if debug:  # pragma: no cover
                 print('nid = ', nid)
                 print('all_nids_to_check =', all_nids_to_check)
             if nid not in all_nids_to_check:
                 msg = 'nids_to_check = %s' % nids_to_check
                 raise RuntimeError(msg)
-            if debug:
+            if debug:  # pragma: no cover
                 print('nids_used         =', nids_used)
                 print('all_nids_to_check =', all_nids_to_check)
 
             nids_used.add(nid)
-            if debug:
+            if debug:  # pragma: no cover
                 print('  adding nid=%s' % nid)
             all_nids_to_check.remove(nid)
-            if debug:
+            if debug:  # pragma: no cover
                 print('  nids_used         =', nids_used)
                 print('  all_nids_to_check =', all_nids_to_check)
 
             eids = nid_to_eid_map[nid]
-            if debug:
+            if debug:  # pragma: no cover
                 print('  eids = %s' % eids)
             for eidi in eids:
                 if eidi in eids_used:
@@ -133,7 +133,7 @@ def extract_bodies(bdf_filename, mpc_id=0):
                     elem = model.elements[eidi]
                 except KeyError:
                     elem = model.rigid_elements[eidi - rigid_offset]
-                if debug:
+                if debug:  # pragma: no cover
                     print(print_card_16(elem.repr_fields()))
                     print('adding eidi=%s' % eidi)
                 body_eids[ibody].add(eidi)
@@ -141,10 +141,10 @@ def extract_bodies(bdf_filename, mpc_id=0):
                 for nidi in nidsi:
                     if nidi not in nids_used:
                         nids_to_check.add(nidi)
-                        if debug:
+                        if debug:  # pragma: no cover
                             print('  adding nid=%s' % nidi)
                 del nidsi # , elem
-            if debug:
+            if debug:  # pragma: no cover
                 print('next eid\n')
                 print('---------------------------')
             del nid, eids

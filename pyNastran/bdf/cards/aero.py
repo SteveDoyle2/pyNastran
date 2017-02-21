@@ -3741,12 +3741,11 @@ class FLUTTER(BaseCard):
         except KeyError:
             pass
 
-
     def uncross_reference(self):
         self.density = self.get_density()
         self.mach = self.get_mach()
         self.reduced_freq_velocity = self.get_rfreq_vel()
-        del self.density_ref, self.mach_ref, self.reduced_freq_velocity
+        del self.density_ref, self.mach_ref, self.reduced_freq_velocity_ref
 
     def get_density(self):
         if isinstance(self.density, integer_types):

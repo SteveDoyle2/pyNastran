@@ -5,6 +5,7 @@ from __future__ import print_function
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
+
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
@@ -100,6 +101,8 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, #TIC,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
+
+from pyNastran.bdf.cards.msgmesh import CGEN
 
 
 class AddCards(AddMethods):
@@ -1035,7 +1038,7 @@ class AddCards(AddMethods):
         return prop
 
     def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
-                 nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
+                   nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
         prop = PCOMPG(pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
                       nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0,
                       comment=comment)
@@ -1296,12 +1299,12 @@ class AddCards(AddMethods):
         return mat
 
     def add_mat10(self, mid, bulk, rho, c, ge=0.0, gamma=None,
-                    table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
-                    comment=''):
+                  table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
+                  comment=''):
         mat = MAT10(mid, bulk, rho, c, ge=ge, gamma=gamma,
-                   table_bulk=table_bulk, table_rho=table_rho,
-                   table_ge=table_ge, table_gamma=table_gamma,
-                   comment=comment)
+                    table_bulk=table_bulk, table_rho=table_rho,
+                    table_ge=table_ge, table_gamma=table_gamma,
+                    comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
@@ -1313,9 +1316,9 @@ class AddCards(AddMethods):
         return mat
 
     def add_mathe(self, mid, model, bulk, rho, texp, mus, alphas, betas, mooney,
-                  sussbat, comment=''):
+                  sussbat, aboyce, comment=''):
         mat = MATHE(mid, model, bulk, rho, texp, mus, alphas, betas, mooney,
-                    sussbat, comment=comment)
+                    sussbat, aboyce, comment=comment)
         self._add_hyperelastic_material_object(mat)
         return mat
 
@@ -1428,6 +1431,55 @@ class AddCards(AddMethods):
         """
         darea = DAREA(sid, p, c, scale, comment=comment)
         self._add_darea_object(darea)
+
+    def add_tload1(self, sid, excite_id, delay, tid, Type='LOAD', us0=0.0, vs0=0.0,
+                   comment=''):
+        load = TLOAD1(sid, excite_id, delay, tid, Type=Type, us0=us0, vs0=vs0,
+                      comment=comment)
+        self._add_dload_entry(load)
+        return load
+
+    def add_tload2(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
+                   frequency=0., phase=0., c=0., b=0.,
+                   us0=0., vs0=0., comment=''):
+        load = TLOAD2(sid, excite_id, delay=0, Type=Type, T1=T1, T2=T2,
+                      frequency=frequency, phase=phase, c=c, b=b,
+                      us0=us0, vs0=vs0, comment=comment)
+        self._add_dload_entry(load)
+        return load
+
+    def add_rload1(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0,
+                   Type='LOAD', comment=''):
+        load = RLOAD1(sid, excite_id, delay=delay, dphase=dphase, tc=tc, td=td,
+                      Type=Type, comment=comment)
+        self._add_dload_entry(load)
+        return load
+
+    def add_rload2(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0,
+                   Type='LOAD', comment=''):
+        load = RLOAD2(sid, excite_id, delay=delay, dphase=dphase, tb=tb, tp=tp,
+                      Type=Type, comment=comment)
+        self._add_dload_entry(load)
+        return load
+
+    def add_rforce(self, sid, nid, cid, scale, r1, r2, r3, method=1, racc=0.,
+                   mb=0, idrf=0, comment=''):
+        load = RFORCE(sid, nid, cid, scale, r1, r2, r3, method=method, racc=racc,
+                      mb=mb, idrf=idrf, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_rforce1(self, sid, nid, scale, group_id, cid=0, r123=None, racc=0.,
+                    mb=0, method=2, comment=''):
+        load = RFORCE1(sid, nid, scale, group_id, cid=cid, r123=r123, racc=racc,
+                       mb=mb, method=method, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_randps(self, sid, j, k, x=0., y=0., tid=0, comment=''):
+        load = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
+        self._add_load_object(load)
+        return load
 
     def add_force(self, sid, node, mag, xyz, cid=0, comment=''):
         """
@@ -1678,7 +1730,7 @@ class AddCards(AddMethods):
         return aero
 
     def add_caero1(self, eid, pid, igid, p1, x12, p4, x43,
-                 cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
+                   cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
         caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
                        nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                        comment=comment)
@@ -1693,7 +1745,7 @@ class AddCards(AddMethods):
         return caero
 
     def add_caero3(self, eid, pid, list_w, p1, x12, p4, x43,
-                       cp=0, list_c1=None, list_c2=None, comment=''):
+                   cp=0, list_c1=None, list_c2=None, comment=''):
         caero = CAERO3(eid, pid, list_w, p1, x12, p4, x43,
                        cp=cp, list_c1=list_c1, list_c2=list_c2, comment=comment)
         self._add_caero_object(caero)
@@ -1867,7 +1919,7 @@ class AddCards(AddMethods):
         return method
 
     def add_eigrl(self, sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None, shfscl=None,
-                 norm=None, options=None, values=None, comment=''):
+                  norm=None, options=None, values=None, comment=''):
         """
         Adds an EIGRL card
 
@@ -2874,7 +2926,7 @@ class AddCards(AddMethods):
         return load
 
     def add_qvect(self, sid, q0, t_source, eids,
-                     ce=0, vector_tableds=None, control_id=0, comment=''):
+                  ce=0, vector_tableds=None, control_id=0, comment=''):
         """
         Creates a QVECT card
 
@@ -3057,3 +3109,9 @@ class AddCards(AddMethods):
         self._add_dmik_object(dmik)
         return dmik
 
+    def add_cgen(self, Type, field_eid, pid, field_id, th_geom_opt,
+                 eidl, eidh, t_abcd=None, direction='L', comment=''):
+        elem = CGEN(Type, field_eid, pid, field_id, th_geom_opt,
+                    eidl, eidh, t_abcd=t_abcd, direction=direction, comment=comment)
+        self._add_element_object(elem)
+        return elem

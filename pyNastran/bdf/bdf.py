@@ -39,6 +39,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
+from pyNastran.bdf.cards.msgmesh import CGEN
 
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
@@ -1809,7 +1810,10 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'CORD2R' : (CORD2R, self._add_coord_object),
             'CORD2C' : (CORD2C, self._add_coord_object),
             'CORD2S' : (CORD2S, self._add_coord_object),
+
+            # msgmesh
             'GMCORD' : (GMCORD, self._add_coord_object),
+            'CGEN' : (CGEN, self._add_element_object),
 
             'PLOTEL' : (PLOTEL, self._add_plotel_object),
 

@@ -9,6 +9,11 @@
 3.  >>> make html
 
 
+# missing:
+#    pyNastran.utils.terminal_size
+#    pyNastran.utils.utils
+#    pyNastran.op4.test.op4_test
+
 #-------------------------------------------------------------------------------
 # DEVELOPER
 #

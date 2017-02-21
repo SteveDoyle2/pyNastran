@@ -39,7 +39,7 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename,
     #tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
     #tecplot.results = array([], dtype='float32')
 
-def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, log=None, debug=False):
+def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, debug=False):
     """
     Converts a UGRID to a Tecplot ASCII file.
 
@@ -50,8 +50,6 @@ def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, log=None, debug=False):
         UGRID : the UGRID object
     tecplot_filename : str
         the output Tecplot filename
-    log : logger; default=None
-        a logger object
     """
     nnodes = len(ugrid_model.nodes)
     nodes = zeros((nnodes, 3), dtype='float64')
@@ -62,7 +60,7 @@ def ugrid_to_tecplot(ugrid_model, tecplot_filename=None, log=None, debug=False):
     non_tets = len(ugrid_model.penta5s) + len(ugrid_model.penta6s) + len(ugrid_model.hexas)
     assert ntets + non_tets > 0, 'nsolids=%s' % (ntets + non_tets)
 
-    tecplot = Tecplot(log=log, debug=debug)
+    tecplot = Tecplot(log=ugrid_model.log, debug=debug)
     tecplot.xyz = ugrid_model.nodes
 
     if ntets and non_tets == 0:
