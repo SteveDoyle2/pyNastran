@@ -1,11 +1,19 @@
+"""
+based on:
+  - http://www.vtk.org/Wiki/VTK/Examples/Cxx/PolyData/SelectPolyData
+
+tested on:
+ - Python 3.5.2;  vtk 7.0
+ - Python 2.7.12; vtk 6.3
+"""
 import vtk
- 
-def main():
+
+def main():  # pragma: no cover
     sphere_source = vtk.vtkSphereSource()
     sphere_source.Update()
-   
+
     selection_points = vtk.vtkPoints()
-   
+
     selection_points.InsertPoint(0, -0.16553, 0.135971, 0.451972)
     selection_points.InsertPoint(1, -0.0880123, -0.134952, 0.4747)
     selection_points.InsertPoint(2,  0.00292618, -0.134604, 0.482459)
@@ -32,44 +40,44 @@ def main():
     selection_points.InsertPoint(23, 0.102552, 0.25997, 0.414814)
     selection_points.InsertPoint(24, 0.131512, 0.161254, 0.454705)
     selection_points.InsertPoint(25, 0.000192443, 0.156264, 0.475307)
-    selection_points.InsertPoint(26, -0.0392091, 0.000251724, 0.499943) 
+    selection_points.InsertPoint(26, -0.0392091, 0.000251724, 0.499943)
     selection_points.InsertPoint(27, -0.096161, 0.159646, 0.46438)
-   
+
     loop = vtk.vtkSelectPolyData()
     loop.SetInputConnection(sphere_source.GetOutputPort())
     loop.SetLoop(selection_points)
     loop.GenerateSelectionScalarsOn()
     loop.SetSelectionModeToSmallestRegion() # negative scalars inside
-   
+
     clip = vtk.vtkClipPolyData() # clips out positive region
-      
+
     clip.SetInputConnection(loop.GetOutputPort())
-   
+
     clip_mapper = vtk.vtkPolyDataMapper()
     clip_mapper.SetInputConnection(clip.GetOutputPort())
-   
+
     clip_actor = vtk.vtkLODActor()
     clip_actor.SetMapper(clip_mapper)
-   
+
     renderer = vtk.vtkRenderer()
-   
+
     render_window = vtk.vtkRenderWindow()
     render_window.AddRenderer(renderer)
-   
+
     interactor = vtk.vtkRenderWindowInteractor()
     interactor.SetRenderWindow(render_window)
-   
+
     # Add the actors to the renderer, set the background and size
     renderer.AddActor(clip_actor)
     renderer.SetBackground(.1, .2, .4)
-   
+
     render_window.SetSize(500, 250)
-   
+
     render_window.Render()
     interactor.Start()
- 
- 
 
-if __name__ == '__main__':
+
+
+if __name__ == '__main__':  # pragma: no cover
     main()
 

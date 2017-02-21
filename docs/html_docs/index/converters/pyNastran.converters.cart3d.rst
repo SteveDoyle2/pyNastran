@@ -1,15 +1,6 @@
 cart3d Package
 ==============
 
-:mod:`c3d_reader` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.c3d_reader
-
-.. automodule:: pyNastran.converters.cart3d.c3d_reader
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`cart3d` Module
 --------------------
@@ -51,35 +42,6 @@ cart3d Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`cart3d_to_openfoam` Module
---------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.cart3d_to_openfoam
-
-.. automodule:: pyNastran.converters.cart3d.cart3d_to_openfoam
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`cart3d_to_panair` Module
-------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.cart3d_to_panair
-
-.. automodule:: pyNastran.converters.cart3d.cart3d_to_panair
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`cart3d_to_quad` Module
-----------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.cart3d_to_quad
-
-.. automodule:: pyNastran.converters.cart3d.cart3d_to_quad
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`cart3d_to_stl` Module
 ---------------------------
@@ -97,27 +59,6 @@ cart3d Package
 .. inheritance-diagram:: pyNastran.converters.cart3d.cart3d_to_tecplot
 
 .. automodule:: pyNastran.converters.cart3d.cart3d_to_tecplot
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`cart3d_to_usm3d` Module
------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.cart3d_to_usm3d
-
-.. automodule:: pyNastran.converters.cart3d.cart3d_to_usm3d
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-:mod:`gui` Module
------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.gui
-
-.. automodule:: pyNastran.converters.cart3d.gui
     :members:
     :undoc-members:
     :show-inheritance:
@@ -141,7 +82,6 @@ cart3d Package
     :members:
     :undoc-members:
     :show-inheritance:
-
 
 :mod:`test_cart3d` Module
 -------------------------
@@ -168,6 +108,6 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.converters.cart3d.menus
+    pyNastran.converters.cart3d.gui
     pyNastran.converters.cart3d.models
 
