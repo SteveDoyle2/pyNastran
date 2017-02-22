@@ -1918,7 +1918,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
     def del_structs(self):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
-        self.struct_i, self.struct_2i, self.struct_8s
+        del self.struct_i, self.struct_2i, self.struct_8s
 
 def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
     if is_magnitude_phase:
