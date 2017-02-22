@@ -43,3 +43,9 @@ make html > make.out 2>&1
 
 # does basically the same thing, but is more obvious...
 # sphinx-build -v -w warnings.out -d build/doctrees . _build/html > junk.out 2>&1
+
+# what is run by rtd
+# sphinx-build -T -E -b readthedocs -d _build/doctrees-readthedocs -D language=en . _build/html
+
+# my fake version
+# sphinx-build -T -E -b readthedocs -d _build/doctrees-readthedocs -D language=en . _build/html > rtd.out 2>&1
