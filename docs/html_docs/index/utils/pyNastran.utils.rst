@@ -103,36 +103,6 @@ This is the pyNastran.utils.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`terminal_size` Module
----------------------------
-
-.. inheritance-diagram:: pyNastran.utils.terminal_size
-
-.. automodule:: pyNastran.utils.terminal_size
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`utils` Module
--------------------
-
-.. inheritance-diagram:: pyNastran.utils.utils
-
-.. automodule:: pyNastran.utils.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`__init__` Module
-----------------------
-
-.. inheritance-diagram:: pyNastran.utils.__init__
-
-.. automodule:: pyNastran.utils.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`__init__` Module
 ----------------------
 

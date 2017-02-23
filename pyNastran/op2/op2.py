@@ -416,6 +416,7 @@ class OP2(OP2_Scalar):
             for obj in itervalues(result):
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
+        self.del_structs()
 
     def build_dataframe(self):
         """
