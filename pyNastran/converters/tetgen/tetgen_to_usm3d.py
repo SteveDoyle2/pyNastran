@@ -1,27 +1,30 @@
+from __future__ import print_function
 from struct import pack, unpack
+from six import integer_types
 
 from pyNastran.utils.log import get_logger
-from pyNastran.converters.dev.tetgen.tetgen import Tetgen
+from pyNastran.converters.tetgen.tetgen import Tetgen
 from pyNastran.converters.usm3d.usm3d_reader import write_usm3d_volume
 
 
-def main():
+def tetgen_to_usm3d(base):
     m = Tetgen()
-    base = 'tetgen_test_flipped.1'
     m.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag=3)
     m.write_nastran(base + '.bdf')
 
     m2 = Tetgen()
-    base = 'tetgen_test_flipped.1'
     m2.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag=2)
     ntris = m2.tris.shape[0]
-    #boundary_nodes = unique(m2.tris)
-    #nboundary_nodes, = boundary_nodes.shape
+
     nboundary_nodes = m2.nodes.shape[0]
-    assert isinstance(nboundary_nodes, int), nboundary_nodes
+    if not isinstance(nboundary_nodes, integer_types):
+        msg = 'nboundary_nodes=%r; type=%s must be an integer' % (
+            nboundary_nodes, type(nboundary_nodes))
+        raise TypeError(msg)
 
     ntets = m.tets.shape[0]
-    nnodes = m.nodes[0]
+    nnodes = m.nodes.shape[0]
+    #assert isinstance(nnodes, int), type(nnodes)
     m.header = {
         'inew': -1,
         'nElements' : ntets,
@@ -39,6 +42,10 @@ def main():
     #model.read_usm3d(basename)
     #model.write_usm3d(basename + '_2')
 
+def main():
+    #base = 'tetgen_test_flipped.1'
+    base = 'tetgen_test.1'
+    tetgen_to_usm3d(base)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

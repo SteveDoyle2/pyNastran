@@ -55,7 +55,6 @@ class SU2_IO(object):
 
         assert nodes is not None
         nnodes = nodes.shape[0]
-        print(nodes)
         if ndim == 3:
             xmax, ymax, zmax = nodes.max(axis=0)
             xmin, ymin, zmin = nodes.min(axis=0)

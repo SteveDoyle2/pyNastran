@@ -147,8 +147,11 @@ class Usm3d(object):
                    ???
         loads : dict[]
             ???
-        flo_filename : ???
-           ???
+        flo_filename : str
+            the latest result filename
+            None : no *.flo file could be found
+            static : *.flo
+            transient : *_xxx.flo
         """
         cogsg_filename = basename + '.cogsg'
         bc_filename = basename + '.bc'

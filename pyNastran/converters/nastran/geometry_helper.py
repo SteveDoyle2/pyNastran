@@ -149,12 +149,12 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         #debug = True
         bar_nids = set([])
-        print('bar_beam_eids = %s' % bar_beam_eids)
+        #print('bar_beam_eids = %s' % bar_beam_eids)
         for eid in bar_beam_eids:
             if eid not in self.eid_map:
-                self.log.error('eid=%s is not a valid element...' % eid)
+                self.log.error('eid=%s is not a valid bar/beam element...' % eid)
                 if debug:
-                    print('eid=%s is not a valid element...' % eid)
+                    print('eid=%s is not a valid bar/beam element...' % eid)
                 continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]

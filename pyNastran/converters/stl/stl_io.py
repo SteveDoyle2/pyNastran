@@ -78,7 +78,6 @@ class STL_IO(object):
             nid += 1
 
         nelements = elements.shape[0]
-        #elements -= 1
         for eid in range(nelements):
             elem = vtkTriangle()
             node_ids = elements[eid, :]

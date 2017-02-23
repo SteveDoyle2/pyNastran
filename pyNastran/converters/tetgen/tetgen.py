@@ -1,5 +1,16 @@
+"""
+defines:
+ - read_tetgen(base, dimension_flag=2, log=None, debug=False)
+ - Tetgen(log=None, debug=False):
+   - write_nastran(self, bdf_filename)
+   - read_tetgen(self, node_filename, smesh_filename, ele_filename, dimension_flag)
+   - read_smesh(self, smesh_filename)
+   - read_nodes(self, node_filename)
+   - read_ele(self, ele_filename, form_flag='1')
+"""
 from __future__ import print_function
-from six import PY2
+from codecs import open
+#from six import PY2
 from six.moves import range
 from numpy import array, zeros
 from pyNastran.utils.log import get_logger
@@ -23,12 +34,7 @@ class Tetgen(object):
 
     def write_nastran(self, bdf_filename):
         """writes a nastran bdf"""
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
-
-        with open(bdf_filename, wb) as f:
+        with open(bdf_filename, 'w') as bdf_file:
             msg = 'CEND\n'
             msg += 'BEGIN BULK\n'
 
@@ -38,7 +44,7 @@ class Tetgen(object):
                 card = ['GRID', nid, cid, x, y, z]
                 msg += print_card_8(card)
                 nid += 1
-            f.write(msg)
+            bdf_file.write(msg)
 
             eid = 1
             mid = 100
@@ -53,9 +59,9 @@ class Tetgen(object):
                     msg += print_card_8(card)
                     eid += 1
                     if eid % 1000 == 0:
-                        f.write(msg)
+                        bdf_file.write(msg)
                         msg = ''
-                f.write(msg)
+                bdf_file.write(msg)
 
             if self.tets is not None:
                 pid = 2
@@ -66,9 +72,9 @@ class Tetgen(object):
                     msg += print_card_8(card)
                     eid += 1
                     if eid % 1000 == 0:
-                        f.write(msg)
+                        bdf_file.write(msg)
                         msg = ''
-                f.write(msg)
+                bdf_file.write(msg)
 
             E = 1e7
             G = None
@@ -76,8 +82,8 @@ class Tetgen(object):
             rho = 0.1
             mat1 = ['MAT1', mid, E, G, nu, rho]
             msg = print_card_8(mat1)
-            f.write(msg)
-            f.write('ENDDATA\n')
+            bdf_file.write(msg)
+            bdf_file.write('ENDDATA\n')
 
     def read_tetgen(self, node_filename, smesh_filename, ele_filename, dimension_flag):
         """reads a tetgen file"""
@@ -93,8 +99,8 @@ class Tetgen(object):
 
     def read_smesh(self, smesh_filename):
         """reads the *.smesh file"""
-        with open(smesh_filename, 'r') as f:
-            lines = f.readlines()
+        with open(smesh_filename, 'r') as smesh_file:
+            lines = smesh_file.readlines()
             lines = clean_lines(lines)
             #iline = 0 # 0  3  0  0 # node list is found in .node file.
 
@@ -108,7 +114,6 @@ class Tetgen(object):
             iline += 1
             for ielement in range(nelements):
                 sline = lines[iline].split()
-                #print(ielement, 'sline =', sline)
                 try:
                     nnodes = sline[0]
                 except IndexError:
@@ -119,31 +124,28 @@ class Tetgen(object):
                     tri_list.append(element_nodes)
                 else:
                     raise NotImplementedError('nnodes = %s' % nnodes)
-                #print(element_nodes)
                 iline += 1
             tri = array(tri_list, 'int32') - 1 # subtract 1 so the node ids start at 0
-            #print(tri)
         return tri
 
     def read_nodes(self, node_filename):
         """reads the *.node file"""
-        with open(node_filename, 'r') as f:
-            nnodes, three, zero1, zero2 = f.readline().strip().split()
+        with open(node_filename, 'r') as node_file:
+            nnodes, three, zero1, zero2 = node_file.readline().strip().split()
             assert three == '3', three
             assert zero1 == '0', zero1
             assert zero2 == '0', zero2
             nnodes = int(nnodes)
             nodes = zeros((nnodes, 3), 'float64')
             for inode in range(nnodes):
-                nodes[inode] = f.readline().strip().split()[1:]
-        #print("nodes =", nodes)
+                nodes[inode] = node_file.readline().strip().split()[1:]
         return nodes
 
     def read_ele(self, ele_filename, form_flag='1'):
         """reads the *.ele file"""
         #print("ele_filename =", ele_filename)
-        with open(ele_filename, 'r') as f:
-            nelements, four, form_flag_enabled = f.readline().strip().split()
+        with open(ele_filename, 'r') as ele_file:
+            nelements, four, form_flag_enabled = ele_file.readline().strip().split()
             form_flag_enabled = int(form_flag_enabled)
 
             assert four == '4', four
@@ -155,13 +157,13 @@ class Tetgen(object):
                 for ielement in range(nelements):
                     # eid n1    n2    n3    n4       flip_flag???
                     # 1   13260 15506 16059 16065    -1
-                    tets[ielement] = f.readline().strip().split()[1:]
+                    tets[ielement] = ele_file.readline().strip().split()[1:]
             else:
                 tets = []
                 for ielement in range(nelements):
                     # eid n1    n2    n3    n4       flip_flag???
                     # 1   13260 15506 16059 16065    -1
-                    n0, n1, n2, n3, flag = f.readline().strip().split()[1:]
+                    n0, n1, n2, n3, flag = ele_file.readline().strip().split()[1:]
                     if flag == form_flag:
                         tets.append((n0, n1, n2, n3))
                 tets = array(tets, 'int32')

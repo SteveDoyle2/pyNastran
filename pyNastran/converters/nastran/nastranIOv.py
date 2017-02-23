@@ -1288,7 +1288,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             eids, lines_bar_y, lines_bar_z = data
             #print(data)
             if len(eids):
-                if debug:
+                if debug: # pragma: no cover
                     print('bar_type = %r' % bar_type)
                 # if bar_type not in ['ROD', 'TUBE']:
                 bar_y = bar_type + '_y'
@@ -1308,7 +1308,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 i = np.searchsorted(self.element_ids, eids)
                 is_type = np.zeros(self.element_ids.shape, dtype='int32')
                 is_type[i] = 1.
-                # print('is-type =', is_type.max())
                 bar_form[2].append(['is_%s' % bar_type, icase, []])
 
                 msg = 'is_%s' % bar_type
@@ -1445,14 +1444,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elem.GetPointIds().SetId(1, j + 1)
             self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 2
-
-        #n1 = bar_lines[:, :3]
-        #n2 = bar_lines[:, 3:]
-        #dy = n2 - n1
-        #Ly = norm(dy, axis=1)
-        # v = dy / Ly *  bar_scale
-        # n2 = n1 + v
-        # print(Ly)
         self.alt_grids[name].SetPoints(points)
 
     def _fill_dependent_independent(self, mpc_id, dim_max, model, lines, nid_to_pid_map):
