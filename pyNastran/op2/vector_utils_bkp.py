@@ -3,7 +3,7 @@ from struct import calcsize
 from itertools import count
 
 import numpy as np
-from numpy import unique, sqrt, cos, arccos, pi, in1d, logical_or
+from numpy import unique, sqrt, cos, arccos, pi, in1d
 
 def filter1d(a, b=None, zero_tol=0.001):
     """

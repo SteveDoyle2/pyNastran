@@ -5,7 +5,7 @@ import warnings
 
 from six import iteritems
 import numpy as np
-from numpy import dot, array_equal
+from numpy import dot
 try:
     import pandas
     is_pandas = True
@@ -29,7 +29,6 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
-from pyNastran.utils.log import SimpleLogger
 
 test_path = pyNastran.__path__[0]
 model_path = os.path.abspath(os.path.join(test_path, '..', 'models'))
@@ -525,7 +524,7 @@ class TestOP2(Tester):
 
     def test_op2_solid_shell_bar_01_fiberdistance(self):
         folder = os.path.join(model_path, 'sol_101_elements')
-        bdf_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.bdf')
+        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.op2')
         make_geom = False
         write_bdf = False

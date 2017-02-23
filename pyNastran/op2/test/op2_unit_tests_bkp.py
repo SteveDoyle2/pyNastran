@@ -109,12 +109,12 @@ class TestOP2(Tester):
     def test_op2_solid_bending_02_geom(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
         op2_filename = os.path.join(folder, 'solid_bending.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        read_op2_geom(op2_filename, debug=False)
 
     def test_op2_solid_shell_bar_01_geom(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        read_op2_geom(op2_filename, debug=False)
 
 
     def test_op2_solid_shell_bar_01_gpforce(self):
@@ -1042,7 +1042,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(folder, 'freq_sine', 'good_sine.dat')
         op2_filename = os.path.join(folder, 'freq_sine', 'good_sine.op2')
         make_geom = False
-        write_bdf = False
+        #write_bdf = False
         write_f06 = True
         debug = False
         op2file = os.path.join(folder, op2_filename)
