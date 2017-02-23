@@ -146,6 +146,8 @@ class SafeXrefMesh(XrefMesh):
 
         for trim in itervalues(self.trims):
             trim.safe_cross_reference(self)
+        for csschd in itervalues(self.csschds):
+            csschd.safe_cross_reference(self)
 
         for spline in itervalues(self.splines):
             spline.safe_cross_reference(self)

@@ -228,6 +228,8 @@ class XrefMesh(BDFAttributes):
             paero.cross_reference(self)
         for trim in itervalues(self.trims):
             trim.cross_reference(self)
+        for csschd in itervalues(self.csschds):
+            csschd.cross_reference(self)
 
         for spline in itervalues(self.splines):
             spline.cross_reference(self)

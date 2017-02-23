@@ -1751,10 +1751,10 @@ class AddCards(AddMethods):
         self._add_caero_object(caero)
         return caero
 
-    def add_caero4(self, eid, pid, nspan, lspan, p1, x12, p4, x43,
-                   cp=0, comment=''):
-        caero = CAERO4(eid, pid, nspan, lspan, p1, x12, p4, x43,
-                       cp=cp, comment=comment)
+    def add_caero4(self, eid, pid, p1, x12, p4, x43,
+                   cp=0, nspan=0, lspan=0, comment=''):
+        caero = CAERO4(eid, pid, p1, x12, p4, x43,
+                       cp=cp, nspan=nspan, lspan=lspan, comment=comment)
         self._add_caero_object(caero)
         return caero
 

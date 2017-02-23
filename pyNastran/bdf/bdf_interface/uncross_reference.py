@@ -90,6 +90,11 @@ class UnXrefMesh(SafeXrefMesh):
             aelist.uncross_reference()
         for aeparam in itervalues(self.aeparams):
             aeparam.uncross_reference()
+        for trim in itervalues(self.trims):
+            trim.uncross_reference()
+        for csschd in itervalues(self.csschds):
+            csschd.uncross_reference()
+
         #for aestat in itervalues(self.aestats):
             #aestat.uncross_reference()
         for aesurf in itervalues(self.aesurf):
@@ -98,6 +103,11 @@ class UnXrefMesh(SafeXrefMesh):
             aesurfs.uncross_reference()
         for flutter in itervalues(self.flutters):
             flutter.uncross_reference()
+
+        if self.aero:
+            self.aero.uncross_reference()
+        if self.aeros:
+            self.aeros.uncross_reference()
 
     def _uncross_reference_constraints(self):
         """

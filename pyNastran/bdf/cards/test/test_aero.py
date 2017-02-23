@@ -5,6 +5,7 @@ tests aero cards
 from __future__ import print_function
 import os
 import unittest
+from six import StringIO
 import numpy as np
 
 import pyNastran
@@ -604,24 +605,21 @@ class TestAero(unittest.TestCase):
                                            lsb, lint, igid, ] + p1 + [x12]))
 
         #---------------
+        # nsb=lsb=None=0
         caero2b = CAERO2(eid, pid, igid, p1, x12,
-                         cp=cp, nsb=0, nint=nint, lsb=0, lint=6,
+                         cp=cp, nsb=None, nint=None, lsb=None, lint=6,
                          comment='this is a caero')
         with self.assertRaises(ValueError):
             caero2b.validate()
 
+        # nint=lint=None=0
         caero2c = CAERO2(eid, pid, igid, p1, x12,
-                         cp=cp, nsb=3, nint=0, lsb=3, lint=0,
+                         cp=cp, nsb=3, nint=None, lsb=3, lint=None,
                          comment='this is a caero')
         with self.assertRaises(ValueError):
             caero2c.validate()
 
-        caero2d = CAERO2(eid, pid, igid, p1, x12,
-                         cp=cp, nsb=3, nint=0, lsb=3, lint=0,
-                         comment='this is a caero')
-        with self.assertRaises(ValueError):
-            caero2d.validate()
-
+        # they're all bad?
         caero2e = CAERO2(eid, pid, igid, p1, x12,
                          cp=cp, nsb=0, nint=0, lsb=0, lint=0,
                          comment='this is a caero')
@@ -775,6 +773,7 @@ class TestAero(unittest.TestCase):
         paero3 = model.add_paero3(pid, nbox, ncontrol_surfaces, x, y,
                                   comment='paero3')
         paero3.validate()
+        paero3.raw_fields()
 
         card = ['CAERO3', 2000, 20001, 0, 22, 33, None, None, None,
                 1.0, 0.0, 0., 100., 17., 130., 0., 100.]
@@ -819,10 +818,15 @@ class TestAero(unittest.TestCase):
         caero3b.get_points()
         caero3b.panel_points_elements()
 
+        bdf_filename = StringIO()
+        model.write_bdf(bdf_filename, close=False)
+        bdf_filename.seek(0)
+        model2 = read_bdf(bdf_filename, punch=True, debug=False)
+
 
     def test_caero4_1(self):
         """checks the CAERO4/PAERO4"""
-        model = BDF()
+        model = BDF(debug=False)
         pid = 1001
         docs = []
         caocs = []
@@ -831,6 +835,7 @@ class TestAero(unittest.TestCase):
                                   cla=0, lcla=0, circ=0, lcirc=0,
                                   comment='paero4')
         paero4.validate()
+        paero4.raw_fields()
 
         x1 = 0.
         y1 = 0.
@@ -856,8 +861,9 @@ class TestAero(unittest.TestCase):
 
         p1 = [x1, y1, z1]
         p4 = [x4, y4, z4]
-        caero4b = model.add_caero4(eid, pid, nspan, lspan, p1, x12, p4, x43,
-                                   cp=cp, comment='caero4b')
+        caero4b = model.add_caero4(eid, pid, p1, x12, p4, x43,
+                                   cp=cp, nspan=nspan, lspan=lspan,
+                                   comment='caero4b')
         caero4b.validate()
         caero4b.write_card()
         caero4b.raw_fields()
@@ -867,9 +873,22 @@ class TestAero(unittest.TestCase):
         caero4b.raw_fields()
         p1, p2, p3, p4 = caero4b.get_points()
 
+        caero4c = CAERO4(eid, pid, p1, x12, p4, x43,
+                         cp=0,nspan=0, lspan=0,
+                         comment='caero4c')
+        with self.assertRaises(RuntimeError):
+            caero4c.validate()
+
+
         #model.cross_reference()
         model.uncross_reference()
         #model.safe_cross_reference()
+
+        bdf_filename = StringIO()
+        model.write_bdf(bdf_filename, close=False)
+        bdf_filename.seek(0)
+        model2 = read_bdf(bdf_filename, xref=False, punch=True, debug=False)
+        model.safe_cross_reference()
 
     def test_caero5_1(self):
         """checks the CAERO5/PAERO5"""
@@ -892,7 +911,7 @@ class TestAero(unittest.TestCase):
         ltaus = 0
         card = ['PAERO5', pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus, ] + caoci
 
-        model = BDF()
+        model = BDF(debug=False)
         model.add_card(card, card[0], comment='', is_list=True,
                        has_none=True)
         paero5 = model.paeros[pid]
@@ -944,8 +963,14 @@ class TestAero(unittest.TestCase):
         model.uncross_reference()
         #model.safe_cross_reference()
 
-        model.write_bdf('caero5.temp')
-        os.remove('caero5.temp')
+        bdf_filename = StringIO()
+        model.write_bdf(bdf_filename, close=False)
+        bdf_filename.seek(0)
+
+        read_bdf(bdf_filename, xref=False, punch=True, debug=False)
+        model.safe_cross_reference()
+
+
         #caero5.raw_fields()
 
 
@@ -1129,21 +1154,52 @@ class TestAero(unittest.TestCase):
         reduced_freqs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
         mkaero = MKAERO1(machs, reduced_freqs, comment='mkaero')
         mkaero.validate()
-        mkaero.write_card()
+        msg = mkaero.write_card()
+        lines = msg.strip().split('\n')
+        expected = [
+            '$mkaero',
+            'MKAERO1       .5     .75',
+            '              .1      .2      .3      .4      .5      .6      .7      .8',
+            'MKAERO1       .5     .75',
+            '              .9      1.     1.1',
+        ]
+        for line1, line2 in zip(lines, expected):
+            assert line1 == line2, '\nline=%r\nexpected=%r'%  (line1, line2)
+
+        expected2 = [
+            '$mkaero1',
+            'MKAERO1       .1      .2      .3      .4      .5      .6      .7      .8',
+            '             .01     .02     .03',
+            'MKAERO1       .9',
+            '             .01     .02     .03',
+        ]
+        machs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        reduced_freqs = [0.01, 0.02, 0.03]
+        model = BDF(debug=False)
+        mkaero = model.add_mkaero1(machs, reduced_freqs, comment='mkaero1')
+        mkaero.raw_fields()
+        msg = mkaero.write_card()
+        lines = msg.strip().split('\n')
+        for line1, line2 in zip(lines, expected2):
+            msg = '\nline    =%r\n' %  str(line1)
+            msg += 'expected=%r\n%s' % (str(line2), msg)
+            assert line1 == line2, msg
 
     def test_mkaero2(self):
         """checks the MKAERO2 card"""
+        model = BDF()
         machs = [0.5, 0.75, 0.8]
         reduced_freqs = [0.1, 0.2, 0.3]
-        mkaero = MKAERO2(machs, reduced_freqs, comment='mkaero2')
+        mkaero = model.add_mkaero2(machs, reduced_freqs, comment='mkaero2')
         mkaero.validate()
         mkaero.write_card()
 
         machs = [0.5, 0.75]
         reduced_freqs = [0.1, 0.2]
-        mkaero = MKAERO2(machs, reduced_freqs, comment='mkaero2')
+        mkaero = model.add_mkaero2(machs, reduced_freqs, comment='mkaero2')
         mkaero.validate()
         mkaero.write_card()
+        mkaero.raw_fields()
 
         mkaero = MKAERO2.add_card(BDFCard(['MKAERO2'] + machs + reduced_freqs), comment='mkaero2')
         mkaero.validate()
@@ -1321,6 +1377,20 @@ class TestAero(unittest.TestCase):
 
         card = ['CSSCHD', sid, aesid, lalpha, lmach, lschd]
         bdf_card = BDFCard(card, has_none=True)
+        csshcd_bad = CSSCHD(sid, aesid, lschd, lalpha='lalpha', lmach=4,
+                            comment='')
+        with self.assertRaises(TypeError):
+            csshcd_bad.validate()
+        csshcd_bad.lalpha = 4
+        csshcd_bad.lmach = 5.0
+        with self.assertRaises(TypeError):
+            csshcd_bad.validate()
+        csshcd_bad.lmach = 5
+        csshcd_bad.validate()
+
+
+        card = ['CSSCHD', sid, aesid, lalpha, lmach, lschd]
+        bdf_card = BDFCard(card, has_none=True)
         csshcd1 = CSSCHD.add_card(bdf_card, comment='csschd card')
         csshcd1.validate()
         csshcd1.write_card()
@@ -1360,16 +1430,61 @@ class TestAero(unittest.TestCase):
         csshcd2.write_card()
         #csshcd1.write_card()
         model.uncross_reference()
-        model.write_bdf('csschd.temp')
 
+        bdf_filename = StringIO()
+        model.write_bdf(bdf_filename, close=False)
         model.safe_cross_reference()
+        bdf_filename.seek(0)
+
+        model2 = read_bdf(bdf_filename, punch=True, debug=False)
+
+        bdf_filename2 = StringIO()
+        model.write_bdf(bdf_filename2, size=16, close=False)
 
         #-----------
         csshcd3 = CSSCHD(sid, aesid, lschd, lalpha=None, lmach=None, comment='cssch card')
         csshcd3.write_card()
         with self.assertRaises(RuntimeError):
             csshcd3.validate()
-        os.remove('csschd.temp')
+
+    def test_monpnt(self):
+        model = BDF(debug=False)
+        name = 'test'
+        label = 'test2'
+        axes = '123'
+        comp = 'WING'
+        xyz = [0., 0., 0.]
+        monpnt1 = model.add_monpnt1(name, label, axes, comp, xyz, cp=0,
+                                    cd=None, comment='monpnt1')
+        monpnt1.raw_fields()
+        monpnt1.validate()
+
+        Type = 'CQUAD4'
+        table = 'STRESS'
+        nddl_item = 42
+        eid = 17
+        monpnt2 = model.add_monpnt2(name, label, table, Type, nddl_item, eid,
+                                    comment='monpnt2')
+        monpnt2.raw_fields()
+        monpnt2.validate()
+
+        grid_set = 43
+        elem_set = 44
+        monpnt3 = model.add_monpnt3(name, label, axes, grid_set, elem_set,
+                                   xyz, cp=0, cd=None,
+                                   xflag=None, comment='monpnt3')
+        monpnt3.raw_fields()
+        monpnt3.validate()
+
+        model._verify_bdf(xref=False)
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+        model.uncross_reference()
+
+        bdf_filename = StringIO()
+        model.write_bdf(bdf_filename, close=False)
+        bdf_filename.seek(0)
+        model2 = read_bdf(bdf_filename, punch=True, debug=False)
 
 
 if __name__ == '__main__':  # pragma: no cover

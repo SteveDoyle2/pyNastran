@@ -1450,6 +1450,32 @@ class CSSCHD(Aero):
         self.lschd = model.AEFact(self.lschd, msg=msg)
         self.lschd_ref = self.lschd
 
+    def safe_cross_reference(self, model):
+        msg = ' which is required by CSSCHD sid=%s' % self.sid
+        try:
+            self.aesid = model.AESurf(self.aesid, msg=msg)
+            self.aesid_ref = self.aesid
+        except KeyError:
+            pass
+
+        try:
+            self.lalpha = model.AEFact(self.lalpha, msg=msg)
+            self.lalpha_ref = self.lalpha
+        except KeyError:
+            pass
+
+        try:
+            self.lmach = model.AEFact(self.lmach, msg=msg)
+            self.lmach_ref = self.lmach
+        except KeyError:
+            pass
+
+        try:
+            self.lschd = model.AEFact(self.lschd, msg=msg)
+            self.lschd_ref = self.lschd
+        except KeyError:
+            pass
+
     def uncross_reference(self):
         self.aesid = self.AESid()
         self.lalpha = self.LAlpha()
@@ -1547,8 +1573,8 @@ class CAERO1(BaseCard):
        int > 0 : AEFACT reference for non-uniform nchord
        int = 0 : use nchord
        AEFACT : AEFACT object  (xref)
-        comment : str; default=''
-            a comment for the card
+    comment : str; default=''
+        a comment for the card
     """
     type = 'CAERO1'
     _field_map = {
@@ -2816,8 +2842,8 @@ class CAERO3(BaseCard):
 
 class CAERO4(BaseCard):
     type = 'CAERO4'
-    def __init__(self, eid, pid, nspan, lspan, p1, x12, p4, x43,
-                 cp=0, comment=''):
+    def __init__(self, eid, pid, p1, x12, p4, x43,
+                 cp=0, nspan=0, lspan=0, comment=''):
         if comment:
             self.comment = comment
 
@@ -2838,7 +2864,7 @@ class CAERO4(BaseCard):
 
     def validate(self):
         if self.nspan == 0 and self.lspan == 0:
-            msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (
+            msg = 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (
                 self.nspan, self.lspan)
             raise RuntimeError(msg)
         assert len(self.p1) == 3, 'p1=%s' % self.p1
@@ -2866,8 +2892,8 @@ class CAERO4(BaseCard):
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.)
         assert len(card) <= 17, 'len(CAERO4 card) = %i\ncard=%s' % (len(card), card)
-        return CAERO4(eid, pid, nspan, lspan, p1, x12, p4, x43,
-                      cp=cp, comment=comment)
+        return CAERO4(eid, pid, p1, x12, p4, x43,
+                      cp=cp, nspan=nspan, lspan=lspan, comment=comment)
 
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)
@@ -2892,6 +2918,20 @@ class CAERO4(BaseCard):
 
         self.cp_ref = self.cp
         self.pid_ref = self.pid
+
+    def safe_cross_reference(self, model):
+        msg = ' which is required by CAERO4 eid=%s' % self.eid
+        try:
+            self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
+            self.pid_ref = self.pid
+        except KeyError:
+            pass
+
+        try:
+            self.cp = model.Coord(self.cp, msg=msg)
+            self.cp_ref = self.cp
+        except KeyError:
+            pass
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -3037,6 +3077,27 @@ class CAERO5(BaseCard):
         if self.nspan == 0:
             self.lspan = model.AEFact(self.lspan, msg=msg)
             self.lspan_ref = self.lspan
+
+    def safe_cross_reference(self, model):
+        msg = ' which is required by CAERO5 eid=%s' % self.eid
+        try:
+            self.pid = model.PAero(self.pid, msg=msg)
+            self.pid_ref = self.pid
+        except KeyError:
+            pass
+
+        try:
+            self.cp = model.Coord(self.cp, msg=msg)
+            self.cp_ref = self.cp
+        except KeyError:
+            pass
+
+        if self.nspan == 0:
+            try:
+                self.lspan = model.AEFact(self.lspan, msg=msg)
+                self.lspan_ref = self.lspan
+            except KeyError:
+                pass
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -3298,6 +3359,19 @@ class PAERO5(BaseCard):
 
         self.ltaus_ref = self.ltaus
         self.lxis_ref = self.lxis
+
+    def safe_cross_reference(self, model):
+        try:
+            self.lxis = model.AEFact(self.lxis_id)
+            self.lxis_ref = self.lxis
+        except KeyError:
+            pass
+
+        try:
+            self.ltaus = model.AEFact(self.ltaus_id)
+            self.ltaus_ref = self.ltaus
+        except KeyError:
+            pass
 
     def uncross_reference(self):
         self.lxis = self.lxis_id
@@ -3857,8 +3931,8 @@ class GUST(BaseCard):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
         #return angle
 
-    def uncross_reference(self):
-        pass
+    #def uncross_reference(self):
+        #pass
 
     def raw_fields(self):
         """
@@ -3907,20 +3981,19 @@ class MKAERO1(BaseCard):
         for i in range(1, 1 + nfields):
             machs.append(double_or_blank(card, i, 'mach'))
             reduced_freqs.append(double_or_blank(card, i + 8, 'rFreq'))
-
         machs = wipe_empty_fields(machs)
         reduced_freqs = wipe_empty_fields(reduced_freqs)
         return MKAERO1(machs, reduced_freqs, comment=comment)
 
-    def uncross_reference(self):
-        pass
+    #def addFreqs(self, mkaero):
+        #self.getMach_rFreqs()
+        #for m in mkaero.machs:
+            #self.machs.append(m)
+        #for f in mkaero.reduced_freqs:
+            #self.reduced_freqs.append(f)
 
-    def addFreqs(self, mkaero):
-        self.getMach_rFreqs()
-        for m in mkaero.machs:
-            self.machs.append(m)
-        for f in mkaero.reduced_freqs:
-            self.reduced_freqs.append(f)
+    #def getMach_rFreqs(self):
+        #return self.machs, self.reduced_freqs
 
     def raw_fields(self):
         """
@@ -3934,8 +4007,11 @@ class MKAERO1(BaseCard):
         #list_fields = ['MKAERO1']
         #for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
         #    list_fields += [mach, rfreq]
-        machs = [None] * 8
-        freqs = [None] * 8
+
+        # kind of a hack because there isn't a good way to do this for
+        # duplicately-defined MKAERO1s
+        machs = [None] * max(8, len(self.machs))
+        freqs = [None] * max(8, len(self.reduced_freqs))
         for i, mach in enumerate(self.machs):
             machs[i] = mach
         for i, freq in enumerate(self.reduced_freqs):
@@ -3943,13 +4019,11 @@ class MKAERO1(BaseCard):
         list_fields = ['MKAERO1'] + machs + freqs
         return list_fields
 
-    def getMach_rFreqs(self):
-        return self.machs, self.reduced_freqs
-
     def write_card(self, size=8, is_double=False):
         cards = []
         nmachs = len(self.machs)
         nreduced_freqs = len(self.reduced_freqs)
+        #print('nmachs=%s nreduced_freqs=%s' % (nmachs > 8, nreduced_freqs > 8))
         if nmachs > 8 or nreduced_freqs > 8:
             if 1:
                 cards = []
@@ -3965,21 +4039,22 @@ class MKAERO1(BaseCard):
                     ifreq += 8
                 msg = self.comment
 
-                #print('mach_sets =', mach_sets)
-                #print('rfreq_sets =', rfreq_sets)
+                #print('mach_sets = %s' % mach_sets)
+                #print('rfreq_sets = %s' % rfreq_sets)
                 for mach_set in mach_sets:
                     for rfreq_set in rfreq_sets:
                         msg += MKAERO1(mach_set, rfreq_set).write_card(
                             size=size, is_double=is_double)
                 return msg
             else:
-                machs = []
-                reduced_freqs = []
-                for mach in self.machs:
-                    machs += [mach] * nreduced_freqs
-                    reduced_freqs += self.reduced_freqs
-                return self.comment + MKAERO2(machs, reduced_freqs).write_card(
-                    size=size, is_double=is_double)
+                raise RuntimeError('what...?')
+                #machs = []
+                #reduced_freqs = []
+                #for mach in self.machs:
+                    #machs += [mach] * nreduced_freqs
+                    #reduced_freqs += self.reduced_freqs
+                #return self.comment + MKAERO2(machs, reduced_freqs).write_card(
+                    #size=size, is_double=is_double)
 
         list_fields = ['MKAERO1']
         machs = [None] * 8
@@ -3998,6 +4073,8 @@ class MKAERO1(BaseCard):
             reduced_freqs[i] = rfreq
         return self.comment + print_card_8(['MKAERO1'] + machs + reduced_freqs)
 
+    def __repr__(self):
+        return self.write_card()
 
 class MKAERO2(BaseCard):
     """
@@ -4018,7 +4095,7 @@ class MKAERO2(BaseCard):
         self.machs = machs
         self.reduced_freqs = reduced_freqs
 
-    def validate(self):
+    #def validate(self):
         if len(self.machs) != len(self.reduced_freqs):
             msg = 'len(machs)=%s len(rfreqs)=%s; should be the same' % (
                 len(self.machs), len(self.reduced_freqs))
@@ -4035,15 +4112,15 @@ class MKAERO2(BaseCard):
             reduced_freqs.append(double(card, i + 1, 'rFreq'))
         return MKAERO2(machs, reduced_freqs, comment=comment)
 
-    def uncross_reference(self):
-        pass
+    #def addFreqs(self, mkaero):
+        #self.getMach_rFreqs()
+        #for m in mkaero.machs:
+            #self.machs.append(m)
+        #for f in mkaero.reduced_freqs:
+            #self.reduced_freqs.append(f)
 
-    def addFreqs(self, mkaero):
-        self.getMach_rFreqs()
-        for m in mkaero.machs:
-            self.machs.append(m)
-        for f in mkaero.reduced_freqs:
-            self.reduced_freqs.append(f)
+    #def getMach_rFreqs(self):
+        #return self.machs, self.reduced_freqs
 
     def raw_fields(self):
         """
@@ -4058,9 +4135,6 @@ class MKAERO2(BaseCard):
         for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
             list_fields += [mach, rfreq]
         return list_fields
-
-    def getMach_rFreqs(self):
-        return self.machs, self.reduced_freqs
 
     def write_card(self, size=8, is_double=False):
         cards = []
@@ -4077,10 +4151,52 @@ class MKAERO2(BaseCard):
             cards.append(print_card_8(list_fields))
         return self.comment + ''.join(cards)
 
+    def __repr__(self):
+        return self.write_card()
+
+
 class MONPNT1(BaseCard):
+    """
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    |    1    |    2    |  3   |  4  |  5  |   6   |   7  | 8  | 9  |
+    +=========+=========+======+=====+=====+=======+======+====+====+
+    | MONPNT1 |  NAME   |                   LABEL                   |
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    |         |  AXES   | COMP | CP  |  X  |   Y   |   Z  | CD |    |
+    +---------+---------+------+-----+-----+-------+------+----+----+
+
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    |    1    |    2    |  3   |  4  |  5  |   6   |   7  | 8  | 9  |
+    +=========+=========+======+=====+=====+=======+======+====+====+
+    | MONPNT1 | WING155 |    Wing Integrated Load to Butline 155    |
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    |         |    34   | WING |     | 0.0 | 155.0 | 15.0 |    |    |
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    """
     type = 'MONPNT1'
     def __init__(self, name, label, axes, comp, xyz, cp=0, cd=None, comment=''):
         """
+        name : str
+            Character string of up to 8 characters identifying the
+            monitor point
+        label : str
+            A string comprising no more than 56 characters
+            that identifies and labels the monitor point.
+        axes : str
+            components {1,2,3,4,5,6}
+        comp : str
+            name of the AECOMP/AECOMPL entry
+        xyz : List[float, float, float]; default=None
+            The coordinates in the CP coordinate system about which the
+            loads are to be monitored.
+            None : [0., 0., 0.]
+        cp : int, CORDx; default=0
+           int : coordinate system
+        cd : int; default=None -> cp
+            the coordinate system for load outputs
+        comment : str; default=''
+            a comment for the card
+
         CD - MSC specific field
         """
         if comment:
@@ -4119,8 +4235,8 @@ class MONPNT1(BaseCard):
 
     def raw_fields(self):
         list_fields = [
-            'MONPNT1', self.name, self.label.strip(), self.axes, self.comp, self.cp,
-        ] + self.xyz + [self.cd]
+            'MONPNT1', self.name, self.label.strip(), self.axes, self.comp,
+            self.cp,] + self.xyz + [self.cd]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -4153,6 +4269,9 @@ class MONPNT2(BaseCard):
         self.nddl_item = nddl_item
         self.eid = eid
 
+    def validate(self):
+        assert self.table in ['STRESS', 'FORCE', 'STRAIN'], self.table
+
     @classmethod
     def add_card(cls, card, comment=''):
         name = string(card, 1, 'name')
@@ -4177,7 +4296,7 @@ class MONPNT2(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        msg = 'MONPNT3 %-8s%s\n' % (self.name, self.label)
+        msg = 'MONPNT2 %-8s%s\n' % (self.name, self.label)
         msg += ('        %-8s%-8s%-8s%-8s\n' % (
             self.table, self.Type, self.nddl_item, self.eid
         ))
@@ -4417,7 +4536,8 @@ class PAERO2(BaseCard):
             self.thn[spot] = value
 
     def __init__(self, pid, orient, width, AR,
-                 thi, thn, lrsb=None, lrib=None, lth1=None, lth2=None, comment=''):
+                 thi, thn, lrsb=None, lrib=None, lth1=None, lth2=None,
+                 comment=''):
         if comment:
             self.comment = comment
 
@@ -4765,6 +4885,9 @@ class PAERO4(BaseCard):
     def cross_reference(self, model):
         pass
 
+    def safe_cross_reference(self, model):
+        pass
+
     def uncross_reference(self):
         pass
 
@@ -4796,8 +4919,8 @@ class SPLINE1(Spline):
     """
     Surface Spline Methods
     Defines a surface spline for interpolating motion and/or forces for
-    aeroelastic problems on aerodynamic geometries defined by regular arrays of
-    aerodynamic points.
+    aeroelastic problems on aerodynamic geometries defined by regular
+    arrays of aerodynamic points.
 
       +---------+-------+-------+------+------+------+----+------+-------+
       |    1    |   2   |    3  |   4  |   5  |   6  |  7 |   8  |   9   |
@@ -4815,8 +4938,8 @@ class SPLINE1(Spline):
         7: 'method', 8:'usage', 9:'nelements', 10:'melements',
     }
 
-    def __init__(self, eid, caero, box1, box2, setg, dz=0., method='IPS', usage='BOTH',
-                 nelements=10, melements=10, comment=''):
+    def __init__(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
+                 usage='BOTH', nelements=10, melements=10, comment=''):
         Spline.__init__(self)
         if comment:
             self.comment = comment
@@ -4969,8 +5092,8 @@ class SPLINE2(Spline):
     """
     Linear Spline
     Defines a surface spline for interpolating motion and/or forces for
-    aeroelastic problems on aerodynamic geometries defined by regular arrays of
-    aerodynamic points.
+    aeroelastic problems on aerodynamic geometries defined by regular
+    arrays of aerodynamic points.
 
       +---------+------+-------+-------+-------+------+----+------+-----+
       |    1    |   2  |   3   |   4   |   5   |  6   |  7 |   8  |  9  |
@@ -5273,13 +5396,15 @@ class SPLINE4(Spline):
     aeroelastic problems on general aerodynamic geometries using either the
     Infinite Plate, Thin Plate or Finite Plate splining method.
 
-     +---------+-------+-------+--------+-----+------+----+------+-------+
-     | SPLINE4 | EID   | CAERO | AELIST | --- | SETG | DZ | METH | USAGE |
-     +---------+-------+-------+--------+-----+------+----+------+-------+
-     | NELEM   | MELEM |       |        |     |      |    |      |       |
-     +---------+-------+-------+--------+-----+------+----+------+-------+
-     | SPLINE4 |   3   | 111   |   115  | --- |  14  | 0. | IPS  |       |
-     +---------+-------+-------+--------+-----+------+----+------+-------+
+    +---------+-------+-------+--------+-----+------+----+------+-------+
+    |    1    |   2   |   3   |    4   |  5  |   6  |  7 |   8  |   9   |
+    +=========+=======+=======+========+=====+======+====+======+=======+
+    | SPLINE4 |  EID  | CAERO | AELIST | --- | SETG | DZ | METH | USAGE |
+    +---------+-------+-------+--------+-----+------+----+------+-------+
+    | NELEM   | MELEM |       |        |     |      |    |      |       |
+    +---------+-------+-------+--------+-----+------+----+------+-------+
+    | SPLINE4 |   3   | 111   |   115  | --- |  14  | 0. | IPS  |       |
+    +---------+-------+-------+--------+-----+------+----+------+-------+
     """
     type = 'SPLINE4'
     _field_map = {
@@ -5579,7 +5704,7 @@ class TRIM(BaseCard):
     """
     +------+--------+------+--------+--------+-----+--------+-----+----------+
     |   1  |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
-    +======+========+=======+=======+========+=====+========+=====+==========+
+    +======+========+======+========+========+=====+========+=====+==========+
     | TRIM |   ID   | MACH |    Q   | LABEL1 | UX1 | LABEL2 | UX2 | IS_RIGID |
     +------+--------+------+--------+--------+-----+--------+-----+----------+
     |      | LABEL3 |  UX3 | LABEL4 |   UX4  | ... |        |     |          |
@@ -5875,7 +6000,10 @@ class TRIM(BaseCard):
         #self.aesurf = model.aesurf
 
     def safe_cross_reference(self, model):
-        self.cross_reference(model)
+        pass
+
+    def uncross_reference(self):
+        pass
 
     @classmethod
     def add_card(cls, card, comment=''):

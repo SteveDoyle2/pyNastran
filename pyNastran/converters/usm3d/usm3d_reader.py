@@ -117,7 +117,7 @@ class Usm3d(object):
         Parameters
         ----------
         basename : str
-            ???
+            the root path to the *.cogsg, *.bc, *.mapbc, *.face, *.front files
         dimension_flag : int
             ???
             2?/3
