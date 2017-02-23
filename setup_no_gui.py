@@ -53,14 +53,14 @@ try:
 except ImportError:
     py_packages.append('six >= 1.9.0')
 
-try:
-    import matplotlib
-    sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
-    if sver < [1, 5, 1]:
-        print("matplotlib.__version__ = %r < '1.5.1'" % six.__version__)
-        py_packages.append('matplotlib >= 1.5.1, <2')
-except ImportError:
-    py_packages.append('matplotlib >= 1.5.1, <2')
+#try:
+#    import matplotlib
+#    sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
+#    if sver < [1, 5, 1]:
+#        print("matplotlib.__version__ = %r < '1.5.1'" % six.__version__)
+#        py_packages.append('matplotlib >= 1.5.1, <2')
+#except ImportError:
+#    py_packages.append('matplotlib >= 1.5.1, <2')
 
 try:
     import docopt
@@ -147,7 +147,7 @@ setup(
             'pyNastranv = pyNastran.bdf.dev_vectorized.solver.solver:main',
             'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
-        ] + py2_gui_scripts
+        ]# + py2_gui_scripts
     },
     test_suite='pyNastran.all_tests',
 )
