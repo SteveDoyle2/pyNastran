@@ -93,7 +93,7 @@ except ImportError:
 try:
     import scipy
     ver = scipy.version.short_version
-    if ver < '0.16.0':
+    if ver < '0.17.0':
         print("scipy.version.short_version = %r < '0.17.0'" % scipy.version.short_version)
         py_packages.append('scipy >= 0.17.0')
 except ImportError:
@@ -161,6 +161,14 @@ for icon_file in icon_files:
     if icon_file.endswith('.png'):
         icon_files2.append(os.path.join(icon_path, icon_file))
 
+packages = find_packages(exclude=['ez_setup', 'examples', 'tests', 'pyNastran.bdf.dev_vectorized'])
+exclude_words = [
+    'pyNastran.bdf.dev_vectorized', 'pyNastran.f06.dev', 'pyNastran.op2.dev',
+    'pyNastran.converters.dev']
+for exclude_word in exclude_words:
+    packages = [package for package in packages if exclude_word not in package]
+#print(packages, len(packages)) # 83
+
 setup(
     name='pyNastran',
     version=pyNastran.__version__,
@@ -183,7 +191,7 @@ setup(
     author_email=pyNastran.__email__,
     url=pyNastran.__website__,
     license=pyNastran.__license__,
-    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+    packages=packages,
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,

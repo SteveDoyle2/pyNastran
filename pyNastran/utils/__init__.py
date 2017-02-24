@@ -284,3 +284,14 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
     #if debug:
         #print('%r' % msg)
     #return msg
+
+def remove_files(*filenames):
+    """delete a list of files"""
+    passed = True
+    failed_list = []
+    for filename in filenames:
+        try:
+            os.remove(filename)
+        except OSError:  # OSError is the general version of WindowsError
+            failed_list.append(filename)
+    return failed_list
