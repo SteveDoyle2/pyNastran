@@ -396,7 +396,6 @@ def write_min_max_stress_dict(stress_filename, min_max_stresses_dict, eids):
         msg += '# icase = %i\n' % icase
         msg += '# Eid, stress_min_cycle1, stress_max_cycle1, stress_min_cycle2, stress_max_cycle2, ...\n'
         for ieid, cases in sorted(iteritems(min_max_stresses_dict)):
-            #print(min_max_stresses_dict.keys())
             eid = eids[ieid]
             line = '%s, ' % eid
             case = cases[icase]
@@ -498,7 +497,7 @@ def rainflow_from_csv(input_csv, casenames, features,
 
             B = np.vstack([min_stress, max_stress]).T
             header = 'max stress%smin_stress\n' % delimiter
-            np.savetxt(csv_out, B, delimiter=delimiter, fmt='%.18e', header=header)
+            np.savetxt(csv_out, B, delimiter=delimiter, header=header)
             plt.plot(range(min_index, max_index), stress_case)
             legend.append(case_name)
             icase += 1
