@@ -287,7 +287,6 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
 
 def remove_files(*filenames):
     """delete a list of files"""
-    passed = True
     failed_list = []
     for filename in filenames:
         try:

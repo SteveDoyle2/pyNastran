@@ -1,10 +1,36 @@
+"""
+defines some methods for working with arrays:
+ - filter1d(a, b=None, zero_tol=0.001)
+ - where_searchsorted(a, v, side='left', x=None, y=None)
+ - sortedsum1d(ids, values, axis=None)
+ - iformat(format_old, precision=2)
+ - abs_max_min_global(values)
+ - abs_max_min_vector(values)
+ - abs_max_min(values, global_abs_max=True)
+ - principal_3d(o11, o22, o33, o12, o23, o13)
+ - transform_force(force_in_local,
+                   coord_out, coords,
+                   nid_cd, i_transform)
+ - transform_force_moment(force_in_local, moment_in_local,
+                          coord_out, coords,
+                          nid_cd, i_transform,
+                          xyz_cid0, summation_point_cid0=None,
+                          consider_rxf=True,
+                          debug=False, logger=None)
+ - transform_force_moment_sum(force_in_local, moment_in_local,
+                              coord_out, coords,
+                              nid_cd, i_transform,
+                              xyz_cid0, summation_point_cid0=None,
+                              consider_rxf=True,
+                              debug=False, logger=None)
+"""
 from __future__ import print_function
 from struct import calcsize
 from itertools import count
 
 import numpy as np
-from numpy import array, where, zeros, asarray, dot, arccos, sqrt, pi
-from numpy import cos, unique, cross, abs as npabs
+from numpy import dot, arccos, sqrt, pi
+from numpy import cos, unique, cross
 
 def filter1d(a, b=None, zero_tol=0.001):
     """

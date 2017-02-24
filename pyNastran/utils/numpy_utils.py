@@ -1,3 +1,7 @@
+"""
+defines:
+ - loadtxt_nice
+"""
 from __future__ import print_function
 from codecs import open as codec_open
 from itertools import count
@@ -69,10 +73,10 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     #if ndmin is not [0, 2]: ## TODO: remove 2
         #raise NotImplementedError('ndmin=%r must be 0' % ndmin)
 
-    if delimiter is None:
-        ending_characters = '\n\r \t'
-    else:
-        ending_characters = '\n\r \t' + delimiter
+    #if delimiter is None:
+        #ending_characters = '\n\r \t'
+    #else:
+        #ending_characters = '\n\r \t' + delimiter
 
     data = []
     if isinstance(filename, StringIO):
@@ -179,7 +183,8 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
                 # For structured arrays, return an array for each field.
                 return (np.squeeze(X[name]) for name in dtype.names)
             else:
-                raise RuntimeError('I think this can never happen...type(dtype)=dict; ndmin=%s' % ndmin)
+                msg = 'I think this can never happen...type(dtype)=dict; ndmin=%s' % ndmin
+                raise RuntimeError(msg)
         else:
             #print('X = ', X)
             #raise NotImplementedError('unpack=%s dtypes=%s' % (unpack, dtype))

@@ -75,7 +75,7 @@ def write_DMIG(f, name, matrix, form,
     ncols = ''
     form = ifo
     if ifo == 9: # Number of columns in a rectangular matrix. Used only for IFO = 9.
-        nrows, ncols = A.shape
+        ncols = A.shape[1]
     f.write('$ type = %s\n' % type(matrix))
     card = ['DMIG', name, 0, ifo, tin, tout, polar, '', ncols]
     f.write(print_card_8(card))
