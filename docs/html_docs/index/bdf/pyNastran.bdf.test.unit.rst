@@ -8,7 +8,6 @@ unit Package
 
 .. automodule:: pyNastran.bdf.test.unit.line_parsing
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ unit Package
 
 .. automodule:: pyNastran.bdf.test.unit.test_mass
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ unit Package
 
 .. automodule:: pyNastran.bdf.test.unit.test_read_write
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ unit Package
 
 .. automodule:: pyNastran.bdf.test.unit.test_renumber
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -52,7 +48,6 @@ unit Package
 
 .. automodule:: pyNastran.bdf.test.unit.test_sum_loads
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -63,7 +58,6 @@ unit Package
 
 .. automodule:: pyNastran.bdf.test.unit.test_sum_loads
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

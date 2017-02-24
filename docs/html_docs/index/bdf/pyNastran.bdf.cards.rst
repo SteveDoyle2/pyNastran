@@ -230,5 +230,4 @@ Subpackages
     pyNastran.bdf.cards.loads
     pyNastran.bdf.cards.properties
     pyNastran.bdf.cards.thermal
-    pyNastran.bdf.cards.test
 

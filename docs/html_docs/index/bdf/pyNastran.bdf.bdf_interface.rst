@@ -121,6 +121,16 @@ bdf_interface Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`subcase_utils` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.subcase_utils
+
+.. automodule:: pyNastran.bdf.bdf_interface.subcase_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`uncross_reference` Module
 -------------------------------
 
