@@ -31,6 +31,9 @@ oes_stressStrain Package
     :undoc-members:
     :show-inheritance:
 
+Subpackages
+-----------
+
 .. toctree::
 
     pyNastran.op2.tables.oes_stressStrain.complex
