@@ -1,3 +1,6 @@
+"""
+defines the command line argument ``test_op4``
+"""
 from __future__ import print_function
 import os
 import sys
@@ -5,15 +8,14 @@ import time
 from traceback import print_exc
 from six import iteritems
 
-import numpy as np
-
 import pyNastran
-from pyNastran.op4.op4 import OP4, read_op4
+from pyNastran.op4.op4 import read_op4
 
 
 def run_lots_of_files(files, write_op4=True,
                       debug=True, save_cases=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000):
+    """runs lots of op4 files"""
     if skip_files is None:
         skip_files = []
     n = ''
@@ -60,6 +62,7 @@ def run_lots_of_files(files, write_op4=True,
 
 def run_op4(op4_filename, write_op4=True, debug=True,
             stop_on_failure=False):
+    """run an op4"""
     print('***debug=%s' % debug)
     assert '.op4' in op4_filename.lower(), 'op4_filename=%s is not an OP4' % op4_filename
     is_passed = False
@@ -68,22 +71,20 @@ def run_op4(op4_filename, write_op4=True, debug=True,
 
     #debug = True
     try:
-        op4 = OP4(debug=debug)
-        op4._new = True
-        matrices = op4.read_op4(op4_filename)
+        matrices = read_op4(op4_filename, debug=debug)
 
-        if 0:
-            matrices2 = op4.read_op4(op4_filename)
+        #if 0:
+            #matrices2 = op4.read_op4(op4_filename)
 
-            print(matrices)
-            print('matrices =', matrices.keys())
+            #print(matrices)
+            #print('matrices =', matrices.keys())
 
-            assert list(sorted(matrices.keys())) == list(sorted(matrices2.keys()))
-            for key, (form, matrix) in sorted(iteritems(matrices)):
-                form2, matrix2 = matrices2[key]
-                assert form == form2
-                delta = matrix - matrix2
-                assert np.array_equal(matrix, matrix2), 'delta=\n%s' % delta
+            #assert list(sorted(matrices.keys())) == list(sorted(matrices2.keys()))
+            #for key, (form, matrix) in sorted(iteritems(matrices)):
+                #form2, matrix2 = matrices2[key]
+                #assert form == form2
+                #delta = matrix - matrix2
+                #assert np.array_equal(matrix, matrix2), 'delta=\n%s' % delta
 
         if write_op4:
             model = os.path.splitext(op4_filename)[0]
@@ -143,6 +144,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
 
 
 def main():
+    """defines the command line argument ``test_op4``"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
