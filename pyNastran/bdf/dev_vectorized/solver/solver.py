@@ -35,7 +35,8 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils.log import get_logger2
 
 # Tables
-from pyNastran.op2.tables.opg_appliedLoads.opg_objects import RealAppliedLoadsVectorArray, AppliedLoadsVectorArray
+from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (
+    RealAppliedLoadsVectorArray, AppliedLoadsVectorArray)
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
@@ -885,7 +886,7 @@ class Solver(OP2):
                 val, options = case.get_parameter('OLOAD')
             except KeyError:
                 self.log.warning('No OLOAD...')
-                self.log.warning(case)
+                #self.log.warning(case)
                 #raise
         del Fg, Kgg
 
@@ -931,9 +932,11 @@ class Solver(OP2):
                         eids = element_type.element_id
                         self.log.info("eids = %s" % eids)
 
-                        self._store_spring_oes(model, eids, e1, case, element_type.type, Type='strain')
+                        self._store_spring_oes(model, eids, e1, case, element_type.type,
+                                               Type='strain')
                         #if self.is_stress:
-                        self._store_spring_oes(model, eids, o1, case, element_type.type, Type='stress')
+                        self._store_spring_oes(model, eids, o1, case, element_type.type,
+                                               Type='stress')
                         #if self.is_force:
                         self._store_spring_oef(model, eids, f1, case, element_type.type)
                         del e1
@@ -1269,7 +1272,8 @@ class Solver(OP2):
 
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
-            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'device_code': 1, 'sort_code': 0,
+            'tCode' : 1, 'table_code':1,  # are these the same?
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
             'element_name': element_name, 'element_type': element_type,
             'format_code':format_code,
@@ -1406,7 +1410,8 @@ class Solver(OP2):
 
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
-            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'device_code': 1, 'sort_code': 0,
+            'tCode' : 1, 'table_code':1,  # are these the same?
             'sort_bits': [0, 0, 0],
             'num_wide': 8, 'table_name': 'OES',
             'element_name': element_name, 'element_type': element_type,
@@ -1541,7 +1546,8 @@ class Solver(OP2):
 
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
-            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'device_code': 1, 'sort_code': 0,
+            'tCode' : 1, 'table_code':1,  # are these the same?
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
             'element_name': element_type, 'format_code':format_code,
             's_code': s_code,
@@ -1600,15 +1606,17 @@ class Solver(OP2):
         dt = None
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
-            'device_code': 1, 'table_code': 1, 'sort_code': 0,
-            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
-            'nonlinear_factor': None, 'data_names':['lsdvmn']
+            'device_code': 1, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUGV1',
+            'nonlinear_factor': None, 'data_names':['lsdvmn'],
+            'tCode' : 1, 'table_code':1,  # are these the same?
         }
         ntimes = 1
         nnodes = model.grid.n
         disp = RealDisplacementArray(data_code, is_sort1, isubcase, dt=None)
 
-        disp.build_data(ntimes, nnodes,
+        ntotal = nnodes
+        disp.build_data(ntimes, nnodes, ntotal,
                         ntimes, nnodes, float_fmt='float32')
         #data = []
 
@@ -1829,19 +1837,20 @@ class Solver(OP2):
 
 
     def _save_applied_load(self, Fg):
-        data_code = {'nonlinear_factor':None,
-                     'sort_bits':[0, 0, 0], 'analysis_code':0,
-                     'is_msc':True,'format_code':0, 'sort_code': 0,
-                     'data_names':['lsdvmn'], 'table_code':1,
-                     'num_wide': 8,'table_name': 'OPG',
+        data_code = {
+            'nonlinear_factor':None,
+            'sort_bits':[0, 0, 0], 'analysis_code':0,
+            'is_msc':True, 'format_code':0, 'sort_code': 0,
+            'data_names':['lsdvmn'],
+            'num_wide': 8, 'table_name': 'OPG',
+            'tCode' : 1, 'table_code':1,  # are these the same?
 
-                     #'log': self.log, 'analysis_code': analysis_code,
-                     #'device_code': 1, 'table_code': 1, 'sort_code': 0,
-                     #'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
-                     #'nonlinear_factor': None, 'data_names':['lsdvmn']
-
-                     }
-        isubcase= self.subcase_id
+            #'log': self.log, 'analysis_code': analysis_code,
+            #'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            #'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
+            #'nonlinear_factor': None, 'data_names':['lsdvmn']
+        }
+        isubcase = self.subcase_id
         dt = None
         is_sort1 = True
         applied_loads = RealLoadVectorArray(
@@ -1854,7 +1863,8 @@ class Solver(OP2):
         nx = ntimes
         ny = nnodes
         float_fmt = 'float32'
-        applied_loads.build_data(ntimes, nnodes, nx, ny, float_fmt)
+        ntotal = nnodes
+        applied_loads.build_data(ntimes, nnodes, ntotal, nx, ny, float_fmt)
         applied_loads.node_gridtype[:, 0] = self.model.grid.node_id
         applied_loads.node_gridtype[:, 1] = 1 # G
         self.load_vectors[self.subcase_id] = applied_loads
@@ -2343,7 +2353,7 @@ class Solver(OP2):
     def write_oload_resultant(self, Fg, xyz_cid0):
         nrows = Fg.size // 6
         Fxyz = Fg.reshape(nrows, 6)
-        Fxyz_sum  = Fxyz.sum(axis=0)
+        Fxyz_sum = Fxyz.sum(axis=0)
         forces = Fxyz[:, :3]
 
         #print('Fxyz =', Fxyz)
