@@ -35,7 +35,7 @@ class TestRainflow(unittest.TestCase):
                           xmax=None, legend_alpha=1.0, debug=False)
 
         stress_filename = 'stress.csv'
-        eids = features.keys()
+        eids = list(features.keys())
         min_max_stresses_dict = rainflow_from_arrays(A.T, features=None, casenames=None,
                                                      nfeatures_max=None,
                                                      filter_stresses=True)

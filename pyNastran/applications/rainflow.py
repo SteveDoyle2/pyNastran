@@ -101,7 +101,9 @@ Bar Impulse
     0
    10
 """
-from __future__ import print_function
+# encoding: utf-8
+from __future__ import print_function, unicode_literals
+from codecs import open
 
 from six.moves import range
 from six import iteritems, iterkeys
@@ -495,9 +497,8 @@ def rainflow_from_csv(input_csv, casenames, features,
                 max_stress = [A[max_index - 1, ifeature]]
 
             B = np.vstack([min_stress, max_stress]).T
-            with open(csv_out, 'wb') as csv_file:
-                csv_file.write('# max stress%smin_stress\n' % delimiter)
-                np.savetxt(csv_file, B, delimiter=delimiter)
+            header = 'max stress%smin_stress\n' % delimiter
+            np.savetxt(csv_out, B, delimiter=delimiter, fmt='%.18e', header=header)
             plt.plot(range(min_index, max_index), stress_case)
             legend.append(case_name)
             icase += 1
