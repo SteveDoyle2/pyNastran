@@ -22,6 +22,15 @@ This is the pyNastran.utils.rst file.
     :undoc-members:
     :show-inheritance:
 
+:mod:`dev` Module
+-----------------
+
+.. inheritance-diagram:: pyNastran.utils.dev
+
+.. automodule:: pyNastran.utils.dev
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 :mod:`docopt_types` Module
 --------------------------
