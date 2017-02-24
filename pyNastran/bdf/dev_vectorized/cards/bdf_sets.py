@@ -46,7 +46,7 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru, condense, build_thr
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
-    components as fcomponents, components_or_blank as fcomponents_or_blank,
+    parse_components, components_or_blank as fcomponents_or_blank,
     fields, string, integer_string_or_blank)
 
 
