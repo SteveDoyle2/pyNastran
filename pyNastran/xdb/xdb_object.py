@@ -4,7 +4,7 @@ from enums import *
 
 
 
-class XDB_obj():
+class XDB_obj(object):
     def __init__(self, table_name, ints, debug=False, log=None):
         self.raw_control=ints[:10]
         self.raw_full=ints
@@ -16,7 +16,7 @@ class XDB_obj():
         self.path_no=ints[2]
         self.subcase_id=ints[3]
         self.set_id=ints[4]
-        self.solution_code= SolutionType(ints[5]) 
+        self.solution_code= SolutionType(ints[5])
         self.design_cycle=ints[6]
         self.iteration_cycle=ints[7]
         self.symmetry_segment=ints[8]
@@ -38,7 +38,3 @@ class XDB_obj():
 
         self.max_key_value=ints[20] # Maximum key value, keyed objects only
         self.last_block_no=ints[21] # Block number of the last data block
-
-
-
-        pass
