@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 import pyNastran
+from pyNastran.utils.log import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.data_in_material_coord import (
@@ -25,9 +26,10 @@ ATOL = 0.01
 
 class TestMaterialCoord(unittest.TestCase):
     def test_force(self):
+        log = get_logger(level='warning')
         for folder, prefix, subcase in CASES:
-            bdf = BDF(debug=False)
-            op2 = OP2(debug=False)
+            bdf = BDF(debug=False, log=log)
+            op2 = OP2(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
             bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
@@ -50,9 +52,10 @@ class TestMaterialCoord(unittest.TestCase):
             #print('OK')
 
     def test_stress(self):
+        log = get_logger(level='warning')
         for folder, prefix, subcase in CASES:
-            bdf = BDF(debug=False)
-            op2 = OP2(debug=False)
+            bdf = BDF(debug=False, log=log)
+            op2 = OP2(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
             bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
@@ -76,9 +79,10 @@ class TestMaterialCoord(unittest.TestCase):
             #print('OK')
 
     def test_strain(self):
+        log = get_logger(level='warning')
         for folder, prefix, subcase in CASES:
-            bdf = BDF(debug=False)
-            op2 = OP2(debug=False)
+            bdf = BDF(debug=False, log=log)
+            op2 = OP2(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
             bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
