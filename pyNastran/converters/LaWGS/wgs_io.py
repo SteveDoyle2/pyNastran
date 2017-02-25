@@ -3,7 +3,7 @@ from six import iteritems
 import vtk
 from vtk import vtkQuad
 from numpy import array, arange, cross
-from pyNastran.converters.LaWGS.wgs_reader import LaWGS
+from pyNastran.converters.LaWGS.wgs_reader import read_lawgs
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
@@ -25,9 +25,8 @@ class LaWGS_IO(object):
         if skip_reading:
             return
 
-        model = LaWGS(lawgs_filename)
+        model = read_lawgs(lawgs_filename, log=self.log, debug=False)
         self.model_type = model.model_type
-        model.read_lawgs()
 
         nodes, elements, regions = model.get_points_elements_regions()
         self.nNodes = len(nodes)

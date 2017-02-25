@@ -119,6 +119,12 @@ class Cart3dGeometry(object):
         msg += '    n=%r' % self.n
         return msg
 
+    def get_phase(self, i, name):
+        return None
+
+    def set_phase(self, i, name):
+        pass
+
 
 class Cart3dResult(object):
     def __init__(self, subcase_id, labels, loads, uname='Cart3dResult'):
@@ -187,3 +193,9 @@ class Cart3dResult(object):
         msg += '  4 | RhoE\n'
         msg += '----+----------\n'
         return msg
+
+    def get_phase(self, i, name):
+        return None
+
+    def set_phase(self, i, name):
+        pass

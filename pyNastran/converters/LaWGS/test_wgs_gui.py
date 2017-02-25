@@ -1,4 +1,5 @@
 import os
+import unittest
 
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
@@ -7,7 +8,6 @@ import pyNastran
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'LaWGS')
 
-import unittest
 
 class LaWGS_GUI(LaWGS_IO, GUIMethods):
     def __init__(self):
