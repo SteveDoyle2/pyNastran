@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for S/HABP.
+"""
 from six import iteritems
 import numpy as np
 from numpy import zeros, array, cross, amax, amin

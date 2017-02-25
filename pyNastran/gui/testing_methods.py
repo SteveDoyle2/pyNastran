@@ -1,7 +1,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 
-from six import iteritems
+from six import iteritems, integer_types
 
 import vtk
 from pyNastran.utils.log import get_logger
@@ -378,11 +378,25 @@ class GUIMethods(GuiAttributes):
 
         #print('self.case_keys = ', self.case_keys)
         for key in self.case_keys:
+            assert isinstance(key, integer_types), key
+            obj, (i, name) = cases[key]
             value = cases[key]
-            #print('key = %s' % str(key))
-            #print('value[0] = %s' % value[0])
             assert not isinstance(value[0], int), 'key=%s\n type=%s value=%s' % (key, type(value[0]), value)
             #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))
+
+            subcase_id = obj.subcase_id
+            case = obj.get_result(i, name)
+            result_type = obj.get_title(i, name)
+            vector_size = obj.get_vector_size(i, name)
+            #location = obj.get_location(i, name)
+            methods = obj.get_methods(i)
+            data_format = obj.get_data_format(i, name)
+            scale = obj.get_scale(i, name)
+            phase = obj.get_phase(i, name)
+            label2 = obj.get_header(i, name)
+            nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+            #default_max, default_min = obj.get_default_min_max(i, name)
+            min_value, max_value = obj.get_min_max(i, name)
 
         self.result_cases = cases
 

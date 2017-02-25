@@ -375,7 +375,7 @@ class Cart3dIO(object):
         size = npoints * 12  # 12=3*4 all the points
         data = self.infile.read(size)
 
-        dtype = self._endian + b'f'
+        dtype = np.dtype(self._endian + 'f4')
         points = np.fromstring(data, dtype=dtype).reshape((npoints, 3))
 
         self.infile.read(8)  # end of second block, start of third block
@@ -386,7 +386,7 @@ class Cart3dIO(object):
         size = nelements * 12  # 12=3*4 all the elements
         data = self.infile.read(size)
 
-        dtype = self._endian + b'i'
+        dtype = np.dtype(self._endian + 'i4')
         elements = np.fromstring(data, dtype=dtype).reshape((nelements, 3))
 
         self.infile.read(8)  # end of third (element) block, start of regions (fourth) block

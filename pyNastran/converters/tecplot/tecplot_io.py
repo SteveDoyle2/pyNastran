@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for Tecplot.
+"""
 from __future__ import print_function
 from six import iteritems
 from six.moves import range

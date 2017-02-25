@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for Panair.
+"""
 from __future__ import print_function
 import os
 

@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for LaWGS.
+"""
 from __future__ import print_function
 from six import iteritems
 import vtk

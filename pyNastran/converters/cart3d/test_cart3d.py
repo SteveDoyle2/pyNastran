@@ -115,15 +115,30 @@ class TestCart3d(unittest.TestCase):
 
         cart3d_ascii = read_cart3d(outfile_name, log=log, debug=False)
         check_array(cart3d.points, cart3d_ascii.points)
+        check_array(cart3d.elements, cart3d_ascii.elements)
 
         cart3d_bin = read_cart3d(outfile_name_bin, log=log, debug=False)
         check_array(cart3d.points, cart3d_bin.points)
+        check_array(cart3d.elements, cart3d_ascii.elements)
+        print(cart3d_bin.points)
+
+        print('---------------')
+        print(cart3d_bin.points)
 
         os.remove(outfile_name)
         os.remove(outfile_name_bin)
 
         cart3d.write_cart3d(outfile_name_bin_out, is_binary=False)
         os.remove(outfile_name_bin_out)
+
+    def test_cart3d_io_04(self):
+        cart3d_filename_bin = os.path.join(test_path, 'threePlugs.bin.tri')
+        cart3d_filename_ascii = os.path.join(test_path, 'threePlugs.a.tri')
+        model_bin = read_cart3d(cart3d_filename_bin)
+        model_ascii = read_cart3d(cart3d_filename_ascii)
+
+        #check_array(model_ascii.points, model_bin.points)
+        check_array(model_ascii.elements, model_bin.elements)
 
     def test_cart3d_to_nastran_01(self):
         """convert to nastran small field"""
@@ -162,13 +177,17 @@ class TestCart3d(unittest.TestCase):
 
 def check_array(points, points2):
     nnodes = points.shape[0]
+    msg = ''
     if not array_equal(points, points2):
         for nid in range(nnodes):
             p1 = points[nid]
             p2 = points2[nid]
             abs_sum_delta = sum(abs(p1-p2))
-            assert allclose(abs_sum_delta, 0.0, atol=1e-6), 'n=%s p1=%s p2=%s diff=%s\nsum(abs(p1-p2))=%s' % (nid, str(p1), str(p2), str(p1-p2), abs_sum_delta)
-
+            if not allclose(abs_sum_delta, 0.0, atol=1e-6):
+                msg += 'n=%s p1=%s p2=%s diff=%s\nsum(abs(p1-p2))=%s\n' % (
+                    nid, str(p1), str(p2), str(p1-p2), abs_sum_delta)
+    if msg:
+        print(msg)
 
 if __name__ == '__main__':  # pragma: no cover
     import time

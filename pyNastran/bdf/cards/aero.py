@@ -3244,6 +3244,33 @@ def elements_from_quad(nx, ny):
     return elements
 
 def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
+    """
+    Creates nodes and elements in a structured grid given 4 points.
+    Used to make an CAERO1 panel.
+
+    Parameters
+    ----------
+    p1 : (3, ) float ndarray
+        leading edge root
+    p2 : (3, ) float ndarray
+        trailing edge root
+    p3 : (3, ) float ndarray
+        trailing edge tip
+    p4 : (3, ) float ndarray
+        leading edge tip
+    x : (nchord, ) float ndarray
+        points in the chordwise direction in percentage of the chord
+    y : (nspan, ) float ndarray
+        points in the spanwise direction in percentage of the span
+
+    Returns
+    -------
+    points (nchord, nspan) float ndarray; might be backwards???
+        the points
+    elements (nquads, 4) int ndarray
+        series of quad elements
+        nquads = (nchord-1) * (nspan-1)
+    """
     nx = x.shape[0]
     ny = y.shape[0]
 

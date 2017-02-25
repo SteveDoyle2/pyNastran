@@ -1,18 +1,22 @@
+"""
+Defines the GUI IO file for Cart3d.
+"""
 from __future__ import print_function
+import os
 from six import iteritems
 from six.moves import range
 
-import os
-from numpy import arange, mean, amax, amin, vstack, zeros, unique, where, sqrt
+from numpy import arange, mean, vstack, zeros, unique, where, sqrt
+import numpy as np
+
 
 import vtk
 from vtk import vtkTriangle
 from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-#from pyNastran.gui.qt_files.result import Result
 from pyNastran.converters.cart3d.cart3d import Cart3D
-from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry, Cart3dResult
+from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry #, Cart3dResult
 
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
@@ -32,7 +36,7 @@ class Cart3dIO(object):
         skip_reading = False
         params_to_delete = (
             'case_keys', 'icase', 'iSubcaseNameMap',
-            'result_cases', 'eid_map', 'nid_map'
+            'result_cases', 'eid_map', 'nid_map',
         )
         if geom_filename is None or geom_filename is '':
             skip_reading = True
@@ -48,7 +52,8 @@ class Cart3dIO(object):
                     try:
                         delattr(self, param)
                     except AttributeError:
-                        self.log.warning('cannot delete %r; hasattr=%r' % (param, hasattr(self, param)))
+                        msg = 'cannot delete %r; hasattr=%r' % (param, hasattr(self, param))
+                        self.log.warning(msg)
 
             skip_reading = False
         #self.scalarBar.VisibilityOff()
@@ -96,7 +101,6 @@ class Cart3dIO(object):
         self.nid_map = {}
         model = Cart3D(log=self.log, debug=False)
         self.model_type = 'cart3d'
-        #self.model_type = model.model_type
         model.read_cart3d(cart3d_filename)
         nodes = model.nodes
         elements = model.elements
@@ -130,14 +134,16 @@ class Cart3dIO(object):
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         self.create_global_axes(dim_max)
 
-        data_type = vtk.VTK_FLOAT
+        # if we're in big endian, VTK won't work, so we byte swap
+        nodes = np.asarray(nodes, dtype=np.dtype('<f'))
         points_array = numpy_to_vtk(
             num_array=nodes,
             deep=True,
-            array_type=data_type
+            array_type=vtk.VTK_FLOAT,
         )
         points.SetData(points_array)
 
+        #assert elements.min() == 0, elements.min()
         nelements = elements.shape[0]
         for eid in range(nelements):
             elem = vtkTriangle()
@@ -151,8 +157,7 @@ class Cart3dIO(object):
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-
-        self._create_cart3d_free_edegs(model, nodes, elements)
+        self._create_cart3d_free_edges(model, nodes, elements)
 
 
         # loadCart3dResults - regions/loads
@@ -249,7 +254,8 @@ class Cart3dIO(object):
 
 
         if os.path.exists(input_c3d_filename):
-            nodes, elements = read_input_c3d(input_c3d_filename, stack=stack, log=self.log, debug=self.debug)
+            nodes, elements = read_input_c3d(input_c3d_filename, stack=stack,
+                                             log=self.log, debug=self.debug)
 
             # Planes
             # ----------
@@ -351,13 +357,14 @@ class Cart3dIO(object):
 
                 #i = 0
                 #for nodesi, elementsi in zip(nodes, elements):
-                    #self.set_quad_grid('box_%i' % i, nodesi, elementsi, color, line_width=1, opacity=1.)
+                    #self.set_quad_grid('box_%i' % i, nodesi, elementsi, color,
+                                       #line_width=1, opacity=1.)
                     #i += 1
         else:
             self.log.warning('input_c3d_filename doesnt exist = %s' % input_c3d_filename)
         return mach, alpha, beta
 
-    def _create_cart3d_free_edegs(self, model, nodes, elements):
+    def _create_cart3d_free_edges(self, model, nodes, elements):
         free_edges = model.get_free_edges(elements)
         nfree_edges = len(free_edges)
         if nfree_edges:
