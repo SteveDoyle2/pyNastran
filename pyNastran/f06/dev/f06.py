@@ -7,7 +7,7 @@ from codecs import open
 
 from pyNastran import is_release
 from pyNastran.utils import print_bad_path
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 #strainEnergyDensity,TemperatureGradientObject
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy
@@ -570,7 +570,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         :log:   a python logging object
         :debug: adds debug messages (True/False)
         """
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def _get_grid_point_singularities(self):  # .. todo:: not done
         """

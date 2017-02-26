@@ -4,7 +4,7 @@ Defines the GUI IO file for SU2.
 from __future__ import print_function
 from six import iteritems
 from six.moves import range
-from numpy import arange
+import numpy as np
 
 import vtk
 from vtk import vtkTriangle, vtkQuad
@@ -50,9 +50,6 @@ class SU2_IO(object):
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
 
@@ -74,18 +71,12 @@ class SU2_IO(object):
 
         self.create_global_axes(dim_max)
 
-        if ndim == 3:
-            nid = 0
-            for i in range(nnodes):
-                points.InsertPoint(nid, nodes[i, :])
-                nid += 1
-        else:
-            nid = 0
-            z = 0.
-            for i in range(nnodes):
-                x, y = nodes[i, :]
-                points.InsertPoint(nid, [x, y, z])
-                nid += 1
+        if ndim == 2:
+            nodes = np.hstack([nodes, np.zeros((nnodes, 1), dtype=nodes.dtype)])
+        #else:
+            # ndim=3
+
+        points = self.numpy_to_vtk_points(nodes)
 
 
         #nelements = 0
@@ -152,8 +143,8 @@ class SU2_IO(object):
         #nnodes = nodes.shape[0]
         icase = 0
         itime = 0
-        eids = arange(1, nelements + 1, dtype='int32')
-        nids = arange(1, nnodes + 1, dtype='int32')
+        eids = np.arange(1, nelements + 1, dtype='int32')
+        nids = np.arange(1, nnodes + 1, dtype='int32')
         eid_res = GuiResult(ID, header='ElementID', title='ElementID',
                             location='centroid', scalar=eids)
         nid_res = GuiResult(ID, header='NodeID', title='NodeID',

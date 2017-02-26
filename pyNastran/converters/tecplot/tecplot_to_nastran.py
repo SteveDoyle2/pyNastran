@@ -3,7 +3,8 @@ Defines:
  - tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True)
  - tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True)
 """
-
+from __future__ import print_function
+from six import string_types
 from numpy import unique
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
@@ -11,15 +12,15 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 
 
-def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, debug=True):
+def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, log=None, debug=True):
     """Converts a Tecplot file to Nastran."""
-    return tecplot_to_nastran_filename(tecplot_filename, bdf_filename, debug=debug)
+    return tecplot_to_nastran_filename(tecplot_filename, bdf_filename, log=log, debug=debug)
 
 
-def tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True):
+def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
     """Converts a Tecplot file to Nastran."""
-    if isinstance(tecplot_filename, str):
-        model = read_tecplot(tecplot_filename, debug=debug)
+    if isinstance(tecplot_filename, string_types):
+        model = read_tecplot(tecplot_filename, log=log, debug=debug)
     else:
         model = tecplot_filename
 

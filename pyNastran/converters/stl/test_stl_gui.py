@@ -24,10 +24,13 @@ class STL_GUI(STL_IO, GUIMethods):
 class STL_GUITest(unittest.TestCase):
 
     def test_stl_geometry(self):
+        from pyNastran.utils.log import get_logger
+        log = get_logger(level='warning')
         geometry_filename = os.path.join(model_path, 'sphere.stl')
         dirname = None
 
         test = STL_GUI()
+        test.log = log
         #test.load_nastran_geometry(geometry_filename, None)
         test.load_stl_geometry(geometry_filename, dirname)
 

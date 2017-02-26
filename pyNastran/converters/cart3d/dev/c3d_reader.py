@@ -5,12 +5,12 @@ from numpy import zeros
 from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 
 class C3D_Reader(FortranFormat):
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
         FortranFormat.__init__(self)
 
     def read_c3d(self, c3d_filename):

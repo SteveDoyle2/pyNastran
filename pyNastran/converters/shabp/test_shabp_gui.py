@@ -2,6 +2,7 @@ import os
 
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.shabp.shabp_io import ShabpIO
+from pyNastran.utils.log import get_logger
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]
@@ -18,12 +19,12 @@ class ShabpGUI(ShabpIO, GUIMethods):
 class TestShabpGUI(unittest.TestCase):
 
     def test_shabp_geometry_01(self):
+        log = get_logger(level='warning')
         dirname = None
         test = ShabpGUI()
+        test.log = log
         shabp_infilename = os.path.join(model_path, 'models', 'flap', 'flap_inviscid.mk5')
         test.load_shabp_geometry(shabp_infilename, '')
-        #test.load_nastran_geometry(geometry_filename, None)
-        #test.load_shabp_geometry(geometry_filename, dirname)
 
     def _test_shabp_geometry_02(self):
         dirname = None
@@ -42,8 +43,6 @@ class TestShabpGUI(unittest.TestCase):
         test = ShabpGUI()
         shabp_infilename = os.path.join(model_path, 'models', 'nose', 'noseX_working.mk5')
         test.load_shabp_geometry(shabp_infilename, '')
-        #test.load_nastran_geometry(geometry_filename, None)
-        #test.load_shabp_geometry(geometry_filename, dirname)
 
 
     def test_shabp_results(self):
@@ -54,7 +53,6 @@ class TestShabpGUI(unittest.TestCase):
         #dirname = None
 
         #test = ShabpGUI()
-
         #test.load_panair_geometry(geometry_filename, dirname)
         #test.load_panair_results(agps_filename, dirname)
 

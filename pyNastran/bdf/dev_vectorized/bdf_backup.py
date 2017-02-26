@@ -28,7 +28,7 @@ from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 
 from pyNastran.utils import _filename, print_bad_path
 from pyNastran.utils.dev import list_print, object_attributes
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 from pyNastran.utils.gui_io import load_file_dialog
 
 # coords
@@ -225,7 +225,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self._relpath = True
         if sys.version_info < (2, 6):
             self._relpath = False
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
         #: list of all read in cards - useful in determining if entire BDF
         #: was read & really useful in debugging

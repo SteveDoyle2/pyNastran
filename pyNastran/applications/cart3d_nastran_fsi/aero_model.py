@@ -6,9 +6,9 @@ from pyNastran.applications.cart3d_nastran_fsi.model import Model
 from pyNastran.applications.cart3d_nastran_fsi.math_functions import (
     triangle_area_centroid_normal, list_print)
 
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 debug = True
-log = get_logger(None, 'debug' if debug else 'info')
+log = get_logger2(log, debug=debug)
 
 class AeroModel(Model):
     def __init__(self, inputs, nodes, elements, Cp):

@@ -2,7 +2,7 @@ from __future__ import print_function
 from pyNastran.applications.cart3d_nastran_fsi.model import Model
 
 from pyNastran.bdf.field_writer import print_card
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 
 class StructuralModel(Model):
@@ -12,7 +12,7 @@ class StructuralModel(Model):
     def __init__(self, fem, pids, debug=False):
         Model.__init__(self)
 
-        self.log = get_logger(None, 'debug' if debug else 'info')
+        self.log = get_logger2(None, debug=debug)
 
         self.debug = debug
         if self.debug:

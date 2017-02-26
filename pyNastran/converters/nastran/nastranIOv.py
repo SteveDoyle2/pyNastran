@@ -44,7 +44,6 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
-from vtk.util.numpy_support import numpy_to_vtk
 
 #from pyNastran import is_release
 from pyNastran.utils import integer_types
@@ -272,7 +271,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 del i
         return skip_reading
 
-    def get_xyz_in_coord(self, model, points, cid=0, fdtype='float32'):
+    def get_xyz_in_coord(self, model, cid=0, fdtype='float32'):
         #import time
         #t0 = time.time()
 
@@ -288,13 +287,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
                                                         in_place=False)
 
-            data_type = vtk.VTK_FLOAT
-            points_array = numpy_to_vtk(
-                num_array=xyz_cid0,
-                deep=True,
-                array_type=data_type
-            )
-            points.SetData(points_array)
             nid_map = self.nid_map
             for i, nid in enumerate(nid_cp_cd[:, 0]):
                 nid_map[nid] = i
@@ -306,13 +298,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.i_transform = icd_transform
             xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
 
-            data_type = vtk.VTK_FLOAT
-            points_array = numpy_to_vtk(
-                num_array=xyz_cid0,
-                deep=False,
-                array_type=data_type
-            )
-            points.SetData(points_array)
             nid_map = self.nid_map
             for i, nid in enumerate(nid_cp_cd[:, 0]):
                 nid_map[nid] = i
@@ -339,12 +324,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         node = model.nodes[nid]
                         xyz_cid0[i, :] = node.get_position()
                         nid_map[nid] = i
-                    points.InsertPoint(i, *xyz_cid0[i, :])
             else:
                 for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
                     xyz = node.get_position()
                     xyz_cid0[i, :] = xyz
-                    points.InsertPoint(i, *xyz)
                     nid_map[nid] = i
 
             # get indicies and transformations for displacements
@@ -384,8 +367,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             #xref_loads = False
             xref_aero = len(model.caeros) > 0
-            model.safe_cross_reference(
             #model.cross_reference(
+            model.safe_cross_reference(
                 xref=True,
                 xref_nodes=True,
                 xref_elements=True,
@@ -487,9 +470,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if nconm2 > 0:
             self.alt_grids['conm2'].Allocate(nconm2, 1000)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #elem.SetNumberOfPoints(nNodes)
 
@@ -497,7 +477,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.model = model
 
         #print('get_xyz_in_coord')
-        xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, points, cid=0, fdtype='float32')
+        xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
+        points = self.numpy_to_vtk_points(xyz_cid0)
         self.xyz_cid0 = xyz_cid0
 
         maxi = xyz_cid0.max(axis=0)

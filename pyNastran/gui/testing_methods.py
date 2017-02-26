@@ -2,8 +2,10 @@ from __future__ import print_function
 from collections import OrderedDict
 
 from six import iteritems, integer_types
+import numpy as np
 
 import vtk
+from vtk.util.numpy_support import numpy_to_vtk
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
@@ -23,6 +25,7 @@ class GuiAttributes(object):
         """
         inputs = kwds['inputs']
         res_widget = kwds['res_widget']
+        self.dev = False
 
         self.case_keys = {}
         self.res_widget = res_widget
@@ -140,6 +143,67 @@ class GuiAttributes(object):
             #elif qt_version == 5:
                 #super(QMainWindow, self).__init__()
 
+        self.main_grids = {}
+        self.main_edge_actors = {}
+        self.main_grid_mappers  = {}
+        self.main_geometry_actors  = {}
+
+    @property
+    def grid(self):
+        #print('get grid; %r' % self.name)
+        return self.main_grids[self.name]
+
+    @grid.setter
+    def grid(self, grid):
+        #print('set grid; %r' % self.name)
+        self.main_grids[self.name] = grid
+
+    #@property
+    #def grid_mapper(self):
+        #return self.main_grid_mappers[self.name]
+
+    #@grid_mapper.setter
+    #def grid_mapper(self, grid_mapper):
+        #self.main_grid_mappers[self.name] = grid_mapper
+
+    #@property
+    #def edge_actor(self):
+        #return self.main_edge_actors[self.name]
+
+    #@edge_actor.setter
+    #def edge_actor(self, edge_actor):
+        #self.main_edge_actors[self.name] = edge_actor
+
+    #@property
+    #def geom_actor(self):
+        #return self.main_geometry_actors[self.name]
+
+    #@geom_actor.setter
+    #def geom_actor(self, geom_actor):
+        #self.main_geometry_actors[self.name] = geom_actor
+
+    def numpy_to_vtk_points(self, nodes, points=None, dtype='<f'):
+        """
+        common method to account for vtk endian quirks and
+        efficiently adding points
+        """
+        assert isinstance(nodes, np.ndarray), type(nodes)
+        if points is None:
+            points = vtk.vtkPoints()
+            nnodes = nodes.shape[0]
+            points.SetNumberOfPoints(nnodes)
+
+            # if we're in big endian, VTK won't work, so we byte swap
+            nodes = np.asarray(nodes, dtype=np.dtype(dtype))
+
+        points_array = numpy_to_vtk(
+            num_array=nodes,
+            deep=True,
+            array_type=vtk.VTK_FLOAT,
+        )
+        points.SetData(points_array)
+        return points
+
     def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
         """
         Makes a CQUAD4 grid
@@ -156,11 +220,9 @@ class GuiAttributes(object):
             return
 
         #print('adding quad_grid %s; nnodes=%s nquads=%s' % (name, nnodes, nquads))
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(nnodes)
-        for nid, node in enumerate(nodes):
-            #print(nid, node)
-            points.InsertPoint(nid, *list(node))
+        assert isinstance(nodes, np.ndarray), type(nodes)
+
+        points = self.numpy_to_vtk_points(nodes)
 
         #assert vtkQuad().GetCellType() == 9, elem.GetCellType()
         self.alt_grids[name].Allocate(nquads, 1000)
@@ -395,6 +457,15 @@ class GUIMethods(GuiAttributes):
             phase = obj.get_phase(i, name)
             label2 = obj.get_header(i, name)
             nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+
+            default_data_format = obj.get_default_data_format(i, name)
+            default_min, default_max = obj.get_default_min_max(i, name)
+            default_scale = obj.get_default_scale(i, name)
+            default_title = obj.get_default_title(i, name)
+            default_phase = obj.get_default_phase(i, name)
+            out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
+            default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
+
             #default_max, default_min = obj.get_default_min_max(i, name)
             min_value, max_value = obj.get_min_max(i, name)
 

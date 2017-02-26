@@ -13,9 +13,9 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.converters.cart3d.cart3d import Cart3D
 #from pyNastran.applications.cart3d_nastran_fsi.math_functions import print_matrix
 
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 debug = True
-log = get_logger(None, 'debug' if debug else 'info')
+log = get_logger2(None, debug=debug)
 
 
 def read_op2(op2_filename, isubcase=1):

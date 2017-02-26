@@ -15,7 +15,7 @@ from vtk import vtkTriangle
 from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.converters.cart3d.cart3d import Cart3D
+from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry #, Cart3dResult
 
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
@@ -99,9 +99,8 @@ class Cart3dIO(object):
 
         self.eid_map = {}
         self.nid_map = {}
-        model = Cart3D(log=self.log, debug=False)
+        model = read_cart3d(cart3d_filename, log=self.log, debug=False)
         self.model_type = 'cart3d'
-        model.read_cart3d(cart3d_filename)
         nodes = model.nodes
         elements = model.elements
         regions = model.regions
@@ -112,14 +111,11 @@ class Cart3dIO(object):
 
         self.grid.Allocate(self.nElements, 1000)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
         self.nid_map = {}
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
-                self.gridResult.InsertNextValue(nid * fraction)
+                self.grid_result.InsertNextValue(nid * fraction)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -133,15 +129,7 @@ class Cart3dIO(object):
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         self.create_global_axes(dim_max)
-
-        # if we're in big endian, VTK won't work, so we byte swap
-        nodes = np.asarray(nodes, dtype=np.dtype('<f'))
-        points_array = numpy_to_vtk(
-            num_array=nodes,
-            deep=True,
-            array_type=vtk.VTK_FLOAT,
-        )
-        points.SetData(points_array)
+        points = self.numpy_to_vtk_points(nodes)
 
         #assert elements.min() == 0, elements.min()
         nelements = elements.shape[0]
@@ -365,33 +353,26 @@ class Cart3dIO(object):
         return mach, alpha, beta
 
     def _create_cart3d_free_edges(self, model, nodes, elements):
-        free_edges = model.get_free_edges(elements)
-        nfree_edges = len(free_edges)
+        free_edges_array = model.get_free_edges(elements)
+        nfree_edges = len(free_edges_array)
         if nfree_edges:
             # yellow = (1., 1., 0.)
             pink = (0.98, 0.4, 0.93)
             npoints = 2 * nfree_edges
             if 'free_edges' not in self.alt_grids:
-                self.create_alternate_vtk_grid('free_edges', color=pink, line_width=3, opacity=1.0,
-                                               representation='surface')
+                self.create_alternate_vtk_grid(
+                    'free_edges', color=pink, line_width=3, opacity=1.0,
+                    representation='surface')
 
             j = 0
-            points = vtk.vtkPoints()
-            points.SetNumberOfPoints(npoints)
-
             self.alt_grids['free_edges'].Allocate(nfree_edges, 1000)
 
-            elem = vtk.vtkLine()
-            # elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-            # elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-
             etype = vtk.vtkLine().GetCellType()
-            for free_edge in free_edges:
+            free_edge_nodes = nodes[free_edges_array.ravel(), :]
+            points = self.numpy_to_vtk_points(free_edge_nodes)
+            #nfree_edges = free_edge_nodes.shape[0]
+            for free_edge in range(nfree_edges):
                 # (p1, p2) = free_edge
-                for ipoint, node_id in enumerate(free_edge):
-                    point = nodes[node_id, :]
-                    points.InsertPoint(j + ipoint, *point)
-
                 elem = vtk.vtkLine()
                 elem.GetPointIds().SetId(0, j)
                 elem.GetPointIds().SetId(1, j + 1)

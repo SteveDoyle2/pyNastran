@@ -1,3 +1,6 @@
+from __future__ import print_function
+from copy import deepcopy
+
 class Cart3dGeometry(object):
     def __init__(self, subcase_id, labels,
                  nodes, elements, regions, area, cnormals,
@@ -28,6 +31,8 @@ class Cart3dGeometry(object):
         self.min_value = self.min_default
         self.max_value = self.max_default
 
+        self.title_default = deepcopy(self.titles)
+        self.data_format_default = deepcopy(self.data_formats)
 
         self.nlabels = None
         self.labelsize = None
@@ -113,6 +118,29 @@ class Cart3dGeometry(object):
     def get_nlabels_labelsize_ncolors_colormap(self, i, name):
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
+    #------------
+    # default getters
+    def get_default_data_format(self, i, name):
+        j = self.titles.index(name)
+        return self.data_format_default[j]
+
+    def get_default_min_max(self, i, name):
+        j = self.titles.index(name)
+        return self.min_default[j], self.max_default[j]
+
+    def get_default_scale(self, i, name):
+        return 0.
+
+    def get_default_phase(self, i, name):
+        return None
+
+    def get_default_title(self, i, name):
+        j = self.titles.index(name)
+        return self.title_default[j]
+
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+        return self.get_nlabels_labelsize_ncolors_colormap(i, name)
+
     def __repr__(self):
         msg = 'Cart3dGeometry\n'
         msg += '    uname=%r\n' % self.uname
@@ -179,6 +207,8 @@ class Cart3dResult(object):
 
     def get_nlabels_labelsize_ncolors_colormap(self, i, name):
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+        return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
     def __repr__(self):
         msg = 'Cart3dResult\n'

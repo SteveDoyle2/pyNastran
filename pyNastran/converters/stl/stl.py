@@ -12,7 +12,7 @@ import scipy
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 def read_stl(stl_filename, log=None, debug=False):
     """
@@ -35,7 +35,7 @@ class STL(object):
     #isOutwardNormals = True
 
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
         self.nodes = None
         self.elements = None

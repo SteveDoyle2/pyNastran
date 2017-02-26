@@ -5,7 +5,7 @@ import unittest
 
 import pyNastran
 from pyNastran.converters.panair.panair_grid import PanairGrid
-#from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
+from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'converters', 'panair')
@@ -13,12 +13,13 @@ test_path = os.path.join(pkg_path, 'converters', 'panair')
 class TestPanair(unittest.TestCase):
 
     def test_panair_io_01(self):
+        log = get_logger(level='warning')
         in_filename = os.path.join(test_path, 'M100', 'M100.inp')
         out_filename = os.path.join(test_path, 'M100', 'M100_out.inp')
         #with open(infile_name, 'w') as f:
             #f.write(lines)
 
-        model = PanairGrid(log=None, debug=False)
+        model = PanairGrid(log=log, debug=False)
         model.read_panair(in_filename)
         #assert len(cart3d.points) == 7, 'npoints=%s' % len(cart3d.points)
         #assert len(cart3d.elements) == 6, 'nelements=%s' % len(cart3d.elements)

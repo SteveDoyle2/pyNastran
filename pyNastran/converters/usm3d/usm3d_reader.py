@@ -15,7 +15,7 @@ from struct import pack, unpack
 from six.moves import range
 from numpy import array, zeros, where
 
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 
 class Usm3d(object):
@@ -55,7 +55,7 @@ class Usm3d(object):
         self.tets = None
         self.bcs = None
         self.precision = 'double'
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
 
     def read_mapbc(self, mapbc_filename):

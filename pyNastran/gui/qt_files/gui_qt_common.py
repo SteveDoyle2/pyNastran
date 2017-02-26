@@ -443,11 +443,13 @@ class GuiCommon(GuiAttributes):
     def _update_grid(self, vector_data):
         """deflects the geometry"""
         nnodes = vector_data.shape[0]
-        points = self.grid.GetPoints()
+        grid = self.grid
+        points = grid.GetPoints()
+        #self.numpy_to_vtk_points(nodes, points=points)
         for j in range(nnodes):
             points.SetPoint(j, *vector_data[j, :])
-        self.grid.Modified()
-        self.grid_selected.Modified()
+        grid.Modified()
+        grid_selected.Modified()
         self._update_follower_grids(vector_data)
 
     def _update_follower_grids(self, vector_data):
@@ -478,7 +480,7 @@ class GuiCommon(GuiAttributes):
     def increment_cycle(self, icase=None):
         #print('1-icase=%r self.icase=%s ncases=%r' % (icase, self.icase, self.ncases))
         #print(type(icase))
-        if isinstance(icase, int):
+        if isinstance(icase, integer_types):
             self.icase = icase
             if self.icase >= self.ncases:
                 self.icase = 0

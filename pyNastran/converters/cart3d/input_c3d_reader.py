@@ -3,7 +3,7 @@ from six import iteritems
 from collections import defaultdict
 from numpy import array, linspace, hstack, vstack
 from pyNastran.bdf.cards.aero import points_elements_from_quad_points
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 
 def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True):
@@ -16,7 +16,7 @@ def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True):
 
 class InputC3dReader(object):
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def read_input_c3d(self, input_c3d_filename, stack=True):
         self.log.info('reading input_c3d=%r' % input_c3d_filename)

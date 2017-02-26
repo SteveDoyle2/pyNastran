@@ -20,10 +20,10 @@ from pyNastran.applications.cart3d_nastran_fsi.kdtree import KdTree
 
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.bdf.bdf import BDF
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 debug = True
-log = get_logger(None, 'debug' if debug else 'info')
+log = get_logger2(None, debug=debug)
 
 
 def entry_exit(func):

@@ -2,6 +2,7 @@ import os
 
 import warnings
 import numpy as np
+from pyNastran.utils.log import get_logger
 warnings.simplefilter('always')
 np.seterr(all='raise')
 
@@ -24,10 +25,12 @@ class SU2_GUI(SU2_IO, GUIMethods):
 class TestSU2GUI(unittest.TestCase):
 
     def test_su2_geometry(self):
+        log = get_logger(level='warning')
         geometry_filename = os.path.join(model_path, 'mesh_naca0012_inv.su2')
         dirname = None
 
         test = SU2_GUI()
+        test.log = log
         test.load_su2_geometry(geometry_filename, dirname)
 
 

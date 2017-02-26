@@ -13,7 +13,7 @@ from numpy import array, vstack, hstack, where, unique, savetxt, zeros, intersec
 import numpy as np
 
 from pyNastran.utils import is_binary_file
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 from pyNastran.op2.fortran_format import FortranFormat
 
 def read_tecplot(tecplot_filename, log=None, debug=False):
@@ -67,7 +67,7 @@ class Tecplot(FortranFormat):
     def __init__(self, log=None, debug=False):
         FortranFormat.__init__(self)
         self.endian = b'<'
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
         self.debug = debug
         self.xyz = array([], dtype='float32')
 

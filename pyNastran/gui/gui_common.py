@@ -363,18 +363,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
                             print(msg)
                         return
 
-        name = 'main'
         for i, input_filename in enumerate(input_filenames):
             if i == 0:
                 name = 'main'
             else:
                 name = input_filename
-            print('name =', name)
-            self.name = name
             #form = inputs['format'].lower()
             is_failed = self.on_load_geometry(
                 infile_name=input_filename, name=name, geometry_format=form,
-                plot=plot, raise_error=False)
+                plot=plot, raise_error=True)
         self.name = 'main'
         print('keys =', self.nid_maps.keys())
 
@@ -955,25 +952,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
         axes.SetTotalLength(scale, scale, scale)
         if Type == 'xyz':
             if label:
-                xlabel = 'x%s' % label
-                ylabel = 'y%s' % label
-                zlabel = 'z%s' % label
+                xlabel = u'x%s' % label
+                ylabel = u'y%s' % label
+                zlabel = u'z%s' % label
                 axes.SetXAxisLabelText(xlabel)
                 axes.SetYAxisLabelText(ylabel)
                 axes.SetZAxisLabelText(zlabel)
         else:
             if Type == 'Rtz':  # cylindrical
                 #x = u'R'
-                #y = u'?'
-                #z = 'z'
+                #y = u'θ'
+                #z = u'z'
                 x = 'R'
                 y = 't'
                 z = 'z'
 
             elif Type == 'Rtp':  # spherical
                 xlabel = u'R'
-                #ylabel = u'?'
-                #z = u'?'
+                #ylabel = u'θ'
+                #z = u'Φ'
                 x = 'R'
                 y = 't'
                 z = 'p'
@@ -1003,7 +1000,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return self.coord_id
 
     def create_global_axes(self, dim_max):
-        self.create_coordinate_system(dim_max, label='', origin=None, matrix_3x3=None, Type='xyz')
+        self.create_coordinate_system(
+            dim_max, label='', origin=None, matrix_3x3=None, Type='xyz')
 
     def create_corner_axis(self):
         """creates the axes that sits in the corner"""
@@ -2369,35 +2367,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if len(fmts) == 0:
             raise RuntimeError('no modules were loaded...')
 
-    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=True):
-        """
-        Loads a baseline geometry
+    def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
+                                plot=True, raise_error=True):
+        """action version of ``on_load_geometry``"""
+        self.on_load_geometry(infile_name=None, geometry_format=None,
+                              name='main', plot=True, raise_error=True)
 
-        Parameters
-        ----------
-        infile_name : str; default=None -> popup
-            path to the filename
-        geometry_format : str; default=None
-            the geometry format for programmatic loading
-        plot : bool; default=True
-            Should the baseline geometry have results created and plotted/rendered?
-            If you're calling the on_load_results method immediately after, set it to False
-        raise_error : bool; default=True
-            stop the code if True
-        """
+    def _load_geometry_filename(self, geometry_format, infile_name):
+        """gets the filename and format"""
         wildcard = ''
         is_failed = False
 
         if geometry_format and geometry_format.lower() not in self.supported_formats:
             is_failed = True
-            #if geometry_format in self.formats:
             msg = 'The import for the %r module failed.\n' % geometry_format
-            #else:
-            #msg += '%r is not a enabled format; enabled_formats=%s\n' % (
-                #geometry_format, self.supported_formats)
             self.log_error(msg)
-            return is_failed
+            return is_failed, None
 
         if infile_name:
             geometry_format = geometry_format.lower()
@@ -2415,9 +2400,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
-                return is_failed
-                #raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (
-                    #infile_name, geometry_format))
+                return is_failed, None
             formats = [geometry_format]
             filter_index = 0
         else:
@@ -2447,20 +2430,49 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #print("infile_name = %r" % infile_name)
                 #print("wildcard_index = %r" % wildcard_index)
                 if not infile_name:
+                    # user clicked cancel
                     is_failed = True
-                    return is_failed # user clicked cancel
+                    return is_failed, None
                 filter_index = wildcard_list.index(wildcard_index)
 
             geometry_format = formats[filter_index]
             load_function = load_functions[filter_index]
             has_results = has_results_list[filter_index]
             #return is_failed
+        return is_failed, (load_function, filter_index, formats)
 
+    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
+                         plot=True, raise_error=True):
+        """
+        Loads a baseline geometry
+
+        Parameters
+        ----------
+        infile_name : str; default=None -> popup
+            path to the filename
+        geometry_format : str; default=None
+            the geometry format for programmatic loading
+        plot : bool; default=True
+            Should the baseline geometry have results created and plotted/rendered?
+            If you're calling the on_load_results method immediately after, set it to False
+        raise_error : bool; default=True
+            stop the code if True
+        """
+        is_failed, out = self._load_geometry_filename(
+            geometry_format, infile_name)
+        if is_failed:
+            return
+
+        load_function, filter_index, formats = out
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]
 
-            self.grid.Reset()
-            self.grid.Modified()
+            if self.name == '':
+                name = 'main'
+            else:
+                print('name = %r' % name)
+            self.name = str(name)
+            #self._reset_model(name)
 
             # reset alt grids
             names = self.alt_grids.keys()
@@ -2488,8 +2500,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             # inspect the load_geometry method to see what version it's using
             #args, varargs, keywords, defaults = inspect.getargspec(load_function)
+            #if args[-1] == 'plot':
             try:
-                #if args[-1] == 'plot':
                 t0 = time.time()
                 has_results = load_function(infile_name, self.last_dir, name=name, plot=plot)
                 dt = time.time() - t0
@@ -2504,8 +2516,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             except Exception as e:
                 msg = traceback.format_exc()
                 self.log_error(msg)
-                #return
-                if raise_error:
+                if raise_error or self.dev:
                     raise
                 #return
             #self.vtk_panel.Update()
@@ -2527,11 +2538,49 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #if self.out_filename is not None:
             #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         #else:
-        msg = '%s - %s' % (self.format, self.infile_name)
-        self.window_title = msg
-        self.update_menu_bar()
-        self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (
-            infile_name, self.format))
+
+        if name == 'main':
+            msg = '%s - %s' % (self.format, self.infile_name)
+            self.window_title = msg
+            self.update_menu_bar()
+            main_str = ''
+        else:
+            main_str = ', name=%r' % name
+
+        self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
+            infile_name, self.format, main_str))
+
+    def _reset_model(self, name):
+        """resets the grids; sets up alt_grids"""
+        if name not in self.main_grids:
+            grid = vtk.vtkUnstructuredGrid()
+            grid_mapper = vtk.vtkDataSetMapper()
+            if self.vtk_version[0] <= 5:
+                grid_mapper.SetInputConnection(grid.GetProducerPort())
+            else:
+                grid_mapper.SetInputData(grid)
+
+            geom_actor = vtk.vtkLODActor()
+            geom_actor.DragableOff()
+            geom_actor.SetMapper(grid_mapper)
+            self.rend.AddActor(geom_actor)
+
+            self.grid = grid
+            self.grid_mapper = grid_mapper
+            self.geom_actor = geom_actor
+
+
+        self.grid.Reset()
+        self.grid.Modified()
+
+        # reset alt grids
+        alt_names = self.alt_grids.keys()
+        for alt_name in alt_names:
+            self.alt_grids[alt_name].Reset()
+            self.alt_grids[alt_name].Modified()
+
+        #gridResult.Reset()
+        #gridResult.Modified()
 
     def _update_menu_bar_to_format(self, fmt, method):
         self.menu_bar_format = fmt
@@ -3020,27 +3069,23 @@ class GuiCommon2(QMainWindow, GuiCommon):
                                            line_width=5, representation='toggle')
 
         # allocate
-        npoints = len(grid_ids)
-        self.alt_grids[point_name].Allocate(npoints, 1000)
-        if nelements > 0:
-            self.alt_grids[geom_name].Allocate(npoints, 1000)
+        nnodes = len(grid_ids)
+        #self.alt_grids[point_name].Allocate(npoints, 1000)
+        #if nelements > 0:
+            #self.alt_grids[geom_name].Allocate(npoints, 1000)
 
         # set points
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(npoints)
-
+        points = self.numpy_to_vtk_points(xyz, dtype='<f')
 
         if nelements > 0:
             geom_grid = self.alt_grids[geom_name]
-            for i, point in enumerate(xyz):
-                points.InsertPoint(i, *point)
+            for i in range(nnodes):
                 elem = vtk.vtkVertex()
                 elem.GetPointIds().SetId(0, i)
                 self.alt_grids[point_name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
         else:
-            for i, point in enumerate(xyz):
-                points.InsertPoint(i, *point)
+            for i in range(nnodes):
                 elem = vtk.vtkVertex()
                 elem.GetPointIds().SetId(0, i)
                 self.alt_grids[point_name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
@@ -3654,11 +3699,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def make_gif(self, gif_filename, icase, scales, phases,
                  isteps=None, time=2.0, analysis_time=2.0, fps=30, magnify=1,
-                 onesided=True, nrepeat=True, delete_images=False, make_gif=True):
+                 onesided=True, nrepeat=0, delete_images=False, make_gif=True):
         """
         Makes an animated gif
 
-        Parameters:
+        Parameters
         ----------
         gif_filename : str
             path to the output gif & png folder
@@ -3679,10 +3724,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
            the time we actually need to simulate (seconds)
         fps : int; default=30
             the frames/second
+
+        Options
+        -------
         onesided : bool; default=True
             should the animation go up and back down
         nrepeat : bool; default=True
             should this gif loop infinitely
+
+        Final Control Options
+        ---------------------
         delete_images : bool; default=False
             cleanup the png files at the end
         make_gif : bool; default=True
@@ -3766,6 +3817,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 images = []
                 for png_filename in png_filenames:
                     images.append(imageio.imread(png_filename))
+                if nrepeat is True:
+                    nrepeat = 0
                 imageio.mimsave(gif_filename, images, duration=duration,
                                 loop=nrepeat)
             else:
@@ -3855,7 +3908,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.geom_actor.setMapper(self.geom_mapper)
 
         #if 0:
-            ##from vtk.numpy_interface import algorithms
+            #from vtk.numpy_interface import algorithms
             #arrow = vtk.vtkArrowSource()
             #arrow.PickableOff()
 
@@ -3865,7 +3918,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.glyph_transform_filter.SetTransform(self.glyph_transform)
 
             #self.glyph = vtk.vtkGlyph3D()
-            ##self.glyph.setInput(xxx)
+            #self.glyph.setInput(xxx)
             #self.glyph.SetSource(self.glyph_transform_filter.GetOutput())
 
             #self.glyph.SetVectorModeToUseVector()

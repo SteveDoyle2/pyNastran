@@ -45,16 +45,12 @@ class STL_IO(object):
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
+        points = self.numpy_to_vtk_points(nodes)
         self.nid_map = {}
-        #elem.SetNumberOfPoints(nNodes)
+        #elem.SetNumberOfPoints(nnodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)
 
@@ -73,12 +69,6 @@ class STL_IO(object):
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
         self.create_global_axes(dim_max)
 
-
-        nid = 0
-        #print("nnodes=%s" % nnodes)
-        for i in range(nnodes):
-            points.InsertPoint(nid, nodes[i, :])
-            nid += 1
 
         nelements = elements.shape[0]
         for eid in range(nelements):

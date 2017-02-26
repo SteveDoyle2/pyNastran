@@ -80,9 +80,6 @@ class UGRID_IO(object):
 
         self.grid.Allocate(self.nElements, 1000)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
@@ -98,14 +95,7 @@ class UGRID_IO(object):
             self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
             self._add_alt_actors(self.alt_grids)
 
-
-        data_type = vtk.VTK_FLOAT
-        points_array = numpy_to_vtk(
-            num_array=nodes,
-            deep=True,
-            array_type=data_type
-        )
-        points.SetData(points_array)
+        points = self.numpy_to_vtk_points(nodes)
 
         if ntris:
             for eid, element in enumerate(tris):

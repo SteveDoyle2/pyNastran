@@ -47,10 +47,6 @@ class SurfIO(object):
         #print("nElements = %s" % self.nElements)
         assert nelements > 0, nelements
 
-        self.grid.Allocate(self.nElements, 1000)
-
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
@@ -59,13 +55,11 @@ class SurfIO(object):
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
-        for inode, node in enumerate(nodes):
-            points.InsertPoint(inode, node)
-
+        points = self.numpy_to_vtk_points(nodes)
         tris = model.tris - 1
         quads = model.quads - 1
 
-
+        self.grid.Allocate(self.nElements, 1000)
         if ntris:
             for eid, element in enumerate(tris):
                 elem = vtkTriangle()

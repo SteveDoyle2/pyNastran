@@ -12,7 +12,7 @@ from numpy.linalg import norm
 
 from pyNastran.converters.openfoam.openfoam_parser import FoamFile, convert_to_dict, write_dict
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 from pyNastran.utils import print_bad_path
 
 
@@ -39,7 +39,7 @@ def get_not_indexes(a, indices):
 
 class FaceFile(object):
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def read_face_file(self, face_filename, ifaces_to_read=None):
         #p = FoamFile(face_filename)
@@ -136,7 +136,7 @@ class FaceFile(object):
 
 class PointFile(object):
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def read_point_file(self, point_filename, ipoints_to_read=None):
         #p = FoamFile(face_filename)
@@ -201,7 +201,7 @@ class PointFile(object):
 
 class BoundaryFile(object):
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def read_boundary_file(self, boundary_filename):
         #p = FoamFile(face_filename)
@@ -302,7 +302,7 @@ class Boundary(object):
     def __init__(self, log=None, debug=False):
         debug = False
         #log = None
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def read_openfoam(self, point_filename, face_filename, boundary_filename):
         assert os.path.exists(face_filename), print_bad_path(face_filename)
@@ -465,7 +465,7 @@ class BlockMesh(object):
     def __init__(self, log=None, debug=False):
         debug = False
         #log = None
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def make_hex_bar(self, bias, ncells):
         """

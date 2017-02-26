@@ -13,7 +13,7 @@ from codecs import open
 #from six import PY2
 from six.moves import range
 from numpy import array, zeros
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 def read_tetgen(base, dimension_flag=2, log=None, debug=False):
@@ -27,7 +27,7 @@ class Tetgen(object):
     http://www.wias-berlin.de/preprint/1762/wias_preprints_1762.pdf
     """
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
         self.nodes = None
         self.tris = None
         self.tets = None

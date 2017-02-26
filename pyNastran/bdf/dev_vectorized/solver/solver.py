@@ -187,8 +187,6 @@ class Solver(OP2):
         #F06Writer.__init_data__(self)
         OP2.__init__(self, debug=False, log=None, debug_file=None) # make_geom=False,
         debug = fargs['--debug']
-        #print('debug =', debug)
-        #self.log = get_logger(log, 'debug' if debug else 'info')
         self.log = get_logger2(log, debug)
 
         self.page_num = 1

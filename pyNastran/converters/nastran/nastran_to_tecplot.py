@@ -118,8 +118,8 @@ def nastran_to_tecplot(model):
         raise NotImplementedError(msg)
     return tecplot
 
-def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
-    model = BDF(log=log)
+def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=False):
+    model = BDF(log=log, debug=debug)
     model.read_bdf(bdf_filename)
     # tecplot = nastran_to_tecplot(model)
 
@@ -169,7 +169,7 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
             self.log.info(element)
     elements = array(elements, dtype='int32')
 
-    tecplot = Tecplot()
+    tecplot = Tecplot(log=model.log)
     tecplot.xyz = nodes
     tecplot.hexa_elements = elements
     tecplot.write_tecplot(tecplot_filename)
