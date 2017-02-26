@@ -18,7 +18,7 @@
 
 ### v0.8.0
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2017/2/25)
 
 <!---
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
