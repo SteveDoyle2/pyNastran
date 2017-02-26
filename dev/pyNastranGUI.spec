@@ -1,13 +1,13 @@
 # -*- PyInstaller input file -*-
 # -*- mode: python           -*-
 
-#pyInstaller_path = ['C:\\Users\\steve\\Desktop\\pyInstaller']
 try:
-    import pyinstaller
+    import pyInstaller
     pyInstaller_path = [os.path.dirname(pyinstaller.__file__)]
     print "pyInstaller_path = %r" % pyInstaller_path
 except ImportError:
     pyInstaller_path = []
+pyInstaller_path = [r'F:\work\pyNastran\pyNastran\pyinstaller']
 
 #-------------------------------------------------------------------------
 ## this block gets/sets the version so it doesn't use git
@@ -30,7 +30,6 @@ pkg_path = pkgutil.get_loader('pyNastran').filename
 init_filename = os.path.join(pkg_path, '__init__.py')
 assert os.path.exists(init_filename), init_filename
 
-
 # getting pyNastran version without using the __init__.py file
 # because we need to hack on it
 import subprocess
@@ -40,7 +39,7 @@ try:
 except:
     # git isn't installed
     ghash = 'no.checksum.error'
-version = '0.8.0+dev.%s' % ghash
+version = '0.9.0+dev.%s' % ghash
 
 # hacking on the __init___.py file to set:
 #   is_pynastrangui_exe = True
@@ -168,7 +167,7 @@ excludes = [
     'msvc_runtime', 'nbconvert', 'networkx', 'notebook', 'numba',
     'numexpr', 'numpydoc', 'odo', 'openmdao', 'openpyxl',
     'openssl', 'pandas', 'path.py', 'pep8', 'pi', 'pip',
-    'psutil', 'py', 'pygments', 'pylint', 'pylint', 'pytest',
+    'psutil', 'py', 'pylint', 'pylint', 'pytest',
     'pytools', 'pytz', 'pyyaml', 'pyzmq',
     'qtconsole', 'requests', 'ruamel_yaml', 'RunSnakeRun',
     'scikit-learn', 'setuptools',
