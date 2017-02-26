@@ -52,8 +52,6 @@ if sys.version_info <= (3,):
         ##'dill'
         ##'wx >= 2.8.12.0',
     ]
-else:
-    pass
 
 #    try:
 #        import vtk

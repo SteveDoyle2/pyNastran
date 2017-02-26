@@ -7,7 +7,7 @@ pkg_path = pyNastran.__path__[0]
 
 ignore_dirs = ['src', 'dmap', 'solver', '__pycache__',
                'op4_old', 'calculix', 'bars', 'case_control',
-               'gui', 'gui_qt', 'pch', 'mesh', 'old', 'solver', 'test']
+               'pch', 'old', 'solver', 'test']
 mods_skip = ['spike', 'shell_backup']
 
 def get_folders_files(dirname, skip_file_sufix=('.pyc', '.pyx', '.bdf'),
