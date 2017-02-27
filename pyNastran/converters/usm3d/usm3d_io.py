@@ -81,10 +81,14 @@ class Usm3dIO(object):
         node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
 
         cases = self.result_cases
+        form = self.get_form()
         bcs = None
         mapbc = None
         bcmap_to_bc_name = None
-        self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+
+        self._fill_usm3d_results(cases, form,
+                                 bcs, mapbc, bcmap_to_bc_name, loads,
+                                 is_geometry=False)
 
     def load_usm3d_geometry(self, cogsg_filename, dirname, name='main', plot=True):
         skip_reading = self._remove_old_geometry(cogsg_filename)
@@ -135,14 +139,15 @@ class Usm3dIO(object):
             raise RuntimeError()
         self.nElements = ntris + ntets
 
-        print("nNodes = %i" % self.nNodes)
-        print("nElements = %i" % self.nElements)
+        self.log.debug("nNodes = %i" % self.nNodes)
+        self.log.debug("nElements = %i" % self.nElements)
 
-        self.grid.Allocate(self.nElements, 1000)
+        grid = self.grid
+        grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
+        #points = vtk.vtkPoints()
+        #points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
@@ -163,18 +168,18 @@ class Usm3dIO(object):
         assert nodes is not None
         nnodes = nodes.shape[0]
 
-        nid = 0
-        for i in range(nnodes):
-            points.InsertPoint(nid, nodes[i, :])
-            nid += 1
-
+        points = self.numpy_to_vtk_points(nodes)
         if ntris:
+            self.element_ids = np.arange(1, ntris + 1, dtype='int32')
             for (n0, n1, n2) in tris:
                 elem = vtkTriangle()
                 elem.GetPointIds().SetId(0, n0)
                 elem.GetPointIds().SetId(1, n1)
                 elem.GetPointIds().SetId(2, n2)
-                self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+        else:
+            ntets = tets.shape[0]
+            self.element_ids = np.arange(1, ntets + 1, dtype='int32')
 
         if dimension_flag == 2:
             pass
@@ -187,30 +192,33 @@ class Usm3dIO(object):
                     elem.GetPointIds().SetId(1, n1)
                     elem.GetPointIds().SetId(2, n2)
                     elem.GetPointIds().SetId(3, n3)
-                    self.grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         else:
             raise RuntimeError('dimension_flag=%r' % dimension_flag)
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
 
         # regions/loads
-        self. turn_text_on()
+        self.turn_text_on()
         self.scalarBar.Modified()
 
         cases = {}
-        #cases = self.result_cases
-        self.element_ids = np.arange(1, len(tris) + 1, dtype='int32')
-        form, cases = self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+        form = []
+        form, cases = self._fill_usm3d_results(cases, form,
+                                               bcs, mapbc, bcmap_to_bc_name, loads,
+                                               is_geometry=True)
         self._finish_results_io2(form, cases)
 
     def clear_usm3d(self):
         """dummy function"""
         pass
 
-    def _fill_usm3d_results(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
+    def _fill_usm3d_results(self, cases, form,
+                            bcs, mapbc, bcmap_to_bc_name, loads,
+                            is_geometry=True):
         """sets up usm3d results"""
         if 'Mach' in loads:
             avg_mach = loads['Mach'].mean()
@@ -223,31 +231,38 @@ class Usm3dIO(object):
             2: ['Usm3d%s' % note, ''],
         }
 
-        form, cases = self._fill_usm3d_case(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+        form, cases = self._fill_usm3d_case(
+            cases, form,
+            bcs, mapbc, bcmap_to_bc_name, loads,
+            is_geometry=is_geometry)
         return form, cases
 
-    def _fill_usm3d_case(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
+    def _fill_usm3d_case(self, cases, form,
+                         bcs, mapbc, bcmap_to_bc_name, loads, is_geometry=True):
         """actually fills the sidebar"""
         self.scalarBar.VisibilityOff()
 
         subcasemap_id = 1
-        icase = 0
+        icase = len(cases)
         itime = 0
-        eid_res = GuiResult(subcasemap_id, 'ElementID', 'ElementID', 'centroid', self.element_ids,
-                            nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                            data_format='%i', uname='GuiResult')
+        if is_geometry:
+            assert self.element_ids is not None, self.element_ids
+            assert len(self.element_ids) > 0, self.element_ids
+            eid_res = GuiResult(
+                subcasemap_id, 'ElementID', 'ElementID', 'centroid', self.element_ids,
+                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                data_format='%i', uname='GuiResult')
 
-        region_res = GuiResult(subcasemap_id, 'Patch', 'Patch', 'centroid', bcs,  # patch_id
-                               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                               data_format='%i', uname='GuiResult')
-        cases[icase] = (eid_res, (itime, 'ElementID'))
-        cases[icase + 1] = (region_res, (itime, 'Patch'))
-        form = [
-            ('ElementID', icase, []),
-            ('Patch', icase + 1, []),
-        ]
+            region_res = GuiResult(
+                subcasemap_id, 'Patch', 'Patch', 'centroid', bcs,  # patch_id
+                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                data_format='%i', uname='GuiResult')
+            cases[icase] = (eid_res, (itime, 'ElementID'))
+            cases[icase + 1] = (region_res, (itime, 'Patch'))
+            form.append(('ElementID', icase, []))
+            form.append(('Patch', icase + 1, []))
+            icase += 2
 
-        icase += 2
         if bcs is not None:
             patch_id = bcs
 
@@ -293,15 +308,17 @@ class Usm3dIO(object):
 
         subcasemap_id = 2
         if len(loads):
+            form0 = []
             for key, load in iteritems(loads):
                 load_res = GuiResult(subcasemap_id, key, key, 'node', load,
                                      nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                                      data_format='%.3f', uname='GuiResult')
-                #cases[(ID, key, 1, 'node', '%.3f', '')] = load
-                cases[icase] = (region_res, (itime, key))
+                cases[icase] = (load_res, (itime, key))
                 formi = (key, icase, [])
-                form.append(formi)
+                form0.append(formi)
                 icase += 1
 
-            self.scalarBar.VisibilityOn()
+            if form0:
+                form.append(('Results', None, form0))
+        self.scalarBar.VisibilityOn()
         return form, cases

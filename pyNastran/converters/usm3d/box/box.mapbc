@@ -1,0 +1,10 @@
+#Thu Dec 15 09:19:55 2005
+#bc.map
+Patch #        BC             Family   #surf   surfIDs         Family
+#---------------------------------------------------------------------
+1              3              3              0            0        box
+2              3              3              0            0        box
+3              4              4              0            0        viscous
+4              3              3              0            0        Box
+5              3              3              0            0        box
+6              3              3              0            0        box

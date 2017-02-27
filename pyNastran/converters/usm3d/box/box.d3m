@@ -1,0 +1,188 @@
+#VGRID VERSION
+3.6
+#/Users/przd/VGRID_3.8_release/Examples/SIMPLE_BOX/box.d3m
+#Thu Dec 15 09:19:55 2005
+#This file was created by GridToolCocoa on Mac OS X
+#GTC 2006 - Build 111005
+#Project Name
+box
+#
+#-------------  Parameters  -----------------
+#
+               1 ( grid: 0 Euler; 1 NS uniform spacing; 2 NS variable spacing)
+            0.15 (rate1: uniform normal spacing growth rate for NS grids)
+            0.02 (rate2: uniform normal spacing growth rate for NS grids)
+           0.001 (delt1: uniform normal spacing for the first viscous layer)
+             100 (nlayr: maximum no. of viscous layers)
+              -1 (rstrt: -1 stop aft surf mesh; 1 continue; 0 no rstrt)
+               1 (ifact: >1.0 coarser Euler grid; <1.0 finer)
+               1 (vfact: >1.0 coarser NS grid; <1.0 finer)
+               0 (strch: 0 off; 1 on)
+               8 (npoli: no. of points defining the configuration)
+              12 (nline: no. of lines defining the configuration)
+               6 (nptch: no. of patches defining the configuration)
+               8 (   ms: no. of background grid sources)
+              20 (   ni: no. of background grid points)
+          250000 (mboun: maximum no. of surface mesh points)
+         2500000 (mpoin: maximum no. of mesh points in each run)
+#
+#-------------  Points  ---------------------
+#
+#No.              X-coor            Y-Coor            Z-Coor
+1                -1.0000000e+01   -1.0000000e+01   -1.0000000e+01  
+2                1.0000000e+01    -1.0000000e+01   -1.0000000e+01  
+3                1.0000000e+01    1.0000000e+01    -1.0000000e+01  
+4                -1.0000000e+01   1.0000000e+01    -1.0000000e+01  
+5                -1.0000000e+01   -1.0000000e+01   1.0000000e+01   
+6                1.0000000e+01    -1.0000000e+01   1.0000000e+01   
+7                1.0000000e+01    1.0000000e+01    1.0000000e+01   
+8                -1.0000000e+01   1.0000000e+01    1.0000000e+01   
+#
+#-------------  Curves  ---------------------
+#
+#no.          #pts     list of points
+       1       2       1       2
+
+       2       2       2       3
+
+       3       2       4       3
+
+       4       2       1       4
+
+       5       2       5       6
+
+       6       2       7       6
+
+       7       2       8       7
+
+       8       2       5       8
+
+       9       2       1       5
+
+      10       2       2       6
+
+      11       2       3       7
+
+      12       2       4       8
+#
+#-------------  Patches  --------------------
+#
+#no.           type    #sides  rotation bc
+#              side    #curves list of curves
+       1       1       4       0       1 char_in/outflow
+                               2      -3      -4       1
+
+       2       1       4       0       1 char_in/outflow
+                               8       7       6      -5
+
+       3       1       4       0       2 viscous_surface
+                               9       5     -10      -1
+
+       4       1       4       0       1 char_in/outflow
+                              11      -7     -12       3
+
+       5       1       4       0       1 char_in/outflow
+                               4      12      -8      -9
+
+       6       1       4       0       1 char_in/outflow
+                              -6     -11      -2      10
+#
+#-------------  Sources  --------------------
+#
+#
+
+source_number    1                Addams          
+0                0                                 (type:0 node, :1 line, stretching)
+1                0                0                (an bn alpha)
+1                1                                 (S, SP for pt 1 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 1 )
+1                1                                 (S, SP for pt 2 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 2 )
+0.5773503        0.5773503        0.5773503        (vector U)
+0                0                0                (vector P)
+-10              -10              -10              (x, y, z of pt 1)
+0                0                0                (x, y, z of pt 2)
+
+source_number    2                Addams          
+0                0                                 (type:0 node, :1 line, stretching)
+1                0                0                (an bn alpha)
+1                1                                 (S, SP for pt 1 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 1 )
+1                1                                 (S, SP for pt 2 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 2 )
+-0.5773503       0.5773503        0.5773503        (vector U)
+-1               0                0                (vector P)
+10               -10              -10              (x, y, z of pt 1)
+0                0                0                (x, y, z of pt 2)
+
+source_number    3                Addams          
+0                0                                 (type:0 node, :1 line, stretching)
+1                0                0                (an bn alpha)
+1                1                                 (S, SP for pt 1 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 1 )
+1                1                                 (S, SP for pt 2 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 2 )
+-0.5773503       0.5773503        -0.5773503       (vector U)
+-0.7071068       0                -0.7071068       (vector P)
+10               -10              10               (x, y, z of pt 1)
+0                0                0                (x, y, z of pt 2)
+
+source_number    4                Addams          
+0                0                                 (type:0 node, :1 line, stretching)
+1                0                0                (an bn alpha)
+1                1                                 (S, SP for pt 1 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 1 )
+1                1                                 (S, SP for pt 2 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 2 )
+0.5773503        0.5773503        -0.5773503       (vector U)
+0                0                -1               (vector P)
+-10              -10              10               (x, y, z of pt 1)
+0                0                0                (x, y, z of pt 2)
+
+source_number    5                Addams          
+0                0                                 (type:0 node, :1 line, stretching)
+1                0                0                (an bn alpha)
+2                1                                 (S, SP for pt 1 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 1 )
+1                1                                 (S, SP for pt 2 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 2 )
+-0.5773503       -0.5773503       -0.5773503       (vector U)
+-0.5773503       -0.5773503       -0.5773503       (vector P)
+10               10               10               (x, y, z of pt 1)
+0                0                0                (x, y, z of pt 2)
+
+source_number    6                Addams          
+0                0                                 (type:0 node, :1 line, stretching)
+1                0                0                (an bn alpha)
+2                1                                 (S, SP for pt 1 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 1 )
+1                1                                 (S, SP for pt 2 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 2 )
+-0.5773503       -0.5773503       0.5773503        (vector U)
+-0.7071068       -0.7071068       0                (vector P)
+10               10               -10              (x, y, z of pt 1)
+0                0                0                (x, y, z of pt 2)
+
+source_number    7                Addams          
+0                0                                 (type:0 node, :1 line, stretching)
+1                0                0                (an bn alpha)
+2                1                                 (S, SP for pt 1 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 1 )
+1                1                                 (S, SP for pt 2 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 2 )
+0.5773503        -0.5773503       0.5773503        (vector U)
+0                -1               0                (vector P)
+-10              10               -10              (x, y, z of pt 1)
+0                0                0                (x, y, z of pt 2)
+
+source_number    8                Addams          
+0                0                                 (type:0 node, :1 line, stretching)
+1                0                0                (an bn alpha)
+2                1                                 (S, SP for pt 1 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 1 )
+1                1                                 (S, SP for pt 2 )
+0.001            0.5              0.08             (delta1, rate1, rate2 for pt 2 )
+0.5773503        -0.5773503       -0.5773503       (vector U)
+0                -0.7071068       -0.7071068       (vector P)
+-10              10               10               (x, y, z of pt 1)
+0                0                0                (x, y, z of pt 2)

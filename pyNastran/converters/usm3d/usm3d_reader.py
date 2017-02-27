@@ -14,7 +14,7 @@ from struct import pack, unpack
 
 from six.moves import range
 from numpy import array, zeros, where
-
+import numpy as np
 from pyNastran.utils.log import get_logger2
 
 
@@ -359,22 +359,25 @@ class Usm3d(object):
             else:
                 raise RuntimeError('precision = %r' % self.precision)
 
-            data = cogsg_file.read(data_length)
-            X = unpack(Format, data)
+            if 0:
+                data = cogsg_file.read(data_length)
+                X = unpack(Format, data)
+                data = cogsg_file.read(data_length)
+                Y = unpack(Format, data)
+                data = cogsg_file.read(data_length)
+                Z = unpack(Format, data)
+                nodes = np.array([X, Y, Z])
 
-            data = cogsg_file.read(data_length)
-            Y = unpack(Format, data)
-
-            data = cogsg_file.read(data_length)
-            Z = unpack(Format, data)
-
-            nodes = array([X, Y, Z])
-
-            nodes = zeros((nnodes, 3), node_array_format)
-            nodes[:, 0] = X
-            nodes[:, 1] = Y
-            nodes[:, 2] = Z
-            del X, Y, Z
+                nodes = np.zeros((nnodes, 3), node_array_format)
+                nodes[:, 0] = X
+                nodes[:, 1] = Y
+                nodes[:, 2] = Z
+                del X, Y, Z
+            else:
+                data = cogsg_file.read(3 * data_length)
+                assert self.precision == 'single', self.precision
+                nodes = np.fromstring(data, '>4f').reshape(3, nnodes).T
+                #nodes = np.fromstring(data, '>4f').reshape(nnodes, 3)
 
 
         cogsg_file.read(nnodes * 3 * 8)  # 3 -> xyz, 8 -> double precision ???
@@ -391,7 +394,7 @@ class Usm3d(object):
             data = cogsg_file.read(4 * data_length)
 
             tets = unpack(Format, data)
-            tets = array(tets)
+            tets = np.array(tets)
             tets = tets.reshape((tets, 4))
 
         #----------------------------------------------------------------------
@@ -402,7 +405,7 @@ class Usm3d(object):
         data = cogsg_file.read(4 * nnodes)
 
         nodes_vol = unpack(Format, data)
-        nodes_vol = array(nodes_vol)
+        nodes_vol = np.array(nodes_vol)
         nodes_vol = nodes_vol.reshape((tets, 3))
 
     def _read_cogsg_volume(self, cogsg_file):
@@ -412,13 +415,24 @@ class Usm3d(object):
         nelements = self.header['nElements']
         Format = '>%si' % nelements
 
-        elements = zeros((nelements, 4), 'int32')
 
         self.log.debug("fv.tell = %s" % cogsg_file.tell())
-        for i in range(4): #  tets
-            data = cogsg_file.read(4 * nelements)
-            elements[:, i] = unpack(Format, data)
-        elements -= 1
+        use_fromstring = True
+
+        if use_fromstring:
+            ndata = 4 * (4 * nelements)
+            data = cogsg_file.read(ndata)
+
+            # the 4 means that we make a (nelements, 4) array?
+            elements = np.fromstring(data, dtype='>4f') - 1
+        else:
+            elements = np.zeros((nelements, 4), 'int32')
+            for i in range(4): #  tets
+                data = cogsg_file.read(4 * nelements)
+                elements[:, i] = unpack(Format, data)
+            elements -= 1
+
+        assert elements.shape == (nelements, 4), elements.shape
 
         dummy2 = cogsg_file.read(4)
         self.log.debug("dummy2 = %s %s" % (unpack('>i', dummy2), unpack('>f', dummy2)))
@@ -437,11 +451,22 @@ class Usm3d(object):
         #assert dummy3_int == 298560
         self.log.debug("dummy3 = %i" % unpack('>i', dummy3)) #, unpack('>f', dummy3)
 
-        nodes = zeros((nnodes, 3), 'float64')
-        for i in range(3): #  x, y, z
-            data = cogsg_file.read(8 * nnodes)
-            assert len(data) == (8 * nnodes)
-            nodes[:, i] = unpack(Format, data)
+        if use_fromstring:
+            data_length = 8 * nnodes
+            data = cogsg_file.read(3 * data_length)
+            assert self.precision == 'double', self.precision
+            nodes = np.fromstring(data, '>d').reshape(3, nnodes).T
+
+            # the ravel creates a copy that we can then use to put in
+            # a contigous order
+            nodes = np.asarray(nodes.ravel(), dtype='<d').reshape(nnodes, 3)
+        else:
+            nodes = zeros((nnodes, 3), 'float64')
+            for i in range(3): #  x, y, z
+                data = cogsg_file.read(8 * nnodes)
+                assert len(data) == (8 * nnodes)
+                nodes[:, i] = unpack(Format, data)
+
 
         dummy4 = cogsg_file.read(4) # nnodes * 3 * 8
         dummy4_int, = unpack('>i', dummy4)
@@ -504,12 +529,12 @@ class Usm3d(object):
             is_sparse = False
 
         #formatCode = 2
-        node_id = zeros(n, 'int32')
-        rho = zeros(n, 'float32')
-        rhoU = zeros(n, 'float32')
-        rhoV = zeros(n, 'float32')
-        rhoW = zeros(n, 'float32')
-        e = zeros(n, 'float32')
+        node_id = np.zeros(n, 'int32')
+        rho = np.zeros(n, 'float32')
+        rhoU = np.zeros(n, 'float32')
+        rhoV = np.zeros(n, 'float32')
+        rhoW = np.zeros(n, 'float32')
+        e = np.zeros(n, 'float32')
 
         with open(flo_filename, 'r') as flo_file:
             line = flo_file.readline().strip()
