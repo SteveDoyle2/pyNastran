@@ -12,6 +12,8 @@ from pyNastran.converters.LaWGS.test_wgs_gui import TestLawgsGUI
 from pyNastran.converters.ugrid.test_ugrid_gui import TestUgridGUI
 from pyNastran.converters.su2.test_su2_gui import TestSU2GUI
 from pyNastran.converters.tetgen.test_tetgen_gui import TestTetgenGUI
+from pyNastran.converters.usm3d.test_usm3d_gui import TestUsm3dGUI
+
 
 if __name__ == '__main__':
     unittest.main()
