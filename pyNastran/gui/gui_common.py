@@ -2472,7 +2472,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 print('name = %r' % name)
             self.name = str(name)
-            #self._reset_model(name)
+            self._reset_model(name)
 
             # reset alt grids
             names = self.alt_grids.keys()
@@ -2568,19 +2568,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.grid = grid
             self.grid_mapper = grid_mapper
             self.geom_actor = geom_actor
-
-
-        self.grid.Reset()
-        self.grid.Modified()
+            self.grid.Modified()
+        else:
+            self.grid.Reset()
+            self.grid.Modified()
 
         # reset alt grids
         alt_names = self.alt_grids.keys()
         for alt_name in alt_names:
             self.alt_grids[alt_name].Reset()
             self.alt_grids[alt_name].Modified()
-
-        #gridResult.Reset()
-        #gridResult.Modified()
 
     def _update_menu_bar_to_format(self, fmt, method):
         self.menu_bar_format = fmt
@@ -2900,11 +2897,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # build GUI and restore saved application state
         #nice_blue = (0.1, 0.2, 0.4)
-        white = (1.0, 1.0, 1.0)
-        black = (0.0, 0.0, 0.0)
-        #red = (1.0, 0.0, 0.0)
-        grey = (119/255., 136/255., 153/255.)
-        screen_shape_default = (1100, 700)
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
         if PY2 and qt_version == 4:
@@ -2912,34 +2904,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #self.reset_settings = False
         if self.reset_settings or qt_version in [5, 'pyside']:
-            self.background_color = grey
-            self.label_color = black
-            self.text_color = white
-            self.resize(1100, 700)
+            self._reset_settings()
         else:
-            setting_keys = [str(key) for key in settings.childKeys()]
-            self.background_color = settings.value("backgroundColor", grey).toPyObject()
-            self.label_color = settings.value("labelColor", black).toPyObject()
-            self.text_color = settings.value("textColor", white).toPyObject()
-            screen_shape = settings.value("screen_shape", screen_shape_default).toPyObject()
-            #if 'recent_files' in setting_keys:
-            self.recent_files = settings.value("recent_files", self.recent_files).toPyObject()
-
-            #w = screen_shape.width()
-            #h = screen_shape.height()
-            #try:
-            self.resize(screen_shape[0], screen_shape[1])
-            width, height = screen_shape
-            if 0 and PY3:
-                pos = settings.value("pos", pos_default).toPyObject()
-                x_pos, y_pos = pos
-                #print(pos)
-                #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
-                y_pos = pos_default[0]
-                self.setGeometry(x_pos, y_pos, width, height)
-            #except TypeError:
-                #self.resize(1100, 700)
-
+            self._reapply_settings(settings)
 
         self.init_ui()
         if self.reset_settings:
@@ -2952,6 +2919,67 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #-------------
         # loading
         self.show()
+
+    def _reset_settings(self):
+        white = (1.0, 1.0, 1.0)
+        black = (0.0, 0.0, 0.0)
+        #red = (1.0, 0.0, 0.0)
+        grey = (119/255., 136/255., 153/255.)
+        #screen_shape_default = (1100, 700)
+
+        self.background_color = grey
+        self.label_color = black
+        self.text_color = white
+        self.resize(1100, 700)
+
+    def _reapply_settings(self, settings):
+        white = (1.0, 1.0, 1.0)
+        black = (0.0, 0.0, 0.0)
+        #red = (1.0, 0.0, 0.0)
+        grey = (119/255., 136/255., 153/255.)
+        screen_shape_default = (1100, 700)
+
+        setting_keys = [str(key) for key in settings.childKeys()]
+        try:
+            self.background_color = settings.value("backgroundColor", grey).toPyObject()
+        except (TypeError, AttributeError):
+            self.background_color = grey
+
+        try:
+            self.label_color = settings.value("labelColor", black).toPyObject()
+        except (TypeError, AttributeError):
+            self.label_color = black
+
+        try:
+            self.text_color = settings.value("textColor", white).toPyObject()
+        except (TypeError, AttributeError):
+            self.text_color = white
+
+        try:
+            screen_shape = settings.value("screen_shape", screen_shape_default).toPyObject()
+        except (TypeError, AttributeError):
+            screen_shape = screen_shape_default
+
+        #if 'recent_files' in setting_keys:
+        try:
+            self.recent_files = settings.value("recent_files", self.recent_files).toPyObject()
+        except (TypeError, AttributeError):
+            pass
+
+        #w = screen_shape.width()
+        #h = screen_shape.height()
+        #try:
+        self.resize(screen_shape[0], screen_shape[1])
+        width, height = screen_shape
+        if 0 and PY3:
+            pos = settings.value("pos", pos_default).toPyObject()
+            x_pos, y_pos = pos
+            #print(pos)
+            #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
+            y_pos = pos_default[0]
+            self.setGeometry(x_pos, y_pos, width, height)
+        #except TypeError:
+            #self.resize(1100, 700)
 
     def setup_post(self, inputs):
         self.load_batch_inputs(inputs)

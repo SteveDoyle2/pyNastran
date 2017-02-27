@@ -1,0 +1,28 @@
+"  +++++++++++++++++++++++++++++++++
+   +                               +
+   +    ++ cubes input file ++     +
+   +    created by 'autoInputs'    +
+   +                               +
+   +++++++++++++++++++++++++++++++++"
+1. Surface Geometry File Name (Cart3D surf Tri file fmt):
+  Components.i.tri
+
+2. Outer Cartesian Box Specs:
+ Xmin     Xmax            Ymin    Ymax            Zmin    Zmax
+ -8.010943e+02 9.790279e+02   -9.724129e+02 8.077787e+02  -8.401133e+02 9.399873e+02
+3. Starting Mesh Dims (# of nodes in each dimension, inclusive):
+ # verts in X    # verts in Y     # verts in Z
+       5              5               5
+  4. Maximum Hex Cell Aspect Ratio ( Isotropic = 1):
+        1
+
+5. Minimum Number of cell refinements on body surface (auto=-1):
+        -1
+
+6. Maximum Number of cell refinements:
+    9
+
+7. Num of bits for each integer coordinates (maximum = 21):
+       21
+
+  +++++++++++++++++++++++++finis!++++++++++++++++++++++

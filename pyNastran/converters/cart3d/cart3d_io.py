@@ -7,12 +7,11 @@ from six import iteritems
 from six.moves import range
 
 from numpy import arange, mean, vstack, zeros, unique, where, sqrt
-import numpy as np
+#import numpy as np
 
 
 import vtk
 from vtk import vtkTriangle
-from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.cart3d.cart3d import read_cart3d
@@ -394,7 +393,6 @@ class Cart3dIO(object):
         pass
 
     def load_cart3d_results(self, cart3d_filename, dirname):
-        model = Cart3D(log=self.log, debug=False)
         self.load_cart3d_geometry(cart3d_filename, dirname)
 
     def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
@@ -439,7 +437,7 @@ class Cart3dIO(object):
         form = [
             ('Geometry', None, geometry_form),
         ]
-        icase = 6
+        icase = 7
         return form, cases, icase
 
         #cnormals = model.get_normals(nodes, elements)

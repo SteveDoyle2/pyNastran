@@ -446,7 +446,7 @@ class Tecplot(FortranFormat):
             self.n += nbytes
             #self.show_data(data, types='if', endian='<') # 'if'?
             s = unpack('2f 9i', data)
-            print(s)
+            self.log.debug(s)
             #assert self.n == 360, self.n
             #print('----------')
 
@@ -547,7 +547,7 @@ class Tecplot(FortranFormat):
                 resvals = unpack(b'%sf' % ni, data)
                 results = array(resvals, dtype='float32').reshape(nvars, nnodes).T
 
-                #
+
                 # 7443 elements
                 if zone_type == 5:
                     # CHEXA
@@ -557,7 +557,7 @@ class Tecplot(FortranFormat):
                     # CQUAD4
                     nnodes_per_element = 4
                     nvals = nnodes_per_element * nelements
-                    print('nvals = %s' % nvals)
+                    self.log.debug('nvals = %s' % nvals)
 
                 nbytes = nvals * 4
                 node_ids = unpack(b'%ii' % nvals, self.f.read(nbytes))
@@ -580,7 +580,7 @@ class Tecplot(FortranFormat):
 
         self.xyz = xyz
         self.results = results
-        print('done...')
+        self.log.debug('done...')
 
     def slice_x(self, xslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
@@ -632,7 +632,6 @@ class Tecplot(FortranFormat):
         """
         slice_value = float(slice_value)
         inodes = where(y < slice_value)[0]
-        #print('inodes =', inodes)
         self._slice_plane_inodes(inodes)
 
     def _slice_plane_inodes(self, inodes):
@@ -829,7 +828,6 @@ class Tecplot(FortranFormat):
             self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
                           (is_hexas, is_tets, is_quads, is_tris))
             if is_hexas:
-                # elements
                 efmt = ' %i %i %i %i %i %i %i %i\n'
                 elements = self.hexa_elements
             elif is_tets:
@@ -887,6 +885,7 @@ class Tecplot(FortranFormat):
         return tris, quads
 
     def get_free_faces(self):
+        """get the free faces for hexa elements"""
         self.log.info('start get_free_faces')
         sort_face_to_element_map = defaultdict(list)
         sort_face_to_face = {}

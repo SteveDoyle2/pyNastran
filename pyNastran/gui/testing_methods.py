@@ -456,7 +456,18 @@ class GUIMethods(GuiAttributes):
             scale = obj.get_scale(i, name)
             phase = obj.get_phase(i, name)
             label2 = obj.get_header(i, name)
+            #scalar_result = obj.get_scalar(i, name)
             nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+            if vector_size == 3:
+                plot_value = obj.get_plot_value(i, name) # vector
+                scale = 1.0
+                phase = 2.0
+                obj.set_scale(i, name, scale)
+                obj.set_phase(i, name, phase)
+            else:
+                scalar_result = obj.get_scalar(i, name)
+
+
 
             default_data_format = obj.get_default_data_format(i, name)
             default_min, default_max = obj.get_default_min_max(i, name)
@@ -464,6 +475,12 @@ class GUIMethods(GuiAttributes):
             default_title = obj.get_default_title(i, name)
             default_phase = obj.get_default_phase(i, name)
             out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
+            nlabels = 4
+            labelsize = 10
+            ncolors = 20
+            colormap = 'jet'
+            obj.set_nlabels_labelsize_ncolors_colormap(
+                i, name, nlabels, labelsize, ncolors, colormap)
             default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
 
             #default_max, default_min = obj.get_default_min_max(i, name)

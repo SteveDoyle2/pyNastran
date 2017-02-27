@@ -24,17 +24,17 @@ class Cart3dGUI(Cart3dIO, GUIMethods):
 class TestCart3dGUI(unittest.TestCase):
 
     def test_cart3d_geometry_01(self):
+        """tests the ascii three plugs model"""
         log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(model_path, 'threePlugs.a.tri')
-        #out_filename = os.path.join(model_path, 'panair.out')
         dirname = None
 
         test = Cart3dGUI()
         test.log = log
-        #test.load_nastran_geometry(geometry_filename, None)
         test.load_cart3d_geometry(geometry_filename, dirname)
 
     def test_cart3d_geometry_02(self):
+        """tests the binary three plugs model"""
         log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(model_path, 'threePlugs.bin.tri')
         dirname = None
@@ -44,8 +44,19 @@ class TestCart3dGUI(unittest.TestCase):
         test.load_cart3d_geometry(geometry_filename, dirname)
 
     def test_cart3d_geometry_03(self):
+        """tests the business jet model"""
         log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(model_path, 'business_jet', 'bJet.a.tri')
+        dirname = None
+
+        test = Cart3dGUI()
+        test.log = log
+        test.load_cart3d_geometry(geometry_filename, dirname)
+
+    def test_cart3d_bcs(self):
+        """tests the power cube model"""
+        log = get_logger(level='warning', encoding='utf-8')
+        geometry_filename = os.path.join(model_path, 'power_cube', 'Components.i.tri')
         dirname = None
 
         test = Cart3dGUI()

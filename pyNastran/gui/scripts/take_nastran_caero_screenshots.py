@@ -1,17 +1,15 @@
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import read_bdf
 
 # find the list of CAERO cards
-model = BDF(debug=False)
 bdf_filename = self.infilename
-model.read_bdf(bdf_filename)
+model = read_bdf(bdf_filename, debug=False)
 caeros = model.caeros.keys()
 #print caeros
 del model
 
 # make a bdf for each CAERO card
 for caeroi in caeros:
-    model2 = BDF(debug=False)
-    model2.read_bdf(bdf_filename)
+    model2 = read_bdf(bdf_filename, debug=False)
 
     for eid in caeros:
         if eid != caeroi:

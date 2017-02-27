@@ -1,11 +1,97 @@
-from copy import deepcopy
+from __future__ import print_function
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8', '|i1', # this last one is a boolean
               '>i4', '>i8', '>f4', '>f8']
 INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']
 
-class GuiResult(object):
+class GuiResultCommon(object):
+    def __init__(self):
+        self.class_name = self.__class__.__name__
+
+    #def get_data_type(self, i, name):
+        #raise NotImplementedError(self.class_name)
+
+    #def get_header(self, i, name):
+        #raise NotImplementedError(self.class_name)
+
+    def get_data_format(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_location(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_title(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_min_max(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_scalar(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_methods(self, i):
+        raise NotImplementedError(self.class_name)
+
+    def get_result(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_vector_size(self, i, name):
+        return 1
+
+    def get_scale(self, i, name):
+        return 0.
+
+    def get_phase(self, i, name):
+        return None
+
+    #------------
+    # setters
+
+    def set_data_format(self, i, name, data_format):
+        raise NotImplementedError(self.class_name)
+
+    def set_min_max(self, i, name, min_value, max_value):
+        raise NotImplementedError(self.class_name)
+
+    def set_title(self, i, name, title):
+        raise NotImplementedError(self.class_name)
+
+    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+                                               ncolors, colormap):
+        raise NotImplementedError(self.class_name)
+
+    def set_scale(self, i, name, scale):
+        raise RuntimeError('This object cannot set a displacement scale factor.')
+
+    def set_phase(self, i, name, phase):
+        pass
+
+    #------------
+    # default getters
+    def get_default_data_format(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_default_min_max(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_default_title(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+        raise NotImplementedError(self.class_name)
+
+    def get_default_scale(self, i, name):
+        return 0.
+
+    def get_default_phase(self, i, name):
+        return None
+
+
+class GuiResult(GuiResultCommon):
     deflects = False
     def __init__(self, subcase_id, header, title, location, scalar,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
@@ -26,6 +112,8 @@ class GuiResult(object):
         uname : str
             some unique name for ...
         """
+        GuiResultCommon.__init__(self)
+
         self.subcase_id = subcase_id
         #assert self.subcase_id > 0, self.subcase_id
 
@@ -111,11 +199,11 @@ class GuiResult(object):
     def set_scale(self, i, name, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
 
-    def set_title(self, i, name):
-        return self.title
+    def set_title(self, i, name, title):
+        self.title = title
 
-    def set_phase(self, i, name):
-        pass
+    #def set_phase(self, i, name, phase):
+        #pass
 
     def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
                                                ncolors, colormap):

@@ -8,7 +8,7 @@ from numpy.linalg import norm
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.nastran.geometry_helper import NastranGuiAttributes
-from pyNastran.converters.nastran.displacements import DisplacementResults, TransientElementResults
+from pyNastran.converters.nastran.displacements import DisplacementResults#, TransientElementResults
 
 class NastranGuiResults(NastranGuiAttributes):
     """
