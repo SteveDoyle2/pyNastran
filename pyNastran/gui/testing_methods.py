@@ -144,9 +144,9 @@ class GuiAttributes(object):
                 #super(QMainWindow, self).__init__()
 
         self.main_grids = {}
-        self.main_edge_actors = {}
-        self.main_grid_mappers  = {}
-        self.main_geometry_actors  = {}
+        #self.main_edge_actors = {}
+        #self.main_grid_mappers  = {}
+        #self.main_geometry_actors  = {}
 
     @property
     def grid(self):

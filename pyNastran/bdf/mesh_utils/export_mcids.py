@@ -47,7 +47,7 @@ def export_mcids(bdf_filename, csv_filename_out=None, iply=0):
     nodes = []
     bars = []
     for eidi, elem in sorted(iteritems(model.elements)):
-        if elem.type in ['CQUAD4', 'CQUAD8']:
+        if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
             xyz1 = elem.nodes_ref[0].get_position()
             xyz2 = elem.nodes_ref[1].get_position()
             xyz3 = elem.nodes_ref[2].get_position()

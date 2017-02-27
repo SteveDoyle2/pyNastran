@@ -1,0 +1,107 @@
+GUI formats
+===========
+ - cart3d input/output
+ - nastran input/output
+ - lawgs input
+ - panair input/output
+ - usm3d volume (postgrid) and results (.flo)
+ - tetgen input
+ - S/HABP input
+ - OpenVSP adb input/output (remove this...)
+ - fast
+ - AFLR2, AFLR3
+   - bedge
+   - surf
+   - ugrid
+ - csv/txt elemental/nodal results for all formats
+ - csv point loading with -u for all formats (multiple files allowed)
+ - csv deflection results
+
+PyQt4/PyQt5/PySide unique
+=========================
+
+ - logger
+
+ - buttons/pulldowns for:
+   - implicit pulldown for formats
+   - zoom/rotate/snap to axis
+   - screenshot
+   - auto-reload
+   - results sidebar
+
+ - auto-reload button.  Useful for:
+    - modifying Panair file
+    - dynamically updating files
+    - incrementing files for Usm3d (e.g. running a job and want to watch the
+      flow develop without having to click load_results)
+
+ - legend menu to edit properties for:
+   - title
+   - min value
+   - max value
+   - data format (%f, %e, %g, %i, %.4f)
+   - red to blue; blue to red
+   - TODO: continuous to discrete (doesn't work)
+   - save results
+   - can't move legend
+     - horizontal/veterical
+     - TODO: can't explicitly place it
+   - show/hide legend
+   - animation
+   - TODO: Cancel button doesn't go to original settings if you click apply
+     - TODO: should maybe remove the OK button and rename Cancel to Close
+
+ - secondary actors menu
+   - actor selection
+     - color
+     - point size
+     - line size
+     - opacity
+     - show/hide
+   - coordinate systems
+     - show/hide
+   - selective editing based on representation
+
+ - focal point picking (e.g. clipping)
+   - "f" key & button
+   - zoom out far, press f to disable clipping
+   - zoom in to desired view distance and press f  to 
+     - cart3d can clip through bounding box to pick nodes/elements
+       that are obscured
+
+ - minor features
+   - default filename for pictures
+   - pretty window title that tells you your "format - infile - outfile"
+     - TODO: outfile is incorrect listed if you load a new geometry
+
+ - zoom/rotate/snap buttons
+ - command line
+   - loading of geometry/results from command line
+   - python scripting
+   - edges
+   - disable HTML output (useful for when PyQt is buggy)
+
+ - picking
+   - cell/node picking based on result type
+   - kind of a hackish picking method
+   - no nodal/centroidal position picking (e.g. get (x, y, z), not just x or y or z)
+
+ - results sidebar
+   - data is put in a nested tree and cycleResults works (Control+L)
+   - multiple nastran subcases
+   - load in custom CSV results
+
+ - Python console scripting menu
+   - modify unexposed data members
+     - high resolution screenshots
+     - animations
+   - powerful tool for quickly creating a command line script
+   - syntax highlighting with QScintilla (PyQt4)
+   -  - font is courier new
+
+ - groups
+   - create groups by Nastran properties (Nastran-specific)
+   - show/hide elements by group
+     - TODO: allow selection of more than one group
+     - TODO: show/hide elements based on picking
+     - TODO: improved picking

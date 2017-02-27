@@ -2552,7 +2552,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _reset_model(self, name):
         """resets the grids; sets up alt_grids"""
-        if name not in self.main_grids:
+        if hasattr(self, 'main_grids') and name not in self.main_grids:
             grid = vtk.vtkUnstructuredGrid()
             grid_mapper = vtk.vtkDataSetMapper()
             if self.vtk_version[0] <= 5:

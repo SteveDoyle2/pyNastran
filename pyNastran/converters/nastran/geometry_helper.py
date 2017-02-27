@@ -349,7 +349,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 if cd2 != 0:
                     #if cd2_ref.type not in ['CORD2R', 'CORD1R']:
                         #continue # TODO: MasterModelTaxi
-                    wb = cd2_ref = transform_node_to_global_assuming_rectangular(wb)  # TODO: fixme
+                    wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)  # TODO: fixme
 
             elif offt_end_b == 'B':
                 pass
@@ -440,8 +440,10 @@ class NastranGeometryHelper(NastranGuiAttributes):
                             eid, line_y[0], line_y[1], line_z[1]))
 
         #print('found_bar_types =', found_bar_types)
-        #no_axial, no_torsion
-        out = None
+        #no_axial_torsion = (no_axial, no_torsion)
+        #no_shear_bending = (no_shear_y, no_shear_z, no_bending_y, no_bending_z)
+        #no_dofs = (no_bending, no_bending_bad, no_6_16, no_0_456, no_0_56, no_56_456, no_0_6, no_0_16)
+        out = (no_axial_torsion, no_shear_bending, no_dofs)
         return bar_nids, bar_types, out
 
     def _get_suport_node_ids(self, model, suport_id):
@@ -682,7 +684,9 @@ def quad_quality(p1, p2, p3, p4):
         #n2b = np.cross(v42, -v21) # v42 x v12
         #warp2 = np.dot(n2a, n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
         #max_warp = max(np.arccos(warp1), np.arccos(warp2))
-    return areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai
+    out = (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+           min_thetai, max_thetai, dideal_thetai)
+    return out
 
 def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
     cos_thetas = []
