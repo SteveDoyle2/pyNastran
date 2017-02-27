@@ -1271,6 +1271,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if len(eids):
                 if debug: # pragma: no cover
                     print('bar_type = %r' % bar_type)
+                    print('eids     = %r' % eids)
+                    print('all_eids = %r' % self.element_ids.tolist())
                 # if bar_type not in ['ROD', 'TUBE']:
                 bar_y = bar_type + '_y'
                 bar_z = bar_type + '_z'
@@ -1288,7 +1290,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # form = ['Geometry', None, []]
                 i = np.searchsorted(self.element_ids, eids)
                 is_type = np.zeros(self.element_ids.shape, dtype='int32')
-                is_type[i] = 1.
+                try:
+                    is_type[i] = 1.
+                except:
+                    #print('self.element_ids =', self.element_ids)
+                    #print('eids =', eids)
+                    ii = np.where(i == len(self.element_ids))[0]
+                    print('ii = %s' % ii)
+                    print('failed eids =', eids[ii])
+                    #assert self.element_ids[i] == eids
+                    raise
                 bar_form[2].append(['is_%s' % bar_type, icase, []])
 
                 msg = 'is_%s' % bar_type
@@ -1298,6 +1309,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
         if self.make_released_dofs2:
+            no_axial, no_torsion = out0
             if no_axial.max() == 1:
                 bar_form[2].append(['No Axial', icase, []])
                 axial_res = GuiResult(0, header='No Axial', title='No Axial',
@@ -1313,6 +1325,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
         if self.make_released_dofs1:
+            no_shear_y, no_shear_z, no_bending_y, no_bending_z = out1
             if no_shear_y.max() == 1:
                 bar_form[2].append(['No Shear Y', icase, []])
                 shear_y_res = GuiResult(0, header='No Shear Y', title='No Shear Y',
@@ -1339,6 +1352,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
         if self.make_released_dofs2 and 0:
+            no_bending, no_bending_bad, no_6_16, no_0_456, no_0_56, no_56_456, no_0_6, no_0_16 = out2
             if no_bending.max() == 1:
                 bar_form[2].append(['No Bending', icase, []])
                 bending_res = GuiResult(0, header='No Bending', title='No Bending',
@@ -1614,6 +1628,401 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _get_sphere_size(self, dim_max):
         return 0.01 * dim_max
 
+    def createPolyData(self, verts, tris):
+        """Create and return a vtkPolyData.
+
+        verts is a (N, 3) numpy array of float vertices
+
+        tris is a (N, 1) numpy array of int64 representing the triangles
+        (cells) we create from the verts above.  The array contains
+        groups of 4 integers of the form: 3 A B C
+        Where 3 is the number of points in the cell and A B C are indexes
+        into the verts array.
+
+        http://vtk.1045678.n5.nabble.com/numpy-to-vtk-and-vtkPolyData-td4949286.html
+        """
+        # save, we share memory with the numpy arrays
+        # so they can't get deleted
+        self.verts = verts
+        self.tris = tris
+
+        poly = vtk.vtkPolyData()
+
+        points = vtk.vtkPoints()
+        from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+        points.SetData(numpy_to_vtk(verts))
+        poly.SetPoints(points)
+
+        cells = vtk.vtkCellArray()
+        cells.SetCells(len(tris) / 4, numpy_to_vtkIdTypeArray(tris))
+        poly.SetPolys(cells)
+        return poly
+
+    def map_elements2(self, points, nid_map, model, j, dim_max,
+                      nid_cp_cd, plot=True, xref_loads=True):
+        #model = BDF()
+        cards_to_consider = [
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+            'CBAR', 'CBEAM', 'CROD', 'CONROD', 'CTUBE',
+            'CTRIA3', 'CTRIAR', 'CQUAD4',
+            'CTRIA6', 'CQUAD8', 'CQUAD',
+            'CTRIAX', 'CTRIAX6',
+            'CQUADX', 'CQUADX4', 'CQUADX8',
+            'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+        ]
+        non_element_cards = [
+            'PBUSH', 'PELAS', 'PROD', 'PSHELL', 'PCOMP', 'PBARL', 'PSOLID', 'PBAR',
+            'PBEAM', 'PBEAML',
+
+            'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
+            'MAT3D', 'MATHE', 'MATHP',
+            'SUPORT', 'SUPORT1', 'EIGR', 'EIGRL', 'EIGB', 'EIGC',
+            'GRID', 'CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C', 'CORD2S',
+        ]
+
+        all_eids = []
+        all_pids = []
+        all_nids = nid_cp_cd[:, 0]
+        #print(model._type_to_id_map)
+        for card_type in model._type_to_id_map:
+            #print('card_type = %r' % card_type)
+            if card_type in cards_to_consider:
+                eids = model._type_to_id_map[card_type]
+                if card_type in ['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
+                    nid = np.array([model.elements[eid].node_ids for eid in eids],
+                                        dtype='int32')
+                    pids = np.array([model.elements[eid].Pid() for eid in eids],
+                                    dtype='int32')
+                    inids = np.searchsorted(all_nids, nid)
+                    nnodes = 2
+
+                    for elem_nid in inids:
+                        elem = vtk.vtkLine()
+                        pts = elem.GetPointIds()
+                        pts.SetId(0, elem_nid[0])
+                        pts.SetId(1, elem_nid[1])
+                        self.grid.InsertNextCell(elem.GetCellType(), pts)
+
+                elif card_type in ['CTRIA3', 'CTRIAR']:
+                    nnodes = 3
+                    nid = np.array([model.elements[eid].node_ids for eid in eids],
+                                   dtype='int32')
+                    pids = np.array([model.elements[eid].Pid() for eid in eids],
+                                    dtype='int32')
+                    theta_mcid = [model.elements[eid].theta_mcid for eid in eids]
+                    inids = np.searchsorted(all_nids, nid)
+
+                    for elem_nid in inids:
+                        elem = vtkTriangle()
+                        pts = elem.GetPointIds()
+                        pts.SetId(0, elem_nid[0])
+                        pts.SetId(1, elem_nid[1])
+                        pts.SetId(2, elem_nid[2])
+                        self.grid.InsertNextCell(elem.GetCellType(), pts)
+
+                elif card_type in ['CQUAD4']:
+                    nnodes = 4
+                    nid = np.array([model.elements[eid].node_ids for eid in eids],
+                                    dtype='int32')
+                    pids = np.array([model.elements[eid].Pid() for eid in eids],
+                                    dtype='int32')
+                    inids = np.searchsorted(all_nids, nid)
+
+                    for elem_nid in inids:
+                        elem = vtkQuad()
+                        pts = elem.GetPointIds()
+                        pts.SetId(0, elem_nid[0])
+                        pts.SetId(1, elem_nid[1])
+                        pts.SetId(2, elem_nid[2])
+                        pts.SetId(3, elem_nid[3])
+                        self.grid.InsertNextCell(elem.GetCellType(), pts)
+                elif card_type == 'CTETRA':
+                    pids_list = []
+                    nids1 = []
+                    nids2 = []
+                    for eid in eids:
+                        elem = model.elements[eid]
+                        pid = elem.Pid()
+                        node_ids = elem.node_ids
+                        if len(node_ids) == 4:
+                            nids1.append(node_ids)
+                        else:
+                            nids2.append(node_ids)
+                        pids_list.append(pid)
+                    pids = np.array(pids_list, dtype='int32')
+
+                    if nids1:
+                        nnodes = 4
+                        nids1 = np.array(nids1, dtype='int32')
+                        inids1 = np.searchsorted(all_nids, nids1)
+                        for elem_nid in inids1:
+                            elem = vtkTetra()
+                            pts = elem.GetPointIds()
+                            pts.SetId(0, elem_nid[0])
+                            pts.SetId(1, elem_nid[1])
+                            pts.SetId(2, elem_nid[2])
+                            pts.SetId(3, elem_nid[3])
+                            self.grid.InsertNextCell(elem.GetCellType(), pts)
+
+                    if nids2:
+                        nnodes = 10
+                        nids2 = np.array(nids2, dtype='int32')
+                        inids2 = np.searchsorted(all_nids, nids2)
+                        for elem_nid in inids2:
+                            elem = vtkQuadraticTetra()
+                            pts = elem.GetPointIds()
+                            pts.SetId(0, elem_nid[0])
+                            pts.SetId(1, elem_nid[1])
+                            pts.SetId(2, elem_nid[2])
+                            pts.SetId(3, elem_nid[3])
+                            pts.SetId(4, elem_nid[4])
+                            pts.SetId(5, elem_nid[5])
+                            pts.SetId(6, elem_nid[6])
+                            pts.SetId(7, elem_nid[7])
+                            pts.SetId(8, elem_nid[8])
+                            pts.SetId(9, elem_nid[9])
+                            self.grid.InsertNextCell(elem.GetCellType(), pts)
+
+
+                elif card_type in ['CHEXA']:
+                    #continue
+                    pids_list = []
+                    nids1 = []
+                    nids2 = []
+                    eids1 = []
+                    eids2 = []
+                    for eid in eids:
+                        elem = model.elements[eid]
+                        pid = elem.Pid()
+                        node_ids = elem.node_ids
+                        if len(node_ids) == 8:
+                            eids1.append(eid)
+                            nids1.append(node_ids)
+                        else:
+                            eids2.append(eid)
+                            nids2.append(node_ids)
+                        pids_list.append(pid)
+
+                    if eids1 and eids2:
+                        eids = eids1 + eids2
+
+                    pids = np.array(pids_list, dtype='int32')
+
+                    if nids1:
+                        nids1 = np.array(nids1, dtype='int32')
+                        inids1 = np.searchsorted(all_nids, nids1)
+                        for elem_nid in inids1:
+                            nnodes = 8
+                            elem = vtkHexahedron()
+                            pts = elem.GetPointIds()
+                            pts.SetId(0, elem_nid[0])
+                            pts.SetId(1, elem_nid[1])
+                            pts.SetId(2, elem_nid[2])
+                            pts.SetId(3, elem_nid[3])
+                            pts.SetId(4, elem_nid[4])
+                            pts.SetId(5, elem_nid[5])
+                            pts.SetId(6, elem_nid[6])
+                            pts.SetId(7, elem_nid[7])
+                            self.grid.InsertNextCell(elem.GetCellType(), pts)
+
+                    if nids2:
+                        nids2 = np.array(nids2, dtype='int32')
+                        print(nids2)
+                        inids2 = np.searchsorted(all_nids, nids2)
+                        for elem_nid in inids2:
+                            nnodes = 20
+                            elem = vtkQuadraticHexahedron()
+                            pts = elem.GetPointIds()
+                            pts.SetId(0, elem_nid[0])
+                            pts.SetId(1, elem_nid[1])
+                            pts.SetId(2, elem_nid[2])
+                            pts.SetId(3, elem_nid[3])
+                            pts.SetId(4, elem_nid[4])
+                            pts.SetId(5, elem_nid[5])
+                            pts.SetId(6, elem_nid[6])
+                            pts.SetId(7, elem_nid[7])
+                            pts.SetId(8, elem_nid[8])
+                            pts.SetId(9, elem_nid[9])
+                            pts.SetId(10, elem_nid[10])
+                            pts.SetId(11, elem_nid[11])
+                            pts.SetId(12, elem_nid[12])
+                            pts.SetId(13, elem_nid[13])
+                            pts.SetId(14, elem_nid[14])
+                            pts.SetId(15, elem_nid[15])
+                            pts.SetId(16, elem_nid[16])
+                            pts.SetId(17, elem_nid[17])
+                            pts.SetId(18, elem_nid[18])
+                            pts.SetId(19, elem_nid[19])
+                            self.grid.InsertNextCell(elem.GetCellType(), pts)
+
+                #elif card_type in ['CPENTA']:
+                #elif card_type in ['CPYRAM']:
+
+                elif card_type in non_element_cards:
+                    continue
+                else:
+                    print('card_type = %r' % card_type)
+                    continue
+                all_eids.append(eids)
+                all_pids.append(pids)
+
+        if len(all_eids) == 0:
+            raise RuntimeError('all_eids=0 ... huh?')
+        if len(all_pids) == 0:
+            raise RuntimeError('all_pids=0 ... huh?')
+
+        if len(all_eids) == 1:
+            all_eids = all_eids[0]
+            all_pids = all_pids[0]
+        else:
+            all_eids = np.hstack(all_eids)
+            all_pids = np.hstack(all_pids)
+
+        eids = all_eids
+        pids = all_pids
+        ieids = np.argsort(eids)
+        #print(ieids)
+        self.ieids = ieids
+        # we need some
+        #eids.sort()
+        #-------------------------------------------------------------
+        for i, eid in enumerate(eids):
+            self.eid_map[eid] = i
+
+        # sorted = unsorted[isort]
+        eids = eids[ieids]
+        pids = pids[ieids]
+
+        nelements = len(all_eids)
+        nid_to_pid_map = None
+        #celas1s = model._type_to_id_map['CELAS1']
+        #celas2s = model._type_to_id_map['CELAS2']
+        #celas3s = model._type_to_id_map['CELAS3']
+        #celas4s = model._type_to_id_map['CELAS4']
+
+        #cdamp1s = model._type_to_id_map['CDAMP1']
+        #cdamp2s = model._type_to_id_map['CDAMP2']
+        #cdamp3s = model._type_to_id_map['CDAMP3']
+        #cdamp4s = model._type_to_id_map['CDAMP4']
+
+        #cbars = model._type_to_id_map['CBAR']
+        #cbeams = model._type_to_id_map['CBEAM']
+        #crods = model._type_to_id_map['CROD']
+        #conrods = model._type_to_id_map['CONROD']
+        #ctubes = model._type_to_id_map['CTUBE']
+
+        ## simple
+        #ctria3s = model._type_to_id_map['CTRIA3']
+        #ctriars = model._type_to_id_map['CTRIAR']
+        #cquad4s = model._type_to_id_map['CQUAD4']
+
+        ## curved
+        #ctria6s = model._type_to_id_map['CTRIA6']
+        #cquad8s = model._type_to_id_map['CQUAD8']
+        #cquads = model._type_to_id_map['CQUAD']
+
+        ## axisymmetric
+        #ctriaxs = model._type_to_id_map['CTRIAX']   # the sane CTRIA6-X
+        #ctriax6s = model._type_to_id_map['CTRIAX6'] # the dumb CTRIA6-X
+
+        #cquadxs = model._type_to_id_map['CQUADX']
+        #cquadx4s = model._type_to_id_map['CQUADX4']
+        #cquadx8s = model._type_to_id_map['CQUADX8']
+
+        #ctetras = model._type_to_id_map['CTETRA']
+        #cpentas = model._type_to_id_map['CPENTA']
+        #chexas = model._type_to_id_map['CHEXA']
+        #cpyrams = model._type_to_id_map['CPYRAM']
+
+        #nelements = i
+        self.nElements = nelements
+        #print('nelements=%s pids=%s' % (nelements, list(pids)))
+        #pids = pids[:nelements]
+
+        self.grid.Modified()
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
+        #self.log_info("updated grid")
+
+        cases = OrderedDict()
+        #del pids_dict
+
+        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        icase = 0
+        form = ['Geometry', None, []]
+        form0 = form[2]
+
+        #new_cases = True
+        # set to True to enable node_ids as an result
+        nids_set = True
+        if nids_set:
+            # this intentionally makes a deepcopy
+            nids = np.array(nid_cp_cd[:, 0])
+            cds = np.array(nid_cp_cd[:, 2])
+
+            nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                                location='node', scalar=nids)
+            cases[icase] = (nid_res, (0, 'NodeID'))
+            form0.append(('NodeID', icase, []))
+            icase += 1
+
+            if len(np.unique(cds)) > 1:
+                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
+                                   location='node', scalar=cds)
+                cases[icase] = (cd_res, (0, 'NodeCd'))
+                form0.append(('NodeCd', icase, []))
+                icase += 1
+            self.node_ids = nids
+
+        # set to True to enable elementIDs as a result
+        eids_set = True
+        if eids_set and nelements:
+            #eids = np.zeros(nelements, dtype='int32')
+            #for (eid, eid2) in iteritems(self.eid_map):
+                #eids[eid2] = eid
+            assert isinstance(eids, np.ndarray), type(eids)
+
+            eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                                location='centroid', scalar=eids)
+            cases[icase] = (eid_res, (0, 'ElementID'))
+            form0.append(('ElementID', icase, []))
+            icase += 1
+            self.element_ids = eids
+
+        # subcase_id, resultType, vector_size, location, dataFormat
+        if len(model.properties) and 0:
+            icase, upids, mids, thickness = self._build_properties(
+                model, nelements, eids, pids, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, cases, form0, icase)
+
+            try:
+                icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
+            except:
+                #raise
+                s = StringIO()
+                traceback.print_exc(file=s)
+                sout = s.getvalue()
+                self.log_error(sout)
+                print(sout)
+                #traceback.print_exc(file=sys.stdout)
+                #etype, value, tb = sys.exc_info
+                #print(etype, value, tb)
+                #raise RuntimeError('Optimization Parsing Error') from e
+                #traceback.print_tb(e)
+                #print(e)
+
+        #if self.make_offset_normals_dim and nelements:
+            #icase, normals = self._build_normals_quality(
+                #model, nelements, cases, form0, icase,
+                #xyz_cid0, material_coord,
+                #min_interior_angle, max_interior_angle, dideal_theta,
+                #area, max_skew_angle, taper_ratio,
+                #max_warp_angle, area_ratio, max_aspect_ratio)
+            #self.normals = normals
+        return nid_to_pid_map, icase, cases, form
+
+
     def map_elements(self, points, nid_map, model, j, dim_max,
                      nid_cp_cd, plot=True, xref_loads=True):
         """
@@ -1715,6 +2124,100 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
           A1,A2 are one split form of the CQUAD4 and A3,A4 are the quad
           split in the other direction.
         """
+        self.grid.SetPoints(points)
+        #return self.map_elements2(points, nid_map, model, j, dim_max,
+                                  #nid_cp_cd, plot=plot, xref_loads=xref_loads)
+
+        out = self._map_elements(model, dim_max, nid_map, j)
+        (nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
+         area, min_interior_angle, max_interior_angle, max_aspect_ratio,
+         max_skew_angle, taper_ratio, dideal_theta,
+         area_ratio, max_warp_angle) = out
+
+        self.grid.Modified()
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
+        #self.log_info("updated grid")
+
+        cases = OrderedDict()
+
+
+        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        icase = 0
+        form = ['Geometry', None, []]
+        form0 = form[2]
+
+        #new_cases = True
+        # set to True to enable node_ids as an result
+        nids_set = True
+        if nids_set:
+            # this intentionally makes a deepcopy
+            nids = np.array(nid_cp_cd[:, 0])
+            cds = np.array(nid_cp_cd[:, 2])
+
+            nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                                location='node', scalar=nids)
+            cases[icase] = (nid_res, (0, 'NodeID'))
+            form0.append(('NodeID', icase, []))
+            icase += 1
+
+            if len(np.unique(cds)) > 1:
+                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
+                                   location='node', scalar=cds)
+                cases[icase] = (cd_res, (0, 'NodeCd'))
+                form0.append(('NodeCd', icase, []))
+                icase += 1
+            self.node_ids = nids
+
+        # set to True to enable elementIDs as a result
+        eids_set = True
+        if eids_set and nelements:
+            eids = np.zeros(nelements, dtype='int32')
+            for (eid, eid2) in iteritems(self.eid_map):
+                eids[eid2] = eid
+
+            eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                                location='centroid', scalar=eids)
+            cases[icase] = (eid_res, (0, 'ElementID'))
+            form0.append(('ElementID', icase, []))
+            icase += 1
+            self.element_ids = eids
+
+        # subcase_id, resultType, vector_size, location, dataFormat
+        if len(model.properties):
+            icase, upids, mids, thickness = self._build_properties(
+                model, nelements, eids, pids, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, cases, form0, icase)
+
+            try:
+                icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
+            except:
+                #raise
+                s = StringIO()
+                traceback.print_exc(file=s)
+                sout = s.getvalue()
+                self.log_error(sout)
+                print(sout)
+                #traceback.print_exc(file=sys.stdout)
+                #etype, value, tb = sys.exc_info
+                #print(etype, value, tb)
+                #raise RuntimeError('Optimization Parsing Error') from e
+                #traceback.print_tb(e)
+                #print(e)
+
+        #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
+        if self.make_offset_normals_dim and nelements:
+            icase, normals = self._build_normals_quality(
+                model, nelements, cases, form0, icase,
+                xyz_cid0, material_coord,
+                min_interior_angle, max_interior_angle, dideal_theta,
+                area, max_skew_angle, taper_ratio,
+                max_warp_angle, area_ratio, max_aspect_ratio)
+            self.normals = normals
+        return nid_to_pid_map, icase, cases, form
+
+    def _map_elements(self, model, dim_max, nid_map, j):
+        """helper for map_elements"""
         xyz_cid0 = self.xyz_cid0
         sphere_size = self._get_sphere_size(dim_max)
 
@@ -2424,90 +2927,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.nElements = nelements
         #print('nelements=%s pids=%s' % (nelements, list(pids)))
         pids = pids[:nelements]
-        self.grid.SetPoints(points)
 
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
-        #self.log_info("updated grid")
-
-        cases = OrderedDict()
-        del pids_dict
-
-
-        self.iSubcaseNameMap = {1: ['Nastran', '']}
-        icase = 0
-        form = ['Geometry', None, []]
-        form0 = form[2]
-
-        #new_cases = True
-        # set to True to enable node_ids as an result
-        nids_set = True
-        if nids_set:
-            # this intentionally makes a deepcopy
-            nids = np.array(nid_cp_cd[:, 0])
-            cds = np.array(nid_cp_cd[:, 2])
-
-            nid_res = GuiResult(0, header='NodeID', title='NodeID',
-                                location='node', scalar=nids)
-            cases[icase] = (nid_res, (0, 'NodeID'))
-            form0.append(('NodeID', icase, []))
-            icase += 1
-
-            if len(np.unique(cds)) > 1:
-                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
-                                   location='node', scalar=cds)
-                cases[icase] = (cd_res, (0, 'NodeCd'))
-                form0.append(('NodeCd', icase, []))
-                icase += 1
-            self.node_ids = nids
-
-        # set to True to enable elementIDs as a result
-        eids_set = True
-        if eids_set and nelements:
-            eids = np.zeros(nelements, dtype='int32')
-            for (eid, eid2) in iteritems(self.eid_map):
-                eids[eid2] = eid
-
-            eid_res = GuiResult(0, header='ElementID', title='ElementID',
-                                location='centroid', scalar=eids)
-            cases[icase] = (eid_res, (0, 'ElementID'))
-            form0.append(('ElementID', icase, []))
-            icase += 1
-            self.element_ids = eids
-
-        # subcase_id, resultType, vector_size, location, dataFormat
-        if len(model.properties):
-            icase, upids, mids, thickness = self._build_properties(
-                model, nelements, eids, pids, cases, form0, icase)
-            icase = self._build_materials(model, mids, thickness, cases, form0, icase)
-
-            try:
-                icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
-            except:
-                #raise
-                s = StringIO()
-                traceback.print_exc(file=s)
-                sout = s.getvalue()
-                self.log_error(sout)
-                print(sout)
-                #traceback.print_exc(file=sys.stdout)
-                #etype, value, tb = sys.exc_info
-                #print(etype, value, tb)
-                #raise RuntimeError('Optimization Parsing Error') from e
-                #traceback.print_tb(e)
-                #print(e)
-
-        #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
-        if self.make_offset_normals_dim and nelements:
-            icase, normals = self._build_normals_quality(
-                model, nelements, cases, form0, icase,
-                xyz_cid0, material_coord,
-                min_interior_angle, max_interior_angle, dideal_theta,
-                area, max_skew_angle, taper_ratio,
-                max_warp_angle, area_ratio, max_aspect_ratio)
-            self.normals = normals
-        return nid_to_pid_map, icase, cases, form
+        out = (
+            nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
+            area, min_interior_angle, max_interior_angle, max_aspect_ratio,
+            max_skew_angle, taper_ratio, dideal_theta,
+            area_ratio, max_warp_angle,
+        )
+        return out
 
     def _build_normals_quality(self, model, nelements, cases, form0, icase,
                                xyz_cid0, material_coord,
