@@ -27,8 +27,10 @@ PyQt4/PyQt5/PySide unique
    - S/HABP input
    - OpenVSP adb input/output (remove this...)
    - fast
-   - ugrid
-   - surf
+   - AFLR2, AFLR3
+     - bedge
+     - surf
+     - ugrid
    - csv/txt elemental/nodal results for all formats
    - csv point loading with -u for all formats (multiple files allowed)
    - csv deflection results
@@ -215,8 +217,8 @@ STL
  - load geometry -> STL
  - Coordinate System
 
-SHABP
-=====
+S/HABP
+======
  - geometry (mk5/geo/inp)
    - location, patch number, component, impact, shadow
  - TODO: full trailer parsing
@@ -316,4 +318,8 @@ surf
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys
  - unbreak hotkeys (p, r, X, Y, Z, ???)
- - explcit pulldown for formats
+ - maybe add explcit pulldown for formats
+ - Improved Picking
+   - area picking
+   - polygon picking
+   - pick visible option
