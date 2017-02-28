@@ -2010,12 +2010,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.edge_mapper.SetInput(edges.GetOutput())
 
         self.edge_actor.SetMapper(self.edge_mapper)
-        self.edge_actor.GetProperty().SetColor(0, 0, 0)
+        self.edge_actor.GetProperty().SetColor(0., 0., 0.)
         self.edge_mapper.SetLookupTable(self.color_function)
         self.edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
         prop = self.edge_actor.GetProperty()
-        prop.SetColor(0, 0, 0)
+        prop.SetColor(0., 0., 0.)
         self.edge_actor.SetVisibility(self.is_edges)
         self.rend.AddActor(self.edge_actor)
 

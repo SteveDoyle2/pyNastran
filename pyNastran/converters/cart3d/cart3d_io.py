@@ -108,7 +108,8 @@ class Cart3dIO(object):
         self.nNodes = model.npoints
         self.nElements = model.nelements
 
-        self.grid.Allocate(self.nElements, 1000)
+        grid = self.grid
+        grid.Allocate(self.nElements, 1000)
 
         self.nid_map = {}
         if 0:
@@ -138,12 +139,12 @@ class Cart3dIO(object):
             elem.GetPointIds().SetId(0, node_ids[0])
             elem.GetPointIds().SetId(1, node_ids[1])
             elem.GetPointIds().SetId(2, node_ids[2])
-            self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+            grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
         self._create_cart3d_free_edges(model, nodes, elements)
 
 

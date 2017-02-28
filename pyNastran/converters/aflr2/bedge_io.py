@@ -45,7 +45,9 @@ class BEdge_IO(object):
             'nodes', color=black, line_width=5, opacity=1., point_size=3,
             representation='point')
         self.alt_grids['nodes'].Allocate(nnodes, 1000)
-        self.grid.Allocate(self.nElements, 1000)
+
+        grid = self.grid
+        grid.Allocate(self.nElements, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -80,10 +82,10 @@ class BEdge_IO(object):
 
         self.nElements = nelements
         self.alt_grids['nodes'].SetPoints(points)
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
         #print("updated grid")
 
         # loadCart3dResults - regions/loads

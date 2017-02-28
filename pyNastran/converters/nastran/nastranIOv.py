@@ -981,94 +981,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.alt_grids[name].SetPoints(points)
         return j
 
-    def set_caero_wireframe_points(
-            self, name, aero_box_ids, box_id_to_caero_element_map,
-            caero_points, structure_points, xyz_cid0,
-            zfighting_offset=0.0, j=0):
-        """
-        Creates the CAERO sub-panels?
-
-        Parameters
-        ----------
-        name : str
-            ???
-        aero_box_ids : List[int]
-            ???
-        box_id_to_caero_element_map : Dict[key]=value
-            key : ???
-                ???
-            value : ???
-                ???
-        caero_points : ???
-            ???
-        xyz_cid0 : ???
-            ???
-        zfighting_offset : float
-            z-fighting is when two elements "fight" for who is in front
-            leading.  The standard way to fix this is to bump the
-            element.
-        j : int???
-            ???
-        """
-        raise RuntimeError('is this used???')
-        points_list = []
-        missing_boxes = []
-        for box_id in aero_box_ids:
-            try:
-                ipoints = box_id_to_caero_element_map[box_id]
-            except KeyError:
-                missing_boxes.append(box_id)
-                continue
-            points_list.append(caero_points[ipoints, :])
-        if missing_boxes:
-            msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
-            self.log_error(msg)
-
-        nid_map = self.nid_map
-        structure_points2 = []
-        for nid in structure_points:
-            if nid in nid_map:
-                structure_points2.append(nid)
-
-        points_list = np.array(points_list)
-        ncaero_sub_points = len(np.unique(points_list.ravel()))
-
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(ncaero_sub_points)
-
-        vtk_type = vtkQuad().GetCellType()
-        for box_id in aero_box_ids:
-            try:
-                elementi = box_id_to_caero_element_map[box_id]
-            except KeyError:
-                continue
-            pointsi = caero_points[elementi]
-            for ipoint, point in enumerate(pointsi):
-                # shift z to remove z-fighting with caero in surface representation
-                point[1] += zfighting_offset
-                point[2] += zfighting_offset
-                points.InsertPoint(j + ipoint, *point)
-            elem = vtkQuad()
-            elem.GetPointIds().SetId(0, j)
-            elem.GetPointIds().SetId(1, j + 1)
-            elem.GetPointIds().SetId(2, j + 2)
-            elem.GetPointIds().SetId(3, j + 3)
-            self.alt_grids[name].InsertNextCell(vtk_type, elem.GetPointIds())
-            assert ipoint == 3, ipoint
-            j += ipoint + 1
-
-        #xyz_cid0[i, :] = node.get_position()
-        #nid_map[nid] = i
-
-        vtk_type = vtk.vtkVertex().GetCellType()
-        for i, nid in enumerate(structure_points2):
-            ipoint = nid_map[nid]
-            point = xyz_cid0[i, :]
-            points.InsertPoint(j, *point)
-            j += 1
-        self.alt_grids[name].SetPoints(points)
-        return j
-
     def set_conm_grid(self, nconm2, dim_max, model, j=0):
         """
         creates the mass secondary actor called:
@@ -1127,7 +1039,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          - mpc_independent_id=mpc_id  (includes rigid elements)
          - suport_id=suport1_id       (includes SUPORT/SUPORT1)
 
-        TODO: consider changing the varying ids to
+        TODO: consider changing the varying ids to huh???
         """
         spc_names = []
         mpc_names = []
@@ -1176,8 +1088,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
                 suport_id = subcase.get_parameter('SUPORT1')[0]
                 if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:  # TODO: is this line correct???
-                    if suport_id is not None and suport_id not in suport1_ids_used:  # TODO: this seems unnecessary
-                        #print('SUPORT1/SUPORT')
+
+                    # TODO: this seems unnecessary
+                    if suport_id is not None and suport_id not in suport1_ids_used:
+                        # SUPORT1 / SUPORT
                         suport1_ids_used.add(suport_id)
                         suport_name = self._fill_suport(suport_id, subcase_id, dim_max, model)
                         suport_names.append(suport_name)
@@ -1185,7 +1099,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # create a SUPORT actor if there are no SUPORT1s
         # otherwise, we already included it in suport_id=suport_id
         if len(suport_names) == 0 and model.suport:
-            #print('SUPORT')
+            # SUPORT
             ids = []
             for suport in model.suport:
                 idsi = suport.node_ids
@@ -1206,8 +1120,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                        point_size=5, representation='point', is_visible=False)
 
         # node_ids = model.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
-        node_ids_c1 = model.get_SPCx_node_ids_c1(spc_id, exclude_spcadd=False,
-                                                 stop_on_failure=False)
+        node_ids_c1 = model.get_SPCx_node_ids_c1(
+            spc_id, exclude_spcadd=False, stop_on_failure=False)
 
         node_ids = []
         for nid, c1 in iteritems(node_ids_c1):
@@ -1252,6 +1166,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # TODO: this should be reworked
         bar_nids, bar_types, out = self._get_bar_yz_arrays(model, bar_beam_eids, scale, debug)
+        no_axial_torsion, no_shear_bending, no_dofs = out
 
         bar_nids = list(bar_nids)
         self.create_alternate_vtk_grid(
@@ -1309,7 +1224,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
         if self.make_released_dofs2:
-            no_axial, no_torsion = out0
+            no_axial, no_torsion = no_axial_torsion
             if no_axial.max() == 1:
                 bar_form[2].append(['No Axial', icase, []])
                 axial_res = GuiResult(0, header='No Axial', title='No Axial',
@@ -1325,7 +1240,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
         if self.make_released_dofs1:
-            no_shear_y, no_shear_z, no_bending_y, no_bending_z = out1
+            no_shear_y, no_shear_z, no_bending_y, no_bending_z = no_shear_bending
             if no_shear_y.max() == 1:
                 bar_form[2].append(['No Shear Y', icase, []])
                 shear_y_res = GuiResult(0, header='No Shear Y', title='No Shear Y',
@@ -1352,7 +1267,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
         if self.make_released_dofs2 and 0:
-            no_bending, no_bending_bad, no_6_16, no_0_456, no_0_56, no_56_456, no_0_6, no_0_16 = out2
+            no_bending, no_bending_bad, no_6_16, no_0_456, no_0_56, no_56_456, no_0_6, no_0_16 = no_dofs
             if no_bending.max() == 1:
                 bar_form[2].append(['No Bending', icase, []])
                 bending_res = GuiResult(0, header='No Bending', title='No Bending',
@@ -1680,7 +1595,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             'SUPORT', 'SUPORT1', 'EIGR', 'EIGRL', 'EIGB', 'EIGC',
             'GRID', 'CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C', 'CORD2S',
         ]
-
+        grid = self.grid
         all_eids = []
         all_pids = []
         all_nids = nid_cp_cd[:, 0]
@@ -1691,7 +1606,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eids = model._type_to_id_map[card_type]
                 if card_type in ['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
                     nid = np.array([model.elements[eid].node_ids for eid in eids],
-                                        dtype='int32')
+                                   dtype='int32')
                     pids = np.array([model.elements[eid].Pid() for eid in eids],
                                     dtype='int32')
                     inids = np.searchsorted(all_nids, nid)
@@ -1702,7 +1617,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         pts = elem.GetPointIds()
                         pts.SetId(0, elem_nid[0])
                         pts.SetId(1, elem_nid[1])
-                        self.grid.InsertNextCell(elem.GetCellType(), pts)
+                        grid.InsertNextCell(elem.GetCellType(), pts)
 
                 elif card_type in ['CTRIA3', 'CTRIAR']:
                     nnodes = 3
@@ -1719,7 +1634,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         pts.SetId(0, elem_nid[0])
                         pts.SetId(1, elem_nid[1])
                         pts.SetId(2, elem_nid[2])
-                        self.grid.InsertNextCell(elem.GetCellType(), pts)
+                        grid.InsertNextCell(elem.GetCellType(), pts)
 
                 elif card_type in ['CQUAD4']:
                     nnodes = 4
@@ -1736,7 +1651,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         pts.SetId(1, elem_nid[1])
                         pts.SetId(2, elem_nid[2])
                         pts.SetId(3, elem_nid[3])
-                        self.grid.InsertNextCell(elem.GetCellType(), pts)
+                        grid.InsertNextCell(elem.GetCellType(), pts)
                 elif card_type == 'CTETRA':
                     pids_list = []
                     nids1 = []
@@ -1763,7 +1678,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             pts.SetId(1, elem_nid[1])
                             pts.SetId(2, elem_nid[2])
                             pts.SetId(3, elem_nid[3])
-                            self.grid.InsertNextCell(elem.GetCellType(), pts)
+                            grid.InsertNextCell(elem.GetCellType(), pts)
 
                     if nids2:
                         nnodes = 10
@@ -1782,7 +1697,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             pts.SetId(7, elem_nid[7])
                             pts.SetId(8, elem_nid[8])
                             pts.SetId(9, elem_nid[9])
-                            self.grid.InsertNextCell(elem.GetCellType(), pts)
+                            grid.InsertNextCell(elem.GetCellType(), pts)
 
 
                 elif card_type in ['CHEXA']:
@@ -1824,7 +1739,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             pts.SetId(5, elem_nid[5])
                             pts.SetId(6, elem_nid[6])
                             pts.SetId(7, elem_nid[7])
-                            self.grid.InsertNextCell(elem.GetCellType(), pts)
+                            grid.InsertNextCell(elem.GetCellType(), pts)
 
                     if nids2:
                         nids2 = np.array(nids2, dtype='int32')
@@ -1854,7 +1769,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             pts.SetId(17, elem_nid[17])
                             pts.SetId(18, elem_nid[18])
                             pts.SetId(19, elem_nid[19])
-                            self.grid.InsertNextCell(elem.GetCellType(), pts)
+                            grid.InsertNextCell(elem.GetCellType(), pts)
 
                 #elif card_type in ['CPENTA']:
                 #elif card_type in ['CPYRAM']:
@@ -1940,9 +1855,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print('nelements=%s pids=%s' % (nelements, list(pids)))
         #pids = pids[:nelements]
 
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
         #self.log_info("updated grid")
 
         cases = OrderedDict()
@@ -2124,7 +2039,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
           A1,A2 are one split form of the CQUAD4 and A3,A4 are the quad
           split in the other direction.
         """
-        self.grid.SetPoints(points)
+        grid = self.grid
+        grid.SetPoints(points)
         #return self.map_elements2(points, nid_map, model, j, dim_max,
                                   #nid_cp_cd, plot=plot, xref_loads=xref_loads)
 
@@ -2134,9 +2050,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          max_skew_angle, taper_ratio, dideal_theta,
          area_ratio, max_warp_angle) = out
 
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
         #self.log_info("updated grid")
 
         cases = OrderedDict()
@@ -2333,6 +2250,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nid_to_pid_map = defaultdict(list)
         pid = 0
 
+        grid = self.grid
         nplotels = len(model.plotels)
         if nplotels:
             lines = []
@@ -2390,7 +2308,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(0, n1)
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, (CTRIA6, CPLSTN6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):

@@ -39,12 +39,9 @@ class FGridReader(object):
                 nodesi[i0 + 2] = sline[2]
                 i0 += 3
 
-            #nodes = vstack([x, y, z]).T
-            #nodes = hstack([x, y, z]).reshape((3, nnodes)).T
-            #nodes = hstack([x, y, z]).reshape((3, nnodes)).T
-            #nodes = nodesi.reshape((nnodes, 3))
-            nodes = nodesi.reshape((3, nnodes)).T
-            #print('nodes.shape = %s' % str(nodes.shape))
+            # we want a contiguous array
+            nodes = nodesi.reshape((3, nnodes)).T.ravel().reshape(nnodes, 3)
+
             ntri_lines = ntris // 2
             j = 0
             for i in range(ntri_lines):

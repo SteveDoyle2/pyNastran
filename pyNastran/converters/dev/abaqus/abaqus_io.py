@@ -182,6 +182,7 @@ class AbaqusIO(object):
         )
         points.SetData(points_array)
 
+        grid = self.grid
         nid_offset = -1
         for part_name, part in iteritems(model.parts):
             nnodesi = part.nodes.shape[0]
@@ -225,7 +226,7 @@ class AbaqusIO(object):
                     elem = vtkLine()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             if n_cpe3:
                 eids = part.cpe3[:, 0]
@@ -235,7 +236,7 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
-                    self.grid.InsertNextCell(5, elem.GetPointIds())
+                    grid.InsertNextCell(5, elem.GetPointIds())
 
             if n_cpe4:
                 eids = part.cpe4[:, 0]
@@ -246,7 +247,7 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             if n_cpe4r:
                 eids = part.cpe4r[:, 0]
@@ -257,7 +258,7 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             if n_coh2d4:
                 eids = part.coh2d4[:, 0]
@@ -268,7 +269,7 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             if n_cohax4:
                 eids = part.cohax4[:, 0]
@@ -279,7 +280,7 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             if n_cax3:
                 eids = part.cax3[:, 0]
@@ -289,7 +290,7 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
-                    self.grid.InsertNextCell(5, elem.GetPointIds())
+                    grid.InsertNextCell(5, elem.GetPointIds())
 
             if n_cax4r:
                 eids = part.cax4r[:, 0]
@@ -300,7 +301,7 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             # solids
             if n_c3d10h:
@@ -313,13 +314,13 @@ class AbaqusIO(object):
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             nid_offset += nnodesi
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
 
         # loadCart3dResults - regions/loads
         #self.turn_text_on()

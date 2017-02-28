@@ -23,18 +23,6 @@ class FastIO(object):
                 None, None)
         return data
 
-    def load_fast_results(self, flo_filename, dirname):
-        model = Usm3dReader(log=self.log, debug=False)
-        #self.result_cases = {}
-        npoints = self.nNodes
-        node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
-
-        cases = self.result_cases
-        bcs = None
-        mapbc = None
-        bcmap_to_bc_name = None
-        self._fill_fast_results(cases, model)
-
     def load_fast_geometry(self, fgrid_filename, dirname, name='main', plot=True):
         skip_reading = self._remove_old_geometry(fgrid_filename)
         if skip_reading:
@@ -78,25 +66,19 @@ class FastIO(object):
         #print("nNodes = %i" % self.nNodes)
         #print("nElements = %i" % self.nElements)
 
-        self.grid.Allocate(self.nElements, 1000)
+        grid = self.grid
+        grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
+        points = self.numpy_to_vtk_points(nodes)
         self.nid_map = {}
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
-
-        nid = 0
-        for i in range(nnodes):
-            points.InsertPoint(nid, nodes[i, :])
-            nid += 1
 
         if dimension_flag == 2:
             for (n0, n1, n2) in tris:
@@ -105,7 +87,7 @@ class FastIO(object):
                 elem.GetPointIds().SetId(0, n0)
                 elem.GetPointIds().SetId(1, n1)
                 elem.GetPointIds().SetId(2, n2)
-                self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         elif dimension_flag == 3:
             if ntets:
                 for (n0, n1, n2, n3) in tets:
@@ -114,14 +96,14 @@ class FastIO(object):
                     elem.GetPointIds().SetId(1, n1)
                     elem.GetPointIds().SetId(2, n2)
                     elem.GetPointIds().SetId(3, n3)
-                    self.grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         else:
             raise RuntimeError('dimension_flag=%r' % dimension_flag)
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
 
         # regions/loads
         self. turn_text_on()
