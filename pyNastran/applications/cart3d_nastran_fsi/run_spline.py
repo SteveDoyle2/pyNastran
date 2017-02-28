@@ -20,18 +20,18 @@ log = get_logger2(None, debug=debug)
 
 def read_op2(op2_filename, isubcase=1):
     """"""
-    log.info('---starting deflectionReader.init of %s---' % op2_filename)
+    log.info('---starting deflection_reader.init of %s---' % op2_filename)
     op2 = OP2()
     op2.set_subcases(subcases=[isubcase])
     op2.set_results('displacements')
     op2.read_op2(op2_filename)
     displacment_obj = op2.displacements[isubcase]
-    log.info('---finished deflectionReader.init of %s---' % op2_filename)
+    log.info('---finished deflection_reader.init of %s---' % op2_filename)
     return displacment_obj
 
 
 #def read_f06(f06_filename, isubcase=1):
-    #log.info('---starting deflectionReader.init of %s---' % f06_filename)
+    #log.info('---starting deflection_reader.init of %s---' % f06_filename)
     #f06 = F06()
     #terms = ['force', 'stress', 'stress_comp', 'strain', 'strain_comp',
              #'displacement', 'grid_point_forces']
@@ -41,7 +41,7 @@ def read_op2(op2_filename, isubcase=1):
 
     ##op2.nastranModel.printDisplacement()
     ##displacements = convertDisplacements(displacements)
-    #log.info('---finished deflectionReader.init of %s---' % f06_filename)
+    #log.info('---finished deflection_reader.init of %s---' % f06_filename)
     #return displacment_obj.translations
 
 
@@ -71,7 +71,8 @@ def write_new_cart3d_mesh(cfd_grid_file, cfd_grid_file2, wA):
         points2[ipoint] = [x, y, z + wai]
 
     # mirroring model
-    points, elements, regions, loads = cart.make_mirror_model(points2, elements, regions, loads)
+    points, elements, regions, loads = cart.make_mirror_model(
+        points2, elements, regions, loads)
 
     # writing half model; no loads (cleans up leftover parameters)
     cart.write_cart3d(cfd_grid_file, points, elements, regions)
@@ -124,21 +125,32 @@ def run_map_deflections(node_list, bdf_filename, out_filename, cart3d, cart3d2, 
     return (wA, wS)
 
 def get_WA(node_list, C, wS, mesh, aero_points):
+    """
+    Cannot use solve
+
+    [C]*[P] = [wS]
+    [P] = [C]^-1*[wS]
+    [wA] = [xK] [Cws]
+
+    """
     log.info('---starting get_WA---')
     #print print_matrix(C)
 
-    C = inv(C) * wS  # Cws matrix, P matrix
-    #P = solve(C, wS)
-    #C*P=wS
-    #P = C^-1*wS
+    Cws = inv(C) * wS  # Cws matrix, P matrix
 
-    wA = getXK_matrix(C, node_list, mesh, aero_points)
+    wA = getXK_matrix(Cws, node_list, mesh, aero_points)
     #wA = xK*C*wS
     log.info('---finished get_WA---')
     sys.stdout.flush()
     return wA
 
 def getXK_matrix(Cws, node_list, mesh, aero_points):
+    """
+    Calculates the XK matrix to
+
+    xK = Rij^2 = (xa-xs)^2. + (ya-ys)^2
+    xK = Rij^2 * ln(Rij^2) / piD16
+    """
     log.info('---starting getXK_matrix---')
     D = 1.
     piD16 = pi * D * 16.
@@ -146,7 +158,6 @@ def getXK_matrix(Cws, node_list, mesh, aero_points):
     nnodes = len(node_list)
     #nPoints = len(aero_points.keys())
     wa = {}
-    #i = 0
     for iaero, aero_node in sorted(iteritems(aero_points)):
         xK = zeros(nnodes+3, 'd')
         #nodeI = mesh.Node(iNode)
@@ -173,7 +184,6 @@ def getXK_matrix(Cws, node_list, mesh, aero_points):
         wai = xK * Cws
         wa[iaero] = wai[0, 0]
         #print("w[%s]=%s" % (iaero, wi[0, 0]))
-        #i += 1
     #print('---wa---')
     #print('wa = ', wa)
     log.info('---finished getXK_matrix---')

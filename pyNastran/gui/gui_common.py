@@ -777,9 +777,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if not self.html_logging:
             print(typ, msg)
             return
-        _fr = sys._getframe(4)  # jump to get out of the logger code
-        n = _fr.f_lineno
-        filename = os.path.basename(_fr.f_globals['__file__'])
 
         if typ == 'DEBUG' and not self.show_debug:
             return
@@ -790,15 +787,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
         elif typ == 'COMMAND' and not self.show_command:
             return
 
-        if typ in ['GUI', 'COMMAND']:
-            msg = '   fname=%-25s lineNo=%-4s   %s\n' % (filename, n, msg)
+        _fr = sys._getframe(4)  # jump to get out of the logger code
+        n = _fr.f_lineno
+        filename = os.path.basename(_fr.f_globals['__file__'])
+
+        #if typ in ['GUI', 'COMMAND']:
+        msg = '   fname=%-25s lineNo=%-4s   %s\n' % (filename, n, msg)
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
 
         #message colors
         dark_orange = '#EB9100'
-        cols = {
+        colors = {
             "GUI" : "blue",
             "COMMAND" : "green",
             "GUI ERROR" : "Crimson",
@@ -808,8 +809,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         }
         msg = msg.rstrip().replace('\n', '<br>')
         msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
-        if typ in cols:
-            msg = '<font color="%s"> %s </font>' % (cols[typ], msg)
+        if typ in colors:
+            msg = '<font color="%s"> %s </font>' % (colors[typ], msg)
 
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
@@ -2001,23 +2002,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def get_edges(self):
         """Create the edge actor"""
         edges = vtk.vtkExtractEdges()
+        edge_mapper = self.edge_mapper
+        edge_actor = self.edge_actor
+
         if self.vtk_version[0] >= 6:
-            # new
             edges.SetInputData(self.grid_selected)
-            self.edge_mapper.SetInputConnection(edges.GetOutputPort())
+            edge_mapper.SetInputConnection(edges.GetOutputPort())
         else:
             edges.SetInput(self.grid_selected)
-            self.edge_mapper.SetInput(edges.GetOutput())
+            edge_mapper.SetInput(edges.GetOutput())
 
-        self.edge_actor.SetMapper(self.edge_mapper)
-        self.edge_actor.GetProperty().SetColor(0., 0., 0.)
-        self.edge_mapper.SetLookupTable(self.color_function)
-        self.edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        edge_actor.SetMapper(edge_mapper)
+        edge_actor.GetProperty().SetColor(0., 0., 0.)
+        edge_mapper.SetLookupTable(self.color_function)
+        edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-        prop = self.edge_actor.GetProperty()
+        prop = edge_actor.GetProperty()
         prop.SetColor(0., 0., 0.)
-        self.edge_actor.SetVisibility(self.is_edges)
-        self.rend.AddActor(self.edge_actor)
+        edge_actor.SetVisibility(self.is_edges)
+        self.rend.AddActor(edge_actor)
 
     def post_group_by_name(self, name):
         """posts a group with a specific name"""
@@ -2439,7 +2442,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             load_function = load_functions[filter_index]
             has_results = has_results_list[filter_index]
             #return is_failed
-        return is_failed, (load_function, filter_index, formats)
+        return is_failed, (infile_name, load_function, filter_index, formats)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
                          plot=True, raise_error=True):
@@ -2463,7 +2466,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if is_failed:
             return
 
-        load_function, filter_index, formats = out
+        infile_name, load_function, filter_index, formats = out
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]
 
@@ -2471,6 +2474,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 name = 'main'
             else:
                 print('name = %r' % name)
+
+            if name != self.name:
+                #scalar_range = self.grid_selected.GetScalarRange()
+                #self.grid_mapper.SetScalarRange(scalar_range)
+                self.grid_mapper.ScalarVisibilityOff()
+                #self.grid_mapper.SetLookupTable(self.color_function)
             self.name = str(name)
             self._reset_model(name)
 
@@ -2569,6 +2578,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.grid_mapper = grid_mapper
             self.geom_actor = geom_actor
             self.grid.Modified()
+
+            # link the current "main" to the scalar bar
+            scalar_range = self.grid_selected.GetScalarRange()
+            self.grid_mapper.ScalarVisibilityOn()
+            self.grid_mapper.SetScalarRange(scalar_range)
+            self.grid_mapper.SetLookupTable(self.color_function)
+
+            self.edge_actor = vtk.vtkLODActor()
+            self.edge_actor.DragableOff()
+            self.edge_mapper = vtk.vtkPolyDataMapper()
+
+            # create the edges
+            self.get_edges()
         else:
             self.grid.Reset()
             self.grid.Modified()

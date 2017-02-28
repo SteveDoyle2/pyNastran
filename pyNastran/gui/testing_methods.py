@@ -144,10 +144,14 @@ class GuiAttributes(object):
                 #super(QMainWindow, self).__init__()
 
         self.main_grids = {}
-        #self.main_edge_actors = {}
-        #self.main_grid_mappers  = {}
-        #self.main_geometry_actors  = {}
+        self.main_grid_mappers  = {}
+        self.main_geometry_actors  = {}
 
+        self.main_edge_mappers = {}
+        self.main_edge_actors = {}
+
+    #-------------------------------------------------------------------
+    # geom
     @property
     def grid(self):
         #print('get grid; %r' % self.name)
@@ -158,30 +162,41 @@ class GuiAttributes(object):
         #print('set grid; %r' % self.name)
         self.main_grids[self.name] = grid
 
-    #@property
-    #def grid_mapper(self):
-        #return self.main_grid_mappers[self.name]
+    @property
+    def grid_mapper(self):
+        return self.main_grid_mappers[self.name]
 
-    #@grid_mapper.setter
-    #def grid_mapper(self, grid_mapper):
-        #self.main_grid_mappers[self.name] = grid_mapper
+    @grid_mapper.setter
+    def grid_mapper(self, grid_mapper):
+        self.main_grid_mappers[self.name] = grid_mapper
 
-    #@property
-    #def edge_actor(self):
-        #return self.main_edge_actors[self.name]
+    @property
+    def geom_actor(self):
+        return self.main_geometry_actors[self.name]
 
-    #@edge_actor.setter
-    #def edge_actor(self, edge_actor):
-        #self.main_edge_actors[self.name] = edge_actor
+    @geom_actor.setter
+    def geom_actor(self, geom_actor):
+        self.main_geometry_actors[self.name] = geom_actor
 
-    #@property
-    #def geom_actor(self):
-        #return self.main_geometry_actors[self.name]
+    #-------------------------------------------------------------------
+    # edges
+    @property
+    def edge_mapper(self):
+        return self.main_edge_mappers[self.name]
 
-    #@geom_actor.setter
-    #def geom_actor(self, geom_actor):
-        #self.main_geometry_actors[self.name] = geom_actor
+    @edge_mapper.setter
+    def edge_mapper(self, edge_mapper):
+        self.main_edge_mappers[self.name] = edge_mapper
 
+    @property
+    def edge_actor(self):
+        return self.main_edge_actors[self.name]
+
+    @edge_actor.setter
+    def edge_actor(self, edge_actor):
+        self.main_edge_actors[self.name] = edge_actor
+
+    #-------------------------------------------------------------------
     def numpy_to_vtk_points(self, nodes, points=None, dtype='<f'):
         """
         common method to account for vtk endian quirks and

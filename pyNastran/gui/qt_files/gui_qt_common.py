@@ -357,6 +357,8 @@ class GuiCommon(GuiAttributes):
                            revert_displaced=True):
         if name is None:
             return
+
+        grid = self.grid
         name_str = self._names_storage.get_name_string(name)
         if not self._names_storage.has_exact_name(name):
             grid_result.SetName(name_str)
@@ -367,7 +369,7 @@ class GuiCommon(GuiAttributes):
                 self._update_grid(self._xyz_nominal)
 
             if location == 'centroid':
-                cell_data = self.grid.GetCellData()
+                cell_data = grid.GetCellData()
                 if self._names_storage.has_close_name(name):
                     cell_data.RemoveArray(name_str)
                     self._names_storage.remove(name)
@@ -377,7 +379,7 @@ class GuiCommon(GuiAttributes):
                               'result_type=%s subtitle=%s label=%s'
                               % (vector_size, subcase_id, result_type, subtitle, label))
             elif location == 'node':
-                point_data = self.grid.GetPointData()
+                point_data = grid.GetPointData()
                 if self._names_storage.has_close_name(name):
                     point_data.RemoveArray(name_str)
                     self._names_storage.remove(name)
@@ -409,16 +411,16 @@ class GuiCommon(GuiAttributes):
                 raise RuntimeError(location)
 
         if location == 'centroid':
-            cell_data = self.grid.GetCellData()
+            cell_data = grid.GetCellData()
             cell_data.SetActiveScalars(name_str)
 
-            point_data = self.grid.GetPointData()
+            point_data = grid.GetPointData()
             point_data.SetActiveScalars(None)
         elif location == 'node':
-            cell_data = self.grid.GetCellData()
+            cell_data = grid.GetCellData()
             cell_data.SetActiveScalars(None)
 
-            point_data = self.grid.GetPointData()
+            point_data = grid.GetPointData()
             if vector_size == 1:
                 point_data.SetActiveScalars(name_str)
             elif vector_size == 3:
@@ -429,7 +431,7 @@ class GuiCommon(GuiAttributes):
         else:
             raise RuntimeError(location)
 
-        self.grid.Modified()
+        grid.Modified()
         self.grid_selected.Modified()
         #self.update_all()
         #self.update_all()

@@ -1,27 +1,4 @@
 from __future__ import print_function
-#include <vtkVersion.h
-#include <vtkSmartPointer.h
-#include <vtkPointData.h
-#include <vtkIdTypeArray.h
-#include <vtkDataSetSurfaceFilter.h
-#include <vtkRendererCollection.h
-#include <vtkProperty.h
-#include <vtkPlanes.h
-#include <vtkObjectFactory.h
-#include <vtkPolyDataMapper.h
-#include <vtkActor.h
-#include <vtkRenderWindow.h
-#include <vtkRenderer.h
-#include <vtkRenderWindowInteractor.h
-#include <vtkPolyData.h
-#include <vtkPointSource.h
-#include <vtkInteractorStyleRubberBandPick.h
-#include <vtkAreaPicker.h
-#include <vtkExtractGeometry.h
-#include <vtkDataSetMapper.h
-#include <vtkUnstructuredGrid.h
-#include <vtkVertexGlyphFilter.h
-#include <vtkIdFilter.h
 
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor

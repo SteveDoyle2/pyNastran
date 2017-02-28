@@ -28,9 +28,9 @@ log = get_logger2(None, debug=debug)
 
 def entry_exit(func):
     def new_f(*args, **kwargs):
-        log.info("Entering", func.__name__)
+        log.info("Entering %s" % func.__name__)
         func(*args, **kwargs)
-        log.info("Exited", func.__name__)
+        log.info("Exited %s" % func.__name__)
     return new_f
 
 class LoadMapping(object):
