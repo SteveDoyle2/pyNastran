@@ -113,6 +113,22 @@ class GuiCommon(GuiAttributes):
         case = obj.get_result(i, name)
         return name, case
 
+    def _get_sidebar_data(self, name):
+        """
+        gets the form for the selected name
+
+        Parameters
+        ----------
+        name : str
+            the name that was selected
+
+        Returns
+        -------
+        form : List[tuple]
+            the form data
+        """
+        return []
+
     def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
                   min_value=None, max_value=None, is_legend_shown=None):
         if not skip_click_check:

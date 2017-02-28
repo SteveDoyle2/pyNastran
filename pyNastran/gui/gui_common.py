@@ -4250,7 +4250,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             t = (i, [])
             data.append(t)
 
-        self.res_widget.update_results(form)
+        self.res_widget.update_results(form, self.name)
 
         key = self.case_keys[0]
         location = self.get_case_location(key)

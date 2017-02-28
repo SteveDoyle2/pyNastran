@@ -209,6 +209,7 @@ class Sidebar(QWidget):
     +--------------+
     """
     def __init__(self, parent, debug=False):
+        """creates the buttons in the Sidebar, not the actual layout"""
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
@@ -251,19 +252,23 @@ class Sidebar(QWidget):
         self.apply_button = QPushButton('Apply', self)
         self.apply_button.clicked.connect(self.on_apply)
 
+        self.name = str(name)
+        self.names = [name]
         self.name_label = QLabel("Name:")
-        self.name_edit = QComboBox()
-        self.name_edit.addItem(str(name))
-        self.name_edit.setDisabled(True)
+        self.name_pulldown = QComboBox()
+        self.name_pulldown.addItem(name)
+        self.name_pulldown.setDisabled(True)
+        self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
 
         self.setup_layout()
 
     def setup_layout(self):
+        """creates the sidebar visual layout"""
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
 
         hbox.addWidget(self.name_label)
-        hbox.addWidget(self.name_edit)
+        hbox.addWidget(self.name_pulldown)
         vbox.addLayout(hbox)
         vbox.addWidget(self.result_case_window)
         vbox.addWidget(self.result_data_window)
@@ -288,11 +293,33 @@ class Sidebar(QWidget):
     def get_form(self):
         return self.result_case_window.data
 
-    def update_results(self, data):
+    def update_results(self, data, name):
+        """
+        Updates the sidebar
+
+        Parameters
+        ----------
+        data : List[tuple]
+            the form data
+        name : str
+            the name that goes at the side
+        """
+        name = str(name)
+        if name in self.names:
+            i = self.names.index(name)
+            self.name_pulldown.setCurrentIndex(i)
+        else:
+            self.name_pulldown.addItem(name)
+            self.names.append(name)
+        if len(self.names) >= 2:
+            self.name_pulldown.setEnabled(True)
+        self.name = name
+
         self.result_case_window.update_data(data)
         self.apply_button.setEnabled(True)
 
     def update_methods(self, data):
+        """the methods is a hidden box"""
         self.result_data_window.update_data(data)
         self.apply_button.setEnabled(True)
 
@@ -303,6 +330,12 @@ class Sidebar(QWidget):
 
     def on_pulldown(self, event):
         print('pulldown...')
+
+    def on_update_name(self, event):
+        """user clicked the pulldown"""
+        name = str(self.name_pulldown.currentText())
+        data = self.parent._get_sidebar_data(name)
+        #self.result_case_window.update_data(data)
 
     def on_apply(self, event):
         data = self.result_case_window.data

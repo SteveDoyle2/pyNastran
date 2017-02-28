@@ -1543,7 +1543,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _get_sphere_size(self, dim_max):
         return 0.01 * dim_max
 
-    def createPolyData(self, verts, tris):
+    def create_poly_data(self, verts, tris):
         """Create and return a vtkPolyData.
 
         verts is a (N, 3) numpy array of float vertices

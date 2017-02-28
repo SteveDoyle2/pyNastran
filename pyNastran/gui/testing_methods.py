@@ -331,7 +331,7 @@ class GuiAttributes(object):
             t = (i, [])
             data.append(t)
 
-        self.res_widget.update_results(formi)
+        self.res_widget.update_results(formi, self.name)
 
         key = list(self.case_keys)[0]
         location = self.get_case_location(key)
