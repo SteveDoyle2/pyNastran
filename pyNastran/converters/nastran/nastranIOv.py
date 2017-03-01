@@ -1563,8 +1563,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         poly = vtk.vtkPolyData()
 
-        points = vtk.vtkPoints()
         from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+
+        points = vtk.vtkPoints()
         points.SetData(numpy_to_vtk(verts))
         poly.SetPoints(points)
 

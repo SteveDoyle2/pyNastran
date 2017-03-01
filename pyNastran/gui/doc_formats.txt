@@ -2,21 +2,25 @@
 
 Nastran
 =======
- - load geometry -> .bdf/nas/dat
+ - load geometry -> .bdf/nas/dat/op2
    - shows CAERO panels
    - change between sub-element and element using dynamic menu
    - element quality metrics
 
- - load results -> op2/f06
+ - load results -> op2
    - SOL 101
      - (nodal/centroidal) stress
-     - (nodal) displacement, velocity, acceleration, spcForces, mpcForces, temperatures
+     - (nodal) displacement, velocity, acceleration, spc_forces, mpc_forces, temperatures
      - displacement shown as displaced model
    - Stress
-     - rodStress, barStress, beamStress, plateStress, solidStress, compositePlateStress (centroidal only)
+     - rod_stress, bar_stress, beam_stress, plate_stress, solid_stress
+     - composite_plate_stress (centroidal only)
    - Force
-     - rodForce
- - transient-style results (no complex data)
+     - rod_force, bar_force
+ - transient-style results
+    - eigenvectors (real/complex)
+    - same options as in static (e.g., displacement, rod stress)
+    - no other complex results
 
  - rotate loads based on local coordinate system
    - displacement (e.g. force, displacement, velocity) done
