@@ -59,50 +59,31 @@ class TetgenIO(object):
         #print("nNodes = ",self.nNodes)
         #print("nElements = ", self.nElements)
 
-        self.grid.Allocate(self.nElements, 1000)
+        grid = self.grid
+        grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        self.nid_map = {}
-
         assert nodes is not None
-        nnodes = nodes.shape[0]
-
-        nid = 0
-        #print("nnodes=%s" % nnodes)
-        for i in range(nnodes):
-            points.InsertPoint(nid, nodes[i, :])
-            nid += 1
+        points = self.numpy_to_vtk_points(nodes)
+        self.nid_map = {}
 
         #elements -= 1
         if dimension_flag == 2:
-            for (n0, n1, n2) in tris:
-                elem = vtkTriangle()
-                #node_ids = elements[eid, :]
-                elem.GetPointIds().SetId(0, n0)
-                elem.GetPointIds().SetId(1, n1)
-                elem.GetPointIds().SetId(2, n2)
-                self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+            etype = 5  # vtkTriangle().GetCellType()
+            self.create_vtk_cells_of_constant_element_type(grid, tris, etype)
         elif dimension_flag == 3:
-            for (n0, n1, n2, n3) in tets:
-                elem = vtkTetra()
-                assert elem.GetCellType() == 10, elem.GetCellType()
-                elem.GetPointIds().SetId(0, n0)
-                elem.GetPointIds().SetId(1, n1)
-                elem.GetPointIds().SetId(2, n2)
-                elem.GetPointIds().SetId(3, n3)
-                self.grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+            etype = 10  # vtkTetra().GetCellType()
+            self.create_vtk_cells_of_constant_element_type(grid, tets, etype)
         else:
-            raise RuntimeError()
+            raise RuntimeError('dimension_flag=%r; expected=[2, 3]' % dimension_flag)
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
 
-        # loadSTLResults - regions/loads
-        self. turn_text_on()
+        # loadTetgenResults - regions/loads
+        self.turn_text_on()
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 

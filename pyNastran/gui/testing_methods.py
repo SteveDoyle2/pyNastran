@@ -126,6 +126,8 @@ class GuiAttributes(object):
         self.num_user_points = 0
 
         self._is_displaced = False
+        self._is_forces = False
+
         self._xyz_nominal = None
 
         self.nvalues = 9
@@ -228,9 +230,10 @@ class GuiAttributes(object):
         elements : (nelements, nnodes_per_element) int ndarray
             the elements to add
         etype : int
-            3 = vtkLine().GetCellType()
-            5 = vtkTriangle().GetCellType()
-            9 = vtk.vtkQuad().GetCellType()
+            3  = vtkLine().GetCellType()
+            5  = vtkTriangle().GetCellType()
+            9  = vtk.vtkQuad().GetCellType()
+            10 = vtkTetra().GetCellType()
         """
         nelements, nnodes_per_element = elements.shape
         # We were careful about how we defined the arrays, so the data
@@ -472,9 +475,9 @@ class GUIMethods(GuiAttributes):
             'main' : self.grid,
         }
         #self.geometry_properties = {
-            ##'main' : None,
-            ##'caero' : None,
-            ##'caero_sub' : None,
+            #'main' : None,
+            #'caero' : None,
+            #'caero_sub' : None,
         #}
         #self._add_alt_actors = _add_alt_actors
 
@@ -519,6 +522,8 @@ class GUIMethods(GuiAttributes):
                 phase = 2.0
                 obj.set_scale(i, name, scale)
                 obj.set_phase(i, name, phase)
+                assert obj.deflects(i, name) in [True, False], obj.deflects(i, name)
+
             else:
                 scalar_result = obj.get_scalar(i, name)
 

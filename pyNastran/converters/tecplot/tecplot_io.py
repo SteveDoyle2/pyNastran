@@ -52,8 +52,8 @@ class TecplotIO(object):
         #self._create_cart3d_free_edegs(model, nodes, elements)
 
 
-        # loadCart3dResults - regions/loads
-        self. turn_text_on()
+        # loadTecplotResults - regions/loads
+        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

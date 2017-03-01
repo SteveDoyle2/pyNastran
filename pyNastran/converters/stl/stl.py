@@ -23,10 +23,15 @@ def read_stl(stl_filename, log=None, debug=False):
     ----------
     stl_filename : str
         the filename to read
+
+    Returns
+    -------
+    model : STL()
+       the stl model
     """
-    stl = STL(log=log, debug=debug)
-    stl.read_stl(stl_filename)
-    return stl
+    model = STL(log=log, debug=debug)
+    model.read_stl(stl_filename)
+    return model
 
 
 class STL(object):

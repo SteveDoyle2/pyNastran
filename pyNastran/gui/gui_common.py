@@ -4005,6 +4005,57 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #id_filter.CellIdsOff()
             #self.grid_mapper.SetInputConnection(id_filter.GetOutputPort())
         self.rend.AddActor(self.geom_actor)
+        self.build_glyph()
+
+    def build_glyph(self):
+        """builds the glyph actor"""
+        grid = self.grid
+        glyphs = vtk.vtkGlyph3D()
+        #if filter_small_forces:
+            #glyphs.SetRange(0.5, 1.)
+
+        glyphs.SetVectorModeToUseVector()
+        #apply_color_to_glyph = False
+        #if apply_color_to_glyph:
+        glyphs.SetColorModeToColorByScale()
+        #glyphs.SetColorModeToColorByScalar()  # super tiny
+        #glyphs.SetColorModeToColorByVector()  # super tiny
+
+        glyphs.ScalingOn()
+        glyphs.ClampingOn()
+        #glyphs.Update()
+
+        glyph_source = vtk.vtkArrowSource()
+        #glyph_source.InvertOn()  # flip this arrow direction
+        if self.vtk_version[0] == 5 :
+            glyphs.SetInput(grid)
+        elif self.vtk_version[0] in [6, 7]:
+            glyphs.SetInputData(grid)
+        else:
+            raise NotImplementedError(vtk.VTK_VERSION)
+
+
+        glyphs.SetSourceConnection(glyph_source.GetOutputPort())
+        #glyphs.SetScaleModeToDataScalingOff()
+        glyphs.SetScaleFactor(10.0)  # bwb
+        #glyphs.SetScaleFactor(1.0)  # solid-bending
+        glyph_mapper = vtk.vtkPolyDataMapper()
+        glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
+        glyph_mapper.ScalarVisibilityOff()
+
+        arrow_actor = vtk.vtkLODActor()
+        arrow_actor.SetMapper(glyph_mapper)
+
+        prop = arrow_actor.GetProperty()
+        prop.SetColor(1., 0., 0.)
+        self.rend.AddActor(arrow_actor)
+        #self.grid.GetPointData().SetActiveVectors(None)
+        arrow_actor.SetVisibility(False)
+
+        self.glyph_source = glyph_source
+        self.glyphs = glyphs
+        self.glyph_mapper = glyph_mapper
+        self.arrow_actor = arrow_actor
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
         if names_to_ignore is None:

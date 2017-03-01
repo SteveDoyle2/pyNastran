@@ -957,7 +957,7 @@ class NastranIO(NastranIO_xref):
         Loads the Nastran results into the GUI
         """
         #gridResult.SetNumberOfComponents(self.nElements)
-        self. turn_text_on()
+        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

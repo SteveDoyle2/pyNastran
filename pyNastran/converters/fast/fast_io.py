@@ -106,7 +106,7 @@ class FastIO(object):
             grid.Update()
 
         # regions/loads
-        self. turn_text_on()
+        self.turn_text_on()
         self.scalarBar.Modified()
 
         cases = {}

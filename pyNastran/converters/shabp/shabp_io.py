@@ -95,8 +95,8 @@ class ShabpIO(object):
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
 
-        # loadCart3dResults - regions/loads
-        self. turn_text_on()
+        # loadShabpResults - regions/loads
+        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

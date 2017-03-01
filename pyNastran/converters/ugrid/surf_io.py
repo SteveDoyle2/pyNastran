@@ -116,8 +116,8 @@ class SurfIO(object):
             self.grid.Update()
         #self.log_info("updated grid")
 
-        # loadCart3dResults - regions/loads
-        self. turn_text_on()
+        # loadSurfResults - regions/loads
+        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

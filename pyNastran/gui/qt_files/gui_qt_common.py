@@ -384,6 +384,9 @@ class GuiCommon(GuiAttributes):
                 self._is_displaced = False
                 self._update_grid(self._xyz_nominal)
 
+            if self._is_forces:
+                self.arrow_actor.SetVisibility(False)
+
             if location == 'centroid':
                 cell_data = grid.GetCellData()
                 if self._names_storage.has_close_name(name):
@@ -407,15 +410,23 @@ class GuiCommon(GuiAttributes):
                     point_data.AddArray(grid_result)
                 elif vector_size == 3:
                     #print('vector_size3; get, update')
+
                     xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                    if obj.deflects(i, res_name):
+                        #grid_result1 = self.set_grid_values(name, case, 1,
+                                                            #min_value, max_value, norm_value)
+                        #point_data.AddArray(grid_result1)
 
-                    #grid_result1 = self.set_grid_values(name, case, 1,
-                                                        #min_value, max_value, norm_value)
-                    #point_data.AddArray(grid_result1)
+                        self._is_displaced = True
+                        self._is_forces = False
+                        self._xyz_nominal = xyz_nominal
+                        self._update_grid(vector_data)
+                    else:
+                        self._is_displaced = False
+                        self._is_forces = True
+                        xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                        self._update_forces(vector_data)
 
-                    self._is_displaced = True
-                    self._xyz_nominal = xyz_nominal
-                    self._update_grid(vector_data)
                     self.log_info('node plotting vector=%s - subcase_id=%s '
                                   'result_type=%s subtitle=%s label=%s'
                                   % (vector_size, subcase_id, result_type, subtitle, label))
@@ -438,7 +449,7 @@ class GuiCommon(GuiAttributes):
 
             point_data = grid.GetPointData()
             if vector_size == 1:
-                point_data.SetActiveScalars(name_str)
+                point_data.SetActiveScalars(name_str)  # TODO: None???
             elif vector_size == 3:
                 point_data.SetActiveVectors(name_str)
             else:
@@ -458,26 +469,43 @@ class GuiCommon(GuiAttributes):
         self.hide_labels(show_msg=False)
         self.show_labels(result_names=[result_type], show_msg=False)
 
-    def _update_grid(self, vector_data):
+    def _update_forces(self, forces_array):
+        """changes the glyphs"""
+        grid = self.grid
+        mag = np.linalg.norm(forces_array, axis=1)
+        #assert len(forces_array) == len(mag)
+
+        new_forces = np.copy(forces_array / mag.max())
+        #print('new_forces_max =', new_forces.max())
+        #print('new_forces =', new_forces)
+        #print('mag =', mag)
+
+        vtk_vectors = numpy_to_vtk(new_forces, deep=1)
+        vtk_mag = numpy_to_vtk(mag, deep=1)
+
+        grid.GetPointData().SetVectors(vtk_vectors)
+        grid.GetPointData().SetScalars(vtk_mag)
+        self.arrow_actor.SetVisibility(True)
+        grid.Modified()
+        self.grid_selected.Modified()
+
+    def _update_grid(self, nodes):
         """deflects the geometry"""
-        nnodes = vector_data.shape[0]
         grid = self.grid
         points = grid.GetPoints()
-        #self.numpy_to_vtk_points(nodes, points=points)
-        for j in range(nnodes):
-            points.SetPoint(j, *vector_data[j, :])
+        self.numpy_to_vtk_points(nodes, points=points, dtype='<f')
         grid.Modified()
-        grid_selected.Modified()
-        self._update_follower_grids(vector_data)
+        self.grid_selected.Modified()
+        self._update_follower_grids(nodes)
 
-    def _update_follower_grids(self, vector_data):
+    def _update_follower_grids(self, nodes):
         """updates grids that use the same ids as the parent model"""
         for name, nids in iteritems(self.follower_nodes):
             grid = self.alt_grids[name]
             points = grid.GetPoints()
             for j, nid in enumerate(nids):
                 i = self.nid_map[nid]
-                points.SetPoint(j, *vector_data[i, :])
+                points.SetPoint(j, *nodes[i, :])
             grid.Modified()
 
     def _get_icase(self, result_name):

@@ -114,8 +114,8 @@ class Plot3d_io(object):
 
         #return
 
-        # loadCart3dResults - regions/loads
-        self. turn_text_on()
+        # loadPlot3dResults - regions/loads
+        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

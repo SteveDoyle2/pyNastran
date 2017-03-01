@@ -101,7 +101,7 @@ class PanairIO(object):
             self.grid.Update()
 
         # loadPanairResults - regions/loads
-        self. turn_text_on()
+        self.turn_text_on()
         if plot:
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()

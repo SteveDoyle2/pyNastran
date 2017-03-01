@@ -3533,10 +3533,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         Loads the Nastran results into the GUI
         """
         #gridResult.SetNumberOfComponents(self.nElements)
-        self. turn_text_on()
+        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
-        #self.show_caero_mesh()
 
         print("trying to read...%s" % op2_filename)
         ext = os.path.splitext(op2_filename)[1].lower()
