@@ -1182,7 +1182,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         bar_types2 = {}
         for bar_type, data in sorted(iteritems(bar_types)):
             eids, lines_bar_y, lines_bar_z = data
-            #print(data)
             if len(eids):
                 if debug: # pragma: no cover
                     print('bar_type = %r' % bar_type)
@@ -1330,31 +1329,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nnodes = nlines * 2
         if nlines == 0:
             return
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(nnodes)
 
         assert name != u'Bar Nodes', name
+        grid = self.alt_grids[name]
 
         bar_eids = np.array(eids, dtype='int32')
-        bar_lines = np.zeros((nlines, 6))
-        self.bar_lines[name] = bar_lines
+        bar_lines = np.asarray(lines, dtype='float32').reshape(nlines, 6)
         self.bar_eids[name] = np.asarray(eids, dtype='int32')
+        self.bar_lines[name] = bar_lines
 
-        j = 0
-        for i, (node1, node2) in enumerate(lines):
-            bar_lines[i, :3] = node1
-            bar_lines[i, 3:] = node2
+        nodes = bar_lines.reshape(nlines * 2, 3)
+        points = self.numpy_to_vtk_points(nodes)
+        elements = np.arange(0, nnodes, dtype='int32').reshape(nlines, 2)
 
-            points.InsertPoint(j, *node1)
-            points.InsertPoint(j + 1, *node2)
-            # print('adding %s %s' % (str(node1), str(node2)))
-
-            elem = vtk.vtkLine()
-            elem.GetPointIds().SetId(0, j)
-            elem.GetPointIds().SetId(1, j + 1)
-            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            j += 2
-        self.alt_grids[name].SetPoints(points)
+        etype = 3 # vtk.vtkLine().GetCellType()
+        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
+        grid.SetPoints(points)
 
     def _fill_dependent_independent(self, mpc_id, dim_max, model, lines, nid_to_pid_map):
         """creates the mpc actors"""

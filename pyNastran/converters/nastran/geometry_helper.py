@@ -67,7 +67,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
         super(NastranGeometryHelper, self).__init__()
 
     def _get_bar_yz_arrays(self, model, bar_beam_eids, scale, debug):
-        #method = 0 # TODO: this should be reworked...
         lines_bar_y = []
         lines_bar_z = []
 
@@ -120,6 +119,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             lines_bar_y = []
             lines_bar_z = []
             bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
+            #bar_types[bar_type] = [eids, lines_bar_y, lines_bar_z]
 
         no_axial = np.zeros(self.element_ids.shape, dtype='int32')
         no_torsion = np.zeros(self.element_ids.shape, dtype='int32')
@@ -424,8 +424,12 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         #print('bar_types =', bar_types)
         for bar_type in list(bar_types):
-            if len(bar_types[bar_type][0]) == 0:
+            bars = bar_types[bar_type]
+            if len(bars[0]) == 0:
                 del bar_types[bar_type]
+                continue
+            #bar_types[bar_type][1] = np.array(bars[1], dtype='float32')  # lines_bar_y
+            #bar_types[bar_type][2] = np.array(bars[2], dtype='float32')  # lines_bar_z
 
         debug = False
         if debug:
