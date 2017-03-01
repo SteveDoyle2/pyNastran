@@ -443,6 +443,11 @@ class GuiCommon(GuiAttributes):
 
             point_data = grid.GetPointData()
             point_data.SetActiveScalars(None)
+            if vector_size == 1:
+                #point_data.SetActiveVectors(None)   # I don't think I need this
+                pass
+            else:
+                raise RuntimeError(vector_size)
         elif location == 'node':
             cell_data = grid.GetCellData()
             cell_data.SetActiveScalars(None)
@@ -451,7 +456,8 @@ class GuiCommon(GuiAttributes):
             if vector_size == 1:
                 point_data.SetActiveScalars(name_str)  # TODO: None???
             elif vector_size == 3:
-                point_data.SetActiveVectors(name_str)
+                pass
+                #point_data.SetActiveVectors(name_str)
             else:
                 raise RuntimeError(vector_size)
             #print('name_str=%r' % name_str)
@@ -476,9 +482,11 @@ class GuiCommon(GuiAttributes):
         #assert len(forces_array) == len(mag)
 
         new_forces = np.copy(forces_array / mag.max())
+
+        #inonzero = np.where(mag > 0)[0]
         #print('new_forces_max =', new_forces.max())
-        #print('new_forces =', new_forces)
-        #print('mag =', mag)
+        #print('new_forces =', new_forces[inonzero])
+        #print('mag =', mag[inonzero])
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
         vtk_mag = numpy_to_vtk(mag, deep=1)

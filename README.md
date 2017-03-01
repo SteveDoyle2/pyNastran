@@ -95,7 +95,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
    - unit conversion
 
 - [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html)
-   - buttons for picking, rotation center
+   - buttons for picking, rotation center, distance
    - PyQt5 support
    - QScintilla & pygments support for scripting code editor
 

@@ -221,7 +221,7 @@ def main():
                     ##selection_node.SetSelectionList(ids)
 
 
-        arrow_actor = vtk.vtkActor()
+        arrow_actor = vtk.vtkLODActor()
         arrow_actor.SetMapper(glyph_mapper)
 
         if not apply_color_to_glyph:
