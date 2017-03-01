@@ -5,7 +5,7 @@ from six import iteritems, integer_types
 import numpy as np
 
 import vtk
-from vtk.util.numpy_support import numpy_to_vtk
+from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
@@ -219,6 +219,51 @@ class GuiAttributes(object):
         points.SetData(points_array)
         return points
 
+    def create_vtk_cells_of_constant_element_type(self, grid, elements, etype):
+        """
+        Adding constant type elements is overly complicated
+
+        grid : vtk.vtkUnstructuredGrid()
+            the unstructured grid
+        elements : (nelements, nnodes_per_element) int ndarray
+            the elements to add
+        etype : int
+            3 = vtkLine().GetCellType()
+            5 = vtkTriangle().GetCellType()
+            9 = vtk.vtkQuad().GetCellType()
+        """
+        nelements, nnodes_per_element = elements.shape
+        # We were careful about how we defined the arrays, so the data
+        # is contiguous when we ravel it.  Otherwise, you need to
+        # deepcopy the arrays (deep=1).  However, numpy_to_vtk isn't so
+        # good, so we could use np.copy, which is better, but it's
+        # ultimately unnecessary.
+
+        #nodes = numpy_to_vtk(elements, deep=0, array_type=vtk.VTK_ID_TYPE)
+        cell_offsets = np.arange(0, nelements, dtype='int32') * 4
+        assert len(cell_offsets) == nelements
+
+        # Create the array of cells
+        vtk_cells = vtk.vtkCellArray()
+        elements_vtk = np.zeros((nelements, nnodes_per_element + 1), dtype='int64')
+        elements_vtk[:, 0] = nnodes_per_element # 3 nodes/tri
+        elements_vtk[:, 1:] = elements
+
+        cells_id_type = numpy_to_vtkIdTypeArray(elements_vtk.ravel(), deep=1)
+        vtk_cells.SetCells(nelements, cells_id_type)
+
+        # Cell types
+        # 5 = vtkTriangle().GetCellType()
+        cell_types = np.ones(nelements, dtype='int32') * etype
+        vtk_cell_types = numpy_to_vtk(
+            cell_types, deep=0,
+            array_type=vtk.vtkUnsignedCharArray().GetDataType())
+
+        vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
+                                    array_type=vtk.VTK_ID_TYPE)
+
+        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+
     def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
         """
         Makes a CQUAD4 grid
@@ -238,18 +283,11 @@ class GuiAttributes(object):
         assert isinstance(nodes, np.ndarray), type(nodes)
 
         points = self.numpy_to_vtk_points(nodes)
+        grid = self.alt_grids[name]
+        grid.SetPoints(points)
 
-        #assert vtkQuad().GetCellType() == 9, elem.GetCellType()
-        self.alt_grids[name].Allocate(nquads, 1000)
-        for element in elements:
-            elem = vtk.vtkQuad()
-            point_ids = elem.GetPointIds()
-            point_ids.SetId(0, element[0])
-            point_ids.SetId(1, element[1])
-            point_ids.SetId(2, element[2])
-            point_ids.SetId(3, element[3])
-            self.alt_grids[name].InsertNextCell(9, elem.GetPointIds())
-        self.alt_grids[name].SetPoints(points)
+        etype = 9  # vtk.vtkQuad().GetCellType()
+        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         self._add_alt_actors({name : self.alt_grids[name]})
 
@@ -385,6 +423,8 @@ class Grid(object):
     def Modified(self):
         pass
     def Update(self):
+        pass
+    def SetCells(self, vtk_cell_types, vtk_cell_locations, vtk_cells):
         pass
 
 

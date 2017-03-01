@@ -7,8 +7,7 @@ from six import iteritems
 from six.moves import range
 
 from numpy import arange, mean, vstack, zeros, unique, where, sqrt
-#import numpy as np
-
+import numpy as np
 
 import vtk
 from vtk import vtkTriangle
@@ -132,14 +131,9 @@ class Cart3dIO(object):
         points = self.numpy_to_vtk_points(nodes)
 
         #assert elements.min() == 0, elements.min()
-        nelements = elements.shape[0]
-        for eid in range(nelements):
-            elem = vtkTriangle()
-            node_ids = elements[eid, :]
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
-            elem.GetPointIds().SetId(2, node_ids[2])
-            grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+
+        etype = 5 # vtkTriangle().GetCellType()
+        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         grid.SetPoints(points)
         grid.Modified()
@@ -164,6 +158,7 @@ class Cart3dIO(object):
         ID = 1
         form, cases, icase = self._fill_cart3d_case2(cases, ID, nodes, elements, regions, model)
         mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
+        #mach = None
         self._fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
         self._finish_results_io2(form, cases)
 
@@ -355,6 +350,7 @@ class Cart3dIO(object):
     def _create_cart3d_free_edges(self, model, nodes, elements):
         free_edges_array = model.get_free_edges(elements)
         nfree_edges = len(free_edges_array)
+
         if nfree_edges:
             # yellow = (1., 1., 0.)
             pink = (0.98, 0.4, 0.93)
@@ -364,21 +360,15 @@ class Cart3dIO(object):
                     'free_edges', color=pink, line_width=3, opacity=1.0,
                     representation='surface')
 
-            j = 0
-            self.alt_grids['free_edges'].Allocate(nfree_edges, 1000)
-
+            alt_grid = self.alt_grids['free_edges']
             etype = vtk.vtkLine().GetCellType()
+            elements2 = np.arange(0, nfree_edges * 2, dtype='int32').reshape(nfree_edges, 2)
+            self.create_vtk_cells_of_constant_element_type(alt_grid, elements2, etype)
+
+            #alt_grid.Allocate(nfree_edges, 1000)
             free_edge_nodes = nodes[free_edges_array.ravel(), :]
             points = self.numpy_to_vtk_points(free_edge_nodes)
-            #nfree_edges = free_edge_nodes.shape[0]
-            for free_edge in range(nfree_edges):
-                # (p1, p2) = free_edge
-                elem = vtk.vtkLine()
-                elem.GetPointIds().SetId(0, j)
-                elem.GetPointIds().SetId(1, j + 1)
-                self.alt_grids['free_edges'].InsertNextCell(etype, elem.GetPointIds())
-                j += 2
-            self.alt_grids['free_edges'].SetPoints(points)
+            alt_grid.SetPoints(points)
 
         else:
             # TODO: clear free edges

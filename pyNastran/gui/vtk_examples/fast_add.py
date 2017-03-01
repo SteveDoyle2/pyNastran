@@ -4,13 +4,16 @@ This example attempts to uses VTK efficiently to:
   - create arrows (glyphs) to represent some vector quantity (e.g., forces)
   - TODO: makes use of masking to remove small forces
 
+
 Multiple challenges are addressed in this example:
   - how to add elements efficiently (even of the same type)
   - how to add multiple types efficiently
   - how to link an unstructured grid to a glyph (e.g., an arrow or a point)
+    we avoid making two unstructured grids
 
-Possible inefficient pieces:
-  - use 1 grid for multiple mappers
+Possible inefficienies:
+  - could we use 1 actor? instead of using
+    1 grid, but multiple mappers
 
 There are flags that let you disable one or more features.
 
@@ -58,29 +61,33 @@ def mixed_type_unstructured_grid():
     # shift the points so we can show both.
     pts[:,1] += 2.0
     npoints = len(pts)
-
     forces = pts
 
 
     # The cells must be int64 because numpy_to_vtkIdTypeArray requires that.
     # I think it depends on what vtkIdTypeArray() was built with.
+    # nnodes_tetra, (nodes_tetra1)
+    # nnodes_hexa, (nodes_hexa1)
     cells = np.array([
         4, 0, 1, 2, 3, # tetra
         8, 4, 5, 6, 7, 8, 9, 10, 11 # hex
     ], dtype='int64')
 
     # The offsets for the cells (i.e., the indices where the cells start)
+    # one for each element
     cell_offsets = np.array([0, 5], dtype='int32')
 
+    # add one element_type for each element
     tetra_type = vtk.vtkTetra().GetCellType() # VTK_TETRA == 10
     hex_type = vtk.vtkHexahedron().GetCellType() # VTK_HEXAHEDRON == 12
     cell_types = np.array([tetra_type, hex_type], dtype='int32')
-    cell_types_vtk = vtk.vtkCellTypes()
 
-    # Create the array of cells unambiguously
-    cell_array = vtk.vtkCellArray()
-    cells_id_type = numpy_to_vtkIdTypeArray(cells, deep=1)
-    cell_array.SetCells(2, cells_id_type)
+    # Create the array of cells
+    vtk_cells = vtk.vtkCellArray()
+    vtk_cells_id_type = numpy_to_vtkIdTypeArray(cells, deep=1)
+
+    # ncells = 2
+    vtk_cells.SetCells(2, vtk_cells_id_type)
 
     # Now create the unstructured grid
     ug = vtk.vtkUnstructuredGrid()
@@ -94,7 +101,7 @@ def mixed_type_unstructured_grid():
 
     # Now just set the cell types and reuse the ug locations and cells
 
-    #ug.SetCells(cell_types, cell_offsets, cell_array)
+    #ug.SetCells(cell_types, cell_offsets, vtk_cell_array)
     ug.SetCells(
         numpy_to_vtk(
             cell_types,
@@ -106,7 +113,7 @@ def mixed_type_unstructured_grid():
             deep=1,
             array_type=vtk.vtkIdTypeArray().GetDataType()
         ),
-        cell_array,
+        vtk_cells,
     )
     return ug, forces
 

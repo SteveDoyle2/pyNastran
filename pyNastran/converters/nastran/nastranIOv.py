@@ -77,14 +77,14 @@ try:
 except ImportError:
     is_geom = False
 
-green = (0., 1., 0.)
-blue = (0., 0., 1.)
-dunno = (0.5, 1., 0.5)
-pink = (0.98, 0.4, 0.93)
-orange = (219/255., 168/255., 13/255.)
-red = (1., 0., 0.)
-yellow = (1., 1., 0.)
-purple = (1., 0., 1.)
+GREEN = (0., 1., 0.)
+BLUE = (0., 0., 1.)
+LIGHT_GREEN = (0.5, 1., 0.5)
+PINK = (0.98, 0.4, 0.93)
+ORANGE = (219/255., 168/255., 13/255.)
+RED = (1., 0., 0.)
+YELLOW = (1., 1., 0.)
+PURPLE = (1., 0., 1.)
 
 
 class NastranIO(NastranGuiResults, NastranGeometryHelper):
@@ -461,7 +461,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         if nconm2 > 0:
             self.create_alternate_vtk_grid(
-                'conm2', color=orange, line_width=5, opacity=1., point_size=4,
+                'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
                 representation='point')
 
         # Allocate grids
@@ -518,8 +518,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # fill grids
         self.create_splines(model, box_id_to_caero_element_map, caero_points)
         if 'caero' in self.alt_grids:
-            self.set_caero_grid(ncaeros_points, model)
-            self.set_caero_subpanel_grid(ncaero_sub_points, model)
+            self.set_caero_grid(ncaeros_points, model, j=0)
+            self.set_caero_subpanel_grid(ncaero_sub_points, model, j=0)
             if has_control_surface:
                 self.set_caero_control_surface_grid(
                     'caero_control_surfaces', cs_box_ids,
@@ -601,11 +601,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if self.has_caero:
             if 'caero' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
-                    'caero', color=yellow, line_width=3, opacity=1.0,
+                    'caero', color=YELLOW, line_width=3, opacity=1.0,
                     representation='toggle', is_visible=True, is_pickable=False)
             if 'caero_subpanels' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
-                    'caero_subpanels', color=yellow, line_width=3, opacity=1.0,
+                    'caero_subpanels', color=YELLOW, line_width=3, opacity=1.0,
                     representation='toggle', is_visible=False, is_pickable=False)
 
             self.alt_grids['caero'].Allocate(ncaeros, 1000)
@@ -683,7 +683,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #ncaero_cs_points = 0
             if 'caero_control_surfaces' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
-                    'caero_control_surfaces', color=pink, line_width=5, opacity=1.0,
+                    'caero_control_surfaces', color=PINK, line_width=5, opacity=1.0,
                     representation='surface')
             for aid, aesurf in iteritems(model.aesurfs):
                 aelist = aesurf.alid1
@@ -754,7 +754,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 zfighting_offset = 0.0001 * iaero
                 grid_name = 'spline_%s_structure_points' % spline_id
                 self.create_alternate_vtk_grid(
-                    grid_name, color=blue, opacity=1.0, point_size=5,
+                    grid_name, color=BLUE, opacity=1.0, point_size=5,
                     representation='point', is_visible=False)
                 msg = ', which is required by %r' % grid_name
                 self._add_nastran_nodes_to_grid(grid_name, structure_points, model, msg)
@@ -763,7 +763,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 zfighting_offset = 0.0001 * (iaero + 1)
                 grid_name = 'spline_%s_boxes' % spline_id
                 self.create_alternate_vtk_grid(
-                    grid_name, color=blue, opacity=0.3,
+                    grid_name, color=BLUE, opacity=0.3,
                     line_width=4,
                     representation='toggle', is_visible=False)
                 self.set_caero_control_surface_grid(
@@ -911,16 +911,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         name : str
             ???
         aero_box_ids : List[int]
-            ???
+            the ids of the box as seen on the AESURF? SET card?
         box_id_to_caero_element_map : Dict[key]=value
             key : ???
                 ???
             value : ???
                 ???
-        caero_points : ???
-            ???
-        xyz_cid0 : ???
-            ???
+        caero_points : (ncaero_points, 3)
+            the xyz coordinates used by the CAEROx actor
         zfighting_offset : float
             z-fighting is when two elements "fight" for who is in front
             leading.  The standard way to fix this is to bump the
@@ -1087,7 +1085,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             # SUPORT1s are subcase-specific SUPORT cards
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
                 suport_id = subcase.get_parameter('SUPORT1')[0]
-                if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:  # TODO: is this line correct???
+
+                # TODO: is this line correct???
+                if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:
 
                     # TODO: this seems unnecessary
                     if suport_id is not None and suport_id not in suport1_ids_used:
@@ -1106,7 +1106,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 ids += idsi
             grid_name = 'SUPORT'
             self.create_alternate_vtk_grid(
-                grid_name, color=red, opacity=1.0, point_size=4,
+                grid_name, color=RED, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
 
         geometry_names = spc_names + mpc_names + suport_names
@@ -1116,7 +1116,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """creates the spc secondary actors"""
         spc_name = 'spc_id=%i' % spc_id
         spc_names = [spc_name]
-        self.create_alternate_vtk_grid(spc_name, color=purple, line_width=5, opacity=1.,
+        self.create_alternate_vtk_grid(spc_name, color=PURPLE, line_width=5, opacity=1.,
                                        point_size=5, representation='point', is_visible=False)
 
         # node_ids = model.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
@@ -1170,7 +1170,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         bar_nids = list(bar_nids)
         self.create_alternate_vtk_grid(
-            'Bar Nodes', color=red, line_width=1, opacity=1.,
+            'Bar Nodes', color=RED, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=True)
         msg = ", which is required by 'Bar Nodes'"
         self._add_nastran_nodes_to_grid('Bar Nodes', bar_nids, model, msg)
@@ -1192,10 +1192,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 bar_z = bar_type + '_z'
 
                 self.create_alternate_vtk_grid(
-                    bar_y, color=green, line_width=5, opacity=1.,
+                    bar_y, color=GREEN, line_width=5, opacity=1.,
                     point_size=5, representation='bar', bar_scale=scale, is_visible=False)
                 self.create_alternate_vtk_grid(
-                    bar_z, color=blue, line_width=5, opacity=1.,
+                    bar_z, color=BLUE, line_width=5, opacity=1.,
                     point_size=5, representation='bar', bar_scale=scale, is_visible=False)
 
                 self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, eids, model)
@@ -1356,13 +1356,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         indname = 'mpc_id=%i_independent' % mpc_id
         linename = 'mpc_id=%i_lines' % mpc_id
         self.create_alternate_vtk_grid(
-            depname, color=green, line_width=5, opacity=1.,
+            depname, color=GREEN, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
         self.create_alternate_vtk_grid(
-            indname, color=dunno, line_width=5, opacity=1.,
+            indname, color=LIGHT_GREEN, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
         self.create_alternate_vtk_grid(
-            linename, color=dunno, line_width=5, opacity=1.,
+            linename, color=LIGHT_GREEN, line_width=5, opacity=1.,
             point_size=5, representation='wire', is_visible=False)
 
         lines2 = []
@@ -1394,6 +1394,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.log.warning('0 nodes added for %r' % name)
             return
         self.follower_nodes[name] = node_ids
+
+        #self.numpy_to_vtk_points(nodes)
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
@@ -1444,7 +1446,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.log.warning('0 spoints added for %r' % name)
             return
         self.create_alternate_vtk_grid(
-            name, color=blue, line_width=1, opacity=1.,
+            name, color=BLUE, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=True)
 
         self.follower_nodes[name] = spoint_ids
@@ -1523,7 +1525,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """creates SUPORT and SUPORT1 nodes"""
         suport_name = 'suport1_id=%i' % suport_id
         self.create_alternate_vtk_grid(
-            suport_name, color=red, line_width=5, opacity=1., point_size=4,
+            suport_name, color=RED, line_width=5, opacity=1., point_size=4,
             representation='point', is_visible=False)
         suport_nids = self._get_suport_node_ids(model, suport_id)
         msg = ', which is required by %r' % suport_name
@@ -1532,37 +1534,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _get_sphere_size(self, dim_max):
         return 0.01 * dim_max
-
-    def create_poly_data(self, verts, tris):
-        """Create and return a vtkPolyData.
-
-        verts is a (N, 3) numpy array of float vertices
-
-        tris is a (N, 1) numpy array of int64 representing the triangles
-        (cells) we create from the verts above.  The array contains
-        groups of 4 integers of the form: 3 A B C
-        Where 3 is the number of points in the cell and A B C are indexes
-        into the verts array.
-
-        http://vtk.1045678.n5.nabble.com/numpy-to-vtk-and-vtkPolyData-td4949286.html
-        """
-        # save, we share memory with the numpy arrays
-        # so they can't get deleted
-        self.verts = verts
-        self.tris = tris
-
-        poly = vtk.vtkPolyData()
-
-        from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
-
-        points = vtk.vtkPoints()
-        points.SetData(numpy_to_vtk(verts))
-        poly.SetPoints(points)
-
-        cells = vtk.vtkCellArray()
-        cells.SetCells(len(tris) / 4, numpy_to_vtkIdTypeArray(tris))
-        poly.SetPolys(cells)
-        return poly
 
     def map_elements2(self, points, nid_map, model, j, dim_max,
                       nid_cp_cd, plot=True, xref_loads=True):
@@ -1933,6 +1904,105 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                      nid_cp_cd, plot=True, xref_loads=True):
         """
         Creates the elements
+        """
+        grid = self.grid
+        grid.SetPoints(points)
+        #return self.map_elements2(points, nid_map, model, j, dim_max,
+                                  #nid_cp_cd, plot=plot, xref_loads=xref_loads)
+
+        out = self._map_elements(model, dim_max, nid_map, j)
+        (nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
+         area, min_interior_angle, max_interior_angle, max_aspect_ratio,
+         max_skew_angle, taper_ratio, dideal_theta,
+         area_ratio, max_warp_angle) = out
+
+        #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
+        #self.log_info("updated grid")
+
+        cases = OrderedDict()
+
+
+        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        icase = 0
+        form = ['Geometry', None, []]
+        form0 = form[2]
+
+        #new_cases = True
+        # set to True to enable node_ids as an result
+        nids_set = True
+        if nids_set:
+            # this intentionally makes a deepcopy
+            nids = np.array(nid_cp_cd[:, 0])
+            cds = np.array(nid_cp_cd[:, 2])
+
+            nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                                location='node', scalar=nids)
+            cases[icase] = (nid_res, (0, 'NodeID'))
+            form0.append(('NodeID', icase, []))
+            icase += 1
+
+            if len(np.unique(cds)) > 1:
+                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
+                                   location='node', scalar=cds)
+                cases[icase] = (cd_res, (0, 'NodeCd'))
+                form0.append(('NodeCd', icase, []))
+                icase += 1
+            self.node_ids = nids
+
+        # set to True to enable elementIDs as a result
+        eids_set = True
+        if eids_set and nelements:
+            eids = np.zeros(nelements, dtype='int32')
+            for (eid, eid2) in iteritems(self.eid_map):
+                eids[eid2] = eid
+
+            eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                                location='centroid', scalar=eids)
+            cases[icase] = (eid_res, (0, 'ElementID'))
+            form0.append(('ElementID', icase, []))
+            icase += 1
+            self.element_ids = eids
+
+        # subcase_id, resultType, vector_size, location, dataFormat
+        if len(model.properties):
+            icase, upids, mids, thickness = self._build_properties(
+                model, nelements, eids, pids, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, cases, form0, icase)
+
+            try:
+                icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
+            except:
+                #raise
+                s = StringIO()
+                traceback.print_exc(file=s)
+                sout = s.getvalue()
+                self.log_error(sout)
+                print(sout)
+                #traceback.print_exc(file=sys.stdout)
+                #etype, value, tb = sys.exc_info
+                #print(etype, value, tb)
+                #raise RuntimeError('Optimization Parsing Error') from e
+                #traceback.print_tb(e)
+                #print(e)
+
+        #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
+        if self.make_offset_normals_dim and nelements:
+            icase, normals = self._build_normals_quality(
+                model, nelements, cases, form0, icase,
+                xyz_cid0, material_coord,
+                min_interior_angle, max_interior_angle, dideal_theta,
+                area, max_skew_angle, taper_ratio,
+                max_warp_angle, area_ratio, max_aspect_ratio)
+            self.normals = normals
+        return nid_to_pid_map, icase, cases, form
+
+    def _map_elements(self, model, dim_max, nid_map, j):
+        """
+        Helper for map_elements
+
 
         element checks
         http://www.altairuniversity.com/wp-content/uploads/2012/04/Student_Guide_211-233.pdf
@@ -2030,102 +2100,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
           A1,A2 are one split form of the CQUAD4 and A3,A4 are the quad
           split in the other direction.
         """
-        grid = self.grid
-        grid.SetPoints(points)
-        #return self.map_elements2(points, nid_map, model, j, dim_max,
-                                  #nid_cp_cd, plot=plot, xref_loads=xref_loads)
-
-        out = self._map_elements(model, dim_max, nid_map, j)
-        (nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
-         area, min_interior_angle, max_interior_angle, max_aspect_ratio,
-         max_skew_angle, taper_ratio, dideal_theta,
-         area_ratio, max_warp_angle) = out
-
-        #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        grid.Modified()
-        if hasattr(grid, 'Update'):
-            grid.Update()
-        #self.log_info("updated grid")
-
-        cases = OrderedDict()
-
-
-        self.iSubcaseNameMap = {1: ['Nastran', '']}
-        icase = 0
-        form = ['Geometry', None, []]
-        form0 = form[2]
-
-        #new_cases = True
-        # set to True to enable node_ids as an result
-        nids_set = True
-        if nids_set:
-            # this intentionally makes a deepcopy
-            nids = np.array(nid_cp_cd[:, 0])
-            cds = np.array(nid_cp_cd[:, 2])
-
-            nid_res = GuiResult(0, header='NodeID', title='NodeID',
-                                location='node', scalar=nids)
-            cases[icase] = (nid_res, (0, 'NodeID'))
-            form0.append(('NodeID', icase, []))
-            icase += 1
-
-            if len(np.unique(cds)) > 1:
-                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
-                                   location='node', scalar=cds)
-                cases[icase] = (cd_res, (0, 'NodeCd'))
-                form0.append(('NodeCd', icase, []))
-                icase += 1
-            self.node_ids = nids
-
-        # set to True to enable elementIDs as a result
-        eids_set = True
-        if eids_set and nelements:
-            eids = np.zeros(nelements, dtype='int32')
-            for (eid, eid2) in iteritems(self.eid_map):
-                eids[eid2] = eid
-
-            eid_res = GuiResult(0, header='ElementID', title='ElementID',
-                                location='centroid', scalar=eids)
-            cases[icase] = (eid_res, (0, 'ElementID'))
-            form0.append(('ElementID', icase, []))
-            icase += 1
-            self.element_ids = eids
-
-        # subcase_id, resultType, vector_size, location, dataFormat
-        if len(model.properties):
-            icase, upids, mids, thickness = self._build_properties(
-                model, nelements, eids, pids, cases, form0, icase)
-            icase = self._build_materials(model, mids, thickness, cases, form0, icase)
-
-            try:
-                icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
-            except:
-                #raise
-                s = StringIO()
-                traceback.print_exc(file=s)
-                sout = s.getvalue()
-                self.log_error(sout)
-                print(sout)
-                #traceback.print_exc(file=sys.stdout)
-                #etype, value, tb = sys.exc_info
-                #print(etype, value, tb)
-                #raise RuntimeError('Optimization Parsing Error') from e
-                #traceback.print_tb(e)
-                #print(e)
-
-        #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
-        if self.make_offset_normals_dim and nelements:
-            icase, normals = self._build_normals_quality(
-                model, nelements, cases, form0, icase,
-                xyz_cid0, material_coord,
-                min_interior_angle, max_interior_angle, dideal_theta,
-                area, max_skew_angle, taper_ratio,
-                max_warp_angle, area_ratio, max_aspect_ratio)
-            self.normals = normals
-        return nid_to_pid_map, icase, cases, form
-
-    def _map_elements(self, model, dim_max, nid_map, j):
-        """helper for map_elements"""
         xyz_cid0 = self.xyz_cid0
         sphere_size = self._get_sphere_size(dim_max)
 
@@ -2251,7 +2225,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             lines = np.array(lines, dtype='int32')
 
             self.create_alternate_vtk_grid(
-                'plotel', color=red, line_width=2, opacity=0.8,
+                'plotel', color=RED, line_width=2, opacity=0.8,
                 point_size=5, representation='wire', is_visible=True)
             self._add_nastran_lines_to_grid('plotel', lines, model)
 

@@ -4,7 +4,6 @@ import numpy as np
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types, iteritems
-from pyNastran.bdf.cards.loads.static_loads import LOAD
 
 
 piover2 = np.pi / 2.
@@ -12,6 +11,7 @@ piover3 = np.pi / 3.
 
 
 class NastranGuiAttributes(object):
+    """GUI specific geometry functions that don't involve PyQt/VTK"""
     def __init__(self):
         # new options, no way to access them through the gui
         # they control results generation
@@ -321,7 +321,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 self.log.error(msg)
                 continue
                 #raise NotImplementedError(msg)
-            #print('v =', v)
+            #print('v = %s' % v)
 
             # rotate wa
             wa = elem.wa
@@ -342,7 +342,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 continue
                 #raise NotImplementedError(msg)
 
-            #print('wa =', wa)
+            #print('wa = %s' % wa)
             # rotate wb
             wb = elem.wb
             if offt_end_b == 'G':
@@ -693,6 +693,7 @@ def quad_quality(p1, p2, p3, p4):
     return out
 
 def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
+    """get the min/max thetas for CTETRA, CPENTA, CHEXA, CPYRAM"""
     cos_thetas = []
     ideal_theta = []
     #print('faces =', faces)

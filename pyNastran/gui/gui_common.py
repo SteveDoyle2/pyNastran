@@ -2514,7 +2514,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 t0 = time.time()
                 has_results = load_function(infile_name, self.last_dir, name=name, plot=plot)
                 dt = time.time() - t0
-                print('dt_load = %.1f sec = %.2f min' % (dt, dt / 60.))
+                print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
                 #else:
                     #name = load_function.__name__
                     #self.log_error(str(args))
