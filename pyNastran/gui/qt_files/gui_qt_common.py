@@ -53,6 +53,14 @@ class GuiCommon(GuiAttributes):
                 axes.SetTotalLength(dim, dim, dim)
 
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
+        """
+        Updates the text actors in the lower left
+
+        Max:  1242.3
+        Min:  0.
+        Subcase: 1 Subtitle:
+        Label: SUBCASE 1; Static
+        """
         self.text_actors[0].SetInput('Max:  %g' % max_value)  # max
         self.text_actors[1].SetInput('Min:  %g' % min_value)  # min
         self.text_actors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))  # info
@@ -481,7 +489,9 @@ class GuiCommon(GuiAttributes):
         mag = np.linalg.norm(forces_array, axis=1)
         #assert len(forces_array) == len(mag)
 
-        new_forces = np.copy(forces_array / mag.max())
+        mag_max = mag.max()
+        new_forces = np.copy(forces_array / mag_max)
+        #mag /= mag_max
 
         #inonzero = np.where(mag > 0)[0]
         #print('new_forces_max =', new_forces.max())

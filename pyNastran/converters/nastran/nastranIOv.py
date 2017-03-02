@@ -272,6 +272,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return skip_reading
 
     def get_xyz_in_coord(self, model, cid=0, fdtype='float32'):
+        """creates the grid points efficiently"""
         #import time
         #t0 = time.time()
 
@@ -1266,7 +1267,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
         if self.make_released_dofs2 and 0:
-            no_bending, no_bending_bad, no_6_16, no_0_456, no_0_56, no_56_456, no_0_6, no_0_16 = no_dofs
+            (no_bending, no_bending_bad, no_6_16, no_0_456,
+             no_0_56, no_56_456, no_0_6, no_0_16) = no_dofs
             if no_bending.max() == 1:
                 bar_form[2].append(['No Bending', icase, []])
                 bending_res = GuiResult(0, header='No Bending', title='No Bending',
@@ -1889,13 +1891,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #traceback.print_tb(e)
                 #print(e)
 
+        #self.glyphs.SetScaleFactor(min_edge_length.mean())
         #if self.make_offset_normals_dim and nelements:
             #icase, normals = self._build_normals_quality(
                 #model, nelements, cases, form0, icase,
                 #xyz_cid0, material_coord,
                 #min_interior_angle, max_interior_angle, dideal_theta,
                 #area, max_skew_angle, taper_ratio,
-                #max_warp_angle, area_ratio, max_aspect_ratio)
+                #max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio)
             #self.normals = normals
         return nid_to_pid_map, icase, cases, form
 
@@ -1914,7 +1917,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         (nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
          area, min_interior_angle, max_interior_angle, max_aspect_ratio,
          max_skew_angle, taper_ratio, dideal_theta,
-         area_ratio, max_warp_angle) = out
+         area_ratio, min_edge_length, max_warp_angle) = out
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         grid.Modified()
@@ -1989,13 +1992,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #print(e)
 
         #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
+        self.glyphs.SetScaleFactor(min_edge_length.mean() * 2.5)  # was 1.5
         if self.make_offset_normals_dim and nelements:
             icase, normals = self._build_normals_quality(
                 model, nelements, cases, form0, icase,
                 xyz_cid0, material_coord,
                 min_interior_angle, max_interior_angle, dideal_theta,
                 area, max_skew_angle, taper_ratio,
-                max_warp_angle, area_ratio, max_aspect_ratio)
+                max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio)
             self.normals = normals
         return nid_to_pid_map, icase, cases, form
 
@@ -2128,6 +2132,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         area = np.zeros(nelements, 'float32')
         area_ratio = np.zeros(nelements, 'float32')
         taper_ratio = np.zeros(nelements, 'float32')
+        min_edge_length = np.zeros(nelements, 'float32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -2253,6 +2258,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             areai = 0.
             area_ratioi = 1.
             taper_ratioi = 0.
+            min_edge_lengthi = 0.
             if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
                     material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
@@ -2268,7 +2274,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p1 = xyz_cid0[n1, :]
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
-                areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai = tri_quality(p1, p2, p3)
+                out = tri_quality(p1, p2, p3)
+                (areai, max_skew, aspect_ratio,
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
 
                 elem.GetPointIds().SetId(0, n1)
                 elem.GetPointIds().SetId(1, n2)
@@ -2296,7 +2304,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p1 = xyz_cid0[n1, :]
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
-                areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai = tri_quality(p1, p2, p3)
+                out = tri_quality(p1, p2, p3)
+                (areai, max_skew, aspect_ratio,
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 elem.GetPointIds().SetId(0, n1)
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
@@ -2334,7 +2344,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p1 = xyz_cid0[n1, :]
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
-                areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai = tri_quality(p1, p2, p3)
+                out = tri_quality(p1, p2, p3)
+                (areai, max_skew, aspect_ratio,
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 elem.GetPointIds().SetId(0, n1)
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
@@ -2358,7 +2370,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
                 p4 = xyz_cid0[n4, :]
-                areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(p1, p2, p3, p4)
+                (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
 
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, n1)
@@ -2382,7 +2396,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
                 p4 = xyz_cid0[n4, :]
-                areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(p1, p2, p3, p4)
+                (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 if None not in node_ids:
                     elem = vtkQuadraticQuad()
                     elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
@@ -2412,7 +2428,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
                 p4 = xyz_cid0[n4, :]
-                areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai = quad_quality(p1, p2, p3, p4)
+                out = quad_quality(p1, p2, p3, p4)
+                (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 if None in node_ids:
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, n1)
@@ -2440,7 +2458,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(10, elem.GetPointIds())
                 #elem_nid_map = {nid:nid_map[nid] for nid in node_ids[:4]}
-                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
             elif isinstance(element, CTETRA10):
                 node_ids = element.node_ids
@@ -2464,7 +2482,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
             elif isinstance(element, CPENTA6):
                 elem = vtkWedge()
@@ -2480,7 +2498,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                 self.grid.InsertNextCell(13, elem.GetPointIds())
-                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
 
             elif isinstance(element, CPENTA15):
@@ -2510,7 +2528,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
             elif isinstance(element, (CHEXA8, CIHEX1)):
                 node_ids = element.node_ids
@@ -2528,7 +2546,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                 elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
                 self.grid.InsertNextCell(12, elem.GetPointIds())
-                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
             elif isinstance(element, (CHEXA20, CIHEX2)):
                 node_ids = element.node_ids
@@ -2566,7 +2584,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                 elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
 
             elif isinstance(element, CPYRAM5):
@@ -2583,7 +2601,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 # etype = 14
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
             elif isinstance(element, CPYRAM13):
                 node_ids = element.node_ids
@@ -2612,7 +2630,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
 
             #elif (isinstance(element, (LineElement, SpringElement)) or
@@ -2699,8 +2717,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid_to_pid_map[nid].append(pid)
 
                 # 2 points
-                lengthi = norm(element.nodes[0].get_position() -
-                               element.nodes[1].get_position())
+                min_edge_lengthi = norm(element.nodes[0].get_position() -
+                                        element.nodes[1].get_position())
                 self.eid_to_nid_map[eid] = node_ids
                 elem = vtk.vtkLine()
                 try:
@@ -2726,7 +2744,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     p2 = xyz_cid0[n2, :]
                     p3 = xyz_cid0[n3, :]
                     p4 = xyz_cid0[n4, :]
-                    areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai = quad_quality(p1, p2, p3, p4)
+                    out = quad_quality(p1, p2, p3, p4)
+                    (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
+                     min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                     if element.Type == 'AREA4' or None in node_ids:
                         elem = vtkQuad()
                     else:
@@ -2755,7 +2775,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     p1 = xyz_cid0[n1, :]
                     p2 = xyz_cid0[n2, :]
                     p3 = xyz_cid0[n3, :]
-                    areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai = tri_quality(p1, p2, p3)
+                    out = tri_quality(p1, p2, p3)
+                    (areai, max_skew, aspect_ratio,
+                     min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                     elem.GetPointIds().SetId(0, n1)
                     elem.GetPointIds().SetId(1, n2)
                     elem.GetPointIds().SetId(2, n3)
@@ -2802,6 +2824,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             area[i] = areai
             area_ratio[i] = area_ratioi
             taper_ratio[i] = taper_ratioi
+            min_edge_length[i] = min_edge_lengthi
             i += 1
         #assert len(self.eid_map) > 0, self.eid_map
         #print('mapped elements')
@@ -2815,7 +2838,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
             area, min_interior_angle, max_interior_angle, max_aspect_ratio,
             max_skew_angle, taper_ratio, dideal_theta,
-            area_ratio, max_warp_angle,
+            area_ratio, min_edge_length, max_warp_angle,
         )
         return out
 
@@ -2823,7 +2846,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                xyz_cid0, material_coord,
                                min_interior_angle, max_interior_angle, dideal_theta,
                                area, max_skew_angle, taper_ratio,
-                               max_warp_angle, area_ratio, max_aspect_ratio):
+                               max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio):
         """
         creates:
          - ElementDim
@@ -3039,6 +3062,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #max_interior_angle[:1000] = np.nan
             area_res = GuiResult(0, header='Area', title='Area',
                                  location='centroid', scalar=area)
+            min_edge_length_res = GuiResult(
+                0, header='Min Edge Length', title='Min Edge Length',
+                location='centroid', scalar=min_edge_length)
+
             min_theta_res = GuiResult(
                 0, header='Min Interior Angle', title='Min Interior Angle',
                 location='centroid', scalar=np.degrees(min_interior_angle))
@@ -3074,22 +3101,24 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cases[icase + 2] = (ny_res, (0, 'NormalY'))
             cases[icase + 3] = (nz_res, (0, 'NormalZ'))
             cases[icase + 4] = (area_res, (0, 'Area'))
-            cases[icase + 5] = (min_theta_res, (0, 'Min Interior Angle'))
-            cases[icase + 6] = (max_theta_res, (0, 'Max Interior Angle'))
-            cases[icase + 7] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
-            cases[icase + 8] = (skew_res, (0, 'Max Skew Angle'))
-            cases[icase + 9] = (aspect_res, (0, 'Aspect Ratio'))
+            cases[icase + 5] = (min_edge_length_res, (0, 'Min Edge Length'))
+            cases[icase + 6] = (min_theta_res, (0, 'Min Interior Angle'))
+            cases[icase + 7] = (max_theta_res, (0, 'Max Interior Angle'))
+            cases[icase + 8] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
+            cases[icase + 9] = (skew_res, (0, 'Max Skew Angle'))
+            cases[icase + 10] = (aspect_res, (0, 'Aspect Ratio'))
 
             form_checks.append(('NormalX', icase + 1, []))
             form_checks.append(('NormalY', icase + 2, []))
             form_checks.append(('NormalZ', icase + 3, []))
             form_checks.append(('Area', icase + 4, []))
-            form_checks.append(('Min Interior Angle', icase + 5, []))
-            form_checks.append(('Max Interior Angle', icase + 6, []))
-            form_checks.append(('Delta Ideal Angle', icase + 7, []))
-            form_checks.append(('Max Skew Angle', icase + 8, []))
-            form_checks.append(('Aspect Ratio', icase + 9, []))
-            icase += 10
+            form_checks.append(('Min Edge Length', icase + 5, []))
+            form_checks.append(('Min Interior Angle', icase + 6, []))
+            form_checks.append(('Max Interior Angle', icase + 7, []))
+            form_checks.append(('Delta Ideal Angle', icase + 8, []))
+            form_checks.append(('Max Skew Angle', icase + 9, []))
+            form_checks.append(('Aspect Ratio', icase + 10, []))
+            icase += 11
 
             if area_ratio.max() > 1.:
                 arearatio_res = GuiResult(
@@ -3164,6 +3193,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             # only solid elements
             form_checks = []
             form0.append(('Element Checks', None, form_checks))
+
+            min_edge_length_res = GuiResult(
+                0, header='Min Edge Length', title='Min Edge Length',
+                location='centroid', scalar=min_edge_length)
             min_theta_res = GuiResult(
                 0, header='Min Interior Angle', title='Min Interior Angle',
                 location='centroid', scalar=np.degrees(min_interior_angle))
@@ -3175,13 +3208,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                     #location='centroid', scalar=skew)
             if is_element_dim:
                 form_checks.append(('ElementDim', icase, []))
-            form_checks.append(('Min Interior Angle', icase + 1, []))
-            form_checks.append(('Max Interior Angle', icase + 2, []))
-            #form_checks.append(('Max Skew Angle', icase + 2, []))
-            cases[icase + 1] = (min_theta_res, (0, 'Min Interior Angle'))
-            cases[icase + 2] = (max_theta_res, (0, 'Max Interior Angle'))
-            #cases[icase + 3] = (skew_res, (0, 'Max Interior Angle'))
-            icase += 3
+            form_checks.append(('Min Edge Length', icase + 1, []))
+            form_checks.append(('Min Interior Angle', icase + 2, []))
+            form_checks.append(('Max Interior Angle', icase + 3, []))
+            #form_checks.append(('Max Skew Angle', icase + 4, []))
+            cases[icase + 1] = (min_edge_length_res, (0, 'Min Edge Length'))
+            cases[icase + 2] = (min_theta_res, (0, 'Min Interior Angle'))
+            cases[icase + 3] = (max_theta_res, (0, 'Max Interior Angle'))
+            #cases[icase + 4] = (skew_res, (0, 'Max Skew Angle'))
+            icase += 4
 
         else:
             form0.append(('ElementDim', icase, []))
@@ -3470,24 +3505,48 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
             if np.abs(forces.max() - forces.min()) > 0.0:
-                load_x_res = GuiResult(subcase_id, header='LoadX', title='LoadX',
-                                       location='node', scalar=forces[:, 0])
-                load_y_res = GuiResult(subcase_id, header='LoadY', title='LoadY',
-                                       location='node', scalar=forces[:, 1])
-                load_z_res = GuiResult(subcase_id, header='LoadZ', title='LoadZ',
-                                       location='node', scalar=forces[:, 2])
-                cases[icase] = (load_x_res, (0, 'LoadX'))
-                cases[icase + 1] = (load_y_res, (0, 'LoadY'))
-                cases[icase + 2] = (load_z_res, (0, 'LoadZ'))
+                from pyNastran.converters.nastran.displacements import (
+                    ForceTableResults)
 
-                # if forces[:, 0].min() != forces[:, 0].max():
-                # if forces[:, 1].min() != forces[:, 1].max():
-                # if forces[:, 2].min() != forces[:, 2].max():
+                fxyz = forces[:, :3]
+                mxyz = forces[:, 3:]
+                fscalar = np.linalg.norm(fxyz, axis=1)
+                mscalar = np.linalg.norm(mxyz, axis=1)
+                if fscalar.max() > 0:
+                    titles = ['Force XYZ']
+                    headers = titles
+                    assert fxyz.shape[1] == 3, fxyz.shape
+                    assert fxyz.shape[0] == len(fscalar)
+                    scales = [1.0]
 
-                form0.append(('Total Load FX', icase, []))
-                form0.append(('Total Load FY', icase + 1, []))
-                form0.append(('Total Load FZ', icase + 2, []))
-                icase += 3
+                    force_xyz_res = ForceTableResults(
+                        subcase_id, titles, headers, fxyz, fscalar,
+                        scales, data_formats=None,
+                        nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                        set_max_min=False, uname='NastranGeometry')
+                    force_xyz_res.save_defaults()
+
+                    cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
+                    form0.append(('Force XYZ', icase, []))
+                    icase += 1
+
+                if mscalar.max() > 0:
+                    titles = ['Moment XYZ']
+                    headers = titles
+                    assert mxyz.shape[1] == 3, mxyz.shape
+                    assert mxyz.shape[0] == len(mscalar)
+                    scales = [1.0]
+
+                    moment_xyz_res = ForceTableResults(
+                        subcase_id, titles, headers, mxyz, mscalar,
+                        scales, data_formats=None,
+                        nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                        set_max_min=False, uname='NastranGeometry')
+                    moment_xyz_res.save_defaults()
+
+                    cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
+                    form0.append(('Moment XYZ', icase, []))
+                    icase += 1
 
             if np.abs(spcd.max() - spcd.min()) > 0.0:
                 t123 = spcd[:, :3]

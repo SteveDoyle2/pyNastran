@@ -53,7 +53,9 @@ class NastranGuiResults(NastranGuiAttributes):
             if key not in result:
                 continue
 
-            title = name + 'XYZ'
+            title1 = name + ' T_XYZ'
+            #title2 = name + ' R_XYZ'
+
             case = result[key]
             subcase_idi = case.isubcase
             if not hasattr(case, 'data'):
@@ -108,6 +110,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                                   uname='NastranResult')
                 for itime in range(ntimes):
                     dt = case._times[itime]
+
+                    # mode = 2; freq = 75.9575 Hz
                     header = self._get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
 
@@ -121,10 +125,10 @@ class NastranGuiResults(NastranGuiAttributes):
                     if tnorm_abs_max > 0.0:
                         scale = self.dim_max / tnorm_abs_max * 0.25
                     scales.append(scale)
-                    titles.append(title)
+                    titles.append(title1)
                     headers.append(header)
-                    cases[icase] = (nastran_res, (itime, title))  # do I keep this???
-                    formii = (title, icase, [])
+                    cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
+                    formii = (title1, icase, [])
                     form_dict[(key, itime)].append(formii)
                     icase += 1
                 nastran_res.save_defaults()
@@ -145,60 +149,19 @@ class NastranGuiResults(NastranGuiAttributes):
                         #scale = self.displacement_scale_factor / tnorm_abs_max
 
                     # TODO: what to do with the scale factor?
-                    scale = self.dim_max
-                    if tnorm_abs_max > 0.0:
-                        scale = self.dim_max / tnorm_abs_max * 0.25
+                    #scale = self.dim_max
+                    #if tnorm_abs_max > 0.0:
+                        #scale = self.dim_max / tnorm_abs_max * 0.25
 
+                    scale = 1.
                     scales.append(scale)
-                    titles.append(title)
+                    titles.append(title1)
                     headers.append(header)
-                    cases[icase] = (nastran_res, (itime, title))  # do I keep this???
-                    formii = (title, icase, [])
+                    cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
+                    formii = (title1, icase, [])
                     form_dict[(key, itime)].append(formii)
                     icase += 1
                 nastran_res.save_defaults()
-            #else:
-                #for itime in range(ntimes):
-                    #dt = case._times[itime]
-                    #header = self._get_nastran_header(case, dt, itime)
-                    #header_dict[(key, itime)] = header
-
-                    #loads = case.data[itime, :, :]
-                    #nxyz = norm(loads[:, :3], axis=1)
-                    #assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
-                        #len(nxyz), nnodes)
-
-                    #tx_res = GuiResult(subcase_idi, header=name + 'Tx', title=name + 'Tx',
-                                       #location='node', scalar=loads[:, 0])
-                    #ty_res = GuiResult(subcase_idi, header=name + 'Ty', title=name + 'Ty',
-                                       #location='node', scalar=loads[:, 1])
-                    #tz_res = GuiResult(subcase_idi, header=name + 'Tz', title=name + 'Tz',
-                                       #location='node', scalar=loads[:, 2])
-                    #rx_res = GuiResult(subcase_idi, header=name + 'Rx', title=name + 'Rx',
-                                       #location='node', scalar=loads[:, 3])
-                    #ry_res = GuiResult(subcase_idi, header=name + 'Ry', title=name + 'Ry',
-                                       #location='node', scalar=loads[:, 4])
-                    #rz_res = GuiResult(subcase_idi, header=name + 'Rz', title=name + 'Rz',
-                                       #location='node', scalar=loads[:, 5])
-                    #txyz_res = GuiResult(subcase_idi, header=name + 'Txyz',
-                                         #title=name + 'Txyz', location='node', scalar=nxyz)
-
-                    #cases[icase] = (tx_res, (0, name + 'Tx'))
-                    #cases[icase + 1] = (ty_res, (0, name + 'Ty'))
-                    #cases[icase + 2] = (tz_res, (0, name + 'Tz'))
-                    #cases[icase + 3] = (rx_res, (0, name + 'Rx'))
-                    #cases[icase + 4] = (ry_res, (0, name + 'Ry'))
-                    #cases[icase + 5] = (rz_res, (0, name + 'Rz'))
-                    #cases[icase + 6] = (txyz_res, (0, name  + 'Txyz'))
-
-                    #form_dict[(key, itime)].append((name + 'Tx', icase, []))
-                    #form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
-                    #form_dict[(key, itime)].append((name + 'Tz', icase + 2, []))
-                    #form_dict[(key, itime)].append((name + 'Rx', icase + 3, []))
-                    #form_dict[(key, itime)].append((name + 'Ry', icase + 4, []))
-                    #form_dict[(key, itime)].append((name + 'Rz', icase + 5, []))
-                    #form_dict[(key, itime)].append((name + 'Txyz', icase + 6, []))
-                    #icase += 7
 
         for (result, name) in temperature_like:
             if key not in result:
@@ -543,15 +506,32 @@ class NastranGuiResults(NastranGuiAttributes):
         else:
             header = ' %s = %i' % (code_name, dt)
 
+        # cases:
+        #   1. lsftsfqs
+        #   2. loadIDs, eigrs
+        #   3. lsdvmns, eigrs
+        #   ???
         if hasattr(case, 'mode_cycle'):
             header += '; freq = %g Hz' % case.mode_cycles[itime]
         elif hasattr(case, 'cycles'):
             header += '; freq = %g Hz' % case.cycles[itime]
         elif hasattr(case, 'eigis'):
             freq = case.eigis[itime]
-            #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
             cycle = np.abs(freq) / (2. * np.pi)
             header += '; freq = %g Hz' % cycle
+        #elif hasattr(case, 'eigrs'):  # TODO: is this right; it's what it used to be...
+            #eigr = case.eigrs[itime]
+            #cycle = np.sqrt(np.abs(eigr)) / (2. * np.pi)  # is this right?
+            #header += '; freq = %g Hz' % cycle
+
+        elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
+            pass
+            #raise RuntimeError(header)
+        else:
+            msg = 'unhandled case; header=%r\n%s' % (header, str(case))
+            print(msg)
+            #raise RuntimeError(msg)
+
         return header.strip('; ')
 
     def _fill_op2_time_centroidal_strain_energy(self, cases, model,
@@ -729,7 +709,7 @@ class NastranGuiResults(NastranGuiAttributes):
             is_element_on[j] = 1.
             di = j[1:-1] - j[0:-2]
             if di.max() != 2:
-                print('di =', np.unique(di))
+                #print('di =', np.unique(di))
                 # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
                 ii = 0
                 eid_old = eids[0]

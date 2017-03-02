@@ -440,6 +440,20 @@ class ScalarBar(object):
         pass
 
 
+class ArrowSource(object):
+    def __init__(self):
+        pass
+class Glyph3D(object):
+    def SetScaleFactor(self, value):
+        pass
+class PolyDataMapper(object):
+    def __init__(self):
+        pass
+class LODActor(object):
+    def __init__(self):
+        pass
+
+
 class MockResWidget(object):
     def __init__(self):
         pass
@@ -474,6 +488,12 @@ class GUIMethods(GuiAttributes):
         self.alt_grids = {
             'main' : self.grid,
         }
+
+        self.glyph_source = ArrowSource()
+        self.glyphs = Glyph3D()
+        self.glyph_mapper = PolyDataMapper()
+        self.arrow_actor = LODActor()
+
         #self.geometry_properties = {
             #'main' : None,
             #'caero' : None,
@@ -523,7 +543,7 @@ class GUIMethods(GuiAttributes):
                 obj.set_scale(i, name, scale)
                 obj.set_phase(i, name, phase)
                 assert obj.deflects(i, name) in [True, False], obj.deflects(i, name)
-
+                xyz, deflected_xyz = obj.get_vector_result(i, name)
             else:
                 scalar_result = obj.get_scalar(i, name)
 

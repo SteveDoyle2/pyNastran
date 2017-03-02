@@ -1,3 +1,7 @@
+"""
+defines NastranGuiAttributes, which defines
+GUI specific geometry functions that don't involve PyQt/VTK
+"""
 # pylint: disable=E1101
 from __future__ import print_function
 import numpy as np
@@ -349,12 +353,14 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 if cd2 != 0:
                     #if cd2_ref.type not in ['CORD2R', 'CORD1R']:
                         #continue # TODO: MasterModelTaxi
-                    wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)  # TODO: fixme
+                    # TODO: fixme
+                    wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
 
             elif offt_end_b == 'B':
                 pass
             elif offt_end_b == 'O':
-                wb = cd1_ref.transform_node_to_global(n2 - wb)  # TODO: fixme
+                # TODO: fixme
+                wb = cd1_ref.transform_node_to_global(n2 - wb)
             else:
                 msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
                 model.log.error(msg)
@@ -446,7 +452,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
         #print('found_bar_types =', found_bar_types)
         #no_axial_torsion = (no_axial, no_torsion)
         #no_shear_bending = (no_shear_y, no_shear_z, no_bending_y, no_bending_z)
-        #no_dofs = (no_bending, no_bending_bad, no_6_16, no_0_456, no_0_56, no_56_456, no_0_6, no_0_16)
+        #no_dofs = (no_bending, no_bending_bad, no_6_16, no_0_456,
+                   #no_0_56, no_56_456, no_0_6, no_0_16)
         out = (no_axial_torsion, no_shear_bending, no_dofs)
         return bar_nids, bar_types, out
 
@@ -473,18 +480,18 @@ class NastranGeometryHelper(NastranGuiAttributes):
         e33 = np.zeros(mids.shape, dtype='float32')
         rho = np.zeros(mids.shape, dtype='float32')
         bulk = np.zeros(mids.shape, dtype='float32')
-        c = np.zeros(mids.shape, dtype='float32')
+        speed_of_sound = np.zeros(mids.shape, dtype='float32')
 
         has_mat8 = False
         has_mat9 = False
-        has_mat10 = False
+        #has_mat10 = False
         for umid in np.unique(mids):
             if umid == 0:
                 continue
             e11i = e22i = e33i = 0.
             rhoi = 0.
             bulki = 0.
-            ci = 0.
+            speed_of_soundi = 0.
             try:
                 mat = model.materials[umid]
             except KeyError:
@@ -509,10 +516,10 @@ class NastranGeometryHelper(NastranGuiAttributes):
             elif mat.type == 'MAT10':
                 bulki = mat.bulk
                 rhoi = mat.rho
-                ci = mat.c
-                has_mat10 = True
-                self.log.info('skipping\n%s' % mat)
-                continue
+                speed_of_soundi = mat.c
+                #has_mat10 = True
+                #self.log.info('skipping\n%s' % mat)
+                #continue
             else:
                 print('skipping\n%s' % mat)
                 continue
@@ -524,7 +531,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             e33[i] = e33i
             rho[i] = rhoi
             bulk[i] = bulki
-            c[i] = ci
+            speed_of_sound[i] = speed_of_soundi
         return has_mat8, has_mat9, e11, e22, e33
 
 def tri_quality(p1, p2, p3):
@@ -551,6 +558,10 @@ def tri_quality(p1, p2, p3):
     v21 = p2 - p1
     v32 = p3 - p2
     v13 = p1 - p3
+    length21 = np.linalg.norm(v21)
+    length32 = np.linalg.norm(v32)
+    length13 = np.linalg.norm(v13)
+    min_edge_length = min(length21, length32, length13)
     areai = 0.5 * np.linalg.norm(np.cross(v21, v13))
 
     cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
@@ -566,9 +577,9 @@ def tri_quality(p1, p2, p3):
     #assert len(lengths) == 3, lengths
     aspect_ratio = lengths.max() / lengths.min()
 
-    cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
-    cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-    cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
+    cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
+    cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
+    cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
     thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
     min_thetai = thetas.min()
     max_thetai = thetas.max()
@@ -584,7 +595,7 @@ def tri_quality(p1, p2, p3):
         #print('theta3=%s' % np.degrees(np.arccos(cos_theta3)))
         #print('max_theta=%s' % theta_deg)
         #asdf
-    return areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai
+    return areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai, min_edge_length
 
 
 def quad_quality(p1, p2, p3, p4):
@@ -593,6 +604,11 @@ def quad_quality(p1, p2, p3, p4):
     v32 = p3 - p2
     v43 = p4 - p3
     v14 = p1 - p4
+    length21 = np.linalg.norm(v21)
+    length32 = np.linalg.norm(v32)
+    length43 = np.linalg.norm(v43)
+    length14 = np.linalg.norm(v14)
+    min_edge_length = min(length21, length32, length43, length14)
 
     v42 = p4 - p2
     v31 = p3 - p1
@@ -648,10 +664,10 @@ def quad_quality(p1, p2, p3, p4):
     #assert len(lengths) == 3, lengths
     aspect_ratio = lengths.max() / lengths.min()
 
-    cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
-    cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-    cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
-    cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
+    cos_theta1 = np.dot(v21, -v14) / (length21 * length14)
+    cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
+    cos_theta3 = np.dot(v43, -v32) / (length43 * length32)
+    cos_theta4 = np.dot(v14, -v43) / (length14 * length43)
     #max_thetai = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
 
     # dot the local normal with the normal vector
@@ -689,7 +705,7 @@ def quad_quality(p1, p2, p3, p4):
         #warp2 = np.dot(n2a, n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
         #max_warp = max(np.arccos(warp1), np.arccos(warp2))
     out = (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-           min_thetai, max_thetai, dideal_thetai)
+           min_thetai, max_thetai, dideal_thetai, min_edge_length)
     return out
 
 def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
@@ -705,15 +721,20 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             v21 = xyz_cid0[n2, :] - xyz_cid0[n1, :]
             v32 = xyz_cid0[n3, :] - xyz_cid0[n2, :]
             v13 = xyz_cid0[n1, :] - xyz_cid0[n3, :]
+            length21 = np.linalg.norm(v21)
+            length32 = np.linalg.norm(v32)
+            length13 = np.linalg.norm(v13)
+            min_edge_length = min(length21, length32, length13)
 
-            cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
-            cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-            cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
+            cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
+            cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
+            cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
             cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3])
             ideal_theta.extend([piover3, piover3, piover3])
         elif len(face) == 4:
             try:
-                node_ids = all_node_ids[face[0]], all_node_ids[face[1]], all_node_ids[face[2]], all_node_ids[face[3]]
+                node_ids = (all_node_ids[face[0]], all_node_ids[face[1]],
+                            all_node_ids[face[2]], all_node_ids[face[3]])
             except:
                 print(face)
                 print(node_ids)
@@ -724,10 +745,15 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             v32 = xyz_cid0[n3, :] - xyz_cid0[n2, :]
             v43 = xyz_cid0[n4, :] - xyz_cid0[n3, :]
             v14 = xyz_cid0[n1, :] - xyz_cid0[n4, :]
-            cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
-            cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-            cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
-            cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
+            length21 = np.linalg.norm(v21)
+            length32 = np.linalg.norm(v32)
+            length43 = np.linalg.norm(v43)
+            length14 = np.linalg.norm(v14)
+            min_edge_length = min(length21, length32, length43, length14)
+            cos_theta1 = np.dot(v21, -v14) / (length21 * length14)
+            cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
+            cos_theta3 = np.dot(v43, -v32) / (length43 * length32)
+            cos_theta4 = np.dot(v14, -v43) / (length14 * length43)
             cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
             ideal_theta.extend([piover2, piover2, piover2, piover2])
         else:
@@ -738,4 +764,4 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
 
     min_thetai = thetas.min()
     max_thetai = thetas.max()
-    return min_thetai, max_thetai, ideal_thetai
+    return min_thetai, max_thetai, ideal_thetai, min_edge_length

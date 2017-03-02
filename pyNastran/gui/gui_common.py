@@ -4017,6 +4017,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         glyphs.SetVectorModeToUseVector()
         #apply_color_to_glyph = False
         #if apply_color_to_glyph:
+        #glyphs.SetScaleModeToScaleByScalar()
+        glyphs.SetScaleModeToScaleByVector()
         glyphs.SetColorModeToColorByScale()
         #glyphs.SetColorModeToColorByScalar()  # super tiny
         #glyphs.SetColorModeToColorByVector()  # super tiny
@@ -4037,7 +4039,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         glyphs.SetSourceConnection(glyph_source.GetOutputPort())
         #glyphs.SetScaleModeToDataScalingOff()
-        glyphs.SetScaleFactor(10.0)  # bwb
+        #glyphs.SetScaleFactor(10.0)  # bwb
         #glyphs.SetScaleFactor(1.0)  # solid-bending
         glyph_mapper = vtk.vtkPolyDataMapper()
         glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
