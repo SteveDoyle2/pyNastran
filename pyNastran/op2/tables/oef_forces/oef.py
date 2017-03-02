@@ -227,12 +227,12 @@ class OEF(OP2Common):
             #: mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             #: eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
             self.cycle = 0.
             self.update_mode_cycle('cycle')
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'cycle'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'cycle'])
             # TODO: mode_cycle is not defined?
-            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
+            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         elif self.analysis_code == 3:  # differential stiffness 0
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)

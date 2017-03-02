@@ -516,13 +516,13 @@ class NastranGuiResults(NastranGuiAttributes):
         elif hasattr(case, 'cycles'):
             header += '; freq = %g Hz' % case.cycles[itime]
         elif hasattr(case, 'eigis'):
-            freq = case.eigis[itime]
-            cycle = np.abs(freq) / (2. * np.pi)
+            eigi = case.eigis[itime]
+            cycle = np.abs(eigi) / (2. * np.pi)
             header += '; freq = %g Hz' % cycle
-        #elif hasattr(case, 'eigrs'):  # TODO: is this right; it's what it used to be...
-            #eigr = case.eigrs[itime]
-            #cycle = np.sqrt(np.abs(eigr)) / (2. * np.pi)  # is this right?
-            #header += '; freq = %g Hz' % cycle
+        elif hasattr(case, 'eigns'):  #  eign is not eigr; it's more like eigi
+            eigi2 = case.eigrs[itime] #  but |eigi| = sqrt(|eign|)
+            cycle = np.sqrt(np.abs(eigr2)) / (2. * np.pi)
+            header += '; freq = %g Hz' % cycle
 
         elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
             pass

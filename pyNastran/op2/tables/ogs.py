@@ -59,10 +59,10 @@ class OGS(OP2Common):
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
             self.mode_cycle = 0.0
             self.update_mode_cycle('mode_cycle')
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
         #elif self.analysis_code == 4: # differential stiffness
         #elif self.analysis_code == 5: # frequency
