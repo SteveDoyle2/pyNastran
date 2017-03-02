@@ -59,24 +59,19 @@ class SurfIO(object):
         tris = model.tris - 1
         quads = model.quads - 1
 
-        self.grid.Allocate(self.nElements, 1000)
+        grid = self.grid
+        grid.Allocate(self.nElements, 1000)
+
+        elements = []
+        etypes = []
         if ntris:
-            for eid, element in enumerate(tris):
-                elem = vtkTriangle()
-                elem.GetPointIds().SetId(0, element[0])
-                elem.GetPointIds().SetId(1, element[1])
-                elem.GetPointIds().SetId(2, element[2])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+            elements.append(tris)
+            etypes.append(5) # vtkTriangle().GetCellType()
         if nquads:
-            for eid, element in enumerate(quads):
-                elem = vtkQuad()
-                elem.GetPointIds().SetId(0, element[0])
-                elem.GetPointIds().SetId(1, element[1])
-                elem.GetPointIds().SetId(2, element[2])
-                elem.GetPointIds().SetId(3, element[3])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+            elements.append(quads)
+            etypes.append(9) # vtkQuad().GetCellType()
+        self.create_vtk_cells_of_constant_element_types(grid, elements, etypes)
+
 
         model.read_surf_failnode(surf_filename)
         if len(model.nodes_failed):
@@ -87,8 +82,9 @@ class SurfIO(object):
 
             ifailed = where(model.nodes_failed == 1)[0]
             nfailed = len(ifailed)
-            self.alt_grids['failed_nodes'].Allocate(nfailed, 1000)
-            grid2 = self.alt_grids['failed_nodes']
+            failed_grid = self.alt_grids['failed_nodes']
+            failed_grid.Allocate(nfailed, 1000)
+            grid2 = failed_grid
             points2 = vtk.vtkPoints()
             points2.SetNumberOfPoints(nfailed)
 
@@ -98,9 +94,8 @@ class SurfIO(object):
                 self.log.debug('%s %s' % (nid, c))
                 points2.InsertPoint(j, *c)
                 elem.GetPointIds().SetId(0, j)
-                self.alt_grids['failed_nodes'].InsertNextCell(elem.GetCellType(),
-                                                              elem.GetPointIds())
-            self.alt_grids['failed_nodes'].SetPoints(points2)
+                failed_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            failed_grid.SetPoints(points2)
             self._add_alt_actors(self.alt_grids)
 
             actor = self.geometry_actors['failed_nodes']
@@ -110,10 +105,10 @@ class SurfIO(object):
             prop.SetPointSize(10)
 
         self.nElements = nelements
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
         #self.log_info("updated grid")
 
         # loadSurfResults - regions/loads
@@ -136,6 +131,7 @@ class SurfIO(object):
         #raise NotImplementedError()
 
     def _fill_surf_case(self, surf_filename, cases, ID, nnodes, nelements, model):
+        """builds the results for the *.surf AFLR3 input file"""
         base, ext = os.path.splitext(surf_filename)
         assert ext == '.surf', surf_filename
 

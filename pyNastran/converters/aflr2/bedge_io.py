@@ -44,13 +44,13 @@ class BEdge_IO(object):
         self.create_alternate_vtk_grid(
             'nodes', color=black, line_width=5, opacity=1., point_size=3,
             representation='point')
-        self.alt_grids['nodes'].Allocate(nnodes, 1000)
+        alt_grid = self.alt_grids['nodes']
+        alt_grid.Allocate(nnodes, 1000)
 
         grid = self.grid
         grid.Allocate(self.nElements, 1000)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
+        points = self.numpy_to_vtk_points(nodes)
 
         mmax = np.amax(nodes, axis=0)
         mmin = np.amin(nodes, axis=0)
@@ -60,35 +60,29 @@ class BEdge_IO(object):
         #print('dim_max =', dim_max)
         #self.update_axes_length(dim_max)
 
+        etype = 1  # vtk.vtkVertex().GetCellType()
+        #elements = np.arange(0, len(nodes), dtype='int32')
+        #assert len(elements) == len(nodes)
+        #self.create_vtk_cells_of_constant_element_type(alt_grid, elements, etype)
         for inode, node in enumerate(nodes):
-            points.InsertPoint(inode, node)
-
             elem = vtk.vtkVertex()
             elem.GetPointIds().SetId(0, inode)
-            self.alt_grids['nodes'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            alt_grid.InsertNextCell(etype, elem.GetPointIds())
 
         bars = model.bars
-        for eid, element in enumerate(bars):
-            elem = vtk.vtkLine()
-            n1, n2 = element
-            try:
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-            except KeyError:
-                print("nodeIDs =", element)
-                print(str(element))
-                continue
-            self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+        etype = 3  # vtkLine().GetCellType()
+        self.create_vtk_cells_of_constant_element_type(grid, bars, etype)
 
         self.nElements = nelements
-        self.alt_grids['nodes'].SetPoints(points)
+        alt_grid.SetPoints(points)
         grid.SetPoints(points)
         grid.Modified()
         if hasattr(grid, 'Update'):
             grid.Update()
         #print("updated grid")
 
-        # loadCart3dResults - regions/loads
+        # loadBedgeResults - regions/loads
         #self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()

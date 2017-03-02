@@ -146,10 +146,6 @@ class Usm3dIO(object):
         grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
-        #points = vtk.vtkPoints()
-        #points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
         self.eid_map = {}
         #elem.SetNumberOfPoints(nNodes)
@@ -171,12 +167,14 @@ class Usm3dIO(object):
         points = self.numpy_to_vtk_points(nodes)
         if ntris:
             self.element_ids = np.arange(1, ntris + 1, dtype='int32')
-            for (n0, n1, n2) in tris:
-                elem = vtkTriangle()
-                elem.GetPointIds().SetId(0, n0)
-                elem.GetPointIds().SetId(1, n1)
-                elem.GetPointIds().SetId(2, n2)
-                grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+            etype = 5  # vtkTriangle().GetCellType()
+            self.create_vtk_cells_of_constant_element_type(grid, tris, etype)
+            #for (n0, n1, n2) in tris:
+                #elem = vtkTriangle()
+                #elem.GetPointIds().SetId(0, n0)
+                #elem.GetPointIds().SetId(1, n1)
+                #elem.GetPointIds().SetId(2, n2)
+                #grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         else:
             ntets = tets.shape[0]
             self.element_ids = np.arange(1, ntets + 1, dtype='int32')
