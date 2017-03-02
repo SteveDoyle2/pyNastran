@@ -1,18 +1,18 @@
 import os
+import unittest
 
 from pyNastran.applications.aero_panel_buckling.run_buckling import run_panel_buckling
-from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import run_nastran
+from pyNastran.utils.nastran_utils import run_nastran
 from pyNastran.converters.nastran.nastranIOv import NastranIO
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, '..', 'models')
 
-import unittest
 
 class TestPanelBuckling(unittest.TestCase):
 
-    def test_solid_shell_bar_01(self):
+    def test_panel_buckling_bwb(self):
         input_dir = os.path.join(model_path, 'bwb')
         bdf_filename = os.path.join(input_dir, 'bwb_saero.bdf')
         workpath = os.path.join(os.getcwd(), 'aero_buckling')

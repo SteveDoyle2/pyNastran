@@ -24,12 +24,12 @@ log = get_logger2(None, debug=debug)
 
 class DeflectionReader(object):
     def __init__(self, op2_filename='fem.op2', isubcase=1):
-        log.info('---starting deflectionReader.init of %s---' % op2_filename)
+        log.info('---starting deflection_reader.init of %s---' % op2_filename)
         op2 = OP2()
         op2.set_results('displacements')
         op2.read_op2(op2_filename)
         self.deflections = op2.displacements[isubcase].data
-        log.info('---finished deflectionReader.init of %s---' % op2_filename)
+        log.info('---finished deflection_reader.init of %s---' % op2_filename)
 
     def get_deflections(self, ID, n0, n1, n2, n3):
         defs = [
@@ -51,10 +51,10 @@ class DeflectionReader(object):
 #------------------------------------------------------------------
 
 class DeflectionMapper(object):
-    def __init__(self, aeroNodes, tets, deflectionReader):  #structural_model
-        self.aeroNodes = aeroNodes
+    def __init__(self, aero_nodes, tets, deflection_reader):  #structural_model
+        self.aero_nodes = aero_nodes
         self.tets = tets
-        self.deflectionReader = deflectionReader
+        self.deflection_reader = deflection_reader
         #self.structural_model = structural_model
         #self.set_aero_infile()
         #self.set_structural_outfile()
@@ -94,7 +94,7 @@ class DeflectionMapper(object):
         excluded = []
         log.info("working on point = %s" % (list_print(m)))
         counter = 0
-        counterMax = 100
+        counter_max = 100
         broken = False
 
         is_internal, local_vol = closest_tet.is_internal_node(m)
@@ -109,7 +109,7 @@ class DeflectionMapper(object):
             #print("excluded = ", len(excluded))
 
             counter += 1
-            if counter == counterMax:
+            if counter == counter_max:
                 break
 
             if tet_id in excluded:
@@ -142,12 +142,13 @@ class DeflectionMapper(object):
         The tet thtat is the least bad (ideally perfect) is the one that
         will be used.
 
-        If a localVol (localVolume) is negative, then the point is outside.
-        However, currently localVol is actually the zeta natural coordinate, so
-        0.<zeta<1.
+        If a localVol (localVolume) is negative, then the point is
+        outside.  However, currently localVol is actually the zeta
+        natural coordinate, so 0.<zeta<1.
 
-        If a point isnt found, the least bad point is taken (the one with the lowest
-        optValue (optimization value) and a 'test' is performed to check how bad it is.
+        If a point isnt found, the least bad point is taken (the one
+        with the lowest opt_value (optimization value) and a 'test' is
+        performed to check how bad it is.
         """
         if excluded is None:
             excluded = []
@@ -227,6 +228,7 @@ class DeflectionMapper(object):
 
 
     def distance(self, p1, p2):
+        """finds the distance between two points"""
         return norm(p1 - p2)
 
     def map_deflections(self, proper_tets=None):
@@ -239,20 +241,20 @@ class DeflectionMapper(object):
         sys.stdout.flush()
         #reader = f06Reader(self.structuralOutfile)
         #d = reader.readDeflections()
-        aeroNodes = self.aeroNodes
+        aero_nodes = self.aero_nodes
         #tets = self.tets
-        d = self.deflectionReader
+        d = self.deflection_reader
         tets = self.tets
 
         #tets = self.buildTetrahedralization()
 
-        #aeroNodes = [array([0.0,0.,0.])]
-        aeroNodes2 = []
+        #aero_nodes = [array([0.0,0.,0.])]
+        aero_nodes2 = []
         tet = tets[1]
         log.info("-" * 80)
-        #print("type(aeroNodes)=%s" % type(aeroNodes))
+        #print("type(aero_nodes)=%s" % type(aero_nodes))
 
-        for i, aero_node in iteritems(aeroNodes):
+        for i, aero_node in iteritems(aero_nodes):
             if aero_node[1] < 0:
                 log.info('skipping aero_node=%s bc y<0.' % i)
                 continue
@@ -273,58 +275,58 @@ class DeflectionMapper(object):
             #print("***tet = %s" % (tet))
             (n0, n1, n2, n3) = tet.nodes
             ID = tet.ID
-            deflectionsTet = d.get_deflections(ID, n0, n1, n2, n3)
-            aeroNode2 = tet.map_deflections(deflectionsTet, aero_node)
-            log.info("aeroNode2 = %s" % (list_print(aeroNode2)))
+            deflections_tet = d.get_deflections(ID, n0, n1, n2, n3)
+            aero_node2 = tet.map_deflections(deflections_tet, aero_node)
+            log.info("aeroNode2 = %s" % (list_print(aero_node2)))
             proper_tets[i] = ID
-            aeroNodes2.append(aeroNode2)
+            aero_nodes2.append(aero_node2)
 
             #for tet in tets:  # should select in certain order based on centroids
             #    if tet.isInternalNode(aero_node):
             #        n0,n1,n2,n3 = tet.nodes
             #
             #        deflectionsTet = [d[n0], d[n1], d[n2], d[n3]]
-            #        aeroNode2 = tet.mapDeflections(deflectionsTet, aero_node)
+            #        aero_node2 = tet.mapDeflections(deflectionsTet, aero_node)
             #break # uncomment to run one aero_node
             log.info("-" * 80)
             sys.stdout.flush()
-        #return aeroNode2
+        #return aero_node2
         #for key, value in proper_tets.items():
         #    print("point_id=%s  -> tetID=%s" % (key, value))
         sys.stdout.flush()
-        return aeroNodes2, proper_tets
+        return aero_nodes2, proper_tets
 
-    #def writeAeroInfile(self):
-        #self.aeroModel.updateNodes(nodes)
-        #self.aeroModel.write(self.aeroFile)
+    #def write_aero_infile(self):
+        #self.aero_model.update_nodes(nodes)
+        #self.aero_model.write(self.aeroFile)
 
 #------------------------------------------------------------------
 
-def load_proper_tets(properTetFilename='properTets.in'):
+def load_proper_tets(proper_tet_filename='properTets.in'):
     proper_tets = {}
 
-    if os.path.exists(properTetFilename):
-        log.info("loading tets from %r..." % properTetFilename)
-        infile = open(properTetFilename, 'r')
+    if os.path.exists(proper_tet_filename):
+        log.info("loading tets from %r..." % proper_tet_filename)
+        infile = open(proper_tet_filename, 'r')
         lines = infile.readlines()
         for line in lines[1:]:
             point_id, proper_tet = line.strip().split()
             proper_tets[int(point_id)] = int(proper_tet)
     else:
-        log.info("couldnt find tetFile %r..." % properTetFilename)
+        log.info("couldnt find tetFile %r..." % proper_tet_filename)
     return proper_tets
 
-def write_proper_tets(workpath, properTets):
+def write_proper_tets(workpath, proper_tets):
     outfilename = os.path.join(workpath, 'properTets.in')
     if not os.path.exists(outfilename):
         log.info("writing tets...")
         msg = '#PointID    tetID\n'
-        for key, value in iteritems(properTets):
+        for key, value in iteritems(proper_tets):
             msg += "%5s  %5s\n" % (key, value)
         with open(outfilename, 'wb') as outfile:
             outfile.write(msg)
 
-def test_Tet():
+def test_tet():
     b = [10., 0., 0.]
     a = [0., 10., 0.]
     c = [0., 0., 10.]
@@ -340,11 +342,11 @@ def test_deflections():
     infilename = os.path.join('op2reader', 'solid_shell_bar.op2')
     deflections = {}
     op2 = DeflectionReader(infilename)
-    #op2.printDisplacement()
+    #op2.print_displacement()
     displacements = op2.convert_displacements()
 
     #for gridID, disp in sorted(displacements.items()):
-    #    print("gridID=%s disp=%s" % (gridID, disp))
+       #print("gridID=%s disp=%s" % (gridID, disp))
 
 #------------------------------------------------------------------
 
@@ -354,9 +356,11 @@ def test_deflections():
     #runPremorph(args, bdf_model, premorph_path)
 
 
-def mapDeflectionsStructures_Aero(bdf_model='test_tet10.bdf', op2_filename='test_tet10.op2',
+def mapDeflectionsStructures_Aero(bdf_model='test_tet10.bdf',
+                                  op2_filename='test_tet10.op2',
                                   tet_filename='geometry.morph.in',
-                                  cart3d_geom_filename='bJet.a.tri', cart3d_out_filename='bJet.a.tri2',
+                                  cart3d_geom_filename='bJet.a.tri',
+                                  cart3d_out_filename='bJet.a.tri2',
                                   proper_tet_filename='properTets.in',
                                   workpath=''):
     t0 = time()
@@ -384,12 +388,12 @@ def mapDeflectionsStructures_Aero(bdf_model='test_tet10.bdf', op2_filename='test
     # loading aero nodes
     cart = Cart3D()  # bJet.a.tri
     cart.read_cart3d(cart3d_geom_filename)
-    #(cartPoints, elements, regions, Cp) = cart.makeHalfModel(cartPoints, elements, regions, Cp)
+    #(cart_points, elements, regions, Cp) = cart.makeHalfModel(cart_points, elements, regions, Cp)
     sys.stdout.flush()
 
 
     #cart_outfile = os.path.join(workpath, 'bJet.a.tri_test')   # test code
-    #cart.writeInfile(cart_outfile, cart_points, elements, regions)
+    #cart.write_infile(cart_outfile, cart_points, elements, regions)
     #for point in cart_points:
     #    print("point = ", point)
 
@@ -408,8 +412,8 @@ def mapDeflectionsStructures_Aero(bdf_model='test_tet10.bdf', op2_filename='test
     cart.write_cart3d(cart3d_out_filename) #bJet.a.tri_new
     log.info("done with deflection mapping!")
 
-    #for aeroNode in aeroNodes2:
-    #    print("aeroNode = ", aeroNode)
+    #for aero_node in aero_nodes2:
+    #    print("aeroNode = ", aero_node)
     t2 = time()
     log.info("total mapDeflections.py time = %g sec" % (t2-t0))
 
@@ -426,12 +430,12 @@ def main():
     log.info("basepath = %r" % basepath)
     tet_filename = os.path.join(configpath, 'geometry.morph.in')
     op2_filename = os.path.join(configpath, 'fem3.op2')
-    cart3dGeom = os.path.join(configpath, 'Cart3d_bwb.i.tri')
-    cart3dOut = os.path.join(workpath, 'Cart3d_bwb.i.tri2')
+    cart3d_geom = os.path.join(configpath, 'Cart3d_bwb.i.tri')
+    cart3d_out = os.path.join(workpath, 'Cart3d_bwb.i.tri2')
     proper_tet_filename = os.path.join(configpath, 'properTets.in')  # not required to exist...
 
     mapDeflectionsStructures_Aero(bdf_model, op2_filename, tet_filename,
-                                  cart3dGeom, cart3dOut, proper_tet_filename,
+                                  cart3d_geom, cart3d_out, proper_tet_filename,
                                   workpath=workpath)
 
     #mapDeflectionsStructures_Aero()

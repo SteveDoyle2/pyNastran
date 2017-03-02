@@ -1,21 +1,30 @@
 from __future__ import print_function
 import os
 import sys
-#from copy import deepcopy
-#from six import iteritems, string_types
 import glob
 import subprocess
-#import time
+import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.bdf import BDF
-from pyNastran.op2.op2 import OP2
+from pyNastran.bdf.bdf import read_bdf
+from pyNastran.op2.op2 import read_op2
 #from pyNastran.utils.nastran_utils import run_nastran
 
-def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, overwrite_op2_if_exists=False):
+def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None,
+                   overwrite_op2_if_exists=False):
+    """
+    Nastran can be very temperamental.
+
+    Sometimes, it decides to just not run a job with os.system(...)
+    or subprocess.  I suspect it's an issue of throwing too many
+    models at the server.  Instead, we can create a bash script,
+    run that on Linux (even if we have to switch operating systems),
+    manually run the the jobs, bring them back, and continue the
+    analysis.
+    """
     #print(bdf_filenames)
     print('Start running patch jobs.')
     nastran_keywords = {
@@ -32,7 +41,6 @@ def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, ov
     for fname in fnames:
         os.remove(os.path.join('linux', fname))
 
-    import shutil
     for bdf_filename in bdf_filenames:
         basename = os.path.basename(bdf_filename)
         patch_id_str = basename.split('_')[1].split('.')[0]
@@ -42,7 +50,9 @@ def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, ov
             #print(bdf_filename)
             #shutil.copyfile(bdf_filename, os.path.join('linux', basename))
             #print('working on %s' % bdf_filename)
-            #cmd = 'nastran {} scr=yes bat=no mem=100MB old=no'.format(bdf_filename)  # subprocess/os.system version
+
+            # subprocess/os.system version
+            #cmd = 'nastran {} scr=yes bat=no mem=100MB old=no'.format(bdf_filename)
             #cmd = 'nastran results/%s scr=yes' % (basename) # shell version
             cmd = 'nastran %s scr=yes bat=no old=no' % (basename) # shell version
             for key, value in nastran_keywords:
@@ -67,6 +77,7 @@ def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, ov
 
 def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None,
              overwrite_op2_if_exists=False):
+    """runs a series of BDF files using subprocess"""
     assert os.path.exists(workpath), print_bad_path(workpath)
 
     curdir = os.getcwd()
@@ -103,6 +114,7 @@ def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None,
 
 
 def load_sym_regions_map(sym_regions_filename):
+    """loads the file that defines which patches are symmetric"""
     print(os.getcwd())
     with open(sym_regions_filename, 'r') as sym_regions_file:
         lines = sym_regions_file.readlines()
@@ -119,8 +131,8 @@ def load_sym_regions_map(sym_regions_filename):
     return region_to_symregion_map, symregion_to_region_map
 
 def get_eigenvalues(op2_filename, debug=False):
-    model2 = OP2(debug=debug)
-    model2.read_op2(op2_filename)
+    """get the buckling eigenvalues for each panel"""
+    model2 = read_op2(op2_filename, debug=debug)
     cases = model2.eigenvectors.keys()
     isubcase = cases[0]
     eigenvector = model2.eigenvectors[isubcase]
@@ -134,14 +146,15 @@ def get_eigenvalues(op2_filename, debug=False):
     return eigrs
 
 def get_eigs(debug=False):
+    """get the buckling eigenvalues for each panel"""
     patch_files = glob.glob('patch_*.bdf')
     patch_numbers = []
     evals = []
     for patch_filename in patch_files:
         patch_number = patch_filename.split('_')[1].split('.')[0]
         patch_numbers.append(int(patch_number))
-        model = BDF(debug=debug)
-        model.read_bdf(patch_filename)
+        model = read_bdf(patch_filename, debug=debug)
+
         #eids = model.elements.keys()
         op2_filename = ''.join([patch_filename[:-4], '.op2'])
         eigenvalues = np.array(get_eigenvalues(op2_filename, debug=debug))
@@ -161,12 +174,13 @@ def get_eigs(debug=False):
     plt.show()
     plt.close()
 
-def main():
+def main():  # pragma: no cover
     #if not os.path.exists('patch_0.op2'):
+    workpath = ''
     bdf_filenames = glob.glob('%s/patches/patch_*.bdf' % workpath)
     run_bdfs(bdf_filenames)
     #get_eigs()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

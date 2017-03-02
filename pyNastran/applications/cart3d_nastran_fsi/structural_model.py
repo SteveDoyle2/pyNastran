@@ -115,4 +115,3 @@ class StructuralModel(Model):
         #out = printCard(card)[:-1]+  '   $ %s\n' % comment
         out = print_card(card, size=16)
         bdf.write(out)
-

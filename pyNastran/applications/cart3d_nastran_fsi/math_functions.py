@@ -177,6 +177,7 @@ def get_triangle_weights(n, n1, n2, n3):
 
 
 def Area(a, b):
+    """gets the quad/tri area"""
     return 0.5 * norm(cross(a, b))
 
 

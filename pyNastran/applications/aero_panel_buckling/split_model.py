@@ -1,5 +1,13 @@
+"""
+defines various functions for splitting a model
+ - load_regions(regions_filename)
+ - load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
+                                           regions_filename, sym_regions_filename=None,
+                                           eig_min=-1.0, eig_max=1.0, eig_default=3.0)
+ - split_model_by_pid_panel(patch_filenames, workpath='results')
+
+"""
 from __future__ import print_function
-#import glob
 import os
 from collections import defaultdict
 
@@ -8,7 +16,7 @@ import numpy as np
 #from numpy import where, unique, array, zeros, searchsorted, log10, array_equal
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.op2.op2 import OP2, read_op2, FatalError
+from pyNastran.op2.op2 import read_op2, FatalError
 from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import (
     load_sym_regions_map)
 
@@ -157,8 +165,10 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
             neg_eigenvalue = 10.
 
         #evals.append(min_eval)
-        bdf_model.log.info('Patch=%s  compression (lambda > 0); lambda=%.3f RF=%.3f' % (patch_id, pos_eigenvalue, pos_reserve_factor))
-        #bdf_model.log.info('Patch=%s  tension    (lambda < 0); lambda=%.3f RF=%.3f' % (patch_id, neg_eigenvalue, neg_reserve_factor))
+        bdf_model.log.info('Patch=%s  compression (lambda > 0); lambda=%.3f RF=%.3f' % (
+            patch_id, pos_eigenvalue, pos_reserve_factor))
+        bdf_model.log.info('Patch=%s  tension    (lambda < 0); lambda=%.3f RF=%.3f' % (
+            patch_id, neg_eigenvalue, neg_reserve_factor))
         reserve_factor = min(neg_reserve_factor, pos_reserve_factor, eig_default)
         assert reserve_factor > 0.
         min_eigenvalue_by_patch_id[patch_id] = reserve_factor
@@ -233,15 +243,15 @@ def split_model_by_pid_panel(patch_filenames, workpath='results'):
             pid_panel[key].append(eid)
             eids[pid].append(eid)
 
-        if 0:
-            for pid, eidsi in sorted(iteritems(eids)):
-                pid_filename = os.path.join(workpath, 'pid_%i_ipanel_%i.txt' % (pid, ipanel))
-                out = str(eidsi)
-                with open(pid_filename, 'w') as pid_file:
-                    pid_file.write('# PSHELL pid\n')
-                    pid_file.write('# eids\n')
-                    pid_file.write('%s\n' % pid)
-                    pid_file.write('%s\n' % out[1:-1])
+        #if 0:
+            #for pid, eidsi in sorted(iteritems(eids)):
+                #pid_filename = os.path.join(workpath, 'pid_%i_ipanel_%i.txt' % (pid, ipanel))
+                #out = str(eidsi)
+                #with open(pid_filename, 'w') as pid_file:
+                    #pid_file.write('# PSHELL pid\n')
+                    #pid_file.write('# eids\n')
+                    #pid_file.write('%s\n' % pid)
+                    #pid_file.write('%s\n' % out[1:-1])
 
     regions_filename = 'regions.txt'
     nregions = 0
@@ -258,7 +268,7 @@ def split_model_by_pid_panel(patch_filenames, workpath='results'):
     return regions_filename
 
 
-def main():
+def main():  # pragma: no cover
     """
     key=AELINK   value=8
     key=AELIST   value=4
@@ -296,5 +306,5 @@ def main():
     load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames,
                                            'regions.txt', sym_regions_filename=sym_regions_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

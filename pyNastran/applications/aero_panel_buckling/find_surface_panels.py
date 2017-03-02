@@ -1,6 +1,6 @@
 """
-Takes a 2D mesh of a structure (e.g. an aircraft) and finds the 2D skin panels
-in order to do a buckling analysis.
+Takes a 2D mesh of a structure (e.g. an aircraft) and finds the "2D" skin
+panels in order to do a buckling analysis.
 """
 # pylint: disable=E1101
 from __future__ import print_function
@@ -14,7 +14,7 @@ from six import iteritems, string_types
 import numpy as np
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.bdf.field_writer import print_card_8
 
@@ -373,6 +373,10 @@ def get_next_edges(eid_to_edge_map, edge_to_eid_map,
                    patch, all_patch_edges, patch_edges,
                    used_eids, used_edges,
                    edges_to_check, patch_len, free_edges):
+    """
+    Loops over the set of edges, grabs the neighboring elements that don't
+    cross a patch line.  Returns a new set of edges to check.
+    """
     edges_to_check_next = deepcopy(edges_to_check)
     for edge in edges_to_check:
         #print('  edge =', edge)
@@ -853,11 +857,11 @@ def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_arr
             patch_file.write(prop.write_card(size=size, is_double=is_double))
             #bdf_model._write_properties(patch_file, size, is_double)
 
-        # msg = ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
-            # '  POINT-ID    ELEMENT-ID    SOURCE         T1             T2             T3             R1             R2             R3\n', ]
-            #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
-            #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
-            #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        # msg = ['                                     G R I D   P O I N T   F O R C E   B A L A N C E\n',
+            # '  POINT-ID   ELEMENT-ID   SOURCE      T1             T2       T3             R1     R2      R3\n', ]
+            #'0     13683         3736   TRIAX6      4.996584E+00   0.0      1.203093E+02   0.0    0.0     0.0'
+            #'      13683         3737   TRIAX6     -4.996584E+00   0.0     -1.203093E+02   0.0    0.0     0.0'
+            #'      13683                *TOTALS*    6.366463E-12   0.0     -1.364242E-12   0.0    0.0     0.0'
         zero = ' '
         if 0:
             msg = []
@@ -1267,7 +1271,10 @@ def create_buckling_header(subcase, eig_min=0., eig_max=100., nroots=20):
     load_id = 55
     # EIGB has severe performance issue
     #bulk_data_cards.append(['EIGB', method, 'INV', eig_min, eig_max, nroots])
-    assert isinstance(nroots, int), 'EIGRL method=%s eig_min=%s eig_max=%s nroots=%s' % (method, eig_min, eig_max, nroots)
+    if not isinstance(nroots, int):
+        msg = 'EIGRL method=%s eig_min=%s eig_max=%s nroots=%s' % (
+            method, eig_min, eig_max, nroots)
+        raise TypeError(msg)
     bulk_data_cards.append(['EIGRL', method, eig_min, eig_max, nroots])
     return case_control, bulk_data_cards, spc_id, mpc_id, load_id
 
@@ -1280,11 +1287,11 @@ def get_bdf_object(bdf_filename, xref=True):
               created (in regards to xref).
     """
     if isinstance(bdf_filename, string_types):
-        model = BDF(debug=False)
         if not os.path.exists('model.obj') or 1:
-            model.read_bdf(bdf_filename, xref=False)
+            model = read_bdf(bdf_filename, xref=False, debug=False)
             #model.save('model.obj')
         else:
+            model = BDF(debug=False)
             model.load('model.obj')
         model.cross_reference(xref=xref)
     elif isinstance(bdf_filename, BDF):
