@@ -123,10 +123,14 @@ if 0:
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage',
-              'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
-              'sphinx.ext.todo', 'sphinx.ext.graphviz',
-              'sphinx.ext.inheritance_diagram','numpydoc' ]
+extensions = [
+    'sphinx.ext.autodoc', 'sphinx.ext.coverage',
+    'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
+    'sphinx.ext.todo', 'sphinx.ext.graphviz',
+    'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.autosummary',
+    'numpydoc',
+]
 
 # display todos
 todo_include_todos=True
@@ -214,7 +218,16 @@ else:
     # new
     # napolean is now called sphinx_rtd_theme
 
-    html_theme = 'sphinx_rtd_theme' # classic/alabaster/numpydoc/sphinx_rtd_theme
+    if 0:
+        html_theme = 'napolean' # classic/alabaster/numpydoc/sphinx_rtd_theme
+        html_theme_path = []
+    elif 1:
+        html_theme = 'default'
+    else:
+        import sphinx_rtd_theme
+        html_theme = 'sphinx_rtd_theme' # classic/alabaster/numpydoc/sphinx_rtd_theme
+        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
     # napolean handles mixed sphinx (alabaster) and numpydoc docstring formats
 
 # Theme options are theme-specific and customize the look and feel of a theme
