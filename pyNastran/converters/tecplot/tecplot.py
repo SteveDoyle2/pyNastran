@@ -306,7 +306,7 @@ class Tecplot(FortranFormat):
         self.log.debug(headers_dict)
         nnodesi = int(headers_dict['N'])
         nelementsi = int(headers_dict['E'])
-        #print('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
+        self.log.info('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
         xyz = zeros((nnodesi, 3), dtype='float32')
         results = zeros((nnodesi, nresults), dtype='float32')
         if zone_type == 'FEBRICK':
@@ -345,30 +345,36 @@ class Tecplot(FortranFormat):
                         line = tecplot_file.readline().strip()
                     sline = line.split()
             elif data_packing == 'BLOCK':
-                for ires in range(3 + nresults):
-                    result = []
-                    i = 0
-                    nresult = 0
-                    nnodes_max = nnodesi + 1
-                    while i < nnodes_max:
-                        result += sline
-                        nresult += len(sline)
-                        if nresult >= nnodesi:
-                            break
+                result = []
+                iresult = 0
+                nresult = 0
+                nnodes_max = (3 + nresults) * nnodesi
+                while iresult < nnodes_max:
+                    result += sline
+                    nresult += len(sline)
+                    if iresult >= nnodes_max:
+                        self.log.debug('breaking...')
+                        #break
+                    line = tecplot_file.readline().strip()
+                    while line[0] == '#':
                         line = tecplot_file.readline().strip()
-                        while line[0] == '#':
-                            line = tecplot_file.readline().strip()
-                        sline = line.split()
-                        if i == 0:
-                            self.log.debug('zone_type=%s sline=%s' % (zone_type, sline))
-                        i += len(sline)
-                    assert i < nnodes_max, 'nresult=%s' % nresult
+                    sline = line.split()
+                    if iresult == 0:
+                        self.log.debug('zone_type=%s sline=%s' % (zone_type, sline))
+                    iresult += len(sline)
+
+                for ires in range(3 + nresults):
+                    i0 = ires * nnodesi
+                    i1 = (ires + 1) * nnodesi #+ 1
+                    if len(result[i0:i1]) != nnodesi:
+                        msg = 'ires=%s len=%s nnodesi=%s' % (ires, len(result[i0:i1]), nnodesi)
+                        raise RuntimeError(msg)
                     if ires in [0, 1, 2]:
                         self.log.debug('ires=%s nnodesi=%s len(result)=%s' %
                                        (ires, nnodesi, len(result)))
-                        xyz[:, ires] = result
+                        xyz[:, ires] = result[i0:i1]
                     else:
-                        results[:, ires - 3] = result
+                        results[:, ires - 3] = result[i0:i1]
             else:
                 raise NotImplementedError(data_packing)
         elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETRIANGLE'):
