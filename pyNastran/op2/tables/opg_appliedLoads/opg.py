@@ -65,13 +65,13 @@ class OPG(OP2Common):
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
-            ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            ## eigenvalue
+            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             self.mode2 = self.add_data_parameter(data, 'mode2', 'i', 7, False)
             self.cycle = self.add_data_parameter(data, 'cycle', 'f', 7, False)
             self.update_mode_cycle('cycle')
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode2', 'cycle', ])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle', ])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
         #    self.lsdvmn = self.get_values(data,'i',5)

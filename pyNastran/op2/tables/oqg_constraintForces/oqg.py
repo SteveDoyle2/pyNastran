@@ -69,13 +69,13 @@ class OQG(OP2Common):
         elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
-            ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            ## eigenvalue
+            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
             self.update_mode_cycle('mode_cycle')
             self.data_names = self.apply_data_code_value('data_names',
-                                                         ['mode', 'eigr', 'mode_cycle'])
+                                                         ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn

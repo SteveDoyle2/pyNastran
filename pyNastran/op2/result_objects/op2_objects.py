@@ -164,14 +164,18 @@ class BaseScalarObject(Op2Codes):
 
                 # Convert eigenvalues to frequencies
                 # TODO: add damping header
-            elif name in ['eigr']:
-                column_names.append('EigenvalueReal')
+            elif name in ['eign']:
+                column_names.append('Eigenvalue')
                 column_values.append(times)
-                abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                abs_freqs = np.sqrt(np.abs(self.eigns)) / (2 * np.pi)
                 column_names.append('Freq')
                 column_values.append(abs_freqs)
                 column_names.append('Radians')
                 column_values.append(abs_freqs * 2 * np.pi)
+
+            elif name in ['eigr']:
+                column_names.append('EigenvalueReal')
+                column_values.append(times)
 
             elif name in ['eigi']:
                 column_names.append('EigenvalueImag')

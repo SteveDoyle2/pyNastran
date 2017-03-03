@@ -54,7 +54,6 @@ def main():
         maskPts = vtk.vtkMaskPoints()
         if vtk.VTK_VERSION <= 5:
             maskPts.SetInputConnection(grid.GetProducerPort())
-            maskPts.SetInputConnection(grid.GetProducerPort())
         else:
             maskPts.SetInputData(grid)
 

@@ -52,7 +52,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 # News
 
-### pyNastran v0.9 progress (12/1/2016)
+### pyNastran v0.9 progress (3/2/2017)
  - [OP2](http://pynastran-git.readthedocs.io/en/latest/quick_start/op2_demo.html)
    - preliminary random results (ATO/CRM/PSD/RMS/NO)
    - improved geometry support
@@ -67,8 +67,17 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      - input/output units
      - mode switching not fixed yet
 
+ - GUI:
+   - complex displacement support
+   - animation support
+   - vector results (real/complex)
+      - SPC Forces, MPC Forces, Load Vector, Applied Load
+        - minimal control presently
+      - No Grid Point Forces (e.g., freebody loads, interface loads)
+   - signficant speedups
+
  - [BDF](http://pynastran-git.readthedocs.io/en/latest/quick_start/bdf_demo.html)
-   - 297 cards supported
+   - 303 cards supported
    - faster node transforms using:
 
      ```python
