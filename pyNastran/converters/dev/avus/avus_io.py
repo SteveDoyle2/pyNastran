@@ -1,8 +1,6 @@
 from __future__ import print_function
-from six import iteritems
 from six.moves import range
 
-import os
 from numpy import arange, mean, amax, amin, array
 
 import vtk
@@ -54,8 +52,8 @@ class AvusIO(object):
         loads = []
         assert loads is not None
         if 'Mach' in loads:
-            avgMach = mean(loads['Mach'])
-            note = ':  avg(Mach)=%g' % avgMach
+            avg_mach = mean(loads['Mach'])
+            note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
         self.iSubcaseNameMap = {1: ['Avus%s' % note, '']}
@@ -65,23 +63,22 @@ class AvusIO(object):
         form, cases = self._fill_avus_case(cases, ID, model, is_surface)
         self._finish_results_io2(form, cases)
 
-        if 0:
+        #if 0:
             # http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/AppendFilter
-            points = vtkAppendFilter()
+            #points = vtkAppendFilter()
             #if VTK_MAJOR_VERSION <= 5:
                 #appendFilter.AddInput(polydata)
                 #appendFilter.AddInput(ug)
             #else:
-            appendFilter.AddInputData(polydata)
-            appendFilter.AddInputData()
-            appendFilter.Update()
+            #appendFilter.AddInputData(polydata)
+            #appendFilter.AddInputData()
+            #appendFilter.Update()
 
     def _make_avus_geometry(self, model, quads_only=False):
         nodes = model.nodes
-        nnodes = self.nNodes
+        #nnodes = self.nNodes
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(nnodes)
+        grid = self.grid
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #self.nid_map = {}
@@ -94,8 +91,7 @@ class AvusIO(object):
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.create_global_axes(dim_max)
-        for i in range(nnodes):
-            points.InsertPoint(i, nodes[i, :])
+        points = self.numpy_to_vtk_points(nodes)
 
         #elements = model.elements
         quads = model.quad_elements
@@ -103,57 +99,57 @@ class AvusIO(object):
         tets = model.tet_elements
         tris = model.tri_elements
 
-        is_quads = len(quads)
-        is_tris = len(tris)
-        is_hexas = len(hexas)
-        is_tets = len(tets)
+        nquads = len(quads)
+        ntris = len(tris)
+        nhexas = len(hexas)
+        ntets = len(tets)
 
-        is_shells = is_quads + is_tris
-        is_solids = is_tets + is_hexas
+        is_shells = nquads + ntris
+        is_solids = ntets + nhexas
         if is_shells:
             is_surface = True
-            if is_quads:
+            if nquads:
                 elements = quads
-                for iface, face in enumerate(quads):
+                for face in quads:
                     elem = vtkQuad()
                     epoints = elem.GetPointIds()
                     epoints.SetId(0, face[0])
                     epoints.SetId(1, face[1])
                     epoints.SetId(2, face[2])
                     epoints.SetId(3, face[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
-                    #break
-            if is_tris:
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            if ntris:
                 elements = tris
-                for iface, face in enumerate(tris):
+                for face in tris:
                     elem = vtkTriangle()
                     epoints = elem.GetPointIds()
                     epoints.SetId(0, face[0])
                     epoints.SetId(1, face[1])
                     epoints.SetId(2, face[2])
-                    self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
-                    #break
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(5, elem.GetPointIds())
 
         elif is_solids:
-            if is_tets:
+            if ntets:
                 elements = tets
                 is_surface = False
                 self.nElements = model.nelements
-                self.grid.Allocate(self.nElements, 1000)
+                grid.Allocate(self.nElements, 1000)
 
                 nelements = elements.shape[0]
-                for eid in range(nelements):
+                for node_ids in elements:
                     elem = vtkTetra()
-                    node_ids = elements[eid, :]
                     epoints = elem.GetPointIds()
                     epoints.SetId(0, node_ids[0])
                     epoints.SetId(1, node_ids[1])
                     epoints.SetId(2, node_ids[2])
                     epoints.SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
 
-            if is_hexas:
+            if nhexas:
                 elements = hexas
                 is_surface = True
                 # is_surface = False
@@ -164,7 +160,7 @@ class AvusIO(object):
                     free_faces = array(model.get_free_faces(), dtype='int32')# + 1
                     nfaces = len(free_faces)
                     elements = free_faces
-                    self.grid.Allocate(nfaces, 1000)
+                    grid.Allocate(nfaces, 1000)
 
                     for face in free_faces:
                         elem = vtkQuad()
@@ -173,11 +169,12 @@ class AvusIO(object):
                         epoints.SetId(1, face[1])
                         epoints.SetId(2, face[2])
                         epoints.SetId(3, face[3])
-                        self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                        #elem.GetCellType() = 5  # vtkTriangle
+                        grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
                 elif is_volume:
                     self.nElements = model.nelements
-                    self.grid.Allocate(self.nElements, 1000)
+                    grid.Allocate(self.nElements, 1000)
 
                     nelements = elements.shape[0]
                     for eid in range(nelements):
@@ -192,18 +189,19 @@ class AvusIO(object):
                         epoints.SetId(5, node_ids[5])
                         epoints.SetId(6, node_ids[6])
                         epoints.SetId(7, node_ids[7])
-                        self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                        #elem.GetCellType() = 5  # vtkTriangle
+                        grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
         else:
             raise NotImplementedError()
 
-        self.grid.SetPoints(points)
+        grid.SetPoints(points)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         #print(dir(self.grid) #.SetNumberOfComponents(0))
         #self.grid.GetCellData().SetNumberOfTuples(1);
         #self.grid.GetCellData().SetScalars(self.gridResult)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
         return is_surface
 
     def clear_avus(self):
@@ -216,7 +214,7 @@ class AvusIO(object):
     def _fill_avus_case(self, cases, ID, model, is_surface):
         #'x', 'y', 'z',
         #result_names = ['rho', 'U', 'V', 'W', 'p']
-        result_names = []
+        #result_names = []
         # result_names = model.variables[3:]
         #nelements = elements.shape[0]
         nelements = model.nelements
@@ -224,12 +222,12 @@ class AvusIO(object):
         #nnodes = nodes.shape[0]
 
 
-        cases_new = []
-        new = False
+        #cases_new = []
+        #new = False
 
         #is_results = False
-        is_results = True
-        results_form = []
+        #is_results = True
+        #results_form = []
 
         if is_surface:
             element_id = 'FaceID'
@@ -250,6 +248,7 @@ class AvusIO(object):
         nid_res = GuiResult(ID, header='NodeID', title='NodeID',
                             location='node', scalar=nids)
         icase = 0
+        itime = 0
         cases[icase] = (eid_res, (itime, element_id))
         cases[icase + 1] = (nid_res, (itime, 'NodeID'))
 
@@ -257,25 +256,25 @@ class AvusIO(object):
 
         return geometry_form, cases
 
-        results = model.results
-        if is_results and len(results):
-            i = 2
-            for iresult, result_name in enumerate(result_names):
-                if results.shape[1] == 1:
-                    nodal_data = results
-                    assert len(result_names) == 1, result_names
-                else:
-                    nodal_data = results[:, iresult]
+        #results = model.results
+        #if is_results and len(results):
+            #i = 2
+            #for iresult, result_name in enumerate(result_names):
+                #if results.shape[1] == 1:
+                    #nodal_data = results
+                    #assert len(result_names) == 1, result_names
+                #else:
+                    #nodal_data = results[:, iresult]
 
-                if new:
-                    cases_new[i] = (result, i, result_name, 1, 'node', '%.3f', '')
-                else:
-                    cases[(ID, i, result_name, 1, 'node', '%.3f', '')] = nodal_data
-                results_form.append((result_name, i, []))
-                i += 1
-        form = [
-            ('Geometry', None, geometry_form),
-        ]
-        if len(results_form):
-            form.append(('Results', None, results_form))
-        return form, cases
+                #if new:
+                    #cases_new[i] = (result, i, result_name, 1, 'node', '%.3f', '')
+                #else:
+                    #cases[(ID, i, result_name, 1, 'node', '%.3f', '')] = nodal_data
+                #results_form.append((result_name, i, []))
+                #i += 1
+        #form = [
+            #('Geometry', None, geometry_form),
+        #]
+        #if len(results_form):
+            #form.append(('Results', None, results_form))
+        #return form, cases
