@@ -12,6 +12,63 @@ import numpy as np
 from pyNastran.utils import is_file_obj, _filename
 
 
+def unique_rows(A, return_index=False, return_inverse=False):
+    """
+    Similar to MATLAB's unique(A, 'rows'), this returns B, I, J
+    where B is the unique rows of A and I and J satisfy
+    A = B[J,:] and B = A[I,:]
+
+    Returns
+    -------
+    I : ndarray?
+        the index array;
+        returns if return_index=True
+    J : ndarray?
+        the inverse array;
+        returns if return_inverse=True
+
+    Example (not tested)
+    --------------------
+    >>> B       = unique_rows(A, return_index=False, return_inverse=False)
+    >>> B, I    = unique_rows(A, return_index=True,  return_inverse=False)
+    >>> B, J    = unique_rows(A, return_index=False, return_inverse=True)
+    >>> B, I, J = unique_rows(A, return_index=True,  return_inverse=True)
+
+    per https://github.com/numpy/numpy/issues/2871
+    """
+    A = np.require(A, requirements='C')
+    assert A.ndim == 2, "array must be 2-dim'l"
+
+    B = np.unique(A.view([('', A.dtype)] * A.shape[1]),
+                  return_index=return_index,
+                  return_inverse=return_inverse)
+
+    if return_index or return_inverse:
+        return (B[0].view(A.dtype).reshape((-1, A.shape[1]), order='C'),) \
+            + B[1:]
+    else:
+        return B.view(A.dtype).reshape((-1, A.shape[1]), order='C')
+
+#def unique_rows(data):
+    #"""
+    #finds the unique rows of a numpy array
+    #"""
+    #uniq = unique(data.view(data.dtype.descr * data.shape[1]))
+    #return uniq.view(data.dtype).reshape(-1, data.shape[1])
+
+
+def cross2d(a, b):
+    """
+    Interface to np.cross for 2d matrices
+
+    [cx0, cy0, cz0] = [ax0, ay0, az0]   [bx0, by0, bz0]
+    |cx1, cy1, cz1| = |ax1, ay1, az1| x |bx1, by1, bz1|
+    |cx2, cy2, cz2| = |ax2, ay2, az2|   |bx2, by2, bz2|
+    [cx3, cy3, cz3] = [ax3, ay3, az3]   [bx3, by3, bz3]
+    """
+    # axisa=-1, axisb=-1, axisc=-1,
+    return np.cross(a, b, axis=1)
+
 def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.float64,
                  converters=None, usecols=None, unpack=False,
                  ndmin=0,):
