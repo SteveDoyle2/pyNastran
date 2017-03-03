@@ -659,6 +659,8 @@ class Tecplot(FortranFormat):
         if zslice is not None:
             zslice = float(zslice)
             inodes.append(where(z < zslice)[0])
+
+        nodes = None
         if len(inodes) == 1:
             nodes = inodes[0]
         elif len(inodes) == 2:
@@ -667,9 +669,10 @@ class Tecplot(FortranFormat):
             nodes = intersect1d(
                 intersect1d(inodes[0], inodes[1], assume_unique=True),
                 inodes[2], assume_unique=True)
-            inodes = arange(self.nodes.shape[0])
+            #inodes = arange(self.nodes.shape[0])
             # nodes = unique(hstack(inodes))
-        self._slice_plane_inodes(nodes)
+        if nodes is not None:
+            self._slice_plane_inodes(nodes)
 
     def _slice_plane(self, y, slice_value):
         """

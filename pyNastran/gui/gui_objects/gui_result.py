@@ -148,7 +148,11 @@ class GuiResult(GuiResultCommon):
         self.header_default = self.header
         self.data_format_default = self.data_format
 
-        self.min_default = self.scalar.min()
+        try:
+            self.min_default = self.scalar.min()
+        except ValueError:
+            print('scalar =', self.scalar)
+            raise
         self.max_default = self.scalar.max()
         self.min_value = self.min_default
         self.max_value = self.max_default

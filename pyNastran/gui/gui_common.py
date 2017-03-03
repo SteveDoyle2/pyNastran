@@ -145,7 +145,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         fmt_order = kwds['fmt_order']
         inputs = kwds['inputs']
-        html_logging = kwds['html_logging']
+
+        if inputs['log'] is not None:
+            html_logging = False
+        else:
+            html_logging = kwds['html_logging']
         del kwds['html_logging']
 
         #if qt_version == 4:  # TODO: remove this???
@@ -296,10 +300,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #=========== Logging widget ===================
 
-        if self.html_logging:
+        if self.html_logging is True:
             self.log_dock_widget = ApplicationLogWidget(self)
             self.log_widget = self.log_dock_widget.log_widget
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
+        else:
+            self.log_widget = self.log
 
         if self.execute_python:
             self.python_dock_widget = PythonConsoleWidget(self)
@@ -2328,13 +2334,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #return None, None
 
     def start_logging(self):
-        if self.html_logging:
+        if self.html_logging is True:
             log = SimpleLogger('debug', 'utf-8', lambda x, y: self._logg_msg(x, y))
             # logging needs synchronizing, so the messages from different
             # threads would not be interleave
             self.log_mutex = QtCore.QReadWriteLock()
         else:
-            log = SimpleLogger('debug', 'utf-8', lambda x, y: print(x, y))
+            log = SimpleLogger(
+                level='debug', encoding='utf-8',
+                #log_func=lambda x, y: print(x, y)  # no colorama
+            )
         self.log = log
 
     def build_fmts(self, fmt_order, stop_on_failure=False):

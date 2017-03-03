@@ -64,14 +64,14 @@ def run_docopt():
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG]\n'
 
     # You don't need to throw a -o flag
     msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG]\n'
 
     # no input/output files
     # can you ever have an OUTPUT, but no INPUT?
@@ -79,7 +79,7 @@ def run_docopt():
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -104,6 +104,7 @@ def run_docopt():
 
     msg += "Info:\n"
     msg += "  -q, --quiet    prints debug messages (default=True)\n"
+    msg += "  --log LOG      disables HTML logging; prints to the screen\n"
     msg += "  -h, --help     show this help message and exit\n"
     msg += "  -v, --version  show program's version number and exit\n"
 
@@ -180,7 +181,7 @@ def run_docopt():
     #assert data['--console'] == False, data['--console']
     return (input_format, input_filenames, output_filenames, shots,
             magnify, rotation, geom_script, post_script, debug, user_points,
-            user_geom, is_groups, no_update)
+            user_geom, is_groups, no_update, data['--log'])
 
 
 def get_inputs():
@@ -198,6 +199,7 @@ def get_inputs():
     user_geom = None
     is_groups = False
     no_update = True
+    log = None
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
@@ -205,7 +207,7 @@ def get_inputs():
         if len(sys.argv) > 1:
             (input_format, input_filename, output_filename, shots, magnify,
              rotation, geom_script, post_script, debug, user_points, user_geom,
-             is_groups, no_update) = run_docopt()
+             is_groups, no_update, log) = run_docopt()
 
     inputs = {
         'format' : input_format,
@@ -221,5 +223,6 @@ def get_inputs():
         'user_geom' : user_geom,
         'is_groups' : is_groups,
         'no_update' : no_update,
+        'log' : log,
     }
     return inputs

@@ -66,6 +66,7 @@ class ApplicationLogWidget(QDockWidget):
 
 
 if is_scintilla:
+    print('using scintilla')
     class SimplePythonEditorWidget(Qsci.QsciScintilla):
         ARROW_MARKER_NUM = 8
 
@@ -216,9 +217,9 @@ class PythonConsoleWidget(QDockWidget):
         TDOO: not done...
         """
         return
-        parentPosition = self.mapToGlobal(QtCore.QPoint(0, 0))
-        self.listMenu.move(parentPosition + QPos)
-        self.listMenu.show()
+        #parentPosition = self.mapToGlobal(QtCore.QPoint(0, 0))
+        #self.listMenu.move(parentPosition + QPos)
+        #self.listMenu.show()
 
     def menuItemClicked_1(self):
         print(1)
