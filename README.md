@@ -67,7 +67,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      - input/output units
      - mode switching not fixed yet
 
- - GUI:
+ - [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html):
    - complex displacement support
    - animation support
    - vector results (real/complex)
