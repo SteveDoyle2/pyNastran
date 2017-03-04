@@ -34,17 +34,6 @@ gui Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`gui` Module
------------------
-
-.. inheritance-diagram:: pyNastran.gui.gui
-
-.. automodule:: pyNastran.gui.gui
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`gui_common` Module
 ------------------------
 
