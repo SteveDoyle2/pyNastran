@@ -329,14 +329,13 @@ class ForceTableResults(NastranTable):
         if self.is_real:
             if self.dim == 2:
                 # single result
-                deflected_xyz = scale * self.dxyz
+                deflected_xyz = self.dxyz
             elif self.dim == 3:
-                deflected_xyz = scale * self.dxyz[i, :]
+                deflected_xyz = self.dxyz[i, :]
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
-            dxyz = self._get_complex_displacements_by_phase(i, phase)
-            deflected_xyz = scale * dxyz
+            deflected_xyz = self._get_complex_displacements_by_phase(i, phase)
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return xyz, deflected_xyz
 

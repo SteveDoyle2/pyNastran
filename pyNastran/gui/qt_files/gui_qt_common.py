@@ -432,8 +432,9 @@ class GuiCommon(GuiAttributes):
                     else:
                         self._is_displaced = False
                         self._is_forces = True
+                        scale = obj.get_scale(i, res_name)
                         xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
-                        self._update_forces(vector_data)
+                        self._update_forces(vector_data, scale)
 
                     self.log_info('node plotting vector=%s - subcase_id=%s '
                                   'result_type=%s subtitle=%s label=%s'
@@ -483,9 +484,11 @@ class GuiCommon(GuiAttributes):
         self.hide_labels(show_msg=False)
         self.show_labels(result_names=[result_type], show_msg=False)
 
-    def _update_forces(self, forces_array):
+    def _update_forces(self, forces_array, scale=None):
         """changes the glyphs"""
         grid = self.grid
+        if scale is not None:
+            self.glyphs.SetScaleFactor(self.glyph_scale_factor * scale)
         mag = np.linalg.norm(forces_array, axis=1)
         #assert len(forces_array) == len(mag)
 
