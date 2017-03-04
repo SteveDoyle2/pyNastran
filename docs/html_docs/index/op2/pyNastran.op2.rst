@@ -103,8 +103,8 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.op2.op2_interface
-    pyNastran.op2.result_objects
-    pyNastran.op2.tables
-    pyNastran.op2.test
+   pyNastran.op2.op2_interface
+   pyNastran.op2.result_objects
+   pyNastran.op2.tables
+   pyNastran.op2.test
 

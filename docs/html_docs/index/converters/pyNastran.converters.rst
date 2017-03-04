@@ -139,18 +139,18 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.converters.aflr2
-    pyNastran.converters.cart3d
-    pyNastran.converters.fast
-    pyNastran.converters.LaWGS
-    pyNastran.converters.nastran
-    pyNastran.converters.openfoam
-    pyNastran.converters.panair
-    pyNastran.converters.shabp
-    pyNastran.converters.stl
-    pyNastran.converters.su2
-    pyNastran.converters.tecplot
-    pyNastran.converters.tetgen
-    pyNastran.converters.ugrid
-    pyNastran.converters.usm3d
+   pyNastran.converters.aflr2
+   pyNastran.converters.cart3d
+   pyNastran.converters.fast
+   pyNastran.converters.LaWGS
+   pyNastran.converters.nastran
+   pyNastran.converters.openfoam
+   pyNastran.converters.panair
+   pyNastran.converters.shabp
+   pyNastran.converters.stl
+   pyNastran.converters.su2
+   pyNastran.converters.tecplot
+   pyNastran.converters.tetgen
+   pyNastran.converters.ugrid
+   pyNastran.converters.usm3d
 

@@ -36,7 +36,7 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.op2.tables.oes_stressStrain.complex
-    pyNastran.op2.tables.oes_stressStrain.random
-    pyNastran.op2.tables.oes_stressStrain.real
+   pyNastran.op2.tables.oes_stressStrain.complex
+   pyNastran.op2.tables.oes_stressStrain.random
+   pyNastran.op2.tables.oes_stressStrain.real
 

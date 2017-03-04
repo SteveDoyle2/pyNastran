@@ -162,7 +162,7 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.bdf.bdf_interface
-    pyNastran.bdf.cards
-    pyNastran.bdf.mesh_utils
+   pyNastran.bdf.bdf_interface
+   pyNastran.bdf.cards
+   pyNastran.bdf.mesh_utils
 

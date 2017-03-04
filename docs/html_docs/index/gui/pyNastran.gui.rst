@@ -149,11 +149,11 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.gui.colormaps
-    pyNastran.gui.geom
-    pyNastran.gui.gui_interface
-    pyNastran.gui.gui_objects
-    pyNastran.gui.icons
-    pyNastran.gui.menus
-    pyNastran.gui.qt_files
+   pyNastran.gui.colormaps
+   pyNastran.gui.geom
+   pyNastran.gui.gui_interface
+   pyNastran.gui.gui_objects
+   pyNastran.gui.icons
+   pyNastran.gui.menus
+   pyNastran.gui.qt_files
 

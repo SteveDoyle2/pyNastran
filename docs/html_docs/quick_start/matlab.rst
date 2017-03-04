@@ -10,7 +10,9 @@ Replace the base redirectstdout.m file (that for my installation is located in t
 
     C:\Program Files\MATLAB\MATLAB Production Server\R2015a\toolbox\matlab\external\interfaces\python\+python\+internal\redirectstdout.m
 
-with this file: https://github.com/SteveDoyle2/pyNastran/tree/master/docs/pyNastran_in_MATLAB_example/redirectstdout/redirectstdout.m
+with this file:
+
+    https://github.com/SteveDoyle2/pyNastran/tree/master/docs/pyNastran_in_MATLAB_example/redirectstdout/redirectstdout.m
 
 Also, instead of imports like:
 
