@@ -34,17 +34,6 @@ gui Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`gui` Module
------------------
-
-.. inheritance-diagram:: pyNastran.gui.gui
-
-.. automodule:: pyNastran.gui.gui
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`gui_common` Module
 ------------------------
 
@@ -160,11 +149,11 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.gui.colormaps
-    pyNastran.gui.geom
-    pyNastran.gui.gui_interface
-    pyNastran.gui.gui_objects
-    pyNastran.gui.icons
-    pyNastran.gui.menus
-    pyNastran.gui.qt_files
+   pyNastran.gui.colormaps
+   pyNastran.gui.geom
+   pyNastran.gui.gui_interface
+   pyNastran.gui.gui_objects
+   pyNastran.gui.icons
+   pyNastran.gui.menus
+   pyNastran.gui.qt_files
 

@@ -39,9 +39,9 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.gui.gui_interface.camera
-    pyNastran.gui.gui_interface.clipping
-    pyNastran.gui.gui_interface.legend
-    pyNastran.gui.gui_interface.modify_label_properties
-    pyNastran.gui.gui_interface.modify_picker_properties
+   pyNastran.gui.gui_interface.camera
+   pyNastran.gui.gui_interface.clipping
+   pyNastran.gui.gui_interface.legend
+   pyNastran.gui.gui_interface.modify_label_properties
+   pyNastran.gui.gui_interface.modify_picker_properties
 

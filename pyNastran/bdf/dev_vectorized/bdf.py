@@ -2966,7 +2966,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         lines = []
         self.log.error('ENCODING - show_bad_file=%r' % self._encoding)
 
-        # rU
         with codec_open(_filename(bdf_filename), 'r', encoding=self._encoding) as bdf_file:
             iline = 0
             nblank = 0

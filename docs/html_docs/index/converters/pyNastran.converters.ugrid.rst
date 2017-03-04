@@ -149,6 +149,6 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.converters.ugrid.models
-    pyNastran.converters.ugrid.naca0012
+   pyNastran.converters.ugrid.models
+   pyNastran.converters.ugrid.naca0012
 

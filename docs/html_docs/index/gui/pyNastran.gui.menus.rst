@@ -72,5 +72,5 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.gui.menus.dev
+   pyNastran.gui.menus.dev
 

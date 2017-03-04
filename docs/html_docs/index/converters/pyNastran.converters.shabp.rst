@@ -56,5 +56,5 @@ Subpackages
 
 .. toctree::
 
-    pyNastran.converters.shabp.models
+   pyNastran.converters.shabp.models
 

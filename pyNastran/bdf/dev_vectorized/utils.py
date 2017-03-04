@@ -49,11 +49,3 @@ def slice_to_iter(ids):
     else:
         raise KeyError(ids)
     return ids2, int_flag
-
-#def unique_rows(data):
-    #"""
-    #finds the unique rows of a numpy array
-    #"""
-    #uniq = unique(data.view(data.dtype.descr * data.shape[1]))
-    #return uniq.view(data.dtype).reshape(-1, data.shape[1])
-
