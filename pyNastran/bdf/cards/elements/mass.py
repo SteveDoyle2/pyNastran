@@ -269,6 +269,10 @@ class CMASS2(PointMassElement):
         assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
 
     @property
+    def nodes(self):
+        return [self.g1, self.g2]
+
+    @property
     def node_ids(self):
         g1 = self.G1()
         g2 = self.G2()

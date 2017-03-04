@@ -1381,7 +1381,7 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTUBE=%s\n' % str(out))
-            (eid, pid, n1, n2) = out
+            #(eid, pid, n1, n2) = out
             elem = CTUBE.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
@@ -1397,7 +1397,7 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CVISC=%s\n' % str(out))
-            #(eid,pid,n1,n2) = out
+            #(eid, pid, n1, n2) = out
             elem = CVISC.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16

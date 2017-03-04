@@ -146,6 +146,87 @@ class RINGAX(BaseCard):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
+class SEQGP(BaseCard):
+    """defines the SEQGP class"""
+    type = 'SEQGP'
+
+    def __init__(self, nids, seqids, comment=''):
+        """
+        Creates the SEQGP card
+
+        Parameters
+        ----------
+        nid : int
+           the node id
+        seqid : int/float
+           the superelement id
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment = comment
+        if isinstance(nids, integer_types):
+            nids = [nids]
+        if isinstance(seqids, integer_types):
+            seqids = [seqids]
+
+        self.nids = nids
+        self.seqids = seqids
+
+    def append(self, seqgp):
+        self.nids += seqgp.nids
+        self.seqids += seqgp.seqids
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        nids, seqids = data
+        return SEQGP(nids, seqids, comment=comment)
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
+        """
+        lists_fields = []
+        if isinstance(self.nid, integer_types):
+            list_fields = [self.type, self.nid]
+            lists_fields.append(list_fields)
+        else:
+            singles, doubles = collapse_thru_packs(self.nid)
+            if singles:
+                list_fields = [self.type] + singles
+            if doubles:
+                for spoint_double in doubles:
+                    list_fields = [self.type] + spoint_double
+                    lists_fields.append(list_fields)
+        return lists_fields
+
+    def write_card(self, size=8, is_double=False):
+        """
+        The writer method used by BDF.write_card
+
+        Parameters
+        ----------
+        size : int; default=8
+            unused
+        is_double : bool; default=False
+            unused
+        """
+        msg = self.comment
+        lists_fields = self.repr_fields()
+        for list_fields in lists_fields:
+            if 'THRU' not in list_fields:
+                msg += print_int_card(list_fields)
+            else:
+                msg += print_card_8(list_fields)
+        return msg
+
+
 class XPoint(BaseCard):
     """common class for EPOINT/SPOINT"""
     def __init__(self, nid, comment):

@@ -5,10 +5,11 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.cards.properties.mass import PMASS, NSM
+import numpy as np
 
+from pyNastran.bdf.cards.properties.mass import PMASS, NSM
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
-from pyNastran.bdf.cards.properties.beam import PBEAM
+from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML
 from pyNastran.bdf.cards.properties.bush import PBUSH
 from pyNastran.bdf.cards.properties.damper import PDAMP, PVISC
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP
@@ -94,13 +95,13 @@ class EPT(GeomCommon):
 
     def _add_op2_property(self, prop):
         if prop.pid > 100000000:
-            raise RuntimeError('bad parsing...%s' % str(prop))
+            raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         self._add_property_object(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
     def _add_pconv(self, prop):
         if prop.pconid > 100000000:
-            raise RuntimeError('bad parsing...%s' % str(prop))
+            raise RuntimeError('bad parsing pconid > 100000000...%s' % str(prop))
         self._add_convection_property_object(prop)
 
 # HGSUPPR
@@ -247,7 +248,11 @@ class EPT(GeomCommon):
 
             # Constant cross-section flag: 1=yes and 0=no
             # what is 2?
-            assert ccf in [0, 1, 2], '  PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in)
+            if ccf not in [0, 1, 2]:
+                msg = ('  PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s; '
+                       'ccf must be in [0, 1, 2]\n' % tuple(data_in))
+                raise ValueError(msg)
+
             for i in range(11):
                 edata = data[n:n+64]
                 if len(edata) != 64:
@@ -263,15 +268,23 @@ class EPT(GeomCommon):
                 elif soi == 1.0:
                     so_str = 'YES'
                 else:
-                    raise NotImplementedError('PBEAM pid=%s i=%s x/xb=%s soi=%s' % (pid, i, xxb, soi))
+                    msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; soi not in 0.0 or 1.0' % (pid, i, xxb, soi)
+                    raise NotImplementedError(msg)
+
+                #if xxb != 0.0:
+                    #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; xxb not in 0.0 or 1.0' % (pid, i, xxb, soi)
+                    #raise NotImplementedError(msg)
 
                 pack2 = (so_str, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                          d1, d2, e1, e2, f1, f2)
                 data_in.append(pack2)
                 if self.is_debug_file:
                     self.binary_debug.write('     %s\n' % str(pack))
-                    self.log.info('    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
-                                  'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2)))
+                    msg = (
+                        '    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
+                        'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))
+                    )
+                    self.log.debug(msg)
             edata = data[n:n+64]
             if len(edata) != 64:
                 endpack = []
@@ -284,8 +297,9 @@ class EPT(GeomCommon):
             assert len(endpack) == 16, endpack
             (k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
              m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
-            self.log.debug('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
-                           'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
+            if self.is_debug_file:
+                self.log.debug('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
+                               'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
             data_in.append(endpack)
 
             prop = PBEAM.add_op2_data(data_in)
@@ -294,7 +308,38 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbeaml(self, data, n):
+        #strs = numpy.core.defchararray.reshapesplit(data, sep=",")
+        ints = np.fromstring(data[n:], self._endian + 'i')
+        floats = np.fromstring(data[n:], self._endian + 'f')
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+
+        struct1 = Struct(self._endian + '2i8s8s')
+        for i, (istarti, iendi) in enumerate(zip(istart, iend)):
+            idata = data[n+istarti*4 : n+(istarti+6)*4]
+            #print('len(idata)=', len(idata))
+            pid, mid, group, Type = struct1.unpack(idata)
+            fvalues = floats[istarti+6: iendi]
+            if self.is_debug_file:
+                self.binary_debug.write('     %s\n' % str(pack))
+                self.log.debug('pid=%i mid=%i group=%r Type=%r' % (pid, mid, group, Type))
+                self.log.debug(fvalues)
+            data_in = [pid, mid, group, Type, fvalues]
+            prop = PBEAML.add_op2_data(data_in)
+            self._add_op2_property(prop)
+        nproperties = len(istart)
+        self.card_count['PBEAML'] = nproperties
+        return len(data)
+
+
+        #str = np.fromstring(data, self._endian + '4s')
+        #print(ints)
+        #self.show_data(data)
         self.log.info('skipping PBEAML in EPT\n')
+        import sys
+        sys.exit()
         return len(data)
 
     def _read_pbend(self, data, n):
@@ -407,7 +452,7 @@ class EPT(GeomCommon):
 
             if self.is_debug_file:
                 self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
-                pid, nlayers, z0, nsm, sb, ft, Tref, ge))
+                    pid, nlayers, z0, nsm, sb, ft, Tref, ge))
             for ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+16])
                 mids.append(mid)

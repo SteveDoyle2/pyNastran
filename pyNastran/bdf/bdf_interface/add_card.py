@@ -66,7 +66,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
 from pyNastran.bdf.cards.aero import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
     AESURF, AESURFS, AERO, AEROS, CSSCHD,
@@ -141,6 +141,23 @@ class AddCards(AddMethods):
         grdset = GRDSET(cp, cd, ps, seid, comment=comment)
         self.grdset = grdset
         return grdset
+
+    def add_seqgp(self, nids, seqids, comment=''):
+        """
+        Creates the SEQGP card
+
+        Parameters
+        ----------
+        nid : int
+           the node id
+        seqid : int/float
+           the superelement id
+        comment : str; default=''
+            a comment for the card
+        """
+        seqgp = SEQGP(ids, comment=comment)
+        self._add_seqgp_object(nids, seqids, comment=comment)
+        return seqgp
 
     def add_spoint(self, ids, comment=''):
         """

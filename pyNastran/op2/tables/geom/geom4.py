@@ -453,11 +453,18 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_rrod(self, data, n):
+        """common method for reading SPCDs"""
+        n = self._read_dual_card(data, n, self._read_rrod_nx, self._read_rrod_msc,
+                                 'RROD', self._add_rigid_element_object)
+        return n
+
+    def _read_rrod_nx(self, data, n):
         """RROD(6501,65,291) - Record 30"""
         s = Struct(b(self._endian + '5i'))
         #self.show_data(data)
         ntotal = 20
         nelements = (len(data) - n) // ntotal
+        elements = []
         for i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -465,10 +472,27 @@ class GEOM4(GeomCommon):
                 self.binary_debug.write('  RROD=%s\n' % str(out))
             #(eid, ga, gb, cma, cmb) = out
             elem = RROD.add_op2_data(out)
-            self._add_rigid_element_object(elem)
+            elements.append(elem)
             n += ntotal
-            self._increase_card_count('RROD', 1)
-        return n
+        return n, elements
+
+    def _read_rrod_msc(self, data, n):
+        """RROD(6501,65,291) - Record 30"""
+        s = Struct(b(self._endian + '5if'))
+        #self.show_data(data)
+        ntotal = 24
+        nelements = (len(data) - n) // ntotal
+        elements = []
+        for i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  RROD=%s\n' % str(out))
+            #(eid, ga, gb, cma, cmb, alpha) = out
+            elem = RROD.add_op2_data(out)
+            elements.append(elem)
+            n += ntotal
+        return n, elements
 
     def _read_rspline(self, data, n):
         """RSPLINE(7001,70,186) - Record 31"""

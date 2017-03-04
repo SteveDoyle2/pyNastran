@@ -14,7 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six.moves import zip, range
-from numpy import array, unique, argsort, mean, allclose
+from numpy import array, unique, argsort, mean, allclose, ndarray
 
 from pyNastran.bdf.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -906,6 +906,28 @@ class PBEAML(IntegratedLineProperty):
     }  # for GROUP="MSCBML0"
 
     def __init__(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
+        """
+        Creates a PBEAML card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        xxb : List[float]
+            The percentage locations along the beam [0., ..., 1.]
+        so : List[str]
+            YES, YESA, NO
+        dims : List[dim]
+            dim : List[float]
+                The dimensions for each section
+        nsm : List[float]
+            nonstructural mass per unit length
+
+        comment : str; default=''
+            a comment for the card
+        """
         IntegratedLineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -920,6 +942,9 @@ class PBEAML(IntegratedLineProperty):
 
         self.dim = dims
         for xxbi, dim in zip(xxb, dims):
+            if not isinstance(dim, (list, ndarray)):
+                msg = 'dims = List[dim]; dim=List[floats]; type(dim)=%s' % (type(dim))
+                raise TypeError(msg)
             assert len(dim) == ndim, 'Type=%s ndim=%s len(dim)=%s xxb=%s dim=%s' % (
                 Type, ndim, len(dim), xxbi, dim)
         self.xxb = xxb
@@ -988,6 +1013,42 @@ class PBEAML(IntegratedLineProperty):
         assert isinstance(nsm, float), 'nsm=%r\n%s' % (nsm, str(self))
         assert isinstance(area, float), 'area=%r\n%s' % (area, str(self))
         assert isinstance(mass_per_length, float), 'mass/L=%r\n%s' % (mass_per_length, str(self))
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pid, mid, group, Type, fvalues) = data
+        group = group.strip()
+        Type = Type.strip()
+        ndim = cls.valid_types[Type]
+        nfvalues = len(fvalues)
+        nsections = nfvalues // (3+ndim)
+        sections = fvalues.reshape(nsections, ndim+3)
+
+        xxb = []
+        so = []
+        dims = []
+        nsm = []
+        for section in sections:
+            xxbi = section[0]
+            sof = section[1]
+            if sof == 0.:
+                sos = 'YES'
+            elif sof == 1.:
+                sos = 'NO'
+            else:
+                raise NotImplementedError(sof)
+
+            dim = list(section[2:-1])
+            nsmi = section[-1]
+            #print(dim)
+            #print(section)
+            xxb.append(xxbi)
+            so.append(sos)
+            dims.append(dim)
+            nsm.append(nsmi)
+
+        return PBEAML(pid, mid, group, Type, xxb, so, dims, nsm,
+                      comment=comment)
 
     def MassPerLength(self):
         r"""

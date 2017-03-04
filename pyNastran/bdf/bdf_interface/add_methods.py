@@ -60,10 +60,6 @@ class AddMethods(BDFAttributes):
             self.params[key] = param
             self._type_to_id_map[param.type].append(key)
 
-    #def add_node(self, node, allow_overwrites=False):
-        #"""deprecated"""
-        #self._add_node_object(node, allow_overwrites)
-
     def _add_node_object(self, node, allow_overwrites=False):
         """adds a GRID card"""
         key = node.nid
@@ -77,6 +73,13 @@ class AddMethods(BDFAttributes):
             assert key > 0, 'nid=%s node=%s' % (key, node)
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
+
+    def _add_seqgp_object(self, seqgp):
+        """adds an SPOINT card"""
+        if self.seqgp is None:
+            self.seqgp = seqgp
+        else:
+            self.seqgp.append(seqgp)
 
     def _add_point_object(self, point, allow_overwrites=False):
         """adds a POINT card"""

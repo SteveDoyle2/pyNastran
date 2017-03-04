@@ -320,18 +320,20 @@ class CHBDYG(ThermalElement):
         rad_mid_front = data[4]
         rad_mid_back = data[5]
         nodes = [datai for datai in data[6:14] if datai > 0]
-        if Type == 5:
-            Type = 'AREA4'
+        if Type == 3:
+            Type = 'REV'
         elif Type == 4:
             Type = 'AREA3'
+        elif Type == 5:
+            Type = 'AREA4'
         #elif Type == 7: # ???
             #Type = 'AREA6'
+        elif Type == 8:
+            Type = 'AREA6'
         elif Type == 9:
             Type = 'AREA8'
-        #elif Type == ???:
-            #Type = 'REV'
         else:
-            raise NotImplementedError('Type=%r' % Type)
+            raise NotImplementedError('eid=%s Type=%r' % (eid, Type))
 
         assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
         return CHBDYG(eid, Type, nodes,
@@ -525,8 +527,11 @@ class CHBDYP(ThermalElement):
             raise NotImplementedError('CHBDYP Type=%r data=%s' % (Type, data))
         #assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
 
-        assert dislin == 0, 'CHBDYP dislin=%r data=%s' % (dislin, data)
-        gmid = dislin
+        #assert dislin == 0, 'CHBDYP dislin=%r data=%s' % (dislin, data)
+        if dislin  == 0:
+            gmid = None
+        else:
+            gmid = dislin
         return CHBDYP(eid, pid, Type, g1, g2, g0=g0, gmid=gmid, ce=ce,
                       iview_front=iviewf, ivew_back=iviewb,
                       rad_mid_front=radmidf, rad_mid_back=radmidb,
