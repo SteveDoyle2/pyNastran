@@ -179,6 +179,11 @@ class PELAST(SpringProperty):
         assert len(card) <= 5, 'len(PELAST card) = %i\ncard=%s' % (len(card), card)
         return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pid, tkid, tgeid, tknid) = data
+        return PELAST(pid, tkid, tgeid, tknid, comment=comment)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly

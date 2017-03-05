@@ -278,7 +278,7 @@ class OP2(object):
             self._intstru = self._endian + '%dq'
             self._ibytes = 8
             self._Str = struct.Struct(self._endian + 'q')
-        # print('bit64 = ', self._bit64)
+        #print('bit64 = ', self._bit64)
 
         self._rowsCutoff = 3000
         self._int32str = self._endian + 'i4'
@@ -375,7 +375,7 @@ class OP2(object):
         """
         eot, key = self._read_op2_end_of_table()
         if key == 0:
-            # print('return None, None, None')
+            #print('return None, None, None')
             return None, None, None
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]

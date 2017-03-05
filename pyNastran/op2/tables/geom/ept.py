@@ -16,7 +16,7 @@ from pyNastran.bdf.cards.properties.properties import PFAST, PGAP
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.shell import PSHEAR, PSHELL, PCOMP
 from pyNastran.bdf.cards.properties.solid import PSOLID
-from pyNastran.bdf.cards.properties.springs import PELAS
+from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
@@ -31,7 +31,7 @@ class EPT(GeomCommon):
 
     def __init__(self):
         GeomCommon.__init__(self)
-        self.bigProperties = {}
+        self.big_properties = {}
         self._ept_map = {
             (3201, 32, 55): ['NSM', self._read_nsm],          # record 2  - needs an object holder (e.g. self.elements/self.properties)
             (52, 20, 181): ['PBAR', self._read_pbar],         # record 11 - buggy
@@ -580,7 +580,7 @@ class EPT(GeomCommon):
         for i in range(nproperties):
             edata = data[n:n+16]
             out = s.unpack(edata)
-            #(pid,k,ge,s) = out
+            #(pid, k, ge, s) = out
             if self.is_debug_file:
                 self.binary_debug.write('  PELAS=%s\n' % str(out))
             prop = PELAS.add_op2_data(out)
@@ -636,8 +636,29 @@ class EPT(GeomCommon):
         return n
 
     def _read_pelast(self, data, n):
-        self.log.info('skipping PELAST in EPT\n')
-        return len(data)
+        """
+        Record 41 -- PELAST(1302,13,34)
+
+        1 PID   I Property identification number
+        2 TKID  I TABLEDi entry identification number for stiffness
+        3 TGEID I TABLEDi entry identification number for structural
+                  damping
+        4 TKNID I TABLEDi entry
+        """
+        ntotal = 16
+        s = Struct(b(self._endian + '4i'))
+        nproperties = (len(data) - n) // ntotal
+        for i in range(nproperties):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PELAST=%s\n' % str(out))
+            #(pid, tkid, tgeid, tknid) = out
+            prop = PELAST.add_op2_data(out)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PELAST'] = nproperties
+        return n
 
     def _read_pgap(self, data, n):
         """
@@ -697,12 +718,12 @@ class EPT(GeomCommon):
         PMASS(402,4,44) - the marker for Record 48
         """
         n = 0
-        s = self.struct_2i
+        s = Struct(b(self._endian + 'if'))
         nentries = (len(data) - n) // 8  # 2*4
         for i in range(nentries):
             edata = data[n:n + 8]
             out = s.unpack(edata)
-            #out = (pid,mass)
+            #out = (pid, mass)
             if self.is_debug_file:
                 self.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS.add_op2_data(out)
@@ -764,7 +785,7 @@ class EPT(GeomCommon):
 
             if max(pid, mid1, mid2, mid3, mid4) > 1e8:
                 #print("PSHELL = ",out)
-                self.bigProperties[pid] = prop
+                self.big_properties[pid] = prop
             else:
                 self._add_op2_property(prop)
             n += ntotal
@@ -799,8 +820,12 @@ class EPT(GeomCommon):
     def _read_ptube(self, data, n):
         """
         PTUBE(1602,16,30) - the marker for Record 56
-        .. todo:: OD2 only exists for heat transfer...how do i know if there's heat transfer at this point...
-        .. todo:: I could store all the tubes and add them later, but what about themal/non-thermal subcases
+
+        .. todo:: OD2 only exists for heat transfer...
+                  how do i know if there's heat transfer at this point?
+                  I could store all the tubes and add them later,
+                  but what about themal/non-thermal subcases?
+
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
         s = Struct(b(self._endian + '2i3f'))
@@ -835,7 +860,7 @@ class EPT(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PVISC=%s\n' % str(out))
-            #(pid,ce,cr) = out
+            #(pid, ce, cr) = out
             prop = PVISC.add_op2_data(out)
             self._add_op2_property(prop)
             n += 12

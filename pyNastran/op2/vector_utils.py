@@ -214,7 +214,6 @@ def sortedsum1d(ids, values, axis=None):
     out = np.zeros(values.shape, dtype=values.dtype)
 
     for i, i1i, i2i in zip(count(), i1, i2):
-        print(i, i1i, i2i)
         out[i, :] = values[i1i:i2i, :].sum(axis=axis)
     return out
 

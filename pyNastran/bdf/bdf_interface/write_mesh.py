@@ -513,29 +513,27 @@ class WriteMesh(BDFAttributes):
                 msg.append(suport.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
-        if self.spcs or self.spcadds:
+        if self.spcs or self.spcoffs:
             #msg = ['$SPCs\n']
             #str_spc = str(self.spcObject) # old
             #if str_spc:
                 #msg.append(str_spc)
             #else:
             msg = ['$SPCs\n']
-            for (unused_id, spcadd) in sorted(iteritems(self.spcadds)):
-                msg.append(str(spcadd))
             for (unused_id, spcs) in sorted(iteritems(self.spcs)):
                 for spc in spcs:
                     msg.append(str(spc))
+            for (unused_id, spcoffs) in sorted(iteritems(self.spcoffs)):
+                for spc in spcoffs:
+                    msg.append(str(spc))
             bdf_file.write(''.join(msg))
 
-        if self.mpcs or self.mpcadds:
+        if self.mpcs:
             msg = ['$MPCs\n']
-            for (unused_id, mpcadd) in sorted(iteritems(self.mpcadds)):
-                msg.append(str(mpcadd))
             for (unused_id, mpcs) in sorted(iteritems(self.mpcs)):
                 for mpc in mpcs:
                     msg.append(mpc.write_card(size, is_double))
             bdf_file.write(''.join(msg))
-
 
     def _write_contact(self, bdf_file, size=8, is_double=False):
         """Writes the contact cards sorted by ID"""

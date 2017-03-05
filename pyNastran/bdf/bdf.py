@@ -892,14 +892,10 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         for key, spcs in sorted(iteritems(self.spcs)):
             for spc in spcs:
                 spc.validate()
-        for key, spcadd in sorted(iteritems(self.spcadds)):
-            spcadd.validate()
 
         for key, mpcs in sorted(iteritems(self.mpcs)):
             for mpc in mpcs:
                 mpc.validate()
-        for key, mpcadd in sorted(iteritems(self.mpcadds)):
-            mpcadd.validate()
 
         #------------------------------------------------
         for key, darea in sorted(iteritems(self.dareas)):

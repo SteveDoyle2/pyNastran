@@ -51,8 +51,8 @@ class ONR(OP2Common):
         if element_name.isalnum():
             self.data_code['element_name'] = element_name
         else:
-            # print("element_name = %r" % (element_name))
-            # print(type(element_name))
+            #print("element_name = %r" % (element_name))
+            #print(type(element_name))
             self.data_code['element_name'] = 'UnicodeDecodeError???'
             self.log.warning('data[20:28]=%r instead of data[24:32]' % data[20:28])
 

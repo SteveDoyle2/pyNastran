@@ -331,10 +331,9 @@ class BDFAttributes(object):
         #self.mpcObject = ConstraintObject()
 
         self.spcs = {}
-        self.spcadds = {}
+        self.spcoffs = {}
 
         self.mpcs = {}
-        self.mpcadds = {}
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
@@ -584,6 +583,7 @@ class BDFAttributes(object):
 
             # spc/mpc constraints - TODO: is this correct?
             'spcs' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD', 'GMSPC'],
+            'spcoffs' : ['SPCOFF', 'SPCOFF1'],
             #'spcadds' : ['SPCADD'],
             #'mpcadds' : ['MPCADD'],
             'mpcs' : ['MPC', 'MPCADD'],

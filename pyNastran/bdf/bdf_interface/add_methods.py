@@ -486,14 +486,6 @@ class AddMethods(BDFAttributes):
             self.bcs[key] = [bc]
             self._type_to_id_map[bc.type].append(key)
 
-    #def add_constraint_mpcadd_object(self, constraint):
-        #raise RuntimeError('is this used?')
-        #key = constraint.conid
-        #if key in self.mpcadds:
-            #raise RuntimeError('must have unique MPCADD IDs')
-        #self.mpcadds[key] = constraint
-        #self._type_to_id_map[constraint.type].append(key)
-
     def _add_constraint_mpc_object(self, constraint):
         key = constraint.conid
         if key in self.mpcs:
@@ -502,20 +494,21 @@ class AddMethods(BDFAttributes):
             self.mpcs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
-    #def add_constraint_spcadd_object(self, constraint):
-        #raise RuntimeError('is this used?')
-        #key = constraint.conid
-        #if key in self.spcadds:
-            #raise RuntimeError('must have unique SPCADD IDs')
-        #self.spcadds[key] = constraint
-        #self._type_to_id_map[constraint.type].append(key)
-
     def _add_constraint_spc_object(self, constraint):
         key = constraint.conid
         if key in self.spcs:
             self.spcs[key].append(constraint)
         else:
             self.spcs[key] = [constraint]
+            self._type_to_id_map[constraint.type].append(key)
+
+    def _add_constraint_spcoff_object(self, constraint):
+        """dumb key, but good enough..."""
+        key = constraint.type
+        if key in self.spcoffs:
+            self.spcoffs[key].append(constraint)
+        else:
+            self.spcoffs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
     def _add_sesuport_object(self, se_suport):

@@ -457,12 +457,11 @@ class SuperABQSet1(Set):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         seid, components, nids = data
-        print(components, nids)
         #assert None not in components, 'Type=%s components=%s' % (self.type, components)
         assert None not in nids, 'Type=%s nids=%s' % (self.type, nids)
         assert -1 not in nids, 'nids=%s' % (nids.tolist())
         assert 0 not in nids, 'nids=%s' % (nids.tolist())
-        return cls(seid, components, nids.tolist(), comment=comment)
+        return cls(seid, components, nids, comment=comment)
 
     def cross_reference(self, model):
         """

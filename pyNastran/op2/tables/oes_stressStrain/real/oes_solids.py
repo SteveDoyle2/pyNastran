@@ -374,8 +374,8 @@ class RealSolidArray(OES_Object):
         assert n == 584, n
         data = [584] + table3 + [584]
         fmt = 'i' + ftable3 + 'i'
-        print(fmt)
-        print(data)
+        #print(fmt)
+        #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2.write(pack(fmt, *data))

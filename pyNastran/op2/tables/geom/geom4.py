@@ -12,7 +12,8 @@ from pyNastran.bdf.cards.bdf_sets import (
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.bdf.cards.constraints import (
-    SUPORT1, SUPORT, SPC, SPC1, SPCADD,
+    SUPORT1, SUPORT,
+    SPC, SPC1, SPCADD, SPCOFF, SPCOFF1,
     MPC, #SPCAX, MPCADD, SESUP, GMSPC
 )
 
@@ -453,7 +454,7 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_rrod(self, data, n):
-        """common method for reading SPCDs"""
+        """common method for reading RROD"""
         n = self._read_dual_card(data, n, self._read_rrod_nx, self._read_rrod_msc,
                                  'RROD', self._add_rigid_element_object)
         return n
@@ -470,7 +471,8 @@ class GEOM4(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  RROD=%s\n' % str(out))
-            #(eid, ga, gb, cma, cmb) = out
+            (eid, ga, gb, cma, cmb) = out
+            out = (eid, ga, gb, cma, cmb, 0.0) # alpha
             elem = RROD.add_op2_data(out)
             elements.append(elem)
             n += ntotal
@@ -560,13 +562,24 @@ class GEOM4(GeomCommon):
         self.log.info('skipping SEUSET1 in GEOM4\n')
         return len(data)
 
-    def _read_spc(self, data, n):
-        """SPC(5501,55,16) - Record 44"""
-        #self.log.info('skipping SPC in GEOM4\n')
-        #n = 0
+    def _read_spcoff(self, data, n):
+        """SPCOFF(5501,55,16) - Record 44"""
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        #nentries = len(data) // 16  # 4*4
+        for i in range(nentries):
+            edata = data[n:n + 16]
+            (sid, ID, c, dx) = unpack(b(self._endian + 'iiif'), edata)
+            if self.is_debug_file:
+                self.log.debug('SPCOFF sid=%s id=%s c=%s dx=%s' % (sid, ID, c, dx))
+            constraint = SPCOFF.add_op2_data([sid, ID, c, dx])
+            self._add_constraint_spcoff_object(constraint)
+            n += 16
+        return n
+
+    def _read_spc(self, data, n):
+        """SPC(5501,55,16) - Record 44"""
+        ntotal = 16
+        nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             edata = data[n:n + 16]
             (sid, ID, c, dx) = unpack(b(self._endian + 'iiif'), edata)
@@ -588,6 +601,80 @@ class GEOM4(GeomCommon):
             #self._add_load_object(load)
             #n += 20
         #return n
+
+    def _read_spcoff1(self, data, n):
+        """
+        SPCOFF1(6210, 62, 344) - Record
+        see SPC1
+
+        Record - SPC1(5481,58,12)
+        Word Name Type Description
+        1 SID I Set identification number  <------ removing...
+        2 C I Component numbers
+        3 THRUFLAG I Thru range flag
+        THRUFLAG=0 No
+        4 ID I Grid or scalar point identification number
+        Word 4 repeats until End of Record
+        THRUFLAG=1 Yes
+        4 ID1 I First grid or scalar point identification number
+        5 ID2 I Second grid or scalar point identification number
+        End THRUFLAG
+
+        Word Name Type Description
+        1 C I Component numbers
+        2 THRUFLAG I Thru range flag
+        THRUFLAG=0 No
+        3 ID I Grid or scalar point identification number
+        Word 3 repeats until End of Record
+        THRUFLAG=1 Yes
+        3 ID1 I First grid or scalar point identification number
+        4 ID2 I Second grid or scalar point identification number
+        End THRUFLAG
+        """
+        nentries = 0
+        nints = (len(data) - n) // 4
+        idata = np.fromstring(data[n:], self.idtype)
+        if not idata[-1] == -1:
+            idata = np.hstack([idata, -1])
+        iminus1 = np.where(idata == -1)[0]
+        assert len(iminus1) > 0, idata
+
+        i = np.hstack([[0], iminus1[:-1]+1])
+        j = np.hstack([iminus1[:-1], -1])
+        for ii, jj in zip(i, j):
+            outi = idata[ii:jj]
+            self._add_spcoff1_card(outi)
+        return len(data)
+
+    def _add_spcoff1_card(self, out):
+        """helper method for ``_read_spcoff1``"""
+        components, thru_flag = out[:2]
+        if thru_flag == 0:  # repeat 4 to end
+            nids = out[2:].tolist()
+            thru_check = False
+        elif thru_flag == 1:
+            n1 = out[2]
+            n2 = out[3]
+            nids = list(range(n1, n2+1))
+            thru_check = True
+        else:
+            raise NotImplementedError('SPCOFF1; thru_flag=%s' % thru_flag)
+
+        assert -1 not in out, out.tolist()
+        if self.is_debug_file:
+            self.binary_debug.write('SPCOFF1: components=%s thru_flag=%s' % (
+                name, components, thru_flag))
+            self.binary_debug.write('   nids=%s\n' % str(nids))
+        if len(nids) == 0:
+            #self.log.warning('skipping SPC1 because its empty...%s' % out)
+            return
+        in_data = [components, nids]
+        constraint = SPCOFF1.add_op2_data(in_data)
+        self._add_constraint_spcoff_object(constraint)
+        self._increase_card_count('SPCOFF1', 1)
+        if thru_check and len(out) > 5:
+            card = out[5:]
+            self._add_spcoff1_card(out[5:])
 
     def _read_spc1(self, data, n):
         r"""
@@ -748,14 +835,6 @@ class GEOM4(GeomCommon):
 
     def _read_spcgrid(self, data, n):
         self.log.info('skipping SPCGRID in GEOM4\n')
-        return len(data)
-
-    def _read_spcoff(self, data, n):
-        self.log.info('skipping SPCOFF in GEOM4\n')
-        return len(data)
-
-    def _read_spcoff1(self, data, n):
-        self.log.info('skipping SPCOFF1 in GEOM4\n')
         return len(data)
 
     def _read_suport(self, data, n):
