@@ -68,7 +68,7 @@ class PDAMP(DamperProperty):
     def _verify(self, xref=True):
         pid = self.Pid()
         b = self.B()
-        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert isinstance(pid, integer_types), 'pid=%r\n%s' % (pid, str(self))
         assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
 
     def raw_fields(self):
@@ -195,7 +195,7 @@ class PDAMPT(DamperProperty):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
 
     def cross_reference(self, model):
         """
@@ -270,7 +270,7 @@ class PVISC(DamperProperty):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
 
     def raw_fields(self):
         list_fields = ['PVISC', self.pid, self.ce, self.cr]

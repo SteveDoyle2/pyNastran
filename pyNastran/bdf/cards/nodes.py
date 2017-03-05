@@ -394,7 +394,7 @@ class XPoints(BaseCard):
     def add_op2_data(cls, data, comment=''):
         points = data
         assert isinstance(points, list), points
-        assert isinstance(points[0], int), points
+        assert isinstance(points[0], integer_types), points
         return cls(points, comment=comment)
 
     def __len__(self):
@@ -675,10 +675,10 @@ class GRDSET(BaseCard):
         seid = self.SEid()
         cd = self.Cd()
         ps = self.Ps()
-        assert isinstance(cp, int), 'cp=%r' % cp
-        assert isinstance(cd, int), 'cd=%r' % cd
+        assert isinstance(cp, integer_types), 'cp=%r' % cp
+        assert isinstance(cd, integer_types), 'cd=%r' % cd
         assert isinstance(ps, string_types), 'ps=%r' % ps
-        assert isinstance(seid, int), 'seid=%r' % seid
+        assert isinstance(seid, integer_types), 'seid=%r' % seid
 
     def raw_fields(self):
         """
@@ -1110,11 +1110,11 @@ class GRID(BaseCard):
         xyz = self.xyz
         ps = self.Ps()
         seid = self.SEid()
-        assert isinstance(nid, int), 'nid=%r' % nid
-        assert isinstance(cp, int), 'cp=%r' % cp
-        assert isinstance(cd, int), 'cd=%r' % cd
+        assert isinstance(nid, integer_types), 'nid=%r' % nid
+        assert isinstance(cp, integer_types), 'cp=%r' % cp
+        assert isinstance(cd, integer_types), 'cd=%r' % cd
         assert isinstance(ps, string_types), 'ps=%r' % ps
-        assert isinstance(seid, int), 'seid=%r' % seid
+        assert isinstance(seid, integer_types), 'seid=%r' % seid
         if xref:
             pos_xyz = self.get_position()
 
@@ -1147,7 +1147,7 @@ class GRID(BaseCard):
     def get_position_no_xref(self, model):
         if self.cp == 0:
             return self.xyz
-        assert isinstance(self.cp, int), self.cp
+        assert isinstance(self.cp, integer_types), self.cp
         coord = model.Coord(self.cp)
         xyz = coord.transform_node_to_global_no_xref(self.xyz, model)
         return xyz

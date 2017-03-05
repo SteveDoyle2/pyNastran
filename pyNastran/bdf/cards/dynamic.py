@@ -752,10 +752,36 @@ class ROTORD(BaseCard):
                  etype=1, eorder=1.0, threshold=0.02, maxiter=10,
                  comment=''):
         """
-        rspeeds : List[int/float, ..., int/float]
+        Parameters
+        ----------
+        sid : int
+            ???
+        rstart : float
+            ???
+        rstart : float
+            ???
+        numstep : int
+            ???
 
+        Parameter Lists
+        ---------------
+        rids : List[int]
+            ???
+        rsets : List[int]
+            ???
+        rspeeds : List[int/float, ..., int/float]
             float : rotor speeds
             int : TABLEDi
+        rcords : List[int]
+            ???
+        w3s : List[float]
+            ???
+        w4s : List[float]
+            ???
+        rforces : List[int]
+            ???
+        brgsets : List[int]
+            ???
         """
         if comment:
             self.comment = comment

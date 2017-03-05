@@ -1,5 +1,15 @@
+"""
+defines:
+    bdf merge        (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
+    bdf equivalence  IN_BDF_FILENAME EQ_TOL\n'
+    bdf renumber     IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+    bdf mirror       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
+    bdf export_mcids IN_BDF_FILENAME [-o OUT_GEOM_FILENAME]\n'
+
+"""
 from __future__ import print_function
 import os
+import sys
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
@@ -8,7 +18,6 @@ from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 
 def cmd_line_equivalence():  # pragma: no cover
     """command line interface to bdf_equivalence_nodes"""
-    import sys
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
@@ -59,7 +68,7 @@ def cmd_line_equivalence():  # pragma: no cover
                           debug=True)
 
 def cmd_line_bin():  # pragma: no cover
-    import sys
+    """bins the model into nbins"""
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
@@ -121,14 +130,14 @@ def cmd_line_bin():  # pragma: no cover
     from pyNastran.bdf.bdf import read_bdf
 
     model = read_bdf(bdf_filename)
-    xyz_cid = model.get_xyz_in_coord(cid=cid, dtype='float64')
+    xyz_cid = model.get_xyz_in_coord(cid=cid, fdtype='float64')
     y = xyz_cid[:, axis1]
     z = xyz_cid[:, axis2]
 
     plt.figure(1)
     #n, bins, patches = plt.hist( [x0,x1,x2], 10, weights=[w0, w1, w2], histtype='bar')
     ys = []
-    zs = []
+    #zs = []
     zs_min = []
     zs_max = []
     y0 = y.min()
@@ -164,7 +173,6 @@ def cmd_line_bin():  # pragma: no cover
 
 def cmd_line_renumber():  # pragma: no cover
     """command line interface to bdf_renumber"""
-    import sys
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
@@ -207,7 +215,6 @@ def cmd_line_renumber():  # pragma: no cover
 
 def cmd_line_mirror():  # pragma: no cover
     """command line interface to write_bdf_symmetric"""
-    import sys
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
@@ -271,7 +278,6 @@ def cmd_line_mirror():  # pragma: no cover
 
 def cmd_line_merge():  # pragma: no cover
     """command line interface to bdf_merge"""
-    import sys
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
@@ -342,7 +348,6 @@ def cmd_line_merge():  # pragma: no cover
 
 def cmd_line_export_mcid():  # pragma: no cover
     """command line interface to export_mcids"""
-    import sys
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
@@ -381,7 +386,6 @@ def cmd_line_export_mcid():  # pragma: no cover
 
 def cmd_line():  # pragma: no cover
     """command line interface to multiple other command line scripts"""
-    import sys
     dev = True
     msg = 'Usage:\n'
     msg += '  bdf merge        (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
@@ -425,7 +429,6 @@ def cmd_line():  # pragma: no cover
         #raise NotImplementedError('arg1=%r' % sys.argv[1])
 
 if __name__ == '__main__':  # pragma: no cover
-    import sys
     sys.argv = sys.argv[1:]
     cmd_line()
 

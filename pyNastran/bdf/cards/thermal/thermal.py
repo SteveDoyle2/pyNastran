@@ -192,9 +192,9 @@ class CHBDYE(ThermalElement):
         eid = self.Eid()
         eid2 = self.Eid2()
         pid = self.Pid()
-        assert isinstance(eid, int)
-        assert isinstance(eid2, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(eid2, integer_types)
+        assert isinstance(pid, integer_types)
 
     #def side_to_eids(self, eid):
         #side_ids = self.side_maps[eid.type][self.side]
@@ -343,7 +343,7 @@ class CHBDYG(ThermalElement):
 
     def _verify(self, xref=False):
         eid = self.Eid()
-        assert isinstance(eid, int)
+        assert isinstance(eid, integer_types)
 
     @property
     def node_ids(self):
@@ -583,8 +583,8 @@ class CHBDYP(ThermalElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
 
     def Eid(self):
         return self.eid

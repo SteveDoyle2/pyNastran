@@ -181,7 +181,7 @@ class XrefMesh(BDFAttributes):
         for spcs in itervalues(self.spcs):
             for spc in spcs:
                 spc.cross_reference(self)
-        for spcoffs in itervalues(self.spcoffss):
+        for spcoffs in itervalues(self.spcoffs):
             for spcoff in spcoffs:
                 spcoff.cross_reference(self)
 

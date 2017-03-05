@@ -9,6 +9,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import numpy as np
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -55,8 +56,8 @@ class PLSOLID(SolidProperty):
         self.stress_strain = stress_strain
 
         self.ge = ge
-        assert isinstance(pid, int), type(pid)
-        assert isinstance(mid, int), type(mid)
+        assert isinstance(pid, integer_types), type(pid)
+        assert isinstance(mid, integer_types), type(mid)
         self._validate_input()
 
     @classmethod
@@ -388,8 +389,8 @@ class PSOLID(SolidProperty):
     def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
 
         if xref:
             if self.mid_ref.type not in ['MAT1', 'MAT4', 'MAT5', 'MAT9', 'MAT10', 'MAT11']:

@@ -84,6 +84,9 @@ class SafeXrefMesh(XrefMesh):
         for spcs in itervalues(self.spcs):
             for spc in spcs:
                 spc.safe_cross_reference(self)
+        for spcoffs in itervalues(self.spcoffs):
+            for spcoff in spcoffs:
+                spcoff.safe_cross_reference(self)
 
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:

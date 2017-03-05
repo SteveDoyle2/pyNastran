@@ -1071,15 +1071,15 @@ class AERO(Aero):
         self.sym_xy = sym_xy
 
     def validate(self):
-        if not isinstance(self.acsid, int):
+        if not isinstance(self.acsid, integer_types):
             msg = 'AERO acsid=%s expected int, got %s' % (
                 self.acsid, type(self.acsid))
             raise TypeError(msg)
-        if not isinstance(self.sym_xz, int):
+        if not isinstance(self.sym_xz, integer_types):
             msg = 'AERO acsid=%s sym_xz=%s; expected int, got %s' % (
                 self.acsid, self.sym_xz, type(self.sym_xz))
             raise TypeError(msg)
-        if not isinstance(self.sym_xy, int):
+        if not isinstance(self.sym_xy, integer_types):
             msg = 'AERO acsid=%s sym_xy=%s; expected int, got %s' % (
                 self.acsid, self.sym_xy, type(self.sym_xy))
             raise TypeError(msg)
@@ -1267,13 +1267,13 @@ class AEROS(Aero):
             return self.rcsid
 
     def validate(self):
-        assert isinstance(self.acsid, int), 'acsid=%s type=%s' % (self.acsid, type(self.acsid))
-        assert isinstance(self.rcsid, int), 'rcsid=%s type=%s' % (self.rcsid, type(self.rcsid))
+        assert isinstance(self.acsid, integer_types), 'acsid=%s type=%s' % (self.acsid, type(self.acsid))
+        assert isinstance(self.rcsid, integer_types), 'rcsid=%s type=%s' % (self.rcsid, type(self.rcsid))
         assert isinstance(self.cref, float), 'cref=%s type=%s' % (self.cref, type(self.cref))
         assert isinstance(self.bref, float), 'bref=%s type=%s' % (self.bref, type(self.bref))
         assert isinstance(self.sref, float), 'sref=%s type=%s' % (self.sref, type(self.sref))
-        assert isinstance(self.sym_xz, int), 'sym_xz=%s type=%s' % (self.sym_xz, type(self.sym_xz))
-        assert isinstance(self.sym_xy, int), 'sym_xy=%s type=%s' % (self.sym_xy, type(self.sym_xy))
+        assert isinstance(self.sym_xz, integer_types), 'sym_xz=%s type=%s' % (self.sym_xz, type(self.sym_xz))
+        assert isinstance(self.sym_xy, integer_types), 'sym_xy=%s type=%s' % (self.sym_xy, type(self.sym_xy))
 
     def cross_reference(self, model):
         """
@@ -1771,7 +1771,7 @@ class CAERO1(BaseCard):
             raise NotImplementedError('spanwise=%r; expected=[y, z]' % spanwise.lower())
 
         dx = max(x12, x43)
-        if isinstance(span, int):
+        if isinstance(span, integer_types):
             nspan = span
         elif isinstance(span, AEFACT):
             lspan = span.sid
@@ -1784,7 +1784,7 @@ class CAERO1(BaseCard):
         else:
             raise TypeError(span)
 
-        if isinstance(chord, int):
+        if isinstance(chord, integer_types):
             nchord = chord
         elif isinstance(chord, AEFACT):
             lchord = chord.sid
@@ -2223,8 +2223,8 @@ class CAERO2(BaseCard):
     def validate(self):
         #print('nsb=%s lsb=%s' % (self.nsb, self.lsb))
         #print('nint=%s lint=%s' % (self.nint, self.lint))
-        assert isinstance(self.lsb, int), self.lsb
-        assert isinstance(self.lint, int), self.lint
+        assert isinstance(self.lsb, integer_types), self.lsb
+        assert isinstance(self.lint, integer_types), self.lint
         assert len(self.p1) == 3, 'p1=%s' % self.p1
         if self.nsb == 0 and self.lsb == 0:
             msg = 'nsb=%s lsb=%s; nsb or lsb must be > 0' % (self.nsb, self.lsb)
@@ -4465,7 +4465,7 @@ class PAERO1(BaseCard):
         Bi2 = []
 
         for bi in Bi:
-            if isinstance(bi, int) and bi >= 0:
+            if isinstance(bi, integer_types) and bi >= 0:
                 Bi2.append(bi)
             elif bi is not None:
                 raise RuntimeError('invalid Bi value on PAERO1 bi=%r' % (bi))

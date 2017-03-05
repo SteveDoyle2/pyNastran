@@ -68,7 +68,7 @@ from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.bdf.cards.properties.mass import PMASS#, NSM
-from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
+from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
@@ -1965,6 +1965,8 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
             'SPC' : (SPC, self._add_constraint_spc_object),
             'SPC1' : (SPC1, self._add_constraint_spc_object),
+            'SPCOFF' : (SPCOFF, self._add_constraint_spcoff_object),
+            'SPCOFF1' : (SPCOFF1, self._add_constraint_spcoff_object),
             'SPCAX' : (SPCAX, self._add_constraint_spc_object),
             'SPCADD' : (SPCADD, self._add_constraint_spc_object),
             'GMSPC' : (GMSPC, self._add_constraint_spc_object),
@@ -2768,7 +2770,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'properties', 'materials', 'creep_materials',
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1', 'MATS3', 'MATT8',
-            'coords', 'mpcs', 'mpcadds',
+            'coords', 'mpcs',
 
             # dynamic cards
             'dareas', 'dphases', 'nlparms', 'nlpcis', 'tsteps', 'tstepnls',
@@ -2810,7 +2812,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'spoints', 'spointi',  # singleton
             'grdset',  # singleton
 
-            'spcs', 'spcadds',
+            'spcs',
 
             'suport', 'se_suport', # suport, suport1 - list
             'doptprm',  # singleton

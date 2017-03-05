@@ -5,7 +5,6 @@ defines:
 from __future__ import print_function
 from six import iteritems, itervalues
 import numpy as np
-from pyNastran.bdf.bdf import PBEAM, PBEAML, PROD
 
 def convert(model, units_to, units=None):
     """
@@ -502,7 +501,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 elif dload.Type == 'ACCE':
                     scale = accel_scale
                 else:
-                    raise RuntimeError(load)
+                    raise RuntimeError(dload)
             else:
                 raise NotImplementedError(dload)
 

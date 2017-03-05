@@ -3,9 +3,7 @@ import os
 import unittest
 
 import numpy as np
-from numpy import allclose
-#import pyNastran
-#from pyNastran.bdf.bdf import BDF
+
 
 #root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')

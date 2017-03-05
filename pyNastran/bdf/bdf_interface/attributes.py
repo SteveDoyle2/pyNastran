@@ -584,8 +584,6 @@ class BDFAttributes(object):
             # spc/mpc constraints - TODO: is this correct?
             'spcs' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD', 'GMSPC'],
             'spcoffs' : ['SPCOFF', 'SPCOFF1'],
-            #'spcadds' : ['SPCADD'],
-            #'mpcadds' : ['MPCADD'],
             'mpcs' : ['MPC', 'MPCADD'],
             'suport' : ['SUPORT'],
             'suport1' : ['SUPORT1'],

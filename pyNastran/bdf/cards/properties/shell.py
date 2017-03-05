@@ -439,7 +439,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
                 return 2. * mass_per_area + self.nsm
             return mass_per_area + self.nsm
         else:
-            assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
+            assert isinstance(iply, integer_types), 'iply must be an integer; iply=%r' % iply
             #rho = self.get_density(iply)
             rho = rhos[iply]
             t = self.thicknesses[iply]
@@ -779,9 +779,9 @@ class PCOMP(CompositeShellProperty):
         nsm = self.Nsm()
         mids = self.Mids()
 
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(is_sym, bool), 'is_sym=%r' % is_sym
-        assert isinstance(nplies, int), 'nplies=%r' % nplies
+        assert isinstance(nplies, integer_types), 'nplies=%r' % nplies
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         assert isinstance(mids, list), 'mids=%r' % mids
 
@@ -971,7 +971,7 @@ class PCOMPG(CompositeShellProperty):
 
             assert mid is not None
             assert thickness is not None
-            assert isinstance(mid, int), 'mid=%s' % mid
+            assert isinstance(mid, integer_types), 'mid=%s' % mid
             assert isinstance(thickness, float), 'thickness=%s' % thickness
             mid_last = mid
             thick_last = thickness
@@ -990,9 +990,9 @@ class PCOMPG(CompositeShellProperty):
         nsm = self.Nsm()
         mids = self.Mids()
 
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(is_sym, bool), 'is_sym=%r' % is_sym
-        assert isinstance(nplies, int), 'nplies=%r' % nplies
+        assert isinstance(nplies, integer_types), 'nplies=%r' % nplies
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         assert isinstance(mids, list), 'mids=%r' % mids
 
@@ -1007,7 +1007,7 @@ class PCOMPG(CompositeShellProperty):
             mid2 = self.Mid(iply)
             assert mids[iply] == mid2
             t = self.Thickness(iply)
-            assert isinstance(glply, int), 'global_ply_id=%r' % glply
+            assert isinstance(glply, integer_types), 'global_ply_id=%r' % glply
             assert isinstance(t, float), 'thickness=%r' % t
             if xref:
                 rho = self.Rho(iply)

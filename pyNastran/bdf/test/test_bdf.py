@@ -572,9 +572,12 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     units_from = ['m', 'kg', 's']
     #convert(fem1, units_to, units=units_from)
     if xref:
-        fem1.get_area_breakdown()
-        fem1.get_volume_breakdown()
-        fem1.get_mass_breakdown()
+        try:
+            fem1.get_area_breakdown()
+            fem1.get_volume_breakdown()
+            fem1.get_mass_breakdown()
+        except RuntimeError:
+            fem1.log.warning('no elements found')
     return fem1
 
 
@@ -724,7 +727,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 105: # buckling
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert 'LOAD' in subcase or 'METHOD' in subcase, subcase
+        assert True in subcase.has_parameter('LOAD', 'METHOD'), subcase
         if 0:
             if 'METHOD' not in subcase:
                 subcases = fem2.subcases

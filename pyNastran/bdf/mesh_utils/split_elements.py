@@ -1,9 +1,10 @@
 
 from __future__ import print_function
 from six import iteritems
-from pyNastran.bdf.bdf import read_bdf, CTRIA3
+from pyNastran.bdf.bdf import read_bdf#, CTRIA3
 
 def split_elements(bdf_filename):
+    """unimplmented method for splitting elements"""
     model = read_bdf(bdf_filename, xref=True)
     for eid, elem in iteritems(model.elements):
         if elem.type == 'CTRIA3':
@@ -18,7 +19,7 @@ def split_elements(bdf_filename):
             # 1-------------2
             #
             p1, p2, p3 = elem.get_node_positions()
-            centroid = (p1 + p2 + p3) / 3.
+            #centroid = (p1 + p2 + p3) / 3.
 
             #
             #      3

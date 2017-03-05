@@ -215,11 +215,11 @@ class CGAP(Element):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert cid is None or isinstance(cid, int), 'cid=%r\n%s' % (cid, str(self))
-        assert isinstance(eid, int), 'eid=%r\n%s' % (eid, str(self))
-        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert cid is None or isinstance(cid, integer_types), 'cid=%r\n%s' % (cid, str(self))
+        assert isinstance(eid, integer_types), 'eid=%r\n%s' % (eid, str(self))
+        assert isinstance(pid, integer_types), 'pid=%r\n%s' % (pid, str(self))
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid_ref.type in ['PGAP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
@@ -387,8 +387,8 @@ class CRAC2D(CrackElement):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
 
     def get_edge_ids(self):
         return []
@@ -448,8 +448,8 @@ class CRAC3D(CrackElement):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
 
     def get_edge_ids(self):
         return []

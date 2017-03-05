@@ -744,7 +744,7 @@ class CTRIA6(TriShell):
         assert isinstance(T1, float), data
         assert isinstance(T2, float), data
         assert isinstance(T3, float), data
-        assert isinstance(TFlag, int), data
+        assert isinstance(TFlag, integer_types), data
         #prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
         return CTRIA6(eid, pid, nids, theta_mcid, zoffset,
@@ -882,7 +882,7 @@ class CTRIA6(TriShell):
 
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
-        assert isinstance(self.TFlag, int), self.TFlag
+        assert isinstance(self.TFlag, integer_types), self.TFlag
         TFlag = set_blank_if_default(self.TFlag, 0)
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
@@ -2972,7 +2972,7 @@ class CQUAD(QuadShell):
         theta_mcid = self.theta_mcid
         if theta_mcid == 0.:
             stheta = ''
-        elif isinstance(theta_mcid, int):
+        elif isinstance(theta_mcid, integer_types):
             stheta = '%s' % theta_mcid
         else:
             stheta = '%s' % theta_mcid
