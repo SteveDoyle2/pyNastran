@@ -35,8 +35,8 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils.log import get_logger2
 
 # Tables
-from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (
-    RealAppliedLoadsVectorArray, AppliedLoadsVectorArray)
+#from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (
+    #RealAppliedLoadsVectorArray, AppliedLoadsVectorArray)
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
@@ -1007,7 +1007,7 @@ class Solver(OP2):
                 e1 = zeros(ncbars, 'float64')
                 f1 = zeros(ncbars, 'float64')
                 for i, eid in enumerate(cbars):
-                    element = elements[eid]
+                    element = cbars[eid]
                     (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID)
                     o1[i] = oxi
                     e1[i] = exi
@@ -1032,7 +1032,7 @@ class Solver(OP2):
                 e1 = zeros(ncbeams, 'float64')
                 f1 = zeros(ncbeams, 'float64')
                 for i, eid in enumerate(cbeams):
-                    element = elements[eid]
+                    element = cbeams[eid]
                     (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID)
                     o1[i] = oxi
                     e1[i] = exi
@@ -1074,7 +1074,7 @@ class Solver(OP2):
             if ncquad4s:
                 cquad4s = model.cquad4
                 for i, eid in enumerate(ncquad4s):
-                    element = elements[eid]
+                    element = cquad4s[eid]
                     (stressi, straini, forcei) = element.displacement_stress(
                         model, q, self.nidComponentToID)
                     stress[i0+i, :] = stressi
@@ -1327,10 +1327,10 @@ class Solver(OP2):
         self.cshear_stress = {}
         self.cshear_strain = {}
 
-                                     S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )
-      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
-        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
-          328        1.721350E+03   1.570314E+03   7.2E+01
+                    S T R E S S E S   I N   S H E A R   P A N E L S   ( C S H E A R )
+      ELEMENT       MAX            AVG        SAFETY    ELEMENT    MAX      AVG    SAFETY
+        ID.        SHEAR          SHEAR       MARGIN      ID.     SHEAR    SHEAR   MARGIN
+          328   1.721350E+03   1.570314E+03   7.2E+01
         """
         if len(eids) == 0:
             return

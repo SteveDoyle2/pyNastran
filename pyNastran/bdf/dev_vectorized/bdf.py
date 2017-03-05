@@ -2540,7 +2540,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'spoints', 'spointi',  # singleton
             'grdset',  # singleton
 
-            'spcs', 'spcadds',
+            'spcs',
 
             'suport', 'se_suport', # suport, suport1 - list
             'doptprm',  # singleton

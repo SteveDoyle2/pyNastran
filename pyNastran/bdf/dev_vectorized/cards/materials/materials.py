@@ -113,7 +113,7 @@ class Materials(object):
         #return rho
 
     def get_density_by_material_id(self, material_id):
-        int_flag = True if isinstance(material_id, int) else False
+        int_flag = True if isinstance(material_id, integer_types) else False
         if isinstance(material_id, integer_types):
             material_id = array([material_id], dtype='int32')
 
@@ -148,7 +148,7 @@ class Materials(object):
 
     def get_density_E_by_material_id(self, material_id):
         assert self.is_built, self.is_built
-        int_flag = True if isinstance(material_id, int) else False
+        int_flag = True if isinstance(material_id, integer_types) else False
         n = len(material_id)
         density = zeros(n, dtype='float64')
         E = zeros(n, dtype='float64')
@@ -277,7 +277,7 @@ class Materials(object):
         return out[0] if int_flag else out
 
     #def __getitem2__(self, material_id):
-        #assert isinstance(material_id, int), 'material_id=%r' % material_id
+        #assert isinstance(material_id, integer_types), 'material_id=%r' % material_id
         #types = self._get_types()
         #for mat in types:
             #if material_id in mat.material_id:
