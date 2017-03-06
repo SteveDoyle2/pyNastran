@@ -65,7 +65,8 @@ from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
 from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
 from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
 from pyNastran.gui.gui_interface.modify_label_properties.interface import on_set_labelsize_color_menu
-from pyNastran.gui.gui_interface.groups_modify import GroupsModify, Group
+from pyNastran.gui.gui_interface.groups_modify.interface import on_modify_group
+from pyNastran.gui.gui_interface.groups_modify.groups_modify import GroupsModify, Group
 
 
 from pyNastran.gui.menus.results_sidebar import Sidebar
@@ -448,7 +449,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
-                ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.modify_group),
+                ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.on_modify_group),
 
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
@@ -574,7 +575,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
              'anti_alias_4', 'anti_alias_8',],
         ]
         if self.is_groups:
-            menu_view += ['modify_groups', 'create_groups_by_property_id',
+            menu_view += ['on_modify_groups', 'create_groups_by_property_id',
                           'create_groups_by_visible_result']
         menu_view += [
             '', 'clipping', #'axis',
@@ -5218,7 +5219,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 raise NotImplementedError(geom_prop)
 
-    def modify_group(self):
+    def on_modify_group(self):
         """
         Opens a dialog box to set:
 
@@ -5232,47 +5233,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         | Format | pyString |
         +--------+----------+
         """
-        if not len(self.groups):  # no 'main' group
-            self.log_error('No main group to create.')
-            return
-        print('groups.keys() =', self.groups.keys())
-
-        data = {0 : self.groups['main']}
-
-        i = 1
-        for name, group in sorted(iteritems(self.groups)):
-            if name == 'main':
-                continue
-            data[i] = group
-            i += 1
-        #data = deepcopy(self.groups)
-
-        if not self._modify_groups_window_shown:
-            self._modify_groups = GroupsModify(
-                data, win_parent=self, group_active=self.group_active)
-            self._modify_groups.show()
-            self._modify_groups_window_shown = True
-            self._modify_groups.exec_()
-        else:
-            self._modify_groups.activateWindow()
-
-        if 'clicked_ok' not in data:
-            self._modify_groups.activateWindow()
-            return
-
-        if data['clicked_ok']:
-            self.on_update_modify_group(data)
-            imain = self._modify_groups.imain
-            name = self._modify_groups.keys[imain]
-            self.post_group_by_name(name)
-            #name =
-            #self._save_geometry_properties(data)
-            del self._modify_groups
-            self._modify_groups_window_shown = False
-        elif data['clicked_cancel']:
-            self.on_update_modify_group(data)
-            del self._modify_groups
-            self._modify_groups_window_shown = False
+        on_modify_group(self)
 
     def on_update_modify_group(self, out_data):
         """

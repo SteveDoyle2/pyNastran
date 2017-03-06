@@ -1,8 +1,8 @@
 from __future__ import print_function
 from six import integer_types
-from pyNastran.gui.gui_interface.legend.qt_legend import LegendPropertiesWindow
+from pyNastran.gui.gui_interface.groups_modify.groups_modify import GroupsModify, Group
 
-def modify_group(self):
+def on_modify_group(self):
     """
     Opens a dialog box to set:
 
