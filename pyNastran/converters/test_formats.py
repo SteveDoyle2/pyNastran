@@ -2,7 +2,7 @@ import unittest
 
 from pyNastran.converters.nastran.test_nastran import TestNastran
 
-from pyNastran.converters.aflr2.test_bedge import TestBEdge
+from pyNastran.converters.aflr.aflr2.test_bedge import TestBEdge
 from pyNastran.converters.cart3d.test_cart3d import TestCart3d
 from pyNastran.converters.fast.test_fast import TestFast
 from pyNastran.converters.panair.test_panair import TestPanair

@@ -4,7 +4,7 @@ import os
 import numpy as np
 import vtk
 
-from pyNastran.converters.aflr2.aflr2 import read_bedge
+from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 

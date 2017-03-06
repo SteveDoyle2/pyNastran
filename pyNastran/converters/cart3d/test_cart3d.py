@@ -7,6 +7,8 @@ import unittest
 import pyNastran
 from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
+from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
+from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 from pyNastran.utils.log import get_logger
 
@@ -44,8 +46,7 @@ class TestCart3d(unittest.TestCase):
             f.write(lines)
 
         log = get_logger(level='warning', encoding='utf-8')
-        cart3d = Cart3D(log=log, debug=False)
-        cart3d.read_cart3d(infile_name)
+        cart3d = read_cart3d(infile_name, log=log, debug=False)
         assert len(cart3d.points) == 7, 'npoints=%s' % len(cart3d.points)
         assert len(cart3d.elements) == 6, 'nelements=%s' % len(cart3d.elements)
         assert len(cart3d.regions) == 6, 'nregions=%s' % len(cart3d.regions)
@@ -130,6 +131,22 @@ class TestCart3d(unittest.TestCase):
 
         cart3d.write_cart3d(outfile_name_bin_out, is_binary=False)
         os.remove(outfile_name_bin_out)
+
+    def test_cart3d_to_stl(self):
+        """convert to stl"""
+        log = get_logger(level='warning', encoding='utf-8')
+        cart3d_filename = os.path.join(test_path, 'threePlugs.bin.tri')
+        stl_filename = os.path.join(test_path, 'threePlugs.stl')
+        cart3d_to_stl_filename(cart3d_filename, stl_filename, log=log)
+        #os.remove(stl_filename)
+
+    def test_cart3d_to_tecplot(self):
+        """convert to tecplot"""
+        log = get_logger(level='warning', encoding='utf-8')
+        cart3d_filename = os.path.join(test_path, 'threePlugs.bin.tri')
+        tecplot_filename = os.path.join(test_path, 'threePlugs.plt')
+        cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=log)
+        #os.remove(tecplot_filename)
 
     def test_cart3d_to_nastran_01(self):
         """convert to nastran small field"""

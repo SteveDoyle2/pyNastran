@@ -8,10 +8,10 @@ warnings.simplefilter('always')
 np.seterr(all='raise')
 
 import pyNastran
-from pyNastran.converters.aflr2.aflr2 import read_bedge
+from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge
 
 pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'aflr2')
+test_path = os.path.join(pkg_path, 'converters', 'aflr', 'aflr2')
 
 class TestBEdge(unittest.TestCase):
 

@@ -36,8 +36,8 @@ def read_stl(stl_filename, log=None, debug=False):
 
 class STL(object):
     #model_type = 'stl'
-    #isStructured = False
-    #isOutwardNormals = True
+    #is_structured = False
+    #is_outward_normals = True
 
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
@@ -533,6 +533,8 @@ class STL(object):
     def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f',
                         normalize_normal_vectors=False, stop_on_failure=True):
         """
+        Writes an STL in ASCII format
+
         solid solid_name
          facet normal -6.601157e-001 6.730213e-001 3.336009e-001
           outer loop
@@ -547,7 +549,7 @@ class STL(object):
         elements = self.elements
         self.log.info("---write_stl_ascii...%r---" % out_filename)
         msg = ''
-        node_format = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
+        noormal_format = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         vertex_format = '     vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         msg += 'solid %s\n' % solid_name
         with open(out_filename, 'w') as out:
@@ -563,7 +565,7 @@ class STL(object):
                     raise
 
                 #msg  += '  facet normal -6.601157e-001 6.730213e-001 3.336009e-001\n'
-                msg = node_format % tuple(normal)
+                msg = noormal_format % tuple(normal)
                 msg += '   outer loop\n'
                 msg += vertex_format % tuple(p1)
                 msg += vertex_format % tuple(p2)
@@ -577,77 +579,79 @@ class STL(object):
 
 
     def read_ascii_stl(self, stl_filename):
-        infile = open(stl_filename, 'r')
-        line = infile.readline()
-        inode = 0
-        ielement = 0
-        nodes_dict = {}
-        elements = []
-        while line:
-            if 'solid' in line[:6].lower():
-                line = infile.readline()  # facet
-                while 'facet' in line.strip()[:5].lower():
-                    #facet normal -6.665299e-001 6.795624e-001 3.064844e-001
-                    #   outer loop
-                    #      vertex 8.142845e-002 2.731541e-001 1.190024e+001
-                    #      vertex 8.186898e-002 2.727136e-001 1.190215e+001
-                    #      vertex 8.467505e-002 2.754588e-001 1.190215e+001
-                    #   endloop
-                    #endfacet
-
-                    infile.readline() # outer loop
-                    L1 = infile.readline().strip()
-                    L2 = infile.readline().strip()
-                    L3 = infile.readline().strip()
-
-                    v1 = L1.split()[1:]
-                    v2 = L2.split()[1:]
-                    v3 = L3.split()[1:]
-                    infile.readline() # endloop
-                    infile.readline() # endfacet
-                    t1 = tuple(v1)
-                    t2 = tuple(v2)
-                    t3 = tuple(v3)
-
-                    assert len(v1) == 3, '%r' % L1
-                    assert len(v2) == 3, '%r' % L2
-                    assert len(v3) == 3, '%r' % L3
-
-                    if t1 in nodes_dict:
-                        i1 = nodes_dict[t1]
-                    else:
-                        i1 = inode
-                        nodes_dict[t1] = inode
-                        inode += 1
-
-                    if t2 in nodes_dict:
-                        i2 = nodes_dict[t2]
-                    else:
-                        i2 = inode
-                        nodes_dict[t2] = inode
-                        inode += 1
-
-                    if t3 in nodes_dict:
-                        i3 = nodes_dict[t3]
-                    else:
-                        i3 = inode
-                        nodes_dict[t3] = inode
-                        inode += 1
-                    element = [i1, i2, i3]
-                    elements.append(element)
-                    ielement += 1
+        """
+        Reads an STL that's in ASCII format
+        """
+        with open(stl_filename, 'r') as infile:
+            line = infile.readline()
+            inode = 0
+            ielement = 0
+            nodes_dict = {}
+            elements = []
+            while line:
+                if 'solid' in line[:6].lower():
                     line = infile.readline()  # facet
-                #print "end of solid..."
-            elif 'endsolid' in line.lower():
-                line = infile.readline()
-            elif line.strip() == '':
-                line = infile.readline()
-            else:
-                self.log.error(line)
-                #line = f.readline()
-                raise NotImplementedError('multiple solids are not supported; line=%r' % line)
-                #break
-        infile.close()
+                    while 'facet' in line.strip()[:5].lower():
+                        #facet normal -6.665299e-001 6.795624e-001 3.064844e-001
+                        #   outer loop
+                        #      vertex 8.142845e-002 2.731541e-001 1.190024e+001
+                        #      vertex 8.186898e-002 2.727136e-001 1.190215e+001
+                        #      vertex 8.467505e-002 2.754588e-001 1.190215e+001
+                        #   endloop
+                        #endfacet
+
+                        infile.readline() # outer loop
+                        L1 = infile.readline().strip()
+                        L2 = infile.readline().strip()
+                        L3 = infile.readline().strip()
+
+                        v1 = L1.split()[1:]
+                        v2 = L2.split()[1:]
+                        v3 = L3.split()[1:]
+                        infile.readline() # endloop
+                        infile.readline() # endfacet
+                        t1 = tuple(v1)
+                        t2 = tuple(v2)
+                        t3 = tuple(v3)
+
+                        assert len(v1) == 3, '%r' % L1
+                        assert len(v2) == 3, '%r' % L2
+                        assert len(v3) == 3, '%r' % L3
+
+                        if t1 in nodes_dict:
+                            i1 = nodes_dict[t1]
+                        else:
+                            i1 = inode
+                            nodes_dict[t1] = inode
+                            inode += 1
+
+                        if t2 in nodes_dict:
+                            i2 = nodes_dict[t2]
+                        else:
+                            i2 = inode
+                            nodes_dict[t2] = inode
+                            inode += 1
+
+                        if t3 in nodes_dict:
+                            i3 = nodes_dict[t3]
+                        else:
+                            i3 = inode
+                            nodes_dict[t3] = inode
+                            inode += 1
+                        element = [i1, i2, i3]
+                        elements.append(element)
+                        ielement += 1
+                        line = infile.readline()  # facet
+                    #print "end of solid..."
+                elif 'endsolid' in line.lower():
+                    line = infile.readline()
+                elif line.strip() == '':
+                    line = infile.readline()
+                else:
+                    self.log.error(line)
+                    #line = f.readline()
+                    raise NotImplementedError('multiple solids are not supported; line=%r' % line)
+                    #break
 
         assert inode > 0, inode
         nnodes = inode + 1 # accounting for indexing

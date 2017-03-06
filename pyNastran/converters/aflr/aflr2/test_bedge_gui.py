@@ -8,13 +8,13 @@ warnings.simplefilter('always')
 np.seterr(all='raise')
 
 import pyNastran
-from pyNastran.converters.aflr2.aflr2 import read_bedge
+from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge
+from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 from pyNastran.gui.testing_methods import GUIMethods
-from pyNastran.converters.aflr2.bedge_io import BEdge_IO
 from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'aflr2')
+model_path = os.path.join(pkg_path, 'converters', 'aflr', 'aflr2')
 
 
 class BEdge_GUI(BEdge_IO, GUIMethods):
