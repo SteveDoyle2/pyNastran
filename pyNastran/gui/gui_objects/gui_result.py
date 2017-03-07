@@ -1,6 +1,12 @@
+"""
+defines:
+ - GuiResultCommon
+ - GuiResult
+"""
 from __future__ import print_function
 
-REAL_TYPES = ['<i4', '<i8', '<f4', '<f8', '|i1', # this last one is a boolean
+REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
+              '|i1', # this is a boolean
               '>i4', '>i8', '>f4', '>f8']
 INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']

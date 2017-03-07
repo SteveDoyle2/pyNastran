@@ -65,8 +65,8 @@ from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
 from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
 from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
 from pyNastran.gui.gui_interface.modify_label_properties.interface import on_set_labelsize_color_menu
-from pyNastran.gui.gui_interface.groups_modify.interface import on_modify_group
-from pyNastran.gui.gui_interface.groups_modify.groups_modify import GroupsModify, Group
+from pyNastran.gui.gui_interface.groups_modify.interface import on_set_modify_groups
+from pyNastran.gui.gui_interface.groups_modify.groups_modify import Group
 
 
 from pyNastran.gui.menus.results_sidebar import Sidebar
@@ -449,7 +449,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
-                ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.on_modify_group),
+                ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
 
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
@@ -575,7 +575,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
              'anti_alias_4', 'anti_alias_8',],
         ]
         if self.is_groups:
-            menu_view += ['on_modify_groups', 'create_groups_by_property_id',
+            menu_view += ['modify_groups', 'create_groups_by_property_id',
                           'create_groups_by_visible_result']
         menu_view += [
             '', 'clipping', #'axis',
@@ -2056,41 +2056,48 @@ class GuiCommon2(QMainWindow, GuiCommon):
         eids = np.intersect1d(all_eids, eids)
 
         # update for indices
-        i = np.searchsorted(all_eids, eids)
+        ishow = np.searchsorted(all_eids, eids)
 
         #eids_off = np.setdiff1d(all_eids, eids)
         #j = np.setdiff1d(all_eids, eids_off)
 
-        self.show_ids_mask(i)
+        self.show_ids_mask(ishow)
 
     def hide_eids(self, eids):
         """hides the specified element IDs"""
         all_eids = self.get_all_eids()
 
+        # remove eids that are out of range
+        eids = np.intersect1d(all_eids, eids)
+
         # A-B
         eids = np.setdiff1d(all_eids, eids)
 
         # update for indices
-        i = np.searchsorted(all_eids, eids)
-        self.show_ids_mask(i)
+        ishow = np.searchsorted(all_eids, eids)
+        self.show_ids_mask(ishow)
 
-    def create_groups_by_visible_result(self):
+    def create_groups_by_visible_result(self, nlimit=50):
         """
         Creates group by the active result
 
-        This should really only be called for integer results < 100-ish.
+        This should really only be called for integer results < 50-ish.
         """
         #self.scalar_bar.title
-
         case_key = self.case_keys[self.icase] # int for object
         result_name = self.result_name
         obj, (i, name) = self.result_cases[case_key]
         default_title = obj.get_default_title(i, name)
+        location = obj.get_location(i, name)
+        if location != 'centroid':
+            self.log.error('not creating result=%r; must be a centroidal result' % result_name)
+            return 0
 
         word = default_title
         prefix = default_title
-        self._create_groups_by_name(word, prefix)
-        self.log_command('create_groups_by_visible_result()')
+        ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
+        self.log_command('create_groups_by_visible_result()'
+                         ' # created %i groups for result_name=%r' % (ngroups, result_name))
 
     def create_groups_by_property_id(self):
         """
@@ -2101,7 +2108,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._create_groups_by_name('PropertyID', 'property')
         self.log_command('create_groups_by_property_id()')
 
-    def _create_groups_by_name(self, name, prefix):
+    def _create_groups_by_name(self, name, prefix, nlimit=50):
         """
         Helper method for `create_groups_by_visible_result` and `create_groups_by_property_id`
         """
@@ -2112,6 +2119,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         result = self.find_result_by_name(name)
         ures = np.unique(result)
+        ngroups = len(ures)
+        if ngroups > nlimit:
+            self.log.error('not creating result; %i new groups would be created; '
+                           'increase nlimit=%i if you really want to' % (ngroups, nlimit))
+            return 0
+
         for uresi in ures:
             ids = np.where(uresi == result)[0]
 
@@ -2123,6 +2136,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             group.element_ids = eids[ids]
             self.log_info('creating group=%r' % name)
             self.groups[name] = group
+        return ngroups
 
     def create_group_with_name(self, name, eids):
         elements_pound = self.groups['main'].elements_pound
@@ -2144,24 +2158,188 @@ class GuiCommon2(QMainWindow, GuiCommon):
         raise RuntimeError('cannot find name=%r' % desired_name)
 
     def show_ids_mask(self, ids_to_show):
-        flip_flag = True is self._show_flag
-        self._update_ids_mask(ids_to_show, flip_flag, show_flag=True, render=False)
-        self._update_ids_mask(ids_to_show, False, show_flag=True, render=True)
-        self._show_flag = True
+        """masks the specific 0-based element ids"""
+        #print('ids_to_show = ', ids_to_show)
+        prop = self.geom_actor.GetProperty()
+        if len(ids_to_show) == self.nElements:
+            #prop.BackfaceCullingOn()
+            pass
+        else:
+            prop.BackfaceCullingOff()
+
+        if 0:  # pragma: no cover
+            self._show_ids_mask(ids_to_show)
+        elif 1:
+            # doesn't work for the BWB_saero.bdf
+            flip_flag = True is self._show_flag
+            assert self._show_flag == True, self._show_flag
+            self._update_ids_mask_show(ids_to_show)
+            self._show_flag = True
+        elif 1:  # pragma: no cover
+            # works
+            flip_flag = True is self._show_flag
+            assert self._show_flag == True, self._show_flag
+            self._update_ids_mask_showTrue(ids_to_show, flip_flag, render=False)
+            self._update_ids_mask_showTrue(ids_to_show, False, render=True)
+            self._show_flag = True
+        else:  # pragma: no cover
+            # old; works; slow
+            flip_flag = True is self._show_flag
+            self._update_ids_mask(ids_to_show, flip_flag, show_flag=True, render=False)
+            self._update_ids_mask(ids_to_show, False, show_flag=True, render=True)
+            self._show_flag = True
 
     def hide_ids_mask(self, ids_to_hide):
-        flip_flag = False is self._show_flag
-        self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False, render=False)
-        self._update_ids_mask(ids_to_hide, False, show_flag=False, render=True)
-        self._show_flag = False
+        """masks the specific 0-based element ids"""
+        #print('hide_ids_mask = ', hide_ids_mask)
+        prop = self.geom_actor.GetProperty()
+        if len(self.ids_to_hide) == 0:
+            prop.BackfaceCullingOn()
+        else:
+            prop.BackfaceCullingOff()
+
+        if 0:  # pragma: no cover
+            self._hide_ids_mask(ids_to_hide)
+        else:
+            # old; works; slow
+            flip_flag = False is self._show_flag
+            self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False, render=False)
+            self._update_ids_mask(ids_to_hide, False, show_flag=False, render=True)
+            self._show_flag = False
+
+    def _show_ids_mask(self, ids_to_show):
+        """
+        helper method for ``show_ids_mask``
+        .. todo:: doesn't work
+        """
+        all_i = np.arange(self.nElements, dtype='int32')
+        ids_to_hide = np.setdiff1d(all_i, ids_to_show)
+        self._hide_ids_mask(ids_to_hide)
+
+    def _hide_ids_mask(self, ids_to_hide):
+        """
+        helper method for ``hide_ids_mask``
+        .. todo:: doesn't work
+        """
+        #print('_hide_ids_mask = ', ids_to_hide)
+        ids = self.numpy_to_vtk_idtype(ids_to_hide)
+
+        #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+
+        if 1:
+            # sane; doesn't work
+            self.selection_node.SetSelectionList(ids)
+            ids.Modified()
+            self.selection_node.Modified()
+            self.selection.Modified()
+            self.grid_selected.Modified()
+            self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+            self.update_all(render=True)
+        else:  # pragma: no cover
+            # doesn't work
+            self.selection.RemoveAllNodes()
+            self.selection_node = vtk.vtkSelectionNode()
+            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            self.selection.AddNode(self.selection_node)
+            self.selection_node.SetSelectionList(ids)
+
+            #self.selection.RemoveAllNodes()
+            #self.selection.AddNode(self.selection_node)
+            self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+            self.selection_node.SetSelectionList(ids)
+            self.update_all(render=True)
+
+
+    def numpy_to_vtk_idtype(self, ids):
+        #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+        from vtk.util.numpy_support import numpy_to_vtkIdTypeArray
+
+        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
+        if isize == 4:
+            dtype = 'int32' # TODO: can we include endian?
+        elif isize == 8:
+            dtype = 'int64'
+        else:
+            msg = 'ids.dtype=%s' % str(ids.dtype)
+            raise NotImplementedError(msg)
+
+        ids = np.asarray(ids, dtype=dtype)
+        vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
+        return vtk_ids
+
+    def _update_ids_mask_showFalse(self, ids_to_show, flip_flag=True, render=True):
+        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids.Modified()
+
+        if flip_flag:
+            self.selection.RemoveAllNodes()
+            self.selection_node = vtk.vtkSelectionNode()
+            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            self.selection_node.SetSelectionList(ids)
+
+            self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            self.selection.AddNode(self.selection_node)
+        else:
+            self.selection_node.SetSelectionList(ids)
+
+        # dumb; works
+        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+        self.update_all(render=render)
+
+    def _update_ids_mask_show(self, ids_to_show):
+        """helper method for ``show_ids_mask``"""
+        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids.Modified()
+
+        self.selection.RemoveAllNodes()
+        self.selection_node = vtk.vtkSelectionNode()
+        self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+        self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        self.selection_node.SetSelectionList(ids)
+        self.selection_node.Modified()
+        self.selection.Modified()
+
+        self.selection.AddNode(self.selection_node)
+
+        # seems to also work
+        self.extract_selection.Update()
+        #self.update_all(render=False)
+
+        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+
+        self.update_all(render=True)
+        if 0:
+            self.grid_selected.Modified()
+            self.vtk_interactor.Render()
+            render_window = self.vtk_interactor.GetRenderWindow()
+            render_window.Render()
+
+    def _update_ids_mask_showTrue(self, ids_to_show, flip_flag=True, render=True):  # pragma: no cover
+        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids.Modified()
+
+        if flip_flag:
+            self.selection.RemoveAllNodes()
+            self.selection_node = vtk.vtkSelectionNode()
+            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            self.selection_node.SetSelectionList(ids)
+
+            self.selection.AddNode(self.selection_node)
+        else:
+            self.selection_node.SetSelectionList(ids)
+
+        # dumb; works
+        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+        self.update_all(render=render)
 
     def _update_ids_mask(self, ids_to_show, flip_flag=True, show_flag=True, render=True):
-        ids = vtk.vtkIdTypeArray()
-        ids.SetNumberOfComponents(1)
-        #ids.SetNumberOfValues(len(ids_to_show))
-        ids.Allocate(len(ids_to_show))
-        for idi in ids_to_show:
-            ids.InsertNextValue(idi)
+        print('flip_flag=%s show_flag=%s' % (flip_flag, show_flag))
+
+        ids = self.numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         if flip_flag:
@@ -2181,14 +2359,50 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #ids.Update()
         #self.shown_ids.Modified()
-        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
-        if 0:
-            self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-            self.extract_selection.Update()
+
+        if 0:  # pragma: no cover
+            # doesn't work...
+            if vtk.VTK_MAJOR_VERSION <= 5:
+                self.extract_selection.SetInput(0, self.grid)
+                self.extract_selection.SetInput(1, self.selection)
+            else:
+                self.extract_selection.SetInputData(0, self.grid)
+                self.extract_selection.SetInputData(1, self.selection)
+        else:
+            # dumb; works
+            self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+
+        #if 0:
+            #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            #self.extract_selection.Update()
 
             #self.grid_not_selected = vtk.vtkUnstructuredGrid()
-            self.grid_not_selected.ShallowCopy(self.extract_selection.GetOutput())
+            #self.grid_not_selected.ShallowCopy(self.extract_selection.GetOutput())
         self.update_all(render=render)
+
+    def update_all_2(self, render=True):  # pragma: no cover
+        self.grid_selected.Modified()
+
+        self.selection_node.Modified()
+        self.selection.Modified()
+        self.extract_selection.Update()
+        self.extract_selection.Modified()
+
+        self.grid_selected.Modified()
+        self.grid_mapper.Update()
+        self.grid_mapper.Modified()
+
+        self.iren.Modified()
+        self.rend.Render()
+        self.rend.Modified()
+
+        self.geom_actor.Modified()
+        self.not_selected_actor.Modified()
+
+        if render:
+            self.vtk_interactor.Render()
+            render_window = self.vtk_interactor.GetRenderWindow()
+            render_window.Render()
 
     def update_all(self, render=True):
         self.grid_selected.Modified()
@@ -2237,9 +2451,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ids = vtk.vtkIdTypeArray()
         ids.SetNumberOfComponents(1)
 
+        # the "selection_node" is really a "selection_element_ids"
+        # furthermore, it's an inverse model, so adding elements
+        # hides more elements
         self.selection_node = vtk.vtkSelectionNode()
         self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
         self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)  # added
         self.selection_node.SetSelectionList(ids)
 
         self.selection = vtk.vtkSelection()
@@ -2278,6 +2496,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
 
     def create_text(self, position, label, text_size=18):
+        """creates a text actor"""
         text_actor = vtk.vtkTextActor()
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
@@ -5219,7 +5438,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 raise NotImplementedError(geom_prop)
 
-    def on_modify_group(self):
+    def on_set_modify_groups(self):
         """
         Opens a dialog box to set:
 
@@ -5233,9 +5452,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         | Format | pyString |
         +--------+----------+
         """
-        on_modify_group(self)
+        on_set_modify_groups(self)
 
-    def on_update_modify_group(self, out_data):
+    def _apply_modify_groups(self, data):
+        """called by on_set_modify_groups when apply is clicked"""
+        self.on_update_modify_groups(data)
+        imain = self._modify_groups_window.imain
+        name = self._modify_groups_window.keys[imain]
+        self.post_group_by_name(name)
+
+    def on_update_modify_groups(self, out_data):
         """
         Applies the changed groups to the different groups if
         something changed.

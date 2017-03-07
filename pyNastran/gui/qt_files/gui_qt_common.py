@@ -137,8 +137,37 @@ class GuiCommon(GuiAttributes):
         """
         return []
 
-    def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
-                  min_value=None, max_value=None, is_legend_shown=None):
+    def _set_case(self, result_name, icase, explicit=False, cycle=False,
+                  skip_click_check=False, min_value=None, max_value=None,
+                  is_legend_shown=None):
+        """
+        Internal method for doing results updating
+
+        result_name : str
+            the name of the case for debugging purposes
+        icase : int
+            the case id
+        explicit : bool; default=False
+            show the command when we're doing in the log
+        cycle : bool; default=False
+            ???
+        skip_click_check : bool; default=False
+            There is no reason to update if the case didn't change on the
+            Results Sidebar
+            True  : Legend Menu
+            False : Results Sidebar
+        min_value : float; default=None
+            the min value
+            None : use the default
+        max_value  : float; default=None
+            the max value
+            None : use the default
+        is_legend_shown : bool; default=None
+            is the scalar bar shown
+            None : stick with the current value
+            True : show the legend
+            False : hide the legend
+        """
         if not skip_click_check:
             if not cycle and icase == self.icase:
                 # don't click the button twice
@@ -172,6 +201,7 @@ class GuiCommon(GuiAttributes):
             min_value, max_value = obj.get_min_max(i, name)
 
         #if 0:
+            # my poor attempts at supporting NaN colors
             #if min_value is None and max_value is None:
                 #max_value = case.max()
                 #min_value = case.min()
@@ -264,7 +294,7 @@ class GuiCommon(GuiAttributes):
         """
         if self._names_storage.has_exact_name(name):
             return
-        #print('name, case =', name, case)
+        #print('name=%r case=%r' % (name, case))
 
         if not hasattr(case, 'dtype'):
             raise RuntimeError('name=%s case=%s' % (name, case))
@@ -286,9 +316,9 @@ class GuiCommon(GuiAttributes):
                 #case[50] = np.int32(1) / np.int32(0)
 
         if vector_size == 1:
+            nvalues = len(case)
             if is_low_to_high:
                 if norm_value == 0:
-                    nvalues = len(case)
                     case2 = full((nvalues), 1.0 - min_value, dtype='float32')
                 else:
                     case2 = 1.0 - (case - min_value) / norm_value
@@ -577,11 +607,7 @@ class GuiCommon(GuiAttributes):
         else:
             # key = self.case_keys[self.icase]
             # location = self.get_case_location(key)
-            location = 'N/A'
-            #result_type = 'centroidal' if location == 'centroid' else 'nodal'
-            result_type = '???'
-            self.log_error('No Results found.  Many results are not supported in the GUI.\n'
-                           'Try using %s results.' % result_type)
+            self.log_error('No results found.')
             self.scalarBar.SetVisibility(False)
             found_cases = False
         #print("next icase=%s key=%s" % (self.icase, key))

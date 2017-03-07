@@ -30,8 +30,6 @@ def set_legend_menu(self):
     defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
     default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
 
-    #vector_size = obj.get_vector_size(i, res_name)
-    #location = obj.get_location(i, res_name)
     data_format = obj.get_data_format(i, res_name)
     scale = obj.get_scale(i, res_name)
     phase = obj.get_phase(i, res_name)
@@ -46,18 +44,9 @@ def set_legend_menu(self):
     if default_format is None:
         default_format = data_format
 
-    #if isinstance(case, ndarray):
-        #if len(case.shape) == 1:
-            #normi = case
-        #else:
-            #normi = norm(case, axis=1)
-    #else:
-        #raise RuntimeError('list-based results have been removed; use numpy.array')
     data = {
         'icase' : self.icase,
         'name' : result_type,
-        #'min' : normi.min(),
-        #'max' : normi.max(),
         'min' : min_value,
         'max' : max_value,
 
