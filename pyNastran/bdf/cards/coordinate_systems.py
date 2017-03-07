@@ -507,7 +507,7 @@ class Coord(BaseCard):
 
     def resolve(self):
         if not self.is_resolved:
-            if isinstance(self.rid, int) and self.rid != 0:
+            if isinstance(self.rid, integer_types) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 self.rid_ref.setup()
@@ -519,7 +519,7 @@ class Coord(BaseCard):
             return p
 
         #if not self.is_resolved:
-            #if isinstance(self.rid, int) and self.rid != 0:
+            #if isinstance(self.rid, integer_types) and self.rid != 0:
                 #raise RuntimeError("BDF has not been cross referenced.")
             #if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 #self.rid_ref.setup()
@@ -564,7 +564,7 @@ class Coord(BaseCard):
             return p
 
         if not self.is_resolved:
-            if isinstance(self.rid, int) and self.rid != 0:
+            if isinstance(self.rid, integer_types) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 self.rid_ref.setup()
@@ -1649,8 +1649,8 @@ class Cord2x(Coord):
         """
         cid = self.Cid()
         rid = self.Rid()
-        assert isinstance(cid, int), 'cid=%r' % cid
-        assert isinstance(rid, int), 'rid=%r' % rid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
+        assert isinstance(rid, integer_types), 'rid=%r' % rid
 
     def update(self, nid_map, cid_map):
         """
@@ -1865,7 +1865,7 @@ class Cord1x(Coord):
             has this model been cross referenced
         """
         cid = self.Cid()
-        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
 
     def cross_reference(self, model):
         """
@@ -2281,8 +2281,8 @@ class CORD2R(Cord2x, RectangularCoord):
         """
         cid = self.Cid()
         rid = self.Rid()
-        assert isinstance(cid, int), 'cid=%r' % cid
-        assert isinstance(rid, int), 'rid=%r' % rid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
+        assert isinstance(rid, integer_types), 'rid=%r' % rid
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)

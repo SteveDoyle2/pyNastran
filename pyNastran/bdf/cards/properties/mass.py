@@ -115,7 +115,7 @@ class PMASS(PointProperty):
     def _verify(self, xref=False):
         pid = self.Pid()
         mass = self.Mass()
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(mass, float), 'mass=%r' % mass
 
     def Mass(self):

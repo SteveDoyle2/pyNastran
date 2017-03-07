@@ -60,10 +60,6 @@ class AddMethods(BDFAttributes):
             self.params[key] = param
             self._type_to_id_map[param.type].append(key)
 
-    #def add_node(self, node, allow_overwrites=False):
-        #"""deprecated"""
-        #self._add_node_object(node, allow_overwrites)
-
     def _add_node_object(self, node, allow_overwrites=False):
         """adds a GRID card"""
         key = node.nid
@@ -77,6 +73,13 @@ class AddMethods(BDFAttributes):
             assert key > 0, 'nid=%s node=%s' % (key, node)
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
+
+    def _add_seqgp_object(self, seqgp):
+        """adds an SPOINT card"""
+        if self.seqgp is None:
+            self.seqgp = seqgp
+        else:
+            self.seqgp.append(seqgp)
 
     def _add_point_object(self, point, allow_overwrites=False):
         """adds a POINT card"""
@@ -483,14 +486,6 @@ class AddMethods(BDFAttributes):
             self.bcs[key] = [bc]
             self._type_to_id_map[bc.type].append(key)
 
-    #def add_constraint_mpcadd_object(self, constraint):
-        #raise RuntimeError('is this used?')
-        #key = constraint.conid
-        #if key in self.mpcadds:
-            #raise RuntimeError('must have unique MPCADD IDs')
-        #self.mpcadds[key] = constraint
-        #self._type_to_id_map[constraint.type].append(key)
-
     def _add_constraint_mpc_object(self, constraint):
         key = constraint.conid
         if key in self.mpcs:
@@ -499,20 +494,21 @@ class AddMethods(BDFAttributes):
             self.mpcs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
-    #def add_constraint_spcadd_object(self, constraint):
-        #raise RuntimeError('is this used?')
-        #key = constraint.conid
-        #if key in self.spcadds:
-            #raise RuntimeError('must have unique SPCADD IDs')
-        #self.spcadds[key] = constraint
-        #self._type_to_id_map[constraint.type].append(key)
-
     def _add_constraint_spc_object(self, constraint):
         key = constraint.conid
         if key in self.spcs:
             self.spcs[key].append(constraint)
         else:
             self.spcs[key] = [constraint]
+            self._type_to_id_map[constraint.type].append(key)
+
+    def _add_constraint_spcoff_object(self, constraint):
+        """dumb key, but good enough..."""
+        key = constraint.type
+        if key in self.spcoffs:
+            self.spcoffs[key].append(constraint)
+        else:
+            self.spcoffs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
     def _add_sesuport_object(self, se_suport):

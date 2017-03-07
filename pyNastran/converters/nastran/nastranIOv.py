@@ -223,12 +223,37 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.vtk_interactor.Render()
 
     def _create_coord(self, dim_max, cid, coord, cid_type):
+        """
+        Create a coordinate system
+
+        Parameters
+        ----------
+        dim_max : float
+            the max model dimension; 10% of the max will be used for the coord length
+        cid : int
+           the coordinate system id
+        coord : Coord()
+           the Nastran coord object
+        cid_type : str
+            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
+            that changes the axis names
+        """
         origin = coord.origin
         beta = coord.beta().T
-        self.create_coordinate_system(dim_max, label='%s' % cid, origin=origin, matrix_3x3=beta,
-                                      Type=cid_type)
+        self.create_coordinate_system(dim_max, label='%s' % cid, origin=origin,
+                                      matrix_3x3=beta, Type=cid_type)
 
     def _create_nastran_coords(self, model, dim_max):
+        """
+        Creates the Nastran coordinate systems.
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        dim_max : float
+            the max model dimension; 10% of the max will be used for the coord length
+        """
         cid_types = {
             'R' : 'xyz',
             'C' : 'Rtz',
@@ -272,7 +297,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return skip_reading
 
     def get_xyz_in_coord(self, model, cid=0, fdtype='float32'):
-        """creates the grid points efficiently"""
+        """Creates the grid points efficiently"""
         #import time
         #t0 = time.time()
 
@@ -291,7 +316,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nid_map = self.nid_map
             for i, nid in enumerate(nid_cp_cd[:, 0]):
                 nid_map[nid] = i
-        elif 0:
+        elif 0:  # pragma: no cover
             # t=.573
             out = model.get_displacement_index_xyz_cp_cd(
                 fdtype='float32', idtype='int32')
@@ -302,7 +327,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nid_map = self.nid_map
             for i, nid in enumerate(nid_cp_cd[:, 0]):
                 nid_map[nid] = i
-        else:
+        else:  # pragma: no cover
             # t=.75
             nid_map = self.nid_map
             assert cid == 0, cid
@@ -340,7 +365,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return xyz_cid0, nid_cp_cd
 
     def _get_model(self, bdf_filename, xref_loads=True):
-        """loads the BDF/OP2 geometry"""
+        """Loads the BDF/OP2 geometry"""
         #print('get_model')
         ext = os.path.splitext(bdf_filename)[1].lower()
         punch = False
@@ -387,6 +412,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return model
 
     def load_nastran_geometry(self, bdf_filename, dirname, name='main', plot=True):
+        """
+        The entry point for Nastran geometry loading.
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the Nastran filename to load
+        dirname : str
+            ???
+        name : str
+            the name of the "main" actor for the GUI
+        plot : bool; default=True
+            should the model be generated or should we wait until
+            after the results are loaded
+        """
         self.eid_maps[name] = {}
         self.nid_maps[name] = {}
         self.i_transform = {}
@@ -592,6 +632,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if grid_name in self.geometry_actors:
                 self.geometry_actors[grid_name].Modified()
 
+        #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         if plot:
             #self.log.info(cases.keys())
             self._finish_results_io2([form], cases)
@@ -752,7 +793,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     print(spline.object_methods())
                     raise
 
-                zfighting_offset = 0.0001 * iaero
+                zfighting_offset = 0.0001 * (iaero + 1)
                 grid_name = 'spline_%s_structure_points' % spline_id
                 self.create_alternate_vtk_grid(
                     grid_name, color=BLUE, opacity=1.0, point_size=5,
@@ -761,7 +802,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self._add_nastran_nodes_to_grid(grid_name, structure_points, model, msg)
 
 
-                zfighting_offset = 0.0001 * (iaero + 1)
+                zfighting_offset = 0.0001 * (iaero + 2)
                 grid_name = 'spline_%s_boxes' % spline_id
                 self.create_alternate_vtk_grid(
                     grid_name, color=BLUE, opacity=0.3,
@@ -782,6 +823,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             number of points used by the 'caero' actor
         model : BDF()
             the bdf model
+        j : int; default=0
+            the current id counter (ID of what???)
 
         Returns
         -------
@@ -793,11 +836,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         max_cpoints = []
         min_cpoints = []
+
+        zfighting_offset = 0.0001
         caero_grid = self.alt_grids['caero']
         for eid, element in sorted(iteritems(model.caeros)):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 # wing panel
                 cpoints = element.get_points()
+                cpoints[0][2] += zfighting_offset
+                cpoints[1][2] += zfighting_offset
                 max_cpoints.append(np.array(cpoints).max(axis=0))
                 min_cpoints.append(np.array(cpoints).min(axis=0))
 
@@ -817,6 +864,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 if 0:
                     # 1D version
                     cpoints = element.get_points()
+                    cpoints[:, 2] +=  zfighting_offset
                     max_cpoints.append(np.array(cpoints).max(axis=0))
                     min_cpoints.append(np.array(cpoints).min(axis=0))
 
@@ -824,7 +872,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     elem.GetPointIds().SetId(0, j)
                     elem.GetPointIds().SetId(1, j + 1)
 
-                    print(', '.join(dir(elem)))
+                    #print(', '.join(dir(elem)))
                     #prop = elem.GetProperty()
 
                     points.InsertPoint(j, *cpoints[0])
@@ -834,6 +882,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     # 3D version
                     xyz, elems = element.get_points_elements_3d()
+                    xyz[:, 2] +=  zfighting_offset
                     for elemi in elems:
                         elem = vtkQuad()
                         elem.GetPointIds().SetId(0, j)
@@ -858,6 +907,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
             self.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
         self.alt_grids['caero'].SetPoints(points)
+        #self.alt_grids['caero']
+        #edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         return j
 
     def set_caero_subpanel_grid(self, ncaero_sub_points, model, j=0):
@@ -870,6 +921,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             number of points used by the 'caero_subpanels' actor
         model : BDF()
             the bdf model
+        j : int; default=0
+            the current id counter (ID of what???)
 
         Returns
         -------
@@ -924,7 +977,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             z-fighting is when two elements "fight" for who is in front
             leading.  The standard way to fix this is to bump the
             element.
-        j : int???
+        j : int; default=0
+            ???
+
+        Returns
+        -------
+        j : int
             ???
         """
         points_list = []
@@ -1538,7 +1596,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return 0.01 * dim_max
 
     def map_elements2(self, points, nid_map, model, j, dim_max,
-                      nid_cp_cd, plot=True, xref_loads=True):
+                      nid_cp_cd, plot=True, xref_loads=True):  # pragma: no cover
         #model = BDF()
         cards_to_consider = [
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -1992,7 +2050,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #print(e)
 
         #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
-        self.glyphs.SetScaleFactor(min_edge_length.mean() * 2.5)  # was 1.5
+        self.set_glyph_scale_factor(min_edge_length.mean() * 2.5)  # was 1.5
         if self.make_offset_normals_dim and nelements:
             icase, normals = self._build_normals_quality(
                 model, nelements, cases, form0, icase,

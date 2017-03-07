@@ -52,7 +52,7 @@ def compare_card_content(fem1, fem2):
         'properties', 'materials', 'creep_materials',
         #'loads',
         'coords',
-        'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas',
+        'spcs', 'spcoffs', 'mpcs', 'dareas',
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies', 'sets',
         'tables', 'random_tables', 'methods', 'cMethods']
     for name in check_obj_names:

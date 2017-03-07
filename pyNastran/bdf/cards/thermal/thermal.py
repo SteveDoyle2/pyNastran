@@ -192,9 +192,9 @@ class CHBDYE(ThermalElement):
         eid = self.Eid()
         eid2 = self.Eid2()
         pid = self.Pid()
-        assert isinstance(eid, int)
-        assert isinstance(eid2, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(eid2, integer_types)
+        assert isinstance(pid, integer_types)
 
     #def side_to_eids(self, eid):
         #side_ids = self.side_maps[eid.type][self.side]
@@ -320,18 +320,20 @@ class CHBDYG(ThermalElement):
         rad_mid_front = data[4]
         rad_mid_back = data[5]
         nodes = [datai for datai in data[6:14] if datai > 0]
-        if Type == 5:
-            Type = 'AREA4'
+        if Type == 3:
+            Type = 'REV'
         elif Type == 4:
             Type = 'AREA3'
+        elif Type == 5:
+            Type = 'AREA4'
         #elif Type == 7: # ???
             #Type = 'AREA6'
+        elif Type == 8:
+            Type = 'AREA6'
         elif Type == 9:
             Type = 'AREA8'
-        #elif Type == ???:
-            #Type = 'REV'
         else:
-            raise NotImplementedError('Type=%r' % Type)
+            raise NotImplementedError('eid=%s Type=%r' % (eid, Type))
 
         assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
         return CHBDYG(eid, Type, nodes,
@@ -341,7 +343,7 @@ class CHBDYG(ThermalElement):
 
     def _verify(self, xref=False):
         eid = self.Eid()
-        assert isinstance(eid, int)
+        assert isinstance(eid, integer_types)
 
     @property
     def node_ids(self):
@@ -525,8 +527,11 @@ class CHBDYP(ThermalElement):
             raise NotImplementedError('CHBDYP Type=%r data=%s' % (Type, data))
         #assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
 
-        assert dislin == 0, 'CHBDYP dislin=%r data=%s' % (dislin, data)
-        gmid = dislin
+        #assert dislin == 0, 'CHBDYP dislin=%r data=%s' % (dislin, data)
+        if dislin  == 0:
+            gmid = None
+        else:
+            gmid = dislin
         return CHBDYP(eid, pid, Type, g1, g2, g0=g0, gmid=gmid, ce=ce,
                       iview_front=iviewf, ivew_back=iviewb,
                       rad_mid_front=radmidf, rad_mid_back=radmidb,
@@ -578,8 +583,8 @@ class CHBDYP(ThermalElement):
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
 
     def Eid(self):
         return self.eid

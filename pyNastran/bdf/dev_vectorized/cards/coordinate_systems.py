@@ -14,12 +14,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from six.moves import zip, range
 
-from numpy import array, cross, dot, transpose, zeros, vstack
+from numpy import array, dot, transpose, zeros, vstack
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
-from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -104,7 +103,7 @@ class Coord(BaseCard):
             return p
 
         if not self.is_resolved:
-            if isinstance(self.rid, int) and self.rid != 0:
+            if isinstance(self.rid, integer_types) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 self.rid.setup()
@@ -302,8 +301,8 @@ class Cord2x(Coord):
         """
         cid = self.Cid()
         rid = self.Rid()
-        assert isinstance(cid, int), 'cid=%r' % cid
-        assert isinstance(rid, int), 'rid=%r' % rid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
+        assert isinstance(rid, integer_types), 'rid=%r' % rid
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -450,7 +449,7 @@ class Cord1x(Coord):
         Verifies all methods for this object work
         """
         cid = self.Cid()
-        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
 
 
     def G1(self):
@@ -596,7 +595,7 @@ class CORD1R(Cord1x):
             self.comment = comment
 
     def raw_fields(self):
-        list_fields = ['CORD1R', self.cid] + self.NodeIDs()
+        list_fields = ['CORD1R', self.cid] + self.node_ids
         return list_fields
 
     def coord_to_xyz(self, p):
@@ -792,8 +791,8 @@ class CORD2R(Cord2x):
         """
         cid = self.Cid()
         rid = self.Rid()
-        assert isinstance(cid, int), 'cid=%r' % cid
-        assert isinstance(rid, int), 'rid=%r' % rid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
+        assert isinstance(rid, integer_types), 'rid=%r' % rid
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)

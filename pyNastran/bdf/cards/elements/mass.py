@@ -262,11 +262,15 @@ class CMASS2(PointMassElement):
         c2 = self.c2
         #self.nodes
 
-        assert isinstance(eid, int), 'eid=%r' % eid
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(eid, integer_types), 'eid=%r' % eid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(mass, float), 'mass=%r' % mass
-        assert c1 is None or isinstance(c1, int), 'c1=%r' % c1
-        assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
+        assert c1 is None or isinstance(c1, integer_types), 'c1=%r' % c1
+        assert c2 is None or isinstance(c2, integer_types), 'c2=%r' % c2
+
+    @property
+    def nodes(self):
+        return [self.g1, self.g2]
 
     @property
     def node_ids(self):
@@ -869,7 +873,7 @@ class CONM2(PointMassElement):
         self.I = np.asarray(I)
 
     def validate(self):
-        assert isinstance(self.cid, int), self.cid
+        assert isinstance(self.cid, integer_types), self.cid
         assert isinstance(self.mass, float), self.mass
         assert self.mass >= 0., 'mass=%s' % self.mass
 
@@ -932,9 +936,9 @@ class CONM2(PointMassElement):
         mass = self.Mass()
         c = self.Centroid()
 
-        assert isinstance(eid, int), 'eid=%r' % eid
-        assert isinstance(nid, int), 'nid=%r' % nid
-        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(eid, integer_types), 'eid=%r' % eid
+        assert isinstance(nid, integer_types), 'nid=%r' % nid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
         assert isinstance(mass, float), 'mass=%r' % mass
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])

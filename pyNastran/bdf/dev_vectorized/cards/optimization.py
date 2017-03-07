@@ -833,7 +833,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
         #elif property_type in stress_types:
-            #if not isinstance(atta, int):
+            #if not isinstance(atta, integer_types):
                 #msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s; atta should be an integer' % (
                     #property_type, response_type, atta, attb, atti)
                 #raise TypeError(msg)
@@ -990,7 +990,7 @@ class DRESP1(OptConstraint):
             msg += 'rtype=%r ptype=%r region=%s A=%r B=%r\n' % (
                 self.rtype, self.property_type, self.region,
                 self.atta, self.attb)
-            assert isinstance(self.atta, int), self.atta
+            assert isinstance(self.atta, integer_types), self.atta
             assert self.attb is None, self.attb
             assert len(self.atti) == 1, self.atti
             #msg += str(self)
@@ -1345,7 +1345,7 @@ class DRESP2(OptConstraint):
                 raise NotImplementedError('  TODO: xref %s' % str(key))
         self.params_ref = self.params
 
-        if isinstance(self.dequation, int):
+        if isinstance(self.dequation, integer_types):
             dequation_ref = model.DEQATN(self.dequation, msg=msg)
             self.func = dequation_ref.func
         elif isinstance(self.dequation, str):
@@ -1363,34 +1363,34 @@ class DRESP2(OptConstraint):
         if name in ['DRESP1', 'DRESP2']:
             for i, val in enumerate(values_list):
                 #self.params[key][i] = model.DResp(val, msg)
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
 
         elif name in ['DVCREL1', 'DVCREL2']:
             for i, val in enumerate(values_list):
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
 
         elif name in ['DVMREL1', 'DVMREL2']:
             for i, val in enumerate(values_list):
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
 
         elif name in ['DVPREL1', 'DVPREL2']:
             for i, val in enumerate(values_list):
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
         elif name == 'DESVAR':
             for i, val in enumerate(values_list):
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
@@ -1398,7 +1398,7 @@ class DRESP2(OptConstraint):
             #print(values_list)
             for i in range(0, len(values_list), 2):
                 val = values_list[i]
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.nid)
@@ -1510,34 +1510,34 @@ class DRESP3(OptConstraint):
         if name in ['DRESP1', 'DRESP2']:
             for i, val in enumerate(values_list):
                 #self.params[key][i] = model.DResp(val, msg)
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
 
         elif name in ['DVCREL1', 'DVCREL2']:
             for i, val in enumerate(values_list):
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
 
         elif name in ['DVMREL1', 'DVMREL2']:
             for i, val in enumerate(values_list):
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
 
         elif name in ['DVPREL1', 'DVPREL2']:
             for i, val in enumerate(values_list):
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
         elif name == 'DESVAR':
             for i, val in enumerate(values_list):
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.OptID())
@@ -1545,7 +1545,7 @@ class DRESP3(OptConstraint):
             #print(values_list)
             for i in range(0, len(values_list), 2):
                 val = values_list[i]
-                if isinstance(val, int):
+                if isinstance(val, integer_types):
                     out.append(val)
                 else:
                     out.append(val.nid)
@@ -1620,7 +1620,7 @@ class DRESP3(OptConstraint):
                 raise NotImplementedError('  TODO: xref %s' % str(name))
         self.params_ref = self.params
 
-        #if isinstance(self.DEquation(), int):
+        #if isinstance(self.DEquation(), integer_types):
             #self.dequation = model.DEQATN(self.dequation, msg=msg)
             #self.dequation_ref = self.dequation
             #self.func = self.dequation_ref.func
@@ -1858,7 +1858,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
 
     @property
     def desvar_ids(self):
-        if isinstance(self.dvids[0], int):
+        if isinstance(self.dvids[0], integer_types):
             return self.dvids
         return [desvar.desvar_id for desvar in self.dvids]
 
@@ -2639,7 +2639,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     #@property
     #def desvar_ids(self):
-        #if isinstance(self.dvids[0], int):
+        #if isinstance(self.dvids[0], integer_types):
             #return self.dvids
         #return [desvar.desvar_id for desvar in self.dvids]
 
@@ -2813,7 +2813,7 @@ class DVPREL2(OptConstraint):
 
     #@property
     #def dequation_ref(self):
-        #if isinstance(self.dequation, int):
+        #if isinstance(self.dequation, integer_types):
             #return self.dequation
         #return self.dequation_ref.equation_id
 

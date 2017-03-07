@@ -70,6 +70,11 @@ class RROD(RigidElement):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
+        if cma == '0':
+            cma = None
+        if cmb == '0':
+            cmb = None
+
         self.eid = eid
         self.ga = ga
         self.gb = gb

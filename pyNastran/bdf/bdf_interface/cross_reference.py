@@ -178,19 +178,12 @@ class XrefMesh(BDFAttributes):
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        for spcadd in itervalues(self.spcadds):
-            raise RuntimeError('removed')
-            #self.spcObject.Add(spcadd)
-            #spcadd.cross_reference(self)
-
         for spcs in itervalues(self.spcs):
             for spc in spcs:
                 spc.cross_reference(self)
-
-        for mpcadd in itervalues(self.mpcadds):
-            raise RuntimeError('removed')
-            #self.mpcObject.Add(mpcadd)
-            ##mpcadd.cross_reference(self)
+        for spcoffs in itervalues(self.spcoffs):
+            for spcoff in spcoffs:
+                spcoff.cross_reference(self)
 
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:

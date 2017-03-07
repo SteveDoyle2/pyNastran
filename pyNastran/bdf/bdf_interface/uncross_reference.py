@@ -114,11 +114,13 @@ class UnXrefMesh(SafeXrefMesh):
         Unlinks the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        for spcadd in itervalues(self.spcadds):
-            spcadd.uncross_reference()
         for spc in itervalues(self.spcs):
             for spci in spc:
                 spci.uncross_reference()
+        for spcoffs in itervalues(self.spcoffs):
+            for spcoff in spcoffs:
+                spcoff.uncross_reference(self)
+
         for mpc in itervalues(self.mpcs):
             for mpci in mpc:
                 mpci.uncross_reference()

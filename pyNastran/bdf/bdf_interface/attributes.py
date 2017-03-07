@@ -244,8 +244,13 @@ class BDFAttributes(object):
         #self.grids = {}
         self.spoints = None
         self.epoints = None
+
         #: stores GRIDSET card
         self.grdset = None
+
+        #: stores SEQGP cards
+        self.seqgp = None
+
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
@@ -326,10 +331,9 @@ class BDFAttributes(object):
         #self.mpcObject = ConstraintObject()
 
         self.spcs = {}
-        self.spcadds = {}
+        self.spcoffs = {}
 
         self.mpcs = {}
-        self.mpcadds = {}
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
@@ -506,6 +510,7 @@ class BDFAttributes(object):
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points' : ['POINT'],
             'grdset' : ['GRDSET'],
+            'seqgp' : ['SEQGP'],
             #'POINT', 'POINTAX', 'RINGAX',
 
             # CMASS4 lies in the QRG
@@ -578,8 +583,7 @@ class BDFAttributes(object):
 
             # spc/mpc constraints - TODO: is this correct?
             'spcs' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD', 'GMSPC'],
-            #'spcadds' : ['SPCADD'],
-            #'mpcadds' : ['MPCADD'],
+            'spcoffs' : ['SPCOFF', 'SPCOFF1'],
             'mpcs' : ['MPC', 'MPCADD'],
             'suport' : ['SUPORT'],
             'suport1' : ['SUPORT1'],

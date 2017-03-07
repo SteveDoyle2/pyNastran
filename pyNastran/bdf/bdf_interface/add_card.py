@@ -42,7 +42,7 @@ from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.bdf.cards.properties.mass import PMASS#, NSM
-from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
+from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
@@ -66,7 +66,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
 from pyNastran.bdf.cards.aero import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
     AESURF, AESURFS, AERO, AEROS, CSSCHD,
@@ -141,6 +141,23 @@ class AddCards(AddMethods):
         grdset = GRDSET(cp, cd, ps, seid, comment=comment)
         self.grdset = grdset
         return grdset
+
+    def add_seqgp(self, nids, seqids, comment=''):
+        """
+        Creates the SEQGP card
+
+        Parameters
+        ----------
+        nid : int
+           the node id
+        seqid : int/float
+           the superelement id
+        comment : str; default=''
+            a comment for the card
+        """
+        seqgp = SEQGP(ids, comment=comment)
+        self._add_seqgp_object(nids, seqids, comment=comment)
+        return seqgp
 
     def add_spoint(self, ids, comment=''):
         """
@@ -2595,10 +2612,11 @@ class AddCards(AddMethods):
         self._add_dresp_object(dresp)
         return dresp
 
-    def add_dresp2(self, dresp_id, label, dequation, region, method, c1, c2, c3,
-                   params, comment=''):
-        dresp = DRESP2(dresp_id, label, dequation, region, method, c1, c2, c3,
-                       params, comment=comment)
+    def add_dresp2(self, dresp_id, label, dequation, region, params,
+                   method='MIN', c1=100., c2=0.005, c3=None,
+                   comment=''):
+        dresp = DRESP2(dresp_id, label, dequation, region, params,
+                       method=method, c1=c1, c2=c2, c3=c3, comment=comment)
         self._add_dresp_object(dresp)
         return dresp
 
@@ -2625,7 +2643,7 @@ class AddCards(AddMethods):
         self._add_dvcrel_object(dvcrel)
         return dvcrel
 
-    def add_dvprel1(self, oid, Type, pid, pname_fid, dvids, coeffs,
+    def add_dvprel1(self, oid, prop_type, pid, pname_fid, dvids, coeffs,
                     p_min=None, p_max=1e20, c0=0.0, validate=True, comment=''):
         """
         Creates a DVPREL1 card
@@ -2634,7 +2652,7 @@ class AddCards(AddMethods):
         ----------
         oid : int
             optimization id
-        Type : str
+        prop_type : str
             property card name (e.g., PSHELL)
         pid : int
             property id
@@ -2655,13 +2673,13 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        dvprel = DVPREL1(oid, Type, pid, pname_fid, dvids, coeffs,
+        dvprel = DVPREL1(oid, prop_type, pid, pname_fid, dvids, coeffs,
                          p_min=p_min, p_max=p_max,
                          c0=c0, validate=validate, comment=comment)
         self._add_dvprel_object(dvprel)
         return dvprel
 
-    def add_dvprel2(self, oid, Type, pid, pname_fid, deqation,
+    def add_dvprel2(self, oid, prop_type, pid, pname_fid, deqation,
                     dvids=None, labels=None, p_min=None, p_max=1e20,
                     validate=True, comment=''):
         """
@@ -2671,7 +2689,7 @@ class AddCards(AddMethods):
         ----------
         oid : int
             optimization id
-        Type : str
+        prop_type : str
             property card name (e.g., PSHELL)
         pid : int
             property id
@@ -2694,21 +2712,21 @@ class AddCards(AddMethods):
 
         .. note:: either dvids or labels is required
         """
-        dvprel = DVPREL2(oid, Type, pid, pname_fid, deqation, dvids, labels,
+        dvprel = DVPREL2(oid, prop_type, pid, pname_fid, deqation, dvids, labels,
                          p_min=p_min, p_max=p_max, validate=validate, comment=comment)
         self._add_dvprel_object(dvprel)
         return dvprel
 
-    def add_dvmrel1(self, oid, Type, mid, mp_name, dvids, coeffs,
+    def add_dvmrel1(self, oid, mat_type, mid, mp_name, dvids, coeffs,
                     mp_min=None, mp_max=1e20, c0=0., validate=True, comment=''):
-        dvmrel = DVMREL1(oid, Type, mid, mp_name, dvids, coeffs,
+        dvmrel = DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
                          mp_min, mp_max, c0=c0, validate=validate, comment=comment)
         self._add_dvmrel_object(dvmrel)
         return dvmrel
 
-    def add_dvmrel2(self, oid, Type, mid, mp_name, deqation, dvids, labels,
+    def add_dvmrel2(self, oid, mat_type, mid, mp_name, deqation, dvids, labels,
                     mp_min=None, mp_max=1e20, validate=True, comment=''):
-        dvmrel = DVMREL2(oid, Type, mid, mp_name, deqation, dvids, labels,
+        dvmrel = DVMREL2(oid, mat_type, mid, mp_name, deqation, dvids, labels,
                          mp_min=mp_min, mp_max=mp_max,
                          validate=validate, comment=comment)
         self._add_dvmrel_object(dvmrel)

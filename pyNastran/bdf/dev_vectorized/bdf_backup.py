@@ -775,7 +775,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # these don't...
         self.spcs = {}
-        self.spcadds = {}
 
         self.mpcs = {}
         self.mpcadds = {}

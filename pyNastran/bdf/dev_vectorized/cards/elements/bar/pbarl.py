@@ -6,7 +6,7 @@ from numpy import array, zeros, arange, searchsorted, unique
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
-from pyNastran.bdf.field_writer_8 import print_card_8, set_default_if_blank
+from pyNastran.bdf.field_writer_8 import print_card_8 #, set_default_if_blank
 from pyNastran.bdf.field_writer_16 import print_card_16
 #from pyNastran.bdf.field_writer_double import print_card_double
 
@@ -15,8 +15,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 #from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, string, double_or_blank, string_or_blank, fields, double)
-from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
+    integer, string, double_or_blank, string_or_blank, double) # fields
+#from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 
 class PBARL(Property):
@@ -233,7 +233,8 @@ class PBARL(Property):
                            #None, None, None] + self.dim + [self.nsm]
 
             #self.model.log.debug('*pbarl write pids=%s' % self.property_id)
-            for (j, pid, mid, group, Type, nsm) in zip(count(), self.property_id[i], self.material_id[i],
+            for (j, pid, mid, group, Type, nsm) in zip(count(), self.property_id[i],
+                                                       self.material_id[i],
                                                        self.group[i], self.Type[i], self.nsm[i]):
                 if pid in self._comments:
                     bdf_file.write(self._comments[pid])

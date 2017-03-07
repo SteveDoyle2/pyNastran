@@ -198,6 +198,11 @@ class GuiAttributes(object):
     def edge_actor(self, edge_actor):
         self.main_edge_actors[self.name] = edge_actor
 
+    def set_glyph_scale_factor(self, scale):
+        """sets the glyph scale factor"""
+        self.glyph_scale_factor = scale
+        self.glyphs.SetScaleFactor(scale)
+
     #-------------------------------------------------------------------
     def numpy_to_vtk_points(self, nodes, points=None, dtype='<f'):
         """

@@ -1,4 +1,6 @@
-from pyNastran.gui.gui_interface.modify_label_properties.modify_label_properties import ModifyLabelPropertiesMenu
+from pyNastran.gui.gui_interface.modify_label_properties.modify_label_properties import (
+    ModifyLabelPropertiesMenu)
+
 
 def on_set_labelsize_color_menu(self):
     """

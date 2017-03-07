@@ -1,3 +1,8 @@
+"""
+defines:
+    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                 starting_id_dict=None, round_ids=False, cards_to_skip=None)
+"""
 from __future__ import print_function
 from math import ceil
 
@@ -17,7 +22,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     ----------
     bdf_filename : str
         a bdf_filename (string; supported) or a BDF model (BDF)
-        that has been cross referenced and is fully valid (a equivalenced deck is not valid)
+        that has been cross referenced and is fully valid (an
+        equivalenced deck is not valid)
     bdf_filename_out : str
         a bdf_filename to write
     size : int; {8, 16}; default=8
@@ -34,12 +40,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                 None : don't renumber this key
     round_ids : bool; default=False
         Should a rounding up be applied for each variable?
-        This makes it easier to read a deck and verify that it's been renumbered properly.
+        This makes it easier to read a deck and verify that it's been
+        renumbered properly.
         This only really applies when starting_id_dict is None
     cards_to_skip : List[str]; (default=None -> don't skip any cards)
-        There are edge cases (e.g. FLUTTER analysis) where things can break due to
-        uncross-referenced cards.  You need to disable entire classes of cards in
-        that case (e.g. all aero cards).
+        There are edge cases (e.g. FLUTTER analysis) where things can
+        break due to uncross-referenced cards.  You need to disable
+        entire classes of cards in that case (e.g. all aero cards).
 
     .. todo:: bdf_model option for bdf_filename hasn't been tested
     .. todo:: add support for subsets (e.g. renumber only a subset of nodes/elements)
@@ -47,7 +54,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     .. todo:: doesn't support element material coordinate systems
 
     ..warning :: spoints might be problematic...check
-    ..warning :: still in development, but it usually brutally crashes if it's not supported
+    ..warning :: still in development, but it usually brutally crashes
+                 if it's not supported
     ..warning :: be careful of card unsupported cards (e.g. ones not read in)
 
     Supports
@@ -323,7 +331,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     nids = model.nodes.keys()
     from itertools import chain
 
-    spoints_nids = sorted(chain(spoints, nids))
+    nids_spoints_epoints = sorted(chain(nids, spoints, epoints))
     #spoints_nids.sort()
     i = 1
     #nnodes = len(spoints_nids)
@@ -336,13 +344,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if 'nid' in starting_id_dict and nid is not None:
         i = nid
         #banned_nodes = spoints
-        for nidi in spoints_nids:
-            if nidi in spoints:
+        for nidi in nids_spoints_epoints:
+            if nidi in spoints or nidi in epoints:
                 pass
                 #print('sid=%s -> %s' % (nid, i))
                 #i += 1
             else:
-                while i in spoints:
+                while i in spoints or i in epoints:
                     #print('*bump')
                     i += 1
                 #print('nid=%s -> %s' % (nid, i))
@@ -356,7 +364,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #print(nid_map)
         #print(reverse_nid_map)
     else:
-        for nid in spoints_nids:
+        for nid in nid_spoints_epoints:
             nid_map[nid] = nid
             reverse_nid_map[nid] = nid
 
@@ -451,15 +459,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                 spc.conid = spc_id
             spc_map[spc_idi] = spc_id
             spc_id += 1
-        for spc_idi, spcadd in sorted(iteritems(model.spcadds)):
-            assert hasattr(spcadd, 'conid')
-            spcadd.conid = spc_id
-            spc_map[spc_idi] = spc_id
-            spc_id += 1
     else:
         for spc_id in model.spcs:
-            spc_map[spc_id] = spc_id
-        for spc_id in model.spcadds:
             spc_map[spc_id] = spc_id
 
     if 'mpc_id' in starting_id_dict and mpc_id is not None:
@@ -470,15 +471,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                 mpc.conid = mpc_id
             mpc_map[mpc_idi] = mpc_id
             mpc_id += 1
-        for mpc_idi, mpcadd in sorted(iteritems(model.mpcadds)):
-            assert hasattr(mpcadd, 'conid')
-            mpcadd.conid = mpc_id
-            mpc_map[mpc_idi] = mpc_id
-            mpc_id += 1
     else:
         for mpc_id in model.mpcs:
-            mpc_map[mpc_id] = mpc_id
-        for mpc_id in model.mpcadds:
             mpc_map[mpc_id] = mpc_id
 
     if 'cid' in starting_id_dict and cid is not None:

@@ -1,61 +1,40 @@
+"""
+defines:
+ - GroupsModify
+"""
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, absolute_import
 from six import iteritems
 
-from numpy import setdiff1d, unique, hstack, ndarray
+from numpy import setdiff1d, unique, hstack
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
+    from PyQt4 import QtGui
     from PyQt4.QtGui import (
-        QLabel, QLineEdit, QPushButton, QWidget, QApplication,
+        QLabel, QLineEdit, QPushButton, QApplication,
         QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
     )
 elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
+    from PyQt5 import QtGui
     from PyQt5.QtWidgets import (
-        QLabel, QLineEdit, QPushButton, QWidget, QApplication,
+        QLabel, QLineEdit, QPushButton, QApplication,
         QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
     )
 elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
+    from PySide import QtGui
     from PySide.QtGui import (
-        QLabel, QLineEdit, QPushButton, QWidget, QApplication,
+        QLabel, QLineEdit, QPushButton, QApplication,
         QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
     )
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
 from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
-from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 #from pyNastran.gui.menus.manage_actors import Model
 from pyNastran.gui.gui_interface.common import PyDialog
-
-
-class ColorDisplay(QWidget):
-    """
-    http://stackoverflow.com/questions/4624985/how-simply-display-a-qcolor-using-pyqt
-    """
-    def __init__(self, parent, default_color=None):
-        super(ColorDisplay, self).__init__(parent)
-        self.color = default_color
-        self.setColor(self.color)
-
-    def setColor(self, color):
-        if color is not None:
-            color = [int(255 * i) for i in color]
-        self.color = QtGui.QColor(*color)
-        self.update()
-
-    def paintEvent(self, event=None):
-        painter = QtGui.QPainter(self)
-        if self.color is not None:
-            painter.setBrush(QtGui.QBrush(self.color))
-            painter.drawRect(self.rect())
-
-    def getColorName(self):
-        return unicode(self.color.name())
-
+from .groups import Group, _get_collapsed_text
+#from .groups_modify.color_display import ColorDisplay
 
 class GroupsModify(PyDialog):
     """
@@ -74,15 +53,14 @@ class GroupsModify(PyDialog):
     +--------------------------+
     """
     def __init__(self, data, win_parent=None, group_active='main'):
-        self.win_parent = win_parent
         PyDialog.__init__(self, data, win_parent)
-        #QDialog.__init__(self, win_parent)
+        self._updated_groups = False
 
-        #self.win_parent = win_parent
         #self.out_data = data
 
         #print(data)
-        self.keys = [group.name for key, group in sorted(iteritems(data))]
+        keys = []
+        self.keys = [group.name for key, group in sorted(iteritems(data)) if isinstance(key, int)]
         self.active_key = self.keys.index(group_active)
 
         group_obj = data[self.active_key]
@@ -99,16 +77,15 @@ class GroupsModify(PyDialog):
         self.table.clear()
         self.table.addItems(self.keys)
 
-        # table
         self.setWindowTitle('Groups: Modify')
         self.create_widgets()
         self.create_layout()
         self.set_connections()
 
         self.on_set_as_main()
-        #self.show()
 
     def create_widgets(self):
+        """creates the menu objects"""
         # Name
         self.name = QLabel("Name:")
         self.name_set = QPushButton("Set")
@@ -161,6 +138,7 @@ class GroupsModify(PyDialog):
 
 
     def create_layout(self):
+        """displays the menu objects"""
         grid = QGridLayout()
         grid.addWidget(self.name, 0, 0)
         grid.addWidget(self.name_edit, 0, 1)
@@ -255,7 +233,7 @@ class GroupsModify(PyDialog):
         #make the new group the default
         self.active_key = self.nrows - 1
 
-        self.keys = [group.name for key, group in sorted(iteritems(self.out_data))]
+        self.keys = [group.name for key, group in sorted(iteritems(self.out_data)) if isinstance(key, int)]
         self.recreate_table()
 
     def recreate_table(self):
@@ -282,6 +260,8 @@ class GroupsModify(PyDialog):
         items = {}
         j = 0
         for i, key in sorted(iteritems(self.out_data)):
+            if isinstance(i, int):
+                continue
             if i != self.active_key:
                 items[j] = key
                 j += 1
@@ -376,9 +356,14 @@ class GroupsModify(PyDialog):
         group = self.out_data[self.active_key]
         group.element_str = element_str
 
-    @staticmethod
-    def check_name(cell):
-        text = str(cell.text()).strip()
+    def check_name(self, cell):
+        cell_value = cell.text()
+        try:
+            text = str(cell_value).strip()
+        except UnicodeEncodeError:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
         if len(text):
             cell.setStyleSheet("QLineEdit{background: white;}")
             return text, True
@@ -401,7 +386,7 @@ class GroupsModify(PyDialog):
         #coords_value, flag2 = self.check_patran_syntax(self.coords_edit,
                                                        #pound=self.coords_pound)
 
-        if flag0 and flag1:
+        if all([flag0, flag1]):
             self._default_name = name
             self._default_elements = self.eids
             self.out_data['clicked_ok'] = True
@@ -412,20 +397,17 @@ class GroupsModify(PyDialog):
     def on_apply(self, force=False):
         passed = self.on_validate()
         if passed or force:
-            self.win_parent.on_modify_group(self.out_data)
+            self.win_parent._apply_modify_groups(self.out_data)
+        return passed
 
     def on_ok(self):
-        passed = self.on_validate()
+        passed = self.on_apply()
         if passed:
-            self.out_data['close'] = True
-            self.out_data['clicked_ok'] = True
-            self.out_data['clicked_cancel'] = False
             self.close()
             #self.destroy()
 
     def on_cancel(self):
         self.out_data['close'] = True
-        self.out_data['clicked_cancel'] = True
         self.close()
 
     def on_update_active_key(self, index):
@@ -494,11 +476,6 @@ class GroupsModify(PyDialog):
         #self.elements_edit # obj.eids
 
 
-def _get_collapsed_text(values):
-    singles, doubles = collapse_colon_packs(values)
-    text = ' '.join([str(s) for s in singles]) + ' '
-    text += ' '.join([''.join([str(doublei) for doublei in double]) for double in doubles])
-    return text
 
 def _add(adict, keys, values_to_add):
     value_stack = []
@@ -513,10 +490,10 @@ def _add(adict, keys, values_to_add):
         return values_add
     return values_to_add
 
-def _simple_add(values_to_add):
-    value_stack.append(values_to_add)
-    values_add = unique(hstack(value_stack))
-    return values_add
+#def _simple_add(values_to_add):
+    #value_stack.append(values_to_add)
+    #values_add = unique(hstack(value_stack))
+    #return values_add
 
 def _remove(adict, keys, values_to_remove):
     value_stack = []
@@ -530,55 +507,20 @@ def _remove(adict, keys, values_to_remove):
     return values_to_remove
 
 
-class Group(object):
-    def __init__(self, name, element_str, elements_pound, editable=True):
-        if len(name):
-            assert len(name) > 0, name
-            assert name[-1] != ' ', name
-            assert '\n' not in name, name
-            assert '\r' not in name, name
-            assert '\t' not in name, name
-        self.name = name
-        #self.cids = [0]
-        if isinstance(element_str, list):
-            element_str = ' '.join(str(s) for s in element_str)
-        else:
-            assert isinstance(element_str, (str, unicode)), 'element_str=%r type=%s' % (element_str, type(element_str))
-        self.element_str = element_str
-        self.elements_pound = elements_pound
-        self.editable = editable
-
-    @property
-    def element_ids(self):
-        return parse_patran_syntax(self.element_str, pound=self.elements_pound)
-
-    @element_ids.setter
-    def element_ids(self, eids):
-        assert isinstance(eids, ndarray), eids
-        self.element_str = _get_collapsed_text(eids).strip()
-
-    def __repr__(self):
-        msg = 'Group:\n'
-        msg += '  name: %s\n' % self.name
-        msg += '  editable: %s\n' % self.editable
-        #msg += '  cids: [%s]\n' % _get_collapsed_text(self.cids).strip()
-        msg += '  element_str: [%s]\n' % self.element_str
-        #msg += '  elements: [%s]\n' % _get_collapsed_text(self.elements).strip()
-        msg += '  elements_pound: %s\n' % self.elements_pound
-        return msg
-
-def main():
+def main(): # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
+
     import sys
     # Someone is launching this directly
     # Create the QApplication
     app = QApplication(sys.argv)
+    #The Main window
 
-    d = {
+    data = {
         0 : Group(name='main', element_str='1:#', elements_pound='103', editable=False),
         1 : Group(name='wing', element_str='1:10', elements_pound='103', editable=True),
         2 : Group(name='fuselage1', element_str='50:60', elements_pound='103', editable=True),
@@ -596,8 +538,9 @@ def main():
         14 : Group(name='fuselage13', element_str='50:60', elements_pound='103', editable=True),
         15 : Group(name='fuselage14', element_str='50:60', elements_pound='103', editable=True),
     }
-    main_window = GroupsModify(d)
+    main_window = GroupsModify(data)
     main_window.show()
+    # Enter the main loop
     app.exec_()
 
 if __name__ == '__main__':  # pragma: no cover

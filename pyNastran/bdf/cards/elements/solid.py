@@ -13,6 +13,7 @@ All solid elements are SolidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import range
 import numpy as np
 from numpy import dot, cross
@@ -389,10 +390,10 @@ class CHEXA8(SolidElement):
     def _verify(self, xref=False):
         eid = self.eid
         pid = self.Pid()
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(self.node_ids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             centroid = self.Centroid()
             volume = self.Volume()
@@ -647,10 +648,10 @@ class CHEXA20(SolidElement):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(self.node_ids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             centroid = self.Centroid()
             volume = self.Volume()
@@ -940,10 +941,10 @@ class CPENTA6(SolidElement):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             centroid = self.Centroid()
             volume = self.Volume()
@@ -1262,10 +1263,10 @@ class CPENTA15(SolidElement):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             centroid = self.Centroid()
             volume = self.Volume()
@@ -1429,10 +1430,10 @@ class CPYRAM5(SolidElement):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             centroid = self.Centroid()
             volume = self.Volume()
@@ -1612,10 +1613,10 @@ class CPYRAM13(SolidElement):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
             centroid = self.Centroid()
             volume = self.Volume()
@@ -1782,10 +1783,10 @@ class CTETRA4(SolidElement):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
             centroid = self.Centroid()
             volume = self.Volume()
@@ -2024,10 +2025,10 @@ class CTETRA10(SolidElement):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/blank; nid=%s' % (i, nid)
         if xref:
             centroid = self.Centroid()
             volume = self.Volume()

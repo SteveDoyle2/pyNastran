@@ -60,7 +60,7 @@ def compare_card_content(fem1, fem2):
         'params', 'nodes', 'elements', 'rigid_elements',
         'properties', 'materials', 'creep_materials',
         'loads', 'coords',
-        'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas', 'dphases',
+        'spcs', 'spcoffs', 'mpcs', 'dareas', 'dphases',
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies',
         'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
         'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',

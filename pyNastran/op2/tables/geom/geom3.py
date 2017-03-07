@@ -10,7 +10,8 @@ from pyNastran.bdf.cards.loads.static_loads import (
     LOAD, PLOAD, PLOAD1, PLOAD2,  #PLOAD3,
     PLOAD4, PLOADX1)  # PLOAD3,
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS, RFORCE1, LOADCYN
-from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1
+from pyNastran.bdf.cards.thermal.loads import (
+    QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL)
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -508,8 +509,30 @@ class GEOM3(GeomCommon):
         return len(data)
 
     def _read_qvol(self, data, n):
-        self.log.info('skipping QVOL in GEOM3\n')
-        return len(data)
+        """
+        Record 30 -- QVOL(2309,23,416)
+
+        1 SID      I Load set identification number
+        2 QVOL    RS Power input per unit volume produced by a
+                     conduction element
+        3 CNTRLND  I Control point used for controlling heat
+                     generation
+        4 EID      I Element identification number
+        """
+        ntotal =  16  # 4*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(b(self._endian + 'if2i'))
+        for i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  QVOL=%s\n' % str(out))
+            #(sid, qvol, cntrlnd, eid) = out
+            load = QVOL.add_op2_data(out)
+            self._add_load_object(load)
+            n += ntotal
+        self.card_count['TEMPP1'] = nentries
+        return n
 
     def _read_rforce(self, data, n):
         ntotal =  40  # 10*4

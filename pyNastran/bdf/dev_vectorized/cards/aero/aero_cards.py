@@ -1102,13 +1102,13 @@ class AEROS(Aero):
             self.sym_xy = 0
 
     def validate(self):
-        assert isinstance(self.acsid, int), 'acsid=%s type=%s' % (self.acsid, type(self.acsid))
-        assert isinstance(self.rcsid, int), 'rcsid=%s type=%s' % (self.rcsid, type(self.rcsid))
+        assert isinstance(self.acsid, integer_types), 'acsid=%s type=%s' % (self.acsid, type(self.acsid))
+        assert isinstance(self.rcsid, integer_types), 'rcsid=%s type=%s' % (self.rcsid, type(self.rcsid))
         assert isinstance(self.cref, float), 'cref=%s type=%s' % (self.cref, type(self.cref))
         assert isinstance(self.bref, float), 'bref=%s type=%s' % (self.bref, type(self.bref))
         assert isinstance(self.sref, float), 'sref=%s type=%s' % (self.sref, type(self.sref))
-        assert isinstance(self.sym_xz, int), 'sym_xz=%s type=%s' % (self.sym_xz, type(self.sym_xz))
-        assert isinstance(self.sym_xy, int), 'sym_xy=%s type=%s' % (self.sym_xy, type(self.sym_xy))
+        assert isinstance(self.sym_xz, integer_types), 'sym_xz=%s type=%s' % (self.sym_xz, type(self.sym_xz))
+        assert isinstance(self.sym_xy, integer_types), 'sym_xy=%s type=%s' % (self.sym_xy, type(self.sym_xy))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1523,7 +1523,7 @@ class CAERO1(BaseCard):
             raise NotImplementedError('spanwise=%r; expected=[y, z]' % spanwise.lower())
 
         dx = max(x12, x43)
-        if isinstance(span, int):
+        if isinstance(span, integer_types):
             nspan = span
         elif isinstance(span, AEFACT):
             lspan = span.sid
@@ -1536,7 +1536,7 @@ class CAERO1(BaseCard):
         else:
             raise TypeError(span)
 
-        if isinstance(chord, int):
+        if isinstance(chord, integer_types):
             nchord = chord
         elif isinstance(chord, AEFACT):
             lchord = chord.sid
@@ -3612,7 +3612,7 @@ class PAERO1(BaseCard):
         Bi2 = []
 
         for bi in Bi:
-            if isinstance(bi, int) and bi >= 0:
+            if isinstance(bi, integer_types) and bi >= 0:
                 Bi2.append(bi)
             elif bi is not None:
                 raise RuntimeError('invalid Bi value on PAERO1 bi=%r' % (bi))

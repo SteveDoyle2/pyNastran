@@ -47,13 +47,13 @@ class PCOMP(Property):
         #self._comments.append(comment)
 
     #def _get_base_parameter_by_property_id(self, property_id, name):
-        #int_flag = True if isinstance(property_id, int) else False
+        #int_flag = True if isinstance(property_id, integer_types) else False
 
         #if property_id is None:
             #property_id = self.property_id
         #elif isinstance(property_id, list):
             #property_id = array(property_id, dtype='int32')
-        #elif isinstance(property_id, int):
+        #elif isinstance(property_id, integer_types):
             #property_id = array([property_id], dtype='int32')
         ##mass_per_area = self.nsm + self.Rho() * self.t
 
@@ -75,13 +75,13 @@ class PCOMP(Property):
         #return thickness[0] if int_flag else thickness
 
     def get_thickness_by_property_id(self, property_id=None):
-        int_flag = True if isinstance(property_id, int) else False
+        int_flag = True if isinstance(property_id, integer_types) else False
 
         if property_id is None:
             property_id = self.property_id
         elif isinstance(property_id, list):
             property_id = array(property_id, dtype='int32')
-        elif isinstance(property_id, int):
+        elif isinstance(property_id, integer_types):
             property_id = array([property_id], dtype='int32')
         #mass_per_area = self.nsm + self.Rho() * self.t
 
@@ -114,7 +114,7 @@ class PCOMP(Property):
         #:param property_id: the property IDs to consider (default=None -> all)
         #"""
         #cow
-        #int_flag = True if isinstance(property_id, int) else False
+        #int_flag = True if isinstance(property_id, integer_types) else False
         ##print('get_nonstructural_mass; pids = %s' % property_ids)
         #if property_id is None:
             #nsm = self.nsm
@@ -140,7 +140,7 @@ class PCOMP(Property):
         if property_id is None:
             property_id = self.property_id
         elif isinstance(property_id, integer_types):
-            int_flag = True #if isinstance(property_id, int) else False
+            int_flag = True #if isinstance(property_id, integer_types) else False
             property_id = [property_id]
             i = self.get_property_index_by_property_id([property_id])
         else:
@@ -214,7 +214,7 @@ class PCOMP(Property):
         #for pid in upid:
             #j = searchsorted(self.property_id, pid)
             #i = where(pid == property_id)[0][0]
-        assert isinstance(property_id, int), type(property_id)
+        assert isinstance(property_id, integer_types), type(property_id)
         i = 0
         j = searchsorted(self.property_id, property_id)
         #print('self.z0 = %s' % self.z0)
@@ -241,7 +241,7 @@ class PCOMP(Property):
         return self.z0[i]
 
     def get_material_id_by_property_id_ply(self, property_id, jply):
-        int_flag = True if isinstance(property_id, int) else False
+        int_flag = True if isinstance(property_id, integer_types) else False
         i = self.get_property_index_by_property_id(property_id)
         jply2, nplies = self._adjust_ply_id(i, jply)
         mid = self.material_id[i, jply2]
@@ -272,7 +272,7 @@ class PCOMP(Property):
         return jply2, nplies
 
     def get_thickness_by_property_id_ply(self, property_id, jply):
-        int_flag = True if isinstance(property_id, int) else False
+        int_flag = True if isinstance(property_id, integer_types) else False
         assert int_flag == True, property_id
 
         i = self.get_property_index_by_property_id(property_id)
@@ -286,7 +286,7 @@ class PCOMP(Property):
         return thickness[0] if int_flag else thickness
 
     def get_density_by_property_id_ply(self, property_id, jply):
-        int_flag = True if isinstance(property_id, int) else False
+        int_flag = True if isinstance(property_id, integer_types) else False
         i = self.get_property_index_by_property_id(property_id)
         if jply < 0:
             msg = 'invalid jply=%s' % (jply)
@@ -308,7 +308,7 @@ class PCOMP(Property):
         return density[0] if int_flag else density
 
     def get_theta_by_property_id_ply(self, property_id, jply):
-        int_flag = True if isinstance(property_id, int) else False
+        int_flag = True if isinstance(property_id, integer_types) else False
         i = self.get_property_index_by_property_id(property_id)
 
         jply2, nplies = self._adjust_ply_id(i, jply)
@@ -319,7 +319,7 @@ class PCOMP(Property):
             #raise IndexError(msg)
 
     def get_sout_by_property_id_ply(self, property_id, jply):
-        int_flag = True if isinstance(property_id, int) else False
+        int_flag = True if isinstance(property_id, integer_types) else False
         i = self.get_property_index_by_property_id(property_id)
 
         jply2, nplies = self._adjust_ply_id(i, jply)
@@ -330,7 +330,7 @@ class PCOMP(Property):
             #raise IndexError(msg)
 
     def get_mass_per_area_by_property_id_ply(self, property_id, jply, method='nplies'):
-        int_flag = True if isinstance(property_id, int) else False
+        int_flag = True if isinstance(property_id, integer_types) else False
         i = self.get_property_index_by_property_id(property_id)
         jply2, nplies = self._adjust_ply_id(i, jply)
 
@@ -376,7 +376,7 @@ class PCOMP(Property):
         return mass_per_area[0] if int_flag else mass_per_area
 
     def get_material_ids_by_property_id(self, property_id=None):
-        #int_flag = True if isinstance(property_id, int) else False
+        #int_flag = True if isinstance(property_id, integer_types) else False
         i = self.get_property_index_by_property_id(property_id)
         #if j < 0:
             #msg = 'invalid jply=%s' % (j)

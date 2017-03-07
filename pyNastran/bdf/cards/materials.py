@@ -269,7 +269,7 @@ class MAT1(IsotropicMaterial):
         E = self.E()
         G = self.G()
         nu = self.Nu()
-        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
         if xref:
             if [self.matt1, self.mats1] == [None, None]:
                 assert isinstance(E, float), 'E=%r' % E
@@ -842,7 +842,7 @@ class MAT3(OrthotropicMaterial):
         :type xref:  bool
         """
         mid = self.Mid()
-        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
         if xref:
             if [self.mats3, self.matt3] == [None, None]:
                 pass
@@ -1296,7 +1296,7 @@ class MAT8(OrthotropicMaterial):
         E22 = self.E22()
         nu12 = self.Nu12()
         G12 = self.G12()
-        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
         assert isinstance(E11, float), 'E11=%r' % E11
         assert isinstance(E22, float), 'E11=%r' % E11
         assert isinstance(G12, float), 'G12=%r' % G12
@@ -1531,7 +1531,7 @@ class MAT9(AnisotropicMaterial):
         #E22 = self.E22()
         #nu12 = self.Nu12()
         #G12 = self.G12()
-        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
         #assert isinstance(E11, float), 'E11=%r' % E11
         #assert isinstance(E22, float), 'E11=%r' % E11
         #assert isinstance(G12, float), 'G12=%r' % G12
@@ -1684,7 +1684,7 @@ class MAT10(Material):
         c = self.c
         ge = self.ge
 
-        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
         assert isinstance(bulk, float), 'bulk=%r' % bulk
         assert isinstance(rho, float), 'rho=%r' % rho
         assert isinstance(c, float), 'c=%r' % c

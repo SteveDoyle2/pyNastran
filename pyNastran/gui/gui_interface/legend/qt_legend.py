@@ -457,7 +457,6 @@ class LegendPropertiesWindow(PyDialog):
     def __init__(self, data, win_parent=None):
         PyDialog.__init__(self, data, win_parent)
 
-        #Init the base class
         self._updated_legend = False
         self._animation_window_shown = False
         self._icase = data['icase']
@@ -501,7 +500,6 @@ class LegendPropertiesWindow(PyDialog):
         self.create_widgets()
         self.create_layout()
         self.set_connections()
-        #self.show()
 
     def _update_defaults_to_blank(self):
         """Changes the default (None) to a blank string"""
@@ -687,7 +685,6 @@ class LegendPropertiesWindow(PyDialog):
         for key in colormap_keys:
             self.colormap_edit.addItem(key)
         self.colormap_edit.setCurrentIndex(colormap_keys.index(self._colormap))
-
 
         # red/blue or blue/red
         self.low_to_high_radio = QRadioButton('Low -> High')

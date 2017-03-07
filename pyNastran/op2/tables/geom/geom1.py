@@ -4,11 +4,13 @@ from six import b
 from six.moves import range
 import numpy as np
 
-from pyNastran.bdf.cards.nodes import GRID, POINT
+from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
 from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,
     CORD2R, CORD2C, CORD2S,
     CORD3G)
+from pyNastran.bdf.cards.elements.damper import CVISC
+from pyNastran.bdf.cards.elements.mass import CMASS2
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class GEOM1(GeomCommon):
@@ -266,8 +268,19 @@ class GEOM1(GeomCommon):
 
     def _read_seqgp(self, data, n):
         """(5301,53,4) - the marker for Record 27"""
-        self.log.info('skipping SEQGP in GEOM1\n')
-        return len(data)
+        s = Struct(b(self._endian + '2i'))
+        nentries = (len(data) - n) // 8
+        for i in range(nentries):
+            edata = data[n:n + 8]  # 2*4
+            out = s.unpack(edata)
+            # (nid, seid) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  SEQGP=%s\n' % str(out))
+            seqgp = SEQGP.add_op2_data(out)
+            self._add_seqgp_object(seqgp)
+            n += 8
+        self._increase_card_count('SEQGP', nentries)
+        return n
 
     def _read_point(self, data, n):
         """
@@ -288,12 +301,35 @@ class GEOM1(GeomCommon):
         return n
 
     def _read_cmass2(self, data, n):
-        self.log.info('skipping CMASS2 in GEOM1\n')
-        return len(data)
+        s = Struct(b(self._endian + 'if4i'))
+        nentries = (len(data) - n) // 24
+        for i in range(nentries):
+            edata = data[n:n + 24]  # 6*4
+            out = s.unpack(edata)
+            # (eid, mass, g1, g2, c1, c2) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CMASS2=%s\n' % str(out))
+            element = CMASS2.add_op2_data(out)
+            self.add_op2_element(element)
+            n += 24
+        self._increase_card_count('CMASS2', nentries)
+        return n
+        #return len(data)
 
     def _read_cvisc(self, data, n):
-        self.log.info('skipping CVISC in GEOM1\n')
-        return len(data)
+        s = Struct(b(self._endian + '4i'))
+        nentries = (len(data) - n) // 16
+        for i in range(nentries):
+            edata = data[n:n + 16]  # 4*4
+            out = s.unpack(edata)
+            # (eid, pid, n1, n2) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CVISC=%s\n' % str(out))
+            element = CVISC.add_op2_data(out)
+            self.add_op2_element(element)
+            n += 16
+        self._increase_card_count('CVISC', nentries)
+        return n
 
 
     def _read_extrn(self, data, n):

@@ -269,12 +269,14 @@ class MATT1(MaterialDependence):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        (mid, E_table, G_table, nu_table, rho_table, A_table, ge_table,
-         st_table, sc_table, ss_table, dunno_a, dunno_b) = data
-        assert dunno_a == 0, data
-        assert dunno_b == 0, data
-        return MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
-                     ge_table, st_table, sc_table, ss_table, comment=comment)
+        (mid, E_table, G_table, nu_table, rho_table, A_table, dunno_a, ge_table,
+         st_table, sc_table, ss_table, dunno_b) = data
+
+        mat = MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
+                    ge_table, st_table, sc_table, ss_table, comment=comment)
+        assert dunno_a == 0, '%s; dunno_a=%s\n%s' % (data, dunno_a, str(mat))
+        assert dunno_b == 0, '%s; dunno_b=%s\n%s' % (data, dunno_b, str(mat))
+        return mat
 
     def E(self, temperature):
         """

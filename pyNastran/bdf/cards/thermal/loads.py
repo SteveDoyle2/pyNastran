@@ -49,12 +49,13 @@ class QVOL(ThermalLoad):
         self.sid = sid
         self.qvol = qvol
         self.control_point = control_point
+        if isinstance(elements, integer_types):
+            elements = [elements]
         self.elements = elements
 
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
-
         qvol = double(card, 2, 'qvol')
         control_point = integer_or_blank(card, 3, 'control_id', 0)
 
@@ -66,6 +67,11 @@ class QVOL(ThermalLoad):
             i += 1
         elements = expand_thru_by(eids)
         return QVOL(sid, qvol, control_point, elements, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid, qvol, control_point, eid = data
+        return QVOL(sid, qvol, control_point, eid, comment=comment)
 
     def get_loads(self):
         return [self]

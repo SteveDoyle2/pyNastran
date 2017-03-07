@@ -900,6 +900,24 @@ class GEOM2(GeomCommon):
         self.card_count['CONV'] = nelements
         return n
 
+    def _read_split_card(self, data, n, read1, read2, card_name, add_method):
+        """
+        generalization of multi read methods for different
+        versions of MSC Nastran
+        """
+        n0 = n
+        try:
+            n, elements = read1(data, n)
+        except AssertionError:
+            self.log.info('AssertionError...try again...')
+            n, elements = read2(data, n0)
+
+        nelements = len(elements)
+        for elem in elements:
+            add_method(elem)
+        self.card_count[card_name] = nelements
+        return n
+
     def _read_dual_card(self, data, n, nx_read, msc_read, card_name, add_method):
         """
         generalization of multi read methods (MSC, NX)
@@ -921,7 +939,6 @@ class GEOM2(GeomCommon):
         nelements = len(elements)
         for elem in elements:
             add_method(elem)
-
         self.card_count[card_name] = nelements
         return n
 
@@ -1085,10 +1102,8 @@ class GEOM2(GeomCommon):
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
             if self.is_debug_file:
                 self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
-            print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
-                  'tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
-                      eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
-            #data_init = [eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4]
+            print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s n5=%s n6=%s n7=%s n8=%s' % (
+                eid, pid, n1, n2, n3, n4, n5, n6, n7, n8))
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
             elem = element.add_op2_data(data)
             self.add_op2_element(elem)
@@ -1132,13 +1147,32 @@ class GEOM2(GeomCommon):
 # CQUAD4FD
 
     def _read_cquad8(self, data, n):
+        """common method for reading CQUAD8s"""
+        n = self._read_split_card(data, n,
+                                  self._read_cquad8_current, self._read_cquad8_v2001,
+                                  'CQUAD8', self.add_op2_element)
+        return n
+
+    def _read_cquad8_current(self, data, n):
         """
         CQUAD8(4701,47,326)  - the marker for Record 72
         .. warning:: inconsistent with dmap manual
+
+        1 EID     I Element identification number
+        2 PID     I Property identification number
+        3 G(8)    I Grid point identification numbers of
+                    connection points
+        11 T(4)  RS Membrane thickness of element at grid
+                    points
+        15 THETA RS Material property orientation angle or
+                    coordinate system identification number
+        16 ZOFFS RS Offset from the surface of grid points
+                    reference plane
+        17 TFLAG  I Relative thickness flag
         """
-        #return n
         nelements = (len(data) - n) // 68  # 17*4
         s = Struct(b(self._endian + '10i 6f i'))
+        elements = []
         for i in range(nelements):
             edata = data[n:n + 68]
             out = s.unpack(edata)
@@ -1146,14 +1180,53 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CQUAD8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
              t3, t4, theta, zoffs, tflag) = out
+            self.log.info('cquad8 tflag = %s' % tflag)
+            assert tflag in [-1, 0, 1], tflag
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %
                   #(eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
             #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8.add_op2_data(out)
-            self.add_op2_element(elem)
+            elements.append(elem)
             n += 68
-        self.card_count['CQUAD8'] = nelements
-        return n
+        return n, elements
+
+    def _read_cquad8_v2001(self, data, n):
+        """
+        CQUAD8(4701,47,326)  - the marker for Record 72
+
+        1 EID     I Element identification number
+        2 PID     I Property identification number
+        3 G(8)    I Grid point identification numbers of
+                    connection points
+        11 T(4)  RS Membrane thickness of element at grid
+                    points
+        15 THETA RS Material property orientation angle or
+                    coordinate system identification number
+        16 ZOFFS RS Offset from the surface of grid points
+                    reference plane
+        """
+        #self.show_data(data, types='if')
+        nelements = (len(data) - n) // 64  # 16*4
+        s = Struct(b(self._endian + '10i 6f'))
+        elements = []
+        for i in range(nelements):
+            edata = data[n:n + 64]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CQUAD8=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
+             t3, t4, theta, zoffs) = out
+            tflag = None
+            out = (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
+                   t3, t4, theta, zoffs, tflag)
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %
+                  #(eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
+            #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
+            elem = CQUAD8.add_op2_data(out)
+            elements.append(elem)
+            self.add_op2_element(elem)
+            n += 64
+        return n, elements
 
 # CQUAD9FD
 # CQUADP
@@ -1302,12 +1375,19 @@ class GEOM2(GeomCommon):
 # CTRIAFD - 95
 
     def _read_ctria6(self, data, n):
+        """common method for reading CTRIA6"""
+        n = self._read_split_card(data, n,
+                                  self._read_ctria6_current, self._read_ctria6_v2001,
+                                  'CTRIA6', self.add_op2_element)
+        return n
+
+    def _read_ctria6_current(self, data, n):
         """
-        CTRIA6(4801,48,327)    - the marker for Record 96
-        .. warning:: inconsistent with dmap manual
+        CTRIA6(4801,48,327) - the marker for Record 96
         """
         s = Struct(b(self._endian + '8i 5f i'))
         nelements = (len(data) - n) // 56  # 14*4
+        elements = []
         for i in range(nelements):
             edata = data[n:n + 56]
             out = s.unpack(edata)
@@ -1316,11 +1396,34 @@ class GEOM2(GeomCommon):
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
                   #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
+            self.log.info('ctria6 tflag = %s' % tflag)
             elem = CTRIA6.add_op2_data(out)
             self.add_op2_element(elem)
+            assert tflag in [-1, 0, 1], tflag
+            elements.append(elem)
             n += 56
-        self.card_count['CTRIA6'] = nelements
-        return n
+        return n, elements
+
+    def _read_ctria6_v2001(self, data, n):
+        """
+        CTRIA6(4801,48,327) - the marker for Record 96
+        """
+        s = Struct(b(self._endian + '8i 5f'))
+        nelements = (len(data) - n) // 52  # 13*4
+        elements = []
+        for i in range(nelements):
+            edata = data[n:n + 52]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
+                  #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
+            (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3) = out
+            out = (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, 0)
+            elem = CTRIA6.add_op2_data(out)
+            elements.append(elem)
+            n += 52
+        return n, elements
 
 # CTRIA6FD
 # CTRIAP
@@ -1381,7 +1484,7 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTUBE=%s\n' % str(out))
-            (eid, pid, n1, n2) = out
+            #(eid, pid, n1, n2) = out
             elem = CTUBE.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
@@ -1397,7 +1500,7 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CVISC=%s\n' % str(out))
-            #(eid,pid,n1,n2) = out
+            #(eid, pid, n1, n2) = out
             elem = CVISC.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16

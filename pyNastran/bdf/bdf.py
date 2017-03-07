@@ -68,7 +68,7 @@ from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.bdf.cards.properties.mass import PMASS#, NSM
-from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
+from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
@@ -93,7 +93,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
 from pyNastran.bdf.cards.aero import (
     AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
     AESURF, AESURFS, AERO, AEROS, CSSCHD,
@@ -333,7 +333,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'PARAM',
 
             ## nodes
-            'GRID', 'GRDSET', 'SPOINT', 'EPOINT',
+            'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'SEQGP',
 
             # points
             'POINT',
@@ -892,14 +892,10 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         for key, spcs in sorted(iteritems(self.spcs)):
             for spc in spcs:
                 spc.validate()
-        for key, spcadd in sorted(iteritems(self.spcadds)):
-            spcadd.validate()
 
         for key, mpcs in sorted(iteritems(self.mpcs)):
             for mpc in mpcs:
                 mpc.validate()
-        for key, mpcadd in sorted(iteritems(self.mpcadds)):
-            mpcadd.validate()
 
         #------------------------------------------------
         for key, darea in sorted(iteritems(self.dareas)):
@@ -1804,6 +1800,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'SPOINT' : (SPOINTs, self._add_spoint_object),
             'EPOINT' : (EPOINTs, self._add_epoint_object),
             'POINT' : (POINT, self._add_point_object),
+            'SEQGP' : (SEQGP, self._add_seqgp_object),
 
             'PARAM' : (PARAM, self._add_param_object),
 
@@ -1968,6 +1965,8 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
 
             'SPC' : (SPC, self._add_constraint_spc_object),
             'SPC1' : (SPC1, self._add_constraint_spc_object),
+            'SPCOFF' : (SPCOFF, self._add_constraint_spcoff_object),
+            'SPCOFF1' : (SPCOFF1, self._add_constraint_spcoff_object),
             'SPCAX' : (SPCAX, self._add_constraint_spc_object),
             'SPCADD' : (SPCADD, self._add_constraint_spc_object),
             'GMSPC' : (GMSPC, self._add_constraint_spc_object),
@@ -2771,7 +2770,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'properties', 'materials', 'creep_materials',
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1', 'MATS3', 'MATT8',
-            'coords', 'mpcs', 'mpcadds',
+            'coords', 'mpcs',
 
             # dynamic cards
             'dareas', 'dphases', 'nlparms', 'nlpcis', 'tsteps', 'tstepnls',
@@ -2813,7 +2812,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'spoints', 'spointi',  # singleton
             'grdset',  # singleton
 
-            'spcs', 'spcadds',
+            'spcs',
 
             'suport', 'se_suport', # suport, suport1 - list
             'doptprm',  # singleton

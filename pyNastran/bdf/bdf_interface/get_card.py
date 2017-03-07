@@ -864,12 +864,12 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     raise RuntimeError(msg)
                 #list_fields = ['RBE3', elem.eid, None, elem.ref_grid_id, elem.refc]
                 n1 = elem.ref_grid_id
-                assert isinstance(n1, int), 'RBE3 eid=%s ref_grid_id=%s' % (elem.eid, n1)
+                assert isinstance(n1, integer_types), 'RBE3 eid=%s ref_grid_id=%s' % (elem.eid, n1)
                 for (_weight, ci, Gij) in elem.WtCG_groups:
                     Giji = elem._nodeIDs(nodes=Gij, allow_empty_nodes=True)
                     # list_fields += [wt, ci] + Giji
                     for n2 in Giji:
-                        assert isinstance(n2, int), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)
+                        assert isinstance(n2, integer_types), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)
                         lines_rigid.append([n1, n2])
             elif elem.type == 'RBE2':
                 #list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm
@@ -1055,7 +1055,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             for nid in node_ids:
                 nid_to_eid_map[nid].append(eid)
             for edge in edges:
-                assert not isinstance(edge, int), 'edge=%s elem=\n%s' % (edge, elem)
+                assert not isinstance(edge, integer_types), 'edge=%s elem=\n%s' % (edge, elem)
                 assert edge[0] < edge[1], 'edge=%s elem=\n%s' % (edge, elem)
                 try:
                     edge_to_eid_map[edge].add(eid)
@@ -1177,7 +1177,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         """
         if pids is None:
             pids = iterkeys(self.properties)
-        elif isinstance(pids, int):
+        elif isinstance(pids, integer_types):
             pids = [int]
         assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
         eids2 = []
@@ -1223,7 +1223,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         """
         if pids is None:
             pids = list(self.properties)
-        elif isinstance(pids, int):
+        elif isinstance(pids, integer_types):
             pids = [int]
 
         assert isinstance(pids, (list, tuple, np.ndarray)), 'pids=%s type=%s' % (pids, type(pids))
@@ -1591,14 +1591,14 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 for mpci in mpc.mpc_ids:
                     if isinstance(mpci, list):
                         for mpcii in mpci:
-                            if isinstance(mpcii, int):
+                            if isinstance(mpcii, integer_types):
                                 mpciii = mpcii
                             else:
                                 mpciii = mpcii.conid
                             mpcs2i = self.get_reduced_mpcs(mpciii)
                             mpcs2 += mpcs2i
                     else:
-                        assert isinstance(mpci, int), mpci
+                        assert isinstance(mpci, integer_types), mpci
                         mpcs2i = self.get_reduced_mpcs(mpci)
                         mpcs2 += mpcs2i
             else:
@@ -1614,7 +1614,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 for spci in spc.sets:
                     if isinstance(spci, list):
                         for spcii in spci:
-                            if isinstance(spcii, int):
+                            if isinstance(spcii, integer_types):
                                 spciii = spcii
                             else:
                                 spciii = spcii.conid
@@ -1623,7 +1623,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     else:
                         # print('spci =', spci)
                         # print(spci.object_attributes())
-                        assert isinstance(spci, int), spci
+                        assert isinstance(spci, integer_types), spci
                         spcs2i = self.get_reduced_spcs(spci)
                         spcs2 += spcs2i
             else:
@@ -2034,6 +2034,6 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         try:
             return self.dequations[equation_id]
         except KeyError:
-            raise KeyError('equation_id=%s not found%s.  Allowed DMIGs=%s'
+            raise KeyError('equation_id=%s not found%s.  Allowed DEQATNs=%s'
                            % (equation_id, msg, np.unique(list(self.dequations.keys()))))
 

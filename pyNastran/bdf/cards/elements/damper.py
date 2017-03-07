@@ -104,8 +104,8 @@ class CDAMP1(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, integer_types), 'nid%i is not an None/integer; nid=%s' %(i, nid)
@@ -239,10 +239,10 @@ class CDAMP2(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
+        assert isinstance(eid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
     def B(self):
         return self.b
@@ -333,11 +333,11 @@ class CDAMP3(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid_ref.type in ['PDAMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
@@ -429,10 +429,10 @@ class CDAMP4(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
+        assert isinstance(eid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' % (i, nid)
 
     def B(self):
         return self.b
@@ -513,11 +513,11 @@ class CDAMP5(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid_ref.type in ['PDAMP5'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
@@ -606,11 +606,11 @@ class CVISC(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid_ref.type in ['PVISC'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 

@@ -45,7 +45,10 @@ class GeomCommon(object):
     def _add_property_object(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
-    def add_constraint_spc_object(self, constraint):
+    def _add_constraint_spc_object(self, constraint):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_constraint_spcoff_object(self, constraint):
         raise RuntimeError('this should be overwritten by the BDF class')
 
     def _add_rigid_element_object(self, constraint):
