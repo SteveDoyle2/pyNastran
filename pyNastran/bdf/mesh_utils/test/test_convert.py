@@ -48,7 +48,7 @@ class TestConvert(unittest.TestCase):
 
     def test_convert_isat(self):
         """converts a isat model"""
-        model_path = os.path.join(pkg_path, '..', 'models', 'isat')
+        model_path = os.path.join(pkg_path, '..', 'models', 'iSat')
         bdf_filename = os.path.join(model_path, 'ISat_Dploy_Sm.dat')
         bdf_filename_out = os.path.join(model_path, 'isat.bdf')
         bdf_filename_out2 = os.path.join(model_path, 'isat_converted.bdf')
