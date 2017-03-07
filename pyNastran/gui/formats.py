@@ -152,7 +152,7 @@ except ImportError:
     #is_fast = False
 
 try:
-    from pyNastran.converters.aflr2.bedge_io import BEdge_IO
+    from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
     is_bedge = True
 except ImportError:
     #raise

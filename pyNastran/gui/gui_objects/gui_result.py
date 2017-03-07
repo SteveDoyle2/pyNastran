@@ -90,6 +90,124 @@ class GuiResultCommon(object):
     def get_default_phase(self, i, name):
         return None
 
+class NormalResult(GuiResultCommon):
+    def __init__(self, subcase_id, header, title, location, scalar,
+                 nlabels=2, labelsize=5, ncolors=2, colormap='jet',
+                 data_format='.1f', uname='GuiResult'):
+        """
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        header : str
+            the sidebar word
+        title : str
+            the legend title
+        location : str
+            node, centroid
+        scalar : (n,) ndarray
+            the data to make a contour plot with
+        data_format : str
+            the type of data result (e.g. '%i', '%.2f', '%.3f')
+        uname : str
+            some unique name for ...
+        """
+        GuiResultCommon.__init__(self)
+
+    def get_data_type(self, i, name):
+        #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
+        return self.data_type
+
+    def get_data_format(self, i, name):
+        #print('Bname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
+        return self.data_format
+
+    def get_location(self, i, name):
+        #print('Cname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
+        return None
+
+    def get_header(self, i, name):
+        return self.header
+
+    def get_title(self, i, name):
+        return self.title
+
+    def get_phase(self, i, name):
+        return None
+
+    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+        #self.ncolors = 1000
+        return self.nlabels, self.labelsize, self.ncolors, self.colormap
+
+    def get_min_max(self, i, name):
+        return self.min_value, self.max_value
+
+    def get_scalar(self, i, name):
+        return self.scalar
+
+    #------------
+    # setters
+
+    def set_data_format(self, i, name, data_format):
+        self.data_format = data_format
+
+    def set_min_max(self, i, name, min_value, max_value):
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def set_scale(self, i, name, scale):
+        raise RuntimeError('This object cannot set a displacement scale factor.')
+
+    def set_title(self, i, name, title):
+        self.title = title
+
+    #def set_phase(self, i, name, phase):
+        #pass
+
+    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+                                               ncolors, colormap):
+        self.nlabels = nlabels
+        self.labelsize = labelsize
+        self.ncolors = ncolors
+        self.colormap = colormap
+
+    #------------
+    # default getters
+    def get_default_data_format(self, i, name):
+        return self.data_format_default
+
+    def get_default_min_max(self, i, name):
+        return self.min_default, self.max_default
+
+    def get_default_scale(self, i, name):
+        return 0.
+
+    def get_default_phase(self, i, name):
+        return None
+
+    def get_default_title(self, i, name):
+        return self.title_default
+
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+        return self.get_nlabels_labelsize_ncolors_colormap(i, name)
+
+    #------------
+    # unmodifyable getters
+    def get_scale(self, i, name):
+        return 0.
+
+    def get_vector_size(self, i, name):
+        return 1
+
+    def get_methods(self, i):
+        return None
+
+    def get_result(self, i, name):
+        return None
+
+    def __repr__(self):
+        msg = 'NormalResult\n'
+        msg += '    uname=%r\n' % self.uname
+        return msg
+
 
 class GuiResult(GuiResultCommon):
     deflects = False

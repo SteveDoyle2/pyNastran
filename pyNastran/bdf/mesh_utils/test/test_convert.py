@@ -46,7 +46,7 @@ class TestConvert(unittest.TestCase):
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
 
-    def _test_convert_isat(self):
+    def test_convert_isat(self):
         """converts a isat model"""
         model_path = os.path.join(pkg_path, '..', 'models', 'isat')
         bdf_filename = os.path.join(model_path, 'ISat_Dploy_Sm.dat')
@@ -67,7 +67,7 @@ class TestConvert(unittest.TestCase):
         os.remove(bdf_filename_out)
         os.remove(bdf_filename_out2)
 
-    def _test_convert_bwb(self):
+    def test_convert_bwb(self):
         """converts a bwb model"""
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
         bdf_filename_out = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes.bdf')

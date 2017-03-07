@@ -116,12 +116,12 @@ class SimpleLogger(object):
                 # only works for Python 2
                 #out = (Fore.GREEN + name + msg).encode(self.encoding)
                 # seems to work with both
-                sys.stdout.write(Fore.GREEN + name + msg)  # bright blue
+                sys.stdout.write(Fore.GREEN + name + msg)
             elif typ == 'DEBUG':
-                sys.stdout.write(Fore.YELLOW + name + msg)
+                sys.stdout.write(Fore.CYAN + name + msg)
             elif typ == 'WARNING':
                 # no ORANGE?
-                sys.stdout.write(Fore.RED + name + msg)
+                sys.stdout.write(Fore.YELLOW + name + msg)
             else: # error / other
                 sys.stdout.write(Fore.RED + name + msg)
         sys.stdout.flush()
