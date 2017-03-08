@@ -127,6 +127,7 @@ class GuiAttributes(object):
 
         self._is_displaced = False
         self._is_forces = False
+        self._is_normals = False
 
         self._xyz_nominal = None
 
@@ -638,6 +639,7 @@ class GUIMethods(GuiAttributes):
             scale = obj.get_scale(i, name)
             phase = obj.get_phase(i, name)
             label2 = obj.get_header(i, name)
+            flag = obj.is_normal_result(i, name)
             #scalar_result = obj.get_scalar(i, name)
             nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
             if vector_size == 3:

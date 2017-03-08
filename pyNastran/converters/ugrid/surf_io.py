@@ -112,7 +112,6 @@ class SurfIO(object):
         #self.log_info("updated grid")
 
         # loadSurfResults - regions/loads
-        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

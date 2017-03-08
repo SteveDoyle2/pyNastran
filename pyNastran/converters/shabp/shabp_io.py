@@ -96,7 +96,6 @@ class ShabpIO(object):
             self.grid.Update()
 
         # loadShabpResults - regions/loads
-        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

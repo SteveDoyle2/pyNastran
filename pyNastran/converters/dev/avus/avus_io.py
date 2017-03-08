@@ -45,7 +45,6 @@ class AvusIO(object):
 
 
         # loadAvusResults - regions/loads
-        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

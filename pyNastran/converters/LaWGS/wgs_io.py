@@ -89,7 +89,6 @@ class LaWGS_IO(object):
             self.grid.Update()
 
         # loadCart3dResults - regions/loads
-        #self.turn_text_on()
         #self.scalarBar.VisibilityOn()
         #self.scalarBar.Modified()
 

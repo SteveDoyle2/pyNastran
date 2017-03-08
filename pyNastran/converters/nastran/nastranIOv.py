@@ -64,7 +64,7 @@ from pyNastran.bdf.cards.elements.solid import (
 )
 
 from pyNastran.gui.errors import NoGeometry
-from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (
     NastranGeometryHelper, tri_quality, quad_quality, get_min_max_theta)
 from pyNastran.converters.nastran.results_helper import NastranGuiResults
@@ -3115,7 +3115,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nz_res = GuiResult(
                 0, header='NormalZ', title='NormalZ',
                 location='centroid', scalar=normals[:, 2], data_format='%.2f')
-
+            nxyz_res = NormalResult(0, 'Normals', 'Normals',
+                                    nlabels=2, labelsize=5, ncolors=2,
+                                    colormap='jet', data_format='%.1f',
+                                    uname='NormalResult')
             # this is just for testing nan colors that doesn't work
             #max_interior_angle[:1000] = np.nan
             area_res = GuiResult(0, header='Area', title='Area',
@@ -3158,25 +3161,27 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cases[icase + 1] = (nx_res, (0, 'NormalX'))
             cases[icase + 2] = (ny_res, (0, 'NormalY'))
             cases[icase + 3] = (nz_res, (0, 'NormalZ'))
-            cases[icase + 4] = (area_res, (0, 'Area'))
-            cases[icase + 5] = (min_edge_length_res, (0, 'Min Edge Length'))
-            cases[icase + 6] = (min_theta_res, (0, 'Min Interior Angle'))
-            cases[icase + 7] = (max_theta_res, (0, 'Max Interior Angle'))
-            cases[icase + 8] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
-            cases[icase + 9] = (skew_res, (0, 'Max Skew Angle'))
-            cases[icase + 10] = (aspect_res, (0, 'Aspect Ratio'))
+            cases[icase + 4] = (nxyz_res, (0, 'Normal'))
+            cases[icase + 5] = (area_res, (0, 'Area'))
+            cases[icase + 6] = (min_edge_length_res, (0, 'Min Edge Length'))
+            cases[icase + 7] = (min_theta_res, (0, 'Min Interior Angle'))
+            cases[icase + 8] = (max_theta_res, (0, 'Max Interior Angle'))
+            cases[icase + 9] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
+            cases[icase + 10] = (skew_res, (0, 'Max Skew Angle'))
+            cases[icase + 11] = (aspect_res, (0, 'Aspect Ratio'))
 
             form_checks.append(('NormalX', icase + 1, []))
             form_checks.append(('NormalY', icase + 2, []))
             form_checks.append(('NormalZ', icase + 3, []))
-            form_checks.append(('Area', icase + 4, []))
-            form_checks.append(('Min Edge Length', icase + 5, []))
-            form_checks.append(('Min Interior Angle', icase + 6, []))
-            form_checks.append(('Max Interior Angle', icase + 7, []))
-            form_checks.append(('Delta Ideal Angle', icase + 8, []))
-            form_checks.append(('Max Skew Angle', icase + 9, []))
-            form_checks.append(('Aspect Ratio', icase + 10, []))
-            icase += 11
+            form_checks.append(('Normal', icase + 4, []))
+            form_checks.append(('Area', icase + 5, []))
+            form_checks.append(('Min Edge Length', icase + 6, []))
+            form_checks.append(('Min Interior Angle', icase + 7, []))
+            form_checks.append(('Max Interior Angle', icase + 8, []))
+            form_checks.append(('Delta Ideal Angle', icase + 9, []))
+            form_checks.append(('Max Skew Angle', icase + 10, []))
+            form_checks.append(('Aspect Ratio', icase + 11, []))
+            icase += 12
 
             if area_ratio.max() > 1.:
                 arearatio_res = GuiResult(
@@ -3353,7 +3358,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for iply in range(prop.nplies):
                     mids[i, iply+1] = prop.Mid(iply)
                     thickness[i, iply+1] = prop.Thickness(iply)
-                thickness[i, 0] = thickness[i, :].sum()
+                thickness[i, 0] = thickness[i[0], :].sum()
+
                 mids[i, 0] = mids[i, 1]
             elif prop.type in ['PELAS', 'PBUSH', 'PDAMP', 'PDAMPT']:
                 i = np.where(pids == pid)[0]
@@ -3650,7 +3656,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         Loads the Nastran results into the GUI
         """
         #gridResult.SetNumberOfComponents(self.nElements)
-        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

@@ -115,7 +115,6 @@ class Plot3d_io(object):
         #return
 
         # loadPlot3dResults - regions/loads
-        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

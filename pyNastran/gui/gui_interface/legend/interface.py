@@ -75,6 +75,7 @@ def set_legend_menu(self):
         'is_discrete': True,
         'is_horizontal': self.scalar_bar.is_horizontal,
         'is_shown' : self.scalar_bar.is_shown,
+        'is_normals' : self._is_normals,
         'clicked_ok' : False,
         'close' : False,
     }

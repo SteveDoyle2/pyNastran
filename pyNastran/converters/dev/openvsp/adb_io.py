@@ -145,7 +145,6 @@ class ADB_IO(object):
         self.log_info("updated grid")
 
         # load results - regions/loads
-        self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

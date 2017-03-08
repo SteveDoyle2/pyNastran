@@ -2,7 +2,7 @@
 # pylint: disable=C0111
 from __future__ import print_function, unicode_literals
 from copy import deepcopy
-from six import iteritems, itervalues, iterkeys
+from six import iteritems, itervalues, iterkeys, string_types
 
 import numpy as np
 from numpy import full, issubdtype
@@ -61,8 +61,17 @@ class GuiCommon(GuiAttributes):
         Subcase: 1 Subtitle:
         Label: SUBCASE 1; Static
         """
-        self.text_actors[0].SetInput('Max:  %g' % max_value)  # max
-        self.text_actors[1].SetInput('Min:  %g' % min_value)  # min
+        if isinstance(max_value, integer_types):
+            max_msg = 'Max:  %i' % max_value
+            min_msg = 'Min:  %i' % min_value
+        elif isinstance(max_value, string_types):
+            max_msg = 'Max:  %s' % str(max_value)
+            min_msg = 'Min:  %s' % str(min_value)
+        else:
+            max_msg = 'Max:  %g' % max_value
+            min_msg = 'Min:  %g' % min_value
+        self.text_actors[0].SetInput(max_msg)
+        self.text_actors[1].SetInput(min_msg)
         self.text_actors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))  # info
 
         if label:
@@ -195,7 +204,8 @@ class GuiCommon(GuiAttributes):
         scale = obj.get_scale(i, name)
         phase = obj.get_phase(i, name)
         label2 = obj.get_header(i, name)
-        nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        nlabels, labelsize, ncolors, colormap = out
         #default_max, default_min = obj.get_default_min_max(i, name)
         if min_value is None and max_value is None:
             min_value, max_value = obj.get_min_max(i, name)
@@ -218,6 +228,19 @@ class GuiCommon(GuiAttributes):
               % (subcase_id, result_type, subtitle, label))
 
         #================================================
+        is_low_to_high = True
+        if case is None:
+            return self.set_normal_result(
+                icase, name, result_type, subcase_id,
+                subtitle, label,
+                data_format, nlabels, labelsize, ncolors, colormap,
+                is_legend_shown, is_low_to_high)
+
+        elif self._is_normals and self.legend_shown:
+            # we hacked the scalar bar to turn off for Normals
+            # so we turn it back on if we need to
+            self._is_normals = False
+            self.show_legend()
 
         if len(case.shape) == 1:
             normi = case
@@ -255,7 +278,6 @@ class GuiCommon(GuiAttributes):
                                name_vector, grid_result_vector,
                                key, subtitle, label)
 
-        is_low_to_high = True
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
@@ -265,6 +287,7 @@ class GuiCommon(GuiAttributes):
                                is_low_to_high=is_low_to_high,
                                is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
+
         self.update_legend(icase,
                            result_type, min_value, max_value, data_format, scale, phase,
                            nlabels, labelsize, ncolors, colormap,
@@ -286,6 +309,68 @@ class GuiCommon(GuiAttributes):
             self.log_command('cycle_results(case=%r)' % self.icase)
         assert self.icase is not False, self.icase
         return self.icase
+
+    def set_normal_result(self, icase, name, result_type, subcase_id,
+                          subtitle, label,
+                          data_format, nlabels, labelsize, ncolors, colormap,
+                          is_legend_shown, is_low_to_high):
+        """plots a NormalResult"""
+        name_str = self._names_storage.get_name_string(name)
+        prop = self.geom_actor.GetProperty()
+
+        min_value = -1.
+        max_value = 1.
+        norm_value = 2.
+        BLUE = (0., 0., 1.)
+        RED = (1., 0., 0.)
+        prop.SetColor(RED)
+
+        # the backface property is null
+        #back_prop = self.geom_actor.GetBackfaceProperty()
+        back_prop = vtk.vtkProperty()
+        back_prop.SetColor(BLUE)
+        self.geom_actor.SetBackfaceProperty(back_prop)
+
+        grid = self.grid
+        if self._is_displaced:
+            self._is_displaced = False
+            self._update_grid(self._xyz_nominal)
+
+        if self._is_forces:
+            self.arrow_actor.SetVisibility(False)
+
+        cell_data = grid.GetCellData()
+        cell_data.SetActiveScalars(None)
+
+        point_data = grid.GetPointData()
+        point_data.SetActiveScalars(None)
+
+        #if is_legend_shown is None:
+            #is_legend_shown = self.scalar_bar.is_shown
+        #self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+                               #data_format,
+                               #nlabels=nlabels, labelsize=labelsize,
+                               #ncolors=ncolors, colormap=colormap,
+                               #is_low_to_high=is_low_to_high,
+                               #is_horizontal=self.is_horizontal_scalar_bar,
+                               #is_shown=is_legend_shown)
+        scale = 0.0
+        phase = None
+
+        min_value = -1.
+        max_value = 1.
+        self.update_legend(icase,
+                           result_type, min_value, max_value, data_format, scale, phase,
+                           nlabels, labelsize, ncolors, colormap,
+                           is_low_to_high, self.is_horizontal_scalar_bar)
+        self.hide_legend()
+        self._is_normals = True
+        #min_value = 'Front Face'
+        #max_value = 'Back Face'
+        #self.update_text_actors(subcase_id, subtitle,
+                                #min_value, max_value, label)
+        self.vtk_interactor.Render()
+
 
     def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
                         is_low_to_high=True):

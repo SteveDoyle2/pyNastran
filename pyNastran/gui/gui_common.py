@@ -194,11 +194,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     @property
     def legend_shown(self):
+        """determines if the legend is shown"""
         return self.scalar_bar.is_shown
 
     @property
     def scalarBar(self):
         return self.scalar_bar.scalar_bar
+
+    def hide_legend(self):
+        """hides the legend"""
+        #self.scalar_bar.is_shown = False
+        self.scalarBar.VisibilityOff()
+
+    def show_legend(self):
+        """shows the legend"""
+        #self.scalar_bar.is_shown = True
+        self.scalarBar.VisibilityOn()
 
     @property
     def color_function(self):
@@ -3841,12 +3852,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
-    def hide_legend(self):
-        self.scalarBar.VisibilityOff()
-
-    def show_legend(self):
-        self.scalarBar.VisibilityOn()
-
     def set_background_color_to_white(self):
         white = (1., 1., 1.)
         self.set_background_color(white)
@@ -4495,6 +4500,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.set_form(form)
 
     def _finish_results_io2(self, form, cases):
+        self.turn_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
         # if isinstance(cases, OrderedDict):
@@ -5209,6 +5215,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         default_phase = obj.get_default_phase(i, name)
         out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
         default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
+        is_normals = obj.is_normal_result(i, name)
 
         assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
@@ -5220,7 +5227,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_low_to_high, is_horizontal_scalar_bar)
+            is_low_to_high, is_horizontal_scalar_bar, is_normals)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
@@ -5313,6 +5320,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # if vector_size == 3:
 
         name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
+        if obj.is_normal_result(i, res_name):
+            return
         norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
 
@@ -5537,20 +5546,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
         changed = False
         #mapper = actor.GetMapper()
         prop = actor.GetProperty()
+        backface_prop = actor.GetBackfaceProperty()
 
-        color1 = prop.GetDiffuseColor()
-        assert color1[1] <= 1.0, color1
-        color2 = group.color_float
-        #print('line2646 - name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
-        #color2 = group.color
-
-        line_width1 = prop.GetLineWidth()
-        line_width2 = group.line_width
-        line_width2 = max(1, line_width2)
+        if backface_prop is None:
+            # don't edit these
+            # we're lying about the colors to make sure the
+            # colors aren't reset for the Normals
+            color1 = prop.GetDiffuseColor()
+            color2 = color1
+            assert color1[1] <= 1.0, color1
+        else:
+            color1 = prop.GetDiffuseColor()
+            assert color1[1] <= 1.0, color1
+            color2 = group.color_float
+            #print('line2646 - name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
+            #color2 = group.color
 
         opacity1 = prop.GetOpacity()
         opacity2 = group.opacity
         opacity2 = max(0.1, opacity2)
+
+        line_width1 = prop.GetLineWidth()
+        line_width2 = group.line_width
+        line_width2 = max(1, line_width2)
 
         point_size1 = prop.GetPointSize()
         point_size2 = group.point_size
@@ -5578,6 +5596,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             prop.SetLineWidth(line_width2)
             changed = True
         if opacity1 != opacity2:
+            #if backface_prop is not None:
+                #backface_prop.SetOpacity(opacity2)
             prop.SetOpacity(opacity2)
             changed = True
         if point_size1 != point_size2:

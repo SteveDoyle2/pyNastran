@@ -83,7 +83,6 @@ class TetgenIO(object):
             grid.Update()
 
         # loadTetgenResults - regions/loads
-        self.turn_text_on()
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 

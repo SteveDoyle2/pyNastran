@@ -124,7 +124,6 @@ class SU2_IO(object):
             self.log_info("updated grid")
 
         # loadSTLResults - regions/loads
-        self.turn_text_on()
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 

@@ -21,6 +21,9 @@ class GuiResultCommon(object):
     #def get_header(self, i, name):
         #raise NotImplementedError(self.class_name)
 
+    def is_normal_result(self, i, name):
+        return False
+
     def get_data_format(self, i, name):
         raise NotImplementedError(self.class_name)
 
@@ -97,9 +100,9 @@ class GuiResultCommon(object):
         return None
 
 class NormalResult(GuiResultCommon):
-    def __init__(self, subcase_id, header, title, location, scalar,
+    def __init__(self, subcase_id, header, title,
                  nlabels=2, labelsize=5, ncolors=2, colormap='jet',
-                 data_format='.1f', uname='GuiResult'):
+                 data_format='%.1f', uname='GuiResult'):
         """
         subcase_id : int
             the flag that points to self.subcases for a message
@@ -107,16 +110,35 @@ class NormalResult(GuiResultCommon):
             the sidebar word
         title : str
             the legend title
-        location : str
-            node, centroid
-        scalar : (n,) ndarray
-            the data to make a contour plot with
+        #location : str
+            #node, centroid
+        #scalar : (n,) ndarray
+            #the data to make a contour plot with
         data_format : str
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         uname : str
             some unique name for ...
         """
         GuiResultCommon.__init__(self)
+        self.scalar = None
+        self.subcase_id = subcase_id
+        self.title = title
+        self.header = header
+        self.data_format = data_format
+
+        self.nlabels = nlabels
+        self.labelsize = labelsize
+        self.ncolors = ncolors
+        self.colormap = colormap
+
+        self.title_default = self.title
+        self.header_default = self.header
+        self.data_format_default = self.data_format
+
+        self.min_value = -1.
+        self.max_value = 1.
+        self.min_default = -1.
+        self.max_default = 1.
 
     def get_data_type(self, i, name):
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
@@ -208,6 +230,9 @@ class NormalResult(GuiResultCommon):
 
     def get_result(self, i, name):
         return None
+
+    def is_normal_result(self, i, name):
+        return True
 
     def __repr__(self):
         msg = 'NormalResult\n'
