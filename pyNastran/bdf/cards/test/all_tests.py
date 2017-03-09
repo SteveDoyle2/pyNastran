@@ -23,6 +23,7 @@ from pyNastran.bdf.cards.test.test_other import TestOther
 from pyNastran.bdf.cards.test.test_optimization import TestOpt
 from pyNastran.bdf.cards.test.test_rigid import TestRigid
 from pyNastran.bdf.cards.test.test_springs import TestSprings
+from pyNastran.bdf.cards.test.test_dampers import TestDampers
 from pyNastran.bdf.cards.test.test_solids import TestSolids
 from pyNastran.bdf.cards.test.test_shells import TestShells
 from pyNastran.bdf.cards.test.test_tables import TestTables
