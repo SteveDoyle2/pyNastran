@@ -87,6 +87,8 @@ class CELAS1(SpringElement):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
+
+        #: component number
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
         assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
@@ -103,13 +105,10 @@ class CELAS1(SpringElement):
 
     def _validate_input(self):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         assert len(self.nodes) == 2
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -182,7 +181,6 @@ class CELAS1(SpringElement):
 
 class CELAS2(SpringElement):
     type = 'CELAS2'
-    aster_type = 'CELAS2'
     _field_map = {
         1: 'eid', 2:'k', 4:'c1', 6:'c2',
     }
@@ -261,10 +259,6 @@ class CELAS2(SpringElement):
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -467,7 +461,6 @@ class CELAS4(SpringElement):
         SpringElement.__init__(self)
         if comment:
             self.comment = comment
-
         self.eid = eid
         #: stiffness of the scalar spring
         self.k = k

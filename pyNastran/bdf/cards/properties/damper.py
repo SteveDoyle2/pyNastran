@@ -49,7 +49,7 @@ class PDAMP(DamperProperty):
         self.b = b
 
     @classmethod
-    def add_card(cls, card, icard, comment=''):
+    def add_card(cls, card, icard=0, comment=''):
         noffset = icard * 2
         pid = integer(card, 1 + noffset, 'pid')
 

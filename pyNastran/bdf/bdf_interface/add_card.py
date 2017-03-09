@@ -453,13 +453,13 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cdamp1(self, eid, pid, nids, c1, c2, comment=''):
-        elem = CDAMP1(eid, pid, nids, c1, c2, comment=comment)
+    def add_cdamp1(self, eid, pid, nids, c1=0, c2=0, comment=''):
+        elem = CDAMP1(eid, pid, nids, c1=c1, c2=c2, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cdamp2(self, eid, b, nids, c1, c2, comment=''):
-        elem = CDAMP2(eid, b, nids, c1, c2, comment=comment)
+    def add_cdamp2(self, eid, b, nids, c1=0, c2=0, comment=''):
+        elem = CDAMP2(eid, b, nids, c1=c1, c2=c2, comment=comment)
         self._add_element_object(elem)
         return elem
 
