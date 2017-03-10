@@ -328,7 +328,7 @@ class TriShell(ShellElement):
         if self.theta_mcid is None:
             raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
         if isinstance(self.theta_mcid, integer_types):
-            i = self.theta_mcid_ref.k
+            i = self.theta_mcid_ref.i
             jmat = np.cross(normal, i) # k x i
             jmat /= np.linalg.norm(jmat)
             # we do an extra normalization here because
@@ -1346,7 +1346,7 @@ class QuadShell(ShellElement):
         if self.theta_mcid is None:
             raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
         if isinstance(self.theta_mcid, integer_types):
-            i = self.theta_mcid_ref.k
+            i = self.theta_mcid_ref.i
             jmat = np.cross(normal, i) # k x i
             jmat /= np.linalg.norm(jmat)
             # we do an extra normalization here because
