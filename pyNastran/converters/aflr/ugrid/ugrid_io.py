@@ -9,9 +9,8 @@ from numpy import amax, amin, arange, ones, zeros, where, unique
 #VTK_TRIANGLE = 5
 import vtk
 from vtk import vtkTriangle, vtkQuad
-from vtk.util.numpy_support import numpy_to_vtk
 
-from pyNastran.converters.aflr.ugrid.surf_reader import TagReader
+from pyNastran.converters.aflr.surf.surf_reader import TagReader
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.utils import is_binary_file

@@ -10,7 +10,6 @@ import unittest
 
 import pyNastran
 from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
-from pyNastran.converters.aflr.ugrid.surf_io import SurfIO
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.bdf.mesh_utils.extract_free_faces import write_skin_solid_faces
@@ -21,25 +20,15 @@ model_path = os.path.join(pkg_path, 'converters', 'tecplot', 'models')
 nastran_path = os.path.join(pkg_path, '..', 'models')
 
 
-class UGRID_GUI(UGRID_IO, SurfIO, GUIMethods):
+class UGRID_GUI(UGRID_IO, GUIMethods):
     """defines the UGRID 2D/3D interface"""
     def __init__(self):
         GUIMethods.__init__(self)
         UGRID_IO.__init__(self)
-        SurfIO.__init__(self)
 
-class TestUgridGUI(unittest.TestCase):
+class TestUgridGui(unittest.TestCase):
     """defines UGRID tests"""
     def test_ugrid_gui_01(self):
-        """tests two_blade_wake_sym_extended.surf"""
-        ugrid_filename = os.path.join(pkg_path, 'converters', 'aflr', 'ugrid', 'models',
-                                      'two_blade_wake_sym_extended.surf')
-        log = get_logger(level='warning')
-        test = UGRID_GUI()
-        test.log = log
-        test.load_surf_geometry(ugrid_filename, dirname=None)
-
-    def test_ugrid_gui_02(self):
         """tests solid_bending.bdf"""
         nastran_filename1 = os.path.join(nastran_path, 'solid_bending', 'solid_bending.bdf')
 
@@ -60,7 +49,7 @@ class TestUgridGUI(unittest.TestCase):
         test.load_ugrid_geometry(ugrid_filename, dirname, name='main',
                                  plot=True)
 
-    def test_ugrid_gui_03(self):
+    def test_ugrid_gui_02(self):
         """tests plate_with_circular_hole"""
         bdf_filename = os.path.join(nastran_path, 'plate_with_circular_hole', 'a101x.dat')
         ugrid_filename = os.path.join(nastran_path, 'plate_with_circular_hole', 'a101x.b8.ugrid')

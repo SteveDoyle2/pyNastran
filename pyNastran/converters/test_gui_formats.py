@@ -12,8 +12,9 @@ from pyNastran.converters.su2.test_su2_gui import TestSU2GUI
 from pyNastran.converters.tetgen.test_tetgen_gui import TestTetgenGUI
 from pyNastran.converters.usm3d.test_usm3d_gui import TestUsm3dGUI
 
-from pyNastran.converters.aflr.ugrid.test_ugrid_gui import TestUgridGUI
 from pyNastran.converters.aflr.aflr2.test_bedge_gui import TestBEdgeGUI
+from pyNastran.converters.aflr.surf.test_surf_gui import TestSurfGui
+from pyNastran.converters.aflr.ugrid.test_ugrid_gui import TestUgridGui
 
 
 if __name__ == '__main__':
