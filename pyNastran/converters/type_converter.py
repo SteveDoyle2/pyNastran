@@ -117,6 +117,7 @@ def process_stl(stl_filename, fmt2, fname2, data=None):
 
 
 def element_slice(tecplot, data):
+    """removes solid elements from a tecplot model"""
     xslice = data['--xx']
     yslice = data['--yy']
     zslice = data['--zz']
@@ -213,7 +214,7 @@ def process_ugrid(ugrid_filename, fmt2, fname2, data=None):
         process_nastran(bdf_filename, 'cart3d', fname2, data=None)
         # ugrid_to_stl(model, fname2)
     elif fmt2 == 'tecplot':
-        from pyNastran.converters.afrl.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
+        from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
         # ugrid_to_tecplot(model, fname2)
         tecplot = ugrid_to_tecplot(model)
         element_slice(tecplot, data)
@@ -287,7 +288,8 @@ def main():
     msg += "  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)\n"
     msg += "  STL/Tecplot supports globbing as the input filename\n"
     msg += "  Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)\n"
-    msg += "  UGRID outfiles must be of the form model.b8.ugrid, where b8, b4, lb8, lb4 are valid choices and periods are important\n"
+    msg += "  UGRID outfiles must be of the form model.b8.ugrid, where\n"
+    msg += "    b8, b4, lb8, lb4 are valid choices and periods are important\n"
     msg += "  Scale has only been tested on STL -> STL\n"
 
     import pyNastran

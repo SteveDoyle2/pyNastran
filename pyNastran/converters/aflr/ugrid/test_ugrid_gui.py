@@ -32,7 +32,7 @@ class TestUgridGUI(unittest.TestCase):
     """defines UGRID tests"""
     def test_ugrid_gui_01(self):
         """tests two_blade_wake_sym_extended.surf"""
-        ugrid_filename = os.path.join(pkg_path, 'converters', 'ugrid', 'models',
+        ugrid_filename = os.path.join(pkg_path, 'converters', 'aflr', 'ugrid', 'models',
                                       'two_blade_wake_sym_extended.surf')
         log = get_logger(level='warning')
         test = UGRID_GUI()
