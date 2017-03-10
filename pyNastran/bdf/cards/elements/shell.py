@@ -1364,7 +1364,6 @@ class QuadShell(ShellElement):
 
 class CSHEAR(QuadShell):
     type = 'CSHEAR'
-    calculix_type = 'S4'
     def __init__(self, eid, pid, nids, comment=''):
         QuadShell.__init__(self)
         if comment:
@@ -2549,7 +2548,6 @@ class CPLSTN8(QuadShell):
 
 class CQUADR(QuadShell):
     type = 'CQUADR'
-    #calculix_type = 'CAX8'
 
     def __init__(self, eid, pid, nids, theta_mcid, zoffset, TFlag,
                  T1, T2, T3, T4, comment=''):

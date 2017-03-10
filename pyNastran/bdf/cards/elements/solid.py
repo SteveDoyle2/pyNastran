@@ -254,9 +254,6 @@ class CHEXA8(SolidElement):
     +-------+-----+-----+----+----+----+----+----+----+
     """
     type = 'CHEXA'
-    aster_type = 'HEXA8'
-    calculix_type = 'C3D8'
-
     def write_card(self, size=8, is_double=False):
         data = [self.eid, self.Pid()] + self.node_ids
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
@@ -483,9 +480,6 @@ class CHEXA20(SolidElement):
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CHEXA'
-    aster_type = 'HEXA20'
-    calculix_type = 'C3D20'
-
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
@@ -757,9 +751,6 @@ class CPENTA6(SolidElement):
       C = (c1-c2)/2
     """
     type = 'CPENTA'
-    aster_type = 'PENTA6'
-    calculix_type = 'C3D6'
-
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
@@ -1113,9 +1104,6 @@ class CPENTA15(SolidElement):
     +---------+-----+-----+----+-----+-----+-----+-----+-----+
     """
     type = 'CPENTA'
-    aster_type = 'PENTA15'
-    calculix_type = 'C3D15'
-
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
@@ -1315,9 +1303,6 @@ class CPYRAM5(SolidElement):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CPYRAM'
-    #aster_type = 'CPYRAM5'
-    #calculix_type = 'C3D5'
-
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
@@ -1479,9 +1464,6 @@ class CPYRAM13(SolidElement):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     type = 'CPYRAM'
-    #aster_type = 'CPYRAM13'
-    #calculix_type = 'C3D13'
-
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:]]
@@ -1664,9 +1646,6 @@ class CTETRA4(SolidElement):
     +--------+-----+-----+----+----+----+----+
     """
     type = 'CTETRA'
-    aster_type = 'TETRA4'
-    calculix_type = 'C3D4'
-
     @property
     def faces(self):
         """
@@ -1895,9 +1874,6 @@ class CTETRA10(SolidElement):
     +--------+-----+-----+-----+-----+-----+----+-----+-----+
     """
     type = 'CTETRA'
-    aster_type = 'TETRA10'
-    calculix_type = 'C3D10'
-
     def write_card(self, size=8, is_double=False):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
