@@ -8,6 +8,8 @@ elif qt_version == 5:
 else:
     raise NotImplementedError(qt_version)
 
+import pyNastran.gui.formats
+import pyNastran.gui.gui_common
 from pyNastran.all_tests_no_gui import *
 from pyNastran.converters.test_gui_formats import *
 
