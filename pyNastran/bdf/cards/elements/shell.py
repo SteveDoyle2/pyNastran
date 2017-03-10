@@ -284,6 +284,67 @@ class TriShell(ShellElement):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
+    def material_coordinate_system(self, normal=None, xyz123=None):
+        """
+        Determines the material coordinate system
+
+        Parameters
+        ----------
+        normal (3, ) float ndarray
+            the unit normal vector
+        xyz123 (3, 3) float ndarray
+            the xyz coordinates
+
+        Returns
+        -------
+        centroid (3, ) float ndarray
+            the centroid of the element
+        imat (3, ) float ndarray
+            the element unit i vector
+        jmat (3, ) float ndarray
+            the element unit j vector
+        normal (3, ) float ndarray
+            the unit normal vector
+
+        TODO: rotate the coordinate system by the angle theta
+        """
+        if normal is None:
+            normal = self.Normal() # k = kmat
+
+        if xyz123 is None:
+            xyz1 = self.nodes_ref[0].get_position()
+            xyz2 = self.nodes_ref[1].get_position()
+            xyz3 = self.nodes_ref[2].get_position()
+            #centroid = (xyz1 + xyz2 + xyz3) / 3.
+            #centroid = self.Centroid()
+        else:
+            #centroid = xyz1234.sum(axis=1)
+            #assert len(centroid) == 3, centroid
+            xyz1 = xyz123[:, 0]
+            xyz2 = xyz123[:, 1]
+            xyz3 = xyz123[:, 2]
+        centroid = (xyz1 + xyz2 + xyz3) / 3.
+
+        if self.theta_mcid is None:
+            raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
+        if isinstance(self.theta_mcid, integer_types):
+            i = self.theta_mcid_ref.k
+            jmat = np.cross(normal, i) # k x i
+            jmat /= np.linalg.norm(jmat)
+            # we do an extra normalization here because
+            # we had to project i onto the elemental plane
+            # unlike in the next block
+            imat = np.cross(jmat, normal)
+        elif isinstance(self.theta_mcid, float):
+            # TODO: rotate by the angle theta
+            imat = xyz2 - xyz1
+            imat /= np.linalg.norm(imat)
+            jmat = np.cross(normal, imat) # k x i
+            jmat /= np.linalg.norm(jmat)
+        else:
+            raise RuntimeError(self.theta_mcid)
+        return centroid, imat, jmat, normal
+
 
 class CTRIA3(TriShell):
     """
@@ -401,6 +462,8 @@ class CTRIA3(TriShell):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
+        #if isinstance(self.theta_mcid, integer_types):
+            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1283,7 +1346,7 @@ class QuadShell(ShellElement):
         if self.theta_mcid is None:
             raise NotImplementedError('theta_mcid=%r' % self.theta_mcid)
         if isinstance(self.theta_mcid, integer_types):
-            i = self.theta_mcid_ref.i
+            i = self.theta_mcid_ref.k
             jmat = np.cross(normal, i) # k x i
             jmat /= np.linalg.norm(jmat)
             # we do an extra normalization here because
@@ -1598,6 +1661,8 @@ class CQUAD4(QuadShell):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
+        #if isinstance(self.theta_mcid, integer_types):
+            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     @property
     def zOffset(self):

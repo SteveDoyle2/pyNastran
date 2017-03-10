@@ -1929,9 +1929,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties) and 0:
-            icase, upids, mids, thickness = self._build_properties(
+            icase, upids, mids, thickness, nplies = self._build_properties(
                 model, nelements, eids, pids, cases, form0, icase)
-            icase = self._build_materials(model, mids, thickness, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, nplies, cases, form0, icase)
 
             try:
                 icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
@@ -2029,9 +2029,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
-            icase, upids, mids, thickness = self._build_properties(
+            icase, upids, mids, thickness, nplies = self._build_properties(
                 model, nelements, eids, pids, cases, form0, icase)
-            icase = self._build_materials(model, mids, thickness, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, nplies, cases, form0, icase)
 
             try:
                 icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
@@ -3329,6 +3329,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         mids = np.zeros((nelements, nplies), dtype='int32')
         thickness = np.zeros((nelements, nplies), dtype='float32')
         rho = np.zeros((nelements, nplies), dtype='float32')
+        nplies = np.zeros(nelements, dtype='int32')
         for pid in upids:
             if pid == 0:
                 print('skipping pid=0')
@@ -3355,7 +3356,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif prop.type in ['PCOMP', 'PCOMPG']:
                 # TODO: only considers iply=0
                 i = np.where(pids == pid)[0]
-                for iply in range(prop.nplies):
+                npliesi = prop.nplies
+                nplies[i] = npliesi
+                for iply in range(npliesi):
                     mids[i, iply+1] = prop.Mid(iply)
                     thickness[i, iply+1] = prop.Thickness(iply)
                 thickness[i, 0] = thickness[i[0], :].sum()
@@ -3380,11 +3383,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 if len(not_skipped_eids_missing_material_id):
                     print('eids=%s dont have materials' %
                           not_skipped_eids_missing_material_id)
-        return icase, upids, mids, thickness
+        return icase, upids, mids, thickness, nplies
 
-    def _build_materials(self, model, mids, thickness, cases, form0, icase):
+    def _build_materials(self, model, mids, thickness, nplies, cases, form0, icase):
         """
         creates:
+          - Thickness
+          - nPlies (composite only)
           - Material ID
           - E_11
           - E_22
@@ -3398,6 +3403,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                               location='centroid', scalar=thickness)
             cases[icase] = (t_res, (0, 'Thickness'))
             form0.append(('Thickness', icase, []))
+            icase += 1
+
+        if nplies.max() > 0:
+            nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
+                              location='centroid', scalar=nplies)
+            cases[icase] = (nplies_res, (0, 'Number of Plies'))
+            form0.append(('Number of Plies', icase, []))
             icase += 1
 
         mid_res = GuiResult(0, header='MaterialID', title='MaterialID',

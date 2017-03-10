@@ -126,7 +126,7 @@ def get_alt_for_density(density):
     return alt_final
 
 
-def get_alt_for_eas_mach(equivalent_airspeed, mach, velocity_units='ft/s'):
+def get_alt_for_eas_mach(equivalent_airspeed, mach, velocity_units='ft/s', alt_units='ft'):
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -136,13 +136,13 @@ def get_alt_for_eas_mach(equivalent_airspeed, mach, velocity_units='ft/s'):
         the equivalent airspeed in velocity_units
     mach : float
         the mach to hold constant
-    SI : bool
-        should SI units be used; default=False
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
 
     Returns
     -------
     alt : float
-        the altitude in ft (SI=m)
+        the altitude in alt units
     """
     equivalent_airspeed = _convert_velocity(equivalent_airspeed, velocity_units, 'ft/s')
     dalt = 500.
@@ -177,7 +177,7 @@ def get_alt_for_eas_mach(equivalent_airspeed, mach, velocity_units='ft/s'):
 
     if n > 18:
         print('n = %s' % n)
-    alt_final = convert_velocity(alt_final, 'ft', alt_units)
+    alt_final = _convert_alt(alt_final, 'ft', alt_units)
     return alt_final
 
 def get_alt_for_q_mach(q, mach, SI=False):
@@ -571,6 +571,22 @@ def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s', debug=False):
 
 def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s', debug=False):
     """
+    Parameters
+    ----------
+    alt : float
+        altitude in alt_units
+    Mach : float
+        Mach Number \f$ M \f$
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    velocity_units : str; default='ft/s'
+        the velocity units; ft/s, m/s, knots
+
+    Returns
+    -------
+    eas : float
+        equivalent airspeed in velocity_units
+
     EAS = TAS * sqrt(rho/rho0)
     p = rho * R * T
     rho = p/(RT)
@@ -599,7 +615,6 @@ def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s', debug=F
         eas *= ft_to_m
     else:
         raise NotImplementedError(eas_units)
-
 
     #if debug:
         #if SI:
@@ -758,12 +773,10 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
     ----------
     alt : bool
         Altitude in alt_units
-    #SI : bool; default=False
-        #convert to SI units
-    #alt : bool
-        #Altitude in alt_units
-    #alt_units : str; default='ft'
-        #the altitude units; ft, kft, m
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    visc_units : str; default='(lbf*s)/ft^2'
+        the viscosity units; (lbf*s)/ft^2, (N*s)/m^2, Pa*s
 
     Returns
     -------
@@ -777,10 +790,10 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
     mu = sutherland_viscoscity(T)  # (lbf*s)/ft^2
     if visc_units == '(lbf*s)/ft^2':
         factor = 1.
-    elif visc_units == '(N*s)/m^2':
+    elif visc_units in ['(N*s)/m^2', 'Pa*s']:
         factor = 47.88026
     else:
-        raise NotImplementedError('visc_units=%r; not in (lbf*s)/ft^2 or (N*s)/m^2')
+        raise NotImplementedError('visc_units=%r; not in (lbf*s)/ft^2 or (N*s)/m^2 or Pa*s')
     return mu * factor
 
 def atm_unit_reynolds_number2(alt, mach, alt_units='ft', ReL_units='1/ft', debug=False):
