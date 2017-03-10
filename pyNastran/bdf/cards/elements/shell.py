@@ -357,8 +357,6 @@ class CTRIA3(TriShell):
     +--------+-------+-------+----+----+----+------------+---------+-----+
     """
     type = 'CTRIA3'
-    aster_type = 'TRIA3'
-    calculix_type = 'S3'
     _field_map = {
         1: 'eid', 2:'pid', 6:'theta_mcid', 7:'zoffset', 10:'TFlag',
         11:'T1', 12:'T2', 13:'T3'}
@@ -462,13 +460,16 @@ class CTRIA3(TriShell):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
-        #if isinstance(self.theta_mcid, integer_types):
-            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
+        if not isinstance(self.theta_mcid, float):
+            self.theta_mcid = self.theta_mcid_ref.cid
+            del self.theta_mcid_ref
 
     @property
     def zOffset(self):
@@ -522,14 +523,14 @@ class CTRIA3(TriShell):
         #if self.T1 + self.T2 + self.T3 > 0.0:
         #    if self.TFlag == 0:
         #        t = self.pid_ref.Thickness()
-        #        T1 = self.T1 / t
-        #        T2 = self.T2 / t
-        #        T3 = self.T3 / t
+        #        t1 = self.T1 / t
+        #        t2 = self.T2 / t
+        #        t3 = self.T3 / t
         #    else:
-        #        T1 = self.T1
-        #        T2 = self.T2
-        #        T3 = self.T3
-        #    t = (T1+T2+T3)/3.
+        #        t1 = self.T1
+        #        t2 = self.T2
+        #        t3 = self.T3
+        #    t = (t1 + t2 + t3)/3.
         #else:
         #    t = self.pid_ref.Thickness()
         #return t
@@ -740,9 +741,6 @@ class CPLSTN3(TriShell):
 
 class CTRIA6(TriShell):
     type = 'CTRIA6'
-    aster_type = 'TRIA6'
-    calculix_type = 'S6'
-
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0., TFlag=0,
                  T1=None, T2=None, T3=None, comment=''):
         TriShell.__init__(self)
@@ -1554,8 +1552,6 @@ class CQUAD4(QuadShell):
     +--------+-------+-------+----+----+----+----+------------+---------+
     """
     type = 'CQUAD4'
-    aster_type = 'QUAD4 # CQUAD4'
-    calculix_type = 'S4'
     _field_map = {1: 'eid', 2:'pid', 7:'theta_mcid', 8:'zoffset',
                   10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
 
@@ -1661,8 +1657,8 @@ class CQUAD4(QuadShell):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
-        #if isinstance(self.theta_mcid, integer_types):
-            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     @property
     def zOffset(self):
@@ -1962,6 +1958,9 @@ class CQUAD4(QuadShell):
         self.nodes = self.node_ids
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
+        if not isinstance(self.theta_mcid, float):
+            self.theta_mcid = self.theta_mcid_ref.cid
+            del self.theta_mcid_ref
 
     def _verify(self, xref=False):
         eid = self.eid
@@ -2369,8 +2368,6 @@ class CPLSTN6(TriShell):
 
 class CPLSTN8(QuadShell):
     type = 'CPLSTN8'
-    aster_type = 'CPLSTN8'
-
     def __init__(self, eid, pid, nids, theta, comment=''):
         QuadShell.__init__(self)
         if comment:
@@ -3067,8 +3064,6 @@ class CQUAD8(QuadShell):
     +--------+-------+-----+----+----+----+----+------------+-------+
     """
     type = 'CQUAD8'
-    aster_type = 'QUAD8'
-
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
                  TFlag=0, T1=None, T2=None, T3=None, T4=None,
                  comment=''):

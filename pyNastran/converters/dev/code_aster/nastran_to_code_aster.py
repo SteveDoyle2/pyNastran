@@ -86,11 +86,41 @@ class CodeAsterConverter(BDF):
         elems = {}
         #for eid,elements in self.elements:
             #elems[eid] = []
+        #aster_type = 'TRIA3';
+        #aster_type = 'TRIA6'; calculix_type = 'S6'
+        #aster_type = 'QUAD4'; calculix_type = 'S4'
+        #aster_type = 'QUAD8'
+
+        #aster_type = 'HEXA8'; calculix_type = 'C3D8'
+        #aster_type = 'HEXA20'; calculix_type = 'C3D20'
+        #aster_type = 'PENTA6'; calculix_type = 'C3D6'
+        #aster_type = 'PENTA15'; calculix_type = 'C3D15'
+        #aster_type = 'CPYRAM5'; calculix_type = 'C3D5'
+        #aster_type = 'CPYRAM13'; calculix_type = 'C3D13'
+        #aster_type = 'TETRA4'; calculix_type = 'C3D4'
+        #aster_type = 'TETRA10'; calculix_type = 'C3D10'
+
         for eid, element in iteritems(self.elements):
-            if not hasattr(element, 'aster_type'):
+            if element.type == 'CTRIA3':
+                Type = 'TRIA3'
+            elif element.type == 'CTRIA6':
+                Type = 'TRIA6'
+            elif element.type == 'CQUAD4':
+                Type = 'QUAD4'
+            elif element.type == 'CQUAD8':
+                Type = 'QUAD8'
+
+            elif element.type == 'CTETRA':
+                Type = 'TETRA4'
+            elif element.type == 'CPENTA':
+                Type = 'PENTA6'
+            elif element.type == 'CHEXA':
+                Type = 'HEXA8'
+            elif element.type == 'CPYRAM':
+                Type = 'CPYRAM5'
+            else:
                 print('rejecting: %s' % element.type)
                 continue
-            Type = element.aster_type
             if Type not in elems:
                 elems[Type] = []
 
