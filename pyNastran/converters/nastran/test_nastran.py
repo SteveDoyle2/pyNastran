@@ -10,7 +10,7 @@ from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
-from pyNastran.converters.ugrid.ugrid_reader import read_ugrid
+from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
 from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]

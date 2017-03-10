@@ -9,7 +9,7 @@ import vtk
 from vtk import vtkTriangle, vtkQuad
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.converters.ugrid.surf_reader import SurfReader, TagReader
+from pyNastran.converters.aflr.ugrid.surf_reader import SurfReader, TagReader
 
 
 class SurfIO(object):

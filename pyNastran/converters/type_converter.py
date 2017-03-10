@@ -189,7 +189,7 @@ def process_ugrid(ugrid_filename, fmt2, fname2, data=None):
         read_solids = False
 
 
-    from pyNastran.converters.ugrid.ugrid_reader import UGRID
+    from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
     model = UGRID(read_shells=read_shells, read_solids=read_solids)
     model.read_ugrid(ugrid_filename)
     if fmt2 == 'nastran':
@@ -213,7 +213,7 @@ def process_ugrid(ugrid_filename, fmt2, fname2, data=None):
         process_nastran(bdf_filename, 'cart3d', fname2, data=None)
         # ugrid_to_stl(model, fname2)
     elif fmt2 == 'tecplot':
-        from pyNastran.converters.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
+        from pyNastran.converters.afrl.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
         # ugrid_to_tecplot(model, fname2)
         tecplot = ugrid_to_tecplot(model)
         element_slice(tecplot, data)

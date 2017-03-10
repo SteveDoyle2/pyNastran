@@ -6,8 +6,8 @@ from collections import defaultdict
 from six import iteritems
 from numpy import zeros, unique, where, argsort, searchsorted, allclose, array
 
-from pyNastran.converters.ugrid.ugrid_reader import read_ugrid
-from pyNastran.converters.ugrid.surf_reader import TagReader
+from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
+from pyNastran.converters.aflr.ugrid.surf_reader import TagReader
 
 def write_foam(ugrid, foam_filename, tag_filename):
     """writes an OpenFOAM file"""

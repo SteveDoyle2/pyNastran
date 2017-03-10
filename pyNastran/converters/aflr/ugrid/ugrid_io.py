@@ -11,9 +11,9 @@ import vtk
 from vtk import vtkTriangle, vtkQuad
 from vtk.util.numpy_support import numpy_to_vtk
 
-from pyNastran.converters.ugrid.surf_reader import TagReader
-from pyNastran.converters.ugrid.ugrid_reader import UGRID
-from pyNastran.converters.ugrid.ugrid2d_reader import UGRID2D_Reader
+from pyNastran.converters.aflr.ugrid.surf_reader import TagReader
+from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
+from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.utils import is_binary_file
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 

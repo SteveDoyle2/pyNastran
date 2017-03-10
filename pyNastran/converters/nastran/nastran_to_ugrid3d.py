@@ -16,7 +16,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
-from pyNastran.formats.aflr3.ugrid_reader import (
+from pyNastran.formats.aflr.ugrid.ugrid_reader import (
     UGRID, determine_dytpe_nfloat_endian_from_ugrid_filename)
 
 

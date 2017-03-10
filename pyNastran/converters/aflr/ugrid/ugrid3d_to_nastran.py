@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 
-from pyNastran.converters.ugrid.ugrid_reader import UGRID
+from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 
 
 def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, include_solids=True,

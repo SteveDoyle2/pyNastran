@@ -164,7 +164,7 @@ except ImportError:
     is_bedge = False
 
 try:
-    from pyNastran.converters.ugrid.surf_io import SurfIO
+    from pyNastran.converters.aflr.ugrid.surf_io import SurfIO
     is_surf = True
 except ImportError:
     #raise
@@ -176,7 +176,7 @@ except ImportError:
     is_surf = False
 
 try:
-    from pyNastran.converters.ugrid.ugrid_io import UGRID_IO
+    from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
     is_ugrid = True
 except ImportError:
     #raise

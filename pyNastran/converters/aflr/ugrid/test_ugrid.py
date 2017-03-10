@@ -7,8 +7,8 @@ import unittest
 
 import pyNastran
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
-from pyNastran.converters.ugrid.ugrid3d_to_nastran import ugrid3d_to_nastran
-from pyNastran.converters.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
+from pyNastran.converters.aflr.ugrid.ugrid3d_to_nastran import ugrid3d_to_nastran
+from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
 from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]

@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from pyNastran.converters.ugrid.ugrid2d_reader import UGRID2D_Reader
+from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.bdf.field_writer_8 import print_card_8, print_int_card
 
 def ugrid2d_to_nastran_filename(ugrid2d_filename, bdf_filename,

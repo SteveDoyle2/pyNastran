@@ -9,8 +9,8 @@ import os
 import unittest
 
 import pyNastran
-from pyNastran.converters.ugrid.ugrid_io import UGRID_IO
-from pyNastran.converters.ugrid.surf_io import SurfIO
+from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
+from pyNastran.converters.aflr.ugrid.surf_io import SurfIO
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.bdf.mesh_utils.extract_free_faces import write_skin_solid_faces

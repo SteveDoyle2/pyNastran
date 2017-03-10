@@ -3,7 +3,7 @@ import os
 from six import iteritems
 
 from numpy import zeros, array
-from pyNastran.converters.ugrid.ugrid_reader import UGRID
+from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
 

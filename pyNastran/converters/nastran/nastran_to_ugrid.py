@@ -1,6 +1,6 @@
 from six import iteritems
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.converters.ugrid.ugrid_reader import UGRID
+from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 
 from numpy import array, hstack
 
