@@ -1,13 +1,12 @@
-# pragma: no cover
 from __future__ import print_function
-from six import  iteritems
-from six.moves import zip
 import os
 import unittest
 from math import sqrt
-
-from numpy import array, array_equiv, array_equal, allclose
 from itertools import count
+
+from six import  iteritems
+from six.moves import zip
+from numpy import array, array_equiv, array_equal, allclose
 
 
 #class DummyWriter(object):
@@ -33,7 +32,7 @@ model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 
 def run_model(bdf_name=None, op2_name=None, f06_name=None,
               op4_name=None, dynamic_vars=None, f06_has_weight=True,
-              vectorized=False, encoding=None):
+              vectorized=False, encoding=None):  # praga: no cover
     outputs = []
     if bdf_name:
         bdf = BDF(debug=False, log=None)
@@ -62,14 +61,14 @@ def run_model(bdf_name=None, op2_name=None, f06_name=None,
 
     if op4_name:
         op4 = OP4()
-        op4.read_op4(op4_name, matrixNames=None, precision='default')
+        op4.read_op4(op4_name, matrix_names=None, precision='default')
         outputs.append(op4)
 
     assert len(outputs) > 0
     if len(outputs) == 1: return outputs[0]
     return outputs
 
-class TestF06(unittest.TestCase):
+class TestF06(unittest.TestCase):  # praga: no cover
 
     def test_blade2dv_fatal_1(self):
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
@@ -102,42 +101,43 @@ class TestF06(unittest.TestCase):
 
         MO = f06.grid_point_weight.MO
         #print("MO %s" % MO)
-        MO_exact = array(
-            [[  1.22085800e-01,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00,  5.33146300e-01,  -1.22767700e-05],
-             [  0.00000000e+00,   1.22085800e-01,   0.00000000e+00,  -5.33146300e-01,  0.00000000e+00,   1.57186600e-01],
-             [  0.00000000e+00,   0.00000000e+00,   1.22085800e-01,   1.22767700e-05, -1.57186600e-01,   0.00000000e+00],
-             [  0.00000000e+00,  -5.33146300e-01,   1.22767700e-05,   3.20227600e+00, -7.13340800e-06,  -6.83890800e-01],
-             [  5.33146300e-01,   0.00000000e+00,  -1.57186600e-01,  -7.13340800e-06,  3.45033400e+00,  -7.35886500e-05],
-             [ -1.22767700e-05,   1.57186600e-01,   0.00000000e+00,  -6.83890800e-01, -7.35886500e-05,   2.50287600e-01]])
+        MO_exact = array([
+            [ 1.220858e-1,  0.000000e+0,  0.000000e+0,  0.000000e+0,  5.331463e-1, -1.227677e-5],
+            [ 0.000000e+0,  1.220858e-1,  0.000000e+0, -5.331463e-1,  0.000000e+0,  1.571866e-1],
+            [ 0.000000e+0,  0.000000e+0,  1.220858e-1,  1.227677e-5, -1.571866e-1,  0.000000e+0],
+            [ 0.000000e+0, -5.331463e-1,  1.227677e-5,  3.202276e+0, -7.133408e-6, -6.838908e-1],
+            [ 5.331463e-1,  0.000000e+0, -1.571866e-1, -7.133408e-6,  3.450334e+0, -7.358865e-5],
+            [-1.227677e-5,  1.571866e-1,  0.000000e+0, -6.838908e-1, -7.358865e-5,  2.502876e-1]])
 
 
         S = f06.grid_point_weight.S
-        S_exact = array([[ 1.,  0.,  0.],
-                         [ 0.,  1.,  0.],
-                         [ 0.,  0.,  1.]])
+        S_exact = array([[1., 0., 0.],
+                         [0., 1., 0.],
+                         [0., 0., 1.]])
         #print("S %s" % S)
 
         mass = f06.grid_point_weight.mass
-        mass_exact = array([ 0.1220858,  0.1220858,  0.1220858])
+        mass_exact = array([0.1220858, 0.1220858, 0.1220858])
         self.assertTrue(array_equiv(mass, mass_exact))
         #print("mass = %s" % mass)
 
         cg = f06.grid_point_weight.cg
         cg_exact = array(
-            [[  0.00000000e+00,   1.00558600e-04,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  1.28751000e+00,   0.00000000e+00,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  1.28751000e+00,   1.00558600e-04,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00]])
+            [[0.000000e+00, 1.005586e-04, 4.366981e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [1.287510e+00, 0.000000e+00, 4.366981e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [1.287510e+00, 1.005586e-04, 0.000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.000000e+00, 0.0e+00, 0.0e+00, 0.0e+00]])
         #print("cg = %s", cg)
         self.assertTrue(array_equiv(cg, cg_exact))
 
         IS = f06.grid_point_weight.IS
         #print("IS = %s" % IS)
-        IS_exact = array([[  8.74036600e-01,  -8.67305300e-06,  -2.54028500e-03],
-                          [ -8.67305300e-06,   9.19714300e-01,   1.99762300e-05],
-                          [ -2.54028500e-03,   1.99762300e-05,   4.79082500e-02]])
+        IS_exact = array([
+            [ 8.74036600e-01, -8.67305300e-06,  -2.54028500e-03],
+            [-8.67305300e-06,  9.19714300e-01,   1.99762300e-05],
+            [-2.54028500e-03,  1.99762300e-05,   4.79082500e-02]])
 
         IQ = f06.grid_point_weight.IQ
         #print("IQ %s" % IQ)
@@ -165,46 +165,47 @@ class TestF06(unittest.TestCase):
 
         MO = f06.grid_point_weight.MO
         #print("MO = %s" % MO)
-        MO_exact = array(
-            [[  1.22085800e-01,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00,  5.33146300e-01,  -1.22767700e-05],
-             [  0.00000000e+00,   1.22085800e-01,   0.00000000e+00,  -5.33146300e-01,  0.00000000e+00,   1.57186600e-01],
-             [  0.00000000e+00,   0.00000000e+00,   1.22085800e-01,   1.22767700e-05, -1.57186600e-01,   0.00000000e+00],
-             [  0.00000000e+00,  -5.33146300e-01,   1.22767700e-05,   3.20227600e+00, -7.13340800e-06,  -6.83890800e-01],
-             [  5.33146300e-01,   0.00000000e+00,  -1.57186600e-01,  -7.13340800e-06,  3.45033400e+00,  -7.35886500e-05],
-             [ -1.22767700e-05,   1.57186600e-01,   0.00000000e+00,  -6.83890800e-01, -7.35886500e-05,   2.50287600e-01]])
+        MO_exact = array([
+            [ 1.220858e-1,  0.000000e+0,  0.000000e+0,  0.000000e+0,  5.331463e-1, -1.227677e-5],
+            [ 0.000000e+0,  1.220858e-1,  0.000000e+0, -5.331463e-1,  0.000000e+0,  1.571866e-1],
+            [ 0.000000e+0,  0.000000e+0,  1.220858e-1,  1.227677e-5, -1.571866e-1,  0.000000e+0],
+            [ 0.000000e+0, -5.331463e-1,  1.227677e-5,  3.202276e+0, -7.133408e-6, -6.838908e-1],
+            [ 5.331463e-1,  0.000000e+0, -1.571866e-1, -7.133408e-6,  3.450334e+0, -7.358865e-5],
+            [-1.227677e-5,  1.571866e-1,  0.000000e+0, -6.838908e-1, -7.358865e-5,  2.502876e-1]])
 
 
         S = f06.grid_point_weight.S
-        S_exact = array([[ 1.,  0.,  0.],
-                         [ 0.,  1.,  0.],
-                         [ 0.,  0.,  1.]])
+        S_exact = array([[1., 0., 0.],
+                         [0., 1., 0.],
+                         [0., 0., 1.]])
         #print("S %s" % S)
 
         mass = f06.grid_point_weight.mass
-        mass_exact = array([ 0.1220858,  0.1220858,  0.1220858])
+        mass_exact = array([0.1220858, 0.1220858, 0.1220858])
         self.assertTrue(array_equiv(mass, mass_exact))
         #print("mass = %s" % mass)
 
         cg = f06.grid_point_weight.cg
         cg_exact = array(
-            [[  0.00000000e+00,   1.00558600e-04,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  1.28751000e+00,   0.00000000e+00,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  1.28751000e+00,   1.00558600e-04,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00]])
+            [[0.00000000e+00, 1.00558600e-04, 4.36698100e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [1.28751000e+00, 0.00000000e+00, 4.36698100e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [1.28751000e+00, 1.00558600e-04, 0.00000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.0e+00, 0.0e+00, 0.0e+00]])
         #print("cg = %s" % cg)
         self.assertTrue(array_equiv(cg, cg_exact))
 
         IS = f06.grid_point_weight.IS
         #print("IS  %s" % IS)
-        IS_exact = array([[  8.74036600e-01,  -8.67305300e-06,  -2.54028500e-03],
-                          [ -8.67305300e-06,   9.19714300e-01,   1.99762300e-05],
-                          [ -2.54028500e-03,   1.99762300e-05,   4.79082500e-02]])
+        IS_exact = array([
+            [ 8.74036600e-01, -8.67305300e-06, -2.54028500e-03],
+            [-8.67305300e-06,  9.19714300e-01,  1.99762300e-05],
+            [-2.54028500e-03,  1.99762300e-05,  4.79082500e-02]])
 
         IQ = f06.grid_point_weight.IQ
         #print("IQ %s" % IQ)
-        IQ_exact = array([[ 0.04790044, 0.9197143, 0.8740444 ]])
+        IQ_exact = array([[0.04790044, 0.9197143, 0.8740444]])
         self.assertTrue(array_equiv(IQ, IQ_exact))
 
     def test_complex_tets_1(self):
@@ -235,7 +236,7 @@ class TestF06(unittest.TestCase):
         assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
         assert f06.Title == 'SIMPLE BEAM EXAMPLE', '%r' % f06.Title
 
-        subtitle_label= f06.iSubcaseNameMap[1]
+        subtitle_label = f06.iSubcaseNameMap[1]
         assert subtitle_label[0] == 'MODES', subtitle_label
         assert subtitle_label[1] == 2, subtitle_label  # 2=modal
         assert subtitle_label[2] == '', subtitle_label
@@ -563,7 +564,7 @@ class TestF06(unittest.TestCase):
         op2name = os.path.join(model_path, 'plate', 'plate.op2')
 
         bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
-        self.assertEqual(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
+        self.assertEqual(bdf.properties[1].t, 0.3, 't=%s' % bdf.properties[1].t)
 
         self.assertEqual(len(bdf.nodes), 36, bdf.nodes)
         self.assertEqual(len(bdf.elements), 25, bdf.elements)
@@ -579,14 +580,14 @@ class TestF06(unittest.TestCase):
             if stress.is_von_mises():
                 #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'VM_Stress'))
                 #vonMises = 'VON MISES'
-                for eid,ovm in sorted(iteritems(stress.ovmShear)):
+                for eid, ovm in sorted(iteritems(stress.ovmShear)):
                     for nid, ovmi in sorted(iteritems(ovm)):
                         for ilayer, ovmii in enumerate(ovmi):
                             print("%8s %8s %6s %8s" % (eid, nid, ilayer, ovmii))
             else:
                 #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'MaxShear'))
                 #vonMises = 'MAX SHEAR'
-                for eid,ovm in sorted(iteritems(stress.ovmShear)):
+                for eid, ovm in sorted(iteritems(stress.ovmShear)):
                     for nid, ovmi in sorted(iteritems(ovm)):
                         ovmi = ovm[nid]
                         for ilayer, ovmii in enumerate(ovmi):

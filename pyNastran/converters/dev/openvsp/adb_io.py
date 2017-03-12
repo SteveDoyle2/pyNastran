@@ -9,7 +9,7 @@ from vtk import vtkTriangle, vtkParametricSpline
 from pyNastran.converters.openvsp.adb_reader import ADB_Reader
 
 
-class ADB_IO(object):
+class ADB_IO(object):  # praga: no cover
     def __init__(self):
         pass
 

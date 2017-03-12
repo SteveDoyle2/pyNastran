@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six import iteritems
 import numpy as np
 
 
@@ -41,7 +42,7 @@ class Material(object):
         """prints a summary for the material"""
         msg = 'Material(\n'
         msg += '  name=%r,\n' % self.name
-        for key, value in self.sections.items():
+        for key, value in iteritems(self.sections):
             msg += '  %r : %r,\n' % (key, value)
         msg += ')\n'
         return msg
@@ -55,7 +56,11 @@ class Part(object):
         self.log = log
         self.solid_sections = solid_sections
 
-        self.nids = np.array(nids, dtype='int32')
+        try:
+            self.nids = np.array(nids, dtype='int32')
+        except ValueError:
+            msg = 'nids=%s is not integers' % nids
+            raise ValueError(msg)
         nnodes = len(self.nids)
 
         node0 = nodes[0]

@@ -2,13 +2,14 @@
 Defines the Abaqus class
 """
 from __future__ import print_function
+from six import iteritems
 import numpy as np
 from pyNastran.utils.log import get_logger2
 from pyNastran.converters.dev.abaqus.abaqus_cards import Material, Part, SolidSection
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
     """reads an abaqus model"""
-    model = Abaqus()
+    model = Abaqus(log=None, debug=False)
     model.read_abaqus_inp(abaqus_inp_filename)
     return model
 
@@ -150,7 +151,7 @@ class Abaqus(object):
                     self.log.debug('end of material')
 
                 elif word.startswith('step'):
-                    print('step!!!!!!!')
+                    #print('step!!!!!!!')
                     iline, line0 = self.read_step(lines, iline, line0, istep)
                     istep += 1
                 elif word.startswith('initial conditions'):
@@ -217,12 +218,12 @@ class Abaqus(object):
             if self.debug:
                 self.log.debug('')
 
-        print('nnassembly = %s' % nassembly)
-        for part_name, part in sorted(self.parts.items()):
+        self.log.debug('nassembly = %s' % nassembly)
+        for part_name, part in sorted(iteritems(self.parts)):
             self.log.info(part)
             part.check_materials(self.materials)
-        for mat_name, mat in sorted(self.materials.items()):
-            print(mat)
+        for mat_name, mat in sorted(iteritems(self.materials)):
+            self.log.debug(mat)
 
     def _read_star_block(self, lines, iline, line0, debug=False):
         """
@@ -276,7 +277,6 @@ class Abaqus(object):
         unallowed_words = [
             'material', 'step', 'boundary', 'amplitude', 'surface interaction',
             'assembly']
-        #print('  line0 =', line0)
         iline += 1
         line0 = lines[iline].strip('\n\r\t, ').lower()
         #print('  wordA =', word)
@@ -513,11 +513,11 @@ class Abaqus(object):
         """reads a Part object"""
         sline2 = word.split(',', 1)[1:]
         #aq
-        assert len(sline2) == 1, sline2
+        assert len(sline2) == 1, 'looking for part_name; word=%r sline2=%s' % (word, sline2)
         name_slot = sline2[0]
         assert 'name' in name_slot, name_slot
         part_name = name_slot.split('=', 1)[1]
-        self.log.info('part_name = %r' % part_name)
+        self.log.debug('part_name = %r' % part_name)
         #asdf
 
         iline += 1
@@ -540,7 +540,7 @@ class Abaqus(object):
         while not line0.startswith('*end part'):
             #if is_start:
             iline += 1 # skips over the header line
-            self.log.info('  ' + line0)
+            self.log.debug('  ' + line0)
             if '*node' in line0:
                 #print('  Node iline=%s' % iline)
                 line0 = lines[iline].strip().lower()
@@ -575,12 +575,18 @@ class Abaqus(object):
 
             elif '*element' in line0:
                 sline = line0.split(',')[1:]
-                assert len(sline) == 1, line0
+                allowed_element_types = [
+                    'r2d2',
+                    'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
+                    'cax3', 'cax4r']
+                assert len(sline) == 1, 'looking for element_type; line0=%r sline=%s' % (line0, sline)
                 etype_sline = sline[0]
                 assert 'type' in etype_sline, etype_sline
                 etype = etype_sline.split('=')[1]
-                assert etype in ['r2d2', 'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
-                                 'cax3', 'cax4r'], etype
+                if etype not in allowed_element_types:
+                    msg = 'etype=%s allowed=[%s]' % (etype, ','.join(allowed_element_types))
+                    raise RuntimeError(msg)
+
                 if self.debug:
                     self.log.debug('    etype = %r' % etype)
 
@@ -593,6 +599,7 @@ class Abaqus(object):
                     iline += 1
                     line0 = lines[iline].strip().lower()
                 element_types[etype] = elements
+
             elif '*nset' in line0:
                 params_map = get_param_map(word)
                 name = params_map['name']
@@ -642,7 +649,11 @@ class Abaqus(object):
                     iline += 1
                     line0 = lines[iline].strip().lower()
             else:
-                raise NotImplementedError(line0)
+                msg = 'line=%r\n' % line0
+                allowed = ['*node', '*element', '*nset', '*elset', '*surface',
+                           '*solid section', '*cohesive section']
+                msg += 'expected=[%r]' % ', '.join(allowed)
+                raise NotImplementedError(msg)
 
             line0 = lines[iline].strip().lower()
             is_start = False

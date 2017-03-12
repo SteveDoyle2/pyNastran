@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from copy import deepcopy
 from collections import defaultdict
@@ -7,7 +8,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
 
 
-class Geom(object):
+class Geom(object):  # praga: no cover
     def __init__(self, name, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny):
         self.name = name
         self.xyz = lifting_surface_xyz
@@ -65,7 +66,7 @@ class Geom(object):
         return msg
 
 
-class DegenGeom(object):
+class DegenGeom(object):  # praga: no cover
     def __init__(self, log=None, debug=False):
         self.log = log
         self.debug = debug
@@ -268,7 +269,7 @@ class DegenGeom(object):
 
 
 
-def main():
+def main():  # praga: no cover
     degen_geom_csv = 'model_DegenGeom.csv'
     d = DegenGeom()
     d.read_degen_geom(degen_geom_csv)
@@ -279,5 +280,5 @@ def main():
     d.write_panair(panair_filename, panair_case_filename)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # praga: no cover
     main()

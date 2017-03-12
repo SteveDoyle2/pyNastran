@@ -10,7 +10,7 @@ from numpy import zeros, array, cross, dot
 from numpy.linalg import det, norm
 
 
-class Plot3d_io(object):
+class Plot3d_io(object):  # praga: no cover
     def __init__(self):
         pass
 
@@ -191,18 +191,6 @@ class Plot3d_io(object):
                 #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
 
-    def load_panair_results(self, panairFileName, dirname):
-        #self.result_cases = {}
-        pass
-
-if __name__ == '__main__':  # pragma: no cover
-    print('')
-
-    def removeOldGeometry(self):
-        pass
-
-    test = PanairIO()
-    test.removeOldGeometry = removeOldGeometry
-
-    #test.load_panair_geometry('SWB.INP','',True,True)
-    test.load_panair_geometry('models/NAC6.INP', '', True, True)
+    #def load_panair_results(self, panairFileName, dirname):
+        ##self.result_cases = {}
+        #pass

@@ -1,6 +1,6 @@
-from pyNastran.op2.fortran_format import FortranFormat
 from struct import unpack
 from numpy import degrees, array, allclose, zeros, hstack, vstack, where
+from pyNastran.op2.fortran_format import FortranFormat
 from pyNastran.utils.log import get_logger2
 
 

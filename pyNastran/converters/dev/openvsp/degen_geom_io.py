@@ -11,7 +11,7 @@ from pyNastran.converters.dev.openvsp.degen_geom import DegenGeom
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
-class DegenGeomIO(object):
+class DegenGeomIO(object):  # praga: no cover
     def __init__(self):
         pass
 

@@ -130,7 +130,7 @@ class Tecplot(FortranFormat):
                 i += 1
                 continue
             if line[0].isdigit() or line[0] == '-':
-                print('breaking...')
+                self.log.debug('breaking...')
                 break
             if 'TITLE' in line:
                 vars_found.append('TITLE')

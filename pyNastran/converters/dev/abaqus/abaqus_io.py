@@ -15,10 +15,6 @@ from vtk.util.numpy_support import numpy_to_vtk
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 #from pyNastran.gui.qt_files.result import Result
 from pyNastran.converters.dev.abaqus.abaqus import Abaqus
-#from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry, Cart3dResult
-
-#from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
-#from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
 
 
 class AbaqusIO(object):

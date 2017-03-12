@@ -1,7 +1,8 @@
+from __future__ import print_function
 from six.moves import range
 from numpy import zeros
 
-class Plot3d(object):
+class Plot3d(object):  # praga: no cover
     def __init__(self, log=None, debug=False):
         self.x = {}
         self.y = {}
