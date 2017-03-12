@@ -107,13 +107,13 @@ try:
     from pyNastran.converters.dev.avus.avus_io import AvusIO
     is_avus = True
 except ImportError:
-    raise
-    #class AvusIO(object):
-    #    """dummy avus gui class"""
-    #    def __init__(self):
-    #        """dummy gui init"""
-    #        pass
-    #is_avus = False
+    #raise
+    class AvusIO(object):
+        """dummy avus gui class"""
+        def __init__(self):
+            """dummy gui init"""
+            pass
+    is_avus = False
 
 try:
     from pyNastran.converters.tetgen.tetgen_io import TetgenIO
@@ -204,29 +204,29 @@ try:
     from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
     is_degen_geom = True
 except ImportError:
-    raise
-    #class DegenGeomIO(object):
-    #    """dummy degen_geom gui class"""
-    #    def __init__(self):
-    #        """dummy gui init"""
-    #        pass
-    #is_degen_geom = False
+    #raise
+    class DegenGeomIO(object):
+        """dummy degen_geom gui class"""
+        def __init__(self):
+            """dummy gui init"""
+            pass
+    is_degen_geom = False
 
 try:
     from pyNastran.converters.dev.abaqus.abaqus_io import AbaqusIO
     is_abaqus = True
 except ImportError:
-    raise
-    #class AbaqusIO(object):
-    #    """dummy abaqus gui class"""
-    #    def __init__(self):
-    #        """dummy gui init"""
-    #        pass
-    #is_abaqus = False
+    #raise
+    class AbaqusIO(object):
+        """dummy abaqus gui class"""
+        def __init__(self):
+            """dummy gui init"""
+            pass
+    is_abaqus = False
 
-try:
-    from pyNastran.converters.su2.su2_io import SU2_IO
-    is_su2 = True
-except ImportError:
-    raise
+#try:
+from pyNastran.converters.su2.su2_io import SU2_IO
+is_su2 = True
+#except ImportError:
+    #raise
 

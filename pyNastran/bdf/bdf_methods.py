@@ -218,7 +218,14 @@ class BDFMethods(BDFAttributes):
         """
         pid_eids = self.get_element_ids_dict_with_pids(property_ids)
 
+        mass_type_to_mass = {}
         pids_to_mass = {}
+        for eid, elem in iteritems(self.masses):
+            if elem.type not in mass_type_to_mass:
+                mass_type_to_mass[elem.type] = elem.Mass()
+            else:
+                mass_type_to_mass[elem.type] += elem.Mass()
+
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
             masses = []
@@ -258,7 +265,7 @@ class BDFMethods(BDFAttributes):
                 raise NotImplementedError(prop)
             if masses:
                 pids_to_mass[pid] = sum(masses)
-        return pids_to_mass
+        return pids_to_mass, mass_type_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
                         sym_axis=None, scale=None):

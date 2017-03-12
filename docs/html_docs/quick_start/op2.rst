@@ -7,7 +7,7 @@ Introduction
 ------------
 This is meant as a tutorial on how to use the pyNastran ``pyNastran.op2.op2.OP2`` class
 
-This page runs through examples relating to the OP2.  The OP2 is preferred as it is much faster and easier to parse.
+This page runs through examples relating to the OP2.  The OP2 is preferred as it is much faster and easier to parse.  How fast?  You can read a 2 GB OP2 in 4 seconds, an 8 GB file in 15 seconds, and a 60 GB file in 1-2 minutes.
 
 Note that a static model is a SOL 101 or SOL 144.  A dynamic/"transient" solution is any transient/modal/load step/frequency based solution (e.g. 103, 109, 145).
 
@@ -54,13 +54,13 @@ instantiate the model
       data: [t1, t2, t3, r1, r2, r3] shape=[1, 72, 6] dtype=float32
       gridTypes
       lsdvmns = [1]
-    
+
     op2.spc_forces[1]
       type=RealSPCForcesArray nnodes=72
       data: [t1, t2, t3, r1, r2, r3] shape=[1, 72, 6] dtype=float32
       gridTypes
       lsdvmns = [1]
-    
+
     op2.ctetra_stress[1]
       type=RealSolidStressArray nelements=186 nnodes=930
       nodes_per_element=5 (including centroid)
@@ -92,7 +92,7 @@ instantiate the model
                              Y   7.329372E+03  YZ   5.895411E+02   B  -7.168877E+01  LY-1.00-0.03-0.01
                              Z   2.454026E+04  ZX  -5.050599E+03   C   7.311813E+03  LZ 0.03-0.98 0.20
     1    MSC.NASTRAN JOB CREATED ON 28-JAN-12 AT 12:52:32                       JANUARY  28, 2012  pyNastran v0.7.1       PAGE     3
-    
+
     1                                        * * * END OF JOB * * *
 
 --------------------------------
@@ -167,7 +167,7 @@ since norm's axis parameter can be tricky, we'll double check the length
 
 we could also have found nnodes by using the attribute.
 
-It has an underscore because the object is also used for elements.
+It has an underscore because the object is also used for elements.  The underscore name is the SORT1 name, but your data may be in SORT2 format.
 
 .. code-block:: python
 
@@ -175,7 +175,7 @@ It has an underscore because the object is also used for elements.
     >>> assert nnodes == nnodes2
     >>> assert nnodes == 72
 
-additionally we know we have 72 nodes from the shape:
+Additionally, we know we have 72 nodes from the shape:
 
 .. code-block:: python
 
@@ -206,6 +206,11 @@ now we'll loop over the nodes and print the total deflection
 ----------------------------------
 Example 3: Eigenvector (transient)
 ----------------------------------
+NA
+
+--------------------------------
+Example 4: Solid Stress (static)
+--------------------------------
 This example will demonstate:
 
  - calculate von mises stress and max shear for solid elements for a static case for an OP2

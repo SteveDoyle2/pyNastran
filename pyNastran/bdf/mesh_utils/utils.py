@@ -351,18 +351,21 @@ def cmd_line_export_mcid():  # pragma: no cover
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
-    msg += "  bdf export_mcids IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n"
+    msg += "  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n"
     msg += '  bdf export_mcids -h | --help\n'
     msg += '  bdf export_mcids -v | --version\n'
     msg += '\n'
 
     msg += "Positional Arguments:\n"
     msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-    #msg += "  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
     msg += '\n'
 
     msg += 'Options:\n'
-    msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+    msg += "  -o OUT, --output  OUT_CSV_FILENAME  path to output CSV file\n\n"
+
+    msg += 'Data Suppression:\n'
+    msg += "  --no_x,  don't write the x axis\n"
+    msg += "  --no_y,  don't write the y axis\n"
 
     msg += 'Info:\n'
     msg += '  -h, --help      show this help message and exit\n'
@@ -379,10 +382,18 @@ def cmd_line_export_mcid():  # pragma: no cover
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        bdf_filename_out = 'mcids.bdf'
-    export_mcids(bdf_filename, bdf_filename_out)
+    csv_filename_out = data['--output']
+    if csv_filename_out is None:
+        csv_filename_out = 'mcids.csv'
+
+    export_xaxis = True
+    export_yaxis = True
+    if data['--no_x']:
+        export_xaxis = False
+    if data['--no_y']:
+        export_yaxis = False
+    export_mcids(bdf_filename, csv_filename_out,
+                 export_xaxis=export_xaxis, export_yaxis=export_yaxis)
 
 def cmd_line():  # pragma: no cover
     """command line interface to multiple other command line scripts"""
@@ -392,7 +403,7 @@ def cmd_line():  # pragma: no cover
     msg += '  bdf equivalence  IN_BDF_FILENAME EQ_TOL\n'
     msg += '  bdf renumber     IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
     msg += '  bdf mirror       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
-    msg += '  bdf export_mcids IN_BDF_FILENAME [-o OUT_GEOM_FILENAME]\n'
+    msg += '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
     if dev:
         msg += '  bdf bin          IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
     msg += '\n'
