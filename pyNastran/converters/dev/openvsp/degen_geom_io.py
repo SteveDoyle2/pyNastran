@@ -15,7 +15,7 @@ class DegenGeomIO(object):
     def __init__(self):
         pass
 
-    def get_degen_geom_wildcard_geometry_results_functions(self):# praga: no cover
+    def get_degen_geom_wildcard_geometry_results_functions(self):# pragma: no cover
         data = ('DegenGeom',
                 'DegenGeom (*.csv)', self.load_degen_geom_geometry,
                 #'Cart3d (*.triq)', self.load_cart3d_results,
@@ -24,7 +24,7 @@ class DegenGeomIO(object):
         return data
 
     def load_degen_geom_geometry(self, csv_filename, dirname,
-                                 name='main', plot=True):# praga: no cover
+                                 name='main', plot=True):# pragma: no cover
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -116,7 +116,7 @@ class DegenGeomIO(object):
         #raise NotImplementedError()
 
 
-    def _fill_degen_geom_case(self, cases, ID, model, nnodes, nelements):  # praga: no cover
+    def _fill_degen_geom_case(self, cases, ID, model, nnodes, nelements):  # pragma: no cover
         icase = 0
         itime = 0
         form = [

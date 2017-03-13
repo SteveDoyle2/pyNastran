@@ -11,7 +11,7 @@ from pyNastran.converters.dev.plot3d.plot3d import Plot3d
 
 raise NotImplementedError()
 
-class Plot3d_io(object):  # praga: no cover
+class Plot3d_io(object):  # pragma: no cover
     def __init__(self):
         pass
 

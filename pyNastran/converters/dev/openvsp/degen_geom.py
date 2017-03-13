@@ -10,13 +10,13 @@ from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
 
 class Geom(object):
     def __init__(self, name, lifting_surface_xyz,
-                 lifting_surface_nx, lifting_surface_ny):  # praga: no cover
+                 lifting_surface_nx, lifting_surface_ny):  # pragma: no cover
         self.name = name
         self.xyz = lifting_surface_xyz
         self.nx = lifting_surface_nx
         self.ny = lifting_surface_ny
 
-    def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):  # praga: no cover
+    def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):  # pragma: no cover
         nx = self.nx
         ny = self.ny
         nxy = nx * ny
@@ -42,7 +42,7 @@ class Geom(object):
         return nid0, eid, pid
 
     @property
-    def elements(self):  # praga: no cover
+    def elements(self):  # pragma: no cover
         nid0 = 1
         eidi = 0
         k = 0
@@ -69,12 +69,12 @@ class Geom(object):
 
 
 class DegenGeom(object):
-    def __init__(self, log=None, debug=False):  # praga: no cover
+    def __init__(self, log=None, debug=False):  # pragma: no cover
         self.log = log
         self.debug = debug
         self.components = defaultdict(list)
 
-    def write_bdf(self, bdf_filename):  # praga: no cover
+    def write_bdf(self, bdf_filename):  # pragma: no cover
         bdf_file = open(bdf_filename, 'wb')
         bdf_file.write('$pyNastran: VERSION=NX\n')
         bdf_file.write('CEND\n')
@@ -99,7 +99,7 @@ class DegenGeom(object):
                 nid, eid, pid = comp.write_bdf_file_obj(bdf_file, nid, eid, pid)
                 pid += 1
 
-    def write_panair(self, panair_filename, panair_case_filename):  # praga: no cover
+    def write_panair(self, panair_filename, panair_case_filename):  # pragma: no cover
         #panair_file = open(panair_filename, 'wb')
         pan = PanairGrid()
         pan.mach = 0.5
@@ -170,7 +170,7 @@ class DegenGeom(object):
         pan.write_panair(panair_filename)
         #self.nNetworks = i
 
-    def read_degen_geom(self, degen_geom_csv):  # praga: no cover
+    def read_degen_geom(self, degen_geom_csv):  # pragma: no cover
         f = open(degen_geom_csv)
         for i in range(4):
             line = f.readline()
@@ -285,7 +285,7 @@ class DegenGeom(object):
 
 
 
-def main():  # praga: no cover
+def main():  # pragma: no cover
     degen_geom_csv = 'model_DegenGeom.csv'
     d = DegenGeom()
     d.read_degen_geom(degen_geom_csv)
@@ -296,5 +296,5 @@ def main():  # praga: no cover
     d.write_panair(panair_filename, panair_case_filename)
 
 
-if __name__ == '__main__':  # praga: no cover
+if __name__ == '__main__':  # pragma: no cover
     main()

@@ -9,11 +9,11 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.openvsp.adb_reader import ADB_Reader
 
 
-class ADB_IO(object):  # praga: no cover
+class ADB_IO(object):  # pragma: no cover
     def __init__(self):
         pass
 
-    def get_openvsp_wildcard_geometry_results_functions(self):  # praga: no cover
+    def get_openvsp_wildcard_geometry_results_functions(self):  # pragma: no cover
         data = ('VSPAero',
                 'VSPAero (*.adb)', self.load_vsp_aero_geometry,
                 #'Cart3d (*.triq)', self.load_cart3d_results,
@@ -21,7 +21,7 @@ class ADB_IO(object):  # praga: no cover
                )
         return data
 
-    def _remove_old_adb_geometry(self, adb_filename):  # praga: no cover
+    def _remove_old_adb_geometry(self, adb_filename):  # pragma: no cover
         self.eid_map = {}
         self.nid_map = {}
         if adb_filename is None:
@@ -52,7 +52,7 @@ class ADB_IO(object):  # praga: no cover
         return skip_reading
 
     def load_vsp_aero_geometry(self, adb_filename, dirname,
-                               name='main', plot=True):  # praga: no cover
+                               name='main', plot=True):  # pragma: no cover
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -168,7 +168,7 @@ class ADB_IO(object):  # praga: no cover
         #raise NotImplementedError()
 
 
-    def _fill_adb_case(self, cases, ID, model, plot_wakes=False):  # praga: no cover
+    def _fill_adb_case(self, cases, ID, model, plot_wakes=False):  # pragma: no cover
         nxyz_nodes = model.nodes.shape[0]
         nxyz_elements = model.tris.shape[0]
         nwake_nodes = model.wake_xyz.shape[0]

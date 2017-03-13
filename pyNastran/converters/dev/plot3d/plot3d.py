@@ -4,7 +4,7 @@ from numpy import zeros
 from pyNastran.utils.log import get_logger2
 
 
-class Plot3d(object):  # praga: no cover
+class Plot3d(object):  # pragma: no cover
     def __init__(self, log=None, debug=False):
         self.x = {}
         self.y = {}

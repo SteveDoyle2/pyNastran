@@ -32,7 +32,7 @@ model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 
 def run_model(bdf_name=None, op2_name=None, f06_name=None,
               op4_name=None, dynamic_vars=None, f06_has_weight=True,
-              vectorized=False, encoding=None):  # praga: no cover
+              vectorized=False, encoding=None):  # pragma: no cover
     outputs = []
     if bdf_name:
         bdf = BDF(debug=False, log=None)
@@ -70,7 +70,7 @@ def run_model(bdf_name=None, op2_name=None, f06_name=None,
 
 class TestF06(unittest.TestCase):
 
-    def test_blade2dv_fatal_1(self):  # praga: no cover
+    def test_blade2dv_fatal_1(self):  # pragma: no cover
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         f06 = F06(debug=False, log=None)
         with self.assertRaises(AttributeError):
@@ -78,7 +78,7 @@ class TestF06(unittest.TestCase):
         with self.assertRaises(FatalError):
             f06.read_f06(f06_filename)
 
-    def test_blade2dv_fatal_2(self):  # praga: no cover
+    def test_blade2dv_fatal_2(self):  # pragma: no cover
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = run_model(bdfname2, dynamic_vars=dynamic_vars)
@@ -145,7 +145,7 @@ class TestF06(unittest.TestCase):
         msg = 'IQ=%s\nexact=%s' % (str(IQ), str(IQ_exact))
         self.assertTrue(array_equiv(IQ, IQ_exact), msg=msg)
 
-    def test_blade2dv_fatal_3(self):  # praga: no cover
+    def test_blade2dv_fatal_3(self):  # pragma: no cover
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = run_model(bdfname2, dynamic_vars=dynamic_vars)
@@ -208,7 +208,7 @@ class TestF06(unittest.TestCase):
         IQ_exact = array([[0.04790044, 0.9197143, 0.8740444]])
         self.assertTrue(array_equiv(IQ, IQ_exact))
 
-    def test_complex_tets_1(self):  # praga: no cover
+    def test_complex_tets_1(self):  # pragma: no cover
         bdfname = None
         bdfname = os.path.join(model_path, 'complex', 'tet10', 'Simple_Example.bdf')
         f06name = os.path.join(model_path, 'complex', 'tet10', 'simple_example.f06')
@@ -227,7 +227,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.chexa_strain) == 0, len(f06.chexa_strain)
         assert len(f06.chexa_stress) == 0, len(f06.chexa_stress)
 
-    def test_beam_modes_1(self):  # praga: no cover
+    def test_beam_modes_1(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
         op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m1.op2')
         f06name = os.path.join(model_path, 'beam_modes', 'beam_modes.f06')
@@ -252,7 +252,7 @@ class TestF06(unittest.TestCase):
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
-    def test_beam_modes_2(self):  # praga: no cover
+    def test_beam_modes_2(self):  # pragma: no cover
         bdfname = None
         op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m2.op2')
         f06name = None
@@ -263,7 +263,7 @@ class TestF06(unittest.TestCase):
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     #@unittest.expectedFailure - fails if subtitle check is different
-    def test_bar3truss_1(self):  # praga: no cover
+    def test_bar3truss_1(self):  # pragma: no cover
         bdfname = None
         op2name = None
         titles = ['', '', '', 'THIS_IS_A_BAD_TITLE', '']
@@ -304,7 +304,7 @@ class TestF06(unittest.TestCase):
             assert len(f06.chexa_stress) == 0, len(f06.chexa_stress)
 
 
-    def test_fsi_1(self):  # praga: no cover
+    def test_fsi_1(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'fsi', 'fsi.bdf')
         f06name = os.path.join(model_path, 'fsi', 'fsi.f06')
         op2name = os.path.join(model_path, 'fsi', 'fsi.op2')
@@ -313,7 +313,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.eigenvectors) == 1, len(f06.eigenvectors)  # 1 is correct
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)  # 1 is correct
 
-    def test_cbush_1(self):  # praga: no cover
+    def test_cbush_1(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'cbush', 'cbush.dat')
         f06name = os.path.join(model_path, 'cbush', 'cbush.f06')
         op2name = os.path.join(model_path, 'cbush', 'cbush.op2')
@@ -327,7 +327,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.cbush_strain) == 0, len(f06.cbush_strain)  # 1 is correct
         assert len(f06.cbush_stress) == 0, len(f06.cbush_stress)  # 1 is correct
 
-    def test_solid_shell_bar_1(self):  # praga: no cover
+    def test_solid_shell_bar_1(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         f06name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.f06')
         op2name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
@@ -372,7 +372,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.chexa_stress) == 1, len(f06.chexa_stress)
 
     #@unittest.expectedFailure  # fails
-    def test_solid_shell_bar_2(self):  # praga: no cover
+    def test_solid_shell_bar_2(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
         f06name = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.f06')
         op2name = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.op2')
@@ -428,7 +428,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.chexa_strain) == 1, len(f06.chexa_strain)    # 1 is correct
         assert len(f06.chexa_stress) == 1, len(f06.chexa_stress)    # 1 is correct
 
-    def test_failure_index(self):  # praga: no cover
+    def test_failure_index(self):  # pragma: no cover
         bdfname = None
         f06name1 = os.path.join(test_path, 'failure_index_test.f06')
         f06name2 = os.path.join(test_path, 'failure_index_test.test_f06.f06')
@@ -459,7 +459,7 @@ class TestF06(unittest.TestCase):
         #T3 = disp.translations[frequency][21][2]
         #self.assertEqual(T3, -1.456074E+02 + -6.035482E+00j)  # T3
 
-    def test_plate_openmdao(self):  # praga: no cover
+    def test_plate_openmdao(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'plate', 'plate_openmdao.bdf')
         f06name = os.path.join(model_path, 'plate', 'plate.f06')
         op2name = os.path.join(model_path, 'plate', 'plate.op2')
@@ -501,7 +501,7 @@ class TestF06(unittest.TestCase):
         with self.assertRaises(SyntaxError):
             bdf3 = run_model(bdfname, dynamic_vars=dynamic_vars)
 
-    def test_complex_displacement(self):  # praga: no cover
+    def test_complex_displacement(self):  # pragma: no cover
         bdfname = None
         f06name1 = os.path.join(test_path, 'complex_displacement.f06')
         f06name2 = os.path.join(test_path, 'complex_displacement.test_f06.f06')
@@ -524,7 +524,7 @@ class TestF06(unittest.TestCase):
         #f06.write_f06(f06name2, quiet=True)
         #os.remove(f06name2)
 
-    def test_eigenvectors1(self):  # praga: no cover
+    def test_eigenvectors1(self):  # pragma: no cover
         bdfname = None
         f06name = os.path.join(test_path, 'test_no_rotations.f06')
         op2name = None
@@ -541,7 +541,7 @@ class TestF06(unittest.TestCase):
         self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][2], array([0., 0., 0.])))
         self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][4], array([0., 0., 0.])))
 
-    def test_eigenvectors2(self):  # praga: no cover
+    def test_eigenvectors2(self):  # pragma: no cover
         bdfname = None
         f06name = os.path.join(test_path, 'test_with_rotations.f06')
         op2name = None
@@ -558,7 +558,7 @@ class TestF06(unittest.TestCase):
         self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][2], array([1., 1., 1.])))
         self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][4], array([1., 1., 1.])))
 
-    def test_plate_vonmises(self):  # praga: no cover
+    def test_plate_vonmises(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'plate', 'plate.bdf')
         f06name = os.path.join(model_path, 'plate', 'plate.f06')
         op2name = os.path.join(model_path, 'plate', 'plate.op2')

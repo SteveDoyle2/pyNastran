@@ -29,6 +29,6 @@ class TestAbaqus(unittest.TestCase):
         read_abaqus(abaqus_filename, debug=False)
         os.remove(abaqus_filename)
 
-if __name__ == '__main__':  #  praga: no cover
+if __name__ == '__main__':  #  pragma: no cover
     unittest.main()
 
