@@ -1,15 +1,15 @@
 """
 Defines:
- - nodes, bars = export_mcids(bdf_filename, csv_filename_out=None)
+ - nodes, bars = export_mcids(bdf_filename, csv_filename=None)
 """
 from __future__ import print_function
-from six import string_types, iteritems
+from six import integer_types, string_types, iteritems
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf
 
 
-def export_mcids(bdf_filename, csv_filename_out=None,
-                 export_xaxis=True, export_yaxis=True,
+def export_mcids(bdf_filename, csv_filename=None,
+                 eids=None, export_xaxis=True, export_yaxis=True,
                  iply=0):
     """
     Exports the element material coordinates systems, so you can
@@ -19,15 +19,17 @@ def export_mcids(bdf_filename, csv_filename_out=None,
     ----------
     bdf_filename : str/BDF
         a bdf filename or BDF model
-    csv_filename_out : str
+    csv_filename : str; default=None
         the path to the output csv
+    eids : List[int]
+        the element ids to consider
     export_xaxis : bool; default=True
         export the x-axis
     export_yaxis : bool; default=True
         export the x-axis
     iply : int; default=0
-        TDOO: not done!
-        the ply to consider; unused
+        TDOO: not validated
+        the ply to consider
 
         PSHELL
         ======
@@ -74,14 +76,20 @@ def export_mcids(bdf_filename, csv_filename_out=None,
     nid = 1
     nodes = []
     bars = []
-    consider_property_rotation = False  # not tested
+    consider_property_rotation = True  # not tested
     export_both_axes = export_xaxis and export_yaxis
     assert export_xaxis or export_yaxis
 
-    for eidi, elem in sorted(iteritems(model.elements)):
+    if eids is None:
+        elements = model.elements
+    else:
+        elements = {eid : model.elements[eid] for eid in eids}
+
+    pids_failed = set([])
+    for eidi, elem in sorted(iteritems(elements)):
         if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
-            prop = elem.pid_ref
-            if prop.type == 'PSHELL':
+            pid_ref = elem.pid_ref
+            if pid_ref.type == 'PSHELL':
                 mid = prop.mid1_ref
                 if mid.type in ['MAT1']:
                     continue
@@ -89,10 +97,10 @@ def export_mcids(bdf_filename, csv_filename_out=None,
                     pass
                 else:
                     raise NotImplementedError(prop)
-            elif prop.type in ['PCOMP', 'PCOMPG']:
+            elif pid_ref.type in ['PCOMP', 'PCOMPG']:
                 pass
             else:
-                raise NotImplementedError(prop)
+                raise NotImplementedError(pid_ref)
             xyz1 = elem.nodes_ref[0].get_position()
             xyz2 = elem.nodes_ref[1].get_position()
             xyz3 = elem.nodes_ref[2].get_position()
@@ -105,33 +113,13 @@ def export_mcids(bdf_filename, csv_filename_out=None,
             dxyz = np.mean([dxyz21, dxyz32, dxyz43, dxyz14]) / 2.
             centroid, imat, jmat, normal = elem.material_coordinate_system()
 
-            if consider_property_rotation:
-                # TODO: not tested
-                pid_ref = elem.pid_ref
-                if pid_ref.type == 'PSHELL':
-                    thetad = 0.0
-                    if isinstance(elem.theta_mcid, float):
-                        thetad = elem.theta_mcid
-                elif pid_ref.type == 'PCOMP':
-                    thetad = pid_ref.thetas[iply]
-                else:
-                    msg = 'property type=%r is not supported\n%s%s' % (
-                        elem.pid_ref.type, elem, elem.pid_ref)
-                    raise NotImplementedError(msg)
-                theta = np.radians(thetad)
-                c = np.cos(theta)
-                s = np.sin(theta)
-
-                R = np.array([
-                    [c, -s, 0.],
-                    [s, c, 0.],
-                    [0., 0., 1.]
-                ], dtype='float64')
-
-                R1 = np.vstack([imat, jmat, _normal])
-                R2 = np.dot(R, R1)
-                imat2 = R2[0, :]
-                jmat2 = R2[1, :]
+            try:
+                imat, jmat = _rotate_mcid(
+                    elem, pid_ref, iply, imat, jmat, normal,
+                    consider_property_rotation=consider_property_rotation)
+            except IndexError:
+                pids_failed.add(pid_ref.pid)
+                continue
 
             iaxis = centroid + imat * dxyz
             jaxis = centroid + jmat * dxyz
@@ -140,19 +128,19 @@ def export_mcids(bdf_filename, csv_filename_out=None,
                                      export_both_axes, export_xaxis)
 
         elif elem.type in ['CTRIA3']:
-            prop = elem.pid_ref
-            if prop.type == 'PSHELL':
-                mid = prop.mid1_ref
+            pid_ref = elem.pid_ref
+            if pid_ref.type == 'PSHELL':
+                mid = pid_ref.mid1_ref
                 if mid.type in ['MAT1']:
                     continue
                 elif mid.type in ['MAT8']:
                     pass
                 else:
-                    raise NotImplementedError(prop)
-            elif prop.type in ['PCOMP', 'PCOMPG']:
+                    raise NotImplementedError(pid_ref)
+            elif pid_ref.type in ['PCOMP', 'PCOMPG']:
                 pass
             else:
-                raise NotImplementedError(prop)
+                raise NotImplementedError(pid_ref)
 
             xyz1 = elem.nodes_ref[0].get_position()
             xyz2 = elem.nodes_ref[1].get_position()
@@ -164,33 +152,13 @@ def export_mcids(bdf_filename, csv_filename_out=None,
             dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
             centroid, imat, jmat, normal = elem.material_coordinate_system()
 
-            if consider_property_rotation:
-                # TODO: not tested
-                pid_ref = elem.pid_ref
-                if pid_ref.type == 'PSHELL':
-                    thetad = 0.0
-                    if isinstance(elem.theta_mcid, float):
-                        thetad = elem.theta_mcid
-                elif pid_ref.type == 'PCOMP':
-                    thetad = pid_ref.thetas[iply]
-                else:
-                    msg = 'property type=%r is not supported\n%s%s' % (
-                        elem.pid_ref.type, elem, elem.pid_ref)
-                    raise NotImplementedError(msg)
-                theta = np.radians(thetad)
-                c = np.cos(theta)
-                s = np.sin(theta)
-
-                R = np.array([
-                    [c, -s, 0.],
-                    [s, c, 0.],
-                    [0., 0., 1.]
-                ], dtype='float64')
-
-                R1 = np.vstack([imat, jmat, _normal])
-                R2 = np.dot(R, R1)
-                imat2 = R2[0, :]
-                jmat2 = R2[1, :]
+            try:
+                imat, jmat = _rotate_mcid(
+                    elem, pid_ref, iply, imat, jmat, normal,
+                    consider_property_rotation=consider_property_rotation)
+            except IndexError:
+                pids_failed.add(pid_ref.pid)
+                continue
 
             iaxis = centroid + imat * dxyz
             jaxis = centroid + jmat * dxyz
@@ -200,15 +168,69 @@ def export_mcids(bdf_filename, csv_filename_out=None,
         elif elem.type in skip_types:
             pass
         else:
-            raise NotImplementedError('element type=%r is not supported\n%s' % (elem.type, elem))
+            msg = 'element type=%r is not supported\n%s' % (elem.type, elem)
+            raise NotImplementedError(msg)
 
-    if csv_filename_out:
-        with open(csv_filename_out, 'w') as out_file:
+    if len(nodes) == 0:
+        msg = 'No material coordinate systems could be found\n'
+        pids_failed_list = list(pids_failed)
+        pids_failed_list.sort()
+        pid_str = [str(pid) for pid in pids_failed_list]
+        msg += 'iPly=%r; Property IDs failed: [%s]\n' % (iply, ', '.join(pid_str))
+
+        for pid in pids_failed_list:
+            prop = model.properties[pid]
+            msg += 'Property %s:\n%s\n' % (pid, prop)
+        raise RuntimeError(msg)
+    if csv_filename:
+        with open(csv_filename, 'w') as out_file:
             for node in nodes:
                 out_file.write('GRID,%i,%s,%s,%s\n' % node)
             for bari in bars:
                 out_file.write('BAR,%i,%i,%i\n' % bari)
     return nodes, bars
+
+def _rotate_mcid(elem, pid_ref, iply, imat, jmat, normal,
+                 consider_property_rotation=True):
+    """rotates a material coordinate system"""
+    if consider_property_rotation:
+        # TODO: not tested
+        pid_ref = elem.pid_ref
+        if pid_ref.type == 'PSHELL':
+            theta_mcid = elem.theta_mcid
+            if isinstance(theta_mcid, float):
+                thetad = theta_mcid
+            elif isinstance(theta_mcid, integer_types):
+                return imat, jmat
+            else:
+                msg = 'theta/mcid=%r is not an int/float; type=%s\n%s' % (
+                    theta_mcid, type(theta_mcid), elem)
+                raise TypeError(msg)
+        elif pid_ref.type in ['PCOMP', 'PCOMPG']:
+            #print(pid_ref.nplies)
+            thetad = pid_ref.get_theta(iply)
+        else:
+            msg = 'property type=%r is not supported\n%s%s' % (
+                elem.pid_ref.type, elem, elem.pid_ref)
+            raise NotImplementedError(msg)
+        if thetad == 0.0:  # catches on mcid=0 as well
+            return imat, jmat
+
+        theta = np.radians(thetad)
+        c = np.cos(theta)
+        s = np.sin(theta)
+
+        R = np.array([
+            [c, -s, 0.],
+            [s, c, 0.],
+            [0., 0., 1.]
+            ], dtype='float64')
+
+        R1 = np.vstack([imat, jmat, normal])
+        R2 = np.dot(R, R1)  ## TODO: validate
+        imat2 = R2[0, :]
+        jmat2 = R2[1, :]
+        return imat2, jmat2
 
 def _add_elements(nid, eid, nodes, bars,
                   centroid, iaxis, jaxis,

@@ -1561,7 +1561,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     picker = self.cell_picker
                     nx = max((xmax - xmin) // 100, 1)
                     ny = max((ymax - ymin) // 100, 1)
-                    print('nx=%s ny=%s' % (nx, ny))
+                    #print('nx=%s ny=%s' % (nx, ny))
                     for xi in range(xmin, xmax, nx):
                         for yi in range(ymin, ymax, ny):
                             picker.Pick(xi, yi, 0, self.rend)
@@ -1573,12 +1573,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     pick_list = self.area_picker.GetPickList()
 
                     props = self.area_picker.GetProp3Ds()
-                    print('props=', props)
-                    print('data=', data)
+                    #print('props=', props)
+                    #print('data=', data)
                     for i in range(data.GetNumberOfCells()):
                         c = data.GetCell(i)
 
-                    print('pick_list=', pick_list)
+                    #print('pick_list=', pick_list)
                     for i in range(props.GetNumberOfItems()):
                         prop = props.GetNextProp3D()
                         print("Picked prop: ", prop)

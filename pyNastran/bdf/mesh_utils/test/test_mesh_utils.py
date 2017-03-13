@@ -16,6 +16,7 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
+from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
@@ -442,6 +443,39 @@ class TestMeshUtils(unittest.TestCase):
         read_bdf(bdf_filename_out1, log=log)
         read_bdf(bdf_filename_out2, log=log)
         read_bdf(bdf_filename_out3, log=log)
+
+    def test_export_mcids(self):
+        """creates material coordinate systems"""
+        bdf_filename = os.path.abspath(os.path.join(
+            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+        csv_filename = os.path.abspath(os.path.join(
+            pkg_path, '..', 'models', 'bwb', 'mcids.csv'))
+        export_mcids(bdf_filename, csv_filename,
+                     export_xaxis=True, export_yaxis=True,
+                     iply=9)
+
+        model = read_bdf(bdf_filename, xref=False)
+        model.safe_cross_reference()
+
+        eids = [1204, 1211]
+        export_mcids(model, csv_filename=None, eids=eids,
+                     export_xaxis=True, export_yaxis=True,
+                     iply=9)
+        export_mcids(model, csv_filename=None, eids=eids,
+                     export_xaxis=True, export_yaxis=False,
+                     iply=9)
+        export_mcids(model, csv_filename=None, eids=eids,
+                     export_xaxis=False, export_yaxis=True,
+                     iply=9)
+        with self.assertRaises(AssertionError):
+            export_mcids(model, csv_filename=None, eids=eids,
+                         export_xaxis=False, export_yaxis=False,
+                         iply=9)
+
+        with self.assertRaises(RuntimeError):
+            export_mcids(model, csv_filename, eids=eids,
+                         export_xaxis=True, export_yaxis=True,
+                         iply=10)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

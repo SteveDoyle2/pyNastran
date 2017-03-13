@@ -382,9 +382,9 @@ def cmd_line_export_mcid():  # pragma: no cover
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
-    csv_filename_out = data['--output']
-    if csv_filename_out is None:
-        csv_filename_out = 'mcids.csv'
+    csv_filename = data['--output']
+    if csv_filename is None:
+        csv_filename = 'mcids.csv'
 
     export_xaxis = True
     export_yaxis = True
@@ -392,7 +392,7 @@ def cmd_line_export_mcid():  # pragma: no cover
         export_xaxis = False
     if data['--no_y']:
         export_yaxis = False
-    export_mcids(bdf_filename, csv_filename_out,
+    export_mcids(bdf_filename, csv_filename,
                  export_xaxis=export_xaxis, export_yaxis=export_yaxis)
 
 def cmd_line():  # pragma: no cover
