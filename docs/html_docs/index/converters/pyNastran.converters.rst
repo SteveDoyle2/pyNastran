@@ -2,6 +2,16 @@
 pyNastran/converters
 ####################
 
+:mod:`abaqus` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.converters.abaqus
+
+.. automodule:: pyNastran.converters.abaqus
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`cart3d` Module
 -----------------------
 
