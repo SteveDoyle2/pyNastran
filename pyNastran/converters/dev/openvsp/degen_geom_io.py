@@ -11,11 +11,11 @@ from pyNastran.converters.dev.openvsp.degen_geom import DegenGeom
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
-class DegenGeomIO(object):  # praga: no cover
+class DegenGeomIO(object):
     def __init__(self):
         pass
 
-    def get_degen_geom_wildcard_geometry_results_functions(self):
+    def get_degen_geom_wildcard_geometry_results_functions(self):# praga: no cover
         data = ('DegenGeom',
                 'DegenGeom (*.csv)', self.load_degen_geom_geometry,
                 #'Cart3d (*.triq)', self.load_cart3d_results,
@@ -23,7 +23,8 @@ class DegenGeomIO(object):  # praga: no cover
                )
         return data
 
-    def load_degen_geom_geometry(self, csv_filename, dirname, name='main', plot=True):
+    def load_degen_geom_geometry(self, csv_filename, dirname,
+                                 name='main', plot=True):# praga: no cover
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -83,7 +84,8 @@ class DegenGeomIO(object):  # praga: no cover
             elem.GetPointIds().SetId(1, node_ids[1])
             elem.GetPointIds().SetId(2, node_ids[2])
             elem.GetPointIds().SetId(3, node_ids[3])
-            self.grid.InsertNextCell(9, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+            #elem.GetCellType() = 5  # vtkTriangle
+            self.grid.InsertNextCell(9, elem.GetPointIds())
 
         self.grid.SetPoints(points)
         self.grid.Modified()
@@ -114,7 +116,7 @@ class DegenGeomIO(object):  # praga: no cover
         #raise NotImplementedError()
 
 
-    def _fill_degen_geom_case(self, cases, ID, model, nnodes, nelements):
+    def _fill_degen_geom_case(self, cases, ID, model, nnodes, nelements):  # praga: no cover
         icase = 0
         itime = 0
         form = [

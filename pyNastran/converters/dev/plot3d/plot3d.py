@@ -1,6 +1,8 @@
 from __future__ import print_function
 from six.moves import range
 from numpy import zeros
+from pyNastran.utils.log import get_logger2
+
 
 class Plot3d(object):  # praga: no cover
     def __init__(self, log=None, debug=False):
@@ -9,20 +11,20 @@ class Plot3d(object):  # praga: no cover
         self.z = {}
         self.block_shapes = {}
 
-        self.log = log
+        self.log = get_logger2(log=log, debug=debug)
 
-    def read_plot3d(self, p3d_name):
+    def read_plot3d(self, p3d_name):  # pragma: no cover
         self.read_plot3d_ascii(p3d_name)
 
-    def read_plot3d_ascii(self, p3d_name):
-        f = open(p3d_name, 'r')
-        sline = f.readline().strip().split()
+    def read_plot3d_ascii(self, p3d_name):  # pragma: no cover
+        p3d_file = open(p3d_name, 'r')
+        sline = p3d_file.readline().strip().split()
         assert len(sline) == 1, sline
         nblocks = int(sline[0])
 
         npoints = 0
         for i in range(nblocks):
-            nx, ny, nz = f.readline().strip().split()
+            nx, ny, nz = p3d_file.readline().strip().split()
             nx = int(nx)
             ny = int(ny)
             nz = int(nz)
@@ -40,7 +42,7 @@ class Plot3d(object):  # praga: no cover
         nxyz = len(block)
         nxyzi2 = None
         while nleft > 0:
-            sline = f.readline().strip().split()
+            sline = p3d_file.readline().strip().split()
             floats = [float(s) for s in sline]
             nxyzi2 = nxyzi + len(floats)
             block[nxyzi : nxyzi2] = floats
@@ -52,13 +54,13 @@ class Plot3d(object):  # praga: no cover
                 #block = self.blocks[iblock]
                 print("reshaping...", self.block_shapes[iblock])
                 nleft -= nxyz
-                b = block.reshape(self.block_shapes[iblock])
+                blocki = block.reshape(self.block_shapes[iblock])
                 if ixyz == 0:
-                    self.x[iblock] = b
+                    self.x[iblock] = blocki
                 elif ixyz == 1:
-                    self.y[iblock] = b
+                    self.y[iblock] = blocki
                 elif ixyz == 2:
-                    self.z[iblock] = b
+                    self.z[iblock] = blocki
                 else:
                     raise RuntimeError()
 

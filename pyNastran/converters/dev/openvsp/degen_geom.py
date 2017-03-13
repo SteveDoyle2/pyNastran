@@ -1,21 +1,22 @@
 from __future__ import print_function
-from six import iteritems
 from copy import deepcopy
 from collections import defaultdict
+from six import iteritems
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
 
 
-class Geom(object):  # praga: no cover
-    def __init__(self, name, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny):
+class Geom(object):
+    def __init__(self, name, lifting_surface_xyz,
+                 lifting_surface_nx, lifting_surface_ny):  # praga: no cover
         self.name = name
         self.xyz = lifting_surface_xyz
         self.nx = lifting_surface_nx
         self.ny = lifting_surface_ny
 
-    def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):
+    def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):  # praga: no cover
         nx = self.nx
         ny = self.ny
         nxy = nx * ny
@@ -41,7 +42,7 @@ class Geom(object):  # praga: no cover
         return nid0, eid, pid
 
     @property
-    def elements(self):
+    def elements(self):  # praga: no cover
         nid0 = 1
         eidi = 0
         k = 0
@@ -62,17 +63,18 @@ class Geom(object):  # praga: no cover
         return elements
 
     def __repr__(self):
-        msg = 'Geom(name=%s, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny)' % (self.name)
+        msg = ('Geom(name=%s, lifting_surface_xyz, '
+               'lifting_surface_nx, lifting_surface_ny)' % (self.name))
         return msg
 
 
-class DegenGeom(object):  # praga: no cover
-    def __init__(self, log=None, debug=False):
+class DegenGeom(object):
+    def __init__(self, log=None, debug=False):  # praga: no cover
         self.log = log
         self.debug = debug
         self.components = defaultdict(list)
 
-    def write_bdf(self, bdf_filename):
+    def write_bdf(self, bdf_filename):  # praga: no cover
         bdf_file = open(bdf_filename, 'wb')
         bdf_file.write('$pyNastran: VERSION=NX\n')
         bdf_file.write('CEND\n')
@@ -97,7 +99,7 @@ class DegenGeom(object):  # praga: no cover
                 nid, eid, pid = comp.write_bdf_file_obj(bdf_file, nid, eid, pid)
                 pid += 1
 
-    def write_panair(self, panair_filename, panair_case_filename):
+    def write_panair(self, panair_filename, panair_case_filename):  # praga: no cover
         #panair_file = open(panair_filename, 'wb')
         pan = PanairGrid()
         pan.mach = 0.5
@@ -159,7 +161,8 @@ class DegenGeom(object):  # praga: no cover
                     z = z.reshape((2, imid+1))
 
                     #print(xend)
-                    patch = PanairPatch(pan.nNetworks, namei, kt, cpNorm, x.T, y.T, z.T, self.log)
+                    patch = PanairPatch(pan.nNetworks, namei, kt, cpNorm,
+                                        x.T, y.T, z.T, self.log)
                     pan.patches[i] = patch
                     pan.nNetworks += 1
                     i += 1
@@ -167,7 +170,7 @@ class DegenGeom(object):  # praga: no cover
         pan.write_panair(panair_filename)
         #self.nNetworks = i
 
-    def read_degen_geom(self, degen_geom_csv):
+    def read_degen_geom(self, degen_geom_csv):  # praga: no cover
         f = open(degen_geom_csv)
         for i in range(4):
             line = f.readline()
@@ -183,7 +186,9 @@ class DegenGeom(object):  # praga: no cover
                 # nnodes -> 6*33=198
                 # nelements -> 160
                 f.readline()
-                surface_node, lifting_surface_nx, lifting_surface_ny = f.readline().strip().split(',')
+
+                line = f.readline.strip()
+                surface_node, lifting_surface_nx, lifting_surface_ny = line.split(',')
                 assert surface_node == 'SURFACE_NODE', surface_node
                 lifting_surface_nx = int(lifting_surface_nx)
                 lifting_surface_ny = int(lifting_surface_ny)
@@ -211,7 +216,6 @@ class DegenGeom(object):  # praga: no cover
                     normals[i, :] = [nx, ny, nz]
                     area[i] = areai
 
-
                 # TODO: the plate is very unclear...it's 6 lines with 3 normals on each line
                 #       but 6*17?
                 # DegenGeom Type,nXsecs,nPnts/Xsec
@@ -233,7 +237,15 @@ class DegenGeom(object):  # praga: no cover
 
                 # DegenGeom Type, nXsecs
                 # STICK_NODE, 6
-                # lex,ley,lez,tex,tey,tez,cgShellx,cgShelly,cgShellz,cgSolidx,cgSolidy,cgSolidz,toc,tLoc,chord,Ishell11,Ishell22,Ishell12,Isolid11,Isolid22,Isolid12,sectArea,sectNormalx,sectNormaly,sectNormalz,perimTop,perimBot,u,t00,t01,t02,t03,t10,t11,t12,t13,t20,t21,t22,t23,t30,t31,t32,t33,it00,it01,it02,it03,it10,it11,it12,it13,it20,it21,it22,it23,it30,it31,it32,it33,
+                #(lex, ley, lez, tex, tey, tez, cgShellx, cgShelly, cgShellz,
+                 #cgSolidx, cgSolidy, cgSolidz, toc, tLoc, chord,
+                 #Ishell11, Ishell22, Ishell12, Isolid11, Isolid22, Isolid12,
+                 #sectArea, sectNormalx, sectNormaly, sectNormalz,
+                 #perimTop, perimBot, u,
+                 #t00, t01, t02, t03, t10, t11, t12, t13,
+                 #t20, t21, t22, t23, t30, t31, t32, t33,
+                 #it00, it01, it02, it03, it10, it11, it12, it13,
+                 #it20, it21, it22, it23, it30, it31, it32, it33)
                 f.readline()
                 stick_node, nx = f.readline().split(',')
                 assert stick_node == 'STICK_NODE', stick_node
@@ -255,7 +267,10 @@ class DegenGeom(object):  # praga: no cover
 
                 # DegenGeom Type
                 # POINT
-                # vol,volWet,area,areaWet,Ishellxx,Ishellyy,Ishellzz,Ishellxy,Ishellxz,Ishellyz,Isolidxx,Isolidyy,Isolidzz,Isolidxy,Isolidxz,Isolidyz,cgShellx,cgShelly,cgShellz,cgSolidx,cgSolidy,cgSolidz
+                #(vol, volWet, area, areaWet,
+                 #Ishellxx, Ishellyy, Ishellzz, Ishellxy, Ishellxz, Ishellyz,
+                 #Isolidxx, Isolidyy, Isolidzz, Isolidxy, Isolidxz, Isolidyz,
+                 #cgShellx, cgShelly, cgShellz, cgSolidx, cgSolidy, cgSolidz)
                 f.readline()
                 point = f.readline().strip()
                 assert point == 'POINT', point
@@ -264,7 +279,8 @@ class DegenGeom(object):  # praga: no cover
                 f.readline()
             else:
                 raise RuntimeError(line)
-            component = Geom(name, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny)
+            component = Geom(name, lifting_surface_xyz,
+                             lifting_surface_nx, lifting_surface_ny)
             self.components[name].append(component)
 
 

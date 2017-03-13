@@ -1,14 +1,15 @@
-raise NotImplementedError()
-
+from __future__ import print_function
 from six import iteritems
 from six.moves import range
 import vtk
 from vtk import vtkQuad
-from pyNastran.converters.dev.plot3d.plot3d import Plot3d
 
 from numpy import zeros, array, cross, dot
 from numpy.linalg import det, norm
 
+from pyNastran.converters.dev.plot3d.plot3d import Plot3d
+
+raise NotImplementedError()
 
 class Plot3d_io(object):  # praga: no cover
     def __init__(self):
@@ -40,7 +41,8 @@ class Plot3d_io(object):  # praga: no cover
         for iblock, shape in sorted(iteritems(model.block_shapes)):
             npoints += shape[0] * shape[1] * shape[2]
             nelements += (shape[0] - 1)  * (shape[1] - 1) * (shape[2] - 1)
-        nblocks = iblock
+
+        nblocks = len(model.block_shapes)
         self.nNodes = npoints
         self.nElements = nelements
 
@@ -75,9 +77,8 @@ class Plot3d_io(object):  # praga: no cover
             for k in range(nk):
                 for j in range(nj):
                     for i in range(ni):
-                        points.InsertPoint(nid, x[i, j, 0],
-                                                y[i, j, 0],
-                                                z[i, j, 0])
+                        points.InsertPoint(
+                            nid, x[i, j, 0], y[i, j, 0], z[i, j, 0])
                         nid += 1
 
             for j in range(nj - 1):
@@ -154,7 +155,7 @@ class Plot3d_io(object):  # praga: no cover
         Yn = zeros(len(nodes), 'float64')
         Zn = zeros(len(nodes), 'float64')
 
-        for i,element in enumerate(elements):
+        for i, element in enumerate(elements):
             p1, p2, p3, p4 = element
             P1 = array(nodes[p1])
             P2 = array(nodes[p2])
