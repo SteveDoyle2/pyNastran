@@ -5,7 +5,7 @@ from __future__ import print_function
 from six import iteritems
 import numpy as np
 from pyNastran.utils.log import get_logger2
-from pyNastran.converters.dev.abaqus.abaqus_cards import Material, Part, SolidSection
+from pyNastran.converters.abaqus.abaqus_cards import Material, Part, SolidSection
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
     """reads an abaqus model"""

@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from pyNastran.converters.dev.abaqus.abaqus import read_abaqus
+from pyNastran.converters.abaqus.abaqus import read_abaqus
 
 class TestAbaqus(unittest.TestCase):
     def test_abaqus_1(self):

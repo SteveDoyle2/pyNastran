@@ -14,7 +14,7 @@ from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 #from pyNastran.gui.qt_files.result import Result
-from pyNastran.converters.dev.abaqus.abaqus import Abaqus
+from pyNastran.converters.abaqus.abaqus import Abaqus
 
 
 class AbaqusIO(object):

@@ -18,7 +18,7 @@ import numpy as np
 np.seterr(all='raise')
 
 from pyNastran.utils import print_bad_path, integer_types
-from pyNastran.converters.dev.abaqus.abaqus import read_abaqus
+from pyNastran.converters.abaqus.abaqus import read_abaqus
 
 import pyNastran.bdf.test
 test_path = pyNastran.bdf.test.__path__[0]

@@ -82,7 +82,7 @@ is_shabp = True
 from pyNastran.converters.stl.stl_io import STL_IO
 is_stl = True
 #except ImportError:
-    ##raise
+    #raise
     #class STL_IO(object):
         #"""dummy stl gui class"""
         #def __init__(self):
@@ -115,23 +115,23 @@ except ImportError:
             pass
     is_avus = False
 
-try:
-    from pyNastran.converters.tetgen.tetgen_io import TetgenIO
-    is_tetgen = True
-except ImportError:
+#try:
+from pyNastran.converters.tetgen.tetgen_io import TetgenIO
+is_tetgen = True
+#except ImportError:
     #raise
-    class TetgenIO(object):
-        """dummy tetgen gui class"""
-        def __init__(self):
-            """dummy gui init"""
-            pass
-    is_tetgen = False
+    #class TetgenIO(object):
+        #"""dummy tetgen gui class"""
+        #def __init__(self):
+            #"""dummy gui init"""
+            #pass
+    #is_tetgen = False
 
 #try:
 from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
 is_usm3d = True
 #except ImportError:
-    ##raise
+    #raise
     #class Usm3dIO(object):
         #"""dummy usm3d gui class"""
         #def __init__(self):
@@ -140,11 +140,11 @@ is_usm3d = True
     #is_usm3d = False
 
 
-try:
-    from pyNastran.converters.fast.fast_io import FastIO
-    is_fast = True
-except ImportError:
-    raise
+#try:
+from pyNastran.converters.fast.fast_io import FastIO
+is_fast = True
+#except ImportError:
+    #raise
     #class FastIO(object):
     #    """dummy fast gui class"""
     #    def __init__(self):
@@ -156,7 +156,7 @@ except ImportError:
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 is_bedge = True
 #except ImportError:
-    ##raise
+    #raise
     #class BEdge_IO(object):
         #"""dummy bedge gui class"""
         #def __init__(self):
@@ -168,7 +168,7 @@ is_bedge = True
 from pyNastran.converters.aflr.surf.surf_io import SurfIO
 is_surf = True
 #except ImportError:
-    ##raise
+    #raise
     #class SurfIO(object):
         #"""dummy surf gui class"""
         #def __init__(self):
@@ -180,7 +180,7 @@ is_surf = True
 from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
 is_ugrid = True
 #except ImportError:
-    ##raise
+    #raise
     #class UGRID_IO(object):
         #"""dummy ugrid gui class"""
         #def __init__(self):
@@ -212,21 +212,20 @@ except ImportError:
             pass
     is_degen_geom = False
 
-try:
-    from pyNastran.converters.dev.abaqus.abaqus_io import AbaqusIO
-    is_abaqus = True
-except ImportError:
+#try:
+from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
+is_abaqus = True
+#except ImportError:
     #raise
-    class AbaqusIO(object):
-        """dummy abaqus gui class"""
-        def __init__(self):
-            """dummy gui init"""
-            pass
-    is_abaqus = False
+    #class AbaqusIO(object):
+        #"""dummy abaqus gui class"""
+        #def __init__(self):
+            #"""dummy gui init"""
+            #pass
+    #is_abaqus = False
 
 #try:
 from pyNastran.converters.su2.su2_io import SU2_IO
 is_su2 = True
 #except ImportError:
     #raise
-
