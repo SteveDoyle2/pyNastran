@@ -12,6 +12,7 @@ def make_pack_form(data):
     N = 0
     n = 0
     #Form = ''
+    fold = None
     old = None
     for d in data:
         if isinstance(d, string_types):

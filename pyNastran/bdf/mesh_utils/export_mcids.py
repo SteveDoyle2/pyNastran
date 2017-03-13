@@ -90,13 +90,13 @@ def export_mcids(bdf_filename, csv_filename=None,
         if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
             pid_ref = elem.pid_ref
             if pid_ref.type == 'PSHELL':
-                mid = prop.mid1_ref
+                mid = pid_ref.mid1_ref
                 if mid.type in ['MAT1']:
                     continue
                 elif mid.type in ['MAT8']:
                     pass
                 else:
-                    raise NotImplementedError(prop)
+                    raise NotImplementedError(pid_ref)
             elif pid_ref.type in ['PCOMP', 'PCOMPG']:
                 pass
             else:
@@ -194,7 +194,6 @@ def _rotate_mcid(elem, pid_ref, iply, imat, jmat, normal,
                  consider_property_rotation=True):
     """rotates a material coordinate system"""
     if consider_property_rotation:
-        # TODO: not tested
         pid_ref = elem.pid_ref
         if pid_ref.type == 'PSHELL':
             theta_mcid = elem.theta_mcid

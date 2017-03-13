@@ -10,11 +10,14 @@ defines:
 from __future__ import print_function
 import os
 import sys
-from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
-from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
+
+# testing these imports are up to date
+from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
+from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
+
 
 def cmd_line_equivalence():  # pragma: no cover
     """command line interface to bdf_equivalence_nodes"""
@@ -208,7 +211,9 @@ def cmd_line_renumber():  # pragma: no cover
     if bdf_filename_out is None:
         bdf_filename_out = 'renumber.bdf'
 
-    cards_to_skip = ['AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2', 'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
+    cards_to_skip = [
+        'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
+        'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
     bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
                  starting_id_dict=None, round_ids=False,
                  cards_to_skip=cards_to_skip)
@@ -282,45 +287,15 @@ def cmd_line_merge():  # pragma: no cover
     import pyNastran
     msg = "Usage:\n"
     msg += "  bdf merge (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n"
-    #msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-d] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    #msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-l] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    #msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p] [-r] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    #msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-
-    #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  bdf merge -h | --help\n'
     msg += '  bdf merge -v | --version\n'
     msg += '\n'
 
     msg += "Positional Arguments:\n"
     msg += "  IN_BDF_FILENAMES   path to input BDF/DAT/NAS files\n"
-    #msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-    #msg += "  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
     msg += '\n'
 
     msg += 'Options:\n'
-    #msg += '  --crash C,     Crash on specific cards (e.g. CGEN,EGRID)\n'
-    #msg += '  -q, --quiet    prints debug messages (default=False)\n'
-    #msg += '  -x, --xref     disables cross-referencing and checks of the BDF.\n'
-    #msg += '                 (default=True -> on)\n'
-    #msg += '  -p, --punch    disables reading the executive and case control decks in the BDF\n'
-    #msg += '                 (default=False -> reads entire deck)\n'
-    #msg += '  -c, --check    disables BDF checks.  Checks run the methods on \n'
-    #msg += '                 every element/property to test them.  May fails if a \n'
-    #msg += '                 card is fully not supported (default=False)\n'
-    #msg += '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
-    #msg += '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
-    #msg += '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
-    #msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
-    #msg += '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed (pyNastran_dump.bdf)\n'
-    #msg += '  -i, --dictsort  Writes the BDF with exactly as read with the INCLUDES processed (pyNastran_dict.bdf)\n'
-    #msg += '  -f, --profile   Profiles the code (default=False)\n'
-    #msg += '  -s, --stop      Stop after first read/write (default=False)\n'
-    #msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
-    #msg += '  --encoding ENCODE  the encoding method\n'
-    #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
-    #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
-    #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
     msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
 
     msg += 'Info:\n'
@@ -342,7 +317,9 @@ def cmd_line_merge():  # pragma: no cover
     if bdf_filename_out is None:
         bdf_filename_out = 'merged.bdf'
 
-    cards_to_skip = ['AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2', 'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
+    cards_to_skip = [
+        'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
+        'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
     bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
