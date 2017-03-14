@@ -30,34 +30,6 @@ class Cart3dIO(object):
                 'Cart3d (*.triq)', self.load_cart3d_results)
         return data
 
-    def _remove_old_geometry(self, geom_filename):
-        skip_reading = False
-        params_to_delete = (
-            'case_keys', 'icase', 'iSubcaseNameMap',
-            'result_cases', 'eid_map', 'nid_map',
-        )
-        if geom_filename is None or geom_filename is '':
-            skip_reading = True
-            return skip_reading
-        else:
-            self.turn_text_off()
-            self.grid.Reset()
-
-            self.result_cases = {}
-            self.ncases = 0
-            for param in params_to_delete:
-                if hasattr(self, param):  # TODO: is this correct???
-                    try:
-                        delattr(self, param)
-                    except AttributeError:
-                        msg = 'cannot delete %r; hasattr=%r' % (param, hasattr(self, param))
-                        self.log.warning(msg)
-
-            skip_reading = False
-        #self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
-        return skip_reading
-
     def _remove_old_cart3d_geometry(self, filename):
         #return self._remove_old_geometry(filename)
 

@@ -29,68 +29,9 @@ class AbaqusIO(object):
                 )
         return data
 
-    #def _remove_old_geometry(self, geom_filename):
-        #skip_reading = False
-        #params_to_delete = (
-            #'case_keys', 'icase', 'iSubcaseNameMap',
-            #'result_cases', 'eid_map', 'nid_map'
-        #)
-        #if geom_filename is None or geom_filename is '':
-            #skip_reading = True
-            #return skip_reading
-        #else:
-            #self.turn_text_off()
-            #self.grid.Reset()
-
-            #self.result_cases = {}
-            #self.ncases = 0
-            #for param in params_to_delete:
-                #if hasattr(self, param):  # TODO: is this correct???
-                    #try:
-                        #delattr(self, param)
-                    #except AttributeError:
-                        #print('param =', param, hasattr(self, param))
-
-            #skip_reading = False
-        ##self.scalarBar.VisibilityOff()
-        #self.scalarBar.Modified()
-        #return skip_reading
-
-    #def _remove_old_cart3d_geometry(self, filename):
-        ##return self._remove_old_geometry(filename)
-
-        #self.eid_map = {}
-        #self.nid_map = {}
-        #if filename is None:
-            ##self.emptyResult = vtk.vtkFloatArray()
-            ##self.vectorResult = vtk.vtkFloatArray()
-            #self.scalarBar.VisibilityOff()
-            #skip_reading = True
-        #else:
-            #self.turn_text_off()
-            #self.grid.Reset()
-            ##self.gridResult.Reset()
-            ##self.gridResult.Modified()
-
-            #self.result_cases = {}
-            #self.ncases = 0
-            #try:
-                #del self.case_keys
-                #del self.icase
-                #del self.iSubcaseNameMap
-            #except:
-                ## print("cant delete geo")
-                #pass
-
-            ##print(dir(self))
-            #skip_reading = False
-        ##self.scalarBar.VisibilityOff()
-        #self.scalarBar.Modified()
-        #return skip_reading
-
     def load_abaqus_geometry(self, abaqus_filename, dirname, name='main', plot=True):
         """loads abaqus input files into the gui"""
-        skip_reading = self._remove_old_cart3d_geometry(abaqus_filename)
+        skip_reading = self._remove_old_geometry(abaqus_filename)
         if skip_reading:
             return
 
