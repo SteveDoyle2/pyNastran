@@ -981,8 +981,8 @@ class CTRIA6(TriShell):
 
 class CTRIAR(TriShell):
     type = 'CTRIAR'
-    def __init__(self, eid, pid, nids, theta_mcid, zoffset,
-                 TFlag, T1, T2, T3, comment=''):
+    def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
+                 TFlag=0, T1=None, T2=None, T3=None, comment=''):
         TriShell.__init__(self)
         if comment:
             self.comment = comment
@@ -1024,8 +1024,8 @@ class CTRIAR(TriShell):
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
         assert len(card) <= 14, 'len(CTRIAR card) = %i\ncard=%s' % (len(card), card)
-        return CTRIAR(eid, pid, nids, theta_mcid, zoffset,
-                      TFlag, T1, T2, T3, comment=comment)
+        return CTRIAR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2192,7 +2192,7 @@ class CPLSTN4(QuadShell):
 class CPLSTN6(TriShell):
     type = 'CPLSTN6'
 
-    def __init__(self, eid, pid, nids, theta, comment=''):
+    def __init__(self, eid, pid, nids, theta=0., comment=''):
         TriShell.__init__(self)
         if comment:
             self.comment = comment
@@ -2222,7 +2222,7 @@ class CPLSTN6(TriShell):
             assert len(card) <= 15, 'len(CPLSTN6 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta = 0.0
-        return CPLSTN6(eid, pid, nids, theta, comment=comment)
+        return CPLSTN6(eid, pid, nids, theta=theta, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2367,7 +2367,7 @@ class CPLSTN6(TriShell):
 
 class CPLSTN8(QuadShell):
     type = 'CPLSTN8'
-    def __init__(self, eid, pid, nids, theta, comment=''):
+    def __init__(self, eid, pid, nids, theta=0., comment=''):
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -2396,7 +2396,7 @@ class CPLSTN8(QuadShell):
             assert len(card) <= 18, 'len(CPLSTN8 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta = 0.0
-        return CPLSTN8(eid, pid, nids, theta, comment=comment)
+        return CPLSTN8(eid, pid, nids, theta=theta, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2530,7 +2530,7 @@ class CPLSTN8(QuadShell):
 
     def raw_fields(self):
         list_fields = ['CPLSTN8', self.eid, self.Pid()] + self.node_ids + [
-            self.T1, self.T2, self.T3, self.T4, self.theta]
+            self.theta]
         return list_fields
 
     def repr_fields(self):
@@ -2549,8 +2549,8 @@ class CPLSTN8(QuadShell):
 class CQUADR(QuadShell):
     type = 'CQUADR'
 
-    def __init__(self, eid, pid, nids, theta_mcid, zoffset, TFlag,
-                 T1, T2, T3, T4, comment=''):
+    def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
+                 T1=None, T2=None, T3=None, T4=None, comment=''):
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -2586,8 +2586,8 @@ class CQUADR(QuadShell):
         T3 = double_or_blank(card, 13, 'T3')
         T4 = double_or_blank(card, 14, 'T4')
         assert len(card) <= 15, 'len(CQUADR card) = %i\ncard=%s' % (len(card), card)
-        return CQUADR(eid, pid, nids, theta_mcid, zoffset,
-                      TFlag, T1, T2, T3, T4, comment=comment)
+        return CQUADR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

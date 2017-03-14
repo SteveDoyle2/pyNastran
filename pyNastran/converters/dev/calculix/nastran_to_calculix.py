@@ -221,8 +221,15 @@ class CalculixConverter(BDF):
 
             if prop.type == 'PSHELL':
                 mid = prop.mid
-                inp += '*SHELL SECTION,ELSET=%s,MATERIA	L=MAT%i\n' % (elset, mid.mid)
+                inp += '*SHELL SECTION,ELSET=%s,MATERIAL=MAT%i\n' % (elset, mid.mid)
                 inp += '%s\n' % prop.t
+                #def _write_calculix(self, marker='markerDummyProp',
+                                    #element_set='ELsetDummyProp'):
+                    #msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' % (
+                        #marker, self.mid, element_set, self.z1)
+                    #msg += '** THICKNESS\n'
+                    #msg += '%s\n\n' % (self.t)
+                    #return msg
             elif prop.type == 'PSOLID':
                 mid = prop.mid
                 inp += '*SOLID SECTION,ELSET=%s,MATERIAL=MAT%i\n' % (elset, mid.mid)
@@ -262,7 +269,7 @@ class CalculixConverter(BDF):
         """
         inp = '** calculix_materials\n'
         for mid, material in sorted(iteritems(self.materials)):
-            msg = '*MATERIAL,NAME=MAT%i\n'
+            msg = '*MATERIAL,NAME=mid%i\n' % material.mid
             if material.type == 'MAT1':
                 msg += '*ELASTIC\n%s, %s\n' % (material.E(), material.Nu())
                 msg += '*DENSITY\n%s\n' % material.get_density()
@@ -274,6 +281,40 @@ class CalculixConverter(BDF):
                 msg += '*CONVECTION\n%s\n' % material.h
                 msg += '*DENSITY\n%s\n' % material.get_density()
                 msg += '*SOLID SECTION,MATERIAL=EL,ELSET=EALL\n'
+            elif material.type == 'MAT2':
+                raise NotImplementedError(material)
+                #msg = '*ELASTIC,TYPE=ORTHO\n'
+                #temperature = 0.  # default value - same properties for all values
+                #msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
+                #D = Dplate
+                #D1111 = D[0, 0]
+                #D1122 = 0.
+                #D2222 = D[1, 1]
+                #D1133 = D[0, 2]
+                #D2233 = D[1, 2]
+                #D3333 = D[2, 2]
+                #D1212 = D[0, 1]
+                #D1313 = D[0, 2]
+                #msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' % (
+                    #D1111, D1122, D2222, D1133, D2233, D3333, D1212, D1313)
+
+                #G23
+                #temperature = self.tref
+                #msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' % (
+                    #self.mid)
+                #msg += '** E1,E2,E3,NU12,NU13,NU23,G12,G13\n'
+                #msg += '** G23,TEMPERATURE\n'
+                #msg += '%s,%s,%s,%s,%s,%s,%s,%s\n' % (
+                    #e1, e2, e3, nu12, nu13, nu23, g12, g13)
+                #msg += '%s,%s\n' % (G23, temperature)
+                #if self.rho > 0.:
+                    #msg += '*DENSITY\n'
+                    #msg += '%s\n' % (self.rho)
+                #if self.a > 0:
+                    #msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.tref)
+                    #msg += '** ALPHA,ALPHA*TREF\n'
+                    #msg += '%s,%s\n\n' % (self.a, self.a * self.tref)
+                #return msg
             else:
                 raise NotImplementedError(mid.type)
         inp += self.breaker()
@@ -469,6 +510,11 @@ class CalculixConverter(BDF):
                         F[i, :] = forcei
             elif load.type == 'GRAV':
                 pass
+                #def write_calculix_grav(self, gx, gy, gz):
+                    #msg = '*DLOAD\n'
+                    #msg += 'AllElements,GRAV,%s,%s,%s\n' % (gx, gy, gz)
+                    #return msg
+
             else:
                 # we collect them so we only get one print
                 unsupported_types.add(load.type)
@@ -546,6 +592,22 @@ class CalculixConverter(BDF):
             inp += '*END STEP\n'
             inp += '** END OF DATA\n'
             finp.write(inp)
+
+def _write_mat1(material, element_set='ELSetDummyMat'):
+    # default value - same properties for all values
+    temperature = material.tref
+    msg = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (element_set)
+    msg += '** E,NU,TEMPERATURE\n'
+    msg += '%s,%s,%s\n' % (material.e, material.nu, temperature)
+
+    if material.rho > 0.:
+        msg += '*DENSITY\n'
+        msg += '%s\n' % (material.rho)
+    if material.a > 0:
+        msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (material.tref)
+        msg += '** ALPHA,ALPHA*TREF\n'
+        msg += '%s,%s\n\n' % (material.a, material.a * material.tref)
+    return msg
 
 def main():
     import sys

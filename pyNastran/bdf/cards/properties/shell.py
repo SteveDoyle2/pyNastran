@@ -1691,14 +1691,6 @@ class PSHELL(ShellProperty):
         self.mid3 = self.Mid3()
         self.mid4 = self.Mid4()
 
-    def _write_calculix(self, marker='markerDummyProp',
-                        element_set='ELsetDummyProp'):
-        msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' % (
-            marker, self.mid, element_set, self.z1)
-        msg += '** THICKNESS\n'
-        msg += '%s\n\n' % (self.t)
-        return msg
-
     def raw_fields(self):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                        self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,

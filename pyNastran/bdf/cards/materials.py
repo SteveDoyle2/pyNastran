@@ -331,22 +331,6 @@ class MAT1(IsotropicMaterial):
             raise ValueError(msg)
         return E, G, nu
 
-    def _write_calculix(self, element_set='ELSetDummyMat'):
-        # default value - same properties for all values
-        temperature = self.tref
-        msg = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (element_set)
-        msg += '** E,NU,TEMPERATURE\n'
-        msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
-
-        if self.rho > 0.:
-            msg += '*DENSITY\n'
-            msg += '%s\n' % (self.rho)
-        if self.a > 0:
-            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.tref)
-            msg += '** ALPHA,ALPHA*TREF\n'
-            msg += '%s,%s\n\n' % (self.a, self.a * self.tref)
-        return msg
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -675,41 +659,6 @@ class MAT2(AnisotropicMaterial):
         #D[5,5] = G22
         #D[6,6] = G33
         return D
-
-    def write_calculix(self):
-        raise NotImplementedError(self.type)
-        #msg = '*ELASTIC,TYPE=ORTHO\n'
-        #temperature = 0.  # default value - same properties for all values
-        #msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
-        #D = Dplate
-        #D1111 = D[0, 0]
-        #D1122 = 0.
-        #D2222 = D[1, 1]
-        #D1133 = D[0, 2]
-        #D2233 = D[1, 2]
-        #D3333 = D[2, 2]
-        #D1212 = D[0, 1]
-        #D1313 = D[0, 2]
-        #msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' % (
-            #D1111, D1122, D2222, D1133, D2233, D3333, D1212, D1313)
-
-        ##G23
-        #temperature = self.tref
-        #msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' % (
-            #self.mid)
-        #msg += '** E1,E2,E3,NU12,NU13,NU23,G12,G13\n'
-        #msg += '** G23,TEMPERATURE\n'
-        #msg += '%s,%s,%s,%s,%s,%s,%s,%s\n' % (
-            #e1, e2, e3, nu12, nu13, nu23, g12, g13)
-        #msg += '%s,%s\n' % (G23, temperature)
-        #if self.rho > 0.:
-            #msg += '*DENSITY\n'
-            #msg += '%s\n' % (self.rho)
-        #if self.a > 0:
-            #msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.tref)
-            #msg += '** ALPHA,ALPHA*TREF\n'
-            #msg += '%s,%s\n\n' % (self.a, self.a * self.tref)
-        #return msg
 
     def raw_fields(self):
         list_fields = ['MAT2', self.mid, self.G11, self.G12, self.G13, self.G22,
@@ -1279,7 +1228,8 @@ class MAT8(OrthotropicMaterial):
 
     def uncross_reference(self):
         self.matt8 = self.Matt8()
-        del self.matt8_ref
+        if self.matt8 is not None:
+            del self.matt8_ref
 
     def Matt8(self):
         return self.matt8
@@ -1288,8 +1238,10 @@ class MAT8(OrthotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
         """
         mid = self.Mid()
         E11 = self.E11()

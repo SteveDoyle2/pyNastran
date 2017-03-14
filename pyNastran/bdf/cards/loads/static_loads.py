@@ -93,11 +93,6 @@ class LOAD(LoadCombination):
         #print("load_types = ", load_types)
         return load_types
 
-    def write_calculix_grav(self, gx, gy, gz):
-        msg = '*DLOAD\n'
-        msg += 'AllElements,GRAV,%s,%s,%s\n' % (gx, gy, gz)
-        return msg
-
     def get_reduced_loads(self):
         """
         Get all load objects in a simplified form, which means all

@@ -111,29 +111,34 @@ class Part(object):
             elements = element_types['r2d2']
             self.r2d2 = np.array(elements, dtype='int32')
             self.r2d2_eids = self.r2d2[:, 0]
+            assert r2d2.shape[1] == 3, r2d2.shape
 
         # shells
         if 'cpe3' in element_types: # similar to CTRIA3
             elements = element_types['cpe3']
             self.cpe3 = np.array(elements, dtype='int32')
             self.cpe3_eids = self.cpe3[:, 0]
+            assert self.cpe3.shape[1] == 4, self.cpe3.shape
 
         if 'cpe4' in element_types: # similar to CQUAD4
             elements = element_types['cpe4']
             self.cpe4 = np.array(elements, dtype='int32')
             self.cpe4_eids = self.cpe4[:, 0]
+            assert self.cpe4.shape[1] == 5, self.cpe4.shape
             #print('  n_cpe4=%r' % str(self.cpe4.shape))
 
         if 'cpe4r' in element_types: # similar to CQUAD4
             elements = element_types['cpe4r']
             self.cpe4r = np.array(elements, dtype='int32')
             self.cpe4r_eids = self.cpe4r[:, 0]
+            assert self.cpe4r.shape[1] == 5, self.cpe4r.shape
 
         if 'coh2d4' in element_types:
             elements = element_types['coh2d4']
             #print(elements)
             self.coh2d4 = np.array(elements, dtype='int32')
             self.coh2d4_eids = self.coh2d4[:, 0]
+            assert self.coh2d4.shape[1] == 5, self.coh2d4.shape
             #print('  n_coh2d4=%r' % str(self.coh2d4.shape))
 
         if 'cohax4' in element_types:
@@ -141,6 +146,7 @@ class Part(object):
             #print(elements)
             self.cohax4 = np.array(elements, dtype='int32')
             self.cohax4_eids = self.cohax4[:, 0]
+            assert self.cohax4.shape[1] == 5, self.cohax4.shape
             #print('  n_cohax4=%r' % str(self.cohax4.shape))
 
         if 'cax3' in element_types:
@@ -148,6 +154,7 @@ class Part(object):
             #print(elements)
             self.cax3 = np.array(elements, dtype='int32')
             self.cax3_eids = self.cax3[:, 0]
+            assert self.cax3.shape[1] == 4, self.cax3.shape
             #print('  n_cax3=%r' % str(self.cax3.shape))
 
         if 'cax4r' in element_types:
@@ -155,6 +162,7 @@ class Part(object):
             #print(elements)
             self.cax4r = np.array(elements, dtype='int32')
             self.cax4r_eids = self.cax4r[:, 0]
+            assert self.cax4r.shape[1] == 5, self.cax4r.shape
             #print('  n_cax4r=%r' % str(self.cax4r.shape))
 
         # solids
@@ -162,6 +170,7 @@ class Part(object):
             elements = element_types['c3d10h']
             self.c3d10h = np.array(elements, dtype='int32')
             self.c3d10h_eids = self.c3d10h[:, 0]
+            assert self.c3d10h.shape[1] == 11, self.c3d10h.shape
 
     def element(self, eid):
         """gets a specific element of the part"""
