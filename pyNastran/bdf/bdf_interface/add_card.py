@@ -10,7 +10,7 @@ from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, P
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 
-from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
+from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (
@@ -26,7 +26,9 @@ from pyNastran.bdf.cards.elements.axisymmetric_shells import (
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
-    CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8)
+    CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
+    CPLSTS3, #CPLSTS4,
+)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
@@ -954,17 +956,17 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_ctriar(self, eid, pid, nids, theta_mcid, zoffset,
-                   TFlag, T1, T2, T3, comment=''):
-        elem = CTRIAR(eid, pid, nids, theta_mcid, zoffset,
-                      TFlag, T1, T2, T3, comment=comment)
+    def add_ctriar(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
+                 TFlag=0, T1=None, T2=None, T3=None, comment=''):
+        elem = CTRIAR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                 TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cquadr(self, eid, pid, nids, theta_mcid, zoffset,
-                   TFlag, T1, T2, T3, T4, comment=''):
-        elem = CQUADR(eid, pid, nids, theta_mcid, zoffset,
-                      TFlag, T1, T2, T3, T4, comment=comment)
+    def add_cquadr(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
+                 T1=None, T2=None, T3=None, T4=None, comment=''):
+        elem = CQUADR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                 TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -1087,6 +1089,31 @@ class AddCards(AddMethods):
                       comment=comment)
         self._add_property_object(prop)
         return prop
+
+    def add_cplstn3(self, eid, pid, nids, theta=0.0, comment=''):
+        elem = CPLSTN3(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cplstn4(self, eid, pid, nids, theta=0.0, comment=''):
+        elem = CPLSTN4(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cplstn6(self, eid, pid, nids, theta=0.0, comment=''):
+        elem = CPLSTN6(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cplstn8(self, eid, pid, nids, theta=0.0, comment=''):
+        elem = CPLSTN8(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cplsts3(self, eid, pid, nids, theta_mcid=0.0, comment=''):
+        elem = CPLSTS3(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
+        self._add_element_object(elem)
+        return elem
 
     def add_ctetra(self, eid, pid, nids, comment=''):
         #elem = CTETRA(eid, pid, nids, comment=comment)

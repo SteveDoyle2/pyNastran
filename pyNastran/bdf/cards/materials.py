@@ -1279,7 +1279,8 @@ class MAT8(OrthotropicMaterial):
 
     def uncross_reference(self):
         self.matt8 = self.Matt8()
-        del self.matt8_ref
+        if self.matt8 is not None:
+            del self.matt8_ref
 
     def Matt8(self):
         return self.matt8
