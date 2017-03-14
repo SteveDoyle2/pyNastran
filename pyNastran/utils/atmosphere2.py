@@ -199,10 +199,16 @@ def get_alt_for_q_mach(q, mach, SI=False):
         the altitude in ft (SI=m)
     """
     pressure = 2 * q / (1.4 * mach ** 2) # gamma = 1.4
-    alt = get_alt_for_pressure(pressure, SI=SI)
+    if SI:
+        alt_units = 'm'
+        pressure_units = 'Pa'
+    else:
+        alt_units = 'ft'
+        pressure_units = 'psf'
+    alt = get_alt_for_pressure(pressure, pressure_units=pressure_units, alt_units=alt_units)
     return alt
 
-def get_alt_for_pressure(pressure, SI=False):
+def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft'):
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -210,16 +216,17 @@ def get_alt_for_pressure(pressure, SI=False):
     ----------
     pressure : float
         the pressure lb/ft^2 (SI=Pa)
-    SI : bool
-        should SI units be used; default=False
+    pressure_units : str; default='psf'
+        the pressure units; psf, psi, Pa
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
 
     Returns
     -------
     alt : float
-        the altitude in ft (SI=m)
+        the altitude in alt_units
     """
-    if SI:
-        pressure /= 47.880259  # Pa to psf
+    pressure = _convert_pressure(pressure, pressure_units, 'psf')
     dalt = 500.
     alt_old = 0.
     alt_final = 5000.
@@ -239,8 +246,8 @@ def get_alt_for_pressure(pressure, SI=False):
 
     if n > 18:
         print('n = %s' % n)
-    if SI:
-        alt_final *= 0.3048  # feet to meters
+
+    alt_final = _convert_alt(alt_final, 'ft', alt_units)
     return alt_final
 
 def _feet_to_alt_units(alt_units):
@@ -253,6 +260,7 @@ def _feet_to_alt_units(alt_units):
     return factor
 
 def _convert_alt(alt, alt_units_in, alt_units_out):
+    """nominal unit is ft"""
     factor = 1.0
     # units to feet
     if alt_units_in == 'm':
@@ -280,6 +288,7 @@ def _convert_alt(alt, alt_units_in, alt_units_out):
     return alt * factor
 
 def _convert_velocity(velocity, velocity_units_in, velocity_units_out):
+    """nominal unit is ft/s"""
     factor = 1.0
     if velocity_units_in == 'm/s':
         factor /= 0.3048
@@ -300,11 +309,35 @@ def _convert_velocity(velocity, velocity_units_in, velocity_units_out):
     elif velocity_units_out == 'knots':
         factor /= 1.68781
     else:
-        msg = 'velocity_units_in=%r is not valid; use [ft/s, m/s, knots]' % velocity_units_in
+        msg = 'velocity_units_out=%r is not valid; use [ft/s, m/s, knots]' % velocity_units_out
         raise RuntimeError(msg)
     #print('velocity=%.1f velocity_units_in=%s velocity_units_out=%s velocity2=%.1f' % (
         #velocity, velocity_units_in, velocity_units_out, velocity * factor))
     return velocity * factor
+
+def _convert_pressure(pressure, pressure_units_in, pressure_units_out):
+    """nominal unit is psf"""
+    factor = 1.0
+    if pressure_units_in == 'psf':
+        pass
+    elif pressure_units_in == 'psi':
+        factor *= 144
+    elif pressure_units_in == 'Pa':
+        factor /= 47.880172
+    else:
+        msg = 'pressure_units_in=%r is not valid; use [psf, psi, Pa]' % pressure_units_in
+        raise RuntimeError(msg)
+
+    if pressure_units_out == 'psf':
+        pass
+    elif pressure_units_out == 'psi':
+        factor /= 144
+    elif pressure_units_out == 'Pa':
+        factor *= 47.880172
+    else:
+        msg = 'pressure_units_out=%r is not valid; use [psf, psi, Pa]' % pressure_units_out
+        raise RuntimeError(msg)
+    return pressure * factor
 
 def _feet_s_to_velocity_units(velocity_units):
     if velocity_units == 'm/s':
