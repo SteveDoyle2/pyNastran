@@ -397,11 +397,6 @@ class PSOLID(SolidProperty):
                 msg = 'mid=%i self.mid_ref.type=%s' % (mid, self.mid_ref.type)
                 raise TypeError(msg)
 
-    def _write_calculix(self, element_set=999):
-        msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (
-            self.mid, element_set)
-        return msg
-
     def raw_fields(self):
         fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,
                   self.stress, self.isop, self.fctn]
