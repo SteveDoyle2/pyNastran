@@ -28,10 +28,13 @@ class CFAST(Element):
         9:'xs', 10:'ys', 11:'zs',
     }
 
-    def __init__(self, eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs, comment=''):
+    def __init__(self, eid, Type, ida, idb, pid=None, gs=None, ga=None, gb=None,
+                 xs=None, ys=None, zs=None, comment=''):
         Element.__init__(self)
         if comment:
             self.comment = comment
+        if pid is None:
+            pid = eid
         self.eid = eid
         self.pid = pid
         self.Type = Type
@@ -43,6 +46,19 @@ class CFAST(Element):
         self.xs = xs
         self.ys = ys
         self.zs = zs
+
+    def validate(self):
+        if self.Type not in ['PROP', 'ELEM']:
+            msg = 'CFAST; eid=%s Type=%r must be in [PROP, ELEM]' % (self.eid, self.Type)
+            raise TypeError(msg)
+        if(self.gs is None and
+           (self.ga is None or self.gb is None) and
+           (self.xs is None or self.ys is None or self.zs is None)):
+            msg = ('CFAST; eid=%s; gs=%s is not an integer or\n'
+                   '              [ga=%s, gb=%s] are not integers or \n'
+                   '              [xs=%s, ys=%s, zs=%s] are not floats' % (
+                       self.eid, self.gs, self.ga, self.gb, self.xs, self.ys, self.zs))
+            raise ValueError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -59,8 +75,8 @@ class CFAST(Element):
         zs = double_or_blank(card, 11, 'zs')
         assert len(card) <= 12, 'len(CFAST card) = %i\ncard=%s' % (len(card), card)
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
-        return CFAST(eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
-                     comment=comment)
+        return CFAST(eid, Type, ida, idb, pid=pid, gs=gs, ga=ga, gb=gb,
+                     xs=xs, ys=ys, zs=zs, comment=comment)
 
     def cross_reference(self, model):
         """

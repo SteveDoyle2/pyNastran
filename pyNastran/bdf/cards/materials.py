@@ -1356,13 +1356,19 @@ class MAT9(AnisotropicMaterial):
         1: 'mid',
     }
 
-    def __init__(self, mid, G11, G12, G13, G14, G15, G16, G22, G23, G24,
-                 G25, G26, G33, G34, G35, G36, G44, G45, G46, G55, G56, G66,
-                 rho, A, tref, ge, comment=''):
+    def __init__(self, mid,
+                 G11=0., G12=0., G13=0., G14=0., G15=0., G16=0.,
+                 G22=0., G23=0., G24=0., G25=0., G26=0.,
+                 G33=0., G34=0., G35=0., G36=0.,
+                 G44=0., G45=0., G46=0.,
+                 G55=0., G56=0., G66=0.,
+                 rho=0., A=None, tref=0., ge=0., comment=''):
         AnisotropicMaterial.__init__(self)
         self.matt9 = None
         if comment:
             self.comment = comment
+        if A is None:
+            A = [0., 0., 0., 0., 0., 0.]
         #: Material ID
         self.mid = mid
         self.G11 = G11
@@ -1471,12 +1477,20 @@ class MAT9(AnisotropicMaterial):
                     G55, G56, G66, rho, A, tref, ge,
                     comment=comment)
 
+    def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
+
     def _verify(self, xref):
         """
         Verifies all methods for this object work
 
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
         """
         mid = self.Mid()
         #E11 = self.E11()

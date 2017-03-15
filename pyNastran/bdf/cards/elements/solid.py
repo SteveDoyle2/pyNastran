@@ -139,6 +139,7 @@ class SolidElement(Element):
         Calculates the mass of the solid element
         Mass = Rho * Volume
         """
+        #print('rho=%e volume=%e' % (self.Rho(), self.Volume()))
         return self.Rho() * self.Volume()
 
     def Mid(self):

@@ -456,21 +456,82 @@ class AddCards(AddMethods):
         return elem
 
     def add_cdamp1(self, eid, pid, nids, c1=0, c2=0, comment=''):
+        """
+        Creates a CDAMP1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PDAMP)
+        nids : List[int, int]
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CDAMP1(eid, pid, nids, c1=c1, c2=c2, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_cdamp2(self, eid, b, nids, c1=0, c2=0, comment=''):
+        """
+        Creates a CDAMP2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        b : float
+            damping
+        nids : List[int, int]
+            SPOINT ids
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CDAMP2(eid, b, nids, c1=c1, c2=c2, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_cdamp3(self, eid, pid, nids, comment=''):
+        """
+        Creates a CDAMP3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PDAMP)
+        nids : List[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CDAMP3(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_cdamp4(self, eid, b, nids, comment=''):
+        """
+        Creates a CDAMP4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        b : float
+            damping
+        nids : List[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CDAMP4(eid, b, nids, comment=comment)
         self._add_element_object(elem)
         return elem
@@ -510,24 +571,48 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pgap(self, pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
-                 comment=''):
+    def add_pgap(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0., kt=None, mu2=None,
+                 tmax=0., mar=100., trmin=0.001, comment=''):
         prop = PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_cfast(self, eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
-                  comment=''):
-        elem = CFAST(eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
-                     comment=comment)
+    def add_cfast(self, eid, Type, ida, idb, pid=None, gs=None, ga=None, gb=None,
+                 xs=None, ys=None, zs=None, comment=''):
+        elem = CFAST(eid, Type, ida, idb, pid=pid, gs=gs, ga=ga, gb=gb,
+                     xs=xs, ys=ys, zs=zs, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_pfast(self, pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass,
-                  ge, comment=''):
-        prop = PFAST(pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass,
-                     ge, comment=comment)
+    def add_pfast(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
+                 kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
+        """
+        Creates a PAST card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        d : int
+            diameter of the fastener
+        kt1, kt2, kt3 : float
+            stiffness values in directions 1-3
+        mcid : int; default=01
+            specifies the element stiffness coordinate system
+        mflag : int; default=0
+            0-absolute; 1-relative
+        kr1, kr2, kr3 : float; default=0.0
+            rotational stiffness values in directions 1-3
+        mass : float; default=0.0
+            lumped mass of the fastener
+        ge : float; default=0.0
+            structural damping
+        comment : str; default=''
+            a comment for the card
+        """
+        prop = PFAST(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
+                     kr1=kr1, kr2=kr2, kr3=kr3, mass=mass, ge=ge, comment=comment)
         self._add_property_object(prop)
         return prop
 
@@ -769,6 +854,30 @@ class AddCards(AddMethods):
         return prop
 
     def add_pbarl(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
+        """
+        Creates a PBARL card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        Type : str
+            type of the bar
+            {ROD, TUBE, I, CHAN, T, BOX, BAR, CROSS, H, T1, I1, CHAN1,
+             Z, CHAN2, T2, BOX1, HEXA, HAT, HAT1, DBOX}
+        dim : List[float]
+            dimensions for cross-section corresponding to Type;
+            the length varies
+        group : str default='MSCBMLO'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
+        nsm : float; default=0.
+           non-structural mass
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
         self._add_property_object(prop)
         return prop
@@ -907,6 +1016,27 @@ class AddCards(AddMethods):
         return prop
 
     def add_pbeaml(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
+        """
+        Creates a PBEAML card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        xxb : List[float]
+            The percentage locations along the beam [0., ..., 1.]
+        so : List[str]
+            YES, YESA, NO
+        dims : List[dim]
+            dim : List[float]
+                The dimensions for each section
+        nsm : List[float]
+            nonstructural mass per unit length
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PBEAML(pid, mid, group, Type, xxb, so, dims, nsm, comment=comment)
         self._add_property_object(prop)
         return prop
@@ -1118,7 +1248,7 @@ class AddCards(AddMethods):
     def add_ctetra(self, eid, pid, nids, comment=''):
         #elem = CTETRA(eid, pid, nids, comment=comment)
         if len(nids) == 4:
-            return CTETRA4(eid, pid, nids, comment=comment)
+            elem = CTETRA4(eid, pid, nids, comment=comment)
         else:
             elem = CTETRA10(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
@@ -1333,9 +1463,13 @@ class AddCards(AddMethods):
         self._add_structural_material_object(mat)
         return mat
 
-    def add_mat9(self, mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25, G26,
-                 G33, G34, G35, G36, G44, G45, G46, G55,
-                 G56, G66, rho, A, tref, ge, comment=''):
+    def add_mat9(self, mid,
+                 G11=0., G12=0., G13=0., G14=0., G15=0., G16=0.,
+                 G22=0., G23=0., G24=0., G25=0., G26=0.,
+                 G33=0., G34=0., G35=0., G36=0.,
+                 G44=0., G45=0., G46=0.,
+                 G55=0., G56=0., G66=0.,
+                 rho=0., A=None, tref=0., ge=0., comment=''):
         mat = MAT9(mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25, G26,
                    G33, G34, G35, G36, G44, G45, G46, G55,
                    G56, G66, rho, A, tref, ge, comment=comment)

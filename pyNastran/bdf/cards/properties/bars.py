@@ -854,6 +854,30 @@ class PBARL(LineProperty):
     }  # for GROUP="MSCBML0"
 
     def __init__(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
+        """
+        Creates a PBARL card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        Type : str
+            type of the bar
+            {ROD, TUBE, I, CHAN, T, BOX, BAR, CROSS, H, T1, I1, CHAN1,
+             Z, CHAN2, T2, BOX1, HEXA, HAT, HAT1, DBOX}
+        dim : List[float]
+            dimensions for cross-section corresponding to Type;
+            the length varies
+        group : str default='MSCBMLO'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
+        nsm : float; default=0.
+           non-structural mass
+        comment : str; default=''
+            a comment for the card
+        """
         LineProperty.__init__(self)
         if comment:
             self.comment = comment

@@ -924,7 +924,6 @@ class PBEAML(IntegratedLineProperty):
                 The dimensions for each section
         nsm : List[float]
             nonstructural mass per unit length
-
         comment : str; default=''
             a comment for the card
         """

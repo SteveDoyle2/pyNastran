@@ -1,11 +1,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import unittest
-from six import StringIO
 from six.moves import range
 from numpy import array
 
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestShells(unittest.TestCase):
     def _make_cquad4(self, model, rho, nu, G, E, t, nsm):
@@ -866,18 +867,6 @@ class TestShells(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
 
-
-def save_load_deck(model):
-    """writes and re-reads a deck"""
-    bdf_file = StringIO()
-    model.write_bdf(bdf_file, size=8, close=False)
-    bdf_file.seek(0)
-    model.write_bdf(bdf_file, size=16, close=False)
-    bdf_file.seek(0)
-
-    model2 = BDF(log=model.log)
-    model2.read_bdf(bdf_file, punch=True)
-    return model2
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
