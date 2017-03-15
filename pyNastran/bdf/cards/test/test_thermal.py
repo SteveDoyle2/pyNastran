@@ -25,6 +25,7 @@ class TestThermal(unittest.TestCase):
                          TFlag=0,  T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
         model.add_pshell(pid, mid1=1, t=0.1)
 
+        eid = 10
         nids = [11, 12, 13, 15]
         pid = 2
         model.add_ctetra(eid, pid, nids)
