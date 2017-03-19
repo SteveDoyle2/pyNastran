@@ -1137,7 +1137,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # standard rotation
             # Disable default left mouse click function (Rotate)
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-
+            self.vtk_interactor.RemoveObservers('EndPickEvent')
+            self.vtk_interactor.AddObserver('EndPickEvent', self._probe_picker)
             # there should be a cleaner way to revert the trackball Rotate command
             # it apparently requires an (obj, event) argument instead of a void...
             self.set_style_as_trackball()
@@ -1464,7 +1465,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if msg:
             self.log_info('\n%s' % msg.lstrip())
 
-    def on_area_pick(self, is_eids=True, is_nids=False, callback=None, force=False):
+    def on_area_pick(self, is_eids=True, is_nids=True, callback=None, force=False):
         """creates a Rubber Band Zoom"""
         self.revert_pressed('area_pick')
         is_checked = self.actions['area_pick'].isChecked()
@@ -3648,93 +3649,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
         self.vtk_interactor.SetPicker(self.node_picker)
         self.vtk_interactor.SetPicker(self.cell_picker)
-
-    def annotate_cell_picker(object, event):
-        """
-        object : vtkCellPicker
-            vtkPicker
-        event : str
-            EndPickEvent
-        """
-        print(object)
-        if self._camera_mode != 'default':
-            return
-        picker = self.cell_picker
-        if picker.GetCellId() < 0:
-            #self.picker_textActor.VisibilityOff()
-            pass
-        else:
-            world_position = picker.GetPickPosition()
-            cell_id = picker.GetCellId()
-            #ds = picker.GetDataSet()
-            #select_point = picker.GetSelectionPoint()
-            self.log_command("annotate_cell_picker()")
-            self.log_info("XYZ Global = %s" % str(world_position))
-            #self.log_info("cell_id = %s" % cell_id)
-            #self.log_info("data_set = %s" % ds)
-            #self.log_info("selPt = %s" % str(select_point))
-
-            #method = 'get_result_by_cell_id()' # self.model_type
-            #print('pick_state =', self.pick_state)
-
-            icase = self.icase
-            key = self.case_keys[icase]
-            location = self.get_case_location(key)
-
-            if location == 'centroid':
-                out = self._cell_centroid_pick(cell_id, world_position)
-            elif location == 'node':
-                out = self._cell_node_pick(cell_id, world_position)
-            else:
-                raise RuntimeError('invalid pick location=%r' % location)
-
-            return_flag, duplicate_key, result_value, result_name, xyz = out
-            if return_flag is True:
-                return
-
-            # prevent duplicate labels with the same value on the same cell
-            if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
-                return
-            self.label_ids[result_name].add(duplicate_key)
-
-            #if 0:
-                #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
-                #result_value = result_value2
-                #xyz2 = xyz
-            #x, y, z = world_position
-            x, y, z = xyz
-            text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
-            text = str(result_value)
-            assert result_name in self.label_actors, result_name
-            self._create_annotation(text, result_name, x, y, z)
-
-    def annotate_point_picker(obj, event):
-        self.log_command("annotate_point_picker()")
-        picker = self.cell_picker
-        if picker.GetPointId() < 0:
-            #self.picker_textActor.VisibilityOff()
-            pass
-        else:
-            world_position = picker.GetPickPosition()
-            point_id = picker.GetPointId()
-            #ds = picker.GetDataSet()
-            select_point = picker.GetSelectionPoint()
-            self.log_command("annotate_point_picker()")
-            self.log_info("world_position = %s" % str(world_position))
-            self.log_info("point_id = %s" % point_id)
-            #self.log_info("data_set = %s" % ds)
-            self.log_info("select_point = %s" % str(select_point))
-
-            #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pick_pos)
-            #self.picker_textActor.SetPosition(select_point[:2])
-            #self.picker_textActor.VisibilityOn()
-
-        #self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
-        #self.node_picker.AddObserver("EndPickEvent", annotate_point_picker)
-        #self.vtk_interactor.SetPicker(self.cell_picker)
-
-        #self.cell_picker.AddObserver("EndPickEvent", on_cell_picker)
-        #self.node_picker.AddObserver("EndPickEvent", on_node_picker)
+        self.setup_mouse_buttons(mode='probe_result')
+        self.setup_mouse_buttons(mode='default')
 
     def convert_units(self, result_name, result_value, xyz):
         #self.input_units

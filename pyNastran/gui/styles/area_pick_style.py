@@ -119,35 +119,21 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):
                 eids = None
                 nids = None
 
-                if 0:
-                    msg = ''
-                    if self.is_eids:
-                        cell_ids = vtk_to_numpy(ugrid.GetCellData().GetArray('Ids'))
+                msg = ''
+                if self.is_eids:
+                    cells = ugrid.GetCellData()
+                    if cells is not None:
+                        cell_ids = vtk_to_numpy(cells.GetArray('Ids'))
                         assert len(cell_ids) == len(np.unique(cell_ids))
                         eids = self.parent.element_ids[cell_ids]
-                        msg += write_patran_syntax_dict({'Elem' : eids})
-                    if self.is_nids:
-                        point_ids = vtk_to_numpy(ugrid.GetPointData().GetArray('Ids'))
+                if self.is_nids:
+                    points = ugrid.GetPointData()
+                    if points is not None:
+                        point_ids = vtk_to_numpy(points.GetArray('Ids'))
                         nids = self.parent.node_ids[point_ids]
-                        msg += '\n' + write_patran_syntax_dict({'Node' : nids})
-                    if msg:
-                        self.parent.log_info('\n%s' % msg.lstrip())
-                else:
-                    msg = ''
-                    if self.is_eids:
-                        cells = ugrid.GetCellData()
-                        if cells is not None:
-                            cell_ids = vtk_to_numpy(cells.GetArray('Ids'))
-                            assert len(cell_ids) == len(np.unique(cell_ids))
-                            eids = self.parent.element_ids[cell_ids]
-                    if self.is_nids:
-                        points = ugrid.GetPointData()
-                        if points is not None:
-                            point_ids = vtk_to_numpy(points.GetArray('Ids'))
-                            nids = self.parent.node_ids[point_ids]
 
-                    if self.callback is not None:
-                        self.callback(eids, nids)
+                if self.callback is not None:
+                    self.callback(eids, nids)
 
                 self.area_pick_button.setChecked(False)
                 self.parent.setup_mouse_buttons(mode='default')
