@@ -22,7 +22,6 @@ from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.nastran.nastranIOv import NastranIO
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.panair.panair_io import PanairIO
-from pyNastran.converters.aflr2.bedge_io import BEdge_IO
 from pyNastran.converters.fast.fast_io import FastIO
 from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
 from pyNastran.converters.shabp.shabp_io import ShabpIO
@@ -30,9 +29,12 @@ from pyNastran.converters.stl.stl_io import STL_IO
 from pyNastran.converters.su2.su2_io import SU2_IO
 from pyNastran.converters.tecplot.tecplot_io import TecplotIO
 from pyNastran.converters.tetgen.tetgen_io import TetgenIO
-from pyNastran.converters.ugrid.surf_io import SurfIO
-from pyNastran.converters.ugrid.ugrid_io import UGRID_IO
 from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
+from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
+
+from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
+from pyNastran.converters.aflr.ugrid.surf_io import SurfIO
+from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
 
 from pyNastran.gui.arg_handling import determine_format
 from pyNastran.utils import print_bad_path
@@ -40,6 +42,7 @@ from pyNastran.utils.dev import get_files_of_type
 from pyNastran.op2.test.test_op2 import get_failed_files
 
 FORMAT_TO_EXTENSION = {
+    #'abaqus' : ['.inp'],
     'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch', '.dat'],
     'stl' : ['.stl'],
     'cart3d' : ['.tri', '.triq'],
@@ -70,11 +73,11 @@ EXTENSION_TO_OUPUT_FORMATS = {
 #pkg_path = pyNastran.__path__[0]
 #model_path = os.path.join(pkg_path, '..', 'models')
 
-class FakeGUI(GUIMethods, NastranIO, Cart3dIO, ShabpIO, PanairIO,
-              LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO,
+class FakeGUI(GUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
+              PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
               #Plot3d_io, ADB_IO, DegenGeomIO,
               # AbaqusIO, AvusIO,
-              FastIO, SurfIO, UGRID_IO, BEdge_IO, SU2_IO):
+              TecplotIO, FastIO, SurfIO, UGRID_IO, BEdge_IO, SU2_IO):
     """spoofs the gui for testing"""
 
     def __init__(self, formati, inputs=None):
@@ -90,6 +93,7 @@ class FakeGUI(GUIMethods, NastranIO, Cart3dIO, ShabpIO, PanairIO,
         GUIMethods.__init__(self, inputs=inputs)
         #ADB_IO.__init__(self)
         #AvusIO.__init__(self)
+        AbaqusIO.__init__(self)
         BEdge_IO.__init__(self)
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)

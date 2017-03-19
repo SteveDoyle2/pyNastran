@@ -1,6 +1,7 @@
 """
 defines the ZoomStyle class
 """
+from __future__ import print_function, division
 import vtk
 
 #left_button_down=self._zoom_picker,
@@ -84,12 +85,13 @@ class ZoomStyle(vtk.vtkInteractorStyleRubberBandZoom):
             #print('  p1 =', p1x, p1y)
             #print('  p2 =', p2x, p2y)
             #print('  z=%s distance=%s' % (z, distance))
-            #print('  zoom_factor = %s\n' % zoom_factor)
+            #print('  zoom_factor = %s\n' % aspect_ratio_x, aspect_ratio_y)
             #camera.SetPosition(x, y, z)
             self.parent.zoom(zoom_factor)
 
             self.zoom_button.setChecked(False)
             self.parent.setup_mouse_buttons(mode='default')
+            #self.parent.actions['zoom'].SetChecked(False)
 
 
     def right_button_press_event(self, obj, event):

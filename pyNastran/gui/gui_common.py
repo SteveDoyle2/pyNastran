@@ -50,7 +50,7 @@ import pyNastran
 
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
 from pyNastran.gui.gui_utils import save_file_dialog, open_file_dialog
@@ -73,6 +73,7 @@ from pyNastran.gui.menus.results_sidebar import Sidebar
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 
+from pyNastran.gui.styles.area_pick_style import AreaPickStyle
 from pyNastran.gui.styles.zoom_style import ZoomStyle
 from pyNastran.gui.styles.probe_style import ProbeResultStyle
 
@@ -342,7 +343,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_error(str(e))
             self.log_error(str(txt))
             raise
-            return
+            #return
         if clear:
             self.python_dock_widget.enter_data.clear()
 
@@ -509,6 +510,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                 ('measure_distance', 'Measure Distance', 'tmeasure_distance.png', None, 'Measure the distance between two nodes', self.on_measure_distance),
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
+                ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
 
                 # TODO: not done...
@@ -582,8 +584,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             'back_color', 'text_color', '',
             'label_modify', 'label_clear', 'label_reset', 'picker_modify', '',
             'legend', 'geo_properties',
-            ['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
-             'anti_alias_4', 'anti_alias_8',],
+            #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
+             #'anti_alias_4', 'anti_alias_8',],
         ]
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id',
@@ -609,7 +611,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'zoom',
                          'rotate_clockwise', 'rotate_cclockwise',
-                         'rotation_center', 'measure_distance', 'probe_result', #'area_pick',
+                         'rotation_center', 'measure_distance', 'probe_result', 'area_pick',
 
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
@@ -1091,7 +1093,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._camera_mode = 'default'
         self.setup_mouse_buttons(mode='default')
 
-    def setup_mouse_buttons(self, mode=None,
+    def setup_mouse_buttons(self, mode=None, revert=False,
                             left_button_down=None, left_button_up=None,
                             right_button_down=None,
                             end_pick=None,
@@ -1103,6 +1105,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         mode : str
             lets you know what kind of mapping this is
+        revert : bool; default=False
+            does the button revert when it's finished
+
         left_button_down : function (default=None)
             the callback function (None -> depends on the mode)
         left_button_up : function (default=None)
@@ -1113,6 +1118,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             a custom vtkInteractorStyle
             None -> keep the same style, but overwrite the left mouse button
         """
+        assert isinstance(mode, string_types), mode
+        assert revert in [True, False], revert
         #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))
         if mode == self._camera_mode:
             #print('auto return from set mouse mode')
@@ -1140,10 +1147,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # Re-assign left mouse click event to custom function (Point Picker)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.style.Rotate)
 
-        elif mode in ['rotation_center', 'measure_distance', 'probe_result']:
+        elif mode in ['rotation_center', 'measure_distance']:
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
+
+            self.vtk_interactor.RemoveObservers('EndPickEvent')
+            self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
+        elif mode in ['probe_result']:
+            # hackish b/c the default setting is so bad
+            self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
+
+            self.vtk_interactor.RemoveObservers('EndPickEvent')
+            self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, 1) # on press down
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, -1) # on button up
         elif mode == 'zoom':
@@ -1182,11 +1199,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_cell_pick_event)
         elif mode == 'cell_pick':
+            #aaa
             #print('set mouse mode as cell_pick')
             self.vtk_interactor.SetPicker(self.cell_picker)
         elif mode == 'node_pick':
+            #bbb
             #print('set mouse mode as node_pick')
             self.vtk_interactor.SetPicker(self.node_picker)
+        elif mode == 'style':
+            self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            self.vtk_interactor.RemoveObservers('RightButtonPressEvent')
+            self.vtk_interactor.SetInteractorStyle(style)
+
 
         #elif mode == 'area_cell_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
@@ -1209,6 +1233,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #pass
         else:
             raise NotImplementedError('camera_mode = %r' % self._camera_mode)
+        self.revert = revert
 
     def on_measure_distance(self):
         self.revert_pressed('measure_distance')
@@ -1220,7 +1245,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.setup_mouse_buttons(mode='default')
             return
         self._measure_distance_pick_points = []
-        self.setup_mouse_buttons('measure_distance', self._measure_distance_picker)
+        self.setup_mouse_buttons('measure_distance', left_button_down=self._measure_distance_picker)
 
     def _measure_distance_picker(self, obj, event):
         picker = self.cell_picker
@@ -1281,24 +1306,69 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #self.vtk_interactor.SetPicker(self.node_picker)
         method = 'cell'
-        #if method == 'node':
+        #method = 'node'
+        if method == 'node':
             #asdf
             #self.set_node_picker()
-            #self.setup_mouse_buttons('rotation_center', self._rotation_center_node_picker)
-        if method == 'cell':
+            self.setup_mouse_buttons('rotation_center', revert=True,
+                                     left_button_down=self._rotation_center_node_picker)
+        elif method == 'cell':
             #tol = self.cell_picker.GetTolerance()
             #print('tol = ', tol)
             #self.cell_picker.SetTolerance(0.5)
             #tol = self.cell_picker.GetTolerance()
             #print('tol = ', tol)
-            self.setup_mouse_buttons('rotation_center', self._rotation_center_cell_picker)
+            self.setup_mouse_buttons('rotation_center', revert=True,
+                                     left_button_down=self._rotation_center_cell_picker)
         else:
             raise NotImplementedError(method)
         #focal_point = self.do_point_pick(point)
         #self.node_picker.RemoveObservers('EndPickEvent')
         #self.node_picker.AddObserver('EndPickEvent', annotate_cell_picker)
 
+    def _rotation_center_node_picker(self, obj, event):
+        """reset the rotation center"""
+        self.log_command('_rotation_center_node_picker()')
+        picker = self.node_picker
+
+        print('picker.object_methods =', object_methods(picker))
+        point_id = picker.GetPointId()
+        if point_id < 0:
+            #self.picker_textActor.VisibilityOff()
+            print('picker.point_id =', point_id)
+        else:
+            self.log_command('_rotation_center_node_picker()')
+            camera = self.rend.GetActiveCamera()
+
+            world_position = picker.GetPickPosition()
+            focal_point = world_position
+            point_id = picker.GetPointId()
+            #ds = picker.GetDataSet()
+            select_point = picker.GetSelectionPoint()
+
+            self.log_command("_rotation_center_node_picker()")
+            self.log_info('focal_point = %s' % str(focal_point))
+            #self.log_info('point_id = %s' % point_id)
+            #self.log_info('data_set = %s' % ds)
+            #self.log_info('select_point = %s' % str(select_point))
+
+            #self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
+            #self.picker_textActor.SetPosition(select_point[:2])
+            #self.picker_textActor.VisibilityOn()
+            self.setup_mouse_buttons(mode='default')
+
+            # now we can actually modify the camera
+            camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+            camera.OrthogonalizeViewUp()
+            rotation_center_button = self.actions['rotation_center']
+            rotation_center_button.setChecked(False)
+
+            #self.set_cell_picker()
+        #if self.revert:
+            #self.setup_mouse_buttons(mode='default')
+
     def _rotation_center_cell_picker(self, obj, event):
+        """reset the rotation center"""
         picker = self.cell_picker
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
@@ -1307,6 +1377,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print('_rotation_center_cell_picker', cell_id)
 
         if cell_id < 0:
+            print('picker.cell_id =', cell_id)
             #self.picker_textActor.VisibilityOff()
             pass
         else:
@@ -1325,6 +1396,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             camera.OrthogonalizeViewUp()
             rotation_center_button = self.actions['rotation_center']
             rotation_center_button.setChecked(False)
+        #if self.revert:
+            #self.setup_mouse_buttons(mode='default')
 
     def revert_pressed(self, active_name):
         if active_name != 'probe_result':
@@ -1370,11 +1443,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # revert probe_result
             self.setup_mouse_buttons(mode='default')
             return
-        self.setup_mouse_buttons('probe_result', self._probe_picker)
+        self.setup_mouse_buttons('probe_result', left_button_down=self._probe_picker)
+
         #style = ProbeResultStyle(parent=self)
         #self.vtk_interactor.SetInteractorStyle(style)
 
-    def on_area_pick(self):
+    def on_quick_probe_result(self):
+        self.revert_pressed('probe_result')
+        is_checked = self.actions['probe_result'].isChecked()
+        self.setup_mouse_buttons('probe_result', left_button_down=self._probe_picker, revert=True)
+
+    def on_area_pick_old(self):
         self.revert_pressed('area_pick')
         is_checked = self.actions['area_pick'].isChecked()
         if not is_checked:
@@ -1392,6 +1471,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
                                  left_button_up=self._area_picker_box_up,
                                  #end_pick=self._area_picker_up,
                                  style=style)
+
+    def on_area_pick(self):
+        """creates a Rubber Band Zoom"""
+        self.revert_pressed('area_pick')
+        is_checked = self.actions['area_pick'].isChecked()
+        if not is_checked:
+            # revert area_pick
+            self.setup_mouse_buttons(mode='default')
+            return
+
+        self.log_info('on_area_pick')
+        self._picker_points = []
+        style = AreaPickStyle(parent=self, is_eids=True, is_nids=False)
+        self.setup_mouse_buttons(mode='style', revert=True, style=style)
+        #self.vtk_interactor.SetInteractorStyle(style)
 
     def on_area_pick_not_square(self):
         self.revert_pressed('area_pick')
@@ -1444,9 +1538,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # revert zoom
             self.setup_mouse_buttons(mode='default')
             return
-
         style = ZoomStyle(parent=self)
-        self.vtk_interactor.SetInteractorStyle(style)
+        self.setup_mouse_buttons(mode='style', revert=True, style=style)
+        #self.vtk_interactor.SetInteractorStyle(style)
 
     def _area_picker(self, obj, event):
         """
@@ -1597,7 +1691,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
 
         cell_id = picker.GetCellId()
-        #print('_rotation_center_cell_picker', cell_id)
+        print('_probe_picker', cell_id)
 
         if cell_id < 0:
             pass
@@ -1663,45 +1757,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             assert result_name in self.label_actors, result_name
             self._create_annotation(text, result_name, x, y, z)
             self.vtk_interactor.Render()
-
-    def _rotation_center_node_picker(self, obj, event):
-        """reset the rotation center"""
-        self.log_command('_rotation_center_node_picker()')
-        picker = self.node_picker
-        from pyNastran.utils import object_methods
-
-        print('picker.object_methods =', object_methods(picker))
-        point_id = picker.GetPointId()
-        if point_id < 0:
-            #self.picker_textActor.VisibilityOff()
-            print('picker.point_id =', point_id)
-        else:
-            self.log_command('_rotation_center_node_picker()')
-            camera = self.rend.GetActiveCamera()
-
-            world_position = picker.GetPickPosition()
-            focal_point = world_position
-            point_id = picker.GetPointId()
-            #ds = picker.GetDataSet()
-            select_point = picker.GetSelectionPoint()
-            self.log_info('focal_point = %s' % str(focal_point))
-            self.log_info('point_id = %s' % point_id)
-            #self.log_info('data_set = %s' % ds)
-            self.log_info('select_point = %s' % str(select_point))
-
-            #self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
-            #self.picker_textActor.SetPosition(select_point[:2])
-            #self.picker_textActor.VisibilityOn()
-            self.setup_mouse_buttons(mode='default')
-
-            # now we can actually modify the camera
-            camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            camera.OrthogonalizeViewUp()
-
-            self.set_cell_picker()
+        if self.revert:
+            self.setup_mouse_buttons(self, mode='default')
 
     #def remove_picker(self):
         #self.vtk_interactor.
+
     def set_node_picker(self):
         self.vtk_interactor.SetPicker(self.node_picker)
 
@@ -3495,8 +3556,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #vtk.vtkLegendScaleActor
         #vtk.vtkLabelPlacer
 
-        self.cell_picker.SetTolerance(0.0005)
-        self.node_picker.SetTolerance(0.5)
+        self.cell_picker.SetTolerance(0.001)
+        self.node_picker.SetTolerance(0.001)
 
     def mark_nodes(self, nids, result_name, text):
         """
@@ -3588,86 +3649,95 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.is_pick = False
         if not self.run_vtk:
             return
-
-        def annotate_cell_picker(object, event):
-            if self._camera_mode != 'default':
-                return
-            picker = self.cell_picker
-            if picker.GetCellId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                world_position = picker.GetPickPosition()
-                cell_id = picker.GetCellId()
-                #ds = picker.GetDataSet()
-                #select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_cell_picker()")
-                self.log_info("XYZ Global = %s" % str(world_position))
-                #self.log_info("cell_id = %s" % cell_id)
-                #self.log_info("data_set = %s" % ds)
-                #self.log_info("selPt = %s" % str(select_point))
-
-                #method = 'get_result_by_cell_id()' # self.model_type
-                #print('pick_state =', self.pick_state)
-
-                icase = self.icase
-                key = self.case_keys[icase]
-                location = self.get_case_location(key)
-
-                if location == 'centroid':
-                    out = self._cell_centroid_pick(cell_id, world_position)
-                elif location == 'node':
-                    out = self._cell_node_pick(cell_id, world_position)
-                else:
-                    raise RuntimeError('invalid pick location=%r' % location)
-
-                return_flag, duplicate_key, result_value, result_name, xyz = out
-                if return_flag is True:
-                    return
-
-                # prevent duplicate labels with the same value on the same cell
-                if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
-                    return
-                self.label_ids[result_name].add(duplicate_key)
-
-                #if 0:
-                    #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
-                    #result_value = result_value2
-                    #xyz2 = xyz
-                #x, y, z = world_position
-                x, y, z = xyz
-                text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
-                text = str(result_value)
-                assert result_name in self.label_actors, result_name
-                self._create_annotation(text, result_name, x, y, z)
-
-        def annotate_point_picker(obj, event):
-            self.log_command("annotate_point_picker()")
-            picker = self.cell_picker
-            if picker.GetPointId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                world_position = picker.GetPickPosition()
-                point_id = picker.GetPointId()
-                #ds = picker.GetDataSet()
-                select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_point_picker()")
-                self.log_info("world_position = %s" % str(world_position))
-                self.log_info("point_id = %s" % point_id)
-                #self.log_info("data_set = %s" % ds)
-                self.log_info("select_point = %s" % str(select_point))
-
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pick_pos)
-                #self.picker_textActor.SetPosition(select_point[:2])
-                #self.picker_textActor.VisibilityOn()
-
-        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
-        self.node_picker.AddObserver("EndPickEvent", annotate_point_picker)
         self.vtk_interactor.SetPicker(self.cell_picker)
+        self.vtk_interactor.SetPicker(self.node_picker)
+
+    def annotate_cell_picker(object, event):
+        """
+        object : vtkCellPicker
+            vtkPicker
+        event : str
+            EndPickEvent
+        """
+        print(object)
+        if self._camera_mode != 'default':
+            return
+        picker = self.cell_picker
+        if picker.GetCellId() < 0:
+            #self.picker_textActor.VisibilityOff()
+            pass
+        else:
+            world_position = picker.GetPickPosition()
+            cell_id = picker.GetCellId()
+            #ds = picker.GetDataSet()
+            #select_point = picker.GetSelectionPoint()
+            self.log_command("annotate_cell_picker()")
+            self.log_info("XYZ Global = %s" % str(world_position))
+            #self.log_info("cell_id = %s" % cell_id)
+            #self.log_info("data_set = %s" % ds)
+            #self.log_info("selPt = %s" % str(select_point))
+
+            #method = 'get_result_by_cell_id()' # self.model_type
+            #print('pick_state =', self.pick_state)
+
+            icase = self.icase
+            key = self.case_keys[icase]
+            location = self.get_case_location(key)
+
+            if location == 'centroid':
+                out = self._cell_centroid_pick(cell_id, world_position)
+            elif location == 'node':
+                out = self._cell_node_pick(cell_id, world_position)
+            else:
+                raise RuntimeError('invalid pick location=%r' % location)
+
+            return_flag, duplicate_key, result_value, result_name, xyz = out
+            if return_flag is True:
+                return
+
+            # prevent duplicate labels with the same value on the same cell
+            if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
+                return
+            self.label_ids[result_name].add(duplicate_key)
+
+            #if 0:
+                #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
+                #result_value = result_value2
+                #xyz2 = xyz
+            #x, y, z = world_position
+            x, y, z = xyz
+            text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
+            text = str(result_value)
+            assert result_name in self.label_actors, result_name
+            self._create_annotation(text, result_name, x, y, z)
+
+    def annotate_point_picker(obj, event):
+        self.log_command("annotate_point_picker()")
+        picker = self.cell_picker
+        if picker.GetPointId() < 0:
+            #self.picker_textActor.VisibilityOff()
+            pass
+        else:
+            world_position = picker.GetPickPosition()
+            point_id = picker.GetPointId()
+            #ds = picker.GetDataSet()
+            select_point = picker.GetSelectionPoint()
+            self.log_command("annotate_point_picker()")
+            self.log_info("world_position = %s" % str(world_position))
+            self.log_info("point_id = %s" % point_id)
+            #self.log_info("data_set = %s" % ds)
+            self.log_info("select_point = %s" % str(select_point))
+
+            #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pick_pos)
+            #self.picker_textActor.SetPosition(select_point[:2])
+            #self.picker_textActor.VisibilityOn()
+
+        #self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
+        #self.node_picker.AddObserver("EndPickEvent", annotate_point_picker)
+        #self.vtk_interactor.SetPicker(self.cell_picker)
 
         #self.cell_picker.AddObserver("EndPickEvent", on_cell_picker)
-        #self.node_picker.AddObserver("EndPickEvent", on_node_picker)p
+        #self.node_picker.AddObserver("EndPickEvent", on_node_picker)
 
     def convert_units(self, result_name, result_value, xyz):
         #self.input_units

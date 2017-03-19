@@ -497,6 +497,11 @@ class GuiCommon(GuiAttributes):
         if name is None:
             return
 
+        # the result type being currently shown
+        # for a Nastran NodeID/displacement, this is 'node'
+        # for a Nastran ElementID/PropertyID, this is 'element'
+        self.result_location = location
+
         grid = self.grid
         name_str = self._names_storage.get_name_string(name)
         if not self._names_storage.has_exact_name(name):

@@ -305,7 +305,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             # t=.578
             #print("get_displacement_index_xyz_cp_cd")
             out = model.get_displacement_index_xyz_cp_cd(
-                fdtype=fdtype, idtype='int32')
+                fdtype=fdtype, idtype='int32', sort_ids=True)
             icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
             self.i_transform = icd_transform
 
@@ -319,7 +319,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         elif 0:  # pragma: no cover
             # t=.573
             out = model.get_displacement_index_xyz_cp_cd(
-                fdtype='float32', idtype='int32')
+                fdtype='float32', idtype='int32', sort_ids=True)
             icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
             self.i_transform = icd_transform
             xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)

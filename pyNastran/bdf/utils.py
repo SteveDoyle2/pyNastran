@@ -539,6 +539,22 @@ def parse_patran_syntax(node_sets, pound=None):
     return unique(nodes)
 
 def write_patran_syntax_dict(dict_sets):
+    """
+    writes partran syntax
+
+    Parameters
+    ----------
+    dict_sets : Dict[str] = List[int]
+        str : the key
+        values : the integer values for that key
+
+    Returns
+    -------
+    node_sets : str
+        the node_set to parse
+
+    See ``parse_patran_syntax_dict`` for explanation of usage
+    """
     msg = ''
     for key, dict_set in sorted(iteritems(dict_sets)):
         singles, doubles = collapse_colon_packs(dict_set)

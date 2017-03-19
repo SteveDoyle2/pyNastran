@@ -27,6 +27,11 @@ class GuiAttributes(object):
         res_widget = kwds['res_widget']
         self.dev = False
 
+        # the result type being currently shown
+        # for a Nastran NodeID/displacement, this is 'node'
+        # for a Nastran ElementID/PropertyID, this is 'element'
+        self.result_location = None
+
         self.case_keys = {}
         self.res_widget = res_widget
         self._show_flag = True
