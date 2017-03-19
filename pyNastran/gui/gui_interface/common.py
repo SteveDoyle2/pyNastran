@@ -36,18 +36,7 @@ class QElementEdit(QLineEdit):
         self.win_parent.win_parent.on_area_pick(is_eids=True, is_nids=False,
                                                 callback=self.on_focus_callback,
                                                 force=True)
-        #if 0:
-            #self.revert_pressed('area_pick')
-            #is_checked = self.actions['area_pick'].isChecked()
-            #if not is_checked:
-                ## revert area_pick
-                #self.setup_mouse_buttons(mode='default')
-                #return
 
-            #self.log_info('on_area_pick')
-            #self._picker_points = []
-            #style = AreaPickStyle(parent=self, is_eids=True, is_nids=False)
-            #self.setup_mouse_buttons(mode='style', revert=True, style=style)
 
 class PyDialog(QDialog):
     """common class for QDialog so value checking & escape/close code is not repeated"""

@@ -77,6 +77,7 @@ from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 from pyNastran.gui.styles.area_pick_style import AreaPickStyle
 from pyNastran.gui.styles.zoom_style import ZoomStyle
 from pyNastran.gui.styles.probe_style import ProbeResultStyle
+from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 
 from pyNastran.gui.testing_methods import CoordProperties
@@ -1149,7 +1150,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # Re-assign left mouse click event to custom function (Point Picker)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.style.Rotate)
 
-        elif mode in ['rotation_center', 'measure_distance']:
+        elif mode in ['measure_distance']: # 'rotation_center',
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
@@ -1177,22 +1178,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if right_button_down:
                 self.vtk_interactor.AddObserver('RightButtonPressEvent', right_button_down)
 
-        elif mode == 'area_pick':
-            assert style is not None, style
-            self.vtk_interactor.SetInteractorStyle(style)
-            # on button down
-            if left_button_down:
-                self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
-            if right_button_down:
-                self.vtk_interactor.AddObserver('RightButtonPressEvent', right_button_down)
-
-            # button up
-            if left_button_up:
-                self.vtk_interactor.AddObserver('LeftButtonReleaseEvent', left_button_up) # on button up
-
-            if end_pick:
-                self.vtk_interactor.AddObserver('EndPickEvent', end_pick) # on button up
-            #style = vtk.vtkInteractorStyleTrackballCamera()
 
         #elif mode == 'node_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
@@ -1212,7 +1197,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.RemoveObservers('RightButtonPressEvent')
             self.vtk_interactor.SetInteractorStyle(style)
-
 
         #elif mode == 'area_cell_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
@@ -1306,100 +1290,97 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.setup_mouse_buttons(mode='default')
             return
 
-        #self.vtk_interactor.SetPicker(self.node_picker)
-        method = 'cell'
-        #method = 'node'
-        if method == 'node':
-            #asdf
-            #self.set_node_picker()
-            self.setup_mouse_buttons('rotation_center', revert=True,
-                                     left_button_down=self._rotation_center_node_picker)
-        elif method == 'cell':
-            #tol = self.cell_picker.GetTolerance()
-            #print('tol = ', tol)
-            #self.cell_picker.SetTolerance(0.5)
-            #tol = self.cell_picker.GetTolerance()
-            #print('tol = ', tol)
-            self.setup_mouse_buttons('rotation_center', revert=True,
-                                     left_button_down=self._rotation_center_cell_picker)
-        else:
-            raise NotImplementedError(method)
-        #focal_point = self.do_point_pick(point)
-        #self.node_picker.RemoveObservers('EndPickEvent')
-        #self.node_picker.AddObserver('EndPickEvent', annotate_cell_picker)
+        style = RotationCenterStyle(parent=self)
+        self.setup_mouse_buttons('style', revert=True, style=style)
 
-    def _rotation_center_node_picker(self, obj, event):
-        """reset the rotation center"""
-        self.log_command('_rotation_center_node_picker()')
-        picker = self.node_picker
+    def set_focal_point(self, focal_point):
+        """
+        Parameters
+        ----------
+        focal_point : (3, ) float ndarray
+            The focal point
+            [ 188.25109863 -7. -32.07858658]
+        """
+        camera = self.rend.GetActiveCamera()
+        self.log_command("set_focal_point(focal_point=%s)" % str(focal_point))
 
-        print('picker.object_methods =', object_methods(picker))
-        point_id = picker.GetPointId()
-        if point_id < 0:
-            #self.picker_textActor.VisibilityOff()
-            print('picker.point_id =', point_id)
-        else:
-            self.log_command('_rotation_center_node_picker()')
-            camera = self.rend.GetActiveCamera()
+        # now we can actually modify the camera
+        camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+        camera.OrthogonalizeViewUp()
+        self.vtk_interactor.Render()
 
-            world_position = picker.GetPickPosition()
-            focal_point = world_position
-            point_id = picker.GetPointId()
-            #ds = picker.GetDataSet()
-            select_point = picker.GetSelectionPoint()
+    #def _rotation_center_node_picker(self, obj, event):
+        #"""reset the rotation center"""
+        #self.log_command('_rotation_center_node_picker()')
+        #picker = self.node_picker
 
-            self.log_command("_rotation_center_node_picker()")
-            self.log_info('focal_point = %s' % str(focal_point))
-            #self.log_info('point_id = %s' % point_id)
-            #self.log_info('data_set = %s' % ds)
-            #self.log_info('select_point = %s' % str(select_point))
+        #print('picker.object_methods =', object_methods(picker))
+        #point_id = picker.GetPointId()
+        #if point_id < 0:
+            ##self.picker_textActor.VisibilityOff()
+            #print('picker.point_id =', point_id)
+        #else:
+            #self.log_command('_rotation_center_node_picker()')
+            #camera = self.rend.GetActiveCamera()
 
-            #self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
-            #self.picker_textActor.SetPosition(select_point[:2])
-            #self.picker_textActor.VisibilityOn()
-            self.setup_mouse_buttons(mode='default')
-
-            # now we can actually modify the camera
-            camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            camera.OrthogonalizeViewUp()
-            rotation_center_button = self.actions['rotation_center']
-            rotation_center_button.setChecked(False)
-
-            #self.set_cell_picker()
-        #if self.revert:
-            #self.setup_mouse_buttons(mode='default')
-
-    def _rotation_center_cell_picker(self, obj, event):
-        """reset the rotation center"""
-        picker = self.cell_picker
-        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        picker.Pick(pixel_x, pixel_y, 0, self.rend)
-
-        cell_id = picker.GetCellId()
-        #print('_rotation_center_cell_picker', cell_id)
-
-        if cell_id < 0:
-            print('picker.cell_id =', cell_id)
-            #self.picker_textActor.VisibilityOff()
-            pass
-        else:
-            camera = self.rend.GetActiveCamera()
-            world_position = picker.GetPickPosition()
-            focal_point = self._get_closest_node_xyz(cell_id, world_position)
-
-            #ds = picker.GetDataSet()
+            #world_position = picker.GetPickPosition()
+            #focal_point = world_position
+            #point_id = picker.GetPointId()
+            ##ds = picker.GetDataSet()
             #select_point = picker.GetSelectionPoint()
-            self.log_command("_rotation_center_cell_picker()")
-            self.log_info('focal_point = %s' % str(focal_point))
-            self.setup_mouse_buttons(mode='default')
 
-            # now we can actually modify the camera
-            camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            camera.OrthogonalizeViewUp()
-            rotation_center_button = self.actions['rotation_center']
-            rotation_center_button.setChecked(False)
-        #if self.revert:
+            #self.log_command("_rotation_center_node_picker()")
+            #self.log_info('focal_point = %s' % str(focal_point))
+            ##self.log_info('point_id = %s' % point_id)
+            ##self.log_info('data_set = %s' % ds)
+            ##self.log_info('select_point = %s' % str(select_point))
+
+            ##self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
+            ##self.picker_textActor.SetPosition(select_point[:2])
+            ##self.picker_textActor.VisibilityOn()
             #self.setup_mouse_buttons(mode='default')
+
+            ## now we can actually modify the camera
+            #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+            #camera.OrthogonalizeViewUp()
+            #rotation_center_button = self.actions['rotation_center']
+            #rotation_center_button.setChecked(False)
+
+            ##self.set_cell_picker()
+        ##if self.revert:
+            ##self.setup_mouse_buttons(mode='default')
+
+    #def _rotation_center_cell_picker(self, obj, event):
+        #"""reset the rotation center"""
+        #picker = self.cell_picker
+        #pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        #picker.Pick(pixel_x, pixel_y, 0, self.rend)
+
+        #cell_id = picker.GetCellId()
+        ##print('_rotation_center_cell_picker', cell_id)
+
+        #if cell_id < 0:
+            #print('picker.cell_id =', cell_id)
+            ##self.picker_textActor.VisibilityOff()
+            #pass
+        #else:
+            #camera = self.rend.GetActiveCamera()
+            #world_position = picker.GetPickPosition()
+            #focal_point = self._get_closest_node_xyz(cell_id, world_position)
+
+            ##ds = picker.GetDataSet()
+            ##select_point = picker.GetSelectionPoint()
+            #self.log_command("_rotation_center_cell_picker()")
+            #self.log_info('focal_point = %s' % str(focal_point))
+            #self.setup_mouse_buttons(mode='default')
+
+            ## now we can actually modify the camera
+            #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+            #camera.OrthogonalizeViewUp()
+            #rotation_center_button = self.actions['rotation_center']
+            #rotation_center_button.setChecked(False)
+        ##if self.revert:
+            ##self.setup_mouse_buttons(mode='default')
 
     def revert_pressed(self, active_name):
         if active_name != 'probe_result':
@@ -1456,7 +1437,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.setup_mouse_buttons('probe_result', left_button_down=self._probe_picker, revert=True)
 
     def on_area_pick_callback(self, eids, nids):
-        """prints the message when area_pick suceeds"""
+        """prints the message when area_pick succeeds"""
         msg = ''
         if eids is not None and len(eids):
             msg += write_patran_syntax_dict({'Elem' : eids})
@@ -1482,7 +1463,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             callback = self.on_area_pick_callback
         style = AreaPickStyle(parent=self, is_eids=is_eids, is_nids=is_nids,
                               callback=callback)
-        self.setup_mouse_buttons(mode='style', revert=True, style=style)
+        self.setup_mouse_buttons(mode='style', revert=True, style=style) #, style_name='area_pick'
 
     def on_area_pick_not_square(self):
         self.revert_pressed('area_pick')
@@ -1495,10 +1476,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_info('on_area_pick')
         self.vtk_interactor.SetPicker(self.area_picker)
 
+        def _area_picker_up(*args):
+            pass
         style = vtk.vtkInteractorStyleDrawPolygon()
         self.setup_mouse_buttons('area_pick',
                                  #left_button_down=self._area_picker,
-                                 left_button_up=self._area_picker_up,
+                                 left_button_up=_area_picker_up,
                                  #end_pick=self._area_picker_up,
                                  style=style)
         #self.area_picker = vtk.vtkAreaPicker()  # vtkRenderedAreaPicker?
@@ -1508,24 +1491,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #vtk.vtkInteractorStyleRubberBandZoom
         #vtk.vtkInteractorStyleAreaSelectHover
         #vtk.vtkInteractorStyleDrawPolygon
-
-    def _area_picker_up(self, obj, event):
-        self.log_info('_area_picker_up')
-        #pts = self.style.GetPolygonPoints()
-        #pts = self.vtk_interactor.GetPolygonPoints()
-        #print('pts =', pts)
-        props = self.area_picker.GetProp3Ds()
-        print(props)
-        for i in range(props.GetNumberOfItems()):
-            prop = props.GetNextProp3D()
-            print("Picked prop: ", prop)
-        self.vtk_interactor.SetPicker(self.cell_picker)
-
-
-        area_pick = self.actions['area_pick']
-        area_pick.setChecked(False)
-        self.setup_mouse_buttons(mode='default')
-        self.vtk_interactor.Render()
 
     def on_zoom(self):
         """creates a Rubber Band Zoom"""
@@ -1538,148 +1503,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         style = ZoomStyle(parent=self)
         self.setup_mouse_buttons(mode='style', revert=True, style=style)
         #self.vtk_interactor.SetInteractorStyle(style)
-
-    def _area_picker(self, obj, event):
-        """
-        picks all the nodes/elements in the box
-        TODO: not done
-        """
-        picker = self.area_picker
-        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        picker.Pick(pixel_x, pixel_y, 0, self.rend)
-
-        cell_id = picker.GetCellId()
-        #print('_rotation_center_cell_picker', cell_id)
-
-        if cell_id < 0:
-            pass
-        else:
-            world_position = picker.GetPickPosition()
-            if 0:
-                camera = self.rend.GetActiveCamera()
-                (result_name, result_value, node_id, node_xyz) = self.get_result_by_xyz_cell_id(
-                    world_position, cell_id)
-                #focal_point = world_position
-                #self.log_info('focal_point = %s' % str(focal_point))
-                self.setup_mouse_buttons(mode='default')
-
-                # now we can actually modify the camera
-                #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-                camera.OrthogonalizeViewUp()
-                rotation_center_button = self.actions['rotation_center']
-                rotation_center_button.setChecked(False)
-
-
-                world_position = picker.GetPickPosition()
-                cell_id = picker.GetCellId()
-                #ds = picker.GetDataSet()
-                #select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_cell_picker()")
-                self.log_info("XYZ Global = %s" % str(world_position))
-                #self.log_info("cell_id = %s" % cell_id)
-                #self.log_info("data_set = %s" % ds)
-                #self.log_info("selPt = %s" % str(select_point))
-
-                #method = 'get_result_by_cell_id()' # self.model_type
-                #print('pick_state =', self.pick_state)
-
-            icase = self.icase
-            key = self.case_keys[icase]
-            location = self.get_case_location(key)
-
-            if location == 'centroid':
-                out = self._cell_centroid_pick(cell_id, world_position)
-            elif location == 'node':
-                out = self._cell_node_pick(cell_id, world_position)
-            else:
-                raise RuntimeError('invalid pick location=%r' % location)
-
-            return_flag, duplicate_key, result_value, result_name, xyz = out
-            if return_flag is True:
-                return
-
-            # prevent duplicate labels with the same value on the same cell
-            if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
-                return
-            self.label_ids[result_name].add(duplicate_key)
-
-            #if 0:
-                #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
-                #result_value = result_value2
-                #xyz2 = xyz
-            #x, y, z = world_position
-            x, y, z = xyz
-            text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
-            text = str(result_value)
-            assert result_name in self.label_actors, result_name
-            self._create_annotation(text, result_name, x, y, z)
-            self.vtk_interactor.Render()
-
-    def _area_picker_box_up(self, obj, event):
-        """
-        actually picks the points for zooming
-
-        TODO: doesn't handle panning of the camera to center the image
-              with respect to the selected limits
-        """
-        #picker = self.area_picker
-        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        #if len(self._picker_points) == 0:
-        self._picker_points.append((pixel_x, pixel_y))
-        self.area_picker.Pick()
-
-        print(self._picker_points)
-        if len(self._picker_points) == 2:
-            p1x, p1y = self._picker_points[0]
-            p2x, p2y = self._picker_points[1]
-            self._picker_points = []
-            dx = abs(p1x - p2x)
-            dy = abs(p1y - p2y)
-            xmin = min(p1x, p2x)
-            ymin = min(p1y, p2y)
-            xmax = max(p1x, p2x)
-            ymax = max(p1y, p2y)
-            self.area_picker.SetRenderer(self.rend)
-            #self.area_picker.SetPickCoords(xmin, ymin, xmax, ymax)
-            self.area_picker.AreaPick(xmin, ymin, xmax, ymax, self.rend)
-            print(self._picker_points)
-            #print('_rotation_center_cell_picker', cell_id)
-
-            self._picker_points = []
-            if dx > 0 and dy > 0:
-                if 1:
-                    cell_ids = set([])
-                    picker = self.cell_picker
-                    nx = max((xmax - xmin) // 100, 1)
-                    ny = max((ymax - ymin) // 100, 1)
-                    #print('nx=%s ny=%s' % (nx, ny))
-                    for xi in range(xmin, xmax, nx):
-                        for yi in range(ymin, ymax, ny):
-                            picker.Pick(xi, yi, 0, self.rend)
-                            cell_id = picker.GetCellId()
-                            if cell_id >= 0:
-                                cell_ids.add(int(cell_id))
-                else:
-                    data = self.area_picker.GetDataSet()
-                    pick_list = self.area_picker.GetPickList()
-
-                    props = self.area_picker.GetProp3Ds()
-                    #print('props=', props)
-                    #print('data=', data)
-                    for i in range(data.GetNumberOfCells()):
-                        c = data.GetCell(i)
-
-                    #print('pick_list=', pick_list)
-                    for i in range(props.GetNumberOfItems()):
-                        prop = props.GetNextProp3D()
-                        print("Picked prop: ", prop)
-
-                self.log_info('cell_ids = %s' % cell_ids)
-
-                area_picker_button = self.actions['area_pick']
-                area_picker_button.setChecked(False)
-                self.setup_mouse_buttons(mode='default')
-            self.vtk_interactor.Render()
 
     def _probe_picker(self, obj, event):
         """pick a point and apply the label based on the current displayed result"""
