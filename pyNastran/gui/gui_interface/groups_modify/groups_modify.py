@@ -32,7 +32,7 @@ else:
 
 from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model
-from pyNastran.gui.gui_interface.common import PyDialog
+from pyNastran.gui.gui_interface.common import PyDialog, QElementEdit
 from .groups import Group, _get_collapsed_text
 #from .groups_modify.color_display import ColorDisplay
 
@@ -98,13 +98,13 @@ class GroupsModify(PyDialog):
         self.elements_button = QPushButton("Default")
 
         # add
-        self.add = QLabel("Add:")
-        self.add_edit = QLineEdit(str(''))
+        self.add = QLabel("Add Elements:")
+        self.add_edit = QElementEdit(self, str(''))
         self.add_button = QPushButton("Add")
 
         # remove
-        self.remove = QLabel("Remove:")
-        self.remove_edit = QLineEdit(str(''))
+        self.remove = QLabel("Remove Elements:")
+        self.remove_edit = QElementEdit(self, str(''))
         self.remove_button = QPushButton("Remove")
 
         # applies a unique implicitly
@@ -298,7 +298,12 @@ class GroupsModify(PyDialog):
         group = self.out_data[self.imain]
         self._default_elements = group.element_str
         self._default_name = group.name
-        if self.win_parent is not None:
+        self.on_update_main()
+
+    def on_update_main(self):
+        """adds/removes the elements to the main actor when add/remove is pressed"""
+        group = self.out_data[self.imain]
+        if self._default_name == group.name and self.win_parent is not None:
             # we're not testing the menu
             self.win_parent.post_group(group)
 
@@ -320,6 +325,7 @@ class GroupsModify(PyDialog):
 
         self.add_edit.clear()
         self.add_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.on_update_main()
 
     def _apply_cids_eids(self):
         #ctext = _get_collapsed_text(self.cids)
@@ -343,6 +349,7 @@ class GroupsModify(PyDialog):
 
         self.remove_edit.clear()
         self.remove_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.on_update_main()
 
     def on_default_name(self):
         name = str(self._default_name)

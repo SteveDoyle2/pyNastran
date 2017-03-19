@@ -557,7 +557,7 @@ def write_patran_syntax_dict(dict_sets):
     """
     msg = ''
     for key, dict_set in sorted(iteritems(dict_sets)):
-        singles, doubles = collapse_colon_packs(dict_set)
+        singles, doubles = collapse_colon_packs(dict_set, thru_split=4)
         double_list = ['%s:%s' % (double[0], double[2])
                        if len(double) == 3 else '%s:%s:%s' % (double[0], double[2], double[4])
                        for double in doubles]

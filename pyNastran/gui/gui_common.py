@@ -48,6 +48,7 @@ from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowIn
 
 import pyNastran
 
+from pyNastran.bdf.utils import write_patran_syntax_dict
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
@@ -1453,39 +1454,34 @@ class GuiCommon2(QMainWindow, GuiCommon):
         is_checked = self.actions['probe_result'].isChecked()
         self.setup_mouse_buttons('probe_result', left_button_down=self._probe_picker, revert=True)
 
-    def on_area_pick_old(self):
-        self.revert_pressed('area_pick')
-        is_checked = self.actions['area_pick'].isChecked()
-        if not is_checked:
-            # revert area_pick
-            self.setup_mouse_buttons(mode='default')
-            return
+    def on_area_pick_callback(self, eids, nids):
+        """prints the message when area_pick suceeds"""
+        msg = ''
+        if eids is not None and len(eids):
+            msg += write_patran_syntax_dict({'Elem' : eids})
+        if nids is not None and len(nids):
+            msg += '\n' + write_patran_syntax_dict({'Node' : nids})
+        if msg:
+            self.log_info('\n%s' % msg.lstrip())
 
-        self.log_info('on_area_pick')
-        self._picker_points = []
-
-        self.vtk_interactor.SetPicker(self.area_picker)
-        style = vtk.vtkInteractorStyleRubberBand2D()
-        self.setup_mouse_buttons('area_pick',
-                                 left_button_down=self._area_picker_box_up,
-                                 left_button_up=self._area_picker_box_up,
-                                 #end_pick=self._area_picker_up,
-                                 style=style)
-
-    def on_area_pick(self):
+    def on_area_pick(self, is_eids=True, is_nids=False, callback=None, force=False):
         """creates a Rubber Band Zoom"""
         self.revert_pressed('area_pick')
         is_checked = self.actions['area_pick'].isChecked()
         if not is_checked:
             # revert area_pick
             self.setup_mouse_buttons(mode='default')
-            return
+            if not force:
+                return
 
         self.log_info('on_area_pick')
         self._picker_points = []
-        style = AreaPickStyle(parent=self, is_eids=True, is_nids=False)
+
+        if callback is None:
+            callback = self.on_area_pick_callback
+        style = AreaPickStyle(parent=self, is_eids=is_eids, is_nids=is_nids,
+                              callback=callback)
         self.setup_mouse_buttons(mode='style', revert=True, style=style)
-        #self.vtk_interactor.SetInteractorStyle(style)
 
     def on_area_pick_not_square(self):
         self.revert_pressed('area_pick')
@@ -2114,11 +2110,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def get_all_eids(self):
         """get the list of all the element IDs"""
-        name, result = self.get_name_result_data(0)
-        if name != 'ElementID':
-            name, result = self.get_name_result_data(1)
-            assert name == 'ElementID', name
-        return result
+        return self.element_ids
+        #name, result = self.get_name_result_data(0)
+        #if name != 'ElementID':
+            #name, result = self.get_name_result_data(1)
+            #assert name == 'ElementID', name
+        #return result
 
     def show_eids(self, eids):
         """shows the specified element IDs"""
@@ -3649,8 +3646,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.is_pick = False
         if not self.run_vtk:
             return
-        self.vtk_interactor.SetPicker(self.cell_picker)
         self.vtk_interactor.SetPicker(self.node_picker)
+        self.vtk_interactor.SetPicker(self.cell_picker)
 
     def annotate_cell_picker(object, event):
         """

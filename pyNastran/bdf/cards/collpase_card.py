@@ -68,8 +68,27 @@ def collapse_thru_packs(fields):
     return singles, doubles
 
 
-def collapse_colon_packs(fields):
+def collapse_colon_packs(fields, thru_split=3):
     """
+    Parameters
+    ----------
+    fields : List[int]
+        the values to collapse
+    thru_split : int; default=3
+        the length to not write THRU
+        3 : [10, 11, 12] will write as '10 THRU 12'
+        4 : [10, 11, 12] will write as '10 11 12'
+
+    Returns
+    -------
+    singles : List[int]
+        the list of singles
+    doubles : List[pack]
+        pack : List[varies]
+            [3, :, 13]
+            [3, :, 13, :, 5]
+        the double packs
+
     # invalid
     SET1,4000, 1, 3, :, 10, 20, :, 30
 
@@ -85,7 +104,7 @@ def collapse_colon_packs(fields):
     """
     fields.sort()
     packs = condense(fields)
-    singles, doubles = build_thru_packs(packs, max_dv=None)
+    singles, doubles = build_thru_packs(packs, max_dv=None, thru_split=thru_split)
     doubles2 = []
     for double in doubles:
         if len(double) == 3:
@@ -146,8 +165,29 @@ def condense(value_list):
     return packs
 
 
-def build_thru_packs(packs, max_dv=1):
+def build_thru_packs(packs, max_dv=1, thru_split=3):
     """
+    Parameters
+    ----------
+    packs : ???
+        ???
+    max_dv : int; default=1
+        ???
+    thru_split : int; default=3
+        the length to not write THRU
+        3 : [10, 11, 12] will write as '10 THRU 12'
+        4 : [10, 11, 12] will write as '10 11 12'
+
+    Returns
+    -------
+    singles : List[int]
+        the list of singles
+    doubles : List[pack]
+        pack : List[varies]
+            [3, THRU, 13]
+            [3, THRU, 13, BY, 5]
+        the double packs
+
     # invalid
     SET1,4000, 1, 3, THRU, 10, 20, THRU, 30
 
@@ -167,7 +207,7 @@ def build_thru_packs(packs, max_dv=1):
             singles.append(first_val)
         else:
             if by == 1:
-                if last_val - first_val < 3: # dont make extra THRU cards
+                if last_val - first_val < thru_split: # dont make extra THRU cards
                     singlei = list(range(first_val, last_val + 1, 1))
                     singles += singlei
                 else:

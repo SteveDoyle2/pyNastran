@@ -20,7 +20,7 @@ class GuiCommon(GuiAttributes):
         inputs = kwds['inputs']
         kwds['res_widget'] = None
         super(GuiCommon, self).__init__(**kwds)
-        self.is_groups = inputs['is_groups']
+        #self.is_groups = inputs['is_groups']
 
         #self.groups = set([])
         self._group_elements = {}

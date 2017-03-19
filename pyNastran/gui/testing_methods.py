@@ -38,7 +38,7 @@ class GuiAttributes(object):
         self._camera_mode = None
 
         self.is_testing = False
-        self.is_groups = False
+        self.is_groups = True
         self._logo = None
         self._script_path = None
         self._icon_path = ''
