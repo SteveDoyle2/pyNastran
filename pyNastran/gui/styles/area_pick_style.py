@@ -35,7 +35,9 @@ from pyNastran.bdf.utils import write_patran_syntax_dict
         #self.picker_points = []
         #self.parent.area_picker.SetRenderer(self.parent.rend)
 
-class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):
+#vtkInteractorStyleRubberBandPick # sucks?
+#class AreaPickStyle(vtk.vtkInteractorStyleDrawPolygon):  # not sure how to use this one...
+class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
     """Picks nodes & elements with a visible box widget"""
     def __init__(self, parent=None, is_eids=True, is_nids=True, callback=None):
         """creates the AreaPickStyle instance"""
@@ -50,6 +52,7 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):
         self.is_eids = is_eids
         self.is_nids = is_nids
         self.callback = callback
+        self._pick_visible = False
 
     def _left_button_press_event(self, obj, event):
         """
@@ -73,9 +76,6 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):
 
         self.picker_points.append((pixel_x, pixel_y))
 
-        area_picker = self.parent.area_picker
-        area_picker.Pick()
-
         #print(self.picker_points)
         if len(self.picker_points) == 2:
             p1x, p1y = self.picker_points[0]
@@ -85,7 +85,6 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):
             ymin = min(p1y, p2y)
             xmax = max(p1x, p2x)
             ymax = max(p1y, p2y)
-            area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
             #print(self.picker_points)
             #print('_area_pick_left_button_release', cell_id)
 
@@ -93,52 +92,77 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):
             dy = abs(p1y - p2y)
             self.picker_points = []
             if dx > 0 and dy > 0:
-                frustrum = area_picker.GetFrustum() # vtkPlanes
-                grid = self.parent.grid
-
-                #extract_ids = vtk.vtkExtractSelectedIds()
-                #extract_ids.AddInputData(grid)
-
-                idsname = "Ids"
-                ids = vtk.vtkIdFilter()
-                ids.SetInputData(grid)
-                if self.is_eids:
-                    ids.CellIdsOn()
-                if self.is_nids:
-                    ids.PointIdsOn()
-                #ids.FieldDataOn()
-                ids.SetIdsArrayName(idsname)
-
-                selected_frustrum = vtk.vtkExtractSelectedFrustum()
-                selected_frustrum.SetFrustum(frustrum)
-                selected_frustrum.PreserveTopologyOff()
-                selected_frustrum.SetInputConnection(ids.GetOutputPort())  # was grid?
-                selected_frustrum.Update()
-
-                ugrid = selected_frustrum.GetOutput()
-                eids = None
-                nids = None
-
-                msg = ''
-                if self.is_eids:
-                    cells = ugrid.GetCellData()
-                    if cells is not None:
-                        cell_ids = vtk_to_numpy(cells.GetArray('Ids'))
-                        assert len(cell_ids) == len(np.unique(cell_ids))
-                        eids = self.parent.element_ids[cell_ids]
-                if self.is_nids:
-                    points = ugrid.GetPointData()
-                    if points is not None:
-                        point_ids = vtk_to_numpy(points.GetArray('Ids'))
-                        nids = self.parent.node_ids[point_ids]
-
-                if self.callback is not None:
-                    self.callback(eids, nids)
-
-                self.area_pick_button.setChecked(False)
-                self.parent.setup_mouse_buttons(mode='default')
+                if self._pick_visible:
+                    self._pick_visible_ids(xmin, ymin, xmax, ymax)
+                else:
+                    self._pick_depth_ids(xmin, ymin, xmax, ymax)
             self.parent.vtk_interactor.Render()
         self.picker_points = []
+
+    def _pick_visible_ids(self, xmin, ymin, xmax, ymax):
+        """
+        Does an area pick of all the visible ids inside the box
+        """
+        #vcs = vtk.vtkVisibleCellSelector()
+        area_picker = vtk.vtkRenderedAreaPicker()
+        area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
+        #area_picker.Pick()
+        pass
+
+
+    def _pick_depth_ids(self, xmin, ymin, xmax, ymax):
+        """
+        Does an area pick of all the ids inside the box, even the ones
+        behind the front elements
+        """
+        area_picker = self.parent.area_picker
+        area_picker.Pick()
+
+        area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
+        frustrum = area_picker.GetFrustum() # vtkPlanes
+        grid = self.parent.grid
+
+        #extract_ids = vtk.vtkExtractSelectedIds()
+        #extract_ids.AddInputData(grid)
+
+        idsname = "Ids"
+        ids = vtk.vtkIdFilter()
+        ids.SetInputData(grid)
+        if self.is_eids:
+            ids.CellIdsOn()
+        if self.is_nids:
+            ids.PointIdsOn()
+        #ids.FieldDataOn()
+        ids.SetIdsArrayName(idsname)
+
+        selected_frustrum = vtk.vtkExtractSelectedFrustum()
+        selected_frustrum.SetFrustum(frustrum)
+        selected_frustrum.PreserveTopologyOff()
+        selected_frustrum.SetInputConnection(ids.GetOutputPort())  # was grid?
+        selected_frustrum.Update()
+
+        ugrid = selected_frustrum.GetOutput()
+        eids = None
+        nids = None
+
+        msg = ''
+        if self.is_eids:
+            cells = ugrid.GetCellData()
+            if cells is not None:
+                cell_ids = vtk_to_numpy(cells.GetArray('Ids'))
+                assert len(cell_ids) == len(np.unique(cell_ids))
+                eids = self.parent.element_ids[cell_ids]
+        if self.is_nids:
+            points = ugrid.GetPointData()
+            if points is not None:
+                point_ids = vtk_to_numpy(points.GetArray('Ids'))
+                nids = self.parent.node_ids[point_ids]
+
+        if self.callback is not None:
+            self.callback(eids, nids)
+
+        self.area_pick_button.setChecked(False)
+        self.parent.setup_mouse_buttons(mode='default')
 
     def right_button_press_event(self, obj, event):
         """cancels the button"""

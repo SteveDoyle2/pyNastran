@@ -4,6 +4,7 @@ defines:
  - GuiResult
 """
 from __future__ import print_function
+import numpy as np
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
               '|i1', # this is a boolean
@@ -243,7 +244,7 @@ class NormalResult(GuiResultCommon):
 class GuiResult(GuiResultCommon):
     deflects = False
     def __init__(self, subcase_id, header, title, location, scalar,
-                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 mask_value=None, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  data_format=None, uname='GuiResult'):
         """
         subcase_id : int
@@ -297,12 +298,33 @@ class GuiResult(GuiResultCommon):
         self.header_default = self.header
         self.data_format_default = self.data_format
 
-        try:
-            self.min_default = self.scalar.min()
-        except ValueError:
-            print('scalar =', self.scalar)
-            raise
+        self.min_default = self.scalar.min()
         self.max_default = self.scalar.max()
+        if self.data_type in INT_TYPES:
+            # turns out you can't have a NaN/inf with an integer array
+            # we need to recast it
+            if mask_value is not None:
+                inan_short = np.where(self.scalar == mask_value)[0]
+                if len(inan_short):
+                    # overly complicated way to allow us to use ~inan to invert the array
+                    inan = np.in1d(np.arange(len(self.scalar)), inan_short)
+
+                    self.scalar = np.asarray(self.scalar, 'f')
+                    self.data_type = self.scalar.dtype.str
+                    self.data_format = '%.0f'
+                    self.scalar[inan] = np.nan
+                    self.min_default = self.scalar[~inan].min()
+                    self.max_default = self.scalar[~inan].max()
+        else:
+            # handling VTK NaN oddinty
+            # filtering the inf values and replacing them with NaN
+            # 1.#R = inf
+            # 1.#J = nan
+            ifinite = np.isfinite(self.scalar)
+            if not np.all(ifinite):
+                self.scalar[~ifinite] = np.nan
+                self.min_default = self.scalar[ifinite].min()
+                self.max_default = self.scalar[ifinite].max()
         self.min_value = self.min_default
         self.max_value = self.max_default
 
