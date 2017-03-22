@@ -112,7 +112,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         elif prop_type == 'PBAR':
             assert pname_fid in [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J'], msg
         elif prop_type == 'PBARL':
-            assert pname_fid in [12, 13, 14, 15, 16, 17, 'DIM1', 'DIM2'], msg
+            assert pname_fid in [12, 13, 14, 15, 16, 17, 'DIM1', 'DIM2', 'DIM3', 'DIM4'], msg
 
         #elif prop_type == 'CBEAM':
             #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg

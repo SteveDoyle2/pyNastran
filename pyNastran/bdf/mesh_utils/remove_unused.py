@@ -13,6 +13,8 @@ from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                   remove_pids=True, remove_mids=True):
     """
+    Takes an uncross-referenced bdf and removes unused data
+
     removes unused:
      - nodes
      - properties
@@ -597,3 +599,4 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         for mid in mids_to_remove:
             del model.materials[mid]
         model.log.debug('removing materials %s' % mids_to_remove)
+    return model
