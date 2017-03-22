@@ -2313,7 +2313,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 max_thetai = 0.0
                 #max_thetai = np.nan
                 max_skew = np.nan
-                max_warp = np.nan
+                #max_warp = np.nan
+                max_warp = 0.0
                 aspect_ratio = np.nan
                 areai = np.nan
                 area_ratioi = np.nan
