@@ -3413,7 +3413,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             icase += 1
 
         mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
-                            location='centroid', scalar=mids)
+                            location='centroid', scalar=mids, mask_value=0)
         cases[icase] = (mid_res, (0, 'MaterialID'))
         form0.append(('MaterialID', icase, []))
         icase += 1

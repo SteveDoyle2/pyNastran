@@ -510,7 +510,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 # new
                 ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center', self.on_rotation_center),
 
-                ('measure_distance', 'Measure Distance', 'tmeasure_distance.png', None, 'Measure the distance between two nodes', self.on_measure_distance),
+                ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.on_measure_distance),
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
