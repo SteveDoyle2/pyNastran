@@ -8,7 +8,9 @@ if qt_version == 4:
     from PyQt4.QtGui import QDialog, QLineEdit, QFocusEvent
 elif qt_version == 5:
     from PyQt5 import QtCore
-    from PyQt5.QtWidgets import QDialog, QLineEdit, QFocusEvent
+    from PyQt5.QtGui import QFocusEvent
+    from PyQt5.QtWidgets import QDialog, QLineEdit
+
 elif qt_version == 'pyside':
     from PySide import QtCore
     from PySide.QtGui import QDialog, QLineEdit, QFocusEvent

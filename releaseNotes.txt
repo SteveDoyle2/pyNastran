@@ -101,12 +101,16 @@ BDF:
 
 GUI:
  - added:
-   - added support for PyQt5 (not quite perfect)
-   - added custom displacement results
+   - marker/arrow plots
+   - NaN colors for invalid results (e.g., normal=NaN for a 
+     CTRIA3 that has 2 coincident points)
+   - area picking for groups
+   - custom displacement results
    - probe support by mouse picking
    - distance support by mouse picking
    - rotation center by mouse picking
    - Python 2 only: nicer Python console
+   - support for PyQt5 (not quite perfect)
  - fixed:
    - display issue with CHEXA20 (element was ordered wrong)
    - element selection for quadratic solids no longer crashes

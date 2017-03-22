@@ -2306,17 +2306,31 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # continue
             # if element.pid.type == 'PSOLID':
                 # continue
-            pid = 0
-            dideal_thetai = 0.0
-            min_thetai = 0.0
-            max_thetai = 0.0
-            max_skew = 0.0
-            max_warp = 0.0
-            aspect_ratio = 1.0
-            areai = 0.
-            area_ratioi = 1.
-            taper_ratioi = 0.
-            min_edge_lengthi = 0.
+            if 1:
+                pid = np.nan
+                dideal_thetai = np.nan
+                min_thetai = np.nan
+                max_thetai = 0.0
+                #max_thetai = np.nan
+                max_skew = np.nan
+                max_warp = np.nan
+                aspect_ratio = np.nan
+                areai = np.nan
+                area_ratioi = np.nan
+                taper_ratioi = np.nan
+                min_edge_lengthi = np.nan
+            else:
+                pid = 0
+                dideal_thetai = 0.0
+                min_thetai = 0.0
+                max_thetai = 0.0
+                max_skew = 0.0
+                max_warp = 0.0
+                aspect_ratio = 1.0
+                areai = 0.
+                area_ratioi = 1.
+                taper_ratioi = 0.
+                min_edge_lengthi = 0.
             if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
                     material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
@@ -2920,12 +2934,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #ielement = 0
         nelements = self.element_ids.shape[0]
         normals = np.zeros((nelements, 3), dtype='float32')
-        offset = np.zeros(nelements, dtype='float32')
-        xoffset = np.zeros(nelements, dtype='float32')
-        yoffset = np.zeros(nelements, dtype='float32')
-        zoffset = np.zeros(nelements, dtype='float32')
-        element_dim = np.zeros(nelements, dtype='int32')
-        nnodes_array = np.zeros(nelements, dtype='int32')
+        offset = np.full(nelements, np.nan, dtype='float32')
+        xoffset = np.full(nelements, np.nan, dtype='float32')
+        yoffset = np.full(nelements, np.nan, dtype='float32')
+        zoffset = np.full(nelements, np.nan, dtype='float32')
+        element_dim = np.full(nelements, -1, dtype='int32')
+        nnodes_array = np.full(nelements, np.nan, dtype='int32')
         for eid, element in sorted(iteritems(model.elements)):
             etype = element.type
             if isinstance(element, ShellElement):
@@ -3095,15 +3109,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # if not a flat plate
         #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-        is_element_dim = element_dim.max() != element_dim.min()
+        is_element_dim = np.max(element_dim) != np.min(element_dim)
         is_element_dim = True
         if is_element_dim:
             eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
-                                    location='centroid', scalar=element_dim)
+                                    location='centroid', scalar=element_dim, mask_value=-1)
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
 
         is_shell = np.abs(normals).max() > 0.
-        is_solid = np.abs(max_interior_angle).max() > 0.
+        is_solid = np.nanmax(np.abs(max_interior_angle)) > 0.
         #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
         if is_shell:
             nx_res = GuiResult(
@@ -3183,7 +3197,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form_checks.append(('Aspect Ratio', icase + 11, []))
             icase += 12
 
-            if area_ratio.max() > 1.:
+            if np.nanmax(area_ratio) > 1.:
                 arearatio_res = GuiResult(
                     0, header='Area Ratio', title='Area Ratio',
                     location='centroid', scalar=area_ratio)
@@ -3191,7 +3205,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form_checks.append(('Area Ratio', icase, []))
                 icase += 1
 
-            if taper_ratio.max() > 1.:
+            if np.nanmax(taper_ratio) > 1.:
                 taperratio_res = GuiResult(
                     0, header='Taper Ratio', title='Taper Ratio',
                     location='centroid', scalar=taper_ratio)
@@ -3199,7 +3213,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form_checks.append(('Taper Ratio', icase, []))
                 icase += 1
 
-            if max_warp_angle.max() > 0.0:
+            if np.nanmax(max_warp_angle) > 0.0:
                 warp_res = GuiResult(
                     0, header='Max Warp Angle', title='MaxWarpAngle',
                     location='centroid', scalar=np.degrees(max_warp_angle))
@@ -3327,7 +3341,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nplies += 1
 
         mids = np.zeros((nelements, nplies), dtype='int32')
-        thickness = np.zeros((nelements, nplies), dtype='float32')
+        thickness = np.full((nelements, nplies), np.nan, dtype='float32')
         rho = np.zeros((nelements, nplies), dtype='float32')
         nplies = np.zeros(nelements, dtype='int32')
         for pid in upids:
@@ -3398,7 +3412,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         has_mat8, has_mat9, e11, e22, e33 = self._get_material_arrays(model, mids)
 
-        if thickness.max() > 0.0:
+        if np.nanmax(thickness) > 0.0:
             t_res = GuiResult(0, header='Thickness', title='Thickness',
                               location='centroid', scalar=thickness)
             cases[icase] = (t_res, (0, 'Thickness'))
