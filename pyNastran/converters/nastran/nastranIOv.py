@@ -3117,7 +3117,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
 
         is_shell = np.abs(normals).max() > 0.
-        is_solid = np.nanmax(np.abs(max_interior_angle)) > 0.
+        is_solid = np.any(np.isfinite(max_interior_angle)) and np.nanmax(np.abs(max_interior_angle)) > 0.
         #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
         if is_shell:
             nx_res = GuiResult(
@@ -3412,7 +3412,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         has_mat8, has_mat9, e11, e22, e33 = self._get_material_arrays(model, mids)
 
-        if np.nanmax(thickness) > 0.0:
+        if np.any(np.isfinite(thickness)) and np.nanmax(thickness) > 0.0:
             t_res = GuiResult(0, header='Thickness', title='Thickness',
                               location='centroid', scalar=thickness)
             cases[icase] = (t_res, (0, 'Thickness'))
