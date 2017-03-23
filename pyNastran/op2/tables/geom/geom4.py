@@ -314,7 +314,7 @@ class GEOM4(GeomCommon):
                 #print(mpc_data)
                 nentries += 1
                 if self.is_debug_file:
-                    self.binary_debug.write('  MPC=%s\n' % str(mpc))
+                    self.binary_debug.write('  MPC=%s\n' % str(mpc_data))
                 mpc = []
                 j = 0
                 i += 2
