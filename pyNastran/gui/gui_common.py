@@ -143,7 +143,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             QMainWindow.__init__(self)
             GuiCommon.__init__(self, **kwds)
-            pass
         else:
             raise NotImplementedError(qt_version)
 
@@ -587,7 +586,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             'label_modify', 'label_clear', 'label_reset', 'picker_modify', '',
             'legend', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
-             #'anti_alias_4', 'anti_alias_8',],
+            #'anti_alias_4', 'anti_alias_8',],
         ]
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id',
@@ -1521,7 +1520,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 camera = self.rend.GetActiveCamera()
                 #focal_point = world_position
                 out = self.get_result_by_xyz_cell_id(world_position, cell_id)
-                result_name, result_value, node_id, node_xyz = out
+                _result_name, result_value, node_id, node_xyz = out
                 focal_point = node_xyz
                 self.log_info('focal_point = %s' % str(focal_point))
                 self.setup_mouse_buttons(mode='default')
@@ -1562,23 +1561,23 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 return
 
             # prevent duplicate labels with the same value on the same cell
-            if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
+            if duplicate_key is not None and duplicate_key in self.label_ids[icase]:
                 return
-            self.label_ids[result_name].add(duplicate_key)
+            self.label_ids[icase].add(duplicate_key)
 
             #if 0:
-                #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
+                #result_value2, xyz2 = self.convert_units(case_key, result_value, xyz)
                 #result_value = result_value2
                 #xyz2 = xyz
             #x, y, z = world_position
             x, y, z = xyz
             text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
             text = str(result_value)
-            assert result_name in self.label_actors, result_name
-            self._create_annotation(text, result_name, x, y, z)
+            assert icase in self.label_actors, icase
+            self._create_annotation(text, icase, x, y, z)
             self.vtk_interactor.Render()
         if self.revert:
-            self.setup_mouse_buttons(self, mode='default')
+            self.setup_mouse_buttons(mode='default')
 
     #def remove_picker(self):
         #self.vtk_interactor.
@@ -1811,7 +1810,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #print('name: %s\nrep: %s' % (
                         #name, self.geometry_properties[name].representation))
                 representation = self.geometry_properties[name].representation
-                if name == 'main' or self.geometry_properties[name].representation in ['main', 'toggle']:
+                if name == 'main' or representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
 
                     prop.SetRepresentationToSurface()
@@ -2210,7 +2209,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             render_window = self.vtk_interactor.GetRenderWindow()
             render_window.Render()
 
-    def _update_ids_mask_showTrue(self, ids_to_show, flip_flag=True, render=True):  # pragma: no cover
+    def _update_ids_mask_showTrue(self, ids_to_show,
+                                  flip_flag=True, render=True):  # pragma: no cover
         ids = self.numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
@@ -2857,6 +2857,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         common method between:
           - on_add_nodal_results(filename)
           - on_add_elemental_results(filename)
+
+        Parameters
+        ----------
+        result_type : str
+            ???
+        out_filename : str
+            the CSV filename to load
         """
         out_filename_short = os.path.basename(out_filename)
         A, fmt_dict, headers = load_csv(out_filename)
@@ -2882,6 +2889,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
         common method between:
           - _load_csv
           - _load_deflection_csv
+
+        Parameters
+        ----------
+        A : dict???
+            the numpy arrays
+        fmt_dict : dict???
+            the format of the arrays?
+        headers : ???
+            the titles???
+        result_type : str
+            'node', 'centroid'
+        out_filename_short : str
+            the display name
+        update : bool; default=True
+            ???
         """
         #print('A =', A)
         formi = []
@@ -2943,8 +2965,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             formi.append((header, icase, []))
 
             # TODO: double check this should be a string instead of an int
-            self.label_actors[header] = []
-            self.label_ids[header] = set([])
+            self.label_actors[icase] = []
+            self.label_ids[icase] = set([])
             icase += 1
         form.append((out_filename_short, None, formi))
 
@@ -3383,7 +3405,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.cell_picker.SetTolerance(0.001)
         self.node_picker.SetTolerance(0.001)
 
-    def mark_nodes(self, nids, result_name, text):
+    def mark_nodes(self, nids, icase, text):
         """
         Marks a series of nodes with custom text labels
 
@@ -3391,7 +3413,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         nids : int, List[int]
             the nodes to apply a message to
-        result_name : ???
+        icase : int
             the key in label_actors to slot the result into
         text : str, List[str]
             the text to display
@@ -3401,9 +3423,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.mark_nodes([1, 6], 'NodeID', 'max')
         self.mark_nodes([1, 6], 'NodeID', ['max', 'min'])
         """
-        if result_name not in self.label_actors:
-            msg = 'result_name=%r not in label_actors=[%s]' % (
-                result_name, ', '.join(self.label_actors))
+        if icase not in self.label_actors:
+            msg = 'icase=%r not in label_actors=[%s]' % (
+                icase, ', '.join(self.label_actors))
             self.log_error(msg)
         i = np.searchsorted(self.node_ids, nids)
         if isinstance(text, string_types):
@@ -3413,16 +3435,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         xyz = self.xyz_cid0[i, :]
         for (xi, yi, zi), texti in zip(xyz, text):
-            self._create_annotation(texti, result_name, xi, yi, zi)
+            self._create_annotation(texti, icase, xi, yi, zi)
         self.vtk_interactor.Render()
 
     def _cell_centroid_pick(self, cell_id, world_position):
         duplicate_key = None
+        icase = self.icase
         if self.pick_state == 'node/centroid':
             return_flag = False
             duplicate_key = cell_id
             result_name, result_value, xyz = self.get_result_by_cell_id(cell_id, world_position)
-            assert result_name in self.label_actors, result_name
+            assert icase in self.label_actors, icase
         else:
             #cell = self.grid.GetCell(cell_id)
             # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
@@ -3446,17 +3469,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return_flag = False
         (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
             world_position, cell_id)
-        assert result_name in self.label_actors, result_name
+        assert self.icase in self.label_actors, result_name
         assert not isinstance(xyz, int), xyz
         return xyz
 
     def _cell_node_pick(self, cell_id, world_position):
         duplicate_key = None
+        icase = self.icase
         if self.pick_state == 'node/centroid':
             return_flag = False
             (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
                 world_position, cell_id)
-            assert result_name in self.label_actors, result_name
+            assert icase in self.label_actors, result_name
             assert not isinstance(xyz, int), xyz
             duplicate_key = node_id
         else:
@@ -3492,7 +3516,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.display_units
         return result_value, xyz
 
-    def _create_annotation(self, text, result_name, x, y, z):
+    def _create_annotation(self, text, icase, x, y, z):
         """
         Creates the actual annotation
 
@@ -3500,17 +3524,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         text : str
             the text to display
-        result_name : ???
+        icase : int
             the key in label_actors to slot the result into
         x, y, z : float
             the position of the label
         """
-        if not isinstance(result_name, string_types):
-            msg = 'result_name=%r type=%s' % (result_name, type(result_name))
+        if not isinstance(icase, integer_types):
+            msg = 'icase=%r type=%s' % (icase, type(icase))
             raise TypeError(msg)
         # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
 
-        #self.convert_units(result_name, result_value, x, y, z)
+        #self.convert_units(icase, result_value, x, y, z)
         if 1:
             source = vtk.vtkVectorText()
             source.SetText(str(text))
@@ -3559,7 +3583,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # finish adding the actor
         self.rend.AddActor(follower)
         follower.SetPickable(False)
-        self.label_actors[result_name].append(follower)
+        self.label_actors[icase].append(follower)
 
         #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
         #camera.GetPosition()
@@ -4093,7 +4117,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         glyph_source = vtk.vtkArrowSource()
         #glyph_source.InvertOn()  # flip this arrow direction
-        if self.vtk_version[0] == 5 :
+        if self.vtk_version[0] == 5:
             glyphs.SetInput(grid)
         elif self.vtk_version[0] in [6, 7]:
             glyphs.SetInputData(grid)
@@ -4400,6 +4424,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """TODO: should handle multiple cell_ids"""
         case_key = self.case_keys[self.icase] # int for object
         result_name = self.result_name
+        icase = self.icase
         case = self.result_cases[case_key]
 
         (obj, (i, res_name)) = case
@@ -4445,8 +4470,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             xyz = node_xyz.mean(axis=0)
         else:
             #self.log.error(msg)
-            msg = 'cell_type=%s nnodes=%s; result_name=%s result_values=%s' % (
-                cell_type, nnodes, result_name, result_values)
+            msg = 'cell_type=%s nnodes=%s; icase=%s result_values=%s' % (
+                cell_type, nnodes, icase, result_values)
             self.log.error(msg)
             #VTK_LINE = 3
 
@@ -4603,10 +4628,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #(1, 'ElementID', 1, 'centroid', '%.0f'),
             #(1, 'Region', 1, 'centroid', '%.0f')
         #]
-        for case_key in self.case_keys:
-            result_name = self.get_result_name(case_key)
-            self.label_actors[result_name] = []
-            self.label_ids[result_name] = set([])
+        for icase in self.case_keys:
+            #result_name = self.get_result_name(icase)
+            self.label_actors[icase] = []
+            self.label_ids[icase] = set([])
 
     def _remove_labels(self):
         """
@@ -4618,12 +4643,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
 
         # existing geometry
-        for result_name, actors in iteritems(self.label_actors):
+        for icase, actors in iteritems(self.label_actors):
             for actor in actors:
                 self.rend.RemoveActor(actor)
                 del actor
-            self.label_actors[result_name] = []
-            self.label_ids[result_name] = set([])
+            self.label_actors[icase] = []
+            self.label_ids[icase] = set([])
 
     def clear_labels(self):
         """
@@ -4634,48 +4659,49 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
 
         # existing geometry
-        #case_key = self.case_keys[self.icase]
+        #icase = self.case_keys[self.icase]
+        icase = self.icase
         result_name = self.result_name
 
-        actors = self.label_actors[result_name]
+        actors = self.label_actors[icase]
         for actor in actors:
             self.rend.RemoveActor(actor)
             del actor
-        self.label_actors[result_name] = []
-        self.label_ids[result_name] = set([])
+        self.label_actors[icase] = []
+        self.label_ids[icase] = set([])
 
-    def resize_labels(self, result_names=None, show_msg=True):
+    def resize_labels(self, case_keys=None, show_msg=True):
         """
         This resizes labels for all result cases.
         TODO: not done...
         """
-        if result_names is None:
+        if case_keys is None:
             names = 'None)  # None -> all'
-            result_names = sorted(self.label_actors.keys())
+            case_keys = sorted(self.label_actors.keys())
         else:
-            mid = '%s,' * len(result_names)
+            mid = '%s,' * len(case_keys)
             names = '[' + mid[:-1] + '])'
 
         count = 0
-        for key in result_names:
-            actors = self.label_actors[key]
+        for icase in case_keys:
+            actors = self.label_actors[icase]
             for actor in actors:
                 actor.VisibilityOff()
                 count += 1
         if count and show_msg:
             self.log_command('hide_labels(%s' % names)
 
-    def hide_labels(self, result_names=None, show_msg=True):
-        if result_names is None:
+    def hide_labels(self, case_keys=None, show_msg=True):
+        if case_keys is None:
             names = 'None)  # None -> all'
-            result_names = sorted(self.label_actors.keys())
+            case_keys = sorted(self.label_actors.keys())
         else:
-            mid = '%s,' * len(result_names)
+            mid = '%s,' * len(case_keys)
             names = '[' + mid[:-1] + '])'
 
         count = 0
-        for key in result_names:
-            actors = self.label_actors[key]
+        for icase in case_keys:
+            actors = self.label_actors[icase]
             for actor in actors:
                 actor.VisibilityOff()
                 #prop = actor.GetProperty()
@@ -4683,20 +4709,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if count and show_msg:
             self.log_command('hide_labels(%s' % names)
 
-    def show_labels(self, result_names=None, show_msg=True):
-        if result_names is None:
+    def show_labels(self, case_keys=None, show_msg=True):
+        if case_keys is None:
             names = 'None)  # None -> all'
-            result_names = sorted(self.label_actors.keys())
+            case_keys = sorted(self.label_actors.keys())
         else:
-            mid = '%s,' * len(result_names)
-            names = mid[:-1] % result_names + ')'
+            mid = '%s,' * len(case_keys)
+            names = mid[:-1] % case_keys + ')'
 
         count = 0
-        for key in result_names:
+        for icase in case_keys:
             try:
-                actors = self.label_actors[key]
+                actors = self.label_actors[icase]
             except KeyError:
-                msg = 'Cant find label_actors for key=%r; keys=%s' % (key, self.label_actors.keys())
+                msg = 'Cant find label_actors for icase=%r; keys=%s' % (
+                    icase, self.label_actors.keys())
                 self.log.error(msg)
                 continue
             for actor in actors:
@@ -4888,7 +4915,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """Updates the size of all the labels"""
         assert size >= 0., size
         self.label_text_size = size
-        for result_name, follower_actors in iteritems(self.label_actors):
+        for icase, follower_actors in iteritems(self.label_actors):
             for follower_actor in follower_actors:
                 follower_actor.SetScale(size)
                 follower_actor.Modified()

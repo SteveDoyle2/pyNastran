@@ -1244,7 +1244,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         scale = 0.15
 
         # TODO: this should be reworked
-        bar_nids, bar_types, nid_release_map = self._get_bar_yz_arrays(model, bar_beam_eids, scale, debug)
+        bar_nids, bar_types, nid_release_map = self._get_bar_yz_arrays(
+            model, bar_beam_eids, scale, debug)
         self.nid_release_map = nid_release_map
 
         bar_nids = list(bar_nids)
@@ -1852,9 +1853,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties) and 0:
-            icase, upids, mids, thickness, nplies = self._build_properties(
+            icase, upids, mids, thickness, nplies, is_pshell_pcomp = self._build_properties(
                 model, nelements, eids, pids, cases, form0, icase)
-            icase = self._build_materials(model, mids, thickness, nplies, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, nplies, is_pshell_pcomp,
+                                          cases, form0, icase)
 
             try:
                 icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
@@ -1952,9 +1954,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
-            icase, upids, mids, thickness, nplies = self._build_properties(
+            icase, upids, mids, thickness, nplies, is_pshell_pcomp = self._build_properties(
                 model, nelements, eids, pids, cases, form0, icase)
-            icase = self._build_materials(model, mids, thickness, nplies, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, nplies, is_pshell_pcomp,
+                                          cases, form0, icase)
 
             try:
                 icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
@@ -3233,7 +3236,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             icase += 1
         return icase, normals
 
-    def _build_properties(self, model, nelements, eids, pids, cases, form0, icase):
+    def _build_properties(self, model, nelements, eids, pids,
+                          cases, form0, icase):
         """
         creates:
           - PropertyID
@@ -3256,17 +3260,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         mid_eids_skip = []
 
         nplies = 1
+        is_pshell = False
+        is_pcomp = False
         if 'PSHELL' in model.card_count:
             nplies = 4
+            is_pshell = True
         for pid in model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True):
             prop = model.properties[pid]
-            nplies = max(nplies, prop.nplies)
-        if nplies > 1:
-            nplies += 1
+            nplies = max(nplies, prop.nplies) + 1
+            is_pcomp = True
 
         mids = np.zeros((nelements, nplies), dtype='int32')
         thickness = np.full((nelements, nplies), np.nan, dtype='float32')
-        rho = np.zeros((nelements, nplies), dtype='float32')
+        #rho = np.full((nelements, nplies), np.nan, dtype='float32')
         nplies = np.zeros(nelements, dtype='int32')
         for pid in upids:
             if pid == 0:
@@ -3278,7 +3284,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # simple types
                 i = np.where(pids == pid)[0]
                 mid = prop.mid_ref.mid
-                mids[i] = mid
+                mids[i, 0] = mid
             elif prop.type == 'PSHELL':
                 # TODO: only considers mid1
                 i = np.where(pids == pid)[0]
@@ -3301,7 +3307,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     thickness[i, iply+1] = prop.Thickness(iply)
                 thickness[i, 0] = thickness[i[0], :].sum()
 
-                mids[i, 0] = mids[i, 1]
+                #mids[i, 0] = mids[i, 1]
             elif prop.type in ['PELAS', 'PBUSH', 'PDAMP', 'PDAMPT']:
                 i = np.where(pids == pid)[0]
                 mid_eids_skip.append(i)
@@ -3309,8 +3315,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 print('material for pid=%s type=%s not considered' % (pid, prop.type))
 
         #print('mids =', mids)
-        mids = mids[:, 0]
-        thickness = thickness[:, 0]
         if len(mid_eids_skip):
             mid_eids_skip = np.hstack(mid_eids_skip)
             if mids.min() == 0:
@@ -3321,9 +3325,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 if len(not_skipped_eids_missing_material_id):
                     print('eids=%s dont have materials' %
                           not_skipped_eids_missing_material_id)
-        return icase, upids, mids, thickness, nplies
+        return icase, upids, mids, thickness, nplies, (is_pshell, is_pcomp)
 
-    def _build_materials(self, model, mids, thickness, nplies, cases, form0, icase):
+    def _build_materials(self, model, mids, thickness, nplies, is_pshell_pcomp,
+                         cases, form0, icase):
         """
         creates:
           - Thickness
@@ -3334,14 +3339,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
           - E_33
           - Is Isotropic?
         """
-        has_mat8, has_mat9, e11, e22, e33 = self._get_material_arrays(model, mids)
-
-        if np.any(np.isfinite(thickness)) and np.nanmax(thickness) > 0.0:
-            t_res = GuiResult(0, header='Thickness', title='Thickness',
-                              location='centroid', scalar=thickness)
-            cases[icase] = (t_res, (0, 'Thickness'))
-            form0.append(('Thickness', icase, []))
-            icase += 1
+        nlayers = mids.shape[1]
 
         if nplies.max() > 0:
             nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
@@ -3350,55 +3348,98 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form0.append(('Number of Plies', icase, []))
             icase += 1
 
-        mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
-                            location='centroid', scalar=mids, mask_value=0)
-        cases[icase] = (mid_res, (0, 'MaterialID'))
-        form0.append(('MaterialID', icase, []))
-        icase += 1
+        for ilayer in range(nlayers):
+            midsi = mids[:, ilayer]
+            if midsi.max() == 0:
+                continue
+            thicknessi = thickness[:, ilayer]
 
-        if has_mat9: # also implicitly has_mat8
-            is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
-        elif has_mat8:
-            is_orthotropic = not np.array_equal(e11, e22)
-        else:
-            is_orthotropic = False
-
-        if is_orthotropic:
-            e11_res = GuiResult(0, header='E_11', title='E_11',
-                                location='centroid', scalar=e11, data_format='%.3e')
-            e22_res = GuiResult(0, header='E_22', title='E_22',
-                                location='centroid', scalar=e22, data_format='%.3e')
-            cases[icase] = (e11_res, (0, 'E_11'))
-            cases[icase + 1] = (e22_res, (0, 'E_22'))
-            form0.append(('E_11', icase, []))
-            form0.append(('E_22', icase + 1, []))
-            icase += 2
-
-            is_isotropic = np.zeros(len(e11), dtype='int8')
-            if has_mat9:
-                is_isotropic[(e11 == e22) | (e11 == e33)] = 1
-                e33_res = GuiResult(0, header='E_33', title='E_33',
-                                    location='centroid', scalar=e33, data_format='%.3e')
-                cases[icase] = (e33_res, (0, 'E_33'))
-                form0.append(('E_33', icase, []))
+            form_layer = []
+            has_mat8, has_mat9, e11, e22, e33 = self._get_material_arrays(model, midsi)
+            if np.any(np.isfinite(thicknessi)) and np.nanmax(thicknessi) > 0.0:
+                t_res = GuiResult(0, header='Thickness', title='Thickness',
+                                  location='centroid', scalar=thicknessi)
+                cases[icase] = (t_res, (0, 'Thickness'))
+                form_layer.append(('Thickness', icase, []))
                 icase += 1
-            else:
-                #is_isotropic_map = e11 == e22
-                is_isotropic[e11 == e22] = 1
 
-            iso_res = GuiResult(0, header='IsIsotropic?', title='IsIsotropic?',
-                                location='centroid', scalar=is_isotropic, data_format='%i')
-            cases[icase] = (iso_res, (0, 'Is Isotropic?'))
-            form0.append(('Is Isotropic?', icase, []))
+            mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
+                                location='centroid', scalar=midsi, mask_value=0)
+            cases[icase] = (mid_res, (0, 'MaterialID'))
+            form_layer.append(('MaterialID', icase, []))
             icase += 1
-        elif e11.max() > 0.:
-            # isotropic
-            e11_res = GuiResult(0, header='E', title='E',
-                                location='centroid', scalar=e11, data_format='%.3e')
-            cases[icase] = (e11_res, (0, 'E'))
-            form0.append(('E', icase, []))
-            icase += 1
+
+            if has_mat9: # also implicitly has_mat8
+                is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
+            elif has_mat8:
+                is_orthotropic = not np.array_equal(e11, e22)
+            else:
+                is_orthotropic = False
+
+            if is_orthotropic:
+                e11_res = GuiResult(0, header='E_11', title='E_11',
+                                    location='centroid', scalar=e11, data_format='%.3e')
+                e22_res = GuiResult(0, header='E_22', title='E_22',
+                                    location='centroid', scalar=e22, data_format='%.3e')
+                cases[icase] = (e11_res, (0, 'E_11'))
+                cases[icase + 1] = (e22_res, (0, 'E_22'))
+                form_layer.append(('E_11', icase, []))
+                form_layer.append(('E_22', icase + 1, []))
+                icase += 2
+
+                is_isotropic = np.zeros(len(e11), dtype='int8')
+                if has_mat9:
+                    is_isotropic[(e11 == e22) | (e11 == e33)] = 1
+                    e33_res = GuiResult(0, header='E_33', title='E_33',
+                                        location='centroid', scalar=e33, data_format='%.3e')
+                    cases[icase] = (e33_res, (0, 'E_33'))
+                    form_layer.append(('E_33', icase, []))
+                    icase += 1
+                else:
+                    #is_isotropic_map = e11 == e22
+                    is_isotropic[e11 == e22] = 1
+
+                iso_res = GuiResult(0, header='IsIsotropic?', title='IsIsotropic?',
+                                    location='centroid', scalar=is_isotropic, data_format='%i')
+                cases[icase] = (iso_res, (0, 'Is Isotropic?'))
+                form_layer.append(('Is Isotropic?', icase, []))
+                icase += 1
+            elif e11.max() > 0.:
+                # isotropic
+                e11_res = GuiResult(0, header='E', title='E',
+                                    location='centroid', scalar=e11, data_format='%.3e')
+                cases[icase] = (e11_res, (0, 'E'))
+                form_layer.append(('E', icase, []))
+                icase += 1
+
+            if nlayers == 1:
+                from0 += form_layer
+            else:
+                word = self._get_nastran_gui_layer_word(ilayer, is_pshell_pcomp)
+                form0.append((word, None, form_layer))
         return icase
+
+    def _get_nastran_gui_layer_word(self, ilayer, is_pshell_pcomp):
+        """gets the PSHELL/PCOMP layer word"""
+        is_pshell, is_pcomp = is_pshell_pcomp
+        word = ''
+        if ilayer == 0:
+            if is_pshell:
+                word += 'PSHELL: mid%i; ' % (ilayer + 1)
+            if is_pcomp:
+                word += 'PCOMP: Total; '
+            word = word.rstrip('; ') + ' & others'
+
+        elif ilayer in [1, 2, 3]:
+            if is_pshell:
+                word += 'PSHELL: mid%i; ' % (ilayer + 1)
+            if is_pcomp:
+                word += 'PCOMP: ilayer=%i' % (ilayer)
+            word = word.rstrip('; ')
+        else:
+            assert is_pcomp, ilayer
+            word += 'PCOMP: ilayer=%i' % (ilayer)
+        return word
 
     def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
         """

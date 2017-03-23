@@ -602,7 +602,7 @@ class GuiCommon(GuiAttributes):
         self.vtk_interactor.Render()
 
         self.hide_labels(show_msg=False)
-        self.show_labels(result_names=[result_type], show_msg=False)
+        self.show_labels(case_keys=[self.icase], show_msg=False)
 
     def _update_forces(self, forces_array, scale=None):
         """changes the glyphs"""
