@@ -126,9 +126,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
             bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
             #bar_types[bar_type] = [eids, lines_bar_y, lines_bar_z]
 
-        no_axial = np.zeros(self.element_ids.shape, dtype='int32')
-        no_torsion = np.zeros(self.element_ids.shape, dtype='int32')
-        no_axial_torsion = (no_axial, no_torsion)
         nid_release_map = defaultdict(list)
 
         #debug = True
@@ -409,6 +406,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         return np.unique(node_ids)
 
     def _get_material_arrays(self, model, mids):
+        """gets e11, e22, e33"""
         e11 = np.zeros(mids.shape, dtype='float32')
         e22 = np.zeros(mids.shape, dtype='float32')
         e33 = np.zeros(mids.shape, dtype='float32')

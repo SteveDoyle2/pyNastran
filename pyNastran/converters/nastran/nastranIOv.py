@@ -1148,7 +1148,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # TODO: is this line correct???
                 if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:
 
-                    # TODO: this seems unnecessary
+                    # TODO: this "if block" seems unnecessary
                     if suport_id is not None and suport_id not in suport1_ids_used:
                         # SUPORT1 / SUPORT
                         suport1_ids_used.add(suport_id)
