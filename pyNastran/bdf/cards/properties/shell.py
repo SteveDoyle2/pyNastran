@@ -88,7 +88,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Is the laminate symmetrical?
 
-        :returns; True or False
+        Returns
+        -------
+        is_symmetrical : bool
+            is the SYM flag active?
         """
         if self.lam == 'SYM':
             return True
@@ -178,7 +181,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     @property
     def nplies(self):
         r"""
-            Gets the number of plies including the core.
+        Gets the number of plies including the core.
 
             ::
 

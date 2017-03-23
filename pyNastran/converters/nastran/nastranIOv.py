@@ -3259,6 +3259,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         upids = np.unique(pids)
         mid_eids_skip = []
 
+        pcomp_nplies = 0
         nplies = 1
         is_pshell = False
         is_pcomp = False
@@ -3267,8 +3268,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             is_pshell = True
         for pid in model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True):
             prop = model.properties[pid]
-            nplies = max(nplies, prop.nplies) + 1
+            pcomp_nplies = max(pcomp_nplies, prop.nplies)
             is_pcomp = True
+        nplies = max(nplies, pcomp_nplies + 1)
 
         mids = np.zeros((nelements, nplies), dtype='int32')
         thickness = np.full((nelements, nplies), np.nan, dtype='float32')
@@ -3305,7 +3307,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for iply in range(npliesi):
                     mids[i, iply+1] = prop.Mid(iply)
                     thickness[i, iply+1] = prop.Thickness(iply)
-                thickness[i, 0] = thickness[i[0], :].sum()
+                thickness[i, 0] = thickness[i[0], 1:].sum()
 
                 #mids[i, 0] = mids[i, 1]
             elif prop.type in ['PELAS', 'PBUSH', 'PDAMP', 'PDAMPT']:
@@ -3351,6 +3353,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         for ilayer in range(nlayers):
             midsi = mids[:, ilayer]
             if midsi.max() == 0:
+                print('cant find anything in ilayer=%s' % ilayer)
                 continue
             thicknessi = thickness[:, ilayer]
 
@@ -3404,7 +3407,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 cases[icase] = (iso_res, (0, 'Is Isotropic?'))
                 form_layer.append(('Is Isotropic?', icase, []))
                 icase += 1
-            elif e11.max() > 0.:
+            elif np.nanmax(e11) > 0.:
                 # isotropic
                 e11_res = GuiResult(0, header='E', title='E',
                                     location='centroid', scalar=e11, data_format='%.3e')
@@ -3413,7 +3416,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
             if nlayers == 1:
-                from0 += form_layer
+                form0 += form_layer
             else:
                 word = self._get_nastran_gui_layer_word(ilayer, is_pshell_pcomp)
                 form0.append((word, None, form_layer))
