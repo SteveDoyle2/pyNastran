@@ -1209,6 +1209,26 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self._add_nastran_nodes_to_grid(spc_name, node_ids, model, msg, nid_to_pid_map)
         return spc_names
 
+    def create_bar_pin_flag_text(self, pin_flag=None):
+        """TODO: needs a better interface in the gui"""
+        from collections import defaultdict
+        nids = []
+        text = []
+        #result_name = self.icase
+        result_name = str('ElementID')
+        for nid, data in sorted(iteritems(self.nid_release_map)):
+            sub_release_map = defaultdict(str)
+            for (eid, pin_flagi) in data:
+                sub_release_map[pin_flagi] += (str(eid) + ', ')
+            texti = '\n'.join(['%s-%s'  % (pin_flagi, msg.rstrip(', '))
+                               for (pin_flagi, msg) in sorted(iteritems(sub_release_map))])
+
+            # super messy
+            #texti = ', '.join(['%s-%s'  % (pin_flagi, eid) for (eid, pin_flagi) in data])
+            nids.append(nid)
+            text.append(texti)
+        self.mark_nodes(nids, result_name, text)
+
     def _fill_bar_yz(self, dim_max, model, icase, cases, form, debug=False):
         """
         plots the y, z vectors for CBAR & CBEAM elements
@@ -1224,8 +1244,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         scale = 0.15
 
         # TODO: this should be reworked
-        bar_nids, bar_types, out = self._get_bar_yz_arrays(model, bar_beam_eids, scale, debug)
-        no_axial_torsion, no_shear_bending, no_dofs = out
+        bar_nids, bar_types, nid_release_map = self._get_bar_yz_arrays(model, bar_beam_eids, scale, debug)
+        self.nid_release_map = nid_release_map
 
         bar_nids = list(bar_nids)
         self.create_alternate_vtk_grid(
@@ -1279,103 +1299,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 type_res = GuiResult(0, header=msg, title=msg,
                                      location='centroid', scalar=is_type)
                 cases[icase] = (type_res, (0, msg))
-                icase += 1
-
-        if self.make_released_dofs2:
-            no_axial, no_torsion = no_axial_torsion
-            if no_axial.max() == 1:
-                bar_form[2].append(['No Axial', icase, []])
-                axial_res = GuiResult(0, header='No Axial', title='No Axial',
-                                      location='centroid', scalar=no_axial)
-                cases[icase] = (axial_res, (0, 'No Axial'))
-                icase += 1
-
-            if no_torsion.max() == 1:
-                bar_form[2].append(['No Torsion', icase, []])
-                torsion_res = GuiResult(0, header='No Torsion', title='No Torsion',
-                                        location='centroid', scalar=no_torsion)
-                cases[icase] = (torsion_res, (0, 'No Torsion'))
-                icase += 1
-
-        if self.make_released_dofs1:
-            no_shear_y, no_shear_z, no_bending_y, no_bending_z = no_shear_bending
-            if no_shear_y.max() == 1:
-                bar_form[2].append(['No Shear Y', icase, []])
-                shear_y_res = GuiResult(0, header='No Shear Y', title='No Shear Y',
-                                        location='centroid', scalar=no_shear_y)
-                cases[icase] = (shear_y_res, (0, 'No Shear Y'))
-                icase += 1
-            if no_shear_z.max() == 1:
-                bar_form[2].append(['No Shear Z', icase, []])
-                shear_z_res = GuiResult(0, header='No Shear Z', title='No Shear Z',
-                                        location='centroid', scalar=no_shear_z)
-                cases[icase] = (shear_z_res, (0, 'No Shear Z'))
-                icase += 1
-            if no_bending_y.max() == 1:
-                bar_form[2].append(['No Bending Y', icase, []])
-                bending_y_res = GuiResult(0, header='No Bending Z', title='No Bending Z',
-                                          location='centroid', scalar=no_bending_y)
-                cases[icase] = (bending_y_res, (0, 'No Bending Z'))
-                icase += 1
-            if no_bending_z.max() == 1:
-                bar_form[2].append(['No Bending Z', icase, []])
-                bending_z_res = GuiResult(0, header='No Bending Z', title='No Bending Z',
-                                          location='centroid', scalar=no_bending_z)
-                cases[icase] = (bending_z_res, (0, 'No Bending Z'))
-                icase += 1
-
-        if self.make_released_dofs2 and 0:
-            (no_bending, no_bending_bad, no_6_16, no_0_456,
-             no_0_56, no_56_456, no_0_6, no_0_16) = no_dofs
-            if no_bending.max() == 1:
-                bar_form[2].append(['No Bending', icase, []])
-                bending_res = GuiResult(0, header='No Bending', title='No Bending',
-                                        location='centroid', scalar=no_bending)
-                cases[icase] = (bending_res, (0, 'No Bending'))
-                icase += 1
-
-            if no_bending_bad.max() == 1:
-                bar_form[2].append(['No Bending (Bad)', icase, []])
-                type_res = GuiResult(0, header='No Bending (Bad)', title='No Bending (Bad)',
-                                     location='centroid', scalar=no_bending_bad)
-                cases[icase] = (type_res, (0, 'No Bending (Bad)'))
-                icase += 1
-
-            if no_6_16.max() == 1:
-                bar_form[2].append(['no_6_16', icase, []])
-                type_res = GuiResult(0, header='no_6_16', title='no_6_16',
-                                     location='centroid', scalar=no_6_16)
-                cases[icase] = (type_res, (0, 'no_6_16'))
-                icase += 1
-            if no_0_56.max() == 1:
-                bar_form[2].append(['no_0_56', icase, []])
-                type_res = GuiResult(0, header='no_0_56', title='no_0_56',
-                                     location='centroid', scalar=no_0_56)
-                cases[icase] = (type_res, (0, 'no_0_56'))
-                icase += 1
-            if no_0_456.max() == 1:
-                bar_form[2].append(['no_0_456', icase, []])
-                type_res = GuiResult(0, header='no_0_456', title='no_0_456',
-                                     location='centroid', scalar=no_0_456)
-                cases[icase] = (type_res, (0, 'no_0_456'))
-                icase += 1
-            if no_56_456.max() == 1:
-                bar_form[2].append(['no_56_456', icase, []])
-                type_res = GuiResult(0, header='no_56_456', title='no_56_456',
-                                     location='centroid', scalar=no_56_456)
-                cases[icase] = (type_res, (0, 'no_56_456'))
-                icase += 1
-            if no_0_6.max() == 1:
-                bar_form[2].append(['no_0_6', icase, []])
-                type_res = GuiResult(0, header='no_0_6', title='no_0_6',
-                                     location='centroid', scalar=no_0_6)
-                cases[icase] = (type_res, (0, 'no_0_6'))
-                icase += 1
-            if no_0_16.max() == 1:
-                bar_form[2].append(['no_0_16)', icase, []])
-                type_res = GuiResult(0, header='no_0_16', title='no_0_16',
-                                     location='centroid', scalar=no_0_16)
-                cases[icase] = (type_res, (0, 'no_0_16'))
                 icase += 1
 
         # print(geo_form)

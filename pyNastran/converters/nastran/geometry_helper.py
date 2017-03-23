@@ -4,6 +4,7 @@ GUI specific geometry functions that don't involve PyQt/VTK
 """
 # pylint: disable=E1101
 from __future__ import print_function
+from collections import defaultdict
 import numpy as np
 from numpy.linalg import norm
 
@@ -128,28 +129,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         no_axial = np.zeros(self.element_ids.shape, dtype='int32')
         no_torsion = np.zeros(self.element_ids.shape, dtype='int32')
         no_axial_torsion = (no_axial, no_torsion)
-
-        no_shear_bending = (None, None, None, None)
-        if self.make_released_dofs1:
-            no_shear_y = np.zeros(self.element_ids.shape, dtype='int32')
-            no_shear_z = np.zeros(self.element_ids.shape, dtype='int32')
-            no_bending_y = np.zeros(self.element_ids.shape, dtype='int32')
-            no_bending_z = np.zeros(self.element_ids.shape, dtype='int32')
-            no_shear_bending = (no_shear_y, no_shear_z, no_bending_y, no_bending_z)
-
-        no_dofs = (None, None, None, None, None,
-                   None, None, None)
-        if self.make_released_dofs2:
-            no_bending = np.zeros(self.element_ids.shape, dtype='int32')
-            no_bending_bad = np.zeros(self.element_ids.shape, dtype='int32')
-            no_6_16 = np.zeros(self.element_ids.shape, dtype='int32')
-            no_0_56 = np.zeros(self.element_ids.shape, dtype='int32')
-            no_0_456 = np.zeros(self.element_ids.shape, dtype='int32')
-            no_56_456 = np.zeros(self.element_ids.shape, dtype='int32')
-            no_0_6 = np.zeros(self.element_ids.shape, dtype='int32')
-            no_0_16 = np.zeros(self.element_ids.shape, dtype='int32')
-            no_dofs = (no_bending, no_bending_bad, no_6_16, no_0_56, no_0_456,
-                       no_56_456, no_0_6, no_0_16)
+        nid_release_map = defaultdict(list)
 
         #debug = True
         bar_nids = set([])
@@ -192,58 +172,13 @@ class NastranGeometryHelper(NastranGuiAttributes):
             Li = norm(i)
             ihat = i / Li
 
-            if not self.make_released_dofs2:
-                if elem.pa == 0 and elem.pb == 0:
-                    pass
-
-                if elem.pa == 1 or elem.pb == 1:
-                    no_axial[ieid] = 1
-                if elem.pa == 2 or elem.pb == 2:
-                    no_axial[ieid] = 1
-                if elem.pa == 3 or elem.pb == 3:
-                    no_axial[ieid] = 1
-                if elem.pa == 4 or elem.pb == 4:
-                    no_torsion[ieid] = 1
-                if elem.pa == 5 or elem.pb == 5:
-                    no_axial[ieid] = 1
-                if elem.pa == 6 or elem.pb == 6:
-                    no_axial[ieid] = 1
-
-            else:
-                if elem.pa == 0 and elem.pb == 0:
-                    pass
-                elif (elem.pa == 6 and elem.pb == 16) or (elem.pa == 16 and elem.pb == 6):
-                    no_axial[ieid] = 1
-                    no_6_16[ieid] = 1
-                elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
-                    no_bending[ieid] = 1
-                    no_0_56[ieid] = 1
-                    #print(elem)
-                elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
-                    no_bending[ieid] = 1
-                    no_torsion[ieid] = 1
-                    no_0_456[ieid] = 1
-                    #print(elem)
-                elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
-                    no_torsion[ieid] = 1
-                    no_56_456[ieid] = 1
-                elif elem.pa == 6 and elem.pb == 0:
-                    no_bending_bad[ieid] = 1
-                    no_0_6[ieid] = 1
-                    #print(elem)
-                elif elem.pa == 0 and elem.pb == 16 or elem.pb == 0 and elem.pa == 16:
-                    no_axial[ieid] = 1
-                    no_bending_bad[ieid] = 1
-                    # print(elem)
-                    no_0_16[ieid] = 1
-                elif elem.pa == 56 and elem.pb == 45 or elem.pb == 56 and elem.pa == 45:
-                    no_torsion[ieid] = 1
-                    no_bending[ieid] = 1
-                else:
-                    msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
-                    print(msg)
-                    continue
-                    #raise NotImplementedError(msg)
+            if elem.pa != 0:
+                print(elem.pa)
+                #assert elem.pa in [], elem.pa
+                nid_release_map[nid1].append((eid, elem.pa))
+            if elem.pb != 0:
+                print(elem.pb)
+                nid_release_map[nid2].append((eid, elem.pb))
 
 
             # OFFT flag
@@ -454,8 +389,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         #no_shear_bending = (no_shear_y, no_shear_z, no_bending_y, no_bending_z)
         #no_dofs = (no_bending, no_bending_bad, no_6_16, no_0_456,
                    #no_0_56, no_56_456, no_0_6, no_0_16)
-        out = (no_axial_torsion, no_shear_bending, no_dofs)
-        return bar_nids, bar_types, out
+        return bar_nids, bar_types, nid_release_map
 
     def _get_suport_node_ids(self, model, suport_id):
         """gets the nodes where SUPORTs and SUPORT1s are defined"""

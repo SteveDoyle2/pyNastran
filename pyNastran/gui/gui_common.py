@@ -2942,6 +2942,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.result_cases[icase] = (res_obj, (islot, title))
             formi.append((header, icase, []))
 
+            # TODO: double check this should be a string instead of an int
             self.label_actors[header] = []
             self.label_ids[header] = set([])
             icase += 1
@@ -2949,7 +2950,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         self.ncases += len(headers)
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
-        self.res_widget.update_results(form)
+        self.res_widget.update_results(form, 'main')
 
     def on_load_nodal_results(self, out_filename=None):
         self._on_load_nodal_elemental_results('Nodal', out_filename)
@@ -3065,6 +3066,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.show()
 
     def _reset_settings(self):
+        """helper method for ``setup_gui``"""
         white = (1.0, 1.0, 1.0)
         black = (0.0, 0.0, 0.0)
         #red = (1.0, 0.0, 0.0)
@@ -3077,6 +3079,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.resize(1100, 700)
 
     def _reapply_settings(self, settings):
+        """helper method for ``setup_gui``"""
         white = (1.0, 1.0, 1.0)
         black = (0.0, 0.0, 0.0)
         #red = (1.0, 0.0, 0.0)
@@ -3384,6 +3387,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         Marks a series of nodes with custom text labels
 
+        Parameters
+        ----------
+        nids : int, List[int]
+            the nodes to apply a message to
+        result_name : ???
+            the key in label_actors to slot the result into
+        text : str, List[str]
+            the text to display
+
         self.mark_nodes(1, 'NodeID', 'max')
         self.mark_nodes(6, 'NodeID', 'min')
         self.mark_nodes([1, 6], 'NodeID', 'max')
@@ -3481,6 +3493,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return result_value, xyz
 
     def _create_annotation(self, text, result_name, x, y, z):
+        """
+        Creates the actual annotation
+
+        Parameters
+        ----------
+        text : str
+            the text to display
+        result_name : ???
+            the key in label_actors to slot the result into
+        x, y, z : float
+            the position of the label
+        """
         if not isinstance(result_name, string_types):
             msg = 'result_name=%r type=%s' % (result_name, type(result_name))
             raise TypeError(msg)
