@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 import numpy as np
 from numpy import zeros, array_equal
 from itertools import count

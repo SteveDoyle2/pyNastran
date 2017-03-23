@@ -3950,37 +3950,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         except ImportError:
             pass
 
-        if make_gif:
-            if is_imageio:
-                images = []
-                for png_filename in png_filenames:
-                    images.append(imageio.imread(png_filename))
-                if nrepeat is True:
-                    nrepeat = 0
-                imageio.mimsave(gif_filename, images, duration=duration,
-                                loop=nrepeat)
-            else:
-                if 0:
-                    from pyNastran.gui.images2gif import write_gif
-                    # duration : frame time
-                    write_gif(gif_filename, png_filenames, duration=duration, repeat=nrepeat,
-                              dither=False, nq=0, subRectangles=True,
-                              dispose=None)
-                else:
-                    with open('make_gif.py', 'w') as pyfile:
-                        pyfile.write('from pyNastran.gui.images2gif import write_gif\n')
-                        pyfile.write('png_filenames = %s\n' % png_filenames)
-                        pyfile.write('write_gif(%r, png_filenames,\n' % gif_filename)
-                        pyfile.write('          duration=%s, repeat=%i,\n' % (duration, nrepeat))
-                        pyfile.write('          dither=False, nq=0, subRectangles=False,\n')
-                        pyfile.write('          dispose=None)\n')
-                    #os.system("python make_gif.py")
-                    import subprocess
-                    subprocess.call('python make_gif.py', shell=False)
-                    #try:
-                        #os.remove('make_gif.py')
-                    #except OSError:
-                        #pass
+        if make_gif and is_imageio:
+            images = []
+            for png_filename in png_filenames:
+                images.append(imageio.imread(png_filename))
+            if nrepeat is True:
+                nrepeat = 0
+            imageio.mimsave(gif_filename, images, duration=duration,
+                            loop=nrepeat)
 
         if delete_images:
             for png_filename in png_filenames:
