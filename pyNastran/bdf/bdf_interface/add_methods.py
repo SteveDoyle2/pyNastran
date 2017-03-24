@@ -141,6 +141,21 @@ class AddMethods(BDFAttributes):
             self.elements[key] = elem
             self._type_to_id_map[elem.type].append(key)
 
+    def _add_ao_object(self, elem_flag, allow_overwrites=False):
+        """adds a CBARAO"""
+        key = elem_flag.eid
+        assert key > 0, 'eid=%s must be positive; elem_flag=\n%s' % (key, elem_flag)
+        if key in self.ao_element_flags and not allow_overwrites:
+            if not elem_flag._is_same_card(self.ao_element_flags[key]):
+                #self._duplicate_elements.append(elem_flag)
+                #if self._stop_on_duplicate_error:
+                    #self.pop_parse_errors()
+                assert elem_flag.eid not in self.ao_element_flags, 'eid=%s\nold_ao_element=\n%snew_ao_element=\n%s' % (
+                    elem_flag.eid, self.ao_element_flags[elem_flag.eid], elem_flag)
+        else:
+            self.ao_element_flags[key] = elem_flag
+            self._type_to_id_map[elem_flag.type].append(key)
+
     def _add_doptprm_object(self, doptprm, comment=''):
         """adds a DOPTPRM"""
         self.doptprm = doptprm

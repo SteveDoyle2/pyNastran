@@ -845,27 +845,37 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def log_info(self, msg):
         """ Helper funtion: log a message msg with a 'INFO:' prefix """
-        assert msg is not None, msg
+        if msg is None:
+            msg = 'msg is None; must be a string'
         self.log.simple_msg(msg, 'INFO')
 
     def log_debug(self, msg):
         """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
-        assert msg is not None, msg
+        if msg is None:
+            msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'DEBUG')
 
     def log_command(self, msg):
         """ Helper funtion: log a message msg with a 'COMMAND:' prefix """
-        assert msg is not None, msg
+        if msg is None:
+            msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'COMMAND')
 
     def log_error(self, msg):
         """ Helper funtion: log a message msg with a 'GUI ERROR:' prefix """
-        assert msg is not None, msg
+        if msg is None:
+            msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'GUI ERROR')
+        help(self.log)
 
     def log_warning(self, msg):
         """ Helper funtion: log a message msg with a 'WARNING:' prefix """
-        assert msg is not None, msg
+        if msg is None:
+            msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'WARNING')
 
     def change_background_color(self):

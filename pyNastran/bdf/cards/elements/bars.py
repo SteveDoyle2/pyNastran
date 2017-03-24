@@ -33,10 +33,10 @@ from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Element
+from pyNastran.bdf.cards.base_card import BaseCard, Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
-    integer_string_or_blank, string_or_blank)
+    integer_string_or_blank, string_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -214,6 +214,64 @@ class CBAROR(object):
         self.offt = string_or_blank(card, 8, 'offt', 'GGG')
         assert len(card) <= 9, 'len(CBAROR card) = %i\ncard=%s' % (len(card), card)
 
+class CBARAO(BaseCard):
+    type = 'CBARAO'
+    """
+    Per MSC 2016.1
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    |   1    |  2   |   3   |  4   |  5  |    6   |  7  | 8  |  9 |
+    +========+======+=======+======+=====+========+=====+====+====+
+    | CBARAO | EID  | SCALE |  X1  | X2  |  X3    | X4  | X5 | X6 |
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    | CBARAO | 1065 |  FR   | 0.2  | 0.4 | 0.6    | 0.8 |    |    |
+    +--------+------+-------+------+-----+--------+-----+----+----+
+
+    Alternate form (not supported):
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    |   1    |  2   |   3   |  4   |  5  |    6   |  7  | 8  |  9 |
+    +========+======+=======+======+=====+========+=====+====+====+
+    | CBARAO | EID  | SCALE | NPTS | X1  | DELTAX |     |    |    |
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    | CBARAO | 1065 |  FR   |  4   | 0.2 | 0.2    |     |    |    |
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    """
+    def __init__(self, eid, scale, x, comment=''):
+        if comment:
+            self.comment = comment
+        self.eid = eid
+        self.scale = scale
+        self.x = x
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        scale = string(card, 2, 'scale')
+        x = [
+            double_or_blank(card, 3, 'x1'),
+            double_or_blank(card, 4, 'x2'),
+            double_or_blank(card, 5, 'x3'),
+            double_or_blank(card, 6, 'x4'),
+            double_or_blank(card, 7, 'x5'),
+            double_or_blank(card, 8, 'x6'),
+        ]
+        assert len(card) <= 9, 'len(CBARAO card) = %i\ncard=%s' % (len(card), card)
+        return CBARAO(eid, scale, x, comment=comment)
+
+    def _verify(self, xref=False):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['CBARAO', self.eid, self.scale] + self.x
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class CBAR(LineElement):
     """
@@ -904,7 +962,7 @@ class CBEND(LineElement):
             # center of curvature.
             pass
         else:
-            raise RuntimeError('geom=%r is not supported on the CBEND' % geom)
+            raise RuntimeError('geom=%r is not supported on the CBEND' % self.geom)
         return L
 
     def _validate_input(self):

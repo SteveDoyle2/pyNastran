@@ -308,6 +308,9 @@ class WriteMesh(BDFAttributes):
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
                         raise
+        if self.ao_element_flags:
+            for (eid, element) in sorted(iteritems(self.ao_element_flags)):
+                bdf_file.write(element.write_card(size, is_double))
 
     def _write_elements_properties(self, bdf_file, size=8, is_double=False):
         """
