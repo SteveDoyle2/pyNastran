@@ -1158,7 +1158,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # create a SUPORT actor if there are no SUPORT1s
         # otherwise, we already included it in suport_id=suport_id
         if len(suport_names) == 0 and model.suport:
-            # SUPORT
+            # handle SUPORT without SUPORT1
             ids = []
             for suport in model.suport:
                 idsi = suport.node_ids
@@ -1167,6 +1167,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.create_alternate_vtk_grid(
                 grid_name, color=RED, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
+
+        if len(mpc_names) == 0 and len(rigid_lines):
+            # handle RBEs without MPCs
+            mpc_id = 0
+            mpc_names += self._fill_dependent_independent(
+                mpc_id, dim_max, model, rigid_lines, nid_to_pid_map)
+            pass
 
         geometry_names = spc_names + mpc_names + suport_names
         return geometry_names
@@ -1336,9 +1343,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
 
         #print('_fill_dependent_independent')
-        depname = 'mpc_id=%i_dependent' % mpc_id
-        indname = 'mpc_id=%i_independent' % mpc_id
-        linename = 'mpc_id=%i_lines' % mpc_id
+        if mpc_id == 0:
+            depname = 'rigid_dependent'
+            indname = 'rigid_independent'
+            linename = 'rigid_lines'
+        else:
+            depname = 'mpc_id=%i_dependent' % mpc_id
+            indname = 'mpc_id=%i_independent' % mpc_id
+            linename = 'mpc_id=%i_lines' % mpc_id
         self.create_alternate_vtk_grid(
             depname, color=GREEN, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
@@ -3544,6 +3556,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          - Temperature(BOTH)
         """
         if not xref_loads:
+            print('returning from plot_applied_loads_early')
             return icase
 
         form = []

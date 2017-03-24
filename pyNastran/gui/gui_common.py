@@ -1510,7 +1510,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
 
         cell_id = picker.GetCellId()
-        print('_probe_picker', cell_id)
+        #print('_probe_picker', cell_id)
 
         if cell_id < 0:
             pass

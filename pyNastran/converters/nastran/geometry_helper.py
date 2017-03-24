@@ -170,11 +170,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             ihat = i / Li
 
             if elem.pa != 0:
-                print(elem.pa)
                 #assert elem.pa in [], elem.pa
                 nid_release_map[nid1].append((eid, elem.pa))
             if elem.pb != 0:
-                print(elem.pb)
                 nid_release_map[nid2].append((eid, elem.pb))
 
 
