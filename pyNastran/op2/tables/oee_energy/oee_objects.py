@@ -74,8 +74,8 @@ class RealStrainEnergyArray(ScalarObject):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         self.ntotal = max(self._ntotals)
-        if max(self._ntotals) != min(self._ntotals):
-            raise RuntimeError('variable length in RealStrainEnergyArray')
+        #if max(self._ntotals) != min(self._ntotals):
+            #raise RuntimeError('variable length in RealStrainEnergyArray')
 
         #self.names = []
         #self.nelements = self.ntotal // self.ntimes
@@ -92,7 +92,10 @@ class RealStrainEnergyArray(ScalarObject):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
+        self.build_data(dtype)
 
+    def build_data(self, dtype):
+        """actually performs the build step"""
         self._times = zeros(self.ntimes, dtype=dtype)
         #self.element = zeros(self.nelements, dtype='int32')
         self.element = zeros((self.ntimes, self.nelements), dtype='int32')
@@ -126,8 +129,9 @@ class RealStrainEnergyArray(ScalarObject):
         nelements = self.element.shape[1]
         if ntimes == 1:
             column_names, column_values = self._build_dataframe_transient_header()
+            element = self.element.ravel()
             self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element.ravel(),
+                                       major_axis=element,
                                        minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
@@ -160,8 +164,8 @@ class RealStrainEnergyArray(ScalarObject):
                 self.data_frame = df1.join(dfs)
                 #self.data_frame.columns.names = column_names
 
-        # remove empty rows
-        self.data_frame = self.data_frame[self.data_frame.ElementID != 0]
+            # remove empty rows
+            self.data_frame = self.data_frame[self.data_frame.ElementID != 0]
 
     def __eq__(self, table):
         return self.assert_equal(table)
