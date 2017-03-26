@@ -540,65 +540,126 @@ class NastranGuiResults(NastranGuiAttributes):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
-        oxx = np.zeros(self.nElements, dtype='float32')
-        oyy = np.zeros(self.nElements, dtype='float32')
-        ozz = np.zeros(self.nElements, dtype='float32')
-        fmt = '%g'
-        header = ''
-        form0 = ('Element Strain Energy', None, [])
+        case = None
+        subcase_id = key[2]
+        strain_energies = [
+            (model.cquad4_strain_energy, 'CQUAD4', True),
+            (model.cquad8_strain_energy, 'CQUAD8', True),
+            (model.cquadr_strain_energy, 'CQUADR', True),
+            (model.cquadx_strain_energy, 'CQUADX', True),
+
+            (model.ctria3_strain_energy, 'CTRIA3', True),
+            (model.ctria6_strain_energy, 'CTRIA6', True),
+            (model.ctriar_strain_energy, 'CTRIAR', True),
+            (model.ctriax_strain_energy, 'CTRIAX', True),
+            (model.ctriax6_strain_energy, 'CTRIAX6', True),
+
+            (model.ctetra_strain_energy, 'CTETRA', True),
+            (model.cpenta_strain_energy, 'CPENTA', True),
+            (model.chexa_strain_energy, 'CHEXA', True),
+            (model.cpyram_strain_energy, 'CPYRAM', True),
+
+            (model.crod_strain_energy, 'CROD', True),
+            (model.ctube_strain_energy, 'CTUBE', True),
+            (model.conrod_strain_energy, 'CONROD', True),
+
+            (model.cbar_strain_energy, 'CBAR', True),
+            (model.cbeam_strain_energy, 'CBEAM', True),
+
+            (model.cgap_strain_energy, 'CGAP', True),
+            (model.celas1_strain_energy, 'CELAS1', True),
+            (model.celas2_strain_energy, 'CELAS2', True),
+            (model.celas3_strain_energy, 'CELAS3', True),
+            (model.celas4_strain_energy, 'CELAS4', True),
+            (model.cdum8_strain_energy, 'CDUM8', False),
+            (model.cbush_strain_energy, 'CBUSH', True),
+            #(model.chexa8fd_strain_energy, '', False),
+            (model.cbend_strain_energy, 'CBEND', False),
+            (model.dmig_strain_energy, 'DMIG', False),
+            (model.genel_strain_energy, 'GENEL', False),
+            (model.cshear_strain_energy, 'CSHEAR', True),
+        ]
+        has_strain_energy = [key in res[0] for res in strain_energies]
+        if not any(has_strain_energy):
+            return icase
+        itrue = has_strain_energy.index(True)
+        ese0 = strain_energies[itrue][0]
+        #times = ese0._times
+
+        #fmt = '%g'
+        #header = ''
+        #form0 = ('Element Strain Energy', None, [])
 
         #op2.strain_energy[1]
             #type=StrainEnergyObject ntimes=3 nelements=16
             #energy, percent, density
             #modes = [1, 2, 3]
-        case = None
-        subcase_id = key[2]
-        if not hasattr(model, 'strain_energy'):
-            return icase
-        if key in model.strain_energy:
+
+        nelements = self.nElements
+
+        eids = self.element_ids
+        ese = np.full(nelements, np.nan, dtype='float32')
+        percent = np.full(nelements, np.nan, dtype='float32')
+        strain_energy_density = np.full(nelements, np.nan, dtype='float32')
+        for i, is_true in enumerate(has_strain_energy):
+            if not is_true:
+                continue
+            resdict, name, flag = strain_energies[i]
+
             #print('key =', key)
-            ese = model.strain_energy[key]
-            #print(ese)
-            times = sorted(ese.energy.keys())  # TODO: not vectorized
-            #assert times[itime] == dt, 'actual=%s expected=%s' % (times[itime], dt)
-            dt = times[itime]
+            case = resdict[key]
 
-            try:
-                header = self._get_nastran_header(case, dt, itime)
-                header_dict[(key, itime)] = header
-            except AttributeError:
-                pass
+            if case.is_complex():
+                continue
+            itotal = np.where(case.element[itime, :] == 100000000)[0][0]
+            #print('itotal = ', itotal)
 
-            if is_static:
-                percent = ese.percent
-                energy = ese.energy
-                density = ese.density
-            else:
-                percent = ese.percent[dt]
-                energy = ese.energy[dt]
-                density = ese.density[dt]
-            for eid, percenti in sorted(iteritems(percent)):
-                if eid not in self.eid_map:
-                    continue
-                i = self.eid_map[eid]
-                oxx[i] = energy[eid]
-                oyy[i] = percenti
-                ozz[i] = density[eid]
+            eidsi2 = case.element[itime, :itotal]
+            i = np.searchsorted(eids, eidsi2)
+            if len(i) != len(np.unique(i)):
+                msg = 'irod=%s is not unique\n' % str(i)
+                #print('eids = %s\n' % str(list(eids)))
+                #print('eidsi = %s\n' % str(list(eidsi)))
+                raise RuntimeError(msg)
+            ese[i] = case.data[itime, :itotal, 0]
+            percent[i] = case.data[itime, :itotal, 1]
+            strain_energy_density[i] = case.data[itime, :itotal, 2]
 
-            case = ese
-            fmt = '%.4f'
-            # TODO: update this to use GUIResult...
-            cases[(subcase_id, icase, 'StrainEnergy', 1, 'centroid', fmt, header)] = oxx
-            form_dict[(key, itime)].append(('StrainEnergy', icase, []))
-            icase += 1
 
-            cases[(subcase_id, icase, 'PercentOfTotal', 1, 'centroid', fmt, header)] = oyy
-            form_dict[(key, itime)].append(('PercentOfTotal', icase, []))
-            icase += 1
+        #ese
 
-            cases[(subcase_id, icase, 'Density', 1, 'centroid', fmt, header)] = ozz
-            form_dict[(key, itime)].append(('Density', icase, []))
-            icase += 1
+        # helicopter.dat
+        #CBEAM : 10
+        #CQUAD4 : 11388
+        #CROD : 544
+        #CTRIA3 : 151
+        # nelements = 12093
+
+        #try:
+            #header = self._get_nastran_header(case, dt, itime)
+            #header_dict[(key, itime)] = header
+        #except AttributeError:
+            #pass
+        if 1:
+            ese_res = GuiResult(subcase_id, header='Strain Energy',
+                                title='Strain Energy', data_format='%.3e',
+                                location='centroid', scalar=ese)
+            percent_res = GuiResult(subcase_id, header='Percent of Total',
+                                title='Percent of Total', data_format='%.3f',
+                                location='centroid', scalar=percent)
+            sed_res = GuiResult(subcase_id, header='Strain Energy Density',
+                                title='Strain Energy Density', data_format='%.3e',
+                                location='centroid', scalar=strain_energy_density)
+
+            cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
+            cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
+            cases[icase + 2] = (sed_res, (subcase_id, 'Strain Energy Density'))
+
+            form_dict[(key, itime)].append(('Strain Energy', icase, []))
+            form_dict[(key, itime)].append(('Percent', icase + 1, []))
+            form_dict[(key, itime)].append(('Strain Energy Density', icase + 1, []))
+            icase += 3
+
         return icase
 
     #icase = self._fill_op2_time_centroidal_force(
@@ -866,7 +927,8 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_time_centroidal_stress(self, cases, model, key, icase, itime,
-                                         form_dict, header_dict, is_static, is_stress=True):
+                                         form_dict, header_dict, is_static,
+                                         is_stress=True):
         """
         Creates the time accurate stress objects for the pyNastranGUI
         """
