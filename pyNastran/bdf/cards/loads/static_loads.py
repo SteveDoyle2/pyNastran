@@ -232,6 +232,24 @@ class GRAV(BaseCard):
     type = 'GRAV'
 
     def __init__(self, sid, scale, N, cid=0, mb=0, comment=''):
+        """
+        Creates an GRAV card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        cid : int; default=0
+            the coordinate system for the load
+        mb : int; default=0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
 
@@ -373,7 +391,28 @@ class ACCEL(BaseCard):
     """
     type = 'ACCEL'
 
-    def __init__(self, sid, cid, N, direction, locs, vals, comment=''):
+    def __init__(self, sid, N, direction, locs, vals, cid=0, comment=''):
+        """
+        Creates an ACCEL card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        direction : str
+            Component direction of acceleration variation
+            {X, Y, Z}
+        locs : ???
+            ???
+        vals : ???
+            ???
+        cid : int; default=0
+            the coordinate system for the load
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Load set identification number (Integer>0)
@@ -416,7 +455,7 @@ class ACCEL(BaseCard):
             vals.append(val)
             j += 1
             i += 2
-        return ACCEL(sid, cid, N, direction, locs, vals, comment=comment)
+        return ACCEL(sid, N, direction, locs, vals, cid=cid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -476,7 +515,28 @@ class ACCEL1(BaseCard):
     """
     type = 'ACCEL1'
 
-    def __init__(self, sid, cid, scale, N, nodes, comment=''):
+    def __init__(self, sid, scale, N, nodes, cid=0, comment=''):
+        """
+        Creates an ACCEL1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        direction : str
+            Component direction of acceleration variation
+            {X, Y, Z}
+        nodes : List[int]
+            the nodes to apply acceleration to
+        cid : int; default=0
+            the coordinate system for the load
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Load set identification number (Integer>0)
@@ -507,7 +567,7 @@ class ACCEL1(BaseCard):
                    double_or_blank(card, 6, 'N3', 0.0)])
 
         nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
-        return ACCEL1(sid, cid, scale, N, nodes, comment=comment)
+        return ACCEL1(sid, scale, N, nodes, cid=cid, comment=comment)
 
     def cross_reference(self, model):
         """

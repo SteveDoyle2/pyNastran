@@ -60,7 +60,7 @@ from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, 
                                                  CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
-from pyNastran.bdf.cards.elements.bars import CBAR, CBEAM3, CBEND
+from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND
@@ -351,7 +351,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
             'CFAST',
 
-            'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
+            'CBAR', 'CBARAO', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
             'CTRIA3', 'CTRIA6', 'CTRIAR',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
             'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
@@ -1821,6 +1821,7 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
             'PTUBE' : (PTUBE, self._add_property_object),
 
             'CBAR' : (CBAR, self._add_element_object),
+            'CBARAO' : (CBARAO, self._add_ao_object),
             'PBAR' : (PBAR, self._add_property_object),
             'PBARL' : (PBARL, self._add_property_object),
             'PBRSECT' : (PBRSECT, self._add_property_object),

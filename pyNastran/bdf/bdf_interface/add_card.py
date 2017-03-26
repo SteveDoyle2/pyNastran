@@ -1725,17 +1725,77 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_accel(self, sid, cid, N, direction, locs, vals, comment=''):
-        load = ACCEL(sid, cid, N, direction, locs, vals, comment=comment)
+    def add_accel(self, sid, N, direction, locs, vals, cid=0, comment=''):
+        """
+        Creates an ACCEL card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        direction : str
+            Component direction of acceleration variation
+            {X, Y, Z}
+        locs : ???
+            ???
+        vals : ???
+            ???
+        cid : int; default=0
+            the coordinate system for the load
+        comment : str; default=''
+            a comment for the card
+        """
+        load = ACCEL(sid, cid, N, direction, locs, vals, cid=cid, comment=comment)
         self._add_load_object(load)
         return load
 
-    def add_accel1(self, sid, cid, scale, N, nodes, comment=''):
-        load = ACCEL1(sid, cid, scale, N, nodes, comment=comment)
+    def add_accel1(self, sid, scale, N, nodes, cid=0, comment=''):
+        """
+        Creates an ACCEL1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        direction : str
+            Component direction of acceleration variation
+            {X, Y, Z}
+        nodes : List[int]
+            the nodes to apply acceleration to
+        cid : int; default=0
+            the coordinate system for the load
+        comment : str; default=''
+            a comment for the card
+        """
+        load = ACCEL1(sid, scale, N, nodes, cid=cid, comment=comment)
         self._add_load_object(load)
         return load
 
     def add_grav(self, sid, scale, N, cid=0, mb=0, comment=''):
+        """
+        Creates an GRAV card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        cid : int; default=0
+            the coordinate system for the load
+        mb : int; default=0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         load = GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
         self._add_load_object(load)
 

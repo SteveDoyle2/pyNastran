@@ -256,6 +256,9 @@ class BDFAttributes(object):
         #: etc.)
         self.elements = {}
 
+        #: stores CBARAO, CBEAMAO
+        self.ao_element_flags = {}
+
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}
         #: stores PLOTELs
@@ -511,6 +514,7 @@ class BDFAttributes(object):
             'points' : ['POINT'],
             'grdset' : ['GRDSET'],
             'seqgp' : ['SEQGP'],
+            'ao_element_flags' : ['CBARAO'],
             #'POINT', 'POINTAX', 'RINGAX',
 
             # CMASS4 lies in the QRG
