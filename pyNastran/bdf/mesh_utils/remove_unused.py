@@ -59,6 +59,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'DMIG', 'DMI', 'DMIJ', 'DMIK', 'DMIJI',
         'POINT', 'EPOINT',
         'DELAY', 'DPHASE',
+        'CBARAO',
 
 
         # properties
