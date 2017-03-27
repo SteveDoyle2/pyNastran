@@ -14,6 +14,14 @@ except ImportError:
 
 
 class RealGridPointForcesArray(ScalarObject):
+    """
+                                       G R I D   P O I N T   F O R C E   B A L A N C E
+       POINT-ID  ELEMENT-ID   SOURCE        T1       T2    T3            R1   R2   R3
+    0     13683        3736  TRIAX6    4.996584E+00  0.0   1.203093E+02  0.0  0.0  0.0
+          13683        3737  TRIAX6   -4.996584E+00  0.0  -1.203093E+02  0.0  0.0  0.0
+          13683              *TOTALS*  6.366463E-12  0.0  -1.364242E-12  0.0  0.0  0.0
+
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
         #self.code = [self.format_code, self.sort_code, self.s_code]

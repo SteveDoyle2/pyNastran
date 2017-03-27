@@ -3874,15 +3874,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             for itime, dt in enumerate(times):
                 ncases_old = icase
+                # stress
                 icase = self._fill_op2_stress(
                     cases, model, key, icase, itime,
                     stress_dict, header_dict, is_static)
+
+                # strain
                 icase = self._fill_op2_strain(
                     cases, model, key, icase, itime,
                     strain_dict, header_dict, is_static)
+
+                # force
                 icase = self._fill_op2_force(
                     cases, model, key, icase, itime,
                     force_dict, header_dict, is_static)
+
+                # strain energy
                 icase = self._fill_op2_time_centroidal_strain_energy(
                     cases, model, key, icase, itime,
                     strain_energy_dict, header_dict, is_static)

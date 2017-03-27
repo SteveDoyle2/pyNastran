@@ -2971,6 +2971,269 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         return page_num - 1
 
 
+# F:\work\pyNastran\examples\Dropbox\move_tpl\beamp11.op2
+class RealForceVU_Array(ScalarObject):
+    """
+          DIRECT TRANSIENT RESPONSE                                           ADAPTIVITY INDEX=      1
+    0                                                                         PVAL ID=       1                       SUBCASE=       1
+       VU-ELEMENT ID =  100001002
+
+                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                        TIME =   0.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
+
+          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
+            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
+       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     0.000000E+00     0.000000E+00
+       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     0.000000E+00     0.000000E+00
+
+                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                        TIME =   1.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
+
+          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
+            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
+       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982032E-01     0.000000E+00
+       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982032E-01     0.000000E+00
+
+                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                        TIME =   2.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
+
+          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
+            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
+       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.999968E-01     0.000000E+00
+       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.999968E-01     0.000000E+00
+
+                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                        TIME =   3.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
+
+          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
+            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
+       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     1.001794E+00     0.000000E+00
+       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     1.001794E+00     0.000000E+00
+
+                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                        TIME =   4.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
+
+          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
+            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
+       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982129E-01     0.000000E+00
+       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982129E-01     0.000000E+00
+    1    MSC/NASTRAN                                            BEAMP11        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    43
+    """
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            self.add = self.add_sort1
+        else:
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
+        return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[fx, fy, fz, mx, my, mz]
+        self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (fx1, fy1, fz1, mx1, my1, mz1) = t1
+                        (fx2, fy2, fz2, mx2, my2, mz2) = t2
+                        if not allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                fx1, fy1, fz1, mx1, my1, mz1,
+                                fx2, fy2, fz2, mx2, my2, mz2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
+
+    def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
+        """unvectorized method for adding SORT1 transient data"""
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
+        self.ielement += 1
+
+    #def add(self, nnodes, dt, data):
+        #[eid, parent, coord, icord, forces] = data
+        #self.parent[eid] = parent
+        #self.coord[eid] = coord
+        #self.icord[eid] = icord
+
+        #self.forceX[eid] = {}
+        #self.shearY[eid] = {}
+        #self.shearZ[eid] = {}
+        #self.torsion[eid] = {}
+        #self.bendingY[eid] = {}
+        #self.bendingZ[eid] = {}
+
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = '1'
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = searchsorted(eids, self.element)  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
+
+    def get_f06_header(self):
+        msg = [
+            '                                 F O R C E S   I N   VU ELEMENTS\n'
+            ' \n'
+            '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        return msg
+
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
+        NotImplementedError(self.code_information())
+
+        msg_temp = self.get_f06_header()
+
+        # write the f06
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            fx = self.data[itime, :, 0]
+            fy = self.data[itime, :, 1]
+            fz = self.data[itime, :, 2]
+            mx = self.data[itime, :, 3]
+            my = self.data[itime, :, 4]
+            mz = self.data[itime, :, 5]
+
+            for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
+                [fxi, fyi, fzi, mxi, myi, mzi] = write_floats_13e([fxi, fyi, fzi, mxi, myi, mzi])
+                f.write('                    %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, fxi, fyi, fzi, mxi, myi, mzi))
+                #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
 class RealCBushForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
@@ -3171,7 +3434,7 @@ class RealCBushForceArray(ScalarObject):
         return page_num - 1
 
 
-class RealForce_VU(ScalarObject):  # 191-VUBEAM
+class RealForceVU(ScalarObject):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None

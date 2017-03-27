@@ -5,7 +5,7 @@ from six.moves import range
 from struct import Struct
 from numpy import fromstring, array
 
-from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy, RealStrainEnergyArray
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 class ONR(OP2Common):
@@ -252,24 +252,19 @@ class ONR(OP2Common):
 
             ntotal = 16
             nelements = ndata // ntotal
-            if 1:
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, RealStrainEnergyArray)
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, RealStrainEnergyArray)
 
-                if auto_return:
-                    #if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
-                        #element_name = self.data_code['element_name']
-                        #if element_name in obj.element_name_count:
-                            #obj.element_name_count[element_name] += nelements
-                        #else:
-                            #obj.element_name_count[element_name] = nelements
-                        #obj.dt_temp = dt
-                    return nelements * self.num_wide * 4
-                #itime = obj.itime #// obj.nelement_types
-            else:
-                if self.read_mode == 1:
-                    return ndata
-                self.create_transient_object(slot, RealStrainEnergy)
+            if auto_return:
+                #if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
+                    #element_name = self.data_code['element_name']
+                    #if element_name in obj.element_name_count:
+                        #obj.element_name_count[element_name] += nelements
+                    #else:
+                        #obj.element_name_count[element_name] = nelements
+                    #obj.dt_temp = dt
+                return nelements * self.num_wide * 4
+            #itime = obj.itime #// obj.nelement_types
 
             obj = self.obj
             itime = obj.itime
@@ -289,11 +284,11 @@ class ONR(OP2Common):
 
                 floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
                 obj._times[itime] = dt
-                if obj.itime == 0:
-                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[ielement:ielement2] = eids
+                #if obj.itime == 0:
+                ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
+                eids = ints[:, 0] // 10
+                assert eids.min() > 0, eids.min()
+                obj.element[itime, ielement:ielement2] = eids
 
                 #[energy, percent, density]
                 obj.data[itime, ielement:ielement2, :] = floats[:, 1:]
@@ -316,13 +311,8 @@ class ONR(OP2Common):
             ntotal = 20
             nnodes = ndata // ntotal
 
-            if 0:
-                if self.read_mode == 1:
-                    return ndata
-                self.create_transient_object(slot, RealStrainEnergy)  # why is this not different?
-            else:
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, RealStrainEnergyArray)
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, RealStrainEnergyArray)
 
             obj = self.obj
             if self.use_vector:
@@ -364,13 +354,8 @@ class ONR(OP2Common):
         elif self.num_wide == 6:  ## TODO: figure this out...
             ntotal = 24
             nnodes = ndata // ntotal
-            if 0:
-                if self.read_mode == 1:
-                    return ndata
-                self.create_transient_object(slot, RealStrainEnergy)  # TODO: why is this not different?
-            else:
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, RealStrainEnergyArray)
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, RealStrainEnergyArray)
 
             obj = self.obj
             if self.use_vector:

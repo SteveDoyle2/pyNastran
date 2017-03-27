@@ -10,7 +10,7 @@ from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger2
 
 #strainEnergyDensity,TemperatureGradientObject
-from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 
 from pyNastran.f06.tables.oes import OES
 from pyNastran.f06.tables.oug import OUG
@@ -19,7 +19,7 @@ from pyNastran.f06.tables.oef import OEF
 from pyNastran.f06.tables.lama import LAMA
 from pyNastran.f06.tables.max_min import MAX_MIN
 from pyNastran.f06.f06_writer import F06Writer
-from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointForces
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
 from pyNastran.utils import is_binary_file
 from pyNastran.f06.errors import FatalError
@@ -931,8 +931,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             if isubcase in self.iSubcases:
                 self.strain_energy[isubcase].readF06Data(data, transient)
             else:
-                sed = RealStrainEnergy(data, transient)
-                sed.readF06Data(data, transient)
+                sed = RealStrainEnergyArray(data, transient)
+                sed.read_f06_data(data, transient)
                 self.strain_energy[isubcase] = sed
 
     def _grid_point_force_balance(self):
@@ -999,7 +999,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                 }
         is_sort1 = True
         if isubcase not in self.grid_point_forces:
-            self.grid_point_forces[isubcase] = RealGridPointForces(data_code, is_sort1, isubcase, dt)
+            self.grid_point_forces[isubcase] = RealGridPointForcesArray(
+                data_code, is_sort1, isubcase, dt)
         self.grid_point_forces[isubcase].add_f06_data(dt, data)
         self.iSubcases.append(isubcase)
 
@@ -1084,7 +1085,9 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Reads the F06 file
 
-        :f06_filename: the file to be parsed (None -> GUI)
+        Parameters
+        f06_filename : str
+            the file to be parsed (None -> GUI)
         """
         self.is_vectorized = vectorized
         if f06_filename is None:

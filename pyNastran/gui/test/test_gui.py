@@ -123,6 +123,17 @@ class FakeGUI(GUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
             msg = "load_geometry_name=%s doesn't exist" % load_geometry_name
             raise NotImplementedError(msg)
 
+    def load_results(self, output_filename):
+        """loads a model"""
+        load_results_name = 'load_%s_results' % self._formati
+        if hasattr(self, load_results_name):
+            # self.load_nastran_ressults(op2_filename, None)
+            dirname = None
+            getattr(self, load_results_name)(output_filename, dirname)
+        else:
+            msg = "load_results_name=%s doesn't exist" % load_results_name
+            raise NotImplementedError(msg)
+
 
 def run_docopt(argv=None):
     """
@@ -131,6 +142,7 @@ def run_docopt(argv=None):
     msg = "Usage:\n"
     # INPUT format may be explicitly or implicitly defined with or
     # without an output file
+    msg += "  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  OUTPUT_FILENAME [--log LOG]\n"
     msg += "  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  [--log LOG]\n"
     msg += "  test_pynastrangui  -f FORMAT  [-r] [-d] INPUT_DIRECTORY [--log LOG]\n"
     msg += "  test_pynastrangui  -f FORMAT  [-r] [-d]                 [--log LOG]\n"
@@ -140,8 +152,9 @@ def run_docopt(argv=None):
     msg += '\n'
 
     msg += 'Positional Arguments:\n'
-    msg += '  INPUT_FILENAME    path to input file\n'
-    msg += '  INPUT_DIRECTORY   path to input directory\n'
+    msg += '  INPUT_FILENAME   path to input file\n'
+    msg += '  OUTPUT_FILENAME  path to output file\n'
+    msg += '  INPUT_DIRECTORY  path to input directory\n'
     msg += '\n'
 
     msg += "Options:\n"
@@ -189,9 +202,11 @@ def run_docopt(argv=None):
             input_filenames = list(itertools.chain.from_iterable(input_filenames))
         else:
             input_filenames = get_failed_files(failed_cases_filename)
+        output_filenames = [None] * len(input_filenames)
     else:
         failed_cases_filename = None
         input_filename = data['INPUT_FILENAME']
+        output_filename = data['OUTPUT_FILENAME']
         if not os.path.exists(input_filename):
             msg = 'input_filename=%r does not exist\n%s' % (
                 input_filename, print_bad_path(input_filename))
@@ -200,6 +215,7 @@ def run_docopt(argv=None):
             msg = 'input_filename=%r is not a file' % input_filename
             raise RuntimeError(msg)
         input_filenames = [input_filename]
+        output_filenames = [output_filename]
 
         if data['--format']:
             formati = data['--format'].lower()
@@ -213,11 +229,11 @@ def run_docopt(argv=None):
         assert log_method in ['debug', 'info', 'warning', 'error'], 'log_method=%r' % log_method
     else:
         log_method = 'debug'
-    return formati, input_filenames, failed_cases_filename, log_method
+    return formati, input_filenames, output_filenames, failed_cases_filename, log_method
 
 def main():
     """runs the gui"""
-    formati, input_filenames, failed_cases_filename, log_method = run_docopt()
+    formati, input_filenames, output_filenames, failed_cases_filename, log_method = run_docopt()
     log = get_logger(log=None, level=log_method, encoding='utf-8')
     npass = 0
     nfailed = 0
@@ -228,7 +244,7 @@ def main():
     test.log = log
     stop_on_failure = ntotal == 1
     t0 = time.time()
-    for input_filename in input_filenames:
+    for input_filename, output_filename in zip(input_filenames, output_filenames):
         input_filename = os.path.abspath(input_filename)
         #output_filename =
         print("filename = %s" % input_filename)
@@ -265,6 +281,9 @@ def main():
             if stop_on_failure:
                 print('input_filenames =', input_filenames)
                 raise
+
+        if output_filename:
+            test.load_results(output_filename)
 
         if is_passed:
             sys.stderr.write('%i  %s' % (npass, input_filename))
