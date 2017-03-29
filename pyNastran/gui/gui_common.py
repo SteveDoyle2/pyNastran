@@ -2818,6 +2818,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         data_dict = read_patran(nod_filename, fdtype='float32', idtype='int32')
         nids = data_dict['nids']
         data = data_dict['data']
+        data_headers = data_dict['headers']
         ndata = data.shape[0]
         if len(data.shape) == 1:
             shape = (ndata, 1)
@@ -2833,7 +2834,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         A = {}
         fmt_dict = {}
-        headers = ['NormalX', 'NormalY', 'NormalZ']
+        headers = data_headers['SEC']
         for i, header in enumerate(headers):
             A[header] = data2[:, i]
             fmt_dict[header] = '%f'
