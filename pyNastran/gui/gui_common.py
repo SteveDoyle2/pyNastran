@@ -438,9 +438,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('load_csv_user_geom', 'Load CSV User Geometry', '', None, 'Loads custom geometry file', self.on_load_user_geom),
                 ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads CSV points ', self.on_load_csv_points),
 
-                ('load_csv_nodal', 'Load CSV Nodal Results', '', None, 'Loads a custom nodal results file', self.on_load_nodal_results),
-                ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),
-                ('load_csv_nodal_deflection', 'Load CSV (Nodal) Deflection Results', '', None, 'Loads a custom deflection results file', self.on_load_deflection_results),
+                ('load_custom_result', 'Load Custom Results', '', None, 'Loads a custom results file', self.on_load_custom_results),
+
                 ('script', 'Run Python script', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ]
 
@@ -606,7 +605,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         menu_file = [
             'load_geometry', 'load_results', '',
-            'load_csv_nodal', 'load_csv_elemental', 'load_csv_nodal_deflection', '',
+            'load_custom_result', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
@@ -2765,7 +2764,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #menu_items = self._create_menu_items()
                     #self._populate_menu(menu_items)
 
-    def on_load_deflection_results(self, out_filename=None):
+    def on_load_custom_results(self, out_filename=None):
+        """will be a more generalized results reader"""
         geometry_format = self.format
         if self.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
@@ -2773,8 +2773,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
             raise RuntimeError(msg)
 
         if out_filename in [None, False]:
-            title = 'Select a (Nodal) Deflection Results File for %s' % (self.format)
-            out_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
+            title = 'Select a Custom Results File for %s' % (self.format)
+
+            #print('wildcard_level =', wildcard_level)
+            #self.wildcard_delimited = 'Delimited Text (*.txt; *.dat; *.csv)'
+            fmts = [
+                'Node - Delimited Text (*.txt; *.dat; *.csv)',
+                'Element - Delimited Text (*.txt; *.dat; *.csv)',
+                'Nodal Deflection - Delimited Text (*.txt; *.dat; *.csv)',
+                'Patran nod (*.nod)',
+            ]
+            fmt = ';;'.join(fmts)
+            wildcard_level, out_filename = self._create_load_file_dialog(fmt, title)
+            iwildcard = fmts.index(wildcard_level)
 
         if out_filename == '':
             return
@@ -2783,15 +2794,55 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_error(msg)
             return
 
-        try:
+        if iwildcard == 0:
+            self._on_load_nodal_elemental_results('Nodal', out_filename)
+        elif iwildcard == 1:
+            self._on_load_nodal_elemental_results('Elemental', out_filename)
+        elif iwildcard == 2:
             self._load_deflection(out_filename)
-        except Exception as e:
-            msg = traceback.format_exc()
-            self.log_error(msg)
-            #return
-            raise
+        elif iwildcard == 3:
+            self._load_load_patran_nod(out_filename)
+        else:
+            raise NotImplementedError('wildcard_level = %s' % wildcard_level)
+        #try:
+        #except Exception as e:
+            #msg = traceback.format_exc()
+            #self.log_error(msg)
+            ##return
+            #raise
+        self.log_command("on_load_custom_results(%r)" % out_filename)
 
-        self.log_command("on_load_deflection_results(%r)" % out_filename)
+    def _load_load_patran_nod(self, nod_filename):
+        """reads a Patran formatted *.nod file"""
+        from pyNastran.bdf.patran_utils.read_patran import read_patran
+        data_dict = read_patran(nod_filename, fdtype='float32', idtype='int32')
+        nids = data_dict['nids']
+        data = data_dict['data']
+        ndata = data.shape[0]
+        if len(data.shape) == 1:
+            shape = (ndata, 1)
+            data = data.reshape(shape)
+
+        if ndata != self.node_ids.shape[0]:
+            inids = np.searchsorted(self.node_ids, nids)
+            assert np.array_equal(nids, self.node_ids[inids]), 'the node ids are invalid'
+            data2 = np.full(data.shape, np.nan, data.dtype)
+            data2[inids, :] = data
+        else:
+            data2 = data
+
+        A = {}
+        fmt_dict = {}
+        headers = ['NormalX', 'NormalY', 'NormalZ']
+        for i, header in enumerate(headers):
+            A[header] = data2[:, i]
+            fmt_dict[header] = '%f'
+
+        out_filename_short = os.path.basename(nod_filename)
+        result_type = 'node'
+        self._add_cases_to_form(A, fmt_dict, headers, result_type,
+                                out_filename_short, update=True)
+
 
     def _on_load_nodal_elemental_results(self, result_type, out_filename=None):
         """
@@ -2804,28 +2855,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         out_filename : str / None
             the path to the results file
         """
-        # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
-        # dtype=[('f0', '<f8'), ('f1', '<i4')])
-        # A['f0']
-        # A['f1']
-        geometry_format = self.format
-        if self.format is None:
-            msg = 'on_load_results failed:  You need to load a file first...'
-            self.log_error(msg)
-            raise RuntimeError(msg)
-
-        if out_filename in [None, False]:
-            title = 'Select a %s Results File for %s' % (result_type, self.format)
-            out_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
-
-        if out_filename == '':
-            return
-        if not os.path.exists(out_filename):
-            msg = 'result file=%r does not exist' % out_filename
-            self.log_error(msg)
-            return
-            #raise IOError(msg)
-        # self.last_dir = os.path.split(out_filename)[0]
         try:
             self._load_csv(result_type, out_filename)
         except Exception as e:
@@ -2840,14 +2869,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.window_title = msg
             #self.out_filename = out_filename
 
-        if result_type == 'Nodal':
-            self.log_command("on_load_nodal_results(%r)" % out_filename)
-        elif result_type == 'Elemental':
-            self.log_command("on_load_elemental_results(%r)" % out_filename)
-        else:
-            raise NotImplementedError(result_type)
-
     def _load_deflection(self, out_filename):
+        """loads a deflection file"""
         out_filename_short = os.path.basename(out_filename)
         A, fmt_dict, headers = load_deflection_csv(out_filename)
         #nrows, ncols, fmts
@@ -2885,11 +2908,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if result_type == 'Nodal':
             assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
             result_type2 = 'node'
+            #ids = self.node_ids
         elif result_type == 'Elemental':
             assert nrows == self.nElements, 'nrows=%s nelements=%s' % (nrows, self.nElements)
             result_type2 = 'centroid'
+            #ids = self.element_ids
         else:
             raise NotImplementedError('result_type=%r' % result_type)
+
+        #num_ids = len(ids)
+        #if num_ids != nrows:
+            #A2 = {}
+            #for key, matrix in iteritems(A):
+                #fmt = fmt_dict[key]
+                #assert fmt not in ['%i'], 'fmt=%r' % fmt
+                #if len(matrix.shape) == 1:
+                    #matrix2 = np.full(num_ids, dtype=matrix.dtype)
+                    #iids = np.searchsorted(ids, )
+            #A = A2
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
                                 out_filename_short, update=True)
 
@@ -2902,11 +2938,23 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         Parameters
         ----------
-        A : dict???
+        A : dict[key] = (n, m) array
             the numpy arrays
-        fmt_dict : dict???
-            the format of the arrays?
-        headers : ???
+            key : str
+                the name
+            n : int
+                number of nodes/elements
+            m : int
+                secondary dimension
+                N/A : 1D array
+                3 : deflection
+        fmt_dict : dict[header] = fmt
+            the format of the arrays
+            header : str
+                the name
+            fmt : str
+                '%i', '%f'
+        headers : List[str]???
             the titles???
         result_type : str
             'node', 'centroid'
@@ -2914,6 +2962,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             the display name
         update : bool; default=True
             ???
+
+        # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
+        # dtype=[('f0', '<f8'), ('f1', '<i4')])
+        # A['f0']
+        # A['f1']
         """
         #print('A =', A)
         formi = []
@@ -2983,12 +3036,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.ncases += len(headers)
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
         self.res_widget.update_results(form, 'main')
-
-    def on_load_nodal_results(self, out_filename=None):
-        self._on_load_nodal_elemental_results('Nodal', out_filename)
-
-    def on_load_elemental_results(self, out_filename=None):
-        self._on_load_nodal_elemental_results('Elemental', out_filename)
 
     def on_load_results(self, out_filename=None):
         """
