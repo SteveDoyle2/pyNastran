@@ -36,7 +36,7 @@ from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, 
                                                  CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
-from pyNastran.bdf.cards.elements.bars import CBAR, CBEAM3, CBEND
+from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT  # PBEND
@@ -783,6 +783,11 @@ class AddCards(AddMethods):
         prop = PTUBE(pid, mid, OD1, t=t, nsm=nsm, OD2=OD2, comment=comment)
         self._add_property_object(prop)
         return prop
+
+    def add_cbarao(self, eid, scale, x, comment=''):
+        elem_flag = CBARAO(eid, scale, x, comment=comment)
+        self._add_ao_object(elem_flag, allow_overwrites=False)
+        return elem_flag
 
     def add_cbar(self, eid, pid, ga, gb, x, g0, offt='GGG', pa=0, pb=0,
                  wa=None, wb=None, comment=''):

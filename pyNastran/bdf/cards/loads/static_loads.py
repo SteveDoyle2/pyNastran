@@ -263,7 +263,7 @@ class GRAV(BaseCard):
         self.scale = scale
 
         #: Acceleration vector components measured in coordinate system CID
-        self.N = N
+        self.N = np.asarray(N)
 
         #: Indicates whether the CID coordinate system is defined in the
         #: main Bulk Data Section (MB = -1) or the partitioned superelement
@@ -275,6 +275,11 @@ class GRAV(BaseCard):
 
         assert not allclose(max(abs(self.N)), 0.), ('GRAV N is a zero vector, '
                                                     'N=%s' % str(self.N))
+
+    def validate(self):
+        if not isinstance(self.scale, float):
+            msg = 'scale=%s type=%s' % (self.scale, type(self.scale))
+            raise TypeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
