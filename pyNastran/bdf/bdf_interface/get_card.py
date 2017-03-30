@@ -893,8 +893,14 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         for load in load_case:
             if load.type == 'LOAD':
                 scale_factors, loads = load.get_reduced_loads()
-                scale_factors2 += scale_factors
-                loads2 += loads
+                for scale_factor, loadi in zip(scale_factors, loads):
+                    if scale_factor == 0.0:
+                        continue
+                    scale_factors2.append(scale_factor)
+                    loads2.append(loadi)
+                #else:
+                    #scale_factors2 += scale_factors
+                    #loads2 += loads
             else:
                 scale_factors2.append(1.)
                 loads2.append(load)

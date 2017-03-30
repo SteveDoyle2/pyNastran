@@ -68,6 +68,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (
     NastranGeometryHelper, tri_quality, quad_quality, get_min_max_theta)
 from pyNastran.converters.nastran.results_helper import NastranGuiResults
+from pyNastran.converters.nastran.displacements import (
+    ForceTableResults)
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
@@ -3576,9 +3578,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 icase += 1
 
             if np.abs(forces.max() - forces.min()) > 0.0:
-                from pyNastran.converters.nastran.displacements import (
-                    ForceTableResults)
-
                 fxyz = forces[:, :3]
                 mxyz = forces[:, 3:]
                 fscalar = np.linalg.norm(fxyz, axis=1)
