@@ -869,7 +869,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'GUI ERROR')
-        help(self.log)
 
     def log_warning(self, msg):
         """ Helper funtion: log a message msg with a 'WARNING:' prefix """
