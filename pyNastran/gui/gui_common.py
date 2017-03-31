@@ -334,17 +334,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command(txt)
         try:
             exec(txt)
-        except TypeError:
-            print(type(txt))
-            raise
+        except TypeError as e:
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
+            self.log_error(str(txt))
+            self.log_error(str(type(txt)))
+            return
         except Exception as e:
             #self.log_error(traceback.print_stack(f))
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
             self.log_error(str(e))
             self.log_error(str(txt))
-            raise
-            #return
+            return
         if clear:
             self.python_dock_widget.enter_data.clear()
 
