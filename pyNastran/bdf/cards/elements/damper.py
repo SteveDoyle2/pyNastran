@@ -91,6 +91,16 @@ class CDAMP1(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CDAMP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'g1', 0),
@@ -237,6 +247,16 @@ class CDAMP2(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CDAMP2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         b = double(card, 2, 'b')
         nids = [integer_or_blank(card, 3, 'n1', 0),
@@ -350,6 +370,16 @@ class CDAMP3(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CDAMP3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 's1', 0),
@@ -538,6 +568,16 @@ class CDAMP5(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CDAMP5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1', 0),
@@ -627,6 +667,16 @@ class CVISC(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CVISC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1', 0),

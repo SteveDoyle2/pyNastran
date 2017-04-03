@@ -187,6 +187,16 @@ class CHEXA(object):
 
     @classmethod
     def add_card(cls, card, comment):
+        """
+        Adds a CHEXA8/CHEXA20 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         if card.nfields == 11:
             return CHEXA8.add_card(card, comment=comment)
         else:
@@ -204,6 +214,16 @@ class CTETRA(object):
 
     @classmethod
     def add_card(cls, card, comment):
+        """
+        Adds a CTETRA4/CTETRA10 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         if card.nfields == 7:
             return CTETRA4.add_card(card, comment=comment)
         else:
@@ -221,6 +241,16 @@ class CPENTA(object):
 
     @classmethod
     def add_card(cls, card, comment):
+        """
+        Adds a CPENTA6/CPENTA15 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         if card.nfields == 9:
             return CPENTA6.add_card(card, comment=comment)
         else:
@@ -238,6 +268,16 @@ class CPYRAM(object):
 
     @classmethod
     def add_card(cls, card, comment):
+        """
+        Adds a CPYRAM5/CPYRAM13 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         if card.nfields == 8:
             return CPYRAM5.add_card(card, comment=comment)
         else:
@@ -281,6 +321,16 @@ class CHEXA8(SolidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CHEXA8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -520,6 +570,16 @@ class CHEXA20(SolidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CHEXA20 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -779,6 +839,16 @@ class CPENTA6(SolidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPENTA6 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -1142,6 +1212,16 @@ class CPENTA15(SolidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPENTA15 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -1332,6 +1412,16 @@ class CPYRAM5(SolidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPYRAM5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
@@ -1501,6 +1591,16 @@ class CPYRAM13(SolidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPYRAM13 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [
@@ -1727,6 +1827,16 @@ class CTETRA4(SolidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTETRA4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer(card, 3, 'nid1'),
@@ -1913,6 +2023,16 @@ class CTETRA10(SolidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTETRA10 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer(card, 3, 'nid1'),

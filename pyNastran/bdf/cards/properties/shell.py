@@ -629,6 +629,16 @@ class PCOMP(CompositeShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCOMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
 
         # z0 is field 2 and is calculated at the end because we need the
@@ -932,6 +942,16 @@ class PCOMPG(CompositeShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCOMPG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         # z0 will be calculated later
         nsm = double_or_blank(card, 3, 'nsm', 0.0)
@@ -1102,6 +1122,16 @@ class PLPLANE(ShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLPLANE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -1182,6 +1212,16 @@ class PPLANE(ShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PPLANE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
         t = double_or_blank(card, 3, 'cid', 0.)
@@ -1263,6 +1303,16 @@ class PSHEAR(ShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PSHEAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         t = double(card, 3, 't')
@@ -1451,6 +1501,16 @@ class PSHELL(ShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PSHELL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid1 = integer_or_blank(card, 2, 'mid1')
         t = double_or_blank(card, 3, 't')

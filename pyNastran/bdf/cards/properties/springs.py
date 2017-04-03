@@ -75,6 +75,19 @@ class PELAS(SpringProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a PELAS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            the index of the PELAS card that's being parsed
+            must be 0 or 1
+        comment : str; default=''
+            a comment for the card
+        """
         noffset = icard * 4
         pid = integer(card, 1 + noffset, 'pid')
         k = double(card, 2 + noffset, 'k')
@@ -172,6 +185,16 @@ class PELAST(SpringProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PELAST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         tkid = integer_or_blank(card, 2, 'tkid', 0)
         tgeid = integer_or_blank(card, 3, 'tgeid', 0)

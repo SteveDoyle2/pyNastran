@@ -69,6 +69,16 @@ class DEQATN(BaseCard):  # needs work...
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DEQATN card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         new_card = ''
         found_none = False
         #print(card)

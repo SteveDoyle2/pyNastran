@@ -62,6 +62,16 @@ class PLSOLID(SolidProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLSOLID card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         stress_strain = string_or_blank(card, 3, 'stress_strain', 'GRID')
@@ -156,6 +166,16 @@ class PCOMPS(SolidProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCOMPS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         cordm = integer_or_blank(card, 2, 'cordm', 0)
         psdir = integer_or_blank(card, 3, 'psdir', 13)
@@ -342,6 +362,16 @@ class PSOLID(SolidProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PSOLID card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         cordm = integer_or_blank(card, 3, 'cordm', 0)

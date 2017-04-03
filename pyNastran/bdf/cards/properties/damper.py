@@ -110,6 +110,16 @@ class PDAMP5(DamperProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PDAMP5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         b = double(card, 3, 'b')
@@ -182,6 +192,16 @@ class PDAMPT(DamperProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PDAMPT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         tbid = integer_or_blank(card, 2, 'tbid', 0)
         assert len(card) <= 3, 'len(PDAMPT card) = %i\ncard=%s' % (len(card), card)

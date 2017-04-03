@@ -58,6 +58,16 @@ class ACSRCE(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ACSRCE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id') # DAREA, FBALOAD, SLOAD
         delay = integer_double_or_blank(card, 3, 'delay', 0) # DELAY, FBADLAY
@@ -358,6 +368,16 @@ class RLOAD1(TabularLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RLOAD1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', 0)
@@ -581,6 +601,16 @@ class RLOAD2(TabularLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RLOAD2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', 0)
@@ -811,6 +841,16 @@ class TLOAD1(TabularLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TLOAD1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', 0)
@@ -995,6 +1035,16 @@ class TLOAD2(TabularLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TLOAD2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_or_blank(card, 3, 'delay', 0)

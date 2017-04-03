@@ -38,6 +38,16 @@ class DTI(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment):
+        """
+        Adds a DTI card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         if name == 'UNITS':
             integer(card, 2, '1')
@@ -807,6 +817,16 @@ class DMIG_UACCEL(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DMIG,UACCEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tin = integer(card, 4, 'tin')
         ncol = integer_or_blank(card, 8, 'ncol')
         return DMIG_UACCEL(tin, ncol, load_sequences={}, comment=comment)
@@ -984,6 +1004,16 @@ class DMI(NastranMatrix):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DMI card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         #zero
 

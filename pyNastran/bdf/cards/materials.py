@@ -85,6 +85,16 @@ class CREEP(Material):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CREEP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         T0 = double_or_blank(card, 2, 'T0', 0.0)
         exp = double_or_blank(card, 3, 'exp', 1e-9)
@@ -222,6 +232,16 @@ class MAT1(IsotropicMaterial):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         E = double_or_blank(card, 2, 'E')
         G = double_or_blank(card, 3, 'G')
@@ -536,6 +556,16 @@ class MAT2(AnisotropicMaterial):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         G11 = double_or_blank(card, 2, 'G11', 0.0)
         G12 = double_or_blank(card, 3, 'G12', 0.0)
@@ -741,6 +771,16 @@ class MAT3(OrthotropicMaterial):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         ex = double(card, 2, 'ex')
         eth = double(card, 3, 'eth')
@@ -884,6 +924,16 @@ class MAT4(ThermalMaterial):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         k = double_or_blank(card, 2, 'k')
         cp = double_or_blank(card, 3, 'cp', 0.0)
@@ -1004,6 +1054,16 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         kxx = double_or_blank(card, 2, 'kxx', 0.0)
         kxy = double_or_blank(card, 3, 'kxy', 0.0)
@@ -1161,6 +1221,16 @@ class MAT8(OrthotropicMaterial):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         e11 = double(card, 2, 'E11')    #: .. todo:: is this the correct default
         e22 = double(card, 3, 'E22')    #: .. todo:: is this the correct default
@@ -1400,6 +1470,16 @@ class MAT9(AnisotropicMaterial):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT9 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         G11 = double_or_blank(card, 2, 'G11', 0.0)
         G12 = double_or_blank(card, 3, 'G12', 0.0)
@@ -1601,6 +1681,16 @@ class MAT10(Material):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT10 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         bulk = double_or_blank(card, 2, 'bulk')
         rho = double_or_blank(card, 3, 'rho')
@@ -1777,6 +1867,16 @@ class MATG(Material):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         idmem = integer(card, 2, 'idmem')
         behav = integer(card, 3, 'behav')
@@ -1876,6 +1976,16 @@ class MAT11(Material):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT11 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         e1 = double(card, 2, 'E1')
         e2 = double(card, 3, 'E2')
@@ -2016,6 +2126,16 @@ class MAT3D(Material):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MAT3D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         e1 = double(card, 2, 'E1')
         e2 = double(card, 3, 'E2')
@@ -2189,6 +2309,16 @@ class MATHE(HyperelasticMaterial):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATHE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         model = string_or_blank(card, 2, 'a10', 'MOONEY')
         bulk = double_or_blank(card, 4, 'bulk, k', None)
@@ -2418,6 +2548,16 @@ class MATHP(HyperelasticMaterial):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATHP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         a10 = double_or_blank(card, 2, 'a10', 0.)
         a01 = double_or_blank(card, 3, 'a01', 0.)
@@ -2590,6 +2730,16 @@ class EQUIV(Material):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an EQUIV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         field2 = integer(card, 2, 'field2')
         field3 = integer(card, 3, 'field3')

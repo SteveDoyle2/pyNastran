@@ -189,6 +189,16 @@ class DCONSTR(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DCONSTR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         dresp_id = integer(card, 2, 'dresp_id')
         lid = integer_double_or_blank(card, 3, 'lid', -1e20)
@@ -300,6 +310,16 @@ class DESVAR(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DESVAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         desvar_id = integer(card, 1, 'desvar_id')
         label = string(card, 2, 'label')
         xinit = double(card, 3, 'xinit')
@@ -359,6 +379,16 @@ class DDVAL(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DDVAL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         n = 1
         ddvals = []
@@ -463,6 +493,16 @@ class DOPTPRM(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DOPTPRM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nfields = len(card) - 1
         params = {}
         for i in range(0, nfields, 2):
@@ -518,6 +558,16 @@ class DLINK(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DLINK card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         ddvid = integer(card, 2, 'ddvid')
         c0 = double_or_blank(card, 3, 'c0', 0.)
@@ -962,6 +1012,16 @@ class DRESP1(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DRESP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         label = string(card, 2, 'label')
         response_type = string(card, 3, 'rtype')
@@ -1208,6 +1268,16 @@ class DRESP2(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DRESP2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
         dequation = integer_or_string(card, 3, 'dequation_id')
@@ -1480,6 +1550,16 @@ class DRESP3(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DRESP3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
         group = string(card, 3, 'group')
@@ -1663,6 +1743,16 @@ class DCONADD(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DCONADD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'dcid')
         dconstrs = []
         for i in range(1, len(card)):
@@ -1711,6 +1801,16 @@ class DSCREEN(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DSCREEN card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         rType = string(card, 1, 'rType')
         trs = double_or_blank(card, 2, 'trs', -0.5)
         nstr = integer_or_blank(card, 3, 'nstr', 20)
@@ -1790,6 +1890,16 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DVCREL1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         eid = integer(card, 3, 'eid')
@@ -1952,6 +2062,16 @@ class DVCREL2(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DVCREL2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')
@@ -2166,6 +2286,16 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DVMREL1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         mid = integer(card, 3, 'mid')
@@ -2307,6 +2437,16 @@ class DVMREL2(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DVMREL2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         mid = integer(card, 3, 'mid')
@@ -2550,6 +2690,16 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DVPREL1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')
@@ -2742,6 +2892,16 @@ class DVPREL2(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DVPREL2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')

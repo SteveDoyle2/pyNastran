@@ -415,6 +415,16 @@ class CTRIA3(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRIAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         #: Element ID
         eid = integer(card, 1, 'eid')
         #: Property ID
@@ -641,6 +651,16 @@ class CPLSTN3(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPLSTN3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         #: Element ID
         eid = integer(card, 1, 'eid')
         #: Property ID
@@ -759,6 +779,16 @@ class CTRIA6(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRIA6 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         #: Element ID
         eid = integer(card, 1, 'eid')
         #: Property ID
@@ -1005,6 +1035,16 @@ class CTRIAR(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRIAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -1380,6 +1420,16 @@ class CSHEAR(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CSHEAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1'),
@@ -1590,6 +1640,16 @@ class CQUAD4(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUAD4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -2102,6 +2162,16 @@ class CPLSTN4(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPLSTN4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -2204,6 +2274,16 @@ class CPLSTN6(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPLSTN6 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         #: Element ID
         eid = integer(card, 1, 'eid')
         #: Property ID
@@ -2381,6 +2461,16 @@ class CPLSTN8(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPLSTN8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer(card, 3, 'n1'),
@@ -2570,6 +2660,16 @@ class CQUADR(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUADR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1'),
@@ -2798,6 +2898,16 @@ class CPLSTS3(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CPLSTS3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         #: Element ID
         eid = integer(card, 1, 'eid')
         #: Property ID
@@ -2956,6 +3066,16 @@ class CQUAD(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer(card, 3, 'n1'),
@@ -3084,6 +3204,16 @@ class CQUAD8(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUAD8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer(card, 3, 'n1'),

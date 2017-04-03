@@ -83,6 +83,16 @@ class CELAS1(SpringElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CELAS1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
@@ -231,6 +241,16 @@ class CELAS2(SpringElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CELAS2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
         nids = [integer_or_blank(card, 3, 'g1', 0),
@@ -365,6 +385,16 @@ class CELAS3(SpringElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CELAS3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
 
@@ -469,6 +499,16 @@ class CELAS4(SpringElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CELAS4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
         s1 = integer_or_blank(card, 3, 's1', 0)

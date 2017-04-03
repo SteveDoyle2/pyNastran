@@ -77,6 +77,16 @@ class CMASS1(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CMASS1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         g1 = integer(card, 3, 'g1')
@@ -227,6 +237,16 @@ class CMASS2(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CMASS2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         mass = double_or_blank(card, 2, 'mass', 0.)
         g1 = integer_or_blank(card, 3, 'g1')
@@ -388,6 +408,16 @@ class CMASS3(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CMASS3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         s1 = integer_or_blank(card, 3, 's1')
@@ -639,6 +669,16 @@ class CONM1(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CONM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         m = np.zeros((6, 6))
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
@@ -897,6 +937,16 @@ class CONM2(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CONM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
         cid = integer_or_blank(card, 3, 'cid', 0)

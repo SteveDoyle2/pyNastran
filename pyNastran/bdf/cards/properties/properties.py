@@ -87,6 +87,16 @@ class PFAST(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PFAST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         d = double(card, 2, 'd')
         mcid = integer_or_blank(card, 3, 'mcid', -1)
@@ -215,6 +225,16 @@ class PGAP(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PGAP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         u0 = double_or_blank(card, 2, 'u0', 0.)
         f0 = double_or_blank(card, 3, 'f0', 0.)
@@ -341,6 +361,16 @@ class PRAC2D(CrackProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PRAC2D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         thick = double(card, 3, 'thick')
@@ -415,6 +445,16 @@ class PRAC3D(CrackProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PRAC3D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         gamma = double_or_blank(card, 3, 'gamma', 0.5)
@@ -484,6 +524,16 @@ class PCONEAX(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCONEAX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         #: Property ID
         pid = integer(card, 1, 'pid')
         #: Material ID

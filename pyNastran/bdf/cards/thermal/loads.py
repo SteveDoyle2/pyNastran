@@ -55,6 +55,16 @@ class QVOL(ThermalLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a QVOL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         qvol = double(card, 2, 'qvol')
         control_point = integer_or_blank(card, 3, 'control_id', 0)
@@ -197,6 +207,16 @@ class QVECT(ThermalLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a QVECT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
         t_source = double(card, 3, 't_source')
@@ -304,6 +324,16 @@ class QBDY1(ThermalLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a QBDY1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         qflux = double(card, 2, 'qflux')
         eids = []
@@ -406,6 +436,16 @@ class QBDY2(ThermalLoad):  # not tested
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a QBDY2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
 
@@ -502,6 +542,16 @@ class QBDY3(ThermalLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a QBDY3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         Q0 = double(card, 2, 'Q0')
         cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
@@ -624,6 +674,16 @@ class QHBDY(ThermalLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a QHBDY card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'eid')
 
         flag = string(card, 2, 'flag')
@@ -723,6 +783,16 @@ class TEMP(ThermalLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TEMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
 
         nfields = len(card)

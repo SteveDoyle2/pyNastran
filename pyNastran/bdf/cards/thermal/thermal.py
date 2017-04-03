@@ -149,6 +149,16 @@ class CHBDYE(ThermalElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CHBDYE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         eid2 = integer(card, 2, 'eid2')
         side = integer(card, 3, 'side')
@@ -290,6 +300,16 @@ class CHBDYG(ThermalElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CHBDYG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         # no field 2
 
@@ -475,6 +495,16 @@ class CHBDYP(ThermalElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CHBDYP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -707,6 +737,16 @@ class PCONV(ThermalProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCONV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pconid = integer(card, 1, 'pconid')
         mid = integer(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', 0)
@@ -812,6 +852,16 @@ class PCONVM(ThermalProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCONVM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pconid = integer(card, 1, 'pconid')
         mid = integer(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', 0)
@@ -892,6 +942,16 @@ class PHBDY(ThermalProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PHBDY card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         af = double_or_blank(card, 2, 'af')
         d1 = double_or_blank(card, 3, 'd1')
@@ -970,6 +1030,16 @@ class CONV(ThermalBC):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CONV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pconid = integer(card, 2, 'pconid')
         film_node = integer_or_blank(card, 3, 'film_node', 0)
@@ -1077,6 +1147,16 @@ class CONVM(ThermalBC):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CONVM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pconvm = integer(card, 2, 'pconvm')
         film_node = integer_or_blank(card, 3, 'film_node', 0)
@@ -1165,6 +1245,16 @@ class RADM(ThermalBC):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RADM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nfields = card.nfields
         radmid = integer(card, 1, 'radmid')
         absorb = double(card, 2, 'absorb')
@@ -1230,6 +1320,16 @@ class RADBC(ThermalBC):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RADBC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nodamb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
         cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)

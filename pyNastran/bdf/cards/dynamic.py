@@ -63,6 +63,16 @@ class DELAY(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DELAY card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nodes = [integer(card, 2, 'node')]
         components = [integer(card, 3, 'components')]
@@ -166,6 +176,16 @@ class DPHASE(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DPHASE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nodes = [integer(card, 2, 'node')]
         components = [integer(card, 3, 'components')]
@@ -274,6 +294,16 @@ class FREQ(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         freqs = fields(double, card, 'freq', i=2, j=len(card))
         return FREQ(sid, freqs, comment=comment)
@@ -346,6 +376,16 @@ class FREQ1(FREQ):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         f1 = double_or_blank(card, 2, 'f1', 0.0)
         df = double(card, 3, 'df')
@@ -392,6 +432,16 @@ class FREQ2(FREQ):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         f1 = double(card, 2, 'f1')  # default=0.0 ?
         f2 = double(card, 3, 'f2')
@@ -445,6 +495,16 @@ class FREQ4(FREQ):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         f1 = double_or_blank(card, 2, 'f1', 0.0)
         f2 = double_or_blank(card, 3, 'f2', 1.e20)
@@ -538,6 +598,16 @@ class NLPARM(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a NLPARM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nlparm_id = integer(card, 1, 'nlparm_id')
         ninc = integer_or_blank(card, 2, 'ninc', 10)
         dt = double_or_blank(card, 3, 'dt', 0.0)
@@ -680,6 +750,16 @@ class NLPCI(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a NLPCI card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nlpci_id = integer(card, 1, 'nlpci_id')
         Type = string_or_blank(card, 2, 'Type', 'CRIS')
         minalr = double_or_blank(card, 3, 'minalr', 0.25)
@@ -836,6 +916,16 @@ class ROTORD(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ROTORD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         rstart = double(card, 2, 'rstart')
         rstep = double(card, 3, 'rstep')
@@ -950,6 +1040,16 @@ class ROTORG(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ROTORG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nid1 = integer(card, 2, 'nid1')
         nid2 = integer_string_or_blank(card, 3, 'nid2')
@@ -1089,6 +1189,16 @@ class TF(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nid0 = integer(card, 2, 'nid0')
         # component 0 means an SPOINT/EPOINT
@@ -1176,6 +1286,16 @@ class TSTEP(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TSTEP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         N = []
         DT = []
@@ -1244,6 +1364,16 @@ class TSTEP1(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TSTEP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         tend = []
         ninc = []
@@ -1386,6 +1516,16 @@ class TSTEPNL(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TSTEPNL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         ndt = integer(card, 2, 'ndt')
         dt = double(card, 3, 'dt')
@@ -1577,6 +1717,16 @@ class TIC(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TIC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nid = integer(card, 2, 'G')
         comp = parse_components(card, 3, 'C')

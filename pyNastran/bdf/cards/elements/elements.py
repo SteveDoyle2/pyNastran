@@ -62,6 +62,16 @@ class CFAST(Element):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CFAST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         Type = string(card, 3, 'Type')
@@ -185,6 +195,16 @@ class CGAP(Element):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CGAP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer_or_blank(card, 3, 'ga')
@@ -371,6 +391,16 @@ class CRAC2D(CrackElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CRAC2D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -444,6 +474,16 @@ class CRAC3D(CrackElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CRAC3D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         # required 1-10, 19-28
@@ -511,6 +551,16 @@ class PLOTEL(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOTEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         nodes = [
             integer(card, 2, 'g1'),
