@@ -21,7 +21,7 @@ from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank, string, string_or_blank,
     blank, integer_or_double, integer_or_blank)
-from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
+from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -522,29 +522,29 @@ class IntegratedLineProperty(LineProperty):
         LineProperty.__init__(self)
 
     def Area(self):
-        A = integrate_positive_line(self.xxb, self.A)
+        A = integrate_positive_unit_line(self.xxb, self.A)
         return A
 
     def J(self):
-        J = integrate_positive_line(self.xxb, self.j)
+        J = integrate_positive_unit_line(self.xxb, self.j)
         return J
 
     def I11(self):
-        i1 = integrate_positive_line(self.xxb, self.i1)
+        i1 = integrate_positive_unit_line(self.xxb, self.i1)
         return i1
 
     def I22(self):
-        i2 = integrate_positive_line(self.xxb, self.i2)
+        i2 = integrate_positive_unit_line(self.xxb, self.i2)
         return i2
 
     def I12(self):
-        i12 = integrate_line(self.xxb, self.i12)
+        i12 = integrate_unit_line(self.xxb, self.i12)
         return i12
 
     def Nsm(self):
         #print("xxb = ",self.xxb)
         #print("nsm = ",self.nsm)
-        nsm = integrate_positive_line(self.xxb, self.nsm)
+        nsm = integrate_positive_unit_line(self.xxb, self.nsm)
         return nsm
 
 
