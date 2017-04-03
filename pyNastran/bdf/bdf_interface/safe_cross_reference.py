@@ -237,3 +237,16 @@ class SafeXrefMesh(XrefMesh):
             darea.safe_cross_reference(self)
         for key, dphase in iteritems(self.dphases):
             dphase.safe_cross_reference(self)
+
+    def safe_get_elements(self, eids, msg=''):
+        """safe xref version of self.Elements(eid, msg='')"""
+        elements = []
+        msgi = ''
+        for eid in eids:
+            try:
+                element = self.Element(eid)
+            except KeyError:
+                element = eid
+                msgi += msg % (eid)
+            elements.append(element)
+        return elements, msgi

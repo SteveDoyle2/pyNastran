@@ -64,9 +64,13 @@ class LoadCombination(Load):  # LOAD, DLOAD
         self.scale = scale
 
         #: individual scale factors (corresponds to load_ids)
+        if isinstance(scale_factors, float):
+            scale_factors = [scale_factors]
         self.scale_factors = scale_factors
 
         #: individual load_ids (corresponds to scale_factors)
+        if isinstance(load_ids, int):
+            load_ids = [load_ids]
         self.load_ids = load_ids
 
     @classmethod

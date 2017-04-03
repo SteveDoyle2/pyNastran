@@ -2402,18 +2402,33 @@ class PLOAD4(Load):
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
-        self.cid = model.Coord(self.cid, msg=msg)
+        try:
+            self.cid = model.Coord(self.cid, msg=msg)
+            self.cid_ref = self.cid
+        except KeyError:
+            model.log.warning('Could not find cid=%s%s' % (self.cid, msg))
+
         #self.eid_ref = self.eid
-        self.cid_ref = self.cid
         if self.g1 is not None:
-            self.g1 = model.Node(self.g1, msg=msg)
-            self.g1_ref = self.g1
+            try:
+                self.g1 = model.Node(self.g1, msg=msg)
+                self.g1_ref = self.g1
+            except KeyError:
+                model.log.warning('Could not find g1=%s%s' % (self.g1, msg))
+
         if self.g34 is not None:
-            self.g34 = model.Node(self.g34, msg=msg)
-            self.g34_ref = self.g34
+            try:
+                self.g34 = model.Node(self.g34, msg=msg)
+                self.g34_ref = self.g34
+            except KeyError:
+                model.log.warning('Could not find g34=%s%s' % (self.g34, msg))
+
         #if self.eids:
-        self.eids = model.Elements(self.eids, msg=msg)
+        msgia = 'Could not find element=%%s, %s\n' % msg
+        self.eids, msgi = model.safe_get_elements(self.eids, msg=msgia)
         self.eids_ref = self.eids
+        if msgi:
+            model.log.warning(msgi.rstrip())
 
     def uncross_reference(self):
         #self.eid = self.Eid(self.eid)

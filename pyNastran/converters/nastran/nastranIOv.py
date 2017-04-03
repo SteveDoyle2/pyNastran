@@ -1990,7 +1990,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #print(e)
 
         #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
-        self.set_glyph_scale_factor(min_edge_length.mean() * 2.5)  # was 1.5
+        self.set_glyph_scale_factor(np.nanmean(min_edge_length) * 2.5)  # was 1.5
         if self.make_offset_normals_dim and nelements:
             icase, normals = self._build_normals_quality(
                 model, nelements, cases, form0, icase,
