@@ -153,6 +153,16 @@ class CBEAM(CBAR):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBEAM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')

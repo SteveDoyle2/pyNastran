@@ -77,6 +77,16 @@ class PBUSH(BushingProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBUSH card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         k_fields = []
         b_fields = []
         ge_fields = []
@@ -308,6 +318,16 @@ class PBUSH1D(BushingProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBUSH1D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         k = double_or_blank(card, 2, 'k', 0.0)
         c = double_or_blank(card, 3, 'c', 0.0)
@@ -575,6 +595,16 @@ class PBUSHT(BushingProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBUSHT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         k_tables = []
         b_tables = []
         ge_tables = []

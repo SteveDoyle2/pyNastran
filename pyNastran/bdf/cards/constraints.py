@@ -68,6 +68,16 @@ class SUPORT1(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SUPORT1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')  # really a support id sid
 
         nfields = len(card)
@@ -182,6 +192,16 @@ class SUPORT(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SUPORT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         # TODO: remove fields...
         #fields = card.fields(1)
 
@@ -300,6 +320,16 @@ class MPC(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an MPC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         gids = []
         constraints = []
@@ -481,6 +511,16 @@ class SPC(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an SPC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             gids = [integer(card, 2, 'G1'),]
@@ -591,6 +631,16 @@ class GMSPC(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a GMSPC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'sid')
         component = parse_components(card, 2, 'components')
         entity = string(card, 3, 'entity')
@@ -653,6 +703,16 @@ class SPCAX(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPCAX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         rid = integer(card, 2, 'rid')
         hid = integer(card, 3, 'hid')
@@ -724,6 +784,16 @@ class SPC1(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPC1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         components = parse_components(card, 2, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(3)
@@ -818,6 +888,16 @@ class SPCOFF(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPCOFF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         raise NotImplementedError()
         #if card.field(5) in [None, '']:
             #gids = [integer(card, 2, 'G1'),]
@@ -929,6 +1009,16 @@ class SPCOFF1(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPCOFF1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         components = parse_components(card, 1, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(2)
         return cls(components, nodes, comment=comment)
@@ -1025,6 +1115,16 @@ class SPCADD(ConstraintADD):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPCADD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         sets = card.fields(2)
         return SPCADD(conid, sets, comment=comment)
@@ -1132,6 +1232,16 @@ class MPCADD(ConstraintADD):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MPCADD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         sets = card.fields(2)
         return MPCADD(conid, sets, comment=comment)

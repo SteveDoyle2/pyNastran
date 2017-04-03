@@ -61,6 +61,16 @@ class BSURF(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BSURF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         #: Number (float)
         nfields = card.nfields
@@ -146,6 +156,16 @@ class BSURFS(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BSURFS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         id = integer(card, 1, 'id')
         eids = []
         g1s = []
@@ -295,6 +315,16 @@ class BCRPARA(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BCRPARA card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         crid = integer(card, 1, 'crid')
         surf = string_or_blank(card, 2, 'surf', 'TOP')
         offset = double_or_blank(card, 3, 'offset')
@@ -343,6 +373,16 @@ class BCTPARA(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BCTPARA card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         csid = integer(card, 1, 'csid')
         i = 2
         j = 1
@@ -454,6 +494,16 @@ class BCTADD(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BCTADD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         csid = integer(card, 1, 'csid')
         S = []
 

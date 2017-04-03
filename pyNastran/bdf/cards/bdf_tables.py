@@ -115,6 +115,16 @@ class DTABLE(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DTABLE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nfields = len(card) - 1
         assert nfields % 2 == 0, nfields
 
@@ -176,6 +186,16 @@ class TABLED1(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
@@ -281,6 +301,16 @@ class TABLED2(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
 
@@ -340,6 +370,16 @@ class TABLED3(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
@@ -403,6 +443,16 @@ class TABLED4(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
@@ -480,6 +530,16 @@ class TABDMP1(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABDMP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         Type = string_or_blank(card, 2, 'Type', 'G')
 
@@ -537,6 +597,16 @@ class TABLEM1(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEM1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
 
         nfields = len(card) - 1
@@ -590,6 +660,16 @@ class TABLEM2(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
 
@@ -649,6 +729,16 @@ class TABLEM3(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEM3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
@@ -712,6 +802,16 @@ class TABLEM4(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEM4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
@@ -766,6 +866,16 @@ class TABLES1(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLES1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         Type = integer_or_blank(card, 2, 'Type', 1)
 
@@ -823,6 +933,16 @@ class TABLEST(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
 
         nfields = len(card) - 1
@@ -890,6 +1010,16 @@ class TABRND1(RandomTable):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABRND1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
@@ -978,6 +1108,16 @@ class TABRNDG(RandomTable):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABRNDG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         Type = integer(card, 2, 'Type')
         LU = double(card, 3, 'LU')

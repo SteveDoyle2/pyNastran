@@ -244,6 +244,16 @@ class CBARAO(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBARAO card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         scale = string(card, 2, 'scale')
         x = [
@@ -412,6 +422,16 @@ class CBAR(LineElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -703,6 +723,16 @@ class CBEAM3(LineElement):  # was CBAR
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBEAM3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -883,6 +913,16 @@ class CBEND(LineElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBEND card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')

@@ -645,6 +645,16 @@ class PBAR(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = double_or_blank(card, 3, 'A', 0.0)
@@ -922,6 +932,16 @@ class PBARL(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBARL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', 'MSCBMLO')
@@ -1619,6 +1639,16 @@ class PBEND(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBEND card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
 

@@ -97,6 +97,16 @@ class CTRAX3(AxisymmetricTri):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRAX3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -229,6 +239,16 @@ class CTRAX6(AxisymmetricTri):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRAX6 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -361,6 +381,16 @@ class CTRIAX(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRIAX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -505,6 +535,16 @@ class CTRIAX6(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRIAX6 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         mid = integer(card, 2, 'mid')
 
@@ -690,6 +730,16 @@ class CQUADX(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUADX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -809,6 +859,16 @@ class CQUADX4(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUADX4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -912,6 +972,16 @@ class CQUADX8(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUADX8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [

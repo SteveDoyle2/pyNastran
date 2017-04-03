@@ -301,6 +301,16 @@ class PBEAM(IntegratedLineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBEAM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'property_id')
         mid = integer(card, 2, 'material_id')
 
@@ -952,6 +962,16 @@ class PBEAML(IntegratedLineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBEAML card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', 'MSCBML0')
@@ -1445,6 +1465,16 @@ class PBCOMP(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBCOMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         area = double_or_blank(card, 3, 'Area', 0.0)
