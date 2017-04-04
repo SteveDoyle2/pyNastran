@@ -1780,6 +1780,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.vtk_interactor.SetInteractorStyle(self.style)
 
     def on_run_script(self, python_file=False):
+        """pulldown for running a python script"""
         is_failed = True
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
@@ -1792,23 +1793,40 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #python_file = os.path.join(script_path, infile_name)
             python_file = os.path.join(infile_name)
 
-        print('python_file =', python_file)
-        execfile(python_file)
+        if not os.path.exists(python_file):
+            msg = 'python_file = %r does not exist' % python_file
+            self.log_error(msg)
+            return is_failed
+
+        lines = open(python_file).read()
+        try:
+            exec(lines)
+        except Exception as e:
+            #self.log_error(traceback.print_stack(f))
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
+            self.log_error(str(txt))
+            return is_failed
         is_failed = False
         self._default_python_file = python_file
         self.log_command('self.on_run_script(%r)' % python_file)
         return is_failed
 
     def on_show_info(self):
+        """sets a flag for showing/hiding INFO messages"""
         self.show_info = not self.show_info
 
     def on_show_debug(self):
+        """sets a flag for showing/hiding DEBUG messages"""
         self.show_debug = not self.show_debug
 
     def on_show_gui(self):
+        """sets a flag for showing/hiding GUI messages"""
         self.show_gui = not self.show_gui
 
     def on_show_command(self):
+        """sets a flag for showing/hiding COMMAND messages"""
         self.show_command = not self.show_command
 
     def on_reset_camera(self):
@@ -3492,6 +3510,54 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.cell_picker.SetTolerance(0.001)
         self.node_picker.SetTolerance(0.001)
 
+    def mark_elements_by_different_case(self, eids, icase_result, icase_to_apply):
+        """
+        Marks a series of elements with custom text labels
+
+        Parameters
+        ----------
+        eids : int, List[int]
+            the elements to apply a message to
+        icase_result : int
+            the case to draw the result from
+        icase_to_apply : int
+            the key in label_actors to slot the result into
+
+        TOODO: fix the following
+        correct   : applies to the icase_to_apply
+        incorrect : applies to the icase_result
+        """
+        if icase_result not in self.label_actors:
+            msg = 'icase_result=%r not in label_actors=[%s]' % (
+                icase_result, ', '.join(self.label_actors))
+            self.log_error(msg)
+            return
+        if icase_to_apply not in self.label_actors:
+            msg = 'icase_to_apply=%r not in label_actors=[%s]' % (
+                icase_to_apply, ', '.join(self.label_actors))
+            self.log_error(msg)
+            return
+
+        eids = np.unique(eids)
+        neids = len(eids)
+        #centroids = np.zeros((neids, 3), dtype='float32')
+        ieids = np.searchsorted(self.element_ids, eids)
+        #print('ieids = ', ieids)
+
+        for cell_id in ieids:
+            centroid = self.cell_centroid(cell_id)
+            result_name, result_values, xyz = self.get_result_by_cell_id(cell_id, centroid, icase_result)
+            texti = '%s' % result_values
+            xi, yi, zi = centroid
+            self._create_annotation(texti, icase_to_apply, xi, yi, zi)
+        self.log_command('mark_elements_by_different_case(%s, %s, %s)' % (eids, icase_result, icase_to_apply))
+        self.vtk_interactor.Render()
+
+        #eids = [16563, 16564, 8916703, 16499, 16500, 8916699, 16565, 16566, 8916706, 16502, 16503, 8916701]
+
+        #icase_result = 22
+        #icase_to_apply = 25
+        #self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
     def mark_nodes(self, nids, icase, text):
         """
         Marks a series of nodes with custom text labels
@@ -4574,11 +4640,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nElements))
 
-    def get_result_by_cell_id(self, cell_id, world_position):
+    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
         """TODO: should handle multiple cell_ids"""
-        case_key = self.case_keys[self.icase] # int for object
+        if icase is None:
+            icase = self.icase
+        case_key = self.case_keys[icase] # int for object
         result_name = self.result_name
-        icase = self.icase
         case = self.result_cases[case_key]
 
         (obj, (i, res_name)) = case
@@ -4648,6 +4715,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #VTK_QUADRATIC_PYRAMID = 27
             raise NotImplementedError(msg)
         return result_name, result_values, xyz
+
+    def cell_centroid(self, cell_id):
+        """gets the cell centroid"""
+        cell = self.grid_selected.GetCell(cell_id)
+        nnodes = cell.GetNumberOfPoints()
+        points = cell.GetPoints()
+        centroid = np.zeros(3, dtype='float32')
+        for ipoint in range(nnodes):
+            point = np.array(points.GetPoint(ipoint), dtype='float32')
+            centroid += point
+        centroid /= nnodes
+        return centroid
 
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
         """won't handle multiple cell_ids/node_xyz"""
