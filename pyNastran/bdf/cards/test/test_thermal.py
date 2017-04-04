@@ -123,7 +123,7 @@ class TestThermal(unittest.TestCase):
         q0 = 18.
         t_source = 19.
         eids = [2]
-        qvect = model.add_qvect(sid, q0, t_source, eids, ce=0,
+        qvect = model.add_qvect(sid, q0, eids, t_source, ce=0,
                                vector_tableds=None, control_id=0,
                                comment='qvect')
         qvect.raw_fields()

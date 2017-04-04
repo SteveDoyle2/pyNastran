@@ -158,7 +158,7 @@ class QVECT(ThermalLoad):
     +-------+------+------+-------+-----+---------+---------+---------+---------+
     """
     type = 'QVECT'
-    def __init__(self, sid, q0, t_source, eids,
+    def __init__(self, sid, q0, eids, t_source=None,
                  ce=0, vector_tableds=None, control_id=0, comment=''):
         """
         Creates a QVECT card
@@ -219,7 +219,7 @@ class QVECT(ThermalLoad):
         """
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
-        t_source = double(card, 3, 't_source')
+        t_source = double_or_blank(card, 3, 't_source')
         ce = integer_or_blank(card, 4, 'ce', 0)
         vector_tableds = [
             integer_double_or_blank(card, 5, 'e1_tabled1', 0.0),

@@ -3169,7 +3169,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_qvect(self, sid, q0, t_source, eids,
+    def add_qvect(self, sid, q0, eids, t_source=None,
                   ce=0, vector_tableds=None, control_id=0, comment=''):
         """
         Creates a QVECT card
@@ -3199,7 +3199,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        load = QVECT(sid, q0, t_source, eids, ce=ce,
+        load = QVECT(sid, q0, eids, t_source=t_source, ce=ce,
                      vector_tableds=vector_tableds, control_id=control_id,
                      comment=comment)
         self._add_dload_entry(load)
