@@ -364,7 +364,8 @@ class CalculixConverter(BDF):
         loads2 = []
         for load in load_case:
             if isinstance(load, LOAD):
-                scale_factors, loads = load.get_reduced_loads()
+                scale_factors, loads = load.get_reduced_loads(
+                    resolve_load_card=False, filter_zero_scale_factors=False)
                 scale_factors2 += scale_factors
                 loads2 += loads
             else:
@@ -374,7 +375,7 @@ class CalculixConverter(BDF):
         nnodes = self.nnodes
         print('nnodes = %s' % nnodes)
         FM = zeros((nnodes, 6), 'float64')
-        print(FM.shape)
+        #print(FM.shape)
         F = FM[:, :3]
         M = FM[:, 3:]
 

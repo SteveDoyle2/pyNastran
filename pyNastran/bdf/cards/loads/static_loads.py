@@ -83,7 +83,7 @@ class LOAD(LoadCombination):
                     if isinstance(lid, list):
                         load_types += load.type
                     else:  # int
-                        load_types += [load.type] + load.getLoadTypes()
+                        load_types += [load.type] + load.get_load_types()
                 elif isinstance(load, (Force, Moment, PLOAD4, GRAV)):
                     load_types += [load.type]
                 else:
@@ -93,11 +93,21 @@ class LOAD(LoadCombination):
         #print("load_types = ", load_types)
         return load_types
 
-    def get_reduced_loads(self):
+    def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         """
         Get all load objects in a simplified form, which means all
         scale factors are already applied and only base objects
         (no LOAD cards) will be returned.
+
+        Parameters
+        ----------
+        resolve_load_card : bool; default=False
+            Nastran requires that LOAD cards do not reference other load cards
+            This feature can be enabled.
+        filter_zero_scale_factors : bool; default=False
+            Nastran does not filter loads with a 0.0 scale factor.  So, if you
+            have a 0.0 load, but are missing load ids, Nastran will throw a
+            fatal error.
 
         .. todo:: lots more object types to support
         """
@@ -113,13 +123,22 @@ class LOAD(LoadCombination):
             scale = i_scale * load_scale # actual scale = global * local
             if isinstance(loads_pack, integer_types):
                 raise RuntimeError('the load have not been cross-referenced')
+            if scale == 0.0 and filter_zero_scale_factors:
+                continue
 
             for load in loads_pack:
                 if simple_loads:
                     loads.append(load)
                     scale_factors.append(scale) # local
                 elif isinstance(load, LOAD):
-                    load_data = load.get_reduced_loads()
+                    if not resolve_load_card:
+                        msg = 'A LOAD card cannot reference another LOAD card\n'
+                        msg += 'current:\n%s\n' % str(self)
+                        msg += 'new:\n%s' % str(load)
+                        raise RuntimeError(msg)
+                    load_data = load.get_reduced_loads(
+                        resolve_load_card=True,
+                        filter_zero_scale_factors=filter_zero_scale_factors)
                     (reduced_scale_factors, reduced_loads) = load_data
 
                     loads += reduced_loads
@@ -144,7 +163,8 @@ class LOAD(LoadCombination):
         gravity_loads = []
 
         types_found = set()
-        (scale_factors, loads) = self.get_reduced_loads()
+        (scale_factors, loads) = self.get_reduced_loads(
+            resolve_load_card=False, filter_zero_scale_factors=False)
 
         for (scale_factor, load) in zip(scale_factors, loads):
             out = load.transform_load()
@@ -673,13 +693,13 @@ class Force(Load):
     def F(self):
         return self.xyz * self.mag
 
-    def get_reduced_loads(self):
+    def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         scale_factors = [1.]
         loads = self.F()
         return(scale_factors, loads)
 
     def organize_loads(self, model):
-        (scale_factors, force_loads) = self.get_reduced_loads()
+        (scale_factors, force_loads) = self.get_reduced_loads(resolve_load_card=False, filter_zero_scale_factors=False)
 
         types_found = [self.type]
         moment_loads = {}
@@ -728,7 +748,7 @@ class Moment(Load):
     def get_loads(self):
         return [self]
 
-    def get_reduced_loads(self):
+    def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         scale_factors = [1.]
         loads = {
             self.node: self.M()
@@ -736,7 +756,8 @@ class Moment(Load):
         return(scale_factors, loads)
 
     def organize_loads(self, model):
-        (scale_factors, moment_loads) = self.get_reduced_loads()
+        (scale_factors, moment_loads) = self.get_reduced_loads(
+            resolve_load_card=False, filter_zero_scale_factors=False)
 
         types_found = [self.type]
         force_loads = {}
@@ -1952,7 +1973,7 @@ class PLOAD1(Load):
         #(g2, matrix) = self.cid.transformToGlobal(A)
         #return (g2)
 
-    def get_reduced_loads(self):
+    def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         """
         Get all load objects in a simplified form, which means all
         scale factors are already applied and only base objects
@@ -1976,7 +1997,8 @@ class PLOAD1(Load):
         gravity_loads = []
 
         types_found = set()
-        (scale_factors, loads) = self.get_reduced_loads()
+        (scale_factors, loads) = self.get_reduced_loads(
+            resolve_load_card=False, filter_zero_scale_factors=False)
 
         for scale_factor, load in zip(scale_factors, loads):
             out = load.transformLoad()

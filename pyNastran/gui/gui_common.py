@@ -492,6 +492,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('reload', 'Reload model', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
 
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
+                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
 
                 ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
                 ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
@@ -628,7 +629,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 (self.menu_help, ('about',)),
                 (self.menu_scripts, scripts),
                 (self.toolbar, toolbar_tools),
-                (self.menu_hidden, ('cycle_results',)),
+                (self.menu_hidden, ('cycle_results', 'rcycle_results',)),
                 # (self.menu_scripts, ()),
                 #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
             ]
@@ -1779,13 +1780,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.vtk_interactor.SetInteractorStyle(self.style)
 
     def on_run_script(self, python_file=False):
+        is_failed = True
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
             infile_name = self._create_load_file_dialog(
                 wildcard, title, self._default_python_file)[1]
             if not infile_name:
-                is_failed = True
                 return is_failed # user clicked cancel
 
             #python_file = os.path.join(script_path, infile_name)
@@ -1793,8 +1794,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         print('python_file =', python_file)
         execfile(python_file)
+        is_failed = False
         self._default_python_file = python_file
         self.log_command('self.on_run_script(%r)' % python_file)
+        return is_failed
 
     def on_show_info(self):
         self.show_info = not self.show_info
@@ -2768,6 +2771,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_load_custom_results(self, out_filename=None):
         """will be a more generalized results reader"""
+        is_failed = True
         geometry_format = self.format
         if self.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
@@ -2787,32 +2791,35 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
             fmt = ';;'.join(fmts)
             wildcard_level, out_filename = self._create_load_file_dialog(fmt, title)
+            if not out_filename:
+                return is_failed # user clicked cancel
             iwildcard = fmts.index(wildcard_level)
 
         if out_filename == '':
-            return
+            return is_failed
         if not os.path.exists(out_filename):
             msg = 'result file=%r does not exist' % out_filename
             self.log_error(msg)
-            return
+            return is_failed
 
-        if iwildcard == 0:
-            self._on_load_nodal_elemental_results('Nodal', out_filename)
-        elif iwildcard == 1:
-            self._on_load_nodal_elemental_results('Elemental', out_filename)
-        elif iwildcard == 2:
-            self._load_deflection(out_filename)
-        elif iwildcard == 3:
-            self._load_load_patran_nod(out_filename)
-        else:
-            raise NotImplementedError('wildcard_level = %s' % wildcard_level)
-        #try:
-        #except Exception as e:
-            #msg = traceback.format_exc()
-            #self.log_error(msg)
-            ##return
-            #raise
+        try:
+            if iwildcard == 0:
+                self._on_load_nodal_elemental_results('Nodal', out_filename)
+            elif iwildcard == 1:
+                self._on_load_nodal_elemental_results('Elemental', out_filename)
+            elif iwildcard == 2:
+                self._load_deflection(out_filename)
+            elif iwildcard == 3:
+                self._load_load_patran_nod(out_filename)
+            else:
+                raise NotImplementedError('wildcard_level = %s' % wildcard_level)
+        except Exception as e:
+            msg = traceback.format_exc()
+            self.log_error(msg)
+            return is_failed
         self.log_command("on_load_custom_results(%r)" % out_filename)
+        is_failed = False
+        return is_failed
 
     def _load_load_patran_nod(self, nod_filename):
         """reads a Patran formatted *.nod file"""
@@ -3478,15 +3485,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         text : str, List[str]
             the text to display
 
-        self.mark_nodes(1, 'NodeID', 'max')
-        self.mark_nodes(6, 'NodeID', 'min')
-        self.mark_nodes([1, 6], 'NodeID', 'max')
-        self.mark_nodes([1, 6], 'NodeID', ['max', 'min'])
+        0 corresponds to the NodeID result
+        self.mark_nodes(1, 0, 'max')
+        self.mark_nodes(6, 0, 'min')
+        self.mark_nodes([1, 6], 0, 'max')
+        self.mark_nodes([1, 6], 0, ['max', 'min'])
         """
         if icase not in self.label_actors:
             msg = 'icase=%r not in label_actors=[%s]' % (
                 icase, ', '.join(self.label_actors))
             self.log_error(msg)
+            return
         i = np.searchsorted(self.node_ids, nids)
         if isinstance(text, string_types):
             text = [text] * len(i)
@@ -3496,6 +3505,35 @@ class GuiCommon2(QMainWindow, GuiCommon):
         xyz = self.xyz_cid0[i, :]
         for (xi, yi, zi), texti in zip(xyz, text):
             self._create_annotation(texti, icase, xi, yi, zi)
+        self.vtk_interactor.Render()
+
+    def __mark_nodes_by_result(self, nids, icases):
+        """
+        # mark the node 1 with the NodeID (0) result
+        self.mark_nodes_by_result_case(1, 0)
+
+        # mark the nodes 1 and 2 with the NodeID (0) result
+        self.mark_nodes_by_result_case([1, 2], 0)
+
+        # mark the nodes with the NodeID (0) and ElementID (1) result
+        self.mark_nodes_by_result_case([1, 2], [0, 1])
+        """
+        i = np.searchsorted(self.node_ids, nids)
+        if isinstance(icases, int):
+            icases = [icases]
+
+        for icase in icases:
+            if icase not in self.label_actors:
+                msg = 'icase=%r not in label_actors=[%s]' % (
+                    icase, ', '.join(self.label_actors))
+                self.log_error(msg)
+                continue
+
+            for node_id in i:
+                #xyz = self.xyz_cid0[i, :]
+                out = self.get_result_by_xyz_node_id(world_position, node_id)
+                _result_name, result_value, node_id, node_xyz = out
+                self._create_annotation(texti, icase, xi, yi, zi)
         self.vtk_interactor.Render()
 
     def _cell_centroid_pick(self, cell_id, world_position):

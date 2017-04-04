@@ -858,14 +858,15 @@ class NastranIO(NastranIO_xref):
             if subcase_id == 0:
                 continue
             load_case_id = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')[0]
-            loadCase = model.loads[load_case_id]
+            load_case = model.loads[load_case_id]
 
             # account for scale factors
             loads2 = []
             scale_factors2 = []
-            for load in loadCase:
+            for load in load_case:
                 if isinstance(load, LOAD):
-                    scale_factors, loads = load.get_reduced_loads()
+                    scale_factors, loads = load.get_reduced_loads(
+                        resolve_load_card=False, filter_zero_scale_factors=False)
                     scale_factors2 += scale_factors
                     loads2 += loads
                 else:

@@ -80,6 +80,13 @@ class GuiCommon(GuiAttributes):
         else:
             self.text_actors[3].VisibilityOff()
 
+    def on_rcycle_results(self, case=None):
+        """the reverse of on_cycle_results"""
+        icase = self.icase - 1
+        if icase == -1:
+            icase = self.ncases - 1
+        self.cycle_results(icase)
+
     def on_cycle_results(self, case=None):
         """the gui method for calling cycle_results"""
         self.cycle_results(self.icase + 1)
