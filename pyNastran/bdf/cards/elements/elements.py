@@ -231,6 +231,16 @@ class CGAP(Element):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CGAP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         ga = data[2]
@@ -423,6 +433,16 @@ class CRAC2D(CrackElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CRAC2D card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -495,6 +515,16 @@ class CRAC3D(CrackElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CRAC3D card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -571,6 +601,16 @@ class PLOTEL(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOTEL card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         nodes = [data[1], data[2]]
         return PLOTEL(eid, nodes, comment=comment)

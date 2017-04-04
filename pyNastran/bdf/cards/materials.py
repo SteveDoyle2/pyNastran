@@ -118,6 +118,16 @@ class CREEP(Material):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CREEP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         T0 = data[1]
         exp = data[2]
@@ -261,6 +271,16 @@ class MAT1(IsotropicMaterial):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         e = data[1]
         g = data[2]
@@ -591,6 +611,16 @@ class MAT2(AnisotropicMaterial):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         G11 = data[1]
         G12 = data[2]
@@ -802,6 +832,16 @@ class MAT3(OrthotropicMaterial):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         ex = data[1]
         eth = data[2]
@@ -952,6 +992,16 @@ class MAT4(ThermalMaterial):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         k = data[1]
         cp = data[2]
@@ -1081,6 +1131,16 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT5 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         kxx = data[1]
         kxy = data[2]
@@ -1258,6 +1318,16 @@ class MAT8(OrthotropicMaterial):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT8 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         e11 = data[1]
         e22 = data[2]
@@ -1519,6 +1589,16 @@ class MAT9(AnisotropicMaterial):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT9 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         G11 = data[1][0]
         G12 = data[1][1]
@@ -1709,6 +1789,16 @@ class MAT10(Material):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT10 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         bulk = data[1]
         rho = data[2]
@@ -2012,6 +2102,16 @@ class MAT11(Material):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MAT11 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         mid = data[0]
         e1 = data[1]
         e2 = data[2]
@@ -2610,6 +2710,16 @@ class MATHP(HyperelasticMaterial):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATHP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         main = data[0]

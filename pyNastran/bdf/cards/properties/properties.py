@@ -118,6 +118,16 @@ class PFAST(Property):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PFAST card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pid, d, mcid, mflag, kt1, kt2, kt3,
          kr1, kr2, kr3, mass, ge) = data
         return PFAST(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
@@ -252,6 +262,16 @@ class PGAP(Property):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PGAP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         u0 = data[1]
         f0 = data[2]

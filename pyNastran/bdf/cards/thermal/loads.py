@@ -80,6 +80,16 @@ class QVOL(ThermalLoad):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a QVOL card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid, qvol, control_point, eid = data
         return QVOL(sid, qvol, control_point, eid, comment=comment)
 
@@ -205,6 +215,9 @@ class QVECT(ThermalLoad):
             self.vector_tableds = vector_tableds
         self.eids = eids
 
+    def validate(self):
+        assert isinstance(self.eids, list), 'type(eids)=%s' % type(self.eids)
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -236,7 +249,7 @@ class QVECT(ThermalLoad):
             assert eid != 0, card
             i += 1
         elements = expand_thru_by(eids)
-        return QVECT(sid, q0, t_source, elements,
+        return QVECT(sid, q0, elements, t_source=t_source,
                      ce=ce, vector_tableds=vector_tableds, control_id=control_id,
                      comment=comment)
 
@@ -346,6 +359,16 @@ class QBDY1(ThermalLoad):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a QBDY1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         qflux = data[1]
         eids = data[2:]
@@ -462,6 +485,16 @@ class QBDY2(ThermalLoad):  # not tested
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a QBDY2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         eid = data[1]
         qfluxs = [data[2]]
@@ -523,7 +556,24 @@ class QBDY3(ThermalLoad):
     """
     type = 'QBDY3'
 
-    def __init__(self, sid, Q0, cntrlnd, eids, comment=''):
+    def __init__(self, sid, q0, cntrlnd, eids, comment=''):
+        """
+        Creates a QBDY3 card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. (Integer > 0)
+        q0 : float; default=None
+            Magnitude of thermal flux vector into face
+        control_id : int; default=0
+            Control point
+        eids : List[int] or THRU
+            Element identification number of a CHBDYE, CHBDYG, or
+            CHBDYP entry
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalLoad.__init__(self)
         if comment:
             self.comment = comment
@@ -532,7 +582,7 @@ class QBDY3(ThermalLoad):
         self.sid = sid
 
         #: Heat flux into element
-        self.Q0 = Q0
+        self.q0 = q0
 
         #: Control point for thermal flux load. (Integer > 0; Default = 0)
         self.cntrlnd = cntrlnd
@@ -553,20 +603,30 @@ class QBDY3(ThermalLoad):
             a comment for the card
         """
         sid = integer(card, 1, 'sid')
-        Q0 = double(card, 2, 'Q0')
+        q0 = double(card, 2, 'q0')
         cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
 
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
-        return QBDY3(sid, Q0, cntrlnd, eids, comment=comment)
+        return QBDY3(sid, q0, cntrlnd, eids, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a QBDY3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
-        Q0 = data[1]
+        q0 = data[1]
         cntrlnd = data[2]
         eids = list(data[3:])
-        return QBDY3(sid, Q0, cntrlnd, eids, comment=comment)
+        return QBDY3(sid, q0, cntrlnd, eids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -606,7 +666,7 @@ class QBDY3(ThermalLoad):
     def raw_fields(self):
         eids = self.Eids()
         eids.sort()
-        list_fields = (['QBDY3', self.sid, self.Q0, self.cntrlnd] +
+        list_fields = (['QBDY3', self.sid, self.q0, self.cntrlnd] +
                        collapse_thru_by(eids))
         return list_fields
 
@@ -614,7 +674,7 @@ class QBDY3(ThermalLoad):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
         eids = self.Eids()
         eids.sort()
-        list_fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
+        list_fields = ['QBDY3', self.sid, self.q0, cntrlnd] + collapse_thru_by(eids)
         return list_fields
 
     #def getLoads(self):
@@ -713,6 +773,16 @@ class QHBDY(ThermalLoad):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a QHBDY card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         flag = data[1]
         q0 = data[2]
@@ -822,6 +892,16 @@ class TEMP(ThermalLoad):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TEMP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         temperatures = {data[1]: data[2]}
         return TEMP(sid, temperatures, comment=comment)
@@ -884,6 +964,16 @@ class TEMPP1(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TEMPP1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid, eid, t, tprime, ts1, ts2 = data
         return TEMPP1(sid, eid, t, tprime, [ts1, ts2])
 
@@ -927,6 +1017,16 @@ class TEMPD(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TEMPD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         temperature = data[1]
         return TEMPD(sid, temperature, comment=comment)

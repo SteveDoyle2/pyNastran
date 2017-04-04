@@ -712,6 +712,16 @@ class PCOMP(CompositeShellProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PCOMP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         #data_in = [
             #pid, z0, nsm, sb, ft, tref, ge,
             #is_symmetrical, Mid, T, Theta, Sout]
@@ -1324,6 +1334,16 @@ class PSHEAR(ShellProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PSHEAR card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         t = data[2]
@@ -1546,6 +1566,16 @@ class PSHELL(ShellProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PSHELL card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid1 = data[1]
         t = data[2]

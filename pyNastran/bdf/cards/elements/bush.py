@@ -140,12 +140,18 @@ class CBUSH(BushElement):
 
     @classmethod
     def add_op2_data(cls, data, f, comment=''):
+        """
+        Adds a CBUSH card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
         return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def nodes(self):

@@ -80,6 +80,16 @@ class PLSOLID(SolidProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLSOLID card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         ge = data[2]
@@ -385,6 +395,16 @@ class PSOLID(SolidProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PSOLID card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         cordm = data[2]

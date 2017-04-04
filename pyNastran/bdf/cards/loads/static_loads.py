@@ -325,6 +325,16 @@ class GRAV(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a GRAV card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         cid = data[1]
         a = data[2]
@@ -883,6 +893,16 @@ class FORCE(Force):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a FORCE card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         cid = data[2]
@@ -1008,6 +1028,16 @@ class FORCE1(Force):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a FORCE1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1153,6 +1183,16 @@ class FORCE2(Force):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a FORCE2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1378,6 +1418,16 @@ class MOMENT(Moment):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MOMENT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         cid = data[2]
@@ -1511,6 +1561,16 @@ class MOMENT1(Moment):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MOMENT1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1658,6 +1718,16 @@ class MOMENT2(Moment):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MOMENT2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1940,6 +2010,16 @@ class PLOAD(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOAD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         p = data[1]
         nodes = data[2:]
@@ -2025,6 +2105,16 @@ class PLOAD1(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOAD1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         eid = data[1]
         Type = data[2]
@@ -2279,6 +2369,16 @@ class PLOAD2(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOAD2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         pressure = data[1]
         eids = list(data[2:])
@@ -2471,6 +2571,16 @@ class PLOAD4(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOAD4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         eid = data[1]
         pressures = data[2]
@@ -2755,6 +2865,16 @@ class PLOADX1(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOADX1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid, eid, pa, pb, ga, gb, theta = data
         return PLOADX1(sid, eid, pa, ga, gb, pb, theta, comment=comment)
 

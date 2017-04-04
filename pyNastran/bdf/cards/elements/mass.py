@@ -98,6 +98,16 @@ class CMASS1(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CMASS1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         g1 = data[2]
@@ -261,6 +271,16 @@ class CMASS2(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CMASS2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         mass = data[1]
         g1 = data[2]
@@ -433,6 +453,16 @@ class CMASS3(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CMASS3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         s1 = data[2]
@@ -521,6 +551,16 @@ class CMASS4(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CMASS4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         mass = data[1]
         s1 = data[2]
@@ -716,6 +756,16 @@ class CONM1(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CONM1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         m = np.zeros((6, 6))
         (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
          m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = data
@@ -977,6 +1027,16 @@ class CONM2(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CONM2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         nid = data[1]
         cid = data[2]

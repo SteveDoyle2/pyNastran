@@ -114,6 +114,16 @@ class CDAMP1(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid, pid, g1, g2, c1, c2 = data
         nids = [g1, g2]
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
@@ -268,6 +278,16 @@ class CDAMP2(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         b = data[1]
         nids = [data[2], data[3]]
@@ -389,6 +409,16 @@ class CDAMP3(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -497,6 +527,16 @@ class CDAMP4(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         b = data[1]
         nids = [data[2], data[3]]
@@ -587,6 +627,16 @@ class CDAMP5(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP5 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -686,6 +736,16 @@ class CVISC(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CVISC card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:4]

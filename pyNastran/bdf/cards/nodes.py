@@ -105,12 +105,12 @@ class RINGAX(BaseCard):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         """
-        TODO: hasnt been verified
+        Adds a RINGAX card from the OP2
 
         Parameters
         ----------
-        data : List[int/float]; default=None
-            a list with the GRID fields defined in OP2 format
+        data : List[varies]
+            a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
         """
@@ -182,6 +182,16 @@ class SEQGP(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SEQGP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         nids, seqids = data
         return SEQGP(nids, seqids, comment=comment)
 
@@ -404,6 +414,16 @@ class XPoints(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SPOINT/EPOINT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         points = data
         assert isinstance(points, list), points
         assert isinstance(points[0], integer_types), points
@@ -788,10 +808,14 @@ class GRIDB(BaseCard):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         """
+        Adds a GRIDB card from the OP2
+
         Parameters
         ----------
         data : List[varies]
-            a list with the GRIDB fields defined in OP2 format
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
         """
         nid = data[0]
         phi = data[1]
@@ -973,6 +997,16 @@ class GRID(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a GRID card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         nid = data[0]
         cp = data[1]
         xyz = np.array(data[2:5])
@@ -1531,6 +1565,16 @@ class POINT(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a POINT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         nid = data[0]
         cp = data[1]
         xyz = np.array(data[2:5])

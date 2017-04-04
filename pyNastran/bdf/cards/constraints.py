@@ -97,6 +97,16 @@ class SUPORT1(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SUPORT1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         conid = data[0]
         assert (len(data) - 1) % 2 == 0, data
         IDs = []
@@ -222,6 +232,16 @@ class SUPORT(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SUPORT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         fields = data
         IDs = []
         Cs = []
@@ -368,6 +388,16 @@ class MPC(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an MPC card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         #msg = 'MPC has not implemented data parsing'
         conid = data[0]
         gids = data[1]
@@ -540,6 +570,16 @@ class SPC(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPC card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         conid = data[0]
         gids = [data[1]]
         components = data[2]
@@ -801,6 +841,16 @@ class SPC1(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPC1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         conid = data[0]
         components = str(data[1])
         nodes = data[2]
@@ -917,6 +967,16 @@ class SPCOFF(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SPCOFF card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         gids = [data[0]]
         components = data[1]
         assert 0 <= components <= 123456, data
@@ -1025,6 +1085,16 @@ class SPCOFF1(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPCOFF1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         components = str(data[0])
         nodes = data[1]
         if nodes[-1] == -1:
@@ -1131,6 +1201,16 @@ class SPCADD(ConstraintADD):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPCADD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         conid = data[0]
         sets = list(data[1:-1])
         return SPCADD(conid, sets, comment=comment)

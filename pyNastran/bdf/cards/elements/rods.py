@@ -127,6 +127,16 @@ class CROD(RodElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CROD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -287,6 +297,16 @@ class CTUBE(RodElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CTUBE card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -443,6 +463,16 @@ class CONROD(RodElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CONROD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         nids = data[1:3]
         mid = data[3]

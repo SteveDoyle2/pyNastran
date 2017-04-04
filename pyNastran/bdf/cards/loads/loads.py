@@ -260,6 +260,16 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an LSEQ card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         excite_id = data[1]
         lid = data[2]
@@ -470,6 +480,16 @@ class DAREA(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a DAREA card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         p = data[1]
         c = data[2]
@@ -596,6 +616,16 @@ class SPCD(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPCD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         gids = [data[1]]
         constraints = [data[2]]
@@ -717,6 +747,16 @@ class SLOAD(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SLOAD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (sid, nid, scale_factor) = data
         return SLOAD(sid, [nid], [scale_factor], comment=comment)
 
@@ -824,6 +864,16 @@ class RFORCE(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RFORCE card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid, nid, cid, a, r1, r2, r3, method, racc, mb = data
         scale = 1.0
         return RFORCE(sid, nid, cid, scale, r1, r2, r3, method=method, racc=racc, mb=mb,
