@@ -2769,7 +2769,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #menu_items = self._create_menu_items()
                     #self._populate_menu(menu_items)
 
-    def on_load_custom_results(self, out_filename=None):
+    def on_load_custom_results(self, out_filename=None, restype=None):
         """will be a more generalized results reader"""
         is_failed = True
         geometry_format = self.format
@@ -2794,6 +2794,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if not out_filename:
                 return is_failed # user clicked cancel
             iwildcard = fmts.index(wildcard_level)
+        else:
+            fmts = [
+                'node', 'element', 'deflection', 'patran_nod',
+            ]
+            iwildcard = fmts.index(restype.lower())
 
         if out_filename == '':
             return is_failed
@@ -2805,19 +2810,23 @@ class GuiCommon2(QMainWindow, GuiCommon):
         try:
             if iwildcard == 0:
                 self._on_load_nodal_elemental_results('Nodal', out_filename)
+                restype = 'Node'
             elif iwildcard == 1:
                 self._on_load_nodal_elemental_results('Elemental', out_filename)
+                restype = 'Element'
             elif iwildcard == 2:
                 self._load_deflection(out_filename)
+                restype = 'Deflection'
             elif iwildcard == 3:
                 self._load_load_patran_nod(out_filename)
+                restype = 'Patran_nod'
             else:
                 raise NotImplementedError('wildcard_level = %s' % wildcard_level)
         except Exception as e:
             msg = traceback.format_exc()
             self.log_error(msg)
             return is_failed
-        self.log_command("on_load_custom_results(%r)" % out_filename)
+        self.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
         is_failed = False
         return is_failed
 
@@ -2848,7 +2857,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             A[header] = data2[:, i]
             fmt_dict[header] = '%f'
 
-        out_filename_short = os.path.basename(nod_filename)
+        out_filename_short = os.path.relpath(nod_filename)
         result_type = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type,
                                 out_filename_short, update=True)
@@ -2908,7 +2917,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         out_filename : str
             the CSV filename to load
         """
-        out_filename_short = os.path.basename(out_filename)
+        out_filename_short = os.path.relpath(out_filename)
         A, fmt_dict, headers = load_csv(out_filename)
         #nrows, ncols, fmts
         header0 = headers[0]
