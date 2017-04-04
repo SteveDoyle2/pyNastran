@@ -3133,6 +3133,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_command("on_load_results(%r)" % out_filenamei)
 
     def setup_gui(self):
+        """
+        Setup the gui
+
+        1.  starts the logging
+        2.  reapplies the settings
+        3.  create pickers
+        4.  create main vtk actors
+        5.  shows the Qt window
+        """
         assert self.fmts != [], 'supported_formats=%s' % self.supported_formats
         self.start_logging()
         settings = QtCore.QSettings()
@@ -3227,6 +3236,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.resize(1100, 700)
 
     def setup_post(self, inputs):
+        """interface for user defined post-scripts"""
         self.load_batch_inputs(inputs)
 
         shots = inputs['shots']
@@ -3313,6 +3323,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             csv_filename, name, str(color)))
 
     def _add_user_geometry(self, csv_filename, name, color):
+        """helper method for ``on_load_user_geom``"""
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
@@ -3322,7 +3333,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         point_name = name + '_point'
         geom_name = name + '_geom'
-
 
         grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename)
         nbars = len(bars)
@@ -3455,6 +3465,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             csv_filename, name, str(color)))
 
     def create_cell_picker(self):
+        """creates the vtk picker objects"""
         self.cell_picker = vtk.vtkCellPicker()
         self.node_picker = vtk.vtkPointPicker()
 
@@ -3814,12 +3825,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.corner_axis.EnabledOn()
 
     def set_background_color_to_white(self):
+        """sets the background color to white; used by gif writing?"""
         white = (1., 1., 1.)
         self.set_background_color(white)
 
 
     def on_take_screenshot(self, fname=None, magnify=None):
-        """ Take a screenshot of a current view and save as a file"""
+        """
+        Take a screenshot of a current view and save as a file
+
+        Parameters
+        ----------
+        fname : str; default=None
+            None : pop open a window
+            str : bypass the popup window
+        magnify : int; default=None
+            None : use self.magnify
+            int : resolution increase factor
+        """
         if fname is None or fname is False:
             filt = QString()
             default_filename = ''
@@ -4438,6 +4461,53 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.set_form(form)
 
     def _finish_results_io2(self, form, cases):
+        """
+        Adds results to the Sidebar
+
+        Parameters
+        ----------
+        form : List[pairs]
+            There are two types of pairs
+            header_pair : (str, None, List[pair])
+                defines a heading
+                str : the sidebar label
+                None : flag that there are sub-results
+                List[pair] : more header/result pairs
+            result_pair : (str, int, List[])
+                str : the sidebar label
+                int : the case id
+                List[] : flag that there are no sub-results
+        cases : dict[case_id] = result
+            case_id : int
+                the case id
+            result : GuiResult
+                the class that stores the result
+
+        form = [
+            'Model', None, [
+                ['NodeID', 0, []],
+                ['ElementID', 1, []]
+                ['PropertyID', 2, []]
+            ],
+            'time=0.0', None, [
+                ['Stress', 3, []],
+                ['Displacement', 4, []]
+            ],
+            'time=1.0', None, [
+                ['Stress', 5, []],
+                ['Displacement', 6, []]
+            ],
+        ]
+        cases = {
+            0 : GuiResult(...),  # NodeID
+            1 : GuiResult(...),  # ElementID
+            2 : GuiResult(...),  # PropertyID
+            3 : GuiResult(...),  # Stress; t=0.0
+            4 : GuiResult(...),  # Displacement; t=0.0
+            5 : GuiResult(...),  # Stress; t=1.0
+            6 : GuiResult(...),  # Displacement; t=1.0
+        }
+        """
         self.turn_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
