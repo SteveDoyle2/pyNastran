@@ -3,9 +3,9 @@ def get_abs_max(min_values, max_values):
 def get_abs_index(data, axis=1):
 def get_max_index(data, axis=1):
 def get_min_index(data, axis=1):
-def integrate_line(x, y):
+def integrate_unit_line(x, y):
 def build_spline(x, y):
-def integrate_positive_line(x, y, minValue=0.):
+def integrate_positive_unit_line(x, y, minValue=0.):
 def reduce_matrix(matA, nids):
 def is_list_ranged(a, List, b):
 def is_float_ranged(a, x, b):

@@ -545,6 +545,16 @@ class CSET1(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CSET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         if integer_string_or_blank(card, 2, 'C') == 'ALL':
             components = '123456'
         else:
@@ -620,6 +630,16 @@ class SET1(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
 
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
@@ -776,6 +796,16 @@ class SET3(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SET3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         desc = string(card, 2, 'desc')
         ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
@@ -872,6 +902,16 @@ class SESET(SetSuper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SESET card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         seid = integer_or_blank(card, 1, 'seid', 0)
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
         return SESET(seid, ids, comment=comment)
@@ -982,6 +1022,16 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SEQSEP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         ssid = integer(card, 1, 'ssid')
         psid = integer(card, 2, 'psid')
         ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
@@ -1020,6 +1070,16 @@ class RADSET(Set):  # not integrated
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RADSET card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         seid = integer(card, 1, 'seid')
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
         return RADSET(seid, ids, comment=comment)
@@ -1056,6 +1116,16 @@ class USET(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a USET card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         components = []
         ids = []
@@ -1113,6 +1183,16 @@ class USET1(ABQSet1):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a USET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         components = fcomponents_or_blank(card, 2, 'components', 0)
 

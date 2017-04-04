@@ -1972,6 +1972,16 @@ class GMCORD(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a GMCORD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         cid = integer(card, 1, 'cid')
         entity = string(card, 2, 'entity')
         gm_ids = [
@@ -2037,10 +2047,14 @@ class CORD3G(Coord):  # not done
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a CORD3G card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
-            a list version of the fields
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
         """
         cid = integer(card, 1, 'cid')
         method = string_or_blank(card, 2, 'E313')

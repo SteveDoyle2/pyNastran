@@ -1260,7 +1260,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         bar_nids = list(bar_nids)
         self.create_alternate_vtk_grid(
             'Bar Nodes', color=RED, line_width=1, opacity=1.,
-            point_size=5, representation='point', bar_scale=0., is_visible=True)
+            point_size=5, representation='point', bar_scale=0., is_visible=False)
         msg = ", which is required by 'Bar Nodes'"
         self._add_nastran_nodes_to_grid('Bar Nodes', bar_nids, model, msg)
 

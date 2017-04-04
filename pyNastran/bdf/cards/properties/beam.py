@@ -23,7 +23,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string, string_or_blank, double_string_or_blank)
-from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
+from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -301,6 +301,16 @@ class PBEAM(IntegratedLineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBEAM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'property_id')
         mid = integer(card, 2, 'material_id')
 
@@ -693,7 +703,7 @@ class PBEAM(IntegratedLineProperty):
         mass_per_lengths = []
         for (area, nsm) in zip(self.A, self.nsm):
             mass_per_lengths.append(area * rho + nsm)
-        mass_per_length = integrate_positive_line(self.xxb, mass_per_lengths)
+        mass_per_length = integrate_positive_unit_line(self.xxb, mass_per_lengths)
         return mass_per_length
 
     def cross_reference(self, model):
@@ -952,6 +962,16 @@ class PBEAML(IntegratedLineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBEAML card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', 'MSCBML0')
@@ -1058,16 +1078,16 @@ class PBEAML(IntegratedLineProperty):
         .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) dx
         """
         rho = self.Rho()
-        massPerLs = []
+        mass_per_lengths = []
         for (dim, nsm) in zip(self.dim, self.nsm):
             a = _bar_areaL('PBEAML', self.Type, dim)
             try:
-                massPerLs.append(a * rho + nsm)
+                mass_per_lengths.append(a * rho + nsm)
             except:
                 msg = "PBEAML a*rho+nsm a=%s rho=%s nsm=%s" % (a, rho, nsm)
                 raise RuntimeError(msg)
-        massPerL = integrate_positive_line(self.xxb, massPerLs)
-        return massPerL
+        mass_per_length = integrate_positive_unit_line(self.xxb, mass_per_lengths)
+        return mass_per_length
 
     def Area(self):
         r"""
@@ -1081,7 +1101,7 @@ class PBEAML(IntegratedLineProperty):
         for dim in self.dim:
             areas.append(_bar_areaL('PBEAML', self.Type, dim))
         try:
-            A = integrate_line(self.xxb, areas)
+            A = integrate_unit_line(self.xxb, areas)
         except ValueError:
             print('PBEAML integration error; pid=%s x/xb=%s areas=%s' % (self.pid, self.xxb, areas))
             A = mean(areas)
@@ -1130,22 +1150,22 @@ class PBEAML(IntegratedLineProperty):
     def J(self):
         #raise NotImplementedError()
         #Js = self._J()
-        #j = integrate_positive_line(self.xxb, Js)
+        #j = integrate_positive_unit_line(self.xxb, Js)
         j = None
         return j
 
     def I11(self):
-        #i1 = integrate_positive_line(self.xxb,self.i1)
+        #i1 = integrate_positive_unit_line(self.xxb,self.i1)
         i1 = None
         return i1
 
     def I22(self):
-        #i2 = integrate_positive_line(self.xxb,self.i2)
+        #i2 = integrate_positive_unit_line(self.xxb,self.i2)
         i2 = None
         return i2
 
     def I12(self):
-        #i12 = integrate_line(self.xxb,self.i12)
+        #i12 = integrate_unit_line(self.xxb,self.i12)
         i12 = None
         return i12
 
@@ -1445,6 +1465,16 @@ class PBCOMP(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBCOMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         area = double_or_blank(card, 3, 'Area', 0.0)

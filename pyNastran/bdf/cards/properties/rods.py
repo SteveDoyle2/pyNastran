@@ -56,6 +56,16 @@ class PROD(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PROD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = double(card, 3, 'A')
@@ -182,6 +192,16 @@ class PTUBE(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PTUBE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')

@@ -87,6 +87,16 @@ class CBUSH(BushElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBUSH card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -256,6 +266,16 @@ class CBUSH1D(BushElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBUSH1D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -375,6 +395,16 @@ class CBUSH2D(BushElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBUSH2D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid')
         ga = integer(card, 3, 'ga')

@@ -81,6 +81,8 @@ class RINGAX(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a RINGAX card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
@@ -384,6 +386,16 @@ class XPoints(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPOINT/EPOINT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         points = []
         for i in range(1, len(card)):
             field = integer_or_string(card, i, 'ID%i' % i)
@@ -568,12 +580,14 @@ class GRDSET(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a GRDSET card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
-           a BDFCard object
-        comment : str
-           a comment for the card
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
         """
         #: Grid point coordinate system
         blank(card, 1, 'blank')
@@ -755,12 +769,14 @@ class GRIDB(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a GRIDB card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
-           the BDFCard object
-        comment : str
-          a comment for the card
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
         """
         nid = integer(card, 1, 'nid')
         phi = double(card, 4, 'phi')
@@ -970,16 +986,14 @@ class GRID(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Creates the GRID card
+        Adds a GRID card from ``BDF.add_card(...)``
 
         Parameters
         ----------
         card : BDFCard()
             a BDFCard object
-        data : List[int/float]; default=None
-            a list with the GRID fields defined in OP2 format
         comment : str; default=''
-          a comment for the card
+            a comment for the card
         """
         nfields = len(card)
         #: Node ID
@@ -1495,12 +1509,14 @@ class POINT(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a POINT card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
-           the BDFCard object
-        comment : str
-          a comment for the card
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
         """
         nid = integer(card, 1, 'nid')
         cp = integer_or_blank(card, 2, 'cp', 0)

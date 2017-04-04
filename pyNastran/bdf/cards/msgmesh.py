@@ -115,17 +115,16 @@ class CGEN(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Creates the CGEN card
+        Adds a CGEN card from ``BDF.add_card(...)``
 
         Parameters
         ----------
         card : BDFCard()
             a BDFCard object
-        data : List[int/float]; default=None
-            a list with the GRID fields defined in OP2 format
         comment : str; default=''
-          a comment for the card
+            a comment for the card
         """
+
         Type = string(card, 1, 'Type')
         feid = integer(card, 2, 'feid')
         pid = integer(card, 3, 'pid')

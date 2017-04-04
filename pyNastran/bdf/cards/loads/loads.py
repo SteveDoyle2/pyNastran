@@ -83,7 +83,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
 
         # alternating of scale factor & load set ID
         nloads = len(card) - 3
-        assert nloads % 2 == 0
+        assert nloads % 2 == 0, 'card=%s' % card
         for i in range(nloads // 2):
             n = 2 * i + 3
             scale_factors.append(double(card, n, 'scale_factor'))
@@ -241,6 +241,16 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a LSEQ card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         lid = integer(card, 3, 'lid')
@@ -347,6 +357,16 @@ class LOADCYN(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a LOADCYN card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         scale = double(card, 2, 'scale')
         segment_id = integer(card, 3, 'segment_id')
@@ -547,6 +567,16 @@ class SPCD(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPCD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             gids = [integer(card, 2, 'G1'),]
@@ -658,6 +688,16 @@ class SLOAD(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SLOAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
@@ -757,6 +797,16 @@ class RFORCE(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RFORCE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nid = integer_or_blank(card, 2, 'nid', 0)
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -915,6 +965,16 @@ class RFORCE1(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RFORCE1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nid = integer_or_blank(card, 2, 'nid', 0)
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -1030,6 +1090,16 @@ class RANDPS(RandomLoad):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RANDPS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         j = integer(card, 2, 'j')
         k = integer(card, 3, 'k')

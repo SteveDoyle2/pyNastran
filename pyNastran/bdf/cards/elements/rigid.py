@@ -102,6 +102,16 @@ class RROD(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RROD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
@@ -255,6 +265,16 @@ class RBAR(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
@@ -388,6 +408,16 @@ class RBAR1(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBAR1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
@@ -516,6 +546,16 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBE1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         ium = card.index('UM')
         if ium > 0:
@@ -711,6 +751,16 @@ class RBE2(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBE2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         gn = integer(card, 2, 'gn')
         cm = components_or_blank(card, 3, 'cm')
@@ -984,6 +1034,16 @@ class RBE3(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBE3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
         refgrid = integer(card, 3, 'refgrid')
@@ -1248,6 +1308,16 @@ class RSPLINE(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RSPLINE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         diameter_ratio = double_or_blank(card, 2, 'diameter_ratio', 0.1)
         nfields = len(card)

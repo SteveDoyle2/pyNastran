@@ -94,6 +94,16 @@ class MATS1(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATS1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         tid = integer_or_blank(card, 2, 'tid')
         Type = string(card, 3, 'Type')
@@ -252,6 +262,16 @@ class MATT1(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         E_table = integer_or_blank(card, 2, 'T(E)')
         G_table = integer_or_blank(card, 3, 'T(G)')
@@ -415,6 +435,16 @@ class MATT2(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         G11_table = integer_or_blank(card, 2, 'T(G11)')
         G12_table = integer_or_blank(card, 3, 'T(G12)')
@@ -578,6 +608,16 @@ class MATT4(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         k_table = integer_or_blank(card, 2, 'T(K)')
         cp_table = integer_or_blank(card, 3, 'T(CP)')
@@ -689,6 +729,16 @@ class MATT5(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         kxx_table = integer_or_blank(card, 2, 'T(Kxx)')
         kxy_table = integer_or_blank(card, 3, 'T(Kxy)')
@@ -836,6 +886,16 @@ class MATT8(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         E1_table = integer_or_blank(card, 2, 'T(E1)')
         E2_table = integer_or_blank(card, 3, 'T(E2)')

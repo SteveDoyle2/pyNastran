@@ -108,6 +108,16 @@ class CROD(RodElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CROD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -258,6 +268,16 @@ class CTUBE(RodElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTUBE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -401,6 +421,16 @@ class CONROD(RodElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CONROD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         nids = [integer(card, 2, 'n1'),
                 integer(card, 3, 'n2')]

@@ -104,6 +104,16 @@ class AECOMP(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AECOMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         list_type = string(card, 2, 'list_type')
         j = 1
@@ -215,6 +225,16 @@ class AEFACT(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AEFACT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
 
         Di = []
@@ -314,6 +334,16 @@ class AELINK(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AELINK card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         id = integer_or_string(card, 1, 'ID')
         label = string(card, 2, 'label')
         independent_labels = []
@@ -403,6 +433,16 @@ class AELIST(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AELIST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         elements = fields(integer_or_string, card, 'eid', i=2, j=len(card))
         return AELIST(sid, elements, comment=comment)
@@ -479,6 +519,16 @@ class AEPARM(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AEPARM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         aeparm_id = integer(card, 1, 'aeparm_id')
         label = string(card, 2, 'label')
         units = card.field(3)
@@ -556,6 +606,16 @@ class AESTAT(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AESTAT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         aestat_id = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
         assert len(card) <= 3, 'len(AESTAT card) = %i\ncard=%s' % (len(card), card)
@@ -704,6 +764,16 @@ class AESURF(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AESURF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         aesid = integer(card, 1, 'aesid')
         label = string(card, 2, 'label')
 
@@ -924,6 +994,16 @@ class AESURFS(BaseCard):  # not integrated
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AESURFS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         aesid = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
         list1 = integer(card, 4, 'list1')
@@ -1098,6 +1178,16 @@ class AERO(Aero):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AERO card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         acsid = integer_or_blank(card, 1, 'acsid', 0)
         velocity = double_or_blank(card, 2, 'velocity')
         cref = double(card, 3, 'cRef')
@@ -1290,6 +1380,16 @@ class AEROS(Aero):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an AEROS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         acsid = integer_or_blank(card, 1, 'acsid', 0)
         rcsid = integer_or_blank(card, 2, 'rcsid', 0)
         cref = double(card, 3, 'cRef')
@@ -1414,6 +1514,16 @@ class CSSCHD(Aero):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CSSCHD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         aesid = integer(card, 2, 'aesid')             # AESURF
         lalpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
@@ -1709,6 +1819,16 @@ class CAERO1(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CAERO1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         cp = integer_or_blank(card, 3, 'cp', 0)
@@ -2236,6 +2356,16 @@ class CAERO2(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CAERO2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         cp = integer_or_blank(card, 3, 'cp', 0)
@@ -2605,6 +2735,16 @@ class CAERO3(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CAERO3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         cp = integer_or_blank(card, 3, 'cp', 0)
@@ -2874,6 +3014,16 @@ class CAERO4(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CAERO4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         cp = integer_or_blank(card, 3, 'cp', 0)
@@ -3037,6 +3187,16 @@ class CAERO5(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CAERO5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         cp = integer_or_blank(card, 3, 'cp', 0)
@@ -3346,6 +3506,16 @@ class PAERO5(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PAERO5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'property_id')
         nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
         lalpha = integer_or_blank(card, 3, 'lalpha', default=0)
@@ -3485,6 +3655,16 @@ class DIVERG(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DIVERG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nroots = integer(card, 2, 'nroot')
         j = 1
@@ -3590,6 +3770,16 @@ class FLFACT(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an FLFACT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
         field3 = double_string_or_blank(card, 3, 'THRU')
@@ -3746,6 +3936,16 @@ class FLUTTER(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FLUTTER card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         method = string(card, 2, 'method (K, KE, PKS, PKNLS, PKNL, PK)')
         density_id = integer(card, 3, 'density')
@@ -3936,6 +4136,16 @@ class GUST(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a GUST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         dload = integer(card, 2, 'dload')
         wg = double(card, 3, 'wg')
@@ -4001,6 +4211,16 @@ class MKAERO1(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an MKAERO1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         list_fields = [interpret_value(field) for field in card[1:]]
         nfields = len(list_fields) - 8
         machs = []
@@ -4130,6 +4350,16 @@ class MKAERO2(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an MKAERO2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         list_fields = card.fields(1)
         nfields = len(list_fields)
         machs = []
@@ -4460,6 +4690,16 @@ class PAERO1(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PAERO1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         Bi = [interpret_value(field) for field in card[2:]]
         Bi2 = []
@@ -4616,6 +4856,16 @@ class PAERO2(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PAERO2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         orient = string(card, 2, 'orient')
         width = double(card, 3, 'width')
@@ -4768,6 +5018,16 @@ class PAERO3(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PAERO3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         nbox = integer(card, 2, 'nbox')
         ncontrol_surfaces = integer(card, 3, 'ncontrol_surfaces')
@@ -4886,6 +5146,16 @@ class PAERO4(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PAERO4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         cla = integer_or_blank(card, 2, 'cla', 0)
         lcla = integer_or_blank(card, 3, 'lcla', 0) # ???
@@ -4990,6 +5260,16 @@ class SPLINE1(Spline):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPLINE1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
         box1 = integer(card, 3, 'box1')
@@ -5165,6 +5445,16 @@ class SPLINE2(Spline):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPLINE2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
         id1 = integer(card, 3, 'id1')
@@ -5338,6 +5628,16 @@ class SPLINE3(Spline):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPLINE3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
         box_id = integer(card, 3, 'box_id')
@@ -5460,6 +5760,16 @@ class SPLINE4(Spline):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPLINE4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
         aelist = integer(card, 3, 'aelist')
@@ -5620,6 +5930,16 @@ class SPLINE5(Spline):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPLINE5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
         aelist = integer(card, 3, 'aelist')
@@ -6034,6 +6354,16 @@ class TRIM(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TRIM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         mach = double(card, 2, 'mach')
         q = double(card, 3, 'q')

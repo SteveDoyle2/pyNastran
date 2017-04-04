@@ -303,6 +303,16 @@ class GRAV(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a GRAV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         scale = double(card, 3, 'scale')
@@ -459,6 +469,16 @@ class ACCEL(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ACCEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         N = array([double_or_blank(card, 3, 'N1', 0.0),
@@ -584,6 +604,16 @@ class ACCEL1(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ACCEL1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         scale = double(card, 3, 'scale')
@@ -831,6 +861,16 @@ class FORCE(Force):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FORCE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -948,6 +988,16 @@ class FORCE1(Force):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FORCE1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1081,6 +1131,16 @@ class FORCE2(Force):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FORCE2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1295,6 +1355,16 @@ class MOMENT(Moment):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MOMENT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -1421,6 +1491,16 @@ class MOMENT1(Moment):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MOMENT1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1555,6 +1635,16 @@ class MOMENT2(Moment):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MOMENT2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1711,6 +1801,16 @@ class GMLOAD(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a GMLOAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         normal = array([
@@ -1817,6 +1917,16 @@ class PLOAD(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         p = double(card, 2, 'p')
         nodes = [integer(card, 3, 'n1'),
@@ -1892,6 +2002,16 @@ class PLOAD1(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOAD1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         Type = string(card, 3, 'Type ("%s")' % '",  "'.join(cls.valid_types))
@@ -2135,6 +2255,16 @@ class PLOAD2(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOAD2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'p')
 
@@ -2296,6 +2426,16 @@ class PLOAD4(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOAD4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         p1 = double_or_blank(card, 3, 'p1', 0.0)
@@ -2593,6 +2733,16 @@ class PLOADX1(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOADX1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         pa = double(card, 3, 'pa')

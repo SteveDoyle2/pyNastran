@@ -107,7 +107,7 @@ def get_min_index(data, axis=1):
     return data[i[:], k], i
 
 
-def integrate_line(x, y):
+def integrate_unit_line(x, y):
     """
     Integrates a line of length 1.0
 
@@ -165,7 +165,7 @@ def build_spline(x, y):
         return splrep(x, y)
 
 
-def integrate_positive_line(x, y, minValue=0.):
+def integrate_positive_unit_line(x, y, min_value=0.):
     """
     Integrates a line of length 1.0
 
@@ -175,8 +175,13 @@ def integrate_positive_line(x, y, minValue=0.):
         the independent variable
     y : List[float]
         the dependent variable
+    min_value : float; default=0.0
+        ???
 
-    :returns integrated_value: the area under the curve
+    Returns
+    -------
+    integrated_value : float
+        the area under the curve
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -184,7 +189,7 @@ def integrate_positive_line(x, y, minValue=0.):
         assert len(x) == len(y), 'x=%s y=%s' % (x, y)
         # now integrate the area
         eval_posit_spline = lambda x, spl, min_val: max(splev([x], spl), min_val)
-        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), minValue))
+        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), min_value))
     except:
         raise RuntimeError('spline Error x=%s y=%s' % (x, y))
     return out[0]

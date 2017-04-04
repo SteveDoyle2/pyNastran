@@ -50,15 +50,16 @@ class PARAM(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Creates a PARAM card.
+        Adds a PARAM card from ``BDF.add_card(...)``
 
         Parameters
         ----------
-        card : BDFCard(); default=None
-            BDFCard object
+        card : BDFCard()
+            a BDFCard object
         comment : str; default=''
             a comment for the card
         """
+
         key = string(card, 1, 'key')
 
         n = 1
