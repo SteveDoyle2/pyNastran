@@ -169,6 +169,9 @@ class CMASS1(PointMassElement):
         c = (p1 + p2) / f
         return c
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     @property
     def node_ids(self):
         g1 = self.G1()
@@ -303,6 +306,9 @@ class CMASS2(PointMassElement):
         assert f > 0., str(self)
         c = (p1 + p2) / f
         return c
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def cross_reference(self, model):
         """
@@ -1000,6 +1006,9 @@ class CONM2(PointMassElement):
             # the actual position of the CONM2
             X2 = self.nid.get_position() + dx
         return X2
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def cross_reference(self, model):
         """

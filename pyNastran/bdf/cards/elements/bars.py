@@ -534,6 +534,9 @@ class CBAR(LineElement):
     def Centroid(self):
         return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     @classmethod
     def _init_x_g0(cls, card, eid):
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
@@ -609,16 +612,23 @@ class CBAR(LineElement):
             return list(self.x)
 
     def get_orientation_vector(self, xyz):
+        """
+        Element offsets are defined in a Cartesian system located at the
+        connecting grid point. The components of the offsets are always
+        defined in units of translation, even if the displacement
+        coordinate system is cylindrical or spherical.
+
+        For example, in Figure 11-11, the grid point displacement
+        coordinate system is cylindrical, and the offset vector is
+        defined using Cartesian coordinates u1, u2, and u3 in units of
+        translation.
+        """
         if self.g0:
             v = xyz[self.g0] - xyz[self.Ga()]
         else:
             v = self.x
         assert self.offt == 'GGG', self.offt
         return v
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):

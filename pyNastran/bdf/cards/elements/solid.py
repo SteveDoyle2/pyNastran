@@ -175,6 +175,9 @@ class SolidElement(Element):
         list_fields = [self.type, self.eid, self.Pid()] + self.node_ids
         return list_fields
 
+    def center_of_mass(self):
+        return self.Centroid()
+
 class CHEXA(object):
     def __init__(self, eid, pid, nids, comment=''):
         if len(nids) == 8:

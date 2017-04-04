@@ -279,6 +279,9 @@ class TriShell(ShellElement):
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
@@ -925,6 +928,9 @@ class CTRIA6(TriShell):
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def flipNormal(self):
         r"""
         Flips normal of element.
@@ -1251,6 +1257,9 @@ class QuadShell(ShellElement):
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def get_area(self):
         return self.Area()
 
@@ -1460,6 +1469,9 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def _verify(self, xref=True):
         eid = self.eid

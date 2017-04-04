@@ -148,6 +148,9 @@ class CROD(RodElement):
     def Centroid(self):
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def Mid(self):
         if isinstance(self.pid, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
@@ -328,6 +331,9 @@ class CTUBE(RodElement):
     def Centroid(self):
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def raw_fields(self):
         list_fields = ['CTUBE', self.eid, self.Pid()] + self.node_ids
         return list_fields
@@ -460,6 +466,9 @@ class CONROD(RodElement):
 
     def Centroid(self):
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def Mid(self):
         if isinstance(self.mid, integer_types):

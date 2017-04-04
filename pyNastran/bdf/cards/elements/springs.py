@@ -29,6 +29,9 @@ class SpringElement(Element):
         p = (self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position()) / 2.
         return p
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def Mass(self):
         return 0.0
 
