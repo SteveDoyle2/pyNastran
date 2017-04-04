@@ -1,0 +1,54 @@
+$ASSIGN MASTER='S:\beam_ra.MASTER', DELETE
+$ASSIGN DBALL='S:\beam_ra.DBALL', DELETE
+$*
+SOL 101
+$
+$INCLUDE 'pchdispa.alt'
+$*
+CEND
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*  CASE CONTROL        
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+TITLE    = Simple Beam Example
+SUBTITLE = Modes
+ECHO     = SORT  
+$*
+$* GLOBAL CASE
+$*
+SPC = 1 
+ELFOR(PLOT,PRINT)=ALL
+STRESS(PLOT,PRINT)=ALL
+LOAD = 1
+DISP(PLOT,PRINT) = ALL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*  BULK DATA           
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+BEGIN BULK
+$*
+$*  PARAM CARDS
+$*
+PARAM   AUTOSPC YES 
+PARAM   GRDPNT         0
+PARAM   K6ROT   100.0000
+PARAM   OUGCORD GLOBAL
+PARAM   POST          -2
+PARAM   POSTEXT YES 
+$*
+EIGRL          1                      10                             MAX
+$*
+INCLUDE 'cbarao_cbeam.blk'
+$*
+$*  RESTRAINT CARDS
+$*
+SPC            1       1  123456     0.0
+FORCE	1	11	0	1.	1.	0.	0.
+$*
+ENDDATA
