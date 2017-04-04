@@ -823,7 +823,7 @@ class RFORCE(Load):
                       idrf, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         sid, nid, cid, a, r1, r2, r3, method, racc, mb = data
         scale = 1.0
         return RFORCE(sid, nid, cid, scale, r1, r2, r3, method=method, racc=racc, mb=mb,

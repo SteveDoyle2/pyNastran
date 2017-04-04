@@ -642,13 +642,13 @@ class QHBDY(ThermalLoad):
     """
     type = 'QHBDY'
     flag_to_nnodes = {
-        'POINT' : 1,
-        'LINE' : 2,
-        'REV' : 2,
-        'AREA3' : 3,
-        'AREA4' : 4,
-        'AREA6' : 6,
-        'AREA8' : 8,
+        'POINT' : (1, 1),
+        'LINE' : (2, 2),
+        'REV' : (2, 2),
+        'AREA3' : (3, 3),
+        'AREA4' : (4, 4),
+        'AREA6' : (4, 6), # 4-6
+        'AREA8' : (5, 8), # 5-8
     }
 
     def __init__(self, sid, flag, q0, grids, af=None, comment=''):
@@ -692,12 +692,23 @@ class QHBDY(ThermalLoad):
 
         q0 = double(card, 3, 'q0')
         af = double_or_blank(card, 4, 'af')
-        nnodes = cls.flag_to_nnodes[flag]
+        nnodes_required, nnodes_max = cls.flag_to_nnodes[flag]
 
         grids = []
-        for i in range(nnodes):
-            grid = integer(card, 5 + i, 'grid%i' % (i + 1))
-            grids.append(grid)
+        if nnodes_required == nnodes_max:
+            for i in range(nnodes_required):
+                grid = integer(card, 5 + i, 'grid%i' % (i + 1))
+                grids.append(grid)
+        else:
+            int_node_count = 0
+            for i in range(nnodes_max):
+                grid = integer_or_blank(card, 5 + i, 'grid%i' % (i + 1))
+                if grid is not None:
+                    int_node_count += 1
+                grids.append(grid)
+            if int_node_count < nnodes_required:
+                msg = 'int_node_count=%s nnodes_required=%s' % (int_node_count, nnodes_required)
+                raise RuntimeError(msg)
         return QHBDY(sid, flag, q0, grids, af=af, comment=comment)
 
     @classmethod

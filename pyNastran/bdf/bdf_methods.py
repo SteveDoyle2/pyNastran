@@ -886,7 +886,7 @@ class BDFMethods(BDFAttributes):
                     centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
                     area = 0.5 * norm(cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
                     if prop.type == 'PSHELL':
-                        T1, T2, T3 = elem.T1, elem.T2, elem.T3
+                        #T1, T2, T3 = elem.T1, elem.T2, elem.T3
                         tflag = elem.tflag
                         if tflag == 0:
                             # absolute
@@ -931,7 +931,7 @@ class BDFMethods(BDFAttributes):
                     area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
 
                     if prop.type == 'PSHELL':
-                        T1, T2, T3, T4 = elem.T1, elem.T2, elem.T3, elem.T4
+                        #T1, T2, T3, T4 = elem.T1, elem.T2, elem.T3, elem.T4
                         tflag = elem.tflag
                         if tflag == 0:
                             # absolute
