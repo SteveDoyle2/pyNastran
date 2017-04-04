@@ -93,6 +93,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             m1 = self.data[itime, :, 3]
             m2 = self.data[itime, :, 4]
             m3 = self.data[itime, :, 5]
+            source = ''
             for f1i, f2i, f3i, m1i, m2i, m3i in zip(f1, f2, f3, m1, m2, m3):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
                 vals2 = write_floats_13e(vals)
@@ -132,6 +133,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             m1 = self.data[itime, :, 3]
             m2 = self.data[itime, :, 4]
             m3 = self.data[itime, :, 5]
+            source = ''
             for f1i, f2i, f3i, m1i, m2i, m3i in zip(f1, f2, f3, m1, m2, m3):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
                 vals2 = write_floats_13e(vals)
@@ -139,7 +141,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                 f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         '%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         node_id, eid, source, dxr, dyr, dzr, rxr, ryr, rzr,
-                        '', '', '',           dxi, dyi, dzi, rxi, ryi, rzi))
+                        '', '', '', '',       dxi, dyi, dzi, rxi, ryi, rzi))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num-1

@@ -1,7 +1,7 @@
 $ASSIGN MASTER='S:\beam_ra.MASTER', DELETE
 $ASSIGN DBALL='S:\beam_ra.DBALL', DELETE
 $*
-SOL SEMODES
+SOL 101
 $
 $INCLUDE 'pchdispa.alt'
 $*
@@ -20,12 +20,10 @@ $*
 $* GLOBAL CASE
 $*
 SPC = 1 
-ELFOR(PUNCH)=ALL
-STRESS(PUNCH)=ALL
-METHOD = 1
-DISP = ALL
-OUTPUT(XYPLOT)
-XYPRINT DISP / 1(T2), 2(T2), 3(T2), 4(T2) 
+ELFOR(PLOT,PRINT)=ALL
+STRESS(PLOT,PRINT)=ALL
+LOAD = 1
+DISP(PLOT,PRINT) = ALL
 $*
 $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $*
@@ -46,14 +44,11 @@ PARAM   POSTEXT YES
 $*
 EIGRL          1                      10                             MAX
 $*
-INCLUDE 'cbar_cbeam.blk'
+INCLUDE 'cbarao_cbeam.blk'
 $*
 $*  RESTRAINT CARDS
 $*
 SPC            1       1  123456     0.0
-$*
-$*  USET, U2 CARDS
-$*
-USET    U2             1     123
+FORCE	1	11	0	1.	1.	0.	0.
 $*
 ENDDATA

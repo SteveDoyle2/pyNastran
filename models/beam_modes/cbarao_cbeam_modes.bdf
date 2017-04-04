@@ -46,7 +46,7 @@ PARAM   POSTEXT YES
 $*
 EIGRL          1                      10                             MAX
 $*
-INCLUDE 'cbar_cbeam.blk'
+INCLUDE 'cbarao_cbeam.blk'
 $*
 $*  RESTRAINT CARDS
 $*
