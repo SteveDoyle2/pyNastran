@@ -384,6 +384,8 @@ class DDVAL(OptConstraint):
     def __init__(self, oid, ddvals, comment=''):
         if comment:
             self.comment = comment
+        if isinstance(ddvals, float):
+            ddvals = [ddvals]
         self.oid = oid
         self.ddvals = ddvals
 

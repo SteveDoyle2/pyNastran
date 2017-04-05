@@ -173,18 +173,58 @@ class CFAST(Element):
 
 
 class CGAP(Element):
+    """
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    |  1   |  2  |  3  |  4  |  5  |  6  |  7  |   8  |  9  |
+    +======+=====+=====+=====+=====+=====+=====+======+=====+
+    | CGAP | EID | PID | GA  | GB  | X1  | X2  |  X3  | CID |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    | CGAP | 17  |  2  | 110 | 112 | 5.2 | 0.3 | -6.1 |     |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+
+    or
+
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    |  1   |  2  |  3  |  4  |  5  |  6  |  7  |   8  |  9  |
+    +======+=====+=====+=====+=====+=====+=====+======+=====+
+    | CGAP | EID | PID | GA  | GB  | GO  |     |      | CID |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    | CGAP | 17  |  2  | 110 | 112 | 13  |     |      |     |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    """
     type = 'CGAP'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
     }
 
-    def __init__(self, eid, pid, ga, gb, x, g0, cid, comment=''):
+    def __init__(self, eid, ga, gb, x, g0, pid=None, cid=None, comment=''):
         """
-        # .. todo:: not done...
+        Creates a CGAP card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        ga, gb : int
+            Connected grid points at ends A and B
+        x : List[float, float, float]
+            Components of the orientation vector,
+            from GA, in the displacement coordinate system at GA
+        g0 : int
+            GO Alternate method to supply the orientation vector using
+            grid point GO. Direction of is from GA to GO
+        pid : int; default=eid
+            Property ID (PGAP)
+        cid : int; default=None
+            Element coordinate system identification number.
+            CID must be specified if GA and GB are coincident
+            (distance from GA to GB < 10^-4)
         """
         Element.__init__(self)
         if comment:
             self.comment = comment
+        if pid is None:
+            pid = eid
         self.eid = eid
         self.pid = pid
         self.ga = ga
@@ -227,7 +267,7 @@ class CGAP(Element):
             x = [None, None, None]
             cid = None
         assert len(card) <= 9, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
-        return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
+        return CGAP(eid, ga, gb, x, g0, pid=pid, cid=cid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -561,6 +601,12 @@ class PLOTEL(BaseCard):
     """
     Defines a 1D dummy element used for plotting.
 
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
     +--------+-----+-----+-----+
     |   1    |  2  |  3  |  4  |
     +========+=====+=====+=====+
@@ -573,6 +619,16 @@ class PLOTEL(BaseCard):
     }
 
     def __init__(self, eid, nodes, comment=''):
+        """
+        Adds a PLOTEL card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : List[int, int]
+            Unique GRID point IDs
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment

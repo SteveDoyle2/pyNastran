@@ -77,8 +77,6 @@ class CMASS1(PointMassElement):
             element id
         pid : int
             property id (PMASS)
-        #nids : List[int, int]
-            #node ids
         g1 : int
             node id
         g2 : int; default=None
@@ -261,6 +259,24 @@ class CMASS2(PointMassElement):
     }
 
     def __init__(self, eid, mass, g1, c1, g2, c2, comment=''):
+        """
+        Creates a CMASS2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mass : float
+            mass
+        g1 : int
+            node id
+        g2 : int; default=None
+            node id
+        c1 / c2 : int; default=None
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         PointMassElement.__init__(self)
         if comment:
             self.comment = comment
@@ -437,6 +453,8 @@ class CMASS3(PointMassElement):
     Defines a scalar mass element that is connected only to scalar points.
 
     +--------+-----+-----+----+----+
+    |   1    |  2  |   3 |  4 |  5 |
+    +========+=====+=====+====+====+
     | CMASS3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
     """
@@ -446,6 +464,22 @@ class CMASS3(PointMassElement):
     }
 
     def __init__(self, eid, pid, s1, s2, comment=''):
+        """
+        Creates a CMASS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PMASS)
+        s1 : int
+            SPOINT id
+        s2 : int
+            SPOINT id
+        comment : str; default=''
+            a comment for the card
+        """
         PointMassElement.__init__(self)
         if comment:
             self.comment = comment
@@ -544,6 +578,8 @@ class CMASS4(PointMassElement):
     without reference to a property entry
 
     +--------+-----+-----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |
+    +========+=====+=====+====+====+
     | CMASS4 | EID |  M  | S1 | S2 |
     +--------+-----+-----+----+----+
     """
@@ -553,6 +589,22 @@ class CMASS4(PointMassElement):
     }
 
     def __init__(self, eid, mass, s1, s2=0, comment=''):
+        """
+        Creates a CMASS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mass : float
+            SPOINT mass
+        s1 : int
+            SPOINT id
+        s2 : int; default=0
+            SPOINT id
+        comment : str; default=''
+            a comment for the card
+        """
         PointMassElement.__init__(self)
         if comment:
             self.comment = comment

@@ -443,16 +443,46 @@ class DESVAR(OptConstraint):
 
 
 class DDVAL(OptConstraint):
+    """
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    |   1   |  2  |   3   |   4   |   5   |   6   |   7   |   8   |   9   |
+    +=======+=====+=======+=======+=======+=======+=======+=======+=======+
+    | DDVAL | ID  | DVAL1 | DVAL2 | DVAL3 | DVAL4 | DVAL5 | DVAL6 | DVAL7 |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    | DDVAL | ID  | DVAL1 | THRU  | DVAL2 | BY    |  INC  |       |       |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    | DDVAL | 110 |  0.1  |  0.2  |  0.3  |  0.5  |  0.6  |  0.4  |       |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    |       | .7  | THRU  |  1.0  |  BY   | 0.05  |       |       |       |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    |       | 1.5 |  2.0  |       |       |       |       |       |       |
+    +-------+-----+-------+-------+-------+-------+-------+-------+-------+
+    """
     type = 'DDVAL'
 
     def __init__(self, oid, ddvals, comment=''):
         if comment:
             self.comment = comment
+        if isinstance(ddvals, float):
+            ddvals = [ddvals]
+        else:
+            ddvals = expand_thru_by(ddvals)
+            ddvals.sort()
         self.oid = oid
         self.ddvals = ddvals
 
     def validate(self):
-        pass
+        if not isinstance(self.ddvals, list):
+            raise TypeError('ddvals=%s must be a list' % self.ddvals)
+
+        msg = ''
+        for iddval, ddval in enumerate(self.ddvals):
+            if not isinstance(ddval, float):
+                msg += 'ddval[%i]=%s is not a float; type=%s\n' % (iddval, ddval, type(ddval))
+        if msg:
+            raise TypeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -473,8 +503,6 @@ class DDVAL(OptConstraint):
             ddval = double_string_or_blank(card, i, 'DDVAL%s' % n)
             if ddval is not None:
                 ddvals.append(ddval)
-        ddvals = expand_thru_by(ddvals)
-        ddvals.sort()
         return DDVAL(oid, ddvals, comment=comment)
 
     def raw_fields(self):

@@ -264,6 +264,16 @@ class AddCards(AddMethods):
         return param
 
     def add_plotel(self, eid, nodes, comment=''):
+        """
+        Adds a PLOTEL card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : List[int, int]
+            Unique GRID point IDs
+        """
         elem = PLOTEL(eid, nodes, comment=comment)
         self._add_plotel_object(elem)
         return elem
@@ -566,8 +576,30 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cgap(self, eid, pid, ga, gb, x, g0, cid, comment=''):
-        elem = CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
+    def add_cgap(self, eid, ga, gb, x, g0, pid=None, cid=None, comment=''):
+        """
+        Creates a CGAP card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        ga, gb : int
+            Connected grid points at ends A and B
+        x : List[float, float, float]
+            Components of the orientation vector,
+            from GA, in the displacement coordinate system at GA
+        g0 : int
+            GO Alternate method to supply the orientation vector using
+            grid point GO. Direction of is from GA to GO
+        pid : int; default=eid
+            Property ID (PGAP)
+        cid : int; default=None
+            Element coordinate system identification number.
+            CID must be specified if GA and GB are coincident
+            (distance from GA to GB < 10^-4)
+        """
+        elem = CGAP(eid, pid, ga, gb, x, g0, pid=pid, cid=cid, comment=comment)
         self._add_element_object(elem)
         return elem
 
