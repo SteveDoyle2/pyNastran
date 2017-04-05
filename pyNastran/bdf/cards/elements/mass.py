@@ -56,6 +56,8 @@ class CMASS1(PointMassElement):
     Defines a scalar mass element.
 
     +--------+-----+-----+----+----+----+----+
+    |   1    |  2  |  3  |  4 |  5 |  6 |  7 |
+    +========+=====+=====+====+====+====+====+
     | CMASS1 | EID | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
@@ -64,7 +66,28 @@ class CMASS1(PointMassElement):
         1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
     }
 
-    def __init__(self, eid, pid, g1, c1, g2, c2, comment=''):
+    def __init__(self, eid, pid, g1, c1=None, g2=None, c2=None, comment=''):
+    #def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):  CELAS1
+        """
+        Creates a CMASS1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PMASS)
+        #nids : List[int, int]
+            #node ids
+        g1 : int
+            node id
+        g2 : int; default=None
+            node id
+        c1 / c2 : int; default=None
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         PointMassElement.__init__(self)
         if comment:
             self.comment = comment

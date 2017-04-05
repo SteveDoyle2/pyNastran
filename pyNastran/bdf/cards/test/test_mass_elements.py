@@ -19,8 +19,21 @@ class TestMassElements(unittest.TestCase):
     """
     The cards tested are:
      * CMASS1
-     * DDVAL
     """
+    def test_conm1(self):
+        model = BDF(debug=False)
+        mass_matrix = np.zeros((6,6), dtype='float32')
+        mass_matrix[0,0] = mass_matrix[1,1] = mass_matrix[2,2] = mass
+        nid = 42
+        eid = 10
+        conm1 = model.add_conm1(eid, nid, mass_matrix, cid=0, comment='conm1')
+        conm1.write_card(size=8)
+        conm1.write_card(size=16)
+        conm1.write_card(size=16, is_double=True)
+        conm1.raw_fields()
+
+        model.validate()
+
     def test_cmass1(self):
         """tests a CMASS1, DDVAL"""
         model = BDF(debug=False)
@@ -32,6 +45,10 @@ class TestMassElements(unittest.TestCase):
         g2 = 2
         c2 = 4
         cmass1 = model.add_cmass1(eid, pid, g1, c1, g2, c2, comment='cmass1')
+        cmass1.write_card(size=8)
+        cmass1.write_card(size=16)
+        cmass1.write_card(size=16, is_double=True)
+        cmass1.raw_fields()
 
         oid = 3
         ddvals = [1]
