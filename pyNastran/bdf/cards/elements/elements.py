@@ -219,6 +219,8 @@ class CGAP(Element):
             Element coordinate system identification number.
             CID must be specified if GA and GB are coincident
             (distance from GA to GB < 10^-4)
+        comment : str; default=''
+            a comment for the card
         """
         Element.__init__(self)
         if comment:

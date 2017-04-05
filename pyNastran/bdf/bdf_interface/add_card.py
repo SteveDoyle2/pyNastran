@@ -598,8 +598,10 @@ class AddCards(AddMethods):
             Element coordinate system identification number.
             CID must be specified if GA and GB are coincident
             (distance from GA to GB < 10^-4)
+        comment : str; default=''
+            a comment for the card
         """
-        elem = CGAP(eid, pid, ga, gb, x, g0, pid=pid, cid=cid, comment=comment)
+        elem = CGAP(eid, ga, gb, x, g0, pid=pid, cid=cid, comment=comment)
         self._add_element_object(elem)
         return elem
 
