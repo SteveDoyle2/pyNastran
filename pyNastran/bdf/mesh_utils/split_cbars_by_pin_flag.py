@@ -206,6 +206,7 @@ def split_cbars_by_pin_flag(bdf_filename,
             56 : 4,
             456 : 5,
             16 : 6,
+            1456 : 7,
         }
         with open(pin_flags_filename, 'w') as pin_flags_file:
             pin_flags_file.write('# Eid(%i), flag(%i)\n')
