@@ -271,7 +271,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         being closed.
         """
         settings = QtCore.QSettings()
-        settings.setValue("main_WindowGeometry", self.saveGeometry())
+        settings.setValue("mainWindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
         settings.setValue("backgroundColor", self.background_color)
         settings.setValue("textColor", self.text_color)

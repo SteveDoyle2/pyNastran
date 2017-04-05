@@ -69,7 +69,7 @@ def make_release_map(model, bar_beam_eids, debug=False):  # pragma: no cover
         #print('bar_beam_eids = %s' % bar_beam_eids)
         for eid in bar_beam_eids:
             if eid not in self.eid_map:
-                self.log.error('eid=%s is not a valid bar/beam element...' % eid)
+                model.log.error('eid=%s is not a valid bar/beam element...' % eid)
                 if debug:
                     print('eid=%s is not a valid bar/beam element...' % eid)
                 continue
@@ -100,7 +100,7 @@ def make_release_map(model, bar_beam_eids, debug=False):  # pragma: no cover
             node2 = model.nodes[nid2]
             n1 = node1.get_position()
             n2 = node2.get_position()
-            centroid = (n1 + n2) / 2.
+            #centroid = (n1 + n2) / 2.
             i = n2 - n1
             Li = np.linalg.norm(i)
             ihat = i / Li
@@ -172,15 +172,18 @@ def split_cbars_by_pin_flag(bdf_filename,
             ga = elem.ga
             gb = elem.gb
             pid = elem.pid
-
             x = elem.x
             g0 = elem.g0
             offt = elem.offt
+            wa = elem.wa
+            wb = elem.wb
+            wc = (wa + wb) / 2.
+
             del model.elements[eid]
             model.add_cbar(eid, pid, ga, nid_new, x, g0, offt=offt, pa=0, pb=0,
-                           wa=None, wb=None, comment='')
+                           wa=wa, wb=wc, comment='')
             model.add_cbar(eid_new, pid, nid_new, gb, x, g0, offt=offt, pa=0, pb=0,
-                           wa=None, wb=None, comment='')
+                           wa=wc, wb=wb, comment='')
             pin_flag_map[eid] = pa
             pin_flag_map[eid_new] = pb
             nid_new += 1
@@ -188,7 +191,6 @@ def split_cbars_by_pin_flag(bdf_filename,
         elif elem.type in ['CELAS1', 'CQUAD4']:
             pin_flag_map[eid] = 0
             #eid_new += 1
-            pass
         else:
             raise RuntimeError(elem.type)
     if bdf_filename_out is not None:
@@ -222,7 +224,7 @@ def main():  # pragma: no cover
     bdf_filename_out = 'split_newgeom_fatigue.bdf'
 
     pin_flags_filename = 'pin_flags.csv'
-    bar_split(bdf_filename, pin_flags_filename, bdf_filename_out=bdf_filename_out)
+    split_cbars_by_pin_flag(bdf_filename, pin_flags_filename, bdf_filename_out=bdf_filename_out)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

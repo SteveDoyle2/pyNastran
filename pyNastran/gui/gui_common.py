@@ -295,8 +295,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._build_menubar()
         #self._hide_menubar()
 
-        # right sidebar
-        self.res_dock.hide()
         if self.run_vtk:
             self.build_vtk_frame()
 
@@ -3169,14 +3167,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #nice_blue = (0.1, 0.2, 0.4)
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
+
         if PY2 and qt_version == 4:
             self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-
-        #self.reset_settings = False
-        if self.reset_settings or qt_version in [5, 'pyside']:
-            self._reset_settings()
+        elif qt_version == 5:  # tested on PY2
+            self.restoreGeometry(settings.value("mainWindowGeometry"))
         else:
-            self._reapply_settings(settings)
+            raise NotImplementedError('PY2=%s PY3=%s qt_version=%s' % (PY2, PY3, qt_version))
+
+        self.reset_settings = False
+        #if self.reset_settings or qt_version in [5, 'pyside']:
+            #self._reset_settings()
+        #else:
+        self._reapply_settings(settings)
 
         self.init_ui()
         if self.reset_settings:
@@ -3192,7 +3195,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _reset_settings(self):
         """helper method for ``setup_gui``"""
-        white = (1.0, 1.0, 1.0)
+        #white = (1.0, 1.0, 1.0)
         black = (0.0, 0.0, 0.0)
         #red = (1.0, 0.0, 0.0)
         grey = (119/255., 136/255., 153/255.)
@@ -3200,12 +3203,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         self.background_color = grey
         self.label_color = black
-        self.text_color = white
+        self.text_color = black
         self.resize(1100, 700)
 
     def _reapply_settings(self, settings):
         """helper method for ``setup_gui``"""
-        white = (1.0, 1.0, 1.0)
+        #white = (1.0, 1.0, 1.0)
         black = (0.0, 0.0, 0.0)
         #red = (1.0, 0.0, 0.0)
         grey = (119/255., 136/255., 153/255.)
@@ -3223,9 +3226,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.label_color = black
 
         try:
-            self.text_color = settings.value("textColor", white).toPyObject()
+            self.text_color = settings.value("textColor", black).toPyObject()
         except (TypeError, AttributeError):
-            self.text_color = white
+            self.text_color = black
 
         try:
             screen_shape = settings.value("screen_shape", screen_shape_default).toPyObject()
