@@ -108,6 +108,16 @@ class CELAS1(SpringElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CELAS1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -267,6 +277,16 @@ class CELAS2(SpringElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CELAS2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         k = data[1]
         nids = [data[2], data[3]]
@@ -408,6 +428,16 @@ class CELAS3(SpringElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CELAS3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         s1 = data[2]
@@ -521,6 +551,16 @@ class CELAS4(SpringElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CELAS4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         k = data[1]
         s1 = data[2]

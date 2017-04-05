@@ -77,6 +77,16 @@ class PROD(Property):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PROD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         A = data[2]
@@ -213,6 +223,16 @@ class PTUBE(Property):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PTUBE card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         OD1 = data[2]

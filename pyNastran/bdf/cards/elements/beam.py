@@ -190,6 +190,24 @@ class CBEAM(CBAR):
 
     @classmethod
     def add_op2_data(cls, data, f, comment=''):
+        """
+        Adds a CBEAM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        f : int
+            beam flag
+            0 : basic
+                [x1, x2, x3] is used
+            1 : cid
+                [x1, x2, x3] is used
+            2 : grid
+                g0 is used instead of [x1, x2, x3]
+        comment : str; default=''
+            a comment for the card
+        """
         #: .. todo:: verify
         assert len(data) == 2, 'data=%s len(data)=%s' % (data, len(data))
         #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],

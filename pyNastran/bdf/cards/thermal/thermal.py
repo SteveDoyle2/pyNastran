@@ -173,6 +173,16 @@ class CHBDYE(ThermalElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CHBDYE card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid, eid2, side, iviewf, iviewb, radmidf, radmidb = data
         return CHBDYE(eid, eid2, side, iviewf, iviewb,
                       radmidf, radmidb, comment=comment)
@@ -333,6 +343,16 @@ class CHBDYG(ThermalElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CHBDYG card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         Type = data[1]
         i_view_front = data[2]
@@ -538,6 +558,16 @@ class CHBDYP(ThermalElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CHBDYP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
          dislin, ce, e1, e2, e3] = data
         #eid = data[0]
@@ -767,6 +797,16 @@ class PCONV(ThermalProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PCONV card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pconid, mid, form, expf, ftype, tid, chlen, gidin, ce, e1, e2, e3) = data
         return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
                      e1, e2, e3, comment=comment)
@@ -961,6 +1001,16 @@ class PHBDY(ThermalProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PHBDY card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         af = data[1]
         d1 = data[2]
@@ -1061,6 +1111,16 @@ class CONV(ThermalBC):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CONV card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         #data_in = [eid, pconid, flmnd, cntrlnd,
                    #[ta1, ta2, ta3, ta5, ta6, ta7, ta8],
                    #[wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
@@ -1170,6 +1230,16 @@ class CONVM(ThermalBC):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CONVM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (eid, pconvm_id, film_node, cntrlnd, ta1, ta2, mdot) = data
         return CONVM(eid, pconvm_id, ta1, film_node, cntrlnd, ta2, mdot,
                      comment=comment)
@@ -1263,6 +1333,16 @@ class RADM(ThermalBC):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RADM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         radmid, absorb = data[:2]
         emissivity  = data[2:]
         return RADM(radmid, absorb, emissivity, comment=comment)

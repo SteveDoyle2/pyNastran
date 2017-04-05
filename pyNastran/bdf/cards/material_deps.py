@@ -138,6 +138,16 @@ class MATS1(MaterialDependence):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATS1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (mid, tid, Type, h, yf, hr, limit1, limit2) = data
         if Type == 1:
             Type = 'NLELAST'
@@ -289,6 +299,16 @@ class MATT1(MaterialDependence):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATT1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (mid, E_table, G_table, nu_table, rho_table, A_table, dunno_a, ge_table,
          st_table, sc_table, ss_table, dunno_b) = data
 
@@ -631,6 +651,16 @@ class MATT4(MaterialDependence):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATT4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (mid, k_table, cp_table, null, h_table, mu_table, hgen_table) = data
         assert null == 0, data
         return MATT4(mid, k_table, cp_table, h_table, mu_table,
@@ -756,6 +786,16 @@ class MATT5(MaterialDependence):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATT5 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
          cp_table, null, hgen_table) = data
         assert null == 0, data

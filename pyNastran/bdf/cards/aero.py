@@ -539,6 +539,16 @@ class AEPARM(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an AEPARM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         id = data[0]
         label = data[1]
         units = data[2]
@@ -1044,6 +1054,19 @@ class AESURFS(BaseCard):  # not integrated
 class Aero(BaseCard):
     """Base class for AERO and AEROS cards."""
     def __init__(self):
+        """
+        Common class for AERO, AEROS
+
+        Attributes
+        ----------
+        acsid : int; default=0
+            aerodyanmic coordinate system
+            defines the direction of the wind
+        sym_xz : int; default=0
+            xz symmetry flag (+1=symmetry; -1=antisymmetric)
+        sym_xy : int; default=0
+            xy symmetry flag (+1=symmetry; -1=antisymmetric)
+        """
         self.sym_xy = None
         self.sym_xz = None
         self.acsid = None
@@ -1114,6 +1137,7 @@ class AERO(Aero):
             FLFACT density scaling factor
         acsid : int; default=0
             aerodyanmic coordinate system
+            defines the direction of the wind
         sym_xz : int; default=0
             xz symmetry flag (+1=symmetry; -1=antisymmetric)
         sym_xy : int; default=0
@@ -1166,7 +1190,7 @@ class AERO(Aero):
 
     def cross_reference(self, model):
         """
-        Cross refernece aerdynamic coordinate system.
+        Cross refernece aerodynamic coordinate system.
 
         Parameters
         ----------
@@ -1294,10 +1318,15 @@ class AEROS(Aero):
             the aerodynamic chord
         bref : float
             the wing span
+            for a half model, this should be the full span
+            for a full model, this should be the full span
         sref : float
             the wing area
+            for a half model, this should be the half area
+            for a full model, this should be the full area
         acsid : int; default=0
             aerodyanmic coordinate system
+            defines the direction of the wind
         rcsid : int; default=0
             coordinate system for rigid body motions
         sym_xz : int; default=0
@@ -1367,7 +1396,7 @@ class AEROS(Aero):
 
     def cross_reference(self, model):
         """
-        Cross refernece aerdynamic coordinate system.
+        Cross refernece aerodynamic coordinate system.
 
         Parameters
         ----------

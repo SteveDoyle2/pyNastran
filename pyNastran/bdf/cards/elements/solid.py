@@ -351,6 +351,16 @@ class CHEXA8(SolidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CHEXA8 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -608,6 +618,16 @@ class CHEXA20(SolidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CHEXA20 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [d if d > 0 else None for d in data[2:]]
@@ -867,6 +887,16 @@ class CPENTA6(SolidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CPENTA6 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -1249,6 +1279,16 @@ class CPENTA15(SolidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CPENTA15 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [d if d > 0 else None for d in data[2:]]
@@ -1435,6 +1475,16 @@ class CPYRAM5(SolidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CPYRAM5 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [d if d > 0 else None for d in data[2:]]
@@ -1624,6 +1674,16 @@ class CPYRAM13(SolidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CPYRAM13 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [d if d > 0 else None for d in data[2:]]
@@ -1851,6 +1911,16 @@ class CTETRA4(SolidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CTETRA4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -2053,6 +2123,16 @@ class CTETRA10(SolidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CTETRA10 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [d if d > 0 else None for d in data[2:]]

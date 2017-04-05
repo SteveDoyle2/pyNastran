@@ -587,6 +587,16 @@ class PBEAM(IntegratedLineProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PBEAM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pid, mid, nsegs, ccf, x) = data[:5]
 
         rows = data[5:]
@@ -1016,11 +1026,6 @@ class PBEAML(IntegratedLineProperty):
             i += 1
         return PBEAML(pid, mid, group, Type, xxb, so, dims, nsm, comment=comment)
 
-    #def add_op2_data(self, data, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError(data)
-
     def _verify(self, xref=False):
         pid = self.Pid()
         rho = self.Rho()
@@ -1035,6 +1040,16 @@ class PBEAML(IntegratedLineProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PBEAML card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pid, mid, group, Type, fvalues) = data
         group = group.strip()
         Type = Type.strip()

@@ -397,6 +397,16 @@ class CTRIA3(TriShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CTRIA3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:5]
@@ -826,6 +836,16 @@ class CTRIA6(TriShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CTRIA6 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:8]
@@ -1450,6 +1470,16 @@ class CSHEAR(QuadShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CSHEAR card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -1692,6 +1722,16 @@ class CQUAD4(QuadShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CQUAD4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:6]
@@ -2318,6 +2358,16 @@ class CPLSTN6(TriShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CPLSTN6 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:8]
@@ -2502,6 +2552,16 @@ class CPLSTN8(QuadShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CPLSTN8 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         #print "CQUAD8 = ",data
         #(6401,
         #6400,
@@ -2703,6 +2763,16 @@ class CQUADR(QuadShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CQUADR card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:6]
@@ -3259,6 +3329,16 @@ class CQUAD8(QuadShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CQUAD8 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         #print "CQUAD8 = ",data
         #(6401,
         #6400,

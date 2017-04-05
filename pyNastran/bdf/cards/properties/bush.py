@@ -118,6 +118,16 @@ class PBUSH(BushingProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PBUSH card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
          g1, g2, g3, g4, g5, g6, sa, st, ea, et) = data
         k_fields = [k1, k2, k3, k4, k5, k6]

@@ -123,6 +123,16 @@ class RROD(RigidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RROD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         ga = data[1]
         gb = data[2]
@@ -288,6 +298,16 @@ class RBAR(RigidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RBAR card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         ga = data[1]
         gb = data[2]
@@ -428,6 +448,16 @@ class RBAR1(RigidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RBAR1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         ga = data[1]
         gb = data[2]
@@ -784,6 +814,16 @@ class RBE2(RigidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RBE2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         gn = data[1]
         cm = data[2]
@@ -1132,6 +1172,16 @@ class RBE3(RigidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RBE3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha = data
         return RBE3(eid, refgrid, refc, weights, comps, gijs,
                     Gmi=gmi, Cmi=cmi, alpha=alpha, comment=comment)

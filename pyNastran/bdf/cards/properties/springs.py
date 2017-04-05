@@ -97,6 +97,16 @@ class PELAS(SpringProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PELAS card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         k = data[1]
         ge = data[2]
@@ -204,6 +214,16 @@ class PELAST(SpringProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PELAST card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pid, tkid, tgeid, tknid) = data
         return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 

@@ -61,6 +61,16 @@ class NSM(PointProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an NSM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         #sid=9  prop_set=PBEA ID=538976333 value=0.0
         #sid=10 prop_set=PDUM ID=538976312 value=2.80259692865e-45
@@ -108,6 +118,16 @@ class PMASS(PointProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PMASS card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mass = data[1]
         return PMASS(pid, mass, comment=comment)

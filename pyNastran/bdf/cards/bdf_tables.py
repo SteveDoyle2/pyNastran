@@ -834,6 +834,16 @@ class TABLEM4(Table):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABLEM4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         tid = data[0]
         x1 = data[1]
         x2 = data[2]
@@ -899,6 +909,16 @@ class TABLES1(Table):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABLES1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         tid = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
@@ -965,6 +985,16 @@ class TABLEST(Table):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABLEST card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         tid = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
@@ -1044,6 +1074,16 @@ class TABRND1(RandomTable):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABRND1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         tid = data[0]
         xaxis = cls._map_axis(data[1])
         yaxis = cls._map_axis(data[2])

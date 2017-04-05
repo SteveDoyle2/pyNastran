@@ -628,6 +628,16 @@ class NLPARM(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a NLPARM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv, int_out, epsU, epsP,
          epsW, maxDiv, maxQn, maxLs, fStress, lsTol, maxBisect, maxR,
          rTolB) = data
@@ -1043,6 +1053,16 @@ class TSTEPNL(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TSTEPNL card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (sid, ndt, dt, no, method, kstep, max_iter, conv, eps_u, eps_p, eps_w,
          max_div, max_qn, max_ls, fstress, max_bisect,
          adjust, mstep, rb, max_r, utol, rtol_b) = data

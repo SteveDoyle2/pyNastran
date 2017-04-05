@@ -1780,6 +1780,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.vtk_interactor.SetInteractorStyle(self.style)
 
     def on_run_script(self, python_file=False):
+        """pulldown for running a python script"""
         is_failed = True
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
@@ -1792,23 +1793,40 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #python_file = os.path.join(script_path, infile_name)
             python_file = os.path.join(infile_name)
 
-        print('python_file =', python_file)
-        execfile(python_file)
+        if not os.path.exists(python_file):
+            msg = 'python_file = %r does not exist' % python_file
+            self.log_error(msg)
+            return is_failed
+
+        lines = open(python_file).read()
+        try:
+            exec(lines)
+        except Exception as e:
+            #self.log_error(traceback.print_stack(f))
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
+            self.log_error(str(txt))
+            return is_failed
         is_failed = False
         self._default_python_file = python_file
         self.log_command('self.on_run_script(%r)' % python_file)
         return is_failed
 
     def on_show_info(self):
+        """sets a flag for showing/hiding INFO messages"""
         self.show_info = not self.show_info
 
     def on_show_debug(self):
+        """sets a flag for showing/hiding DEBUG messages"""
         self.show_debug = not self.show_debug
 
     def on_show_gui(self):
+        """sets a flag for showing/hiding GUI messages"""
         self.show_gui = not self.show_gui
 
     def on_show_command(self):
+        """sets a flag for showing/hiding COMMAND messages"""
         self.show_command = not self.show_command
 
     def on_reset_camera(self):
@@ -2769,7 +2787,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #menu_items = self._create_menu_items()
                     #self._populate_menu(menu_items)
 
-    def on_load_custom_results(self, out_filename=None):
+    def on_load_custom_results(self, out_filename=None, restype=None):
         """will be a more generalized results reader"""
         is_failed = True
         geometry_format = self.format
@@ -2794,6 +2812,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if not out_filename:
                 return is_failed # user clicked cancel
             iwildcard = fmts.index(wildcard_level)
+        else:
+            fmts = [
+                'node', 'element', 'deflection', 'patran_nod',
+            ]
+            iwildcard = fmts.index(restype.lower())
 
         if out_filename == '':
             return is_failed
@@ -2805,19 +2828,23 @@ class GuiCommon2(QMainWindow, GuiCommon):
         try:
             if iwildcard == 0:
                 self._on_load_nodal_elemental_results('Nodal', out_filename)
+                restype = 'Node'
             elif iwildcard == 1:
                 self._on_load_nodal_elemental_results('Elemental', out_filename)
+                restype = 'Element'
             elif iwildcard == 2:
                 self._load_deflection(out_filename)
+                restype = 'Deflection'
             elif iwildcard == 3:
                 self._load_load_patran_nod(out_filename)
+                restype = 'Patran_nod'
             else:
                 raise NotImplementedError('wildcard_level = %s' % wildcard_level)
         except Exception as e:
             msg = traceback.format_exc()
             self.log_error(msg)
             return is_failed
-        self.log_command("on_load_custom_results(%r)" % out_filename)
+        self.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
         is_failed = False
         return is_failed
 
@@ -2848,7 +2875,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             A[header] = data2[:, i]
             fmt_dict[header] = '%f'
 
-        out_filename_short = os.path.basename(nod_filename)
+        out_filename_short = os.path.relpath(nod_filename)
         result_type = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type,
                                 out_filename_short, update=True)
@@ -2908,7 +2935,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         out_filename : str
             the CSV filename to load
         """
-        out_filename_short = os.path.basename(out_filename)
+        out_filename_short = os.path.relpath(out_filename)
         A, fmt_dict, headers = load_csv(out_filename)
         #nrows, ncols, fmts
         header0 = headers[0]
@@ -3124,6 +3151,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_command("on_load_results(%r)" % out_filenamei)
 
     def setup_gui(self):
+        """
+        Setup the gui
+
+        1.  starts the logging
+        2.  reapplies the settings
+        3.  create pickers
+        4.  create main vtk actors
+        5.  shows the Qt window
+        """
         assert self.fmts != [], 'supported_formats=%s' % self.supported_formats
         self.start_logging()
         settings = QtCore.QSettings()
@@ -3218,6 +3254,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.resize(1100, 700)
 
     def setup_post(self, inputs):
+        """interface for user defined post-scripts"""
         self.load_batch_inputs(inputs)
 
         shots = inputs['shots']
@@ -3304,6 +3341,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             csv_filename, name, str(color)))
 
     def _add_user_geometry(self, csv_filename, name, color):
+        """helper method for ``on_load_user_geom``"""
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
@@ -3313,7 +3351,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         point_name = name + '_point'
         geom_name = name + '_geom'
-
 
         grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename)
         nbars = len(bars)
@@ -3446,6 +3483,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             csv_filename, name, str(color)))
 
     def create_cell_picker(self):
+        """creates the vtk picker objects"""
         self.cell_picker = vtk.vtkCellPicker()
         self.node_picker = vtk.vtkPointPicker()
 
@@ -3472,6 +3510,54 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.cell_picker.SetTolerance(0.001)
         self.node_picker.SetTolerance(0.001)
 
+    def mark_elements_by_different_case(self, eids, icase_result, icase_to_apply):
+        """
+        Marks a series of elements with custom text labels
+
+        Parameters
+        ----------
+        eids : int, List[int]
+            the elements to apply a message to
+        icase_result : int
+            the case to draw the result from
+        icase_to_apply : int
+            the key in label_actors to slot the result into
+
+        TOODO: fix the following
+        correct   : applies to the icase_to_apply
+        incorrect : applies to the icase_result
+        """
+        if icase_result not in self.label_actors:
+            msg = 'icase_result=%r not in label_actors=[%s]' % (
+                icase_result, ', '.join(self.label_actors))
+            self.log_error(msg)
+            return
+        if icase_to_apply not in self.label_actors:
+            msg = 'icase_to_apply=%r not in label_actors=[%s]' % (
+                icase_to_apply, ', '.join(self.label_actors))
+            self.log_error(msg)
+            return
+
+        eids = np.unique(eids)
+        neids = len(eids)
+        #centroids = np.zeros((neids, 3), dtype='float32')
+        ieids = np.searchsorted(self.element_ids, eids)
+        #print('ieids = ', ieids)
+
+        for cell_id in ieids:
+            centroid = self.cell_centroid(cell_id)
+            result_name, result_values, xyz = self.get_result_by_cell_id(cell_id, centroid, icase_result)
+            texti = '%s' % result_values
+            xi, yi, zi = centroid
+            self._create_annotation(texti, icase_to_apply, xi, yi, zi)
+        self.log_command('mark_elements_by_different_case(%s, %s, %s)' % (eids, icase_result, icase_to_apply))
+        self.vtk_interactor.Render()
+
+        #eids = [16563, 16564, 8916703, 16499, 16500, 8916699, 16565, 16566, 8916706, 16502, 16503, 8916701]
+
+        #icase_result = 22
+        #icase_to_apply = 25
+        #self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
     def mark_nodes(self, nids, icase, text):
         """
         Marks a series of nodes with custom text labels
@@ -3805,12 +3891,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.corner_axis.EnabledOn()
 
     def set_background_color_to_white(self):
+        """sets the background color to white; used by gif writing?"""
         white = (1., 1., 1.)
         self.set_background_color(white)
 
 
     def on_take_screenshot(self, fname=None, magnify=None):
-        """ Take a screenshot of a current view and save as a file"""
+        """
+        Take a screenshot of a current view and save as a file
+
+        Parameters
+        ----------
+        fname : str; default=None
+            None : pop open a window
+            str : bypass the popup window
+        magnify : int; default=None
+            None : use self.magnify
+            int : resolution increase factor
+        """
         if fname is None or fname is False:
             filt = QString()
             default_filename = ''
@@ -4429,6 +4527,53 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.set_form(form)
 
     def _finish_results_io2(self, form, cases):
+        """
+        Adds results to the Sidebar
+
+        Parameters
+        ----------
+        form : List[pairs]
+            There are two types of pairs
+            header_pair : (str, None, List[pair])
+                defines a heading
+                str : the sidebar label
+                None : flag that there are sub-results
+                List[pair] : more header/result pairs
+            result_pair : (str, int, List[])
+                str : the sidebar label
+                int : the case id
+                List[] : flag that there are no sub-results
+        cases : dict[case_id] = result
+            case_id : int
+                the case id
+            result : GuiResult
+                the class that stores the result
+
+        form = [
+            'Model', None, [
+                ['NodeID', 0, []],
+                ['ElementID', 1, []]
+                ['PropertyID', 2, []]
+            ],
+            'time=0.0', None, [
+                ['Stress', 3, []],
+                ['Displacement', 4, []]
+            ],
+            'time=1.0', None, [
+                ['Stress', 5, []],
+                ['Displacement', 6, []]
+            ],
+        ]
+        cases = {
+            0 : GuiResult(...),  # NodeID
+            1 : GuiResult(...),  # ElementID
+            2 : GuiResult(...),  # PropertyID
+            3 : GuiResult(...),  # Stress; t=0.0
+            4 : GuiResult(...),  # Displacement; t=0.0
+            5 : GuiResult(...),  # Stress; t=1.0
+            6 : GuiResult(...),  # Displacement; t=1.0
+        }
+        """
         self.turn_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
@@ -4495,11 +4640,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nElements))
 
-    def get_result_by_cell_id(self, cell_id, world_position):
+    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
         """TODO: should handle multiple cell_ids"""
-        case_key = self.case_keys[self.icase] # int for object
+        if icase is None:
+            icase = self.icase
+        case_key = self.case_keys[icase] # int for object
         result_name = self.result_name
-        icase = self.icase
         case = self.result_cases[case_key]
 
         (obj, (i, res_name)) = case
@@ -4569,6 +4715,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #VTK_QUADRATIC_PYRAMID = 27
             raise NotImplementedError(msg)
         return result_name, result_values, xyz
+
+    def cell_centroid(self, cell_id):
+        """gets the cell centroid"""
+        cell = self.grid_selected.GetCell(cell_id)
+        nnodes = cell.GetNumberOfPoints()
+        points = cell.GetPoints()
+        centroid = np.zeros(3, dtype='float32')
+        for ipoint in range(nnodes):
+            point = np.array(points.GetPoint(ipoint), dtype='float32')
+            centroid += point
+        centroid /= nnodes
+        return centroid
 
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
         """won't handle multiple cell_ids/node_xyz"""

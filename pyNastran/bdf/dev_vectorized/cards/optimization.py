@@ -210,6 +210,16 @@ class DCONSTR(OptConstraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a DCONSTR card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         oid = data[0]
         rid = data[1]
         lid = data[2]
