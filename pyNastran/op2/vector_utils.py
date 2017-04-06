@@ -525,7 +525,7 @@ def transform_force_moment(force_in_local, moment_in_local,
     T_b2g @ xyz_b = T_a2g @ xyz_a
     xyz_b = T_b2g.T @ T_a2g @ xyz_a = T_g2b @ T_a2g @ xyz_a
     """
-    print('consider_rxf =', consider_rxf)
+    #print('consider_rxf =', consider_rxf)
     #debug = True
     assert logger is not None
     assert nid_cd.shape[0] == force_in_local.shape[0]
@@ -542,23 +542,23 @@ def transform_force_moment(force_in_local, moment_in_local,
 
     #coord_out_cid = coord_out.cid
     beta_out = coord_out.beta().T
-    logger.debug('beta_out =\n%s' % beta_out)
 
     if debug:
+        logger.debug('beta_out =\n%s' % beta_out)
         logger.debug(coord_out)
         if consider_rxf:
             for ii in range(xyz_cid0.shape[0]):
                 logger.debug('***i=%s xyz=%s nid=%s cd=%s' % (
                     ii, xyz_cid0[ii, :], nid_cd[ii, 0], nid_cd[ii, 1]))
         logger.debug('------------')
+        logger.debug('ucds = %s' % ucds)
 
     if consider_rxf and summation_point_cid0 is None:
         summation_point_cid0 = np.array([0., 0., 0.])
 
-    logger.debug('ucds = %s' % ucds)
     #eye = np.eye(3, dtype=beta_cd.dtype)
     for cd in ucds:
-        logger.debug('cd = %s' % cd)
+        #logger.debug('cd = %s' % cd)
         i = np.where(cds == cd)[0]
         nidsi = nids[i]
         analysis_coord = coords[cd]

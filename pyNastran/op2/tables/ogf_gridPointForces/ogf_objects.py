@@ -519,8 +519,9 @@ class RealGridPointForcesArray(ScalarObject):
         """
         raise NotImplementedError()
 
-    def shear_moment_diagram(self, xyz_cid0, eids, nids, element_centroids_cid0,
-                             coord, coords, stations, coord_out,
+    def shear_moment_diagram(self, xyz_cid0, eids, nids, icd_transform,
+                             element_centroids_cid0,
+                             coord, coords, nid_cd, stations, coord_out,
                              idir=0, itime=0, debug=False, logger=None):
         """
         Computes a series of forces/moments at various stations along a structure.
@@ -608,10 +609,11 @@ class RealGridPointForcesArray(ScalarObject):
 
             if 0: # pragma: no cover
                 # I don't think this will work...
-                forcei, momenti = extract_freebody_loads(
+                forcei, momenti = self.extract_freebody_loads(
                     eids[i],
                     coord_out, coords, nid_cd, icd_transform,
-                    xyz_cid0, summation_point, itime=itime, debug=debug, logger=logger)
+                    # xyz_cid0, summation_point,
+                    itime=itime, debug=debug, logger=logger)
 
                 force_sum[istation, :] = forcei.sum(axis=0)
                 # TODO: extract_freebody_loads doesn't sum forces/moments
@@ -789,7 +791,7 @@ class RealGridPointForcesArray(ScalarObject):
             for itime in range(ntimes):
                 dt = self._times[itime]
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
-                f.write(''.join(header + msg))
+                f06_file.write(''.join(header + msg))
 
                 #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -809,14 +811,14 @@ class RealGridPointForcesArray(ScalarObject):
                     vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
-                        f.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                                nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                        f06_file.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            nid, eid, ename, f1, f2, f3, m1, m2, m3))
                         zero = '0'
                     else:
-                        f.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                                zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                        f06_file.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
                         zero = ' '
-                f.write(page_stamp % page_num)
+                f06_file.write(page_stamp % page_num)
                 page_num += 1
         return page_num - 1
 
