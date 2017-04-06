@@ -2792,7 +2792,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if self.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
             self.log_error(msg)
-            raise RuntimeError(msg)
+            return is_failed
 
         if out_filename in [None, False]:
             title = 'Select a Custom Results File for %s' % (self.format)
