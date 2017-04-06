@@ -127,6 +127,7 @@ from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
+             exclude_results=None, include_results=None,
              log=None, debug=True, debug_file=None, build_dataframe=None,
              skip_undefined_matrices=True, mode='msc', encoding=None):
     """
@@ -142,7 +143,9 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
                 will be used for superelements regardless of the option
     subcases : List[int, ...] / int; default=None->all subcases
         list of [subcase1_ID,subcase2_ID]
-
+    exclude_results / include_results : List[str] / str; default=None
+        a list of result types to exclude/include
+        one of these must be None
     build_dataframe : bool (default=None -> True if in iPython, False otherwise)
         builds a pandas DataFrame for op2 objects
     skip_undefined_matrices : bool; default=False
@@ -172,10 +175,19 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
+    if exclude_results and include_results:
+        msg = 'exclude_results or include_results must be None\n'
+        msg += 'exclude_results=%r\n' % exclude_results
+        msg += 'include_results=%r\n' % include_results
+        raise RuntimeError(msg)
+    elif exclude_results:
+        model.remove_results(exclude_results)
+    elif include_results:
+        model.set_results(include_results)
+
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
                    encoding=encoding)
-
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
     ## doesn't support F06 writer

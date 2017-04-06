@@ -28,7 +28,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealPlateBilinearForceArray, RealPlateForceArray)
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
-from pyNastran.op2.vector_utils import filter1d
+from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min_vector
 
 test_path = pyNastran.__path__[0]
 model_path = os.path.abspath(os.path.join(test_path, '..', 'models'))
@@ -58,6 +58,57 @@ class TestOP2(Tester):
         i = filter1d(a, b, zero_tol=1.1)
         res = np.array([1])
         self.assertTrue(np.array_equal(i, res), 'C i=%s res=%s' % (i, res))
+
+        def test_abs_max_min_global(self):
+            #print(iformat('4si3f', 2))
+            print(abs_max_min_global([0.0, 2.0, 1.0]))
+            print(abs_max_min_global([0.0, 2.0, -1.0]))
+            print(abs_max_min_global([0.0, 2.0, -3.0]))
+            print(abs_max_min_global(np.array([0.0, 2.0, -3.0])))
+            print(abs_max_min_global([1.0]))
+
+            # gets the global max/min value
+            print(abs_max_min_global([
+                [0.0, 2.0, -3.0],
+                [0.0, 2.0, -4.0],
+            ]))
+            print(abs_max_min_global(np.array([
+                [0.0, 2.0, -3.0],
+                [0.0, 2.0, -4.0],
+            ])))
+
+        def test_abs_max_min_vector(self):
+            print(abs_max_min_vector(np.array([
+                [0.0, 2.0, 1.0],
+                [0.0, 2.0, -1.0],
+                [0.0, 2.0, -3.0],
+            ])))
+
+            print(abs_max_min_vector([
+                [0.0, 2.0, 1.0],
+                [0.0, 2.0, -1.0],
+                [0.0, 2.0, -3.0],
+                [0.0, 2.0, 4.0],
+            ]))
+            print(abs_max_min_vector(np.array([
+                [0.0, 2.0, 1.0],
+                [0.0, 2.0, -1.0],
+                [0.0, 2.0, -3.0],
+                [0.0, 2.0, 4.0],
+            ])))
+
+            print(abs_max_min_vector(np.array([
+                [3.0, 2.0, -3.0],
+                [-3.0, 2.0, 3.0],
+            ])))
+
+            # not an array
+            #print(abs_max_min([
+                #[0.0, 2.0, 1.0],
+                #[0.0, 2.0, -1.0],
+                #[0.0, 2.0, -3.0],
+                #[0.0, 2.0, 4.0],
+            #]))
 
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""

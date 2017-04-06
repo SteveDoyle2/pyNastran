@@ -141,6 +141,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
+             skip_cards=None,
              encoding=None, log=None, debug=True, mode='msc'):
     """
     Creates the BDF object
@@ -163,6 +164,9 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         should the bdf be cross referenced (default=True)
     punch : bool
         indicates whether the file is a punch file (default=False)
+    skip_cards : List[str]; default=None
+        None : include all cards
+        list of cards to skip
     encoding : str
         the unicode encoding (default=None; system default)
 
@@ -192,6 +196,8 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     .. todo:: finish this
     """
     model = BDF(log=log, debug=debug, mode=mode)
+    if skip_cards:
+        model.disable_cards(skip_cards)
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
                    xref=xref, punch=punch, read_includes=True, encoding=encoding)
 

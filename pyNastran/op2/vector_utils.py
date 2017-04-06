@@ -406,62 +406,9 @@ def principal_3d(o11, o22, o33, o12, o23, o13):
     return pmax, pmin
 
 
-def test_abs_max_min_global():
-    #print(iformat('4si3f', 2))
-    print(abs_max_min_global([0.0, 2.0, 1.0]))
-    print(abs_max_min_global([0.0, 2.0, -1.0]))
-    print(abs_max_min_global([0.0, 2.0, -3.0]))
-    print(abs_max_min_global(np.array([0.0, 2.0, -3.0])))
-    print(abs_max_min_global([1.0]))
-
-    # gets the global max/min value
-    print(abs_max_min_global([
-        [0.0, 2.0, -3.0],
-        [0.0, 2.0, -4.0],
-    ]))
-    print(abs_max_min_global(np.array([
-        [0.0, 2.0, -3.0],
-        [0.0, 2.0, -4.0],
-    ])))
-
-
-def test_abs_max_min_vector():
-    print(abs_max_min_vector(np.array([
-        [0.0, 2.0, 1.0],
-        [0.0, 2.0, -1.0],
-        [0.0, 2.0, -3.0],
-    ])))
-
-    print(abs_max_min_vector([
-        [0.0, 2.0, 1.0],
-        [0.0, 2.0, -1.0],
-        [0.0, 2.0, -3.0],
-        [0.0, 2.0, 4.0],
-    ]))
-    print(abs_max_min_vector(np.array([
-        [0.0, 2.0, 1.0],
-        [0.0, 2.0, -1.0],
-        [0.0, 2.0, -3.0],
-        [0.0, 2.0, 4.0],
-    ])))
-
-    print(abs_max_min_vector(np.array([
-        [3.0, 2.0, -3.0],
-        [-3.0, 2.0, 3.0],
-    ])))
-
-    # not an array
-    #print(abs_max_min([
-        #[0.0, 2.0, 1.0],
-        #[0.0, 2.0, -1.0],
-        #[0.0, 2.0, -3.0],
-        #[0.0, 2.0, 4.0],
-    #]))
-
-
 def transform_force(force_in_local,
                     coord_out, coords,
-                    nid_cd, i_transform):
+                    nid_cd, icd_transform):
     """
     Transforms force/moment from global to local and returns all the forces.
 
@@ -473,10 +420,18 @@ def transform_force(force_in_local,
         forces in the local frame
     coord_out : CORD()
         the desired local frame
-    xyz_cid0 : (n, 3) ndarray
-        the nodes in the global frame
-    summation_point_cid0 : (3, ) ndarray
-        the summation point in the global frame
+    coords : dict[int] = CORDx
+        all the coordinate systems
+        key : int
+        value : CORDx
+    nid_cd : (M, 2) int ndarray
+        the (BDF.point_ids, cd) array
+    icd_transform : dict[cd] = (Mi, ) int ndarray
+        the mapping for nid_cd
+    #xyz_cid0 : (n, 3) ndarray
+        #the nodes in the global frame
+    #summation_point_cid0 : (3, ) ndarray
+        #the summation point in the global frame
 
     .. warning:: the function signature will change...
     .. todo:: sum of moments about a point must have an rxF term to get the
@@ -512,7 +467,7 @@ def transform_force(force_in_local,
 
 def transform_force_moment(force_in_local, moment_in_local,
                            coord_out, coords,
-                           nid_cd, i_transform,
+                           nid_cd, icd_transform,
                            xyz_cid0, summation_point_cid0=None,
                            consider_rxf=True,
                            debug=False, logger=None):
@@ -521,16 +476,24 @@ def transform_force_moment(force_in_local, moment_in_local,
 
     Parameters
     ----------
-    force : (N, 3) ndarray
+    force_in_local : (N, 3) ndarray
         forces in the local frame
-    moment : (N, 3) ndarray
+    moment_in_local : (N, 3) ndarray
         moments in the local frame
-    coord_out : CORD()
+    coord_out : CORDx()
         the desired local frame
+    coords : dict[int] = CORDx
+        all the coordinate systems
+        key : int
+        value : CORDx
+    nid_cd : (M, 2) int ndarray
+        the (BDF.point_ids, cd) array
+    icd_transform : dict[cd] = (Mi, ) int ndarray
+        the mapping for nid_cd
     xyz_cid0 : (n, 3) ndarray
         the nodes in the global frame
     summation_point_cid0 : (3, ) ndarray
-        the summation point in the global frame
+        the summation point in the global frame???
     consider_rxf : bool; default=True
         considers the r x F term
     debug : bool; default=False
@@ -562,15 +525,19 @@ def transform_force_moment(force_in_local, moment_in_local,
     T_b2g @ xyz_b = T_a2g @ xyz_a
     xyz_b = T_b2g.T @ T_a2g @ xyz_a = T_g2b @ T_a2g @ xyz_a
     """
+    print('consider_rxf =', consider_rxf)
     #debug = True
     assert logger is not None
+    assert nid_cd.shape[0] == force_in_local.shape[0]
     dtype = force_in_local.dtype
     #dtype = 'float64'
+
+    force_in_local_sum = force_in_local.sum(axis=0)
     force_out = np.zeros(force_in_local.shape, dtype=dtype)
     moment_out = np.zeros(force_in_local.shape, dtype=dtype)
 
     nids = nid_cd[:, 0]
-    cds = nid_cd[:, 1] * 0
+    cds = nid_cd[:, 1] #* 0
     ucds = unique(cds)
 
     #coord_out_cid = coord_out.cid
@@ -588,26 +555,33 @@ def transform_force_moment(force_in_local, moment_in_local,
     if consider_rxf and summation_point_cid0 is None:
         summation_point_cid0 = np.array([0., 0., 0.])
 
+    logger.debug('ucds = %s' % ucds)
+    #eye = np.eye(3, dtype=beta_cd.dtype)
     for cd in ucds:
+        logger.debug('cd = %s' % cd)
         i = np.where(cds == cd)[0]
         nidsi = nids[i]
         analysis_coord = coords[cd]
         beta_cd = analysis_coord.beta()
-        #logger.debug('analysis_coord =\n%s' % analysis_coord)
-        logger.debug('beta_cd =\n%s' % beta_cd)
 
-        logger.debug('i = %s' % i)
-        logger.debug('force_in_local = %s' % force_in_local)
+        force_in_locali = -force_in_local[i, :]
+        moment_in_locali = -moment_in_local[i, :]
+
+        #if 0 and np.array_equal(beta_cd, eye):
+        force_in_globali = force_in_locali
+        moment_in_globali = moment_in_locali
+        if debug:
+            #logger.debug('analysis_coord =\n%s' % analysis_coord)
+            logger.debug('beta_cd =\n%s' % beta_cd)
+
+            logger.debug('i = %s' % i)
+            logger.debug('force_in_local = %s' % force_in_local)
+            logger.debug('force_in_local.sum() = %s' % force_in_local_sum)
         #force_in_locali.astype('float64')
         #moment_in_locali.astype('float64')
 
         # rotate loads from an arbitrary coordinate system to local xyz
-        if 1:
-            force_in_locali = -force_in_local[i, :]
-            moment_in_locali = -moment_in_local[i, :]
-        else:
-            force_in_locali = -force_in_local[i, :]
-            moment_in_locali = -moment_in_local[i, :]
+        if 0:
             logger.debug(analysis_coord)
             logger.debug(force_in_locali)
             force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
@@ -617,26 +591,32 @@ def transform_force_moment(force_in_local, moment_in_local,
             if debug:
                 logger.debug('i = %s' % i)
                 logger.debug('nids = %s' % nidsi)
-                logger.debug('force_input =%s' % force_in_locali)
+                logger.debug('force_input = %s' % force_in_locali)
 
         # rotate the forces/moments into a coordinate system coincident
         # with the local frame and with the same primary directions
         # as the global frame
         force_in_globali = dot(force_in_locali, beta_cd)
-        logger.debug('force_in_globali = %s' % force_in_globali)
         moment_in_globali = dot(moment_in_locali, beta_cd)
 
         # rotate the forces and moments into a coordinate system coincident
         # with the output frame and with the same primary directions
         # as the output frame
+
+        #if 0 and np.array_equal(beta_out, eye):
+            #force_outi = force_in_globali
+            #moment_outi = moment_in_globali
         force_outi = dot(force_in_globali, beta_out)
         moment_outi = dot(moment_in_globali, beta_out)
 
         if debug:
-            logger.debug('force_in_locali =%s' % force_in_locali.T)
-            logger.debug('force_in_globali = %s' % force_in_globali.T)
+            #if show_local:
+            logger.debug('force_in_locali = \n%s' % force_in_locali.T)
+            logger.debug('force_in_globali = \n%s' % force_in_globali.T)
+            logger.debug('force_in_locali.sum()  = %s' % force_in_locali.sum(axis=0))
+            logger.debug('force_in_globali.sum() = %s' % force_in_globali.sum(axis=0))
             logger.debug('force_outi = %s' % force_outi)
-            logger.debug('moment_outi = %s' % moment_outi)
+            #logger.debug('moment_outi = %s' % moment_outi)
 
         # these are in the local XYZ coordinates
         # we'll do the final transform later
@@ -652,9 +632,9 @@ def transform_force_moment(force_in_local, moment_in_local,
 
             rxf_in_cid = dot(rxf, beta_out)
             if debug:
-                logger.debug('delta = %s' % delta)
-                logger.debug('rxf = %s' % rxf.T)
-                logger.debug('rxf_in_cid = %s' % rxf_in_cid)
+                logger.debug('delta_moment = %s' % delta)
+                #logger.debug('rxf = %s' % rxf.T)
+                #logger.debug('rxf_in_cid = %s' % rxf_in_cid)
 
             moment_out[i, :] += rxf_in_cid
 
@@ -668,7 +648,7 @@ def transform_force_moment(force_in_local, moment_in_local,
 
 def transform_force_moment_sum(force_in_local, moment_in_local,
                                coord_out, coords,
-                               nid_cd, i_transform,
+                               nid_cd, icd_transform,
                                xyz_cid0, summation_point_cid0=None,
                                consider_rxf=True,
                                debug=False, logger=None):
@@ -677,16 +657,24 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
 
     Parameters
     ----------
-    force : (N, 3) ndarray
+    force_in_local : (N, 3) ndarray
         forces in the local frame
-    moment : (N, 3) ndarray
+    moment_in_local : (N, 3) ndarray
         moments in the local frame
-    coord_out : CORD()
+    coord_out : CORDx()
         the desired local frame
-    xyz_cid0 : (n, 3) ndarray
-        the nodes in the global frame
+    coords : dict[int] = CORDx
+        all the coordinate systems
+        key : int
+        value : CORDx
+    nid_cd : (M, 2) int ndarray
+        the (BDF.point_ids, cd) array
+    icd_transform : dict[cd] = (Mi, ) int ndarray
+        the mapping for nid_cd
+    xyz_cid0 : (nnodes + nspoints + nepoints, 3) ndarray
+        the grid locations in coordinate system 0
     summation_point_cid0 : (3, ) ndarray
-        the summation point in the global frame
+        the summation point in the global frame???
     consider_rxf : bool; default=True
         considers the r x F term
     debug : bool; default=False
@@ -711,17 +699,17 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
     out = transform_force_moment(
         force_in_local, moment_in_local,
         coord_out, coords, nid_cd,
-        i_transform, xyz_cid0,
+        icd_transform, xyz_cid0,
         summation_point_cid0=summation_point_cid0, consider_rxf=consider_rxf,
         debug=debug, logger=logger)
     force_out, moment_out = out
     if debug:
         logger.debug('force_sum = %s' % force_out.sum(axis=0))
-        logger.debug('moment_sum = %s' % moment_out.sum(axis=0))
+        if consider_rxf:
+            logger.debug('moment_sum = %s' % moment_out.sum(axis=0))
     return force_out, moment_out, force_out.sum(axis=0), moment_out.sum(axis=0)
 
 
 if __name__ == '__main__':  # pragma: no cover
     #print(iformat('4si3f'))
-    test_abs_max_min_global()
-    test_abs_max_min_vector()
+    pass

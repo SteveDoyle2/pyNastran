@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import iteritems
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -281,10 +280,9 @@ class RealGridPointForcesArray(ScalarObject):
                         raise ValueError(msg)
         return True
 
-    def extract_freebody_loads(
-        self, eids,
-        coord_out, coords, nid_cd, i_transform,
-        itime=0, debug=True, logger=None):
+    def extract_freebody_loads(self, eids,
+                               coord_out, coords, nid_cd, icd_transform,
+                               itime=0, debug=True, logger=None):
         """
         Extracts Patran-style freebody loads
 
@@ -300,7 +298,7 @@ class RealGridPointForcesArray(ScalarObject):
             value : CORDx
         nid_cd : (M, 2) int ndarray
             the (BDF.point_ids, cd) array
-        i_transform : dict[cd] = (Mi, ) int ndarray
+        icd_transform : dict[cd] = (Mi, ) int ndarray
             the mapping for nid_cd
         summation_point : (3, ) float ndarray
             the summation point in output??? coordinate system
@@ -363,25 +361,26 @@ class RealGridPointForcesArray(ScalarObject):
         force, moment = transform_force_moment(
             force_global, moment_global,
             coord_out, coords, nid_cd[is_in3, :],
-            i_transform,
+            icd_transform,
             xyz_cid0=None, summation_point_cid0=None,
             consider_rxf=False,
             debug=debug, logger=logger)
         return force, moment
 
-    def extract_interface_loads(
-        self, nids, eids,
-        coord_out, coords, nid_cd, i_transform,
-        xyz_cid0, summation_point, itime=0, debug=True, logger=None):
+    def extract_interface_loads(self, nids, eids,
+                                coord_out, coords, nid_cd, icd_transform,
+                                xyz_cid0, summation_point=None,
+                                consider_rxf=True,
+                                itime=0, debug=True, logger=None):
         """
         Extracts Patran-style interface loads
 
         Parameters
         ----------
         nids : (Nn, ) int ndarray
-            all the nodes to consider
+            all the nodes to consider; must be sorted
         eids : (Ne, ) int ndarray
-            all the elements to consider
+            all the elements to consider; must be sorted
         coord_out : CORD2R()
             the output coordinate system
         coords : dict[int] = CORDx
@@ -390,12 +389,15 @@ class RealGridPointForcesArray(ScalarObject):
             value : CORDx
         nid_cd : (M, 2) int ndarray
             the (BDF.point_ids, cd) array
-        i_transform : dict[cd] = (Mi, ) int ndarray
+        icd_transform : dict[cd] = (Mi, ) int ndarray
             the mapping for nid_cd
-        xyz_cid0 : (nnodes + nspoints, 3) ndarray
+        xyz_cid0 : (nnodes + nspoints + nepoints, 3) ndarray
             the grid locations in coordinate system 0
-        summation_point : (3, ) float ndarray
-            the summation point in output??? coordinate system
+        summation_point : (3, ) float ndarray; default=None
+            None : no load summation
+            array : the summation point in the output??? coordinate system
+        consider_rxf : bool; default=True
+            considers the r x F term
         itime : int; default=0
             the time to extract loads for
         debug : bool; default=False
@@ -430,6 +432,8 @@ class RealGridPointForcesArray(ScalarObject):
         #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported; coord_out=\n%s' % str(coord_out)
         eids = np.asarray(eids)
         nids = np.asarray(nids)
+        eids.sort()
+        nids.sort()
 
         # TODO: Handle multiple values for itime
         #       Is this even possible?
@@ -451,6 +455,10 @@ class RealGridPointForcesArray(ScalarObject):
             raise RuntimeError(msg)
 
         if debug:
+            f06_filename = 'grid_point_forcesi_itime.debug.f06'
+            with open(f06_filename, 'w') as f06_file:
+                self.write_f06_time(f06_file, itime=0, i=irange)
+
             logger.debug('gpforce_eids =' % gpforce_eids[is_in])
             logger.debug('nids = %s' % gpforce_nids[irange])
             logger.debug('eids = %s' % gpforce_eids[irange])
@@ -461,12 +469,18 @@ class RealGridPointForcesArray(ScalarObject):
             msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
             raise IndexError(msg)
 
+        nid_cd_used = nid_cd[is_in3, :]
+        nids_used = nid_cd_used[:, 0]
+        gp_nids_used = gpforce_nids[irange]
+        isort = np.searchsorted(nids_used, gp_nids_used)
+
         force_global = self.data[itime, irange, :3]
         moment_global = self.data[itime, irange, 3:]
         out = transform_force_moment_sum(force_global, moment_global,
-                                         coord_out, coords, nid_cd[is_in3, :],
-                                         i_transform,
-                                         xyz_cid0[is_in3, :], summation_point_cid0=summation_point,
+                                         coord_out, coords, nid_cd[is_in3, :][isort],
+                                         icd_transform,
+                                         xyz_cid0[is_in3, :][isort], summation_point_cid0=summation_point,
+                                         consider_rxf=consider_rxf,
                                          debug=debug, logger=logger)
         return out
 
@@ -506,7 +520,7 @@ class RealGridPointForcesArray(ScalarObject):
         raise NotImplementedError()
 
     def shear_moment_diagram(self, xyz_cid0, eids, nids, element_centroids_cid0,
-                             coord, coords, stations,
+                             coord, coords, stations, coord_out,
                              idir=0, itime=0, debug=False, logger=None):
         """
         Computes a series of forces/moments at various stations along a structure.
@@ -531,7 +545,7 @@ class RealGridPointForcesArray(ScalarObject):
             value : CORDx
         nid_cd : (M, 2) int ndarray
             the (BDF.point_ids, cd) array
-        i_transform : dict[cd] = (Mi, ) int ndarray
+        icd_transform : dict[cd] = (Mi, ) int ndarray
             the mapping for nid_cd
         stations : (nstations, ) float ndarray
             the station to sum forces/moments about
@@ -563,6 +577,7 @@ class RealGridPointForcesArray(ScalarObject):
         ----
         Not Tested...Does 3b work?  Can 3a give the right answer?
         """
+        nstations = len(stations)
         assert coord_out.type in ['CORD2R', 'CORD1R'], coord_out.type
         beta = coord_out.beta()
         element_centroids_coord = np.dot(beta, element_centroids_cid0)  # TODO: verify
@@ -591,11 +606,11 @@ class RealGridPointForcesArray(ScalarObject):
             offset[idir] = station
             summation_point = coord_out.origin + offset
 
-            if 0:
+            if 0: # pragma: no cover
                 # I don't think this will work...
                 forcei, momenti = extract_freebody_loads(
                     eids[i],
-                    coord_out, coords, nid_cd, i_transform,
+                    coord_out, coords, nid_cd, icd_transform,
                     xyz_cid0, summation_point, itime=itime, debug=debug, logger=logger)
 
                 force_sum[istation, :] = forcei.sum(axis=0)
@@ -605,11 +620,11 @@ class RealGridPointForcesArray(ScalarObject):
             else:
                 forcei, momenti, force_sumi, moment_sumi = self.extract_interface_loads(
                     eids[i], nids[j],
-                    coord_out, coords, nid_cd, i_transform,
+                    coord_out, coords, nid_cd, icd_transform,
                     xyz_cid0, summation_point, itime=itime, debug=debug, logger=logger)
 
-                force_sum[istation, :] = forcei_sum
-                moment_sum[istation, :] = momenti_sum
+                force_sum[istation, :] = force_sumi
+                moment_sum[istation, :] = moment_sumi
         return force_sum, moment_sum
 
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
@@ -712,7 +727,7 @@ class RealGridPointForcesArray(ScalarObject):
                     itime, nid, eid, ename.strip(), t1i, t2i, t3i, r1i, r2i, r3i))
         return
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = self._get_f06_msg()
@@ -722,7 +737,7 @@ class RealGridPointForcesArray(ScalarObject):
             for itime in range(ntimes):
                 dt = self._times[itime]
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
-                f.write(''.join(header + msg))
+                f06_file.write(''.join(header + msg))
 
                 #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
                 #[t1, t2, t3, r1, r2, r3]
@@ -757,14 +772,14 @@ class RealGridPointForcesArray(ScalarObject):
                     vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
-                        f.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                                nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                        f06_file.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            nid, eid, ename, f1, f2, f3, m1, m2, m3))
                         zero = '0'
                     else:
-                        f.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                                zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                        f06_file.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
                         zero = ' '
-                f.write(page_stamp % page_num)
+                f06_file.write(page_stamp % page_num)
                 page_num += 1
         else:
             nids = self.node_element[:, 0]
@@ -804,6 +819,59 @@ class RealGridPointForcesArray(ScalarObject):
                 f.write(page_stamp % page_num)
                 page_num += 1
         return page_num - 1
+
+    def write_f06_time(self, f06_file, itime=0, i=None, header=None, page_num=1, page_stamp=''):
+        if header is None:
+            header = []
+        dt = self._times[itime]
+        msg = self._get_f06_msg()
+
+        ntimes = self.data.shape[0]
+        header = _eigenvalue_header(self, header, itime, ntimes, dt)
+        f06_file.write(''.join(header + msg))
+
+        #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+        #[t1, t2, t3, r1, r2, r3]
+        t1 = self.data[itime, i, 0]
+        t2 = self.data[itime, i, 1]
+        t3 = self.data[itime, i, 2]
+        r1 = self.data[itime, i, 3]
+        r2 = self.data[itime, i, 4]
+        r3 = self.data[itime, i, 5]
+
+        nids = self.node_element[itime, i, 0]
+        eids = self.node_element[itime, i, 1]
+        enames = self.element_names[itime, i]
+
+        zero = ' '
+        ntotal = self._ntotals[itime]
+        #print(self._ntotals)
+        assert len(eids) == len(nids)
+        assert len(enames) == len(nids), 'enames=%s nnids=%s' % (len(enames), len(nids))
+        assert len(t1) == len(nids)
+        assert len(t2) == len(nids)
+        assert len(t3) == len(nids)
+        assert len(r1) == len(nids)
+        assert len(r2) == len(nids)
+        assert len(nids) <= ntotal, 'len(nids)=%s ntotal=%s' % (len(nids), ntotal)
+
+        for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+             range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
+
+            #print(nid, eid, ename, t1i)
+            vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+            vals2 = write_floats_13e(vals)
+            [f1, f2, f3, m1, m2, m3] = vals2
+            if eid == 0:
+                f06_file.write('   %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                zero = '0'
+            else:
+                f06_file.write('%s  %8s    %10s    %s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    zero, nid, eid, ename, f1, f2, f3, m1, m2, m3))
+                zero = ' '
+        #f.write(page_stamp % page_num)
+        page_num += 1
 
     def _get_f06_msg(self):
         msg = [
@@ -1255,7 +1323,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         ]
         if is_mag_phase:
             msg += ['                                                          (REAL/IMAGINARY)\n \n']
-            mag_phase
+            raise NotImplementedError('mag/phase')
         else:
             msg += ['                                                          (REAL/IMAGINARY)\n \n']
 
