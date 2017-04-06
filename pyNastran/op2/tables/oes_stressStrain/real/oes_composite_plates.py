@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
@@ -75,7 +76,7 @@ class RealCompositePlateArray(OES_Object):
         self.is_built = True
 
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
 

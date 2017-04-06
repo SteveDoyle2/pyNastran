@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six import integer_types
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -83,13 +84,14 @@ class RealGridPointForcesArray(ScalarObject):
         #print("***name=%s ntimes=%s ntotal=%s" % (
             #self.element_names, self.ntimes, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
 
         self._times = zeros(self.ntimes, dtype=dtype)
 
+        assert self.ntotal < 2147483647, self.ntotal # max int
         if self.is_unique:
-            assert isinstance(self.ntotal, int), self.ntotal
+            assert isinstance(self.ntotal, integer_types), 'ntotal=%r type=%s' % (self.ntotal, type(self.ntotal))
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
             self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
@@ -954,7 +956,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_names, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
 
         self._times = zeros(self.ntimes, dtype=dtype)

@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import itervalues
+from six import itervalues, integer_types
 from math import isnan
 from collections import OrderedDict
 from numpy import zeros, empty, array_equal
@@ -90,7 +90,7 @@ class RealStrainEnergyArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self.build_data(dtype)
 
@@ -102,8 +102,8 @@ class RealStrainEnergyArray(ScalarObject):
         #self.element_data_type = empty(self.nelements, dtype='|U8')
 
         #[energy, percent, density]
-        assert isinstance(self.ntimes, int), self.ntimes
-        assert isinstance(self.ntotal, int), self.ntotal
+        assert isinstance(self.ntimes, integer_types), self.ntimes
+        assert isinstance(self.ntotal, integer_types), self.ntotal
         self.data = zeros((self.ntimes, self.nelements, 3), dtype='float32')
 
     def build_dataframe(self):
