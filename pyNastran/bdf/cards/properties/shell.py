@@ -1282,19 +1282,38 @@ class PPLANE(ShellProperty):
 
 
 class PSHEAR(ShellProperty):
+    """
+    Defines the properties of a shear panel (CSHEAR entry).
+
+    +--------+-----+-----+---+-----+----+----+
+    |   1    |  2  |  3  | 4 |  5  |  6 |  7 |
+    +========+=====+=====+===+=====+====+====+
+    | PSHEAR | PID | MID | T | NSM | F1 | F2 |
+    +--------+-----+-----+---+-----+----+----+
+    """
     type = 'PSHEAR'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'f1', 6:'f2'}
 
-    def __init__(self, pid, t, mid, nsm=0., f1=0., f2=0., comment=''):
+    def __init__(self, pid, mid, t, nsm=0., f1=0., f2=0., comment=''):
         """
-        Defines the properties of a shear panel (CSHEAR entry).
+        Creates a PSHEAR card
 
-
-        +--------+-----+-----+---+-----+----+----+
-        |   1    |  2  |  3  | 4 |  5  |  6 |  7 |
-        +========+=====+=====+===+=====+====+====+
-        | PSHEAR | PID | MID | T | NSM | F1 | F2 |
-        +--------+-----+-----+---+-----+----+----+
+        Parameters
+        ----------
+        pid : int
+            property id
+        t : float
+            shear panel thickness
+        mid : int
+            material id
+        nsm : float; default=0.
+            nonstructural mass per unit length
+        f1 : float; default=0.0
+            Effectiveness factor for extensional stiffness along edges 1-2 and 3-4
+        f2 : float; default=0.0
+            Effectiveness factor for extensional stiffness along edges 2-3 and 1-4
+        comment : str; default=''
+            a comment for the card
         """
         ShellProperty.__init__(self)
         if comment:
@@ -1330,7 +1349,7 @@ class PSHEAR(ShellProperty):
         f1 = double_or_blank(card, 5, 'f1', 0.0)
         f2 = double_or_blank(card, 6, 'f2', 0.0)
         assert len(card) <= 7, 'len(PSHEAR card) = %i\ncard=%s' % (len(card), card)
-        return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
+        return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

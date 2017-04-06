@@ -1037,6 +1037,45 @@ class AddCards(AddMethods):
                    area=0.0, i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
                    k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
                    symopt=0, comment=''):
+        """
+        Creates a PBCOMP card
+
+        Parameters
+        ---------
+        pid : int
+            Property ID
+        mid : int
+            Material ID
+        mids : List[int]
+            Material ID for the i-th integration point
+        y / z : List[float]
+            The (y,z) coordinates of the lumped areas in the element
+            coordinate system
+        c : List[float]; default=0.0
+            Fraction of the total area for the i-th lumped area
+            default not supported...
+        area : float
+            Area of beam cross section
+        i1 / i2 : float; default=0.0
+            Area moment of inertia about plane 1/2 about the neutral axis
+        i12 : float; default=0.0
+           area product of inertia
+        j : float; default=0.0
+            Torsional moment of interia
+        nsm : float; default=0.0
+            Nonstructural mass per unit length
+        k1 / k2 : float; default=1.0
+            Shear stiffness factor K in K*A*G for plane 1/2
+        m1 / m2 : float; default=0.0
+            The (y,z) coordinates of center of gravity of nonstructural mass
+        n1 / n2 : float; default=0.0
+            The (y,z) coordinates of neutral axis
+        symopt : int; default=0
+            Symmetry option to input lumped areas for the beam cross section
+            0 < Integer < 5
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PBCOMP(pid, mid, y, z, c, mids,
                       area, i1, i2, i12, j, nsm,
                       k1, k2, m1, m2, n1, n2,
@@ -1081,12 +1120,46 @@ class AddCards(AddMethods):
         return prop
 
     def add_cshear(self, eid, pid, nids, comment=''):
+        """
+        Creates a CSHEAR card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHEAR)
+        nids : List[int, int, int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CSHEAR(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_pshear(self, pid, t, mid, nsm=0., f1=0., f2=0., comment=''):
-        prop = PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
+    def add_pshear(self, pid, mid, t, nsm=0., f1=0., f2=0., comment=''):
+        """
+        Creates a PSHEAR card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        t : float
+            shear panel thickness
+        mid : int
+            material id
+        nsm : float; default=0.
+            nonstructural mass per unit length
+        f1 : float; default=0.0
+            Effectiveness factor for extensional stiffness along edges 1-2 and 3-4
+        f2 : float; default=0.0
+            Effectiveness factor for extensional stiffness along edges 2-3 and 1-4
+        comment : str; default=''
+            a comment for the card
+        """
+        prop = PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
         self._add_property_object(prop)
         return prop
 
