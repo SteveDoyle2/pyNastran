@@ -276,6 +276,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         settings.setValue("backgroundColor", self.background_color)
         settings.setValue("textColor", self.text_color)
         settings.setValue("labelColor", self.label_color)
+        settings.setValue("font_size", self.font_size)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.window()

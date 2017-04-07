@@ -3213,8 +3213,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #red = (1.0, 0.0, 0.0)
         grey = (119/255., 136/255., 153/255.)
         screen_shape_default = (1100, 700)
+        font_size = 8
 
         setting_keys = [str(key) for key in settings.childKeys()]
+        try:
+            self.font_size = settings.value("font_size", font_size)
+        except (TypeError, AttributeError):
+            self.font_size = 8
+
         try:
             self.background_color = settings.value("backgroundColor", grey).toPyObject()
         except (TypeError, AttributeError):
@@ -3246,6 +3252,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #try:
         self.resize(screen_shape[0], screen_shape[1])
         width, height = screen_shape
+
+        font = QtGui.QFont()
+        font.setPointSize(self.font_size)
+        self.setFont(font)
+
         if 0 and PY3:
             pos = settings.value("pos", pos_default).toPyObject()
             x_pos, y_pos = pos
