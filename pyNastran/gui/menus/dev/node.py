@@ -6,15 +6,39 @@ http://www.saltycrane.com/blog/2007/12/pyqt-43-qtableview-qabstracttablemodel/
 http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-work-in-this-program
 """
 from __future__ import print_function
-from six import iteritems
-from PyQt4 import QtCore, QtGui
+#from PyQt4 import QtCore, QtGui
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, CustomQTableView
+from pyNastran.gui.qt_version import qt_version
+
+if qt_version == 4:
+    from PyQt4 import QtCore#, QtGui
+    #from PyQt4 import QtGui
+    from PyQt4.QtGui import (
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
+        QSpinBox, QCheckBox, QRadioButton, QButtonGroup, QDoubleSpinBox, QLineEdit,
+        QColorDialog, QHeaderView,
+        QColor, QPalette)
+elif qt_version == 5:
+    from PyQt5 import QtCore#, QtGui
+    from PyQt5.QtGui import QColor, QPalette
+    from PyQt5.QtWidgets import (
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
+        QSpinBox, QCheckBox, QRadioButton, QButtonGroup, QDoubleSpinBox, QLineEdit,
+        QColorDialog, QHeaderView)
+elif qt_version == 'pyside':
+    from PySide import QtCore #, QtGui
+    #from PySide import QtGui
+    from PySide.QtGui import (
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
+        QSpinBox, QCheckBox, QRadioButton, QButtonGroup, QDoubleSpinBox, QLineEdit,
+        QColorDialog, QColor, QPalette, QHeaderView)
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 
-
-class EditNodeProperties(QtGui.QDialog):
+class EditNodeProperties(QDialog):
     def __init__(self, data, win_parent=None):
         """
         +-----------------+
@@ -41,7 +65,7 @@ class EditNodeProperties(QtGui.QDialog):
         |          Close         |
         +------------------------+
         """
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         self.setWindowTitle('Edit Node Properties')
 
         #default
@@ -60,7 +84,7 @@ class EditNodeProperties(QtGui.QDialog):
 
         self.keys = sorted(self.points.keys())
         keys = self.keys
-        nrows = len(keys)
+        #nrows = len(keys)
 
         active_point = data['active_point']
         #self.active_key = keys[0]
@@ -74,7 +98,10 @@ class EditNodeProperties(QtGui.QDialog):
         table_model = Model(items, header_labels, self)
         view = CustomQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        if qt_version in [4, 'pyside']:
+            view.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+        else:
+            view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table = view
 
         #self.representation = actor_obj.representation
@@ -89,21 +116,21 @@ class EditNodeProperties(QtGui.QDialog):
         #----------------------------------------------
         #self._default_is_apply = False
 
-        self.color = QtGui.QLabel("Color:")
-        self.color_edit = QtGui.QPushButton()
+        self.color = QLabel("Color:")
+        self.color_edit = QPushButton()
         #self.color_edit.setFlat(True)
 
         color = self.out_data['point_properties'].color
         opacity = self.out_data['point_properties'].opacity
         show = self.out_data['point_properties'].is_visible
         #color = self.out_data[self.active_key].color
-        qcolor = QtGui.QColor()
+        qcolor = QColor()
         qcolor.setRgb(*color)
         #print('color =%s' % str(color))
-        palette = QtGui.QPalette(self.color_edit.palette()) # make a copy of the palette
-        #palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, \
+        palette = QPalette(self.color_edit.palette()) # make a copy of the palette
+        #palette.setColor(QPalette.Active, QPalette.Base, \
                     #qcolor)
-        palette.setColor(QtGui.QPalette.Background, QtGui.QColor('blue'))  # ButtonText
+        palette.setColor(QPalette.Background, QColor('blue'))  # ButtonText
         self.color_edit.setPalette(palette)
 
         self.color_edit.setStyleSheet("QPushButton {"
@@ -111,43 +138,43 @@ class EditNodeProperties(QtGui.QDialog):
                                       #"border:1px solid rgb(255, 170, 255); "
                                       "}")
 
-        self.all_nodes_header = QtGui.QLabel("All Nodes:")
-        self.point_size = QtGui.QLabel("Point Size:")
-        self.point_size_edit = QtGui.QSpinBox(self)
+        self.all_nodes_header = QLabel("All Nodes:")
+        self.point_size = QLabel("Point Size:")
+        self.point_size_edit = QSpinBox(self)
         self.point_size_edit.setRange(1, 10)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
 
-        self.opacity = QtGui.QLabel("Opacity:")
-        self.opacity_edit = QtGui.QDoubleSpinBox(self)
+        self.opacity = QLabel("Opacity:")
+        self.opacity_edit = QDoubleSpinBox(self)
         self.opacity_edit.setRange(0.1, 1.0)
         self.opacity_edit.setDecimals(1)
         self.opacity_edit.setSingleStep(0.1)
         self.opacity_edit.setValue(opacity)
 
         # show/hide
-        self.checkbox_show = QtGui.QCheckBox("Show")
-        self.checkbox_hide = QtGui.QCheckBox("Hide")
+        self.checkbox_show = QCheckBox("Show")
+        self.checkbox_hide = QCheckBox("Hide")
         self.checkbox_show.setChecked(show)
         self.checkbox_hide.setChecked(not show)
 
         #----------------------------------------------
-        self.nodes_header = QtGui.QLabel("Single Node:")
-        self.name = QtGui.QLabel("ID:")
-        self.name_edit = QtGui.QLineEdit('Node %i' % name)
+        self.nodes_header = QLabel("Single Node:")
+        self.name = QLabel("ID:")
+        self.name_edit = QLineEdit('Node %i' % name)
         self.name_edit.setDisabled(True)
 
-        self.description = QtGui.QLabel("Description:")
-        self.description_edit = QtGui.QLineEdit(str(description))
+        self.description = QLabel("Description:")
+        self.description_edit = QLineEdit(str(description))
         #self.description_edit.setDisabled(True)
 
         location_x = 0.1
         location_y = 0.1
         location_z = 0.1
-        self.location = QtGui.QLabel("Location:")
-        self.location_x_edit = QtGui.QDoubleSpinBox(self)
-        self.location_y_edit = QtGui.QDoubleSpinBox(self)
-        self.location_z_edit = QtGui.QDoubleSpinBox(self)
+        self.location = QLabel("Location:")
+        self.location_x_edit = QDoubleSpinBox(self)
+        self.location_y_edit = QDoubleSpinBox(self)
+        self.location_z_edit = QDoubleSpinBox(self)
         #self.location_x_edit.setDecimals(1)
         delta_x = abs(location_x) / 100. if location_x != 0.0 else 0.1
         delta_y = abs(location_y) / 100. if location_y != 0.0 else 0.1
@@ -159,20 +186,20 @@ class EditNodeProperties(QtGui.QDialog):
         self.location_y_edit.setValue(location_y)
         self.location_z_edit.setValue(location_z)
 
-        self.coord = QtGui.QLabel("Coord:")
-        self.coord_edit = QtGui.QSpinBox(self)
+        self.coord = QLabel("Coord:")
+        self.coord_edit = QSpinBox(self)
         self.coord_edit.setRange(0, 99999999)
         #self.coord_edit.setSingleStep(1)
         self.coord_edit.setValue(0)
 
-        self.coord_type = QtGui.QLabel("Coord Type:")
+        self.coord_type = QLabel("Coord Type:")
         #----------------------------------------------
 
         # closing
         #if self._default_is_apply:
             #self.apply_button.setDisabled(True)
 
-        self.close_button = QtGui.QPushButton("Close")
+        self.close_button = QPushButton("Close")
 
         self.create_layout()
         self.set_connections()
@@ -224,33 +251,33 @@ class EditNodeProperties(QtGui.QDialog):
         #return
 
     def create_layout(self):
-        cancel_box = QtGui.QHBoxLayout()
+        cancel_box = QHBoxLayout()
         cancel_box.addWidget(self.close_button)
 
-        grid1 = QtGui.QGridLayout()
-        grid2 = QtGui.QGridLayout()
+        grid1 = QGridLayout()
+        grid2 = QGridLayout()
 
         #-----------------------------------------
         # setup
-        self.radio_rectangular = QtGui.QRadioButton('Rectangular')
-        self.radio_cylindrical = QtGui.QRadioButton('Cylindrical')
-        self.radio_spherical = QtGui.QRadioButton('Spherical')
+        self.radio_rectangular = QRadioButton('Rectangular')
+        self.radio_cylindrical = QRadioButton('Cylindrical')
+        self.radio_spherical = QRadioButton('Spherical')
 
-        coord_type_layout = QtGui.QHBoxLayout()
+        coord_type_layout = QHBoxLayout()
         coord_type_layout.addWidget(self.radio_rectangular)
         coord_type_layout.addWidget(self.radio_cylindrical)
         coord_type_layout.addWidget(self.radio_spherical)
 
-        location_layout = QtGui.QHBoxLayout()
+        location_layout = QHBoxLayout()
         location_layout.addWidget(self.location_x_edit)
         location_layout.addWidget(self.location_y_edit)
         location_layout.addWidget(self.location_z_edit)
 
-        checkboxs = QtGui.QButtonGroup(self)
+        checkboxs = QButtonGroup(self)
         checkboxs.addButton(self.checkbox_show)
         checkboxs.addButton(self.checkbox_hide)
 
-        vbox1 = QtGui.QVBoxLayout()
+        vbox1 = QVBoxLayout()
         vbox1.addWidget(self.checkbox_show)
         vbox1.addWidget(self.checkbox_hide)
         #vbox1.addLayout(checkboxs)
@@ -311,7 +338,7 @@ class EditNodeProperties(QtGui.QDialog):
 
         #------------------------------------
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addLayout(grid1)
         vbox.addLayout(vbox1)
         vbox.addStretch()
@@ -324,30 +351,50 @@ class EditNodeProperties(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
-        self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
-        self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
-        self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
-        self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
+        if qt_version == 4:
+            self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
+            self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
+            self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
+            self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
+            self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
 
 
-        self.connect(self.description_edit, QtCore.SIGNAL("valueChanged(int)"), self.on_description)
-        self.connect(self.coord_edit, QtCore.SIGNAL("valueChanged(int)"), self.on_coord)
-        self.connect(self.radio_rectangular, QtCore.SIGNAL('clicked()'), self.on_coord_type)
-        self.connect(self.radio_cylindrical, QtCore.SIGNAL('clicked()'), self.on_coord_type)
-        self.connect(self.radio_spherical, QtCore.SIGNAL('clicked()'), self.on_coord_type)
+            self.connect(self.description_edit, QtCore.SIGNAL("valueChanged(int)"), self.on_description)
+            self.connect(self.coord_edit, QtCore.SIGNAL("valueChanged(int)"), self.on_coord)
+            self.connect(self.radio_rectangular, QtCore.SIGNAL('clicked()'), self.on_coord_type)
+            self.connect(self.radio_cylindrical, QtCore.SIGNAL('clicked()'), self.on_coord_type)
+            self.connect(self.radio_spherical, QtCore.SIGNAL('clicked()'), self.on_coord_type)
 
-        self.connect(self.location_x_edit, QtCore.SIGNAL('clicked()'), self.on_location_x)
-        self.connect(self.location_y_edit, QtCore.SIGNAL('clicked()'), self.on_location_y)
-        self.connect(self.location_z_edit, QtCore.SIGNAL('clicked()'), self.on_location_z)
+            self.connect(self.location_x_edit, QtCore.SIGNAL('clicked()'), self.on_location_x)
+            self.connect(self.location_y_edit, QtCore.SIGNAL('clicked()'), self.on_location_y)
+            self.connect(self.location_z_edit, QtCore.SIGNAL('clicked()'), self.on_location_z)
 
-        self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
+            self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
 
-        #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
+            #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
 
-        #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
+            #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+            #self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
+        else:
+            pass
+            #self.opacity_edit.clicked.connect(self.on_opacity)
+            #self.point_size.clicked.connect(self.on_point_size)
+            #self.color_edit.clicked.connect(self.on_color)
+            #self.checkbox_show.clicked.connect(self.on_show)
+            #self.checkbox_hide.clicked.connect(self.on_hide)
+
+            #self.description_edit.valueChanged.connect(self.on_description)
+            #self.coord_edit.valueChanged.connect(self.on_coord)
+            #self.radio_rectangular.clicked.connect(self.on_coord_type)
+            #self.radio_cylindrical.clicked.connect(self.on_coord_type)
+            #self.radio_spherical.clicked.connect(self.on_coord_type)
+
+            #self.location_x_edit.clicked.connect(self.on_location_x)
+            #self.location_y_edit.clicked.connect(self.on_location_y)
+            #self.location_z_edit.clicked.connect(self.on_location_z)
+            self.close_button.clicked.connect(self.on_close)
+
 
 
     def on_color(self):
@@ -355,7 +402,7 @@ class EditNodeProperties(QtGui.QDialog):
         rgb_color_ints = obj.color
 
         msg = 'Points'
-        col = QtGui.QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self, "Choose a %s color" % msg)
+        col = QColorDialog.getColor(QColor(*rgb_color_ints), self, "Choose a %s color" % msg)
         if col.isValid():
             color = col.getRgbF()[:3]
             obj.color = color
@@ -494,7 +541,7 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     #g = GeometryHandle()
     #g.add('main', color=(0, 0, 0), line_thickness=0.0)

@@ -4,17 +4,20 @@ if qt_version == 4:
     #from PyQt4 import QtCore, QtGui
     from PyQt4 import QtGui
     from PyQt4.QtGui import (
-        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
+        QSpinBox)
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
     from PyQt5 import QtGui
     from PyQt5.QtWidgets import (
-        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
+        QSpinBox)
 elif qt_version == 'pyside':
     #from PySide import QtCore, QtGui
     from PySide import QtGui
     from PySide.QtGui import (
-        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
+        QSpinBox)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
@@ -50,7 +53,7 @@ class PreferencesWindow(PyDialog):
     def create_widgets(self):
         # Text Size
         self.textsize = QLabel("Text Size:")
-        self.textsize_edit = QtGui.QSpinBox(self)
+        self.textsize_edit = QSpinBox(self)
         self.textsize_edit.setValue(self._default_textsize)
         self.textsize_edit.setRange(7, 20)
         self.textsize_button = QPushButton("Default")

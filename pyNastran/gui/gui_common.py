@@ -541,6 +541,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.on_set_font_size(self.font_size - 1)
 
     def on_set_font_size(self, font_size, show_command=True):
+        """changes the font size"""
         is_failed = True
         if not isinstance(font_size, int):
             self.log_error('font_size=%r must be an integer; type=%s' % (
@@ -548,7 +549,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return is_failed
         if font_size < 6:
             font_size = 6
-
+        if self.font_size == font_size:
+            return False
         self.font_size = font_size
         font = QtGui.QFont()
         font.setPointSize(self.font_size)
