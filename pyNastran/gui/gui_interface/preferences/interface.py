@@ -13,7 +13,7 @@ def set_preferences_menu(self):
         #self.log_error('No model has been loaded.')
         #return
     data = {
-        'text_size' : self.font_size,
+        'font_size' : self.font_size,
         'clicked_ok' : False,
         'close' : False,
     }

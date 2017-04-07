@@ -9,6 +9,7 @@ from __future__ import print_function
 from six import iteritems
 
 from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.gui_interface.common import PyDialog
 if qt_version == 4:
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
@@ -157,7 +158,7 @@ class Model(QtCore.QAbstractTableModel):
             self.close()
 
 
-class EditGeometryProperties(QDialog):
+class EditGeometryProperties(PyDialog):
     force = True
     allow_update = True
     def __init__(self, data, win_parent=None):
@@ -181,12 +182,14 @@ class EditGeometryProperties(QDialog):
         |    Apply   OK   Cancel  |
         +-------------------------+
         """
-        QDialog.__init__(self, win_parent)
+        PyDialog.__init__(self, data, win_parent)
+        self.set_font_size(data['font_size'])
+        del self.out_data['font_size']
         self.setWindowTitle('Edit Geometry Properties')
 
         #default
-        self.win_parent = win_parent
-        self.out_data = data
+        #self.win_parent = win_parent
+        #self.out_data = data
 
         self.keys = sorted(data.keys())
         self.keys = data.keys()
@@ -884,6 +887,7 @@ def main():
     green = (0, 255, 0)
     purple = (255, 0, 255)
     d = {
+        'font_size' : 8,
         'caero1' : AltGeometry(parent, 'caero', color=green, line_width=3, opacity=0.2),
         'caero2' : AltGeometry(parent, 'caero', color=purple, line_width=4, opacity=0.3),
         'caero' : AltGeometry(parent, 'caero', color=blue, line_width=2, opacity=0.1, bar_scale=1.0),

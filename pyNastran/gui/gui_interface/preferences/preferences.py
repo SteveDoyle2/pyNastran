@@ -38,7 +38,7 @@ class PreferencesWindow(PyDialog):
 
         self._updated_preference = False
 
-        self._default_textsize = data['text_size']
+        self._default_textsize = data['font_size']
 
         #self.setupUi(self)
         self.setWindowTitle('Preferences')
@@ -103,7 +103,6 @@ class PreferencesWindow(PyDialog):
         font.setPointSize(value)
         self.setFont(font)
 
-
     def on_default_textsize(self):
         self.textsize_edit.setValue(self._default_textsize)
         self.textsize_edit.setStyleSheet("QLineEdit{background: white;}")
@@ -124,7 +123,7 @@ class PreferencesWindow(PyDialog):
         textsize_value, flag0 = self.check_float(self.textsize_edit)
 
         if flag0:
-            self.out_data['text_size'] = int(textsize_value)
+            self.out_data['font_size'] = int(textsize_value)
             self.out_data['clicked_ok'] = True
             return True
         return False

@@ -54,6 +54,7 @@ class GroupsModify(PyDialog):
     """
     def __init__(self, data, win_parent=None, group_active='main'):
         PyDialog.__init__(self, data, win_parent)
+        self.set_font_size(data['font_size'])
         self._updated_groups = False
 
         #self.out_data = data

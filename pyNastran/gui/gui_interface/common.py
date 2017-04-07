@@ -5,15 +5,15 @@ from pyNastran.bdf.utils import (
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore
-    from PyQt4.QtGui import QDialog, QLineEdit, QFocusEvent
+    from PyQt4.QtGui import QDialog, QLineEdit, QFocusEvent, QFont
 elif qt_version == 5:
     from PyQt5 import QtCore
-    from PyQt5.QtGui import QFocusEvent
+    from PyQt5.QtGui import QFocusEvent, QFont
     from PyQt5.QtWidgets import QDialog, QLineEdit
 
 elif qt_version == 'pyside':
     from PySide import QtCore
-    from PySide.QtGui import QDialog, QLineEdit, QFocusEvent
+    from PySide.QtGui import QDialog, QLineEdit, QFocusEvent, QFont
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
@@ -47,6 +47,11 @@ class PyDialog(QDialog):
         QDialog.__init__(self, win_parent)
         self.out_data = data
         self.win_parent = win_parent
+
+    def set_font_size(self, font_size):
+        font = QFont()
+        font.setPointSize(font_size)
+        self.setFont(font)
 
     def closeEvent(self, event):
         self.out_data['close'] = True

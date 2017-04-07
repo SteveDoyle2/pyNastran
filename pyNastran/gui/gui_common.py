@@ -554,6 +554,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         font = QtGui.QFont()
         font.setPointSize(self.font_size)
         self.setFont(font)
+
+        #self.toolbar.setFont(font)
+        self.menu_file.setFont(font)
+        self.menu_view.setFont(font)
+        self.menu_window.setFont(font)
+        self.menu_help.setFont(font)
+        #self.menu_scripts.setFont(font)
+
         return False
 
     def deprecated(self, old_name, new_name, deprecated_version):
@@ -5277,8 +5285,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         set_preferences_menu(self)
 
     def _apply_preferences(self, data):
-        text_size = data['text_size']
-        self.on_set_font_size(text_size)
+        font_size = data['font_size']
+        self.on_set_font_size(font_size)
 
     #---------------------------------------------------------------------------------------
     # CLIPPING MENU
@@ -5559,6 +5567,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #case = self.result_cases[key]
 
         data = deepcopy(self.geometry_properties)
+        data['font_size'] = self.font_size
         if not self._edit_geometry_properties_window_shown:
             self._edit_geometry_properties = EditGeometryProperties(data, win_parent=self)
             self._edit_geometry_properties.show()

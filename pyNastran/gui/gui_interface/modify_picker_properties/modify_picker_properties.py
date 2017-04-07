@@ -26,18 +26,17 @@ elif qt_version == 'pyside':
     )
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
+from pyNastran.gui.gui_interface.common import PyDialog
 
 
-class ModifyPickerPropertiesMenu(QDialog):
+class ModifyPickerPropertiesMenu(PyDialog):
 
     def __init__(self, data, win_parent=None):
-        self.win_parent = win_parent
-
         self._size = data['size'] * 100.
-        self.out_data = data
         self.dim_max = data['dim_max']
 
-        QDialog.__init__(self, win_parent)
+        PyDialog.__init__(self, data, win_parent)
+        self.set_font_size(data['font_size'])
         self.setWindowTitle('Modify Picker Properties')
         self.create_widgets()
         self.create_layout()
@@ -171,6 +170,7 @@ def main():
     app = QApplication(sys.argv)
     #The Main window
     d = {
+        'font_size' : 8,
         'size' : 10.,
         'dim_max' : 502.
     }

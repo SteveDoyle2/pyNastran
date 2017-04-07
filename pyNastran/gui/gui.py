@@ -237,6 +237,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             '',
             'Reload Model:  using the same filename, reload the model',
         ]
+
+        #message_box = QMessageBox()
+        #message_box.setStyleSheet('QMessageBox {background-color: #2b5b84; color: white;}\nQPushButton{color: white; font-size: 16px; background-color: #1d1d1d; border-radius: 10px; padding: 10px; text-align: center;}\n QPushButton:hover{color: #2b5b84;}')
+        #message_box.setFont(self.font())
         QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
     def on_reload(self):

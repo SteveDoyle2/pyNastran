@@ -7,6 +7,7 @@ def on_set_picker_size_menu(self):
 
     element_picker_size = self.element_picker_size
     data = {
+        'font_size' : self.font_size,
         'size' : element_picker_size,
         'dim_max' : self.dim_max,
         #'clicked_ok' : False,

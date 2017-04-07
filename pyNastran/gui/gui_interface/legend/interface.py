@@ -45,6 +45,7 @@ def set_legend_menu(self):
         default_format = data_format
 
     data = {
+        'font_size' : self.font_size,
         'icase' : self.icase,
         'name' : result_type,
         'min' : min_value,

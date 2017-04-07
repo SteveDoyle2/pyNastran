@@ -55,6 +55,7 @@ class AnimationWindow(PyDialog):
     """
     def __init__(self, data, win_parent=None):
         PyDialog.__init__(self, data, win_parent)
+        self.set_font_size(data['font_size'])
         self.istep = 0
 
         self._updated_animation = False
@@ -435,6 +436,7 @@ def main(): # pragma: no cover
     #The Main window
 
     data2 = {
+        'font_size' : 8,
         'icase' : 1,
         'name' : 'cat',
         'time' : 2,

@@ -36,6 +36,7 @@ class ClippingPropertiesWindow(PyDialog):
     def __init__(self, data, win_parent=None):
         #Init the base class
         PyDialog.__init__(self, data, win_parent)
+        self.set_font_size(data['font_size'])
 
         self._updated_clipping = False
 

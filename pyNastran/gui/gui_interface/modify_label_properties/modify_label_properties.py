@@ -24,11 +24,13 @@ elif qt_version == 'pyside':
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
+from pyNastran.gui.gui_interface.common import PyDialog
 
-class ModifyLabelPropertiesMenu(QDialog):
+
+class ModifyLabelPropertiesMenu(PyDialog):
 
     def __init__(self, data, win_parent=None):
-        self.win_parent = win_parent
+        #self.win_parent = win_parent
         float_color = data['color']
         assert len(float_color) == 3, float_color
         assert isinstance(float_color[0], float), float_color
@@ -39,10 +41,11 @@ class ModifyLabelPropertiesMenu(QDialog):
         assert isinstance(self.int_color[0], int), self.int_color
 
         self._size = data['size']
-        self.out_data = data
+        #self.out_data = data
         self.dim_max = data['dim_max']
 
-        QDialog.__init__(self, win_parent)
+        PyDialog.__init__(self, data, win_parent)
+        self.set_font_size(data['font_size'])
         self.setWindowTitle('Modify Label Properties')
         self.create_widgets()
         self.create_layout()
@@ -228,6 +231,7 @@ def main():
     app = QApplication(sys.argv)
     #The Main window
     d = {
+        'font_size' : 8,
         'color' : (1., 0., 0.), # red
         'size' : 10.,
         'dim_max' : 502.

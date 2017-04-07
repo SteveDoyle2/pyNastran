@@ -60,9 +60,11 @@ class LegendPropertiesWindow(PyDialog):
 
     def __init__(self, data, win_parent=None):
         PyDialog.__init__(self, data, win_parent)
+        self.set_font_size(data['font_size'])
 
         self._updated_legend = False
         self._animation_window_shown = False
+
         self._icase = data['icase']
         self._default_icase = self._icase
 
@@ -521,6 +523,7 @@ class LegendPropertiesWindow(PyDialog):
         if not flag0:
             return
         data = {
+            'font_size' : self.out_data['font_size'],
             'icase' : self._icase,
             'name' : name,
             'time' : 2,

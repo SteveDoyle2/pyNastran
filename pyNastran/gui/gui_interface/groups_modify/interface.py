@@ -22,6 +22,7 @@ def on_set_modify_groups(self):
     print('groups.keys() =', self.groups.keys())
 
     data = {
+        'font_size' : self.font_size,
         0 : self.groups['main'],
         'clicked_ok' : False,
         'close' : False,
