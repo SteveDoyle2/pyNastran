@@ -64,6 +64,7 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
 from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
 from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
+from pyNastran.gui.gui_interface.preferences.interface import set_preferences_menu
 from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
 from pyNastran.gui.gui_interface.modify_label_properties.interface import on_set_labelsize_color_menu
 from pyNastran.gui.gui_interface.groups_modify.interface import on_set_modify_groups
@@ -514,8 +515,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
+                ('text_size_increase', 'Increase Text Size', 'text_up.png', 'Ctrl+Plus', 'Increase Text Size', self.on_increase_text_size),
+                ('text_size_decrease', 'Decrease Text Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Text Size', self.on_decrease_text_size),
+                ('set_preferences', 'Set Preferences', 'preferences.png', None, 'Set Text Size', self.set_preferences_menu),
 
-                # TODO: not done...
+                # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.on_area_pick),
             ]
         # print('version =', vtk.VTK_VERSION, self.vtk_version)
@@ -529,6 +533,28 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
         self.tools = tools
         self.checkables = checkables
+
+    def on_increase_text_size(self):
+        self.on_set_font_size(self.font_size + 1)
+
+    def on_decrease_text_size(self):
+        self.on_set_font_size(self.font_size - 1)
+
+    def on_set_font_size(self, font_size, show_command=True):
+        is_failed = True
+        print('on_set_font_size', font_size)
+        if not isinstance(font_size, int):
+            self.log_error('font_size=%r must be an integer; type=%s' % (
+                font_size, type(font_size)))
+            return is_failed
+        if font_size < 6:
+            font_size = 6
+
+        self.font_size = font_size
+        font = QtGui.QFont()
+        font.setPointSize(self.font_size)
+        self.setFont(font)
+        return False
 
     def deprecated(self, old_name, new_name, deprecated_version):
         deprecated(old_name, new_name, deprecated_version, levels=[-1])
@@ -583,7 +609,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
-            'back_color', 'text_color', '',
+            'set_preferences', 'back_color', 'text_color', '',
             'label_modify', 'label_clear', 'label_reset', 'picker_modify', '',
             'legend', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
@@ -617,6 +643,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
+        hidden_tools = ('cycle_results', 'rcycle_results',
+                        'text_size_increase', 'text_size_decrease')
 
         menu_items = []
         if create_menu_bar:
@@ -627,7 +655,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 (self.menu_help, ('about',)),
                 (self.menu_scripts, scripts),
                 (self.toolbar, toolbar_tools),
-                (self.menu_hidden, ('cycle_results', 'rcycle_results',)),
+                (self.menu_hidden, hidden_tools),
                 # (self.menu_scripts, ()),
                 #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
             ]
@@ -3217,7 +3245,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         setting_keys = [str(key) for key in settings.childKeys()]
         try:
-            self.font_size = settings.value("font_size", font_size)
+            if qt_version == 4:
+                self.font_size = settings.value("font_size", font_size).toPyObject()
+            elif qt_version == 4:
+                self.font_size = settings.value("font_size", font_size)
+            else:
+                self.font_size = 8
         except (TypeError, AttributeError):
             self.font_size = 8
 
@@ -5232,6 +5265,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
         assert size >= 0., size
         self.cell_picker.SetTolerance(size)
 
+    #---------------------------------------------------------------------------------------
+    def set_preferences_menu(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        """
+        set_preferences_menu(self)
+
+    def _apply_preferences(self, data):
+        text_size = data['text_size']
+        self.on_set_font_size(text_size)
 
     #---------------------------------------------------------------------------------------
     # CLIPPING MENU
