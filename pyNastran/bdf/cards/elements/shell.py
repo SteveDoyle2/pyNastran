@@ -376,6 +376,32 @@ class CTRIA3(TriShell):
 
     def __init__(self, eid, pid, nids, zoffset=0.,
                  theta_mcid=0.0, TFlag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
+        """
+        Creates a CTRIA3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int]
+            node ids
+        zoffset : float; default=0.0
+            ???
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        TFlag : int; default=0
+            0 : ???
+            1 : ???
+        T1 / T2 / T3 : float; default=1.0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         TriShell.__init__(self)
         if comment:
             self.comment = comment
@@ -773,9 +799,44 @@ class CPLSTN3(TriShell):
 
 
 class CTRIA6(TriShell):
+    """
+    +--------+------------+---------+----+----+----+----+----+-----+
+    |   1    |      2     |    3    |  4 |  5 |  6 | 7  | 8  |  9  |
+    +========+============+=========+=====+===+====+====+====+=====+
+    | CTRIA3 |    EID     |   PID   | N1 | N2 | N3 | N4 | N5 | N6  |
+    +--------+------------+---------+----+----+----+----+----+-----+
+    |        | THETA/MCID | ZOFFSET | T1 | T2 | T3 |    |    |     |
+    +--------+------------+---------+----+----+----+----+----+-----+
+    """
     type = 'CTRIA6'
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0., TFlag=0,
                  T1=None, T2=None, T3=None, comment=''):
+        """
+        Creates a CTRIA6 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int/None, int/None, int/None]
+            node ids
+        zoffset : float; default=0.0
+            ???
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        TFlag : int; default=0
+            0 : ???
+            1 : ???
+        T1 / T2 / T3 : float; default=1.0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         TriShell.__init__(self)
         if comment:
             self.comment = comment
@@ -1036,9 +1097,44 @@ class CTRIA6(TriShell):
 
 
 class CTRIAR(TriShell):
+    """
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |  9  |
+    +========+=======+=======+=====+===+====+============+=========+=====+
+    | CTRIAR |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |        |       | TFLAG | T1 | T2 | T3 |            |         |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    """
     type = 'CTRIAR'
     def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
                  TFlag=0, T1=None, T2=None, T3=None, comment=''):
+        """
+        Creates a CTRIAR card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int]
+            node ids
+        zoffset : float; default=0.0
+            ???
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        TFlag : int; default=0
+            0 : ???
+            1 : ???
+        T1 / T2 / T3 : float; default=1.0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         TriShell.__init__(self)
         if comment:
             self.comment = comment
@@ -1432,8 +1528,29 @@ class QuadShell(ShellElement):
 
 
 class CSHEAR(QuadShell):
+    """
+    +--------+-------+-------+----+----+----+----+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |
+    +========+=======+=======+=====+===+====+====+
+    | CSHEAR |  EID  |  PID  | N1 | N2 | N3 | N4 |
+    +--------+-------+-------+----+----+----+----+
+    """
     type = 'CSHEAR'
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CSHEAR card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHEAR)
+        nids : List[int, int, int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+        """
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -1660,6 +1777,32 @@ class CQUAD4(QuadShell):
 
     def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
                  TFlag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment=''):
+        """
+        Creates a CQUAD4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int]
+            node ids
+        zoffset : float; default=0.0
+            ???
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        TFlag : int; default=0
+            0 : ???
+            1 : ???
+        T1 / T2 / T3 / T4 : float; default=1.0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -2709,10 +2852,45 @@ class CPLSTN8(QuadShell):
 
 
 class CQUADR(QuadShell):
+    """
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |     8      |    9    |
+    +========+=======+=======+=====+===+====+====+============+=========+
+    | CQUADR |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 | T4 |            |         |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    """
     type = 'CQUADR'
 
     def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
                  T1=None, T2=None, T3=None, T4=None, comment=''):
+        """
+        Creates a CQUADR card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int]
+            node ids
+        zoffset : float; default=0.0
+            ???
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        TFlag : int; default=0
+            0 : ???
+            1 : ???
+        T1 / T2 / T3 / T4 : float; default=1.0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -3122,13 +3300,13 @@ class CPLSTS3(TriShell):
 
 class CQUAD(QuadShell):
     """
-    +-------+-------+-----+----+------------+----+----+------------+-------+
-    |    1  |   2   |  3  |  4 |     5      |  6 |  7 |      8     |   9   |
-    +=======+=======+=====+====+============+====+====+============+=======+
-    | CQUAD |  EID  | PID | G1 |     G2     | G3 | G4 |     G5     |  G6   |
-    +-------+-------+-----+----+------------+----+----+------------+-------+
-    |       |   G7  | G8  | G9 | THETA/MCID |    |    |            |       |
-    +-------+-------+-----+----+------------+----+----+------------+-------+
+    +-------+-------+-----+----+------------+----+----+----+----+
+    |    1  |   2   |  3  |  4 |     5      |  6 |  7 | 8  |  9 |
+    +=======+=======+=====+====+============+====+====+====+====+
+    | CQUAD |  EID  | PID | G1 |     G2     | G3 | G4 | G5 | G6 |
+    +-------+-------+-----+----+------------+----+----+----+----+
+    |       |   G7  | G8  | G9 | THETA/MCID |    |    |    |    |
+    +-------+-------+-----+----+------------+----+----+----+----+
 
     theta_mcid is an MSC specific variable
     """
@@ -3267,6 +3445,32 @@ class CQUAD8(QuadShell):
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
                  TFlag=0, T1=None, T2=None, T3=None, T4=None,
                  comment=''):
+        """
+        Creates a CQUAD8 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int, int/None, int/None, int/None, int/None]
+            node ids
+        zoffset : float; default=0.0
+            ???
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        TFlag : int; default=0
+            0 : ???
+            1 : ???
+        T1 / T2 / T3 : float; default=1.0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         QuadShell.__init__(self)
         if comment:
             self.comment = comment

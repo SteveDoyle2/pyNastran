@@ -10,7 +10,6 @@ from pyNastran.xdb.xdb_object import XDB_obj
 from pyNastran.xdb.debug_output import debug_output
 
 
-
 def read_xdb(xdb_filename, etype, nsubcases=1, npload4s=1, debug=False, log=None):
     """function interface to the XDB class"""
     xdb = XDB(debug=debug, log=log)

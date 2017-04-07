@@ -1443,12 +1443,66 @@ class PBMSECT(LineProperty):
 
 
 class PBCOMP(LineProperty):
+    """
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |   1    |   2  |  3  |  4  |   5  |  6 |  7  |   8    |  9  |
+    +========+======+=====+=====+======+====+=====+========+=====+
+    | PBCOMP | PID  | MID | A   |  I1  | I2 | I12 |   J    | NSM |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |        |  K1  | K2  | M1  |  M2  | N1 | N2  | SYMOPT |     |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |        |  Y1  | Z1  | C1  | MID1 |    |     |        |     |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |        |  Y2  | Z2  | C2  | MID2 |    |     |        |     |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |        | ...  | ... | ... |      |    |     |        |     |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    """
     type = 'PBCOMP'
 
     def __init__(self, pid, mid, y, z, c, mids,
                  area=0.0, i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
                  k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
                  symopt=0, comment=''):
+        """
+        Creates a PBCOMP card
+
+        Parameters
+        ---------
+        pid : int
+            Property ID
+        mid : int
+            Material ID
+        mids : List[int]
+            Material ID for the i-th integration point
+        y / z : List[float]
+            The (y,z) coordinates of the lumped areas in the element
+            coordinate system
+        c : List[float]; default=0.0
+            Fraction of the total area for the i-th lumped area
+            default not supported...
+        area : float
+            Area of beam cross section
+        i1 / i2 : float; default=0.0
+            Area moment of inertia about plane 1/2 about the neutral axis
+        i12 : float; default=0.0
+           area product of inertia
+        j : float; default=0.0
+            Torsional moment of interia
+        nsm : float; default=0.0
+            Nonstructural mass per unit length
+        k1 / k2 : float; default=1.0
+            Shear stiffness factor K in K*A*G for plane 1/2
+        m1 / m2 : float; default=0.0
+            The (y,z) coordinates of center of gravity of nonstructural mass
+        n1 / n2 : float; default=0.0
+            The (y,z) coordinates of neutral axis
+        symopt : int; default=0
+            Symmetry option to input lumped areas for the beam cross section
+            0 < Integer < 5
+        comment : str; default=''
+            a comment for the card
+        """
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -1477,6 +1531,17 @@ class PBCOMP(LineProperty):
         self.c = c
         self.mids = mids
         assert 0 <= self.symopt <= 5, 'symopt=%i is invalid; ' % self.symopt
+
+    def validate(self):
+        assert isinstance(self.mids, list), 'mids=%r type=%s' % (self.mids, type(self.mids))
+        assert isinstance(self.y, list), 'y=%r type=%s' % (self.y, type(self.y))
+        assert isinstance(self.z, list), 'z=%r type=%s' % (self.z, type(self.z))
+        assert isinstance(self.c, list), 'c=%r type=%s' % (self.c, type(self.c))
+
+        assert len(self.mids) == len(self.y), 'len(mids)=%s len(y)=%s' % (len(self.mids), len(self.y))
+        assert len(self.mids) == len(self.z), 'len(mids)=%s len(z)=%s' % (len(self.mids), len(self.z))
+        assert len(self.mids) == len(self.c), 'len(mids)=%s len(c)=%s' % (len(self.mids), len(self.c))
+        assert self.symopt in [0, 1, 2, 3, 4, 5], 'symopt=%r' % self.symopt
 
     @classmethod
     def add_card(cls, card, comment=''):

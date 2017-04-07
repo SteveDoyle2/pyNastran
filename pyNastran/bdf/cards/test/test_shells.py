@@ -560,12 +560,14 @@ class TestShells(unittest.TestCase):
         nids = [1, 2, 3, 4]
 
         cshear = model.add_cshear(eid, pid, nids, comment='cshear')
-        pshear = model.add_pshear(pid, t, mid, nsm=0., f1=0., f2=0., comment='')
+        pshear = model.add_pshear(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
 
         E = 30.e7
         G = None
         nu = 0.3
         mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
+        model.pop_parse_errors()
+        model.validate()
 
         cshear.raw_fields()
         cshear.write_card(size=8)

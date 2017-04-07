@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=C0103,R0902,R0904,R0914
 """
 All bar properties are defined in this file.  This includes:
  *   PBAR
@@ -9,6 +9,30 @@ All bar properties are defined in this file.  This includes:
 
 All bars are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
+
+Area
+====
+ROD   = pi*(DIM1^2)
+TUBE  = pi*(DIM1^2 - DIM2^2)
+I     = (DIM3*DIM6)+(DIM2*DIM5) + ((DIM1-(DIM5+DIM6))*DIM4)
+I1    = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+CHAN  = (2*(DIM1*DIM4))+((DIM2-(2*DIM4))*DIM3)
+CHAN1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+CHAN2 = 2*(DIM1*DIM3)+((DIM4-(2*DIM1))*DIM2)
+T     = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
+T1    = (DIM1*DIM3)+(DIM2*DIM4)
+T2    = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
+BOX   = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
+BOX1  = (DIM2*DIM6)+(DIM2*DIM5)+((DIM1-DIM5-DIM6)*DIM3)+((DIM1-DIM5-DIM6)*DIM4)
+BAR   = DIM1*DIM2
+CROSS = (DIM2*DIM3)+2*((0.5*DIM1)*DIM4)
+H     = 2*((0.5*DIM2)*DIM3)+(DIM1*DIM4)
+Z     = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+HEXA  = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
+HAT   = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
+HAT1  = (DIM1*DIM5)+(DIM3*DIM4)+((DIM1-DIM3)*DIM4)+2*((DIM2-DIM5-DIM4)*DIM4)
+DBOX  = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
+        (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -25,11 +49,11 @@ from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
-def IyyBeam(b, h):
+def Iyy_beam(b, h):
     return 1 / 12. * b * h ** 3
 
 
-def IBeam(b, h):
+def I_beam(b, h):
     f = 1 / 12. * b * h
     Iyy = f * h * h  # 1/12.*b*h**3
     Izz = f * b * b  # 1/12.*h*b**3
@@ -37,7 +61,7 @@ def IBeam(b, h):
     return (Iyy, Izz, Iyz)
 
 
-def IBeamOffset(b, h, y, z):
+def I_beam_offset(b, h, y, z):
     A = b * h
     f = 1. / 12. * A
 
@@ -51,7 +75,7 @@ def IBeamOffset(b, h, y, z):
     return (Iyy, Izz, Iyz)
 
 
-def getInertiaRectangular(sections):
+def get_inertia_rectangular(sections):
     """
     Calculates the moment of inertia for a section about the CG.
 
@@ -72,8 +96,8 @@ def getInertiaRectangular(sections):
         Ax += A * x
         Ay += A * y
 
-    xCG = Ax / A
-    yCG = Ay / A
+    xcg = Ax / A
+    ycg = Ay / A
     Axx = 0.
     Ayy = 0.
     Axy = 0.
@@ -81,9 +105,9 @@ def getInertiaRectangular(sections):
         (b, h, x, y) = section
         #A = b*h
         #As.append(A)
-        Axx += As[i] * (x - xCG) ** 2
-        Ayy += As[i] * (y - yCG) ** 2
-        Axy += As[i] * (x - xCG) * (y - yCG)
+        Axx += As[i] * (x - xcg) ** 2
+        Ayy += As[i] * (y - ycg) ** 2
+        Axy += As[i] * (x - xcg) * (y - ycg)
     Ixx = Axx / A
     Iyy = Ayy / A
     Ixy = Axy / A
@@ -186,7 +210,7 @@ class LineProperty(Property):
             w2 = dim[3]  # d1
             sections.append([w2, h2, 0., 0.])
 
-            (A, Iyy, Izz, Iyz) = getInertiaRectangular(sections)
+            (A, Iyy, Izz, Iyz) = get_inertia_rectangular(sections)
             assert Iyz == 0.
 
         elif self.Type == 'BAR':
@@ -281,21 +305,21 @@ def _bar_areaL(class_name, Type, dim):
     .. note:: internal method
     """
     if Type == 'ROD':
-        """
-        This is a circle if you couldn't tell...
-          __C__
-         /     \
-        |       |
-        F       D
-        |       |
-         \     /
-          \_E_/
-
-        Radius = dim1
-        """
+        # This is a circle if you couldn't tell...
+        #   __C__
+        #  /     \
+        # |       |
+        # F       D
+        # |       |
+        #  \     /
+        #   \_E_/
+        #
+        # Radius = dim1
         A = pi * dim[0] ** 2
     elif Type == 'TUBE':
         A = pi * (dim[0] ** 2 - dim[1] ** 2)
+
+    #I = (DIM3*DIM6)+(DIM2*DIM5) + ((DIM1-(DIM5+DIM6))*DIM4)
     elif Type == 'I':
         h1 = dim[5]
         w1 = dim[2]
@@ -306,26 +330,37 @@ def _bar_areaL(class_name, Type, dim):
         h2 = dim[0] - h1 - h3
         w2 = dim[3]
         A = h1 * w1 + h2 * w2 + h3 * w3
+
+    #I1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+    elif Type == 'I1':
+        h2 = dim[2]
+        w2 = dim[1]
+
+        h1 = dim[3] - h2
+        w1 = dim[0] + w2
+        A = h1 * w1 + h2 * w2
+
+        A = 2 * (h1 * w1 + h2 * w2 + h3 * w3)  # symmetrical box
+
     elif Type == 'L':
-        """
-
-         D4
-        F--C      ^
-        |  |      |
-        |  |      |
-        |  |      | D2
-        |  +---+  |
-        |   D3 |  |
-        E------D  |
-
-        <------> D1
-        """
+        #  D4
+        # F--C      ^
+        # |  |      |
+        # |  |      |
+        # |  |      | D2
+        # |  +---+  |
+        # |   D3 |  |
+        # E------D  |
+        #
+        # <------> D1
         (d1, d2, d3, d4) = dim
         A1 = d1 * d3
 
         h2 = (d2 - d3)
         A2 = h2 * d4
         A = A1 + A2
+
+    #CHAN = (2*(DIM1*DIM4))+((DIM2-(2*DIM4))*DIM3)
     elif Type == 'CHAN':
         h1 = dim[3]
         w1 = dim[0]
@@ -335,61 +370,11 @@ def _bar_areaL(class_name, Type, dim):
         h2 = dim[1] - h1 - h3
         w2 = dim[2]
         A = h1 * w1 + h2 * w2 + h3 * w3
-    elif Type == 'T':
-        h1 = dim[2]
-        w1 = dim[0]
+        dim1, dim2, dim3, dim4 = dim
+        A2 = 2. * dim1 * dim4 + (dim2 - 2. * dim4) * dim3
+        assert A == A2
 
-        h2 = dim[1] - h1
-        w2 = dim[3]
-        A = h1 * w1 + h2 * w2
-    elif Type == 'BOX':
-        h1 = dim[2]
-        w1 = dim[0]
-
-        h2 = dim[1] - 2 * h1
-        w2 = dim[3]
-        A = 2 * (h1 * w1 + h2 * w2)
-    elif Type == 'BAR':
-        """
-        <------> D1
-
-        F------C  ^
-        |      |  |
-        |      |  | D2
-        |      |  |
-        E------D  |
-        """
-        h1 = dim[1]
-        w1 = dim[0]
-        A = h1 * w1
-    elif Type == 'CROSS':
-        h1 = dim[2]
-        w1 = dim[1]
-
-        h2 = dim[3]
-        w2 = dim[0]
-        A = h1 * w1 + h2 * w2
-    elif Type == 'H':
-        h1 = dim[2]
-        w1 = dim[1]
-
-        h2 = dim[3]
-        w2 = dim[0]
-        A = h1 * w1 + h2 * w2
-    elif Type == 'T1':
-        h1 = dim[0]
-        w1 = dim[2]
-
-        h2 = dim[3]
-        w2 = dim[1]
-        A = h1 * w1 + h2 * w2
-    elif Type == 'I1':
-        h2 = dim[2]
-        w2 = dim[1]
-
-        h1 = dim[3] - h2
-        w1 = dim[0] + w2
-        A = h1 * w1 + h2 * w2
+    #CHAN1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
     elif Type == 'CHAN1':
         h2 = dim[2]
         w2 = dim[1]
@@ -397,13 +382,11 @@ def _bar_areaL(class_name, Type, dim):
         h1 = dim[3] - h2
         w1 = dim[0] + w2
         A = h1 * w1 + h2 * w2
-    elif Type == 'Z':
-        h2 = dim[2]
-        w2 = dim[1]
+        dim1, dim2, dim3, dim4 = dim
+        A2 = dim2 * dim3 + (dim4 - dim3) * (dim1 + dim2)
+        assert A == A2
 
-        h1 = dim[3] - h2
-        w1 = dim[0]
-        A = h1 * w1 + h2 * w2
+    #CHAN2 = 2*(DIM1*DIM3)+((DIM4-(2*DIM1))*DIM2)
     elif Type == 'CHAN2':
         h2 = dim[1]
         w2 = dim[3]
@@ -411,7 +394,29 @@ def _bar_areaL(class_name, Type, dim):
         h1 = dim[2] - h2
         w1 = dim[0] * 2
         A = h1 * w1 + h2 * w2
+        dim1, dim2, dim3, dim4 = dim
+        A2 = 2 * dim1 * dim3 + (dim4 - 2 * dim1) * dim2
+        assert A == A2
 
+    #T = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
+    elif Type == 'T':
+        h1 = dim[2]
+        w1 = dim[0]
+
+        h2 = dim[1] - h1
+        w2 = dim[3]
+        A = h1 * w1 + h2 * w2
+
+    #T1 = (DIM1*DIM3)+(DIM2*DIM4)
+    elif Type == 'T1':
+        h1 = dim[0]
+        w1 = dim[2]
+
+        h2 = dim[3]
+        w2 = dim[1]
+        A = h1 * w1 + h2 * w2
+
+    #T2 = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
     elif Type == 'T2':
         h1 = dim[3]
         w1 = dim[1]
@@ -419,6 +424,17 @@ def _bar_areaL(class_name, Type, dim):
         h2 = h1 - dim[2]
         w2 = dim[0]
         A = h1 * w1 + h2 * w2
+
+    #BOX = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
+    elif Type == 'BOX':
+        h1 = dim[2]
+        w1 = dim[0]
+
+        h2 = dim[1] - 2 * h1
+        w2 = dim[3]
+        A = 2 * (h1 * w1 + h2 * w2)
+
+    #BOX1 = (DIM2*DIM6)+(DIM2*DIM5)+((DIM1-DIM5-DIM6)*DIM3)+((DIM1-DIM5-DIM6)*DIM4)
     elif Type == 'BOX1':
         h1 = dim[2]  # top
         w1 = dim[0]
@@ -432,12 +448,56 @@ def _bar_areaL(class_name, Type, dim):
         w4 = dim[4]  # right
         A2 = h3 * (w3 + w4)
         A = A1 + A2
-    elif Type == 'HEXA':
-        hBox = dim[2]
-        wBox = dim[1]
 
-        wTri = dim[0]
-        A = hBox * wBox - wTri * hBox
+    #BAR   = DIM1*DIM2
+    elif Type == 'BAR':
+        # <------> D1
+        #
+        # F------C  ^
+        # |      |  |
+        # |      |  | D2
+        # |      |  |
+        # E------D  |
+        h1 = dim[1]
+        w1 = dim[0]
+        A = h1 * w1
+
+    #CROSS = (DIM2*DIM3)+2*((0.5*DIM1)*DIM4)
+    elif Type == 'CROSS':
+        h1 = dim[2]
+        w1 = dim[1]
+
+        h2 = dim[3]
+        w2 = dim[0]
+        A = h1 * w1 + h2 * w2
+
+    #H = 2*((0.5*DIM2)*DIM3)+(DIM1*DIM4)
+    elif Type == 'H':
+        h1 = dim[2]
+        w1 = dim[1]
+
+        h2 = dim[3]
+        w2 = dim[0]
+        A = h1 * w1 + h2 * w2
+
+    #Z = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+    elif Type == 'Z':
+        h2 = dim[2]
+        w2 = dim[1]
+
+        h1 = dim[3] - h2
+        w1 = dim[0]
+        A = h1 * w1 + h2 * w2
+
+    #HEXA = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
+    elif Type == 'HEXA':
+        hbox = dim[2]
+        wbox = dim[1]
+
+        wtri = dim[0]
+        A = hbox * wbox - wtri * hbox
+
+    #HAT = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
     elif Type == 'HAT':
         w = dim[1]      # constant width (note h is sometimes w)
         h1 = w           # horizontal lower bar
@@ -449,7 +509,7 @@ def _bar_areaL(class_name, Type, dim):
         h3 = w           # half of top bar
         w3 = dim[2] / 2.
 
-        A = 2 * (h1 * w1 + h2 * w2 + h3 * w3)  # symmetrical box
+    #HAT1 = (DIM1*DIM5)+(DIM3*DIM4)+((DIM1-DIM3)*DIM4)+2*((DIM2-DIM5-DIM4)*DIM4)
     elif Type == 'HAT1':
         w = dim[3]
 
@@ -464,9 +524,10 @@ def _bar_areaL(class_name, Type, dim):
 
         h1 = w              # upper, horizontal lower bar (see HAT)
         w1 = w0 - w3
-
         A = 2 * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
 
+    #DBOX = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
+    #       (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
     elif Type == 'DBOX':
         #
         #  |--2------5----
@@ -479,8 +540,8 @@ def _bar_areaL(class_name, Type, dim):
         #0,1,2,6,11
         #1,2,3,7,12
 
-        hTotal = dim[11]
-        wTotal = dim[0]
+        htotal = dim[11]
+        wtotal = dim[0]
 
         h2 = dim[6]
         w2 = dim[3]
@@ -488,16 +549,16 @@ def _bar_areaL(class_name, Type, dim):
         h4 = dim[7]
         w4 = w2
 
-        h1 = hTotal - h2 - h4
+        h1 = htotal - h2 - h4
         w1 = dim[3]
 
         h5 = dim[8]
-        w5 = wTotal - w2
+        w5 = wtotal - w2
 
         h7 = dim[9]
         w7 = w5
 
-        h6 = hTotal - h5 - h7
+        h6 = htotal - h5 - h7
         w6 = dim[5]
 
         h3 = (h1 + h6) / 2.
@@ -925,8 +986,9 @@ class PBARL(LineProperty):
         assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
         if not isinstance(self.group, string_types):
             raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
-        #if self.group != 'MSCBMLO':
-            #raise ValueError('Invalid group; pid=%s group=%r expected=[MSCBMLO]' % (self.pid, self.group))
+        #if self.group != 'MSCBML0':
+            #msg = 'Invalid group; pid=%s group=%r expected=[MSCBML0]' % (self.pid, self.group)
+            #raise ValueError(msg)
 
         assert None not in self.dim
 
@@ -944,7 +1006,7 @@ class PBARL(LineProperty):
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
-        group = string_or_blank(card, 3, 'group', 'MSCBMLO')
+        group = string_or_blank(card, 3, 'group', 'MSCBML0')
         Type = string(card, 4, 'Type')
 
         ndim = cls.valid_types[Type]
