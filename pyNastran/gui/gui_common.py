@@ -542,7 +542,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_set_font_size(self, font_size, show_command=True):
         is_failed = True
-        print('on_set_font_size', font_size)
         if not isinstance(font_size, int):
             self.log_error('font_size=%r must be an integer; type=%s' % (
                 font_size, type(font_size)))
@@ -561,6 +560,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.menu_window.setFont(font)
         self.menu_help.setFont(font)
         #self.menu_scripts.setFont(font)
+        self.log_command('on_set_font_size(%s)' % font_size)
 
         return False
 
