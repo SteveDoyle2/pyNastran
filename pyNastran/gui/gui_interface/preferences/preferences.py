@@ -1,25 +1,24 @@
-from six import string_types
-
+from __future__ import print_function
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     #from PyQt4 import QtCore, QtGui
-    from PyQt4 import QtCore, QtGui
+    from PyQt4 import QtGui
     from PyQt4.QtGui import (
-        QDialog, QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
-    from PyQt5 import QtCore, QtGui
+    from PyQt5 import QtGui
     from PyQt5.QtWidgets import (
-        QDialog, QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
 elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
+    #from PySide import QtCore, QtGui
+    from PySide import QtGui
     from PySide.QtGui import (
-        QDialog, QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
 from pyNastran.gui.gui_interface.common import PyDialog
-from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
 class PreferencesWindow(PyDialog):
     """
@@ -105,7 +104,6 @@ class PreferencesWindow(PyDialog):
 
     def on_default_textsize(self):
         self.textsize_edit.setValue(self._default_textsize)
-        self.textsize_edit.setStyleSheet("QLineEdit{background: white;}")
         self.on_set_font(self._default_textsize)
 
     #@staticmethod
