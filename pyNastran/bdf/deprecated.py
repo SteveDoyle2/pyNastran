@@ -1,13 +1,5 @@
 # pylint: disable=E1101,C0103
 
-
-class GetMethodsDeprecated(object):
-    """defines deprecated methods for GetMethods"""
-
-    def __init__(self):
-        pass
-
-
 class DeprecatedCompositeShellProperty(object):
     """
     To be deprecated in:

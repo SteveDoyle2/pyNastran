@@ -128,6 +128,9 @@ class BDFAttributes(object):
         self.punch = None
         self._encoding = None
 
+        #: list of Nastran SYSTEM commands
+        self.system_command_lines = []
+
         #: list of execive control deck lines
         self.executive_control_lines = []
 

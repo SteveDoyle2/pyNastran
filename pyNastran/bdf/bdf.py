@@ -131,7 +131,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_methods import BDFMethods
-from pyNastran.bdf.bdf_interface.get_card import GetMethods
+from pyNastran.bdf.bdf_interface.get_card import GetCard
 from pyNastran.bdf.bdf_interface.add_card import AddCards
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.mirror_mesh import WriteMeshes
@@ -256,7 +256,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     return model
 
 
-class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
+class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
@@ -308,11 +308,8 @@ class BDF(BDFMethods, GetMethods, AddCards, WriteMeshes, UnXrefMesh):
         #: stores the card_count of cards that have been rejected
         self.reject_count = {}
 
-        #: was an ENDDATA card found
-        #self.foundEndData = False
-
         #: allows the BDF variables to be scoped properly (i think...)
-        GetMethods.__init__(self)
+        GetCard.__init__(self)
         AddCards.__init__(self)
         BDFMethods.__init__(self)
         WriteMeshes.__init__(self)
