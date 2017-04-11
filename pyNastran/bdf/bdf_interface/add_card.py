@@ -1949,7 +1949,7 @@ class AddCards(AddMethods):
             the coordinate system for ???
         nvector : (3, ) float ndarray
            blank : load acts normal to the face
-           the local pressure vector (not supported)
+           the local pressure vector
         surf_or_line : str; default='SURF'
            SURF : surface load
            LINE : line load (only defined for QUADR, TRIAR)

@@ -1622,7 +1622,8 @@ class BDFMethods(BDFAttributes):
                     eid = elem.eid
                     if eid not in eids:
                         continue
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                    etype = elem.type
+                    if etype in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
                         # triangles
                         nodes = elem.node_ids
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
@@ -1640,7 +1641,7 @@ class BDFMethods(BDFAttributes):
                             raise FloatingPointError(msg)
                         centroid = (n1 + n2 + n3) / 3.
                         nface = 3
-                    elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                    elif etype in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         # quads
                         nodes = elem.node_ids
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
@@ -1659,19 +1660,19 @@ class BDFMethods(BDFAttributes):
                         centroid = (n1 + n2 + n3 + n4) / 4.
                         nface = 4
 
-                    elif elem.type == 'CTETRA':
+                    elif etype == 'CTETRA':
                         #face = elem.get_face(load.g1.nid, load.g34.nid)
                         face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
                         face, area, centroid, normal = face_acn
                         nface = 3
 
-                    elif elem.type == 'CHEXA':
+                    elif etype == 'CHEXA':
                         #face = elem.get_face(load.g1.nid, load.g34.nid)
                         face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
                         face, area, centroid, normal = face_acn
                         nface = 4
 
-                    elif elem.type == 'CPENTA':
+                    elif etype == 'CPENTA':
                         g1 = load.g1.nid
                         if load.g34 is None:
                             #face = elem.get_face(g1)
@@ -1684,7 +1685,7 @@ class BDFMethods(BDFAttributes):
                         face, area, centroid, normal = face_acn
                     else:
                         self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (
-                            loadcase_id, eid, elem.type, load.type))
+                            loadcase_id, eid, etype, load.type))
                         continue
                     r = centroid - p
 
@@ -1701,7 +1702,7 @@ class BDFMethods(BDFAttributes):
 
                     if  load.surf_or_line == 'SURF':
                         if norm(load.nvector) != 0.0 or load.Cid() != 0:
-                            normal = load.nvector
+                            normal = load.nvector / np.linalg.norm(load.nvector)
                             assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
                     else:
                         msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
@@ -2113,7 +2114,8 @@ class BDFMethods(BDFAttributes):
 
                 for elem in load.eids:
                     eid = elem.eid
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                    etype = elem.type
+                    if etype in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
                         # triangles
                         nodes = elem.node_ids
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
@@ -2131,7 +2133,7 @@ class BDFMethods(BDFAttributes):
                             raise FloatingPointError(msg)
                         centroid = (n1 + n2 + n3) / 3.
                         nface = 3
-                    elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                    elif etype in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         # quads
                         nodes = elem.node_ids
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
@@ -2150,19 +2152,19 @@ class BDFMethods(BDFAttributes):
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
                         nface = 4
-                    elif elem.type == 'CTETRA':
+                    elif etype == 'CTETRA':
                         #face1 = elem.get_face(load.g1.nid, load.g34.nid)
                         face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
                         face, area, centroid, normal = face_acn
                         #assert face == face1
                         nface = 3
-                    elif elem.type == 'CHEXA':
+                    elif etype == 'CHEXA':
                         #face1 = elem.get_face(load.g34.nid, load.g1.nid)
                         face_acn = elem.get_face_area_centroid_normal(load.g34.nid, load.g1.nid)
                         face, area, centroid, normal = face_acn
                         #assert face == face1
                         nface = 4
-                    elif elem.type == 'CPENTA':
+                    elif etype == 'CPENTA':
                         g1 = load.g1.nid
                         if load.g34 is None:
                             #face1 = elem.get_face(g1)
@@ -2176,7 +2178,7 @@ class BDFMethods(BDFAttributes):
                         #assert face == face1
                     else:
                         msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
-                               % (loadcase_id, eid, elem.type, load.type))
+                               % (loadcase_id, eid, etype, load.type))
                         self.log.debug(msg)
                         continue
 
@@ -2194,7 +2196,7 @@ class BDFMethods(BDFAttributes):
 
                     if load.surf_or_line == 'SURF':
                         if norm(load.nvector) != 0.0 or load.Cid() != 0:
-                            normal = load.nvector
+                            normal = load.nvector / np.linalg.norm(load.nvector)
                             assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
                     else:
                         msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (

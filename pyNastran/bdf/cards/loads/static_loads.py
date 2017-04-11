@@ -2495,7 +2495,7 @@ class PLOAD4(Load):
             the coordinate system for ???
         nvector : (3, ) float ndarray
            blank : load acts normal to the face
-           the local pressure vector (not supported)
+           the local pressure vector
         surf_or_line : str; default='SURF'
            SURF : surface load
            LINE : line load    (only defined for QUADR, TRIAR)
@@ -2530,6 +2530,8 @@ class PLOAD4(Load):
         #: (Integer >= 0;Default=0)
         self.cid = cid
         self.nvector = nvector
+
+        # flag with values of SURF/LINE
         self.surf_or_line = surf_or_line
 
         # Line load direction
@@ -2597,7 +2599,8 @@ class PLOAD4(Load):
         surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
         line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
         assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
-        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector, surf_or_line, line_load_dir, comment=comment)
+        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
+                      surf_or_line, line_load_dir, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2667,7 +2670,7 @@ class PLOAD4(Load):
 
         if  self.surf_or_line != 'SURF':
             if norm(self.nvector) != 0.0 or self.cid != 0:
-                vector = self.nvector
+                vector = self.nvector / np.linalg.norm(load.nvector)
                 assert self.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (self.Cid(), str(load))
             else:
                 # normal pressure
