@@ -2445,18 +2445,35 @@ class PLOAD2(Load):
 
 class PLOAD4(Load):
     """
-    +--------+-----+-----+----+----+------+------+----+-------+
-    |   1    |  2  |  3  |  4 |  5 |  6   |   7  |  8 |   9   |
-    +========+=====+=====+====+====+======+======+====+=======+
-    | PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  | G1 | G3/G4 |
-    +--------+-----+-----+----+----+------+------+----+-------+
-    |        | CID | N1  | N2 | N3 | SORL | LDIR |    |       |
-    +--------+-----+-----+----+----+------+------+----+-------+
+    Standard Format
+    ===============
+    Defines a pressure load on a face of a CHEXA, CPENTA, CTETRA,
+    CTRIA3, CTRIA6, CTRIAR, CQUAD4, CQUAD8, or CQUADR element.
+    +--------+-----+-----+----+----+------+------+------+-------+
+    |   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
+    +========+=====+=====+====+====+======+======+======+=======+
+    | PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  |  G1  | G3/G4 |
+    +--------+-----+-----+----+----+------+------+------+-------+
+    |        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
+    +--------+-----+-----+----+----+------+------+------+-------+
+
+    Alternate Format
+    ================
+    Defines a pressure load on a face of a CTRIA3, CTRIA6, CTRIAR,
+    CQUAD4, CQUAD8, or CQUADR element.
+    +--------+-----+-----+----+----+------+------+------+-------+
+    |   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
+    +========+=====+=====+====+====+======+======+======+=======+
+    | PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  | THRU | EID2  |
+    +--------+-----+-----+----+----+------+------+------+-------+
+    |        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
+    +--------+-----+-----+----+----+------+------+------+-------+
     """
     type = 'PLOAD4'
 
     def __init__(self, sid, eids, pressures,
-                 g1=None, g34=None, cid=0, NVector=None, sorl='SURF', ldir='NORM', comment=''):
+                 g1=None, g34=None, cid=0, nvector=None, surf_or_line='SURF',
+                 line_load_dir='NORM', comment=''):
         """
         Creates a PLOAD4 card
 
@@ -2476,25 +2493,25 @@ class PLOAD4(Load):
             only used for solid elements
         cid : int; default=0
             the coordinate system for ???
-        NVector : (3, ) float ndarray
+        nvector : (3, ) float ndarray
            blank : load acts normal to the face
            the local pressure vector (not supported)
-        sorl : str; default='SURF'
+        surf_or_line : str; default='SURF'
            SURF : surface load
-           LINE : line load (only defined for QUADR, TRIAR)
+           LINE : line load    (only defined for QUADR, TRIAR)
            not supported
-        ldir : str; default='NORM'
-           direction of the line load (see sorl); {X, Y, Z, TANG, NORM}
+        line_load_dir : str; default='NORM'
+           direction of the line load (see surf_or_line); {X, Y, Z, TANG, NORM}
            not supported
         comment : str; default=''
             a comment for the card
 
         TODO: fix the way "pressures" works
         """
-        if NVector is None:
-            NVector = np.zeros(3, dtype='float64')
+        if nvector is None:
+            nvector = np.zeros(3, dtype='float64')
         else:
-            NVector = np.asarray(NVector, dtype='float64')
+            nvector = np.asarray(nvector, dtype='float64')
 
         if comment:
             self.comment = comment
@@ -2512,15 +2529,26 @@ class PLOAD4(Load):
         #: Coordinate system identification number. See Remark 2.
         #: (Integer >= 0;Default=0)
         self.cid = cid
-        self.NVector = NVector
-        self.sorl = sorl
-        self.ldir = ldir
+        self.nvector = nvector
+        self.surf_or_line = surf_or_line
+
+        # Line load direction
+        #
+        #   1. X, Y, Z : line load in x/y/z in the element coordinate
+        #                system
+        #   2. TANG    : line load is tangent to the edge pointing
+        #                from G1 to G2
+        #   3. NORM    : line load is in the mean plane, normal to the
+        #                edge and pointing outwards from the element
+        #
+        #   if cid=N123 = 0: line_load_dir_default=NORM
+        self.line_load_dir = line_load_dir
 
     def validate(self):
-        if self.sorl not in ['SURF', 'LINE']:
-            raise RuntimeError(self.sorl)
-        if self.ldir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
-            raise RuntimeError(self.ldir)
+        if self.surf_or_line not in ['SURF', 'LINE']:
+            raise RuntimeError(self.surf_or_line)
+        if self.line_load_dir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
+            raise RuntimeError(self.line_load_dir)
         assert self.g1 != 0, str(self)
         assert self.g34 != 0, str(self)
 
@@ -2546,8 +2574,9 @@ class PLOAD4(Load):
             double_or_blank(card, 6, 'p4', p1)]
 
         eids = [eid]
-        if (integer_string_or_blank(card, 7, 'g1/THRU') == 'THRU' and
-            integer_or_blank(card, 8, 'eid2')):
+        g1_thru = integer_string_or_blank(card, 7, 'g1/THRU')
+        if g1_thru == 'THRU' and integer_or_blank(card, 8, 'eid2'):
+            # alternate form
             eid2 = integer(card, 8, 'eid2')
             if eid2:
                 eids = list(unique(
@@ -2556,6 +2585,7 @@ class PLOAD4(Load):
             g1 = None
             g34 = None
         else:
+            # standard form
             eids = [eid]
             g1 = integer_or_blank(card, 7, 'g1')
             g34 = integer_or_blank(card, 8, 'g34')
@@ -2564,10 +2594,10 @@ class PLOAD4(Load):
         nvector = array([double_or_blank(card, 10, 'N1', 0.0),
                          double_or_blank(card, 11, 'N2', 0.0),
                          double_or_blank(card, 12, 'N3', 0.0)])
-        sorl = string_or_blank(card, 13, 'sorl', 'SURF')
-        ldir = string_or_blank(card, 14, 'ldir', 'NORM')
+        surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
+        line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
         assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
-        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector, sorl, ldir, comment=comment)
+        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector, surf_or_line, line_load_dir, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2594,28 +2624,31 @@ class PLOAD4(Load):
         cid = data[5]
         nvector = data[6]
 
-        sorl = data[7]
-        #self.ldir = data[8]
+        surf_or_line = data[7]
+        #self.line_load_dir = data[8]
         #assert len(data)==8
 
         eids = [eid]
-        sorl = 'SURF'
-        ldir = 'NORM'
-        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector, sorl, ldir, comment=comment)
+        surf_or_line = 'SURF'
+        line_load_dir = 'NORM'
+        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
+                      surf_or_line, line_load_dir, comment=comment)
 
     def get_loads(self):
         return [self]
 
     def transform_load(self):
         """
-        .. warning:: sorl=SURF is supported (not LINE)
-        .. warning:: ldir=NORM is supported (not X,Y,Z)
+        Considers single elememnts
+
+        .. warning:: surf_or_line=SURF is supported (not LINE)
+        .. warning:: line_load_dir=NORM is supported (not X,Y,Z)
         """
-        if  self.sorl != 'SURF':
-            msg = 'Only surface loads are supported.  required_sorl=SURF.  actual=%r' % self.sorl
+        if self.surf_or_line != 'SURF':
+            msg = 'Only surface loads are supported.  required_surf_or_line=SURF.  actual=%r' % self.surf_or_line
             raise RuntimeError(msg)
-        if self.ldir != 'NORM':
-            msg = 'Only normal loads are supported.   required_ldir=NORM.  actual=%r' % self.ldir
+        if self.line_load_dir != 'NORM':
+            msg = 'Only normal loads are supported.   required_line_load_dir=NORM.  actual=%r' % self.line_load_dir
             raise RuntimeError(msg)
         if len(self.eids) != 1:
             msg = 'Only one load may be defined on each PLOAD4.  nLoads=%s\n%s' % (
@@ -2632,17 +2665,26 @@ class PLOAD4(Load):
             area = elem.Area()
         n = len(face_node_ids)
 
-        elem = self.eids_ref[0]
-        vector = array(elem.Normal())
+        if  self.surf_or_line != 'SURF':
+            if norm(self.nvector) != 0.0 or self.cid != 0:
+                vector = self.nvector
+                assert self.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (self.Cid(), str(load))
+            else:
+                # normal pressure
+                assert len(self.eids_ref) == 1, 'only 1 element is supported by transform_load on PLOAD4\n%s' % (str(self))
+                elem = self.eids_ref[0]
+                vector = array(elem.Normal())
+        else:
+            raise NotImplementedError('surf_or_line=%r on PLOAD4 is not supported\n%s' % (self.surf_or_line, str(self)))
+
         vectors = []
         for (nid, p) in zip(face_node_ids, self.pressures):
-            #: .. warning:: only supports normal pressures
             vectors.append(vector * p * area / n)  # Force_i
-
         is_load = None
         return (is_load, face_node_ids, vectors)
 
     def Cid(self):
+        """gets the coordinate system object"""
         if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid_ref.cid
@@ -2715,17 +2757,17 @@ class PLOAD4(Load):
         del self.cid_ref, self.eids_ref
 
     def G1(self):
-        if isinstance(self.g1, (integer_types)):
+        if isinstance(self.g1, integer_types):
             return self.g1
         return self.g1_ref.nid
 
     def G34(self):
-        if isinstance(self.g34, (integer_types)):
+        if isinstance(self.g34, integer_types):
             return self.g34
         return self.g34_ref.nid
 
     def Eid(self, eid):
-        if isinstance(eid, (integer_types)):
+        if isinstance(eid, integer_types):
             return eid
         return eid.eid
 
@@ -2746,12 +2788,10 @@ class PLOAD4(Load):
     def get_element_ids(self, eid=None):
         if eid:
             eidi = self.Eid(eid)
-            #assert len(str(eidi)) < 20, eidi
             return eidi
         eids = []
         for element in self.eids:
             eidi = self.Eid(element)
-            #assert len(str(eidi)) < 20, eidi
             eids.append(eidi)
         return eids
 
@@ -2759,21 +2799,67 @@ class PLOAD4(Load):
     def element_ids(self):
         return self.get_element_ids()
 
-    def raw_fields(self):
+    def repr_fields(self):
         eids = self.element_ids
         #print('eids = ', eids)
         eid = eids[0]
         #print('eid = ', eid)
-        cid = set_blank_if_default(self.Cid(), 0)
-        sorl = set_blank_if_default(self.sorl, 'SURF')
-        ldir = set_blank_if_default(self.ldir, 'NORM')
         p1 = self.pressures[0]
         p2 = set_blank_if_default(self.pressures[1], p1)
         p3 = set_blank_if_default(self.pressures[2], p1)
         p4 = set_blank_if_default(self.pressures[3], p1)
         list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
 
-        if self.g1 is not None:  # is it a SOLID element
+        if self.g1 is not None:
+            # is it a SOLID element
+            node_ids = self.node_ids
+            #node_ids = self.node_ids([self.g1, self.g34])
+            list_fields += node_ids
+        else:
+            if len(eids) > 1:
+                try:
+                    list_fields.append('THRU')
+                    eidi = eids[-1]
+                except:
+                    print("g1  = %s" % self.g1)
+                    print("g34 = %s" % self.g34)
+                    print("self.eids = %s" % self.eids)
+                    raise
+                list_fields.append(eidi)
+            else:
+                list_fields += [None, None]
+
+        cid = self.Cid()
+        if cid or norm(self.nvector) > 0.0:
+            n1 = self.nvector[0]
+            n2 = self.nvector[1]
+            n3 = self.nvector[2]
+            list_fields.append(cid)
+            list_fields += [n1, n2, n3]
+            surf_or_line = self.surf_or_line
+            line_load_dir = self.line_load_dir
+        else:
+            list_fields += [None, None, None, None]
+            surf_or_line = set_blank_if_default(self.surf_or_line, 'SURF')
+            line_load_dir = set_blank_if_default(self.line_load_dir, 'NORM')
+        list_fields.append(surf_or_line)
+        if surf_or_line == 'LINE':
+            list_fields.append(line_load_dir)
+        return list_fields
+
+    def raw_fields(self):
+        eids = self.element_ids
+        #print('eids = ', eids)
+        eid = eids[0]
+        #print('eid = ', eid)
+        p1 = self.pressures[0]
+        p2 = self.pressures[1]
+        p3 = self.pressures[2]
+        p4 = self.pressures[3]
+        list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
+
+        if self.g1 is not None:
+            # is it a SOLID element
             node_ids = self.node_ids
             #node_ids = self.node_ids([self.g1, self.g34])
             list_fields += node_ids
@@ -2792,21 +2878,26 @@ class PLOAD4(Load):
                 list_fields.append(eidi)
             else:
                 list_fields += [None, None]
-        list_fields.append(cid)
 
-        n1 = set_blank_if_default(self.NVector[0], 0.0)
-        n2 = set_blank_if_default(self.NVector[1], 0.0)
-        n3 = set_blank_if_default(self.NVector[2], 0.0)
-        list_fields += [n1, n2, n3]
-        list_fields.append(sorl)
-        list_fields.append(ldir)
+        cid = self.Cid()
+        if cid or norm(self.nvector) > 0.0:
+            n1 = self.nvector[0]
+            n2 = self.nvector[1]
+            n3 = self.nvector[2]
+            list_fields.append(cid)
+            list_fields += [n1, n2, n3]
+        else:
+            list_fields += [None, None, None, None]
+
+        surf_or_line = self.surf_or_line
+        line_load_dir = self.line_load_dir
+        list_fields.append(surf_or_line)
+        if surf_or_line == 'LINE':
+            list_fields.append(line_load_dir)
         return list_fields
 
-    def repr_fields(self):
-        return self.raw_fields()
-
     def write_card(self, size=8, is_double=False):
-        card = self.raw_fields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)

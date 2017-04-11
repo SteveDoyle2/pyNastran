@@ -454,8 +454,8 @@ class CalculixConverter(BDF):
                 # there are 4 possible pressures, but we assume p0
                 pressure = load.pressures[0] * scale
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
-                assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
-                assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
+                assert load.surf_or_line == 'SURF', 'surf_or_line = %s' % (load.surf_or_line)
+                assert load.line_load_dir == 'NORM', 'line_load_dir = %s' % (load.line_load_dir)
                 for elem in load.eids:
                     eid = elem.eid
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIAR',]:

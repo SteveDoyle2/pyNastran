@@ -1927,7 +1927,7 @@ class AddCards(AddMethods):
         return load
 
     def add_pload4(self, sid, eids, pressures, g1=None, g34=None, cid=0,
-                   NVector=None, sorl='SURF', ldir='NORM', comment=''):
+                   nvector=None, surf_or_line='SURF', line_load_dir='NORM', comment=''):
         """
         Creates a PLOAD4 card
 
@@ -1947,15 +1947,15 @@ class AddCards(AddMethods):
             only used for solid elements
         cid : int; default=0
             the coordinate system for ???
-        NVector : (3, ) float ndarray
+        nvector : (3, ) float ndarray
            blank : load acts normal to the face
            the local pressure vector (not supported)
-        sorl : str; default='SURF'
+        surf_or_line : str; default='SURF'
            SURF : surface load
            LINE : line load (only defined for QUADR, TRIAR)
            not supported
-        ldir : str; default='NORM'
-           direction of the line load (see sorl); {X, Y, Z, TANG, NORM}
+        line_load_dir : str; default='NORM'
+           direction of the line load (see surf_or_line); {X, Y, Z, TANG, NORM}
            not supported
         comment : str; default=''
             a comment for the card
@@ -1963,8 +1963,8 @@ class AddCards(AddMethods):
         TODO: fix the way "pressures" works
         """
         load = PLOAD4(sid, eids, pressures, g1=g1, g34=g34, cid=cid,
-                      NVector=NVector, sorl=sorl,
-                      ldir=ldir, comment=comment)
+                      nvector=nvector, surf_or_line=surf_or_line,
+                      line_load_dir=line_load_dir, comment=comment)
         self._add_load_object(load)
         return load
 

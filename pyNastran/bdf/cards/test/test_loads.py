@@ -697,7 +697,8 @@ class TestLoads(unittest.TestCase):
         g34 = 8
         pressures = [1., 1., 1., 1.]
         pload4 = model.add_pload4(sid, eids, pressures, g1=1, g34=8,
-                                  cid=0, NVector=None, sorl='SURF', ldir='NORM', comment='pload4')
+                                  cid=0, nvector=None, surf_or_line='SURF',
+                                  line_load_dir='NORM', comment='pload4')
 
 
         conid = 42

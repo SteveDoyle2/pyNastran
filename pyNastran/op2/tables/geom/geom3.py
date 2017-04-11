@@ -375,15 +375,15 @@ class GEOM3(GeomCommon):
             #s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8
             #sdrlA = s1+s2+s3+s4
             #sdrlB = s5+s6+s7+s8
-            #ldirA = L1+L2+L3+L4
-            #ldirB = L5+L6+L7+L8
+            #line_load_dirA = L1+L2+L3+L4
+            #line_load_dirB = L5+L6+L7+L8
             sdrlA = None
             sdrlB = None
-            ldirA = None
-            ldirB = None
+            line_load_dirA = None
+            line_load_dirB = None
             load = PLOAD4.add_op2_data(
                 [sid, eid, [p1, p2, p3, p4], g1, g34,
-                 cid, [n1, n2, n3], sdrlA, sdrlB, ldirA, ldirB])
+                 cid, [n1, n2, n3], sdrlA, sdrlB, line_load_dirA, line_load_dirB])
             self._add_load_object(load)
             n += 48
         self.card_count['PLOAD4'] = nentries

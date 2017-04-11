@@ -1617,8 +1617,7 @@ class BDFMethods(BDFAttributes):
                             loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
-                assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
-                assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
+                assert load.line_load_dir == 'NORM', 'line_load_dir = %s' % (load.line_load_dir)
                 for elem in load.eids:
                     eid = elem.eid
                     if eid not in eids:
@@ -1699,6 +1698,15 @@ class BDFMethods(BDFAttributes):
                         #print(msg % (pressure, eid))
                     else:
                         pressure = pressures[0]
+
+                    if  load.surf_or_line == 'SURF':
+                        if norm(load.nvector) != 0.0 or load.Cid() != 0:
+                            normal = load.nvector
+                            assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                    else:
+                        msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
+                            load.surf_or_line, str(load))
+                        raise NotImplementedError(msg)
 
                     f = pressure * area * normal * scale
                     #load.cid.transformToGlobal()
@@ -2100,8 +2108,9 @@ class BDFMethods(BDFAttributes):
                             loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
-                assert load.sorl == 'SURF', 'sorl = %r' % (load.sorl)
-                assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
+                #assert load.surf_or_line == 'SURF', 'surf_or_line = %r' % (load.surf_or_line)
+                assert load.line_load_dir == 'NORM', 'line_load_dir = %s' % (load.line_load_dir)
+
                 for elem in load.eids:
                     eid = elem.eid
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
@@ -2182,6 +2191,15 @@ class BDFMethods(BDFAttributes):
                         #print(msg % (pressure, eid))
                     else:
                         pressure = load.pressures[0]
+
+                    if load.surf_or_line == 'SURF':
+                        if norm(load.nvector) != 0.0 or load.Cid() != 0:
+                            normal = load.nvector
+                            assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                    else:
+                        msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
+                            load.surf_or_line, str(load))
+                        raise NotImplementedError(msg)
 
                     r = centroid - p
                     f = pressure * area * normal * scale
