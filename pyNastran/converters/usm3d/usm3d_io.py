@@ -149,11 +149,11 @@ class Usm3dIO(object):
         self.nid_map = {}
         self.eid_map = {}
         #elem.SetNumberOfPoints(nNodes)
-        if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
-                self.gridResult.InsertNextValue(nid * fraction)
+        #if 0:
+            #fraction = 1. / self.nNodes  # so you can color the nodes by ID
+            #for nid, node in sorted(iteritems(nodes)):
+                #points.InsertPoint(nid - 1, *node)
+                #self.gridResult.InsertNextValue(nid * fraction)
                 #print(str(element))
 
                 #elem = vtk.vtkVertex()

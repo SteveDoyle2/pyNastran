@@ -114,7 +114,7 @@ class AddCards(AddMethods):
 
     def add_grid(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0, comment=''):
         """
-        Creates the GRID card in a functional way
+        Creates the GRID card
 
         Parameters
         ----------
@@ -140,6 +140,24 @@ class AddCards(AddMethods):
         return grid
 
     def add_grdset(self, cp, cd, ps, seid, comment):
+        """
+        Creates the GRDSET card
+
+        Parameters
+        ----------
+        cp : int; default=0
+            the xyz coordinate frame
+        cd : int; default=0
+            the analysis coordinate frame
+        ps : str; default=''
+            Additional SPCs in the analysis coordinate frame (e.g. '123').
+            This corresponds to DOF set ``SG``.
+        seid : int; default=0
+            superelement id
+            TODO: how is this used by Nastran???
+        comment : str; default=''
+            a comment for the card
+        """
         grdset = GRDSET(cp, cd, ps, seid, comment=comment)
         self.grdset = grdset
         return grdset
@@ -157,8 +175,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        seqgp = SEQGP(ids, comment=comment)
-        self._add_seqgp_object(nids, seqids, comment=comment)
+        seqgp = SEQGP(nids, seqids, comment=comment)
+        self._add_seqgp_object(seqgp)
         return seqgp
 
     def add_spoint(self, ids, comment=''):
@@ -1352,8 +1370,8 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cplsts3(self, eid, pid, nids, theta_mcid=0.0, comment=''):
-        elem = CPLSTS3(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
+    def add_cplsts3(self, eid, pid, nids, theta=0.0, comment=''):
+        elem = CPLSTS3(eid, pid, nids, theta=theta, comment=comment)
         self._add_element_object(elem)
         return elem
 

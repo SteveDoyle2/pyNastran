@@ -606,7 +606,7 @@ class ACCEL1(BaseCard):
 
         #: Components of the acceleration vector measured in coordinate system
         #: CID. (Real; at least one Ni != 0)
-        self.N = np.asarray(N, dtype='float64')
+        self.N = np.asarray(N)
 
         #: nodes to apply the acceleration to
         self.nodes = expand_thru_by(nodes)
@@ -816,7 +816,7 @@ class Moment(Load):
                 gravity_loads)
 
     def M(self):
-        return self.xyz * self.mag
+        return {self.node_id : self.xyz * self.mag}
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()

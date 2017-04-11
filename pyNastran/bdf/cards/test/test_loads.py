@@ -16,8 +16,8 @@ test_path = pyNastran.__path__[0]
 
 
 class TestLoads(unittest.TestCase):
-    def test_force_1(self):
-        """CROD, FORCE"""
+    def test_force(self):
+        """CONROD, FORCE"""
         model = BDF(debug=False)
         eid = 1
         mid = 100
@@ -43,6 +43,34 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(force.F()[11], np.array([42., 42., 84.])), force.F()
         model.cross_reference()
         force.raw_fields()
+
+    def test_moment(self):
+        """CONROD, MOMENT"""
+        model = BDF(debug=False)
+        eid = 1
+        mid = 100
+        nids = [10, 11]
+        A = 3.14
+        model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0,
+                         comment='')
+        model.add_grid(10, xyz=[10., 0., 0.])
+        model.add_grid(11, xyz=[11., 0., 0.])
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        sid = 10000
+        node = 11
+        mag = 42.
+        xyz = [1., 1., 2.]
+        moment = model.add_moment(sid, node, mag, xyz)
+        moment.raw_fields()
+        model.validate()
+        model.pop_parse_errors()
+        assert np.array_equal(moment.M()[11], np.array([42., 42., 84.])), force.M()
+        model.cross_reference()
+        moment.raw_fields()
 
     def test_accel1(self):
         """tests ACCEL1"""

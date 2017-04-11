@@ -3455,7 +3455,6 @@ class DVGRID(OptConstraint):
         self.cid_ref = model.Coord(self.cid)
         #self.dconstrs = [model.dconstrs[oid] for oid in self.dconstr_ids]
         #self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
-        pass
 
     def uncross_reference(self):
         return

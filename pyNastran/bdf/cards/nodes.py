@@ -581,6 +581,21 @@ class GRDSET(BaseCard):
     def __init__(self, cp, cd, ps, seid, comment=''):
         """
         Creates the GRDSET card
+
+        Parameters
+        ----------
+        cp : int; default=0
+            the xyz coordinate frame
+        cd : int; default=0
+            the analysis coordinate frame
+        ps : str; default=''
+            Additional SPCs in the analysis coordinate frame (e.g. '123').
+            This corresponds to DOF set ``SG``.
+        seid : int; default=0
+            superelement id
+            TODO: how is this used by Nastran???
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -960,7 +975,7 @@ class GRID(BaseCard):
 
     def __init__(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0, comment=''):
         """
-        Creates the GRID card in a functional way
+        Creates the GRID card
 
         Parameters
         ----------

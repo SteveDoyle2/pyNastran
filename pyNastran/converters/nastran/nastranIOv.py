@@ -1175,7 +1175,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             mpc_id = 0
             mpc_names += self._fill_dependent_independent(
                 mpc_id, dim_max, model, rigid_lines, nid_to_pid_map)
-            pass
 
         geometry_names = spc_names + mpc_names + suport_names
         return geometry_names
