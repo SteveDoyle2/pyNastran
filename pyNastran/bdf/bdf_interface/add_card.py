@@ -1859,7 +1859,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        load = ACCEL(sid, cid, N, direction, locs, vals, cid=cid, comment=comment)
+        load = ACCEL(sid, N, direction, locs, vals, cid=cid, comment=comment)
         self._add_load_object(load)
         return load
 

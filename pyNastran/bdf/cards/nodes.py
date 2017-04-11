@@ -1009,7 +1009,7 @@ class GRID(BaseCard):
         """
         nid = data[0]
         cp = data[1]
-        xyz = np.array(data[2:5])
+        xyz = data[2:5]
         cd = data[5]
         ps = data[6]
         seid = data[7]
@@ -1037,10 +1037,10 @@ class GRID(BaseCard):
         cp = integer_or_blank(card, 2, 'cp', 0)
 
         #: node location in local frame
-        xyz = np.array([
+        xyz = [
             double_or_blank(card, 3, 'x1', 0.),
             double_or_blank(card, 4, 'x2', 0.),
-            double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
+            double_or_blank(card, 5, 'x3', 0.)]
 
         if nfields > 6:
             #: Analysis coordinate system
@@ -1059,25 +1059,12 @@ class GRID(BaseCard):
         return GRID(nid, cp, xyz, cd, ps, seid, comment=comment)
 
     def _validate_input(self):
+        assert isinstance(self.cp, integer_types), 'cp=%s' % (self.cp)
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
         assert self.cd >= -1, 'cd=%s' % (self.cd)
         assert self.seid >= 0, 'seid=%s' % (self.seid)
         assert len(self.xyz) == 3
-
-    #def Position(self, debug=False):
-        #self.deprecated('Position()', 'get_position()', '0.8')
-        #return self.get_position()
-
-    #def PositionWRT(self, model, cid):
-        #self.deprecated('PositionWRT(self, model, cid)',
-                        #'get_position_wrt(model, cid)', '0.8')
-        #return self.get_position_wrt(model, cid)
-
-    #def UpdatePosition(self, model, xyz, cid=0):
-        #self.deprecated('UpdatePosition(self, model, xyz, cid',
-                        #'set_position(self, model, xyz, cid=cid)', '0.8')
-        #return self.set_position(model, xyz, cid=cid)
 
     def Nid(self):
         """
@@ -1112,8 +1099,7 @@ class GRID(BaseCard):
         """
         if isinstance(self.cd, integer_types):
             return self.cd
-        else:
-            return self.cd.cid
+        return self.cd_ref.cid
 
     def Cp(self):
         """
@@ -1126,8 +1112,7 @@ class GRID(BaseCard):
         """
         if isinstance(self.cp, integer_types):
             return self.cp
-        else:
-            return self.cp.cid
+        return self.cp_ref.cid
 
     def SEid(self):
         """
@@ -1140,8 +1125,7 @@ class GRID(BaseCard):
         """
         if isinstance(self.seid, integer_types):
             return self.seid
-        else:
-            return self.seid.seid
+        return self.seid.seid
 
     def _verify(self, xref):
         """

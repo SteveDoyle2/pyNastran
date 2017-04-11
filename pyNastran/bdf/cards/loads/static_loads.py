@@ -467,13 +467,14 @@ class ACCEL(BaseCard):
 
         #: Components of the acceleration vector measured in coordinate system
         #: CID. (Real; at least one Ni != 0)
-        self.N = N
+        self.N = np.asarray(N, dtype='float64')
 
         #: Component direction of acceleration variation. (Character; one of X,Y or Z)
         self.direction = direction
         self.locs = array(locs, dtype='float64')
         self.vals = array(vals, dtype='float64')
 
+    def validate(self):
         assert max(abs(self.N)) > 0.
         assert self.direction in ['X', 'Y', 'Z'], 'dir=%r' % self.direction
 
@@ -491,9 +492,9 @@ class ACCEL(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
-        N = array([double_or_blank(card, 3, 'N1', 0.0),
-                   double_or_blank(card, 4, 'N2', 0.0),
-                   double_or_blank(card, 5, 'N3', 0.0)])
+        N = [double_or_blank(card, 3, 'N1', 0.0),
+             double_or_blank(card, 4, 'N2', 0.0),
+             double_or_blank(card, 5, 'N3', 0.0)]
         direction = string(card, 6, 'dir')
 
         i = 9
@@ -605,12 +606,18 @@ class ACCEL1(BaseCard):
 
         #: Components of the acceleration vector measured in coordinate system
         #: CID. (Real; at least one Ni != 0)
-        self.N = N
+        self.N = np.asarray(N, dtype='float64')
 
         #: nodes to apply the acceleration to
         self.nodes = expand_thru_by(nodes)
 
         assert max(abs(self.N)) > 0.
+
+    def validate(self):
+        assert len(self.N) == 3, 'N=%r' % self.N
+        assert isinstance(self.cid, integer_types), 'cid=%r' % self.cid
+        assert isinstance(self.scale, float), 'cid=%r' % self.scale
+        assert isinstance(self.nodes, list), 'nodes=%r' % self.nodes
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -627,9 +634,9 @@ class ACCEL1(BaseCard):
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         scale = double(card, 3, 'scale')
-        N = array([double_or_blank(card, 4, 'N1', 0.0),
-                   double_or_blank(card, 5, 'N2', 0.0),
-                   double_or_blank(card, 6, 'N3', 0.0)])
+        N = [double_or_blank(card, 4, 'N1', 0.0),
+             double_or_blank(card, 5, 'N2', 0.0),
+             double_or_blank(card, 6, 'N3', 0.0)]
 
         nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
         return ACCEL1(sid, scale, N, nodes, cid=cid, comment=comment)
