@@ -922,7 +922,7 @@ class EXTSEOUT(CaseControlCard):
                 key = key_value
                 data_list.append((key, None))
             if key not in cls.allowed_keys:
-                msg = 'key=%r allowed_keys=%r' % (key, ''.join(cls.allowed_keys))
+                msg = 'key=%r allowed_keys=[%s]' % (key, ', '.join(cls.allowed_keys))
                 raise KeyError(msg)
         return EXTSEOUT(data_list)
 

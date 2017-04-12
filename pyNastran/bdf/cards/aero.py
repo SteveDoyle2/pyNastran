@@ -4238,6 +4238,14 @@ class MKAERO1(BaseCard):
         self.machs = np.unique(machs)
         self.reduced_freqs = np.unique(reduced_freqs)
 
+    def validate(self):
+        if len(self.machs) == 0:
+            msg = 'MKAERO1; nmachs=%s machs=%s' % (len(self.machs), self.machs)
+            raise ValueError(msg)
+        if len(self.reduced_freqs) == 0:
+            msg = 'MKAERO1; nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
+            raise ValueError(msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -4301,46 +4309,36 @@ class MKAERO1(BaseCard):
         nreduced_freqs = len(self.reduced_freqs)
         #print('nmachs=%s nreduced_freqs=%s' % (nmachs > 8, nreduced_freqs > 8))
         if nmachs > 8 or nreduced_freqs > 8:
-            if 1:
-                cards = []
-                mach_sets = []
-                rfreq_sets = []
-                imach = 0
-                ifreq = 0
-                while imach < nmachs:
-                    mach_sets.append(self.machs[imach:imach+8])
-                    imach += 8
-                while ifreq < nreduced_freqs:
-                    rfreq_sets.append(self.reduced_freqs[ifreq:ifreq+8])
-                    ifreq += 8
-                msg = self.comment
+            cards = []
+            mach_sets = []
+            rfreq_sets = []
+            imach = 0
+            ifreq = 0
+            while imach < nmachs:
+                mach_sets.append(self.machs[imach:imach+8])
+                imach += 8
+            while ifreq < nreduced_freqs:
+                rfreq_sets.append(self.reduced_freqs[ifreq:ifreq+8])
+                ifreq += 8
+            msg = self.comment
 
-                #print('mach_sets = %s' % mach_sets)
-                #print('rfreq_sets = %s' % rfreq_sets)
-                for mach_set in mach_sets:
-                    for rfreq_set in rfreq_sets:
-                        msg += MKAERO1(mach_set, rfreq_set).write_card(
-                            size=size, is_double=is_double)
-                return msg
-            else:
-                raise RuntimeError('what...?')
-                #machs = []
-                #reduced_freqs = []
-                #for mach in self.machs:
-                    #machs += [mach] * nreduced_freqs
-                    #reduced_freqs += self.reduced_freqs
-                #return self.comment + MKAERO2(machs, reduced_freqs).write_card(
-                    #size=size, is_double=is_double)
+            #print('mach_sets = %s' % mach_sets)
+            #print('rfreq_sets = %s' % rfreq_sets)
+            for mach_set in mach_sets:
+                for rfreq_set in rfreq_sets:
+                    msg += MKAERO1(mach_set, rfreq_set).write_card(
+                        size=size, is_double=is_double)
+            return msg
 
         list_fields = ['MKAERO1']
         machs = [None] * 8
         reduced_freqs = [None] * 8
         cards = []
         if not 0 < len(self.machs) <= 8:
-            msg = 'nmachs=%s machs=%s' % (len(self.machs), self.machs)
+            msg = 'MKAERO1; nmachs=%s machs=%s' % (len(self.machs), self.machs)
             raise ValueError(msg)
         if not 0 < len(self.reduced_freqs) <= 8:
-            msg = 'nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
+            msg = 'MKAERO1; nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
             raise ValueError(msg)
 
         for i, mach in zip(count(), self.machs):
@@ -4371,10 +4369,17 @@ class MKAERO2(BaseCard):
         self.machs = machs
         self.reduced_freqs = reduced_freqs
 
-    #def validate(self):
+    def validate(self):
         if len(self.machs) != len(self.reduced_freqs):
-            msg = 'len(machs)=%s len(rfreqs)=%s; should be the same' % (
+            msg = 'MKAERO2; len(machs)=%s len(rfreqs)=%s; should be the same' % (
                 len(self.machs), len(self.reduced_freqs))
+            raise ValueError(msg)
+
+        if len(self.machs) == 0:
+            msg = 'MKAERO2; nmachs=%s machs=%s' % (len(self.machs), self.machs)
+            raise ValueError(msg)
+        if len(self.reduced_freqs) == 0:
+            msg = 'MKAERO2; nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
             raise ValueError(msg)
 
     @classmethod

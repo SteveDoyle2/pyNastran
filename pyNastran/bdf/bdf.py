@@ -846,6 +846,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             diverg.validate()
         for key, csschd in sorted(iteritems(self.csschds)):
             csschd.validate()
+        for mkaero in self.mkaeros:
+            mkaero.validate()
         for monitor in self.monitor_points:
             monitor.validate()
 
@@ -1056,11 +1058,12 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         self._parse_primary_file_header(bdf_filename)
 
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-        executive_control_lines, case_control_lines, \
+        system_lines, executive_control_lines, case_control_lines, \
             bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
 
-        self.case_control_lines = case_control_lines
+        self.system_command_lines = system_lines
         self.executive_control_lines = executive_control_lines
+        self.case_control_lines = case_control_lines
 
         sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
         self.update_solution(sol, method, sol_iline)
@@ -1421,7 +1424,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                     return cards, card_count
                 #print("card_name = %s" % card_name)
 
-            comment = _clean_comment(comment)
+            comment = _clean_comment_bulk(comment)
             if line.rstrip():
                 card_lines.append(line)
                 if backup_comment:
@@ -3327,12 +3330,14 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
         Returns
         -------
+        system_lines : list[str]
+            the Nastran SYSTEM lines
         executive_control_lines : list[str]
-            the executive control deck as a list of strings
+            the executive control deck lines
         case_control_lines : list[str]
-            the case control deck as a list of strings
+            the case control deck lines
         bulk_data_lines : list[str]
-            the bulk data deck as a list of strings
+            the bulk data deck lines
         """
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             lines = bdf_filename.readlines()
@@ -3352,6 +3357,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
     def _lines_to_deck_lines(self, lines, punch=False):
         """
         Splits the BDF lines into:
+         - system lines
          - executive control deck
          - case control deck
          - bulk data deck
@@ -3869,13 +3875,44 @@ def _clean_comment(comment):
     if comment == '':
         pass
     elif comment in IGNORE_COMMENTS:
-        comment = ''
+        comment = None
     elif 'pynastran' in comment.lower():
-        comment = ''
+        csline = comment.lower().split('pynastran', 1)
+        if csline[1].strip()[0] == ':':
+            comment = None
 
     #if comment:
         #print(comment)
     return comment
+
+def _clean_comment_bulk(comment):
+    """
+    Removes specific pyNastran comment lines so duplicate lines aren't
+    created.
+
+    Parameters
+    ----------
+    comment : str
+        the comment to possibly remove
+
+    Returns
+    -------
+    updated_comment : str
+        the comment
+    """
+    if comment == '':
+        pass
+    elif comment in IGNORE_COMMENTS:
+        comment = ''
+    elif 'pynastran' in comment.lower():
+        csline = comment.lower().split('pynastran', 1)
+        if csline[1].strip() == ':':
+            comment = ''
+
+    #if comment:
+        #print(comment)
+    return comment
+
 
 def _lines_to_decks(lines, i, punch):
     """
@@ -3913,10 +3950,60 @@ def _lines_to_decks(lines, i, punch):
     #for line in bulk_data_lines:
         #print(line)
 
+    # break out system commands
+    system_lines, executive_control_lines = _break_system_lines(executive_control_lines)
+
     # clean comments
-    executive_control_lines = [_clean_comment(line) for line in executive_control_lines]
-    case_control_lines = [_clean_comment(line) for line in case_control_lines]
-    return executive_control_lines, case_control_lines, bulk_data_lines
+    system_lines = [_clean_comment(line) for line in system_lines
+                    if _clean_comment(line) is not None]
+    executive_control_lines = [_clean_comment(line) for line in executive_control_lines
+                               if _clean_comment(line) is not None]
+    case_control_lines = [_clean_comment(line) for line in case_control_lines
+                          if _clean_comment(line) is not None]
+    return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
+
+def _break_system_lines(executive_control_lines):
+    """
+    Extracts the Nastran system lines
+
+    Per NX Nastran 10:
+
+    ACQUIRE Selects NDDL schema and NX Nastran Delivery Database.
+    ASSIGN Assigns physical files to DBset members or special FORTRAN
+    files.
+    CONNECT Groups geometry data by evaluator and database.
+    DBCLEAN Deletes selected database version(s) and/or projects.
+    DBDICT Prints the database directory in user-defined format.
+    DBDIR Prints the database directory.
+    DBFIX Identifies and optionally corrects errors found in the database.
+    DBLOAD Loads a database previously unloaded by DBUNLOAD.
+    DBLOCATE Obtains data blocks and parameters from databases.
+    DBSETDEL Deletes DBsets.
+    DBUNLOAD Unloads a database for compression, transfer, or archival
+    storage.
+    DBUPDATE Specifies the time between updates of the database directory.
+    ENDJOB Terminates a job upon completion of FMS statements.
+    EXPAND Concatenates additional DBset members to an existing DBset.
+    INCLUDE Inserts an external file in the input file.
+    INIT Creates a temporary or permanent DBset.
+    NASTRAN Specifies values for system cells.
+    PROJ Defines the current or default project identifier.
+    """
+    file_management = (
+        'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
+        'DBFIX ', 'DBLOAD ', 'DBLOCATE ', 'DBSETDEL ', 'DBUNLOAD ',
+        'DBUPDATE ', 'ENDJOB ', 'EXPAND ', 'INCLUDE ', 'INIT ', 'NASTRAN ',
+        'PROJ ',
+    )
+    system_lines = []
+    j = None
+    for i, line in enumerate(executive_control_lines):
+        if line.strip().upper().startswith(file_management):
+            j = i
+    if j is not None:
+        system_lines = executive_control_lines[:j+1]
+        executive_control_lines = executive_control_lines[j+1:]
+    return system_lines, executive_control_lines
 
 def _check_valid_deck(flag):
     """Crashes if the flag is set wrong"""

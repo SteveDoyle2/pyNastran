@@ -1000,6 +1000,18 @@ class TEMPD(BaseCard):
     type = 'TEMPD'
 
     def __init__(self, sid, temperature, comment=''):
+        """
+        Creates a TEMPD card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. (Integer > 0)
+        temperature : float
+            default temperature
+        comment : str; default=''
+            a comment for the card
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -1008,6 +1020,18 @@ class TEMPD(BaseCard):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a TEMPD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            sid to be parsed
+        comment : str; default=''
+            a comment for the card
+        """
         nfields = len(card) - 1
         assert nfields % 2 == 0, 'card=%s' % card
         i = 2 * icard

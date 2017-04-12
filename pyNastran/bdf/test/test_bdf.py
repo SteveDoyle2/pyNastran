@@ -636,8 +636,8 @@ def run_fem2(bdf_model, out_model, xref, punch,
         sol_200_map = fem2.case_control_deck.sol_200_map
         sol_base = fem2.sol
         is_restart = False
-        for line in fem2.executive_control_lines:
-            if 'RESTART' in line:
+        for line in fem2.system_command_lines:
+            if line.strip().upper().startswith('RESTART'):
                 is_restart = True
         if not is_restart:
             validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map)

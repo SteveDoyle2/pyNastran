@@ -247,7 +247,7 @@ class WriteMesh(BDFAttributes):
         """
         if self.punch is None:
             # writing a mesh without using read_bdf
-            if self.executive_control_lines or self.case_control_deck:
+            if self.system_command_lines or self.executive_control_lines or self.case_control_deck:
                 self.punch = False
             else:
                 self.punch = True
@@ -267,8 +267,12 @@ class WriteMesh(BDFAttributes):
         """
         Writes the executive control deck.
         """
+        msg = ''
+        for line in self.system_command_lines:
+            msg += line + '\n'
+
         if self.executive_control_lines:
-            msg = '$EXECUTIVE CONTROL DECK\n'
+            msg += '$EXECUTIVE CONTROL DECK\n'
             if self.sol == 600:
                 new_sol = 'SOL 600,%s' % self.sol_method
             else:

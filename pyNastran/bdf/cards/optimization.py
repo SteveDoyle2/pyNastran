@@ -1530,7 +1530,8 @@ class DRESP2(OptConstraint):
         model : BDF()
             the BDF object
         """
-        print('a', model.dtable)
+        if model.dtable is not None:
+            self.log.debug('dtable = %s' % model.dtable)
         msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):

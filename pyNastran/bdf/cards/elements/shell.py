@@ -119,6 +119,12 @@ class ShellElement(Element):
         """
         return self.pid_ref.Thickness()
 
+    #def Volume(self):
+        #"""
+        #Returns the volume
+        #"""
+        #return self.Thickness() * self.Area()
+
     @property
     def material_ids(self):
         """
@@ -3370,6 +3376,16 @@ class CQUAD(QuadShell):
         self.nodes = self.node_ids
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
+
+    def Area(self):
+        r"""
+        .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
+        where a and b are the quad's cross node point vectors"""
+        (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.get_node_positions()
+        a = n1 - n3
+        b = n2 - n4
+        area = 0.5 * norm(cross(a, b))
+        return area
 
     def Thickness(self):
         """

@@ -1109,8 +1109,9 @@ class BDFMethods(BDFAttributes):
         if is_no and len(short_sym_axis) > 1:
             raise RuntimeError('no can only be used by itself; sym_axis=%s' % (str(sym_axis)))
         for sym_axisi in sym_axis:
-            if sym_axisi.lower not in ['no', 'xy', 'yz', 'xz']:
-                msg = 'sym_axis=%r is invalid; allowed=[no, xy, yz, xz]' % sym_axis
+            if sym_axisi.lower() not in ['no', 'xy', 'yz', 'xz']:
+                msg = 'sym_axis=%r is invalid; sym_axisi=%r; allowed=[no, xy, yz, xz]' % (
+                    sym_axis, sym_axisi)
                 raise RuntimeError(msg)
 
         if sym_axis:
