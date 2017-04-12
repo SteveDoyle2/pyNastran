@@ -2318,7 +2318,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         ind = searchsorted(eids, self.element)
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -2344,7 +2344,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + words))
+            f06.write(''.join(header + words))
 
             # sd, bm1, bm2, ts1, ts2, af, trq
             sd = self.data[itime, :, 0]
@@ -2357,11 +2357,9 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             for eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi in zip(eids, sd, bm1, bm2, ts1, ts2, af, trq):
                 [bm1i, bm2i, ts1i, ts2i, afi, trqi] = write_floats_13e([
                     bm1i, bm2i, ts1i, ts2i, afi, trqi])
-            #f.write('     %8i  %4.3f  %-13s  %-13s     %-13s  %-13s     %-13s     %s\n' % (
-                #eid, sd, bm1i, bm2i, ts1i, ts2i, afi, trqi))
-            f.write('     %8i   %4.3f  %-13s  %-13s     %-13s  %-13s         %-13s      %s\n' % (
-                eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi))
-            f.write(page_stamp % page_num)
+                f06.write('     %8i   %4.3f  %-13s  %-13s     %-13s  %-13s         %-13s      %s\n' % (
+                    eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi))
+            f06.write(page_stamp % page_num)
         return page_num
 
     def __eq__(self, table):

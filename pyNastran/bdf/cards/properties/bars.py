@@ -321,6 +321,29 @@ def _bar_areaL(class_name, Type, dim):
 
     #I = (DIM3*DIM6)+(DIM2*DIM5) + ((DIM1-(DIM5+DIM6))*DIM4)
     elif Type == 'I':
+        #  <----d3---->
+        #
+        #  1----------2      ^
+        #  |    A     |  d6  |
+        # 12-11---4---3      |
+        #     |   |          |
+        #     |   |          |  d1
+        #     | B | <--- d4  |
+        #     |   |          |
+        #  9-10---5---6      |
+        #  |    C     |  d5  |
+        #  8----------7      v
+        #
+        #  <----d2---->
+        #
+        #
+        # h1 = hA = d6
+        # h2 = hB = d1 - d6 - d5
+        # h3 = hC = d5
+        # w1 = wA = d3
+        # w2 = wB = d4
+        # w3 = wC = d5
+        # A = A1 + A2 + A3
         h1 = dim[5]
         w1 = dim[2]
 

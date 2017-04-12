@@ -47,26 +47,6 @@ EXPECTED_HEADER_KEYS_CHECK = ['version', 'encoding', 'punch', 'nnodes', 'nelemen
 EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units']
 
 
-def _clean_comment(comment, end=-1):
-    """
-    Removes specific pyNastran comment lines so duplicate lines aren't
-    created.
-
-    Parameters
-    ----------
-    comment : str
-         the comment to possibly remove
-    end : int; default=-1
-        lets you remove trailing characters (e.g. a ``\n``)
-    """
-    raise RuntimeError('is this used...')
-    if comment[:end] in _REMOVED_LINES:
-        comment = ''
-    elif 'pynastran' in comment.lower():
-        comment = ''
-    return comment
-
-
 def _to_fields_mntpnt1(card_lines):
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines

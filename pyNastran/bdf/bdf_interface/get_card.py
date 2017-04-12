@@ -335,7 +335,7 @@ class GetCard(GetMethods):
 
         try:
             mpcs = self.mpcs[mpc_id]
-        except:
+        except KeyError:
             self.log.warning('mpc_id=%s not found' % mpc_id)
             return []
 
@@ -524,7 +524,7 @@ class GetCard(GetMethods):
 
         Parameters
         ----------
-        p0 : (3, ) ndarray
+        p0 : (3, ) float ndarray
             the reference location
         load_case_id : int
             the load id
@@ -534,8 +534,8 @@ class GetCard(GetMethods):
             ???
         node_ids : ???
             ???
-        normals : ???
-            ???
+        normals : (nelements, 3) float ndarray
+            the normal vectors for the shells
         dependents_nodes : ???
             ???
         include_grav : bool; default=False
@@ -611,7 +611,9 @@ class GetCard(GetMethods):
                                      'CQUAD4', 'CSHEAR']:
                         node_ids = elem.node_ids
                         nnodes = len(node_ids)
-                        normal = elem.Normal()
+                        ie = eid_map[eid]
+                        normal = normals[ie, :]
+
                         area = elem.Area()
                         forcei = pressure * normal * area / nnodes
                         # r = elem.Centroid() - p0
@@ -635,20 +637,35 @@ class GetCard(GetMethods):
                 # single element per PLOAD
                 #eid = elem.eid
                 #pressures[eids.index(eid)] = p
-                pressure = load.pressures[0] * scale
+                #pressure = load.pressures[0] * scale
 
                 # multiple elements
                 for elem in load.eids:
                     ie = eid_map[elem.eid]
-                    nz = normals[ie, :]
+                    normal = normals[ie, :]
                     # pressures[eids.index(elem.eid)] += p
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
-                                     # TODO: this was split in bdf_methods...
-                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR']:
                         area = elem.get_area()
                         elem_node_ids = elem.node_ids
-                        elem_nnodes = len(elem_node_ids)
-                        forcei = pressure * area / elem_nnodes
+                        nface = len(elem_node_ids)
+
+                        if load.surf_or_line == 'SURF':
+                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
+                                normal = load.nvector / np.linalg.norm(load.nvector)
+                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                        else:
+                            msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
+                                load.surf_or_line, str(load))
+                            self.log.debug(msg)
+                            continue
+
+                        pressures = load.pressures[:nface]
+                        if min(pressures) != max(pressures):
+                            pressure = np.mean(pressures)
+                        else:
+                            pressure = pressures[0]
+
+                        forcei = pressure * area * normal / nface
                         for nid in elem_node_ids:
                             if nid in dependents_nodes:
                                 fail_nids.add(nid)
@@ -659,14 +676,57 @@ class GetCard(GetMethods):
                             #forces[nids.index(nid)] += F
                             i = nid_map[nid]
                             try:
-                                forces[i, :] += forcei * nz
+                                forces[i, :] += forcei
                             except IndexError:
                                 print('i = %s' % i)
                                 print('normals.shape = %s' %  str(normals.shape))
                                 print('forces.shape = %s' % str(forces.shape))
-                                print('nz = ', normals[i, :])
+                                print('normal = ', normal)
                                 print('forces[i, :] = ', forces[i, :])
                                 raise
+                        #nface = 3
+                    elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        area = elem.get_area()
+                        elem_node_ids = elem.node_ids
+                        nface = len(elem_node_ids)
+
+                        if load.surf_or_line == 'SURF':
+                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
+                                normal = load.nvector / np.linalg.norm(load.nvector)
+                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                        else:
+                            msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
+                                load.surf_or_line, str(load))
+                            self.log.debug(msg)
+                            continue
+
+                        pressures = load.pressures[:nface]
+                        if min(pressures) != max(pressures):
+                            pressure = np.mean(pressures)
+                        else:
+                            pressure = pressures[0]
+
+                        forcei = pressure * area * normal / nface
+
+                        for nid in elem_node_ids:
+                            if nid in dependents_nodes:
+                                fail_nids.add(nid)
+                                fail_count += 1
+                                if fail_count < fail_count_max:
+                                    print('    nid=%s is a dependent node and has a'
+                                          ' PLOAD4 applied\n%s' % (nid, str(load)))
+                            #forces[nids.index(nid)] += F
+                            i = nid_map[nid]
+                            try:
+                                forces[i, :] += forcei
+                            except IndexError:
+                                print('i = %s' % i)
+                                print('normals.shape = %s' %  str(normals.shape))
+                                print('forces.shape = %s' % str(forces.shape))
+                                print('normal = ', normal)
+                                print('forces[i, :] = ', forces[i, :])
+                                raise
+                            nface = 4
                     else:
                         elem_node_ids = elem.node_ids
                         if elem.type == 'CTETRA':
@@ -698,6 +758,7 @@ class GetCard(GetMethods):
                                    % (load_case_id, eid, elem.type, load.type))
                             self.log.debug(msg)
                             continue
+
                         pressures = load.pressures[:nface]
                         assert len(pressures) == nface
                         if min(pressures) != max(pressures):
@@ -710,6 +771,17 @@ class GetCard(GetMethods):
                         else:
                             pressure = pressures[0]
                         #centroidal_pressures
+
+                        if  load.surf_or_line == 'SURF':
+                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
+                                normal = load.nvector / np.linalg.norm(load.nvector)
+                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                        else:
+                            msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
+                                load.surf_or_line, str(load))
+                            self.log.debug(msg)
+                            continue
+
                         f = pressure * area * normal * scale
                         for inid in face:
                             inidi = nid_map[elem_node_ids[inid]]
@@ -810,8 +882,8 @@ class GetCard(GetMethods):
                         #for elem in load.eids:
                         ie = np.searchsorted(eids, elem.eid)
                         #pressures[ie] += p  # correct; we can't assume model orientation
-                        nz = normals[ie, 2]  # considers normal of shell
-                        pressures[ie] += pressure * nz
+                        normal = normals[ie, 2]  # considers normal of shell
+                        pressures[ie] += pressure * normal
 
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         #A, centroid, normal = elem.get_face_area_centroid_normal(
@@ -820,11 +892,20 @@ class GetCard(GetMethods):
             iload += 1
         return True, pressures
 
-    def _get_temperatures_array(self, load_case_id):
+    def _get_temperatures_array(self, load_case_id, dtype='float32'):
         """
-        Builds the temperature array based on thermal cards
+        Builds the temperature array based on thermal cards.
+        Used by the GUI.
+
+        Parameters
+        ----------
+        load_case_id : int
+            the load id
+        dtype : str; default='float32'
+            the type of the temperature array
 
         Returns
+        -------
         is_temperatures : bool
             is there temperature data
         temperatures : (nnodes, ) float ndarray
@@ -838,7 +919,7 @@ class GetCard(GetMethods):
         load_case = self.loads[load_case_id]
         loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
         tempd = self.tempds[load_case_id].temperature if load_case_id in self.tempds else 0.
-        temperatures = np.ones(len(self.nodes), dtype='float32') * tempd
+        temperatures = np.ones(len(self.nodes), dtype=dtype) * tempd
         for load, scale in zip(loads2, scale_factors2):
             if load.type == 'TEMP':
                 temps_dict = load.temperatures
@@ -846,7 +927,7 @@ class GetCard(GetMethods):
                     nidi = nids.index(nid)
                     temperatures[nidi] = val
             else:
-                print(load.type)
+                self.log.debug(load.type)
         return is_temperatures, temperatures
 
     def _get_rigid(self):
@@ -946,6 +1027,14 @@ class GetCard(GetMethods):
         mpc_id : int; default=None -> no MPCs are checked
             TODO: add
 
+        Returns
+        -------
+        dependent_nid_to_components : dict[node_id] : components
+            node_id : int
+                the node_id
+            components : str
+                the DOFs that are linked
+
         Nastran can either define a load/motion at a given node.
         SPCs define constraints that may not have loads/motions.
 
@@ -981,7 +1070,8 @@ class GetCard(GetMethods):
         return dependent_nid_to_components
 
     def get_node_ids_with_element(self, eid, msg=''):
-        return self.get_node_ids_with_elements([eid], msg=msg)
+        self.deprecated('get_node_ids_with_element(eid)', 'get_node_ids_with_elements(eid)', '0.9')
+        return self.get_node_ids_with_elements(eid, msg=msg)
 
     def _get_maps(self, eids=None, map_names=None,
                   consider_0d=True, consider_0d_rigid=True,
@@ -1002,7 +1092,7 @@ class GetCard(GetMethods):
         consider_2d : bool; default=True
             considers CQUAD4, CQUAD8, CQUADR, CQUAD,
             CTRIA3, CTRIA6, CTRIAX, CTRIAX6, CSHEAR elements
-        consider_2d : bool; default=True
+        consider_3d : bool; default=True
             considers CTETRA, CPENTA, CPYRAM, CHEXA elements
 
         .. todo:: map_names support
@@ -1020,7 +1110,9 @@ class GetCard(GetMethods):
         ]
 
         for name in map_names:
-            assert name in allowed_maps, 'name=%s; allowed=%s' % (name, sorted(allowed_maps.keys()))
+            if name not in allowed_maps:
+                msg = 'name=%s; allowed=%s' % (name, sorted(allowed_maps.keys()))
+                raise RuntimeError(msg)
 
         eid_to_edge_map = {}
         eid_to_nid_map = {}
@@ -1101,6 +1193,9 @@ class GetCard(GetMethods):
           >>> msg = ' which are required for pid=1'
           >>> node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
         """
+        if isinstance(eids, integer_types):
+            eids = [eids]
+
         nids2 = set([])
         for eid in eids:
             element = self.Element(eid, msg=msg)
@@ -1170,6 +1265,16 @@ class GetCard(GetMethods):
             nnodes : int
                 varies based on the element type
         """
+        if pids is None:
+            pids = list(self.properties)
+        elif isinstance(pids, integer_types):
+            pids = [int]
+
+        assert isinstance(pids, (list, tuple, np.ndarray)), 'pids=%s type=%s' % (pids, type(pids))
+        pid_to_eids_map = {}
+        for pid in pids:
+            pid_to_eids_map[pid] = []
+
         skip_elements = ['CONROD']
         etypes_ = self._slot_to_type_map['elements']
         etype_to_nids_map = {}

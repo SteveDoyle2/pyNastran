@@ -2475,6 +2475,8 @@ class PLOAD4(Load):
     +--------+-----+-----+----+----+------+------+------+-------+
     |        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
     +--------+-----+-----+----+----+------+------+------+-------+
+
+    .. warning:: NX does not support SORL and LDIR, MSC does
     """
     type = 'PLOAD4'
 
@@ -2526,7 +2528,7 @@ class PLOAD4(Load):
 
         # these can be greater than 1 if it's a shell (not a solid)
         self.eids = eids
-        self.pressures = pressures
+        self.pressures = np.asarray(pressures)
 
         #: used for solid element only
         self.g1 = g1

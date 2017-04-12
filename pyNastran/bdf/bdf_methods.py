@@ -101,7 +101,7 @@ class BDFMethods(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
-    def get_area_breakdown(self, property_ids=None):
+    def get_area_breakdown(self, property_ids=None, sum_bar_area=True):
         """
         gets a breakdown of the area by property region
 
@@ -134,7 +134,10 @@ class BDFMethods(BDFAttributes):
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 for eid in eids:
                     elem = self.elements[eid]
-                    areas.append(elem.Area())
+                    if sum_bar_area:
+                        areas.append(elem.Area())
+                    else:
+                        areas = [elem.Area()]
             elif prop.type in skip_props:
                 pass
             else:
