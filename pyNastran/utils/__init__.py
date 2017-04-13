@@ -156,7 +156,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
         try:
             if check(k) and attr_type(getattr(obj, k)):
                 out.append(k)
-        except KeyError:
+        except:
             pass
     out.sort()
     return out

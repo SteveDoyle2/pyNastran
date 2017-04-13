@@ -612,6 +612,26 @@ class CBEAM(CBAR):
         self.gb = self.Gb()
         del self.ga_ref, self.gb_ref, self.pid_ref
 
+    def _verify(self, xref=False):
+        eid = self.eid
+        pid = self.Pid()
+        edges = self.get_edge_ids()
+        mid = self.Mid()
+        nsm = self.Nsm()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(nsm, float), 'nsm=%r' % nsm
+        if xref:  # True
+            assert self.pid_ref.type in ['PBEAM', 'PBEAML', 'PBCOMP'], '%s%s' % (self, self.pid_ref)
+            A = self.Area()
+            mpl = self.MassPerLength()
+            L = self.Length()
+            mass = self.Mass()
+            assert isinstance(A, float), 'eid=%s A=%r' % (eid, A)
+            assert isinstance(L, float), 'eid=%s L=%r' % (eid, L)
+            assert isinstance(mpl, float), 'eid=%s mass_per_length=%r' % (eid, mpl)
+            assert isinstance(mass, float), 'eid=%s mass=%r' % (eid, mass)
+            assert L > 0.0, 'eid=%s L=%s' % (eid, L)
+
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()

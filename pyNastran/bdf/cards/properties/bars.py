@@ -366,20 +366,22 @@ def _bar_areaL(class_name, Type, dim):
         A = 2 * (h1 * w1 + h2 * w2 + h3 * w3)  # symmetrical box
 
     elif Type == 'L':
+        #
         #  D4
-        # F--C      ^
-        # |  |      |
-        # |  |      |
-        # |  |      | D2
-        # |  +---+  |
-        # |   D3 |  |
-        # E------D  |
+        # F---C      ^
+        # |   |      |
+        # | 2 |      |
+        # |   |      | D2
+        # +---+---+  |
+        # |1   D3 |  |
+        # E-------D  v
         #
         # <------> D1
+        #
         (d1, d2, d3, d4) = dim
         A1 = d1 * d3
 
-        h2 = (d2 - d3)
+        h2 = d2 - d3
         A2 = h2 * d4
         A = A1 + A2
 

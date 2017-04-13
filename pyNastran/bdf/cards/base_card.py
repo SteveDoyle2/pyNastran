@@ -241,6 +241,9 @@ class BaseCard(object):
                 print("list_fields = ", list_fields)
                 raise
 
+    def rstrip(self):
+        return str(self).rstrip()
+
     def write_card(self, size=8, is_double=False):
         """
         Writes the card with the specified width and precision
