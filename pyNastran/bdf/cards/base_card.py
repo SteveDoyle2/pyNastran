@@ -291,8 +291,7 @@ class Property(BaseCard):
         """
         if isinstance(self.mid, integer_types):
             return self.mid
-        else:
-            return self.mid_ref.mid
+        return self.mid_ref.mid
 
     def cross_reference(self, model):
         """dummy cross reference method for a Property"""

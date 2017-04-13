@@ -1111,7 +1111,8 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pbeaml(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
+    def add_pbeaml(self, pid, mid, Type, xxb, dims, so=None, nsm=None,
+                   group='MSCBML0', comment=''):
         """
         Creates a PBEAML card
 
@@ -1123,17 +1124,23 @@ class AddCards(AddMethods):
             material id
         xxb : List[float]
             The percentage locations along the beam [0., ..., 1.]
-        so : List[str]
-            YES, YESA, NO
         dims : List[dim]
             dim : List[float]
                 The dimensions for each section
-        nsm : List[float]
+        group : str; default='MSCBMLO'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
+        so : List[str]; default=None
+            YES, YESA, NO
+            None : [0.] * len(xxb)
+        nsm : List[float]; default=None
             nonstructural mass per unit length
+            None : [0.] * len(xxb)
         comment : str; default=''
             a comment for the card
         """
-        prop = PBEAML(pid, mid, group, Type, xxb, so, dims, nsm, comment=comment)
+        prop = PBEAML(pid, mid, Type, xxb, dims,
+                      group=group, so=so, nsm=nsm, comment=comment)
         self._add_property_object(prop)
         return prop
 

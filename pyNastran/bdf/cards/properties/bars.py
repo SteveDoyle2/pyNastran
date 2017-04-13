@@ -626,6 +626,7 @@ def _bar_areaL(class_name, Type, dim):
         msg = 'areaL; Type=%s is not supported for %s class...' % (
             Type, class_name)
         raise NotImplementedError(msg)
+    assert A > 0, 'Type=%r dim=%r' % (Type, dim)
     return A
 
 class IntegratedLineProperty(LineProperty):
@@ -997,7 +998,7 @@ class PBARL(LineProperty):
         dim : List[float]
             dimensions for cross-section corresponding to Type;
             the length varies
-        group : str default='MSCBMLO'
+        group : str; default='MSCBMLO'
             this parameter can lead to a very broken deck with a very
             bad error message; don't touch it!
         nsm : float; default=0.
@@ -1117,13 +1118,14 @@ class PBARL(LineProperty):
             print(msg)
             J = 0.0
         nsm = self.Nsm()
-        mpl = self.MassPerLength()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         assert isinstance(A, float), 'pid=%r' % A
         assert isinstance(J, float), 'cid=%r' % J
         assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+        if xref:
+            mpl = self.MassPerLength()
+            assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
 
     def Area(self):
         """

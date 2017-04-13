@@ -474,16 +474,16 @@ class CBAR(LineElement):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
-        mid = self.Mid()
-        nsm = self.Nsm()
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
         if xref:  # True
             assert self.pid_ref.type in ['PBAR', 'PBARL'], '%s%s' % (self, self.pid_ref)
+            mid = self.Mid()
             A = self.Area()
+            nsm = self.Nsm()
             mpl = self.MassPerLength()
             L = self.Length()
             mass = self.Mass()
+            assert isinstance(mid, int), 'mid=%r' % mid
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(A, float), 'eid=%s A=%r' % (eid, A)
             assert isinstance(L, float), 'eid=%s L=%r' % (eid, L)
             assert isinstance(mpl, float), 'eid=%s mass_per_length=%r' % (eid, mpl)

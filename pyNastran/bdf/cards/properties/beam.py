@@ -925,7 +925,8 @@ class PBEAML(IntegratedLineProperty):
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
+    def __init__(self, pid, mid, Type, xxb, dims, so=None, nsm=None,
+                 group='MSCBML0', comment=''):
         """
         Creates a PBEAML card
 
@@ -937,13 +938,18 @@ class PBEAML(IntegratedLineProperty):
             material id
         xxb : List[float]
             The percentage locations along the beam [0., ..., 1.]
-        so : List[str]
-            YES, YESA, NO
         dims : List[dim]
             dim : List[float]
                 The dimensions for each section
-        nsm : List[float]
+        group : str; default='MSCBMLO'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
+        so : List[str]; default=None
+            YES, YESA, NO
+            None : [0.] * len(xxb)
+        nsm : List[float]; default=None
             nonstructural mass per unit length
+            None : [0.] * len(xxb)
         comment : str; default=''
             a comment for the card
         """
@@ -958,6 +964,12 @@ class PBEAML(IntegratedLineProperty):
         #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
         self.Type = Type
         ndim = self.valid_types[self.Type]
+
+        nxxb = len(xxb)
+        if nsm is None:
+            nsm = [0.] * nxxb
+        if so is None:
+            so = ['YES'] * nxxb
 
         self.dim = dims
         for xxbi, dim in zip(xxb, dims):
@@ -1024,19 +1036,21 @@ class PBEAML(IntegratedLineProperty):
             nsm.append(nsmi)
             n += 1
             i += 1
-        return PBEAML(pid, mid, group, Type, xxb, so, dims, nsm, comment=comment)
+        return PBEAML(pid, mid, Type, xxb, dims, group=group,
+                      so=so, nsm=nsm, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        rho = self.Rho()
         nsm = self.Nsm()
         area = self.Area()
-        mass_per_length = self.MassPerLength()
         assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
-        assert isinstance(rho, float), 'rho=%r\n%s' % (rho, str(self))
         assert isinstance(nsm, float), 'nsm=%r\n%s' % (nsm, str(self))
         assert isinstance(area, float), 'area=%r\n%s' % (area, str(self))
-        assert isinstance(mass_per_length, float), 'mass/L=%r\n%s' % (mass_per_length, str(self))
+        if xref:
+            rho = self.Rho()
+            mass_per_length = self.MassPerLength()
+            assert isinstance(rho, float), 'rho=%r\n%s' % (rho, str(self))
+            assert isinstance(mass_per_length, float), 'mass/L=%r\n%s' % (mass_per_length, str(self))
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1081,8 +1095,8 @@ class PBEAML(IntegratedLineProperty):
             dims.append(dim)
             nsm.append(nsmi)
 
-        return PBEAML(pid, mid, group, Type, xxb, so, dims, nsm,
-                      comment=comment)
+        return PBEAML(pid, mid, Type, xxb, dims, group=group,
+                      so=so, nsm=nsm, comment=comment)
 
     def MassPerLength(self):
         r"""
@@ -1187,9 +1201,8 @@ class PBEAML(IntegratedLineProperty):
     def raw_fields(self):
         list_fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type,
                        None, None, None, None]
-        #print("self.nsm = ",self.nsm)
-        #print("xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,
-        #                                     self.dim,self.nsm))
+        #print("xxb=%s so=%s dim=%s nsm=%s" % (
+            #self.xxb,self.so, self.dim,self.nsm))
         for (i, xxb, so, dim, nsm) in zip(count(), self.xxb, self.so,
                                           self.dim, self.nsm):
             if i == 0:

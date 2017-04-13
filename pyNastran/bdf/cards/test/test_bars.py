@@ -210,8 +210,10 @@ class TestBars(unittest.TestCase):
         grid2 = ['GRID', 2, None, 1., 0., 0.]
         grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
+        pid = 11
+        mid = 12
         cbar = [
-            'CAR', 10, 11, 1, 2, 0., 1., 0., None,
+            'CBAR', 10, pid, 1, 2, 0., 1., 0., None,
         ]
         k1 = k2 = None
         area = 2.0
@@ -223,12 +225,12 @@ class TestBars(unittest.TestCase):
         j = None
         nsm = 0.1
         pbar = [
-            'PBAR', 11, 12, area, i1, i2, j, nsm,
+            'PBAR', pid, mid, area, i1, i2, j, nsm,
             None, None, None, None, None, None, None, None,
             k1, k2, i12
         ]
 
-        mat1 = ['MAT1', 12, 3.0e7, None, nu, rho]
+        mat1 = ['MAT1', mid, 3.0e7, None, nu, rho]
         model.add_card(grid1, 'GRID')
         model.add_card(grid2, 'GRID')
         model.add_card(cbar, 'CBAR')
@@ -298,6 +300,58 @@ class TestBars(unittest.TestCase):
 
             cg = array([0.5, 0., 0.], dtype='float32')
             #print('cg =', op2_cg)
+
+    def test_bar_mass_2(self):
+        """CBAR/PBARL"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[0., 1., 0.])
+
+        mid = 1
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+
+        #---------------------------------------------------------------
+        eid = 1
+        pid = 101
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbar = model.add_cbar(eid, pid, ga, gb, x, g0, offt='GGG',
+                              pa=0, pb=0, wa=None, wb=None,
+                              comment='CBAR')
+        Type = 'BOX'
+        dim = [1., 2., 0.1, 0.1]
+        #pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  #so=None, comment='PBEAML')
+        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBMLO', nsm=0.,
+                                comment='PBARL')
+        #---------------------------------------------------------------
+        eid = 2
+        pid = 102
+        x = None
+        g0 = 3
+        cbar = model.add_cbar(eid, pid, ga, gb, x, g0, offt='GGG',
+                              pa=0, pb=0, wa=None, wb=None,
+                              comment='CBAR')
+        Type = 'BOX'
+        dim = [1., 2., 0.1, 0.1]
+        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBMLO', nsm=0.,
+                                comment='PBARL')
+        #---------------------------------------------------------------
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        model._verify_bdf(xref=True)
+        model.uncross_reference()
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

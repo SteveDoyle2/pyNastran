@@ -153,47 +153,6 @@ class TestBeams(unittest.TestCase):
         ]
         self._compare(fields, lines_expected)
 
-    def test_cbeam_05(self):
-        # modification of test_pbeam_05
-        model = BDF(debug=False)
-        lines = ['PBEAM,3,6,2.9,3.5,5.97,0.4,3.14',
-                 '     , , ,2.0,-4.0',]
-        card = model.add_card(lines, 'PBEAM', is_list=False)
-
-        lines = ['CBEAM         10       3      1       2      0.01.000000     0.0']
-        model.add_card(lines, 'CBEAM', is_list=False)
-
-        lines = ['MAT1, 6, 1.0e7,,0.3']
-        model.add_card(lines, 'MAT1', is_list=False)
-
-        lines = ['GRID,1,,0.,0.,0.']
-        model.add_card(lines, 'GRID', is_list=False)
-
-        lines = ['GRID,2,,0.,0.,0.']
-        model.add_card(lines, 'GRID', is_list=False)
-        model.cross_reference()
-
-        cbeam = model.Element(10)
-        #cbeam = model.elements[10]
-        #print("Area = ", cbeam.Area())
-        #print("I11 = ", cbeam.I11())
-        #print("I22 = ", cbeam.I22())
-        #print("I12 = ", cbeam.I12())
-        #print("J = ", cbeam.J())
-
-        #print("Area = ", cbeam.Area())
-        #print("I11 = ", cbeam.I1())
-        #print("I22 = ", cbeam.I2())
-        #print("I12 = ", cbeam.I12())
-        #print("J = ", cbeam.J())
-        node_ids = cbeam.node_ids
-        assert node_ids == [1, 2], node_ids
-        self.assertEqual(cbeam.Area(), 2.9)
-        self.assertEqual(cbeam.I11(), 3.5)
-        self.assertEqual(cbeam.I22(), 5.97)
-        self.assertEqual(cbeam.I12(), 0.4)
-        self.assertEqual(cbeam.J(), 3.14)
-
     def test_pbeam_06(self):
         bdf = BDF(debug=False)
         lines = [
@@ -427,6 +386,220 @@ class TestBeams(unittest.TestCase):
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
+    def test_cbeam_01(self):
+        """modification of test_pbeam_05"""
+        model = BDF(debug=False)
+        lines = ['PBEAM,3,6,2.9,3.5,5.97,0.4,3.14',
+                 '     , , ,2.0,-4.0',]
+        card = model.add_card(lines, 'PBEAM', is_list=False)
+
+        lines = ['CBEAM         10       3      1       2      0.01.000000     0.0']
+        model.add_card(lines, 'CBEAM', is_list=False)
+
+        mid = 6
+        E = 1.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[0., 0., 0.])
+        model.cross_reference()
+
+        cbeam = model.Element(10)
+        #cbeam = model.elements[10]
+        #print("Area = ", cbeam.Area())
+        #print("I11 = ", cbeam.I11())
+        #print("I22 = ", cbeam.I22())
+        #print("I12 = ", cbeam.I12())
+        #print("J = ", cbeam.J())
+
+        #print("Area = ", cbeam.Area())
+        #print("I11 = ", cbeam.I1())
+        #print("I22 = ", cbeam.I2())
+        #print("I12 = ", cbeam.I12())
+        #print("J = ", cbeam.J())
+        node_ids = cbeam.node_ids
+        assert node_ids == [1, 2], node_ids
+        self.assertEqual(cbeam.Area(), 2.9)
+        self.assertEqual(cbeam.I11(), 3.5)
+        self.assertEqual(cbeam.I22(), 5.97)
+        self.assertEqual(cbeam.I12(), 0.4)
+        self.assertEqual(cbeam.J(), 3.14)
+
+    def test_cbeam_02(self):
+        """CBEAM/PBEAML"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[0., 1., 0.])
+
+        mid = 1
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+
+        #---------------------------------------------------------------
+        eid = 1
+        pid = 101
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam1 = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                 pa=0, pb=0, wa=None, wb=None,
+                                 sa=0, sb=0, comment='CBEAM')
+        Type = 'BOX'
+        xxb = [0.]
+        dims = [[1., 2., 0.1, 0.1], [1., 2., 0.1, 0.1]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+        eid = 2
+        pid = 102
+        x = None
+        g0 = 3
+        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+        Type = 'BOX'
+        xxb = [0.]
+        dims = [[1., 2., 0.1, 0.1]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+        eid = 3
+        pid = 103
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+        Type = 'BAR'
+        xxb = [0.]
+        dims = [[2., 3.]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+        eid = 4
+        pid = 104
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+        Type = 'ROD'
+        xxb = [0.]
+        dims = [[2.]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+        eid = 5
+        pid = 105
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+        Type = 'TUBE'
+        xxb = [0.]
+        dims = [[2., 1.]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+        eid = 6
+        pid = 106
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+        Type = 'L'
+        xxb = [0.]
+        dims = [[2., 2., 0.1, 0.1]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+        eid = 7
+        pid = 107
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+        Type = 'T'
+        xxb = [0.]
+        dims = [[1., 2., 0.1, 0.2]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+        eid = 8
+        pid = 108
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+        Type = 'T1'
+        xxb = [0.]
+        dims = [[1., 2., 0.2, 0.1]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+        eid = 9
+        pid = 109
+        ga = 1
+        gb = 2
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+        Type = 'T2'
+        xxb = [0.]
+        dims = [[1., 2., 0.2, 0.1]]
+        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+                                  so=None, comment='PBEAML')
+        #---------------------------------------------------------------
+
+        model.validate()
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        pbeaml.raw_fields()
+        pbeaml.write_card_16()
+        model._verify_bdf(xref=False)
+
+        #----------------
+        model.cross_reference()
+
+        model._verify_bdf(xref=True)
+        model.mass_properties()
+        pids_to_area = model.get_area_breakdown(property_ids=None, sum_bar_area=False)
+        for pid, area in sorted(pids_to_area.items()):
+            assert area > 0., 'pid=%s area=%s' % (pid, area)
+
+        pids_to_mass, _mass_type_to_mass = model.get_mass_breakdown(property_ids=None)
+        for pid, mass in sorted(pids_to_mass.items()):
+            assert mass > 0., 'pid=%s mass=%s' % (pid, mass)
+
+        #--------------------
+        model.uncross_reference()
+        model._verify_bdf(xref=False)
+        model.safe_cross_reference()
+        model.uncross_reference()
+
     def test_beam_mass_01(self):
         model = BDF(debug=False)
         #model.case_control_deck = CaseControlDeck(case_control_lines)
@@ -435,9 +608,12 @@ class TestBeams(unittest.TestCase):
         grid2 = ['GRID', 2, None, 1., 0., 0.]
         grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
+
+        pid = 11
         cbeam = [
-            'CBEAM', 10, 11, 1, 2, 0., 1., 0., None,
+            'CBEAM', 10, pid, 1, 2, 0., 1., 0., None,
         ]
+        mid = 12
         nsm_offset_a = [0., 0., 0.]
         nsm_offset_b = [0., 50., 0.]
         k1 = k2 = None
@@ -448,7 +624,7 @@ class TestBeams(unittest.TestCase):
         nsm_b = 0.
         nu = 0.3
         pbeam = ([
-            'PBEAM', 11, 12,
+            'PBEAM', pid, mid,
                         area1, 2.1, 1.2, 1.3, None, nsm_a,
             None, None, None, None, None, None, None, None,
 
@@ -521,7 +697,7 @@ class TestBeams(unittest.TestCase):
             os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
         os.remove('pbeam12.bdf')
 
-        if 0:
+        if 0:  # pragma: no cover
             from pyNastran.op2.op2 import OP2
             op2 = OP2()
             op2.read_op2('pbeam12.op2')
