@@ -188,13 +188,11 @@ class TestBars(unittest.TestCase):
                     pa=0, pb=0, wa=None, wb=None, comment='')
         cbar.validate()
         model.elements[eid] = cbar
-
-        with self.assertRaises(AttributeError):
-            pbarl._verify()
+        pbarl._verify(xref=False)
 
         model.validate()
         model.cross_reference()
-        pbarl._verify()
+        pbarl._verify(xref=True)
         assert allclose(cbar.Mass(), 9.9247779608), cbar.Mass()
 
         mat.rho = 0.
