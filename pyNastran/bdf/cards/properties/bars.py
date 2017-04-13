@@ -356,14 +356,39 @@ def _bar_areaL(class_name, Type, dim):
 
     #I1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
     elif Type == 'I1':
-        h2 = dim[2]
+        #
+        #  d1/2   d2  d1/2
+        #  <---><---><--->
+        #
+        #  1--------------2     ^
+        #  |      A       |     |
+        # 12---11---4-----3     |
+        #       |   |        ^  |
+        #       |   |        |  |  d4
+        #       | B |     d3 |  |
+        #       |   |        v  |
+        #  9----10---5----6     |
+        #  |      C       |     |
+        #  8--------------7     v
+        #
+        #  <----d2---->
+        #
+        #
+        # h1 = hA = (d4 - d3) / 2
+        # h2 = hB = d3
+        #
+        # w1 = wA = d1 + d2
+        # w2 = d2
+        #
+        # A3 = A1
+        # A = A1 + A2 + A3
+        w1 = dim[0] + dim[1]
+        h1 = (dim[3] - dim[2]) / 2.
+
         w2 = dim[1]
+        h2 = dim[2]
 
-        h1 = dim[3] - h2
-        w1 = dim[0] + w2
-        A = h1 * w1 + h2 * w2
-
-        A = 2 * (h1 * w1 + h2 * w2 + h3 * w3)  # symmetrical box
+        A = 2. * (h1 * w1) + h2 * w2
 
     elif Type == 'L':
         #  D4
@@ -522,15 +547,21 @@ def _bar_areaL(class_name, Type, dim):
 
     #HAT = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
     elif Type == 'HAT':
-        w = dim[1]      # constant width (note h is sometimes w)
-        h1 = w           # horizontal lower bar
-        w1 = dim[3]
-
-        h2 = dim[0] - 2 * w  # vertical bar
-        w2 = w
-
-        h3 = w           # half of top bar
-        w3 = dim[2] / 2.
+        #
+        #        <--------d3------->
+        #
+        #        +-----------------+              ^
+        #   d4   |        A        |   d4         |
+        # <----> +-d2-+-------+-d2-+ <---->       |
+        #        | B  |       |  B |              | d1
+        # +------+----+       +----+------+       |
+        # |     C     |       |     C     | t=d2  |
+        # +-----------+       +-----------+       v
+        t = dim[1]
+        wa = dim[2]
+        hb = dim[0] - 2. * t
+        wc = dim[3] + t
+        A = wa * t + (2. * wc * t) + (2. * hb * t)
 
     #HAT1 = (DIM1*DIM5)+(DIM3*DIM4)+((DIM1-DIM3)*DIM4)+2*((DIM2-DIM5-DIM4)*DIM4)
     elif Type == 'HAT1':
@@ -547,7 +578,7 @@ def _bar_areaL(class_name, Type, dim):
 
         h1 = w              # upper, horizontal lower bar (see HAT)
         w1 = w0 - w3
-        A = 2 * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
+        A = 2. * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
 
     #DBOX = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
     #       (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
