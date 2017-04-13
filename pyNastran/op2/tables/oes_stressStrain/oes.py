@@ -964,12 +964,6 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                if self.is_debug_file:
-                    self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                    self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
-                    self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
@@ -989,6 +983,12 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
+                    if self.is_debug_file:
+                        self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                        self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                        self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
+                        self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
                     struct1 = Struct(b(self._endian + 'i4f'))
                     for i in range(nelements):
                         edata = data[n:n+ntotal]

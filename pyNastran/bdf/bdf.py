@@ -3784,7 +3784,13 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                 print(str(card))
                 raise
 
-                #raise
+        for eid, cbarao in sorted(iteritems(self.ao_element_flags)):
+            try:
+                assert self.elements[eid].type == 'CBAR', 'CBARAO error: eid=%s is not a CBAR' % eid
+            except Exception:
+                print(str(cbarao))
+                raise
+
         for key, card in sorted(iteritems(self.properties)):
             try:
                 card._verify(xref)

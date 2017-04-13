@@ -479,6 +479,7 @@ class CBAR(LineElement):
         assert isinstance(mid, int), 'mid=%r' % mid
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         if xref:  # True
+            assert self.pid_ref.type in ['PBAR', 'PBARL'], '%s%s' % (self, self.pid_ref)
             A = self.Area()
             mpl = self.MassPerLength()
             L = self.Length()

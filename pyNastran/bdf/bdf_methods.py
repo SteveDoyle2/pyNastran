@@ -240,7 +240,7 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     area = elem.Area()
                     masses.append(area * (rho * t + nsm))
-            elif prop.type in ['PCOMP', 'PCOMPG',]:
+            elif prop.type in ['PCOMP', 'PCOMPG']:
                 for eid in eids:
                     elem = self.elements[eid]
                     masses.append(elem.Mass())
