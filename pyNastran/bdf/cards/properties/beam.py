@@ -941,7 +941,7 @@ class PBEAML(IntegratedLineProperty):
         dims : List[dim]
             dim : List[float]
                 The dimensions for each section
-        group : str; default='MSCBMLO'
+        group : str; default='MSCBML0'
             this parameter can lead to a very broken deck with a very
             bad error message; don't touch it!
         so : List[str]; default=None
@@ -1213,9 +1213,9 @@ class PBEAML(IntegratedLineProperty):
         return list_fields
 
     def repr_fields(self):
-        #group = set_blank_if_default(self.group, 'MSCBMLO')
+        group = set_blank_if_default(self.group, 'MSCBML0')
         list_fields = self.raw_fields()
-        #list_fields[3] = group
+        list_fields[3] = group
         return list_fields
 
     def write_card(self, size=8, is_double=False):

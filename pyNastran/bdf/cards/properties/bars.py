@@ -981,7 +981,7 @@ class PBARL(LineProperty):
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
+    def __init__(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """
         Creates a PBARL card
 
@@ -998,7 +998,7 @@ class PBARL(LineProperty):
         dim : List[float]
             dimensions for cross-section corresponding to Type;
             the length varies
-        group : str; default='MSCBMLO'
+        group : str; default='MSCBML0'
             this parameter can lead to a very broken deck with a very
             bad error message; don't touch it!
         nsm : float; default=0.
@@ -1434,7 +1434,7 @@ class PBARL(LineProperty):
         return list_fields
 
     def repr_fields(self):
-        group = set_blank_if_default(self.group, 'MSCBMLO')
+        group = set_blank_if_default(self.group, 'MSCBML0')
         ndim = self.valid_types[self.Type]
         assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
         list_fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None,
