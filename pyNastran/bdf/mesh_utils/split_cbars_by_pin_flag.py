@@ -44,11 +44,11 @@ def make_release_map(model, bar_beam_eids, debug=False):  # pragma: no cover
         # PBEAML specfic
         "L" : [],
     }  # for GROUP="MSCBML0"
-    allowed_types = [
-        'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
-        'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
-        'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z', 'bar', 'beam',
-    ]
+    #allowed_types = [
+        #'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
+        #'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
+        #'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z', 'bar', 'beam',
+    #]
 
     # bar_types['bar'] = [ [...], [...], [...] ]
     #bar_types = defaultdict(lambda : defaultdict(list))
@@ -98,12 +98,12 @@ def make_release_map(model, bar_beam_eids, debug=False):  # pragma: no cover
             bar_nids.update([nid1, nid2])
             node1 = model.nodes[nid1]
             node2 = model.nodes[nid2]
-            n1 = node1.get_position()
-            n2 = node2.get_position()
-            #centroid = (n1 + n2) / 2.
-            i = n2 - n1
-            Li = np.linalg.norm(i)
-            ihat = i / Li
+            xyz1 = node1.get_position()
+            xyz2 = node2.get_position()
+            #centroid = (xyz1 + xyz2) / 2.
+            i = xyz2 - xyz1
+            lengthi = np.linalg.norm(i)
+            ihat = i / lengthi
 
             if elem.pa != 0:
                 #assert elem.pa in [], elem.pa
@@ -114,7 +114,8 @@ def make_release_map(model, bar_beam_eids, debug=False):  # pragma: no cover
 
 
 def split_cbars_by_pin_flag(bdf_filename,
-                            pin_flags_filename=None, bdf_filename_out=None):
+                            pin_flags_filename=None, bdf_filename_out=None,
+                            debug=False):
     """
     Splits bar elements if they have a pin flag.  That way you can
     each side of the element (A/B) a unique color based on the pin flag.
@@ -130,6 +131,11 @@ def split_cbars_by_pin_flag(bdf_filename,
         this is optional as you may need to define your own map
     bdf_filename_out : str; default=None
         write the updated deck
+    debug : bool/None; default=True
+        used to set the logger if no logger is passed in
+            True:  logs debug/info/error messages
+            False: logs info/error messages
+            None:  logs error messages
 
     Returns
     -------
@@ -142,7 +148,7 @@ def split_cbars_by_pin_flag(bdf_filename,
             the bar pin flag
     """
     if isinstance(bdf_filename, string_types):
-        model = read_bdf(bdf_filename, xref=False)
+        model = read_bdf(bdf_filename, xref=False, debug=debug)
     else:
         model = bdf_filename
     card_types = ['CBAR', 'CBEAM']
@@ -155,7 +161,8 @@ def split_cbars_by_pin_flag(bdf_filename,
     eid_new = max(model.elements) + 1
     for eid in sorted(list(model.elements.keys())):
         elem = model.elements[eid]
-        if elem.type == 'CBAR':
+        etype = elem.type
+        if etype in ['CBAR', 'CBEAM']:
             pa = elem.pa
             pb = elem.pb
             if pa == 0 and pa == pb:
@@ -169,6 +176,7 @@ def split_cbars_by_pin_flag(bdf_filename,
             model.add_grid(nid_new, cp=0, xyz=xyz_mid, cd=0, ps='', seid=0,
                            comment='')
 
+            comment = elem.comment
             ga = elem.ga
             gb = elem.gb
             pid = elem.pid
@@ -180,23 +188,33 @@ def split_cbars_by_pin_flag(bdf_filename,
             wc = (wa + wb) / 2.
 
             del model.elements[eid]
-            model.add_cbar(eid, pid, ga, nid_new, x, g0, offt=offt, pa=0, pb=0,
-                           wa=wa, wb=wc, comment='')
-            model.add_cbar(eid_new, pid, nid_new, gb, x, g0, offt=offt, pa=0, pb=0,
-                           wa=wc, wb=wb, comment='')
+            if etype == 'CBAR':
+                model.add_cbar(eid, pid, ga, nid_new, x, g0, offt=offt, pa=0, pb=0,
+                               wa=wa, wb=wc, comment=comment)
+                model.add_cbar(eid_new, pid, nid_new, gb, x, g0, offt=offt, pa=0, pb=0,
+                               wa=wc, wb=wb, comment='')
+            else:  # CBEAM
+                model.add_cbeam(eid, pid, ga, nid_new, x, g0, offt=offt, pa=0, pb=0,
+                                wa=wa, wb=wc, sa=0, sb=0, bit=None, comment=comment)
+                model.add_cbeam(eid_new, pid, nid_new, gb, x, g0, offt=offt, pa=0, pb=0,
+                                wa=wc, wb=wb, sa=0, sb=0, bit=None, comment='')
             pin_flag_map[eid] = pa
             pin_flag_map[eid_new] = pb
             nid_new += 1
             eid_new += 1
-        elif elem.type in ['CELAS1', 'CQUAD4']:
+        else:
             pin_flag_map[eid] = 0
             #eid_new += 1
-        else:
-            raise RuntimeError(elem.type)
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out)
     assert len(model.elements) == len(pin_flag_map)
+    #nid_release_map = make_release_map(model, bar_beam_eids)
 
+    write_pin_flag_map(pin_flag_map, pin_flags_filename)
+    return model, pin_flag_map
+
+def write_pin_flag_map(pin_flag_map, pin_flags_filename):
+    """writes the pin flag map"""
     if pin_flags_filename is not None:
         pin_flag_remap = {
             0 : 0,
@@ -213,19 +231,3 @@ def split_cbars_by_pin_flag(bdf_filename,
             for eid, pin_flag in sorted(iteritems(pin_flag_map)):
                 pin_flag2 = pin_flag_remap[pin_flag]
                 pin_flags_file.write('%s,%s\n' % (eid, pin_flag2))
-
-    #nid_release_map = make_release_map(model, bar_beam_eids)
-    return model, pin_flag_map
-
-def main():  # pragma: no cover
-    #bdf_filename = 'modes_old.bdf'
-    #bdf_filename_out = 'modes_split_old.bdf'
-
-    bdf_filename = 'merged_model_newgeom_fatigue.bdf'
-    bdf_filename_out = 'split_newgeom_fatigue.bdf'
-
-    pin_flags_filename = 'pin_flags.csv'
-    split_cbars_by_pin_flag(bdf_filename, pin_flags_filename, bdf_filename_out=bdf_filename_out)
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

@@ -813,6 +813,8 @@ class SPC1(Constraint):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
         self.conid = conid
         self.components = components
         self.nodes = expand_thru(nodes)

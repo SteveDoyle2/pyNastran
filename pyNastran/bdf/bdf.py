@@ -269,7 +269,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
         Parameters
         ----------
-        debug : bool/None
+        debug : bool/None; default=True
             used to set the logger if no logger is passed in
                 True:  logs debug/info/error messages
                 False: logs info/error messages
@@ -3387,7 +3387,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                 if "'" not in line_base:
                     pass
                 else:
-                    # print('----------------------')
+                    #print('----------------------')
 
                     line_base = line_base[8:].strip()
                     if line_base.startswith("'") and line_base.endswith("'"):
@@ -3933,6 +3933,7 @@ def _lines_to_decks(lines, i, punch):
     else:
         flag = 1
         for i, line in enumerate(lines):
+            #print(line)
             if flag == 1:
                 #line = line.upper()
                 if line.upper().startswith('CEND'):
