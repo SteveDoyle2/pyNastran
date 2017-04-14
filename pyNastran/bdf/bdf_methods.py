@@ -130,14 +130,24 @@ class BDFMethods(BDFAttributes):
             if prop.type in ['PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG', ]:
                 for eid in eids:
                     elem = self.elements[eid]
-                    areas.append(elem.Area())
+                    try:
+                        areas.append(elem.Area())
+                    except AttributeError:
+                        print(prop)
+                        print(elem)
+                        raise
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 for eid in eids:
                     elem = self.elements[eid]
-                    if sum_bar_area:
-                        areas.append(elem.Area())
-                    else:
-                        areas = [elem.Area()]
+                    try:
+                        if sum_bar_area:
+                            areas.append(elem.Area())
+                        else:
+                            areas = [elem.Area()]
+                    except AttributeError:
+                        print(prop)
+                        print(elem)
+                        raise
             elif prop.type in skip_props:
                 pass
             else:
