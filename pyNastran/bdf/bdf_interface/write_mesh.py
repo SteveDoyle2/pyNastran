@@ -12,7 +12,6 @@ from six import string_types, iteritems, itervalues, PY2, StringIO
 
 #from pyNastran.utils import is_file_obj
 from pyNastran.bdf.utils import print_filename
-from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -74,6 +73,7 @@ class WriteMesh(BDFAttributes):
         Performs type checking on the write_bdf inputs
         """
         if out_filename is None:
+            from pyNastran.utils.gui_io import save_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
                 "*.bdf;*.dat;*.nas;*.pch|" \
                 "All files (*.*)|*.*"

@@ -45,6 +45,7 @@ class WriteMesh(object):
         Performs type checking on the write_bdf inputs
         """
         if out_filename is None:
+            from pyNastran.utils.gui_io import save_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
                 "*.bdf;*.dat;*.nas;*.pch|" \
                 "All files (*.*)|*.*"
