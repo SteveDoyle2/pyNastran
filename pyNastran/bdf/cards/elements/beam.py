@@ -647,6 +647,8 @@ class CBEAM(CBAR):
         w1b = set_blank_if_default(self.wb[0], 0.0)
         w2b = set_blank_if_default(self.wb[1], 0.0)
         w3b = set_blank_if_default(self.wb[2], 0.0)
+        pa = set_blank_if_default(self.pa, 0)
+        pb = set_blank_if_default(self.pb, 0)
 
         sa = set_blank_if_default(self.sa, 0)
         sb = set_blank_if_default(self.sb, 0)
@@ -654,7 +656,7 @@ class CBEAM(CBAR):
         offt = self.get_offt_bit_defaults()
         ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
-                       self.pa, self.pb, w1a, w2a, w3a,
+                       pa, pb, w1a, w2a, w3a,
                        w1b, w2b, w3b, sa, sb]
         return list_fields
 
