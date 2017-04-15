@@ -134,7 +134,6 @@ class DEQATN(BaseCard):  # needs work...
                     is_join = True
             else:
                 # last line
-                pass
                 is_join = False
             if not is_join:
                 if '=' not in eqi:

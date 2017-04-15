@@ -662,7 +662,7 @@ class GEOM4(GeomCommon):
 
         assert -1 not in out, out.tolist()
         if self.is_debug_file:
-            self.binary_debug.write('SPCOFF1: components=%s thru_flag=%s' % (
+            self.binary_debug.write('SPCOFF1: name=%r components=%s thru_flag=%s' % (
                 name, components, thru_flag))
             self.binary_debug.write('   nids=%s\n' % str(nids))
         if len(nids) == 0:

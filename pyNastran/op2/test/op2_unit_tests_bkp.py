@@ -246,7 +246,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_global_radial.op2')
         op2 = read_op2_geom(op2_filename)
 
-        xyz_cid0 = op2.get_xyz_in_coord(cid=0, dtype='float64')
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0, fdtype='float64')
         i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, op2.coords, xyz_cid0=xyz_cid0)
 
@@ -331,7 +331,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_global2_radial.op2')
         op2 = read_op2_geom(op2_filename)
 
-        xyz_cid0 = op2.get_xyz_in_coord(cid=0, dtype='float64')
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0, fdtype='float64')
         i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, op2.coords, xyz_cid0=xyz_cid0)
 
@@ -404,7 +404,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_global_radial_cd.op2')
         op2 = read_op2_geom(op2_filename)
 
-        xyz_cid0 = op2.get_xyz_in_coord(cid=0, dtype='float64')
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0, fdtype='float64')
         i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, op2.coords, xyz_cid0=xyz_cid0)
 
@@ -492,7 +492,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
         op2 = read_op2_geom(op2_filename)
 
-        xyz_cid0 = op2.get_xyz_in_coord(cid=0, dtype='float64')
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0, fdtype='float64')
         i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, op2.coords, xyz_cid0=xyz_cid0)
 

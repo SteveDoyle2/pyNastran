@@ -172,7 +172,7 @@ class CBAROR(object):
     def __init__(self):
         self.n = 0
 
-    def add(self, card=None, data=None, comment=''):
+    def add_card(self, card, comment=''):
         if self.n == 1:
             raise RuntimeError('only one CBAROR is allowed')
         self.n = 1
@@ -196,6 +196,7 @@ class CBAROR(object):
                               dtype='float64')
         self.offt = string_or_blank(card, 8, 'offt', 'GGG')
         assert len(card) <= 9, 'len(CBAROR card) = %i\ncard=%s' % (len(card), card)
+
 
 class CBARAO(BaseCard):
     type = 'CBARAO'
