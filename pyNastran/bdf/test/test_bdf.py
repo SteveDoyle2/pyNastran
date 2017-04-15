@@ -280,7 +280,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         print("bdf_model = %s" % bdf_model)
     if is_folder:
         bdf_model = os.path.join(test_path, folder, bdf_filename)
-    out_model = bdf_model + '_out'
+
+    model, ext = os.path.splitext(bdf_model)
+    out_model = '%s.test_bdf%s' % (model, ext)
 
     fem1, fem2, diff_cards = run_and_compare_fems(
         bdf_model, out_model, debug=debug, xref=xref, check=check,
