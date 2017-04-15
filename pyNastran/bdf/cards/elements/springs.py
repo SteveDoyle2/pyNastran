@@ -131,7 +131,6 @@ class CELAS1(SpringElement):
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         assert len(self.nodes) == 2
 
-
     @property
     def node_ids(self):
         msg = ', which is required by CELAS1 eid=%s' % (self.eid)
@@ -142,7 +141,7 @@ class CELAS1(SpringElement):
 
     def _verify(self, xref=True):
         eid = self.eid
-        nodeIDs = self.node_ids
+        node_ids = self.node_ids
         c1 = self.c2
         c2 = self.c1
         #ge = self.ge
@@ -155,9 +154,10 @@ class CELAS1(SpringElement):
         #assert isinstance(s, float), 'ge=%r' % s
         if xref:
             k = self.K()
+            assert self.pid_ref.type in ['PELAS'], self.pid_ref
             assert isinstance(k, float), 'k=%r' % k
-            assert len(nodeIDs) == len(self.nodes)
-            #for nodeID, node in zip(nodeIDs, self.nodes):
+            assert len(node_ids) == len(self.nodes)
+            #for nodeID, node in zip(node_ids, self.nodes):
                 #assert node.node.nid
 
     def _is_same_card(self, elem):
