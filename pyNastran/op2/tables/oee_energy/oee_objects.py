@@ -249,7 +249,7 @@ class RealStrainEnergyArray(ScalarObject):
         self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

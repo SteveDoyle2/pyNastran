@@ -128,7 +128,7 @@ class RealBushArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return ['<%s>\n' % self.__class__.__name__,
                     '  ntimes: %i\n' % self.ntimes,

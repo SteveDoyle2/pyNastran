@@ -649,7 +649,7 @@ class RealGridPointForcesArray(ScalarObject):
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1139,7 +1139,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

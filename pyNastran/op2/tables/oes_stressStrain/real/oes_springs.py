@@ -124,7 +124,7 @@ class RealSpringArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [stress]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -446,7 +446,7 @@ class RealNonlinearSpringStressArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [force, stress]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

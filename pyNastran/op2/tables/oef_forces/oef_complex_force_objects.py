@@ -116,7 +116,7 @@ class ComplexRodForceArray(ScalarObject):
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -351,7 +351,7 @@ class ComplexCShearForceArray(ScalarObject):
             shear12, shear23, shear34, shear41]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -580,7 +580,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         self.data[self.itime, self.ielement, 0] = force
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -792,7 +792,7 @@ class ComplexViscForceArray(ScalarObject):
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1006,7 +1006,7 @@ class ComplexPlateForceArray(ScalarObject):
         self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1248,7 +1248,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1493,7 +1493,7 @@ class ComplexCBarForceArray(ScalarObject):
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1784,7 +1784,7 @@ class ComplexCBeamForceArray(ScalarObject):
         self.element_node[self.itotal, :] = [eid, nid]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2039,7 +2039,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2257,7 +2257,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2482,7 +2482,7 @@ class ComplexCBushForceArray(ScalarObject):
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2649,7 +2649,7 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
@@ -2771,7 +2771,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient

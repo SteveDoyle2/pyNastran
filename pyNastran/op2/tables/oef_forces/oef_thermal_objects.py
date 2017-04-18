@@ -134,7 +134,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         self.data[self.itime, self.ielement, :] = [xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -325,7 +325,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -412,7 +412,7 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
@@ -592,7 +592,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -681,7 +681,7 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
@@ -883,7 +883,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
             self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -976,7 +976,7 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
@@ -1192,7 +1192,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.data[self.itime, self.ielement, :] = [free_conv, free_conv_k]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1366,7 +1366,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.data[self.itime, self.ielement, :] = [fapplied, free_conv, force_conv, frad, ftotal]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
