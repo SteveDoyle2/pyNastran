@@ -20,6 +20,8 @@ try:
     IS_TERMINAL = True
 except ImportError:
     IS_COLORAMA = False
+USE_COLORAMA = IS_COLORAMA and IS_TERMINAL
+
 #else:
     #from colorama import init as colorinit, Fore
     #colorinit(autoreset=True)
@@ -109,7 +111,8 @@ class SimpleLogger(object):
         """
         # max length of 'INFO', 'DEBUG', 'WARNING', etc.
         name = '%-8s' % (typ + ':')
-        if not IS_TERMINAL or not typ:
+        #if not IS_TERMINAL or not typ:
+        if not USE_COLORAMA:
             # if we're writing to a file
             #out = name + msg
             if PY2:
@@ -118,23 +121,7 @@ class SimpleLogger(object):
             else:
                 sys.stdout.write((name + msg) if typ else msg)
         else:
-            # write to the screen
-            #
-            # Python 3 requires str, not bytes
-            # Python 2 seems to be able to use either
-            if typ == 'INFO':
-                #'\033[ 1 m; 34 m'
-                # only works for Python 2
-                #out = (Fore.GREEN + name + msg).encode(self.encoding)
-                # seems to work with both
-                sys.stdout.write(Fore.GREEN + name + msg)
-            elif typ == 'DEBUG':
-                sys.stdout.write(Fore.CYAN + name + msg)
-            elif typ == 'WARNING':
-                # no ORANGE?
-                sys.stdout.write(Fore.YELLOW + name + msg)
-            else: # error / other
-                sys.stdout.write(Fore.RED + name + msg)
+            _write_screen(typ, name + msg)
         sys.stdout.flush()
 
     def msg_typ(self, typ, msg):
@@ -242,13 +229,13 @@ class SimpleLogger(object):
         assert msg is not None, msg
         self.msg_typ('CRITICAL', msg)
 
-def properties(n=3):
+def properties(nframe=3):
     """
     Gets frame information
 
     Parameters
     ----------
-    n : int; default=3
+    nframe : int; default=3
         the number of frames to jump back
         0 = current
         2 = calling from an embedded function (e.g., log_msg)
@@ -262,7 +249,7 @@ def properties(n=3):
         the filen ame of the nth frame
     """
     # jump to get out of the logger code
-    frame = sys._getframe(n)
+    frame = sys._getframe(nframe)
     active_file = os.path.basename(frame.f_globals['__file__'])
     if active_file.endswith('.pyc'):
         return frame.f_lineno, active_file[:-1]
@@ -330,7 +317,7 @@ def log_msg(typ, msg, encoding='utf-8'):
 
     Message will have format 'typ: msg'
     """
-    n, filename = properties(n=2)
+    n, filename = properties(nframe=2)
     filename_n = '%s:%s' % (filename, n)
     _log_msg(typ, '%-8s: %-28s %s\n' % (typ, filename_n, msg), encoding=encoding)
 
