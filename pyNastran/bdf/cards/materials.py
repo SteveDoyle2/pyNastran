@@ -2037,8 +2037,8 @@ class MAT11(Material):
         8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
         15:'tref', 16: 'ge',
     }
-    def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                 a1, a2, a3, tref, ge, comment=''):
+    def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
+                 a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment=''):
         Material.__init__(self)
         if comment:
             self.comment = comment
@@ -2097,8 +2097,8 @@ class MAT11(Material):
         tref = double_or_blank(card, 15, 'tref', 0.0)
         ge = double_or_blank(card, 16, 'ge', 0.0)
         assert len(card) <= 17, 'len(MAT11 card) = %i\ncard=%s' % (len(card), card)
-        return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                     a1, a2, a3, tref, ge, comment=comment)
+        return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
+                     a1=a1, a2=a2, a3=a3, tref=tref, ge=ge, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2205,7 +2205,7 @@ class MAT3D(Material):
     """
     type = 'MAT3D'
 
-    def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
+    def __init__(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
                  comment=''):
         Material.__init__(self)
         if comment:

@@ -41,7 +41,7 @@ from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.msgmesh import CGEN
 
-from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
+from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1, CIHEX2)

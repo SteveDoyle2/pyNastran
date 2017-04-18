@@ -312,6 +312,18 @@ class CHEXA8(SolidElement):
         return self.comment + msg
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CHEXA8
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=8
+        """
         SolidElement.__init__(self)
         if comment:
             self.comment = comment
@@ -565,6 +577,18 @@ class CHEXA20(SolidElement):
         return self.comment + msg.rstrip() + '\n'
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CHEXA20
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=20
+        """
         SolidElement.__init__(self)
 
         if comment:
@@ -849,6 +873,18 @@ class CPENTA6(SolidElement):
         return self.comment + msg
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CPENTA6
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=6
+        """
         SolidElement.__init__(self)
 
         if comment:
@@ -1229,6 +1265,18 @@ class CPENTA15(SolidElement):
         return self.comment + msg.rstrip() + '\n'
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CPENTA15
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=15
+        """
         SolidElement.__init__(self)
 
         if comment:
@@ -1878,6 +1926,18 @@ class CTETRA4(SolidElement):
         return self.comment + msg
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CTETRA4
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=4
+        """
         SolidElement.__init__(self)
         if comment:
             self.comment = comment
@@ -2081,6 +2141,18 @@ class CTETRA10(SolidElement):
                                                 self.node_ids[:4], self.nodes[:4])
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CTETRA10
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=10
+        """
         SolidElement.__init__(self)
         if comment:
             self.comment = comment

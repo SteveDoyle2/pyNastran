@@ -1,4 +1,9 @@
-"""defines various methods to add cards"""
+"""
+Defines a method to add a card that is faster than add_card
+and far less error prone for a user
+
+That said, there are still a few bugs.
+"""
 # pylint: disable=R0913, R0914, C0103
 from __future__ import print_function
 
@@ -9,6 +14,7 @@ from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
+from pyNastran.bdf.cards.msgmesh import CGEN
 
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
@@ -39,7 +45,7 @@ from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
 from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
-from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT  # PBEND
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
@@ -94,17 +100,17 @@ from pyNastran.bdf.cards.bdf_sets import (
     SESET, #SEQSEP
 )
 from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
-from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, QVOL, QVECT
+from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
+from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
+                                               QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, RADM, RADBC)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, #TIC,
+                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 
-from pyNastran.bdf.cards.msgmesh import CGEN
 
 
 class AddCards(AddMethods):
@@ -631,14 +637,14 @@ class AddCards(AddMethods):
         return prop
 
     def add_cfast(self, eid, Type, ida, idb, pid=None, gs=None, ga=None, gb=None,
-                 xs=None, ys=None, zs=None, comment=''):
+                  xs=None, ys=None, zs=None, comment=''):
         elem = CFAST(eid, Type, ida, idb, pid=pid, gs=gs, ga=ga, gb=gb,
                      xs=xs, ys=ys, zs=zs, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_pfast(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
-                 kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
+                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
         """
         Creates a PAST card
 
@@ -1224,16 +1230,16 @@ class AddCards(AddMethods):
         return elem
 
     def add_ctriar(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
-                 TFlag=0, T1=None, T2=None, T3=None, comment=''):
+                   TFlag=0, T1=None, T2=None, T3=None, comment=''):
         elem = CTRIAR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                 TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_cquadr(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
-                 T1=None, T2=None, T3=None, T4=None, comment=''):
+                   T1=None, T2=None, T3=None, T4=None, comment=''):
         elem = CQUADR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                 TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
+                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -1383,6 +1389,18 @@ class AddCards(AddMethods):
         return elem
 
     def add_ctetra(self, eid, pid, nids, comment=''):
+        """
+        Creates a CTETRA4/CTETRA10
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=4 or 10
+        """
         #elem = CTETRA(eid, pid, nids, comment=comment)
         if len(nids) == 4:
             elem = CTETRA4(eid, pid, nids, comment=comment)
@@ -1392,6 +1410,18 @@ class AddCards(AddMethods):
         return elem
 
     def add_cpyram(self, eid, pid, nids, comment=''):
+        """
+        Creates a CPYRAM5/CPYRAM13
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=5 or 13
+        """
         #elem = CPYRAM(eid, pid, nids, comment=comment)
         if len(nids) == 5:
             elem = CPYRAM5(eid, pid, nids, comment=comment)
@@ -1401,6 +1431,18 @@ class AddCards(AddMethods):
         return elem
 
     def add_cpenta(self, eid, pid, nids, comment=''):
+        """
+        Creates a CPENTA6/CPENTA15
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=6 or 15
+        """
         #elem = CPENTA(eid, pid, nids, comment=comment)
         if len(nids) == 6:
             elem = CPENTA6(eid, pid, nids, comment=comment)
@@ -1410,6 +1452,18 @@ class AddCards(AddMethods):
         return elem
 
     def add_chexa(self, eid, pid, nids, comment=''):
+        """
+        Creates a CHEXA8/CHEXA20
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSOLID, PLSOLID)
+        nids : List[int]
+            node ids; n=8 or 20
+        """
         #elem = CHEXA(eid, pid, nids, comment=comment)
         if len(nids) == 8:
             elem = CHEXA8(eid, pid, nids, comment=comment)
@@ -1623,10 +1677,29 @@ class AddCards(AddMethods):
         self._add_structural_material_object(mat)
         return mat
 
-    def add_mat11(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                  a1, a2, a3, tref, ge, comment=''):
-        mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                    a1, a2, a3, tref, ge, comment=comment)
+    def add_mat11(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
+                  a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment=''):
+        mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
+                    a1=a1, a2=a2, a3=a3, tref=tref, ge=ge, comment=comment)
+        self._add_structural_material_object(mat)
+        return mat
+
+    def add_mat3d(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
+                  comment=''):
+        """
+        This is a VABS specific card that is almost identical to the MAT11.
+        """
+        mat = MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
+                    comment=comment)
+        self._add_structural_material_object(mat)
+        return mat
+
+    def add_matg(self, mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap=0.,
+                 tab_yprs=None, tab_epl=None,
+                 tab_gpl=None, tab_gap=None, comment=''):
+        mat = MATG(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap=gap,
+                   tab_yprs=tab_yprs, tab_epl=tab_epl,
+                   tab_gpl=tab_gpl, tab_gap=tab_gap, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
@@ -1757,7 +1830,7 @@ class AddCards(AddMethods):
     def add_tload2(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
                    frequency=0., phase=0., c=0., b=0.,
                    us0=0., vs0=0., comment=''):
-        load = TLOAD2(sid, excite_id, delay=0, Type=Type, T1=T1, T2=T2,
+        load = TLOAD2(sid, excite_id, delay=delay, Type=Type, T1=T1, T2=T2,
                       frequency=frequency, phase=phase, c=c, b=b,
                       us0=us0, vs0=vs0, comment=comment)
         self._add_dload_entry(load)
@@ -3175,6 +3248,16 @@ class AddCards(AddMethods):
         self._add_bcrpara_object(bcrpara)
         return bcrpara
 
+    def add_tic(self, sid, nodes, components, u0, v0, comment=''):
+        tic = TIC(sid, nodes, components, u0, v0, comment=comment)
+        self._add_tic_object(tic)
+        return tic
+
+    def add_tstep1(self, sid, tend, ninc, nout, comment=''):
+        tstep1 = TSTEP1(sid, tend, ninc, nout, comment=comment)
+        self._add_tstep_object(tstep1)
+        return tstep1
+
     def add_tstep(self, sid, N, DT, NO, comment=''):
         tstep = TSTEP(sid, N, DT, NO, comment=comment)
         self._add_tstep_object(tstep)
@@ -3272,6 +3355,18 @@ class AddCards(AddMethods):
         #return temp
 
     def add_tempd(self, sid, temperature, comment=''):
+        """
+        Creates a TEMPD card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. (Integer > 0)
+        temperature : float
+            default temperature
+        comment : str; default=''
+            a comment for the card
+        """
         tempd = TEMPD(sid, temperature, comment=comment)
         self._add_tempd_object(tempd)
         return tempd
@@ -3292,6 +3387,23 @@ class AddCards(AddMethods):
         return load
 
     def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment=''):
+        """
+        Creates a QBDY3 card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. (Integer > 0)
+        q0 : float; default=None
+            Magnitude of thermal flux vector into face
+        control_id : int; default=0
+            Control point
+        eids : List[int] or THRU
+            Element identification number of a CHBDYE, CHBDYG, or
+            CHBDYP entry
+        comment : str; default=''
+            a comment for the card
+        """
         load = QBDY3(sid, Q0, cntrlnd, eids, comment=comment)
         self._add_thermal_load_object(load)
         return load
