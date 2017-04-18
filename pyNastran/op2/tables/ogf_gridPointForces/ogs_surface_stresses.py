@@ -389,7 +389,7 @@ class GridPointStressesVolume(ScalarObject):
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        f.write('GridPointStressesVolumeObject write_f06 is not implemented...\n')
+        f.write('GridPointStressesVolume write_f06 is not implemented...\n')
         return page_num
 
         #raise NotImplementedError()
