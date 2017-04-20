@@ -37,12 +37,12 @@ from pyNastran.bdf.cards.elements.shell import (
 )
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
+from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                                  CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
-from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND
+from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND#, CBAROR
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND
@@ -699,6 +699,11 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
+    #def add_pbush2d(self, pid, k, c, m, sa, se, optional_vars, comment=''):
+        #prop = PBUSH2D(pid. comment=comment)
+        #self._add_property_object(prop)
+        #return prop
+
     def add_pbusht(self, pid, k_tables, b_tables, ge_tables, kn_tables,
                    comment=''):
         prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
@@ -1147,6 +1152,22 @@ class AddCards(AddMethods):
         """
         prop = PBEAML(pid, mid, Type, xxb, dims,
                       group=group, so=so, nsm=nsm, comment=comment)
+        self._add_property_object(prop)
+        return prop
+
+    def add_cbend(self, eid, pid, ga, gb, g0, x, geom, comment=''):
+        elem = CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_pbend(self, pid, mid, beam_type, A, i1, i2, j,
+                  c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                  nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
+                  comment=''):
+        prop = PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
+                     comment=comment)
         self._add_property_object(prop)
         return prop
 
@@ -1866,6 +1887,20 @@ class AddCards(AddMethods):
 
     def add_randps(self, sid, j, k, x=0., y=0., tid=0, comment=''):
         load = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_acsrce(self, sid, excite_id, rho, b, delay=0, dphase=0, power=0,
+                   comment=''):
+        load = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=power,
+                      comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_loadcyn(self, sid, scale, segment_id, scales, load_ids,
+                    segment_type=None, comment=''):
+        load = LOADCYN(sid, scale, segment_id, scales, load_ids,
+                       segment_type=segment_type, comment=comment)
         self._add_load_object(load)
         return load
 
@@ -3465,6 +3500,41 @@ class AddCards(AddMethods):
                    rad_mid_front=0, rad_mid_back=0,
                    e1=None, e2=None, e3=None,
                    comment=''):
+        """
+        Creates a CHBDYP card
+
+        Parameters
+        ----------
+        eid : int
+            Surface element ID
+        pid : int
+            PHBDY property entry identification numbers. (Integer > 0)
+        Type : str
+            Surface type
+            Must be {POINT, LINE, ELCYL, FTUBE, TUBE}
+        iview_front : int; default=0
+            A VIEW entry identification number for the front face.
+        ivew_back : int; default=0
+            A VIEW entry identification number for the back face.
+        g1 / g2 : int
+            Grid point identification numbers of grids bounding the surface
+        g0 : int; default=0
+            Orientation grid point
+        rad_mid_front : int
+            RADM identification number for front face of surface element
+        rad_mid_back : int
+            RADM identification number for back face of surface element.
+        gmid : int
+            Grid point identification number of a midside node if it is used
+            with the line type surface element.
+        ce : int; default=0
+            Coordinate system for defining orientation vector
+        e1 / e2 / e3 : float; default=None
+            Components of the orientation vector in coordinate system CE.
+            The origin of the orientation vector is grid point G1.
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CHBDYP(eid, pid, Type, g1, g2,
                       g0=g0, gmid=gmid, ce=ce,
                       iview_front=iview_front, ivew_back=ivew_back,
@@ -3508,11 +3578,51 @@ class AddCards(AddMethods):
         return elem
 
     def add_phbdy(self, pid, af=None, d1=None, d2=None, comment=''):
+        """
+        Creates a PHBDY card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id
+        af : int
+            Area factor of the surface used only for CHBDYP element
+            Must be {POINT, LINE, TUBE, ELCYL}
+            TUBE : constant thickness of hollow tube
+        d1, d2 : float; default=None
+            Diameters associated with the surface
+            Used with CHBDYP [ELCYL, TUBE, FTUBE] surface elements
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PHBDY(pid, af=af, d1=d1, d2=d2, comment=comment)
         self._add_phbdy_object(prop)
         return prop
 
     def add_conv(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment=''):
+        """
+        Creates a CONV card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pconid : int
+            Convection property ID
+        mid : int
+            Material ID
+        ta : List[int]
+            Ambient points used for convection 0's are allowed for TA2
+            and higher
+        film_node : int; default=0
+            Point for film convection fluid property temperature
+        cntrlnd : int; default=0
+            Control point for free convection boundary condition
+        comment : str; default=''
+            a comment for the card
+        """
         boundary_condition = CONV(eid, pconid, ta,
                                   film_node=film_node, cntrlnd=cntrlnd,
                                   comment=comment)
@@ -3522,6 +3632,33 @@ class AddCards(AddMethods):
     def add_convm(self, eid, pconvm, ta1, film_node=0, cntmdot=0,
                   ta2=None, mdot=1.0,
                   comment=''):
+        """
+        Creates a CONVM card
+
+        Parameters
+        ----------
+        eid : int
+            element id (CHBDYP)
+        pconid : int
+            property ID (PCONVM)
+        mid : int
+            Material ID
+        ta1 : int
+            ambient point for convection
+        ta2 : int; default=None
+            None : ta1
+            ambient point for convection
+        film_node : int; default=0
+        cntmdot : int; default=0
+            control point used for controlling mass flow
+            0/blank is only allowed when mdot > 0
+        mdot : float; default=1.0
+            a multiplier for the mass flow rate in case there is no
+            point associated with the CNTRLND field
+            required if cntmdot = 0
+        comment : str; default=''
+            a comment for the card
+        """
         boundary_condition = CONVM(eid, pconvm, ta1,
                                    film_node=film_node, cntmdot=cntmdot,
                                    ta2=ta2, mdot=mdot,
@@ -3543,6 +3680,39 @@ class AddCards(AddMethods):
                   chlen=None, gidin=None, ce=0,
                   e1=None, e2=None, e3=None,
                   comment=''):
+        """
+        Creates a PCONV card
+
+        Parameters
+        ----------
+        pconid : int
+            Convection property ID
+        mid : int
+            Material ID
+        form : int; default=0
+            Type of formula used for free convection
+            Must be {0, 1, 10, 11, 20, or 21}
+        expf : float; default=0.0
+            Free convection exponent as implemented within the context
+            of the particular form that is chosen
+        ftype : int; default=0
+            Formula type for various configurations of free convection
+        tid : int; default=None
+            Identification number of a TABLEHT entry that specifies the
+            two variable tabular function of the free convection heat
+            transfer coefficient
+        chlen : float; default=None
+            Characteristic length
+        gidin : int; default=None
+            Grid ID of the referenced inlet point
+        ce : int; default=0
+            Coordinate system for defining orientation vector.
+        e1 / e2 / e3 : List[float]; default=None
+            Components of the orientation vector in coordinate system CE.
+            The origin of the orientation vector is grid point G1
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PCONV(pconid, mid,
                      form=form, expf=expf, ftype=ftype,
                      tid=tid, chlen=chlen, gidin=gidin,
@@ -3552,10 +3722,42 @@ class AddCards(AddMethods):
 
     def add_pconvm(self, pconid, mid, coef, form=0, flag=0,
                    expr=0.0, exppi=0.0, exppo=0.0, comment=''):
+        """
+        Creates a PCONVM card
+
+        Parameters
+        ----------
+        pconid : int
+            Convection property ID
+        mid: int
+            Material ID
+        coef: float
+            Constant coefficient used for forced convection
+        form: int; default=0
+            Type of formula used for free convection
+            Must be {0, 1, 10, 11, 20, or 21}
+        flag: int; default=0
+            Flag for mass flow convection
+        expr: float; default=0.0
+            Reynolds number convection exponent
+        exppi: float; default=0.0
+            Prandtl number convection exponent for heat transfer into
+            the working fluid
+        exppo: float; default=0.0
+            Prandtl number convection exponent for heat transfer out of
+            the working fluid
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PCONVM(pconid, mid, coef, form=form, flag=flag,
                       expr=expr, exppi=exppi, exppo=exppo, comment=comment)
         self._add_convection_property_object(prop)
         return prop
+
+    def add_dti(self, name, fields, comment=''):
+        dti = DTI(name, fields, comment=comment)
+        self._add_dti_object(dti)
+        return dti
 
     def add_dmig_uaccel(self, tin, ncol, load_sequences, comment=''):
         dmig = DMIG_UACCEL(tin, ncol, load_sequences, comment=comment)

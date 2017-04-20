@@ -462,6 +462,41 @@ class CHBDYP(ThermalElement):
                  iview_front=0, ivew_back=0,
                  rad_mid_front=0, rad_mid_back=0,
                  e1=None, e2=None, e3=None, comment=''):
+        """
+        Creates a CHBDYP card
+
+        Parameters
+        ----------
+        eid : int
+            Surface element ID
+        pid : int
+            PHBDY property entry identification numbers. (Integer > 0)
+        Type : str
+            Surface type
+            Must be {POINT, LINE, ELCYL, FTUBE, TUBE}
+        iview_front : int; default=0
+            A VIEW entry identification number for the front face.
+        ivew_back : int; default=0
+            A VIEW entry identification number for the back face.
+        g1 / g2 : int
+            Grid point identification numbers of grids bounding the surface
+        g0 : int; default=0
+            Orientation grid point
+        rad_mid_front : int
+            RADM identification number for front face of surface element
+        rad_mid_back : int
+            RADM identification number for back face of surface element.
+        gmid : int
+            Grid point identification number of a midside node if it is used
+            with the line type surface element.
+        ce : int; default=0
+            Coordinate system for defining orientation vector
+        e1 / e2 / e3 : float; default=None
+            Components of the orientation vector in coordinate system CE.
+            The origin of the orientation vector is grid point G1.
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalElement.__init__(self)
         if comment:
             self.comment = comment
@@ -711,7 +746,7 @@ class PCONV(ThermalProperty):
     +-------+--------+-------+-------+-------+-------+-----+----+----+
     | PCONV |   7    |   3   | 10.32 | 10.05 | 10.09 |     |    |    |
     +-------+--------+-------+-------+-------+-------+-----+----+----+
-    | 10.37 |        |       |       |       |       |     |    |    |
+    |       | 10.37  |       |       |       |       |     |    |    |
     +-------+--------+-------+-------+-------+-------+-----+----+----+
 
     .. todo:: alternate format is not supported; NX not checked
@@ -721,6 +756,39 @@ class PCONV(ThermalProperty):
     def __init__(self, pconid, mid, form=0, expf=0.0, ftype=0, tid=None,
                  chlen=None, gidin=None, ce=0,
                  e1=None, e2=None, e3=None, comment=''):
+        """
+        Creates a PCONV card
+
+        Parameters
+        ----------
+        pconid : int
+            Convection property ID
+        mid : int
+            Material ID
+        form : int; default=0
+            Type of formula used for free convection
+            Must be {0, 1, 10, 11, 20, or 21}
+        expf : float; default=0.0
+            Free convection exponent as implemented within the context
+            of the particular form that is chosen
+        ftype : int; default=0
+            Formula type for various configurations of free convection
+        tid : int; default=None
+            Identification number of a TABLEHT entry that specifies the
+            two variable tabular function of the free convection heat
+            transfer coefficient
+        chlen : float; default=None
+            Characteristic length
+        gidin : int; default=None
+            Grid ID of the referenced inlet point
+        ce : int; default=0
+            Coordinate system for defining orientation vector.
+        e1 / e2 / e3 : List[float]; default=None
+            Components of the orientation vector in coordinate system CE.
+            The origin of the orientation vector is grid point G1
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -857,6 +925,33 @@ class PCONVM(ThermalProperty):
 
     def __init__(self, pconid, mid, coef, form=0, flag=0,
                  expr=0.0, exppi=0.0, exppo=0.0, comment=''):
+        """
+        Creates a PCONVM card
+
+        Parameters
+        ----------
+        pconid : int
+            Convection property ID
+        mid: int
+            Material ID
+        coef: float
+            Constant coefficient used for forced convection
+        form: int; default=0
+            Type of formula used for free convection
+            Must be {0, 1, 10, 11, 20, or 21}
+        flag: int; default=0
+            Flag for mass flow convection
+        expr: float; default=0.0
+            Reynolds number convection exponent
+        exppi: float; default=0.0
+            Prandtl number convection exponent for heat transfer into
+            the working fluid
+        exppo: float; default=0.0
+            Prandtl number convection exponent for heat transfer out of
+            the working fluid
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -883,10 +978,10 @@ class PCONVM(ThermalProperty):
         self.expr = expr
 
         #: Prandtl number convection exponent for heat transfer into the
-        #: workingfluid. (Real > 0.0; Default = 0.0)
+        #: working fluid. (Real > 0.0; Default = 0.0)
         self.exppi = exppi
 
-        #: Prandtl number convection exponent for heat transfer into the
+        #: Prandtl number convection exponent for heat transfer out of the
         #: working fluid. (Real > 0.0; Default = 0.0)
         self.exppo = exppo
 
@@ -958,6 +1053,25 @@ class PHBDY(ThermalProperty):
     type = 'PHBDY'
 
     def __init__(self, pid, af=None, d1=None, d2=None, comment=''):
+        """
+        Creates a PHBDY card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id
+        af : int
+            Area factor of the surface used only for CHBDYP element
+            Must be {POINT, LINE, TUBE, ELCYL}
+            TUBE : constant thickness of hollow tube
+        d1, d2 : float; default=None
+            Diameters associated with the surface
+            Used with CHBDYP [ELCYL, TUBE, FTUBE] surface elements
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -1052,6 +1166,27 @@ class CONV(ThermalBC):
     type = 'CONV'
 
     def __init__(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment=''):
+        """
+        Creates a CONV card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pconid : int
+            Convection property ID
+        mid : int
+            Material ID
+        ta : List[int]
+            Ambient points used for convection 0's are allowed for TA2
+            and higher
+        film_node : int; default=0
+            Point for film convection fluid property temperature
+        cntrlnd : int; default=0
+            Control point for free convection boundary condition
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
@@ -1181,11 +1316,46 @@ class CONVM(ThermalBC):
     """
     Specifies a forced convection boundary condition for heat transfer analysis
     through connection to a surface element (CHBDYi entry).
+
+    +-------+-----+--------+-------+---------+-----+-----+------+
+    |   1   |  2  |    3   |   4   |    5    |  6  |  7  |   8  |
+    +=======+=====+========+=======+=========+=====+=====+======+
+    | CONVM | EID | PCONID | FLMND | CNTMDOT | TA1 | TA2 | Mdot |
+    +-------+-----+--------+-------+---------+-----+-----+------+
+      CONVM | 101 |    1   |  201  |   301   |  20 |  21 |      |
+    +-------+-----+--------+-------+---------+-----+-----+------+
     """
     type = 'CONVM'
 
     def __init__(self, eid, pconvm, ta1, film_node=0, cntmdot=0,
                  ta2=None, mdot=1.0, comment=''):
+        """
+        Creates a CONVM card
+
+        Parameters
+        ----------
+        eid : int
+            element id (CHBDYP)
+        pconid : int
+            property ID (PCONVM)
+        mid : int
+            Material ID
+        ta1 : int
+            ambient point for convection
+        ta2 : int; default=None
+            None : ta1
+            ambient point for convection
+        film_node : int; default=0
+        cntmdot : int; default=0
+            control point used for controlling mass flow
+            0/blank is only allowed when mdot > 0
+        mdot : float; default=1.0
+            a multiplier for the mass flow rate in case there is no
+            point associated with the CNTRLND field
+            required if cntmdot = 0
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment

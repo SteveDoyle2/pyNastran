@@ -605,7 +605,17 @@ class CBAR(LineElement):
         else:
             return self.gb_ref.nid
 
-    def getX_G0_defaults(self):
+    def get_x_g0_defaults(self):
+        """
+        X and G0 compete for the same fields, so the method exists to
+        make it easier to write the card
+
+        Returns
+        -------
+        x_g0 : varies
+            g0 : List[int, None, None]
+            x : List[float, float, float]
+        """
         if self.g0 is not None:
             return (self.g0, None, None)
         else:
@@ -653,15 +663,21 @@ class CBAR(LineElement):
 
     def raw_fields(self):
         """
-        .. todo:: not perfectly accurate b/c ???
+        Gets the fields of the card in their full form
         """
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
+
+        # offt doesn't exist in NX nastran
         offt = set_blank_if_default(self.offt, 'GGG')
+
         list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
                        x3, offt, self.pa, self.pb] + list(self.wa) + list(self.wb)
         return list_fields
 
     def repr_fields(self):
+        """
+        Gets the fields of the card in their reduced form
+        """
         pa = set_blank_if_default(self.pa, 0)
         pb = set_blank_if_default(self.pb, 0)
 
@@ -672,7 +688,7 @@ class CBAR(LineElement):
         w1b = set_blank_if_default(self.wb[0], 0.0)
         w2b = set_blank_if_default(self.wb[1], 0.0)
         w3b = set_blank_if_default(self.wb[2], 0.0)
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
 
         # offt doesn't exist in NX nastran
         offt = set_blank_if_default(self.offt, 'GGG')
@@ -833,7 +849,7 @@ class CBEAM3(LineElement):  # was CBAR
         return [self.Ga(), self.Gb(), self.Gc()]
 
     def raw_fields(self):
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         (ga, gb, gc) = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
                   list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
@@ -854,7 +870,7 @@ class CBEAM3(LineElement):  # was CBAR
         twb = set_blank_if_default(self.tw[1], 0.0)
         twc = set_blank_if_default(self.tw[2], 0.0)
 
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         (ga, gb, gc) = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
                        w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
@@ -943,7 +959,7 @@ class CBEND(LineElement):
         assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
         return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
 
-    def getX_G0_defaults(self):
+    def get_x_g0_defaults(self):
         if self.g0 is not None:
             return (self.g0, None, None)
         else:
@@ -953,11 +969,6 @@ class CBEND(LineElement):
             #x2 = set_blank_if_default(self.x[1], 0.0)
             #x3 = set_blank_if_default(self.x[2], 0.0)
             return list(self.x)
-
-    #def add_op2_data(self, data, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError(data)
 
     def Length(self):
         # TODO: consider w1a and w1b in the length formulation
@@ -1060,7 +1071,7 @@ class CBEND(LineElement):
         del self.ga_ref, self.gb_ref, self.pid_ref
 
     def raw_fields(self):
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         list_fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
                        x1, x2, x3, self.geom]
         return list_fields

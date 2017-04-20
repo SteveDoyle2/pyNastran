@@ -3403,7 +3403,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                                 self._dump_file(crash_name, lines, i+1)
                                 msg = 'There was an invalid filename found while parsing (index).\n'
                                 msg += 'Check the end of %r\n' % crash_name
-                                msg += 'bdf_filename2 = %r\n' % bdf_filename
+                                #msg += 'bdf_filename2 = %r\n' % bdf_filename
                                 msg += 'include_lines = %s' % include_lines
                                 raise IndexError(msg)
                              #print('endswith_quote=%s; %r' % (
