@@ -24,10 +24,63 @@ class PointProperty(Property):
     def cross_reference(self, model):
         pass
 
+class NSM1(PointProperty):
+    """
+    Defines a set of non structural mass.
+
+    +------+-----+------+-------+-----+----+----+----+----+
+    |  1   |  2  |  3   |   4   |  5  | 6  | 7  | 8  | 9  |
+    +======+=====+======+=======+=====+====+====+====+====+
+    | NSM1 | SID | TYPE | VALUE | ID  | ID | ID | ID | ID |
+    +------+-----+------+-------+-----+----+----+----+----+
+    |      |  ID |  ID  |  ID   | etc |    |    |    |    |
+    +------+-----+------+-------+-----+----+----+----+----+
+    """
+    type = 'NSM1'
+    valid_properties = [
+        'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
+        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D']
+
+    def __init__(self, sid, Type, id, value, comment=''):
+        PointProperty.__init__(self, card, data)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.Type = Type
+        self.ids = ids
+        self.value = value
+        assert self.Type in self.valid_properties
+
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        Type = string(card, 2, 'Type')
+        value = double(card, 3, 'value')
+        ids = card[4:]
+        return NSM1(sid, Type, value, ids, comment=comment)
+
+    def raw_fields(self):
+        #nodes = self.node_ids
+        list_fields = ['NSM1', self.sid, self.Type, self.value] + self.ids
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class NSM(PointProperty):
     """
     Defines a set of non structural mass.
+
+    +-----+-----+------+----+-------+----+-------+----+-------+
+    |  1  |  2  |  3   |  4 |   5   | 6  |   7   | 8  |   9   |
+    +=====+=====+======+====+=======+====+=======+====+=======+
+    | NSM | SID | TYPE | ID | VALUE | ID | VALUE | ID | VALUE |
+    +-----+-----+------+----+-------+----+-------+----+-------+
     """
     type = 'NSM'
     _field_map = {
@@ -36,7 +89,7 @@ class NSM(PointProperty):
 
     #: Set points to either Property entries or Element entries.
     #: Properties are:
-    validProperties = [
+    valid_properties = [
         'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D']
 
@@ -48,7 +101,7 @@ class NSM(PointProperty):
         self.Type = Type
         self.id = id
         self.value = value
-        assert self.Type in self.validProperties
+        assert self.Type in self.valid_properties
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):

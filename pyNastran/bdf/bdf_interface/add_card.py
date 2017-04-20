@@ -43,7 +43,7 @@ from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT  # PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
-from pyNastran.bdf.cards.properties.mass import PMASS#, NSM
+from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
@@ -351,6 +351,16 @@ class AddCards(AddMethods):
         mass = CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
         self._add_mass_object(mass)
         return mass
+
+    def add_nsm(sid, Type, id, value, comment=''):
+        nsm = NSM(sid, Type, id, value, comment='')
+        self._add_nsm_object(nsm)
+        return nsm
+
+    def add_nsm1(sid, Type, value, ids, comment=''):
+        nsm = NSM1(sid, Type, value, ids, comment='')
+        self._add_nsm_object(nsm)
+        return nsm
 
     def add_pmass(self, pid, mass, comment=''):
         prop = PMASS(pid, mass, comment=comment)

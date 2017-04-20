@@ -160,6 +160,17 @@ class AddMethods(BDFAttributes):
         """adds a DOPTPRM"""
         self.doptprm = doptprm
 
+    def _add_nsm_object(self, nsm, allow_overwrites=False):
+        key = nsm.sid
+        assert key > 0, 'sid=%s must be positive; nsm=\n%s' % (key, nsm)
+        assert key not in self.nsms, 'sid=%s already exists; nsm=\n%s' % (key, nsm)
+        #if key in self.masses and not allow_overwrites:
+            #if not mass._is_same_card(self.masses[key]):
+                #self._duplicate_masses.append(mass)
+        #else:
+        self.nsms[key] = nsm
+        self._type_to_id_map[nsm.type].append(key)
+
     def _add_mass_object(self, mass, allow_overwrites=False):
         key = mass.eid
         assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
