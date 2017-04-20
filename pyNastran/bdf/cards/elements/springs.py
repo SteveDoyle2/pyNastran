@@ -142,8 +142,8 @@ class CELAS1(SpringElement):
     def _verify(self, xref=True):
         eid = self.eid
         node_ids = self.node_ids
-        c1 = self.c2
-        c2 = self.c1
+        c1 = self.c1
+        c2 = self.c2
         #ge = self.ge
         #s = self.s
 
@@ -479,12 +479,33 @@ class CELAS3(SpringElement):
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
         return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
+    def get_edge_ids(self):
+        return []
+
+    def _verify(self, xref=True):
+        eid = self.eid
+        node_ids = self.node_ids
+        s1 = self.s1
+        s2 = self.s2
+        #ge = self.ge
+        #s = self.s
+
+        assert isinstance(eid, int), 'eid=%r' % eid
+        assert isinstance(s1, int), 's1=%r' % s1
+        assert isinstance(s2, int), 's2=%r' % s2
+        #assert isinstance(ge, float), 'ge=%r' % ge
+        #assert isinstance(s, float), 'ge=%r' % s
+        if xref:
+            k = self.K()
+            assert self.pid_ref.type in ['PELAS'], self.pid_ref
+            assert isinstance(k, float), 'k=%r' % k
+            assert len(node_ids) == len(self.nodes)
+            #for nodeID, node in zip(node_ids, self.nodes):
+                #assert node.node.nid
+
     def raw_fields(self):
         list_fields = ['CELAS3', self.eid, self.Pid()] + self.node_ids
         return list_fields
-
-    def get_edge_ids(self):
-        return []
 
     #def repr_fields(self):
         #s1 = set_blank_if_default(self.s1,0)

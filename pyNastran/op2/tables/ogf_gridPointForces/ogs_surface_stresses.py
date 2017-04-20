@@ -43,7 +43,7 @@ class GridPointStressesArray(ScalarObject):
         self.grid_element[self.ntotal, :] = [ekey, eid]
         self.data[self.itime, self.ntotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
@@ -83,7 +83,7 @@ class GridPointStresses(ScalarObject):
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
@@ -284,7 +284,7 @@ class GridPointStressesVolume(ScalarObject):
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
@@ -389,7 +389,7 @@ class GridPointStressesVolume(ScalarObject):
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        f.write('GridPointStressesVolumeObject write_f06 is not implemented...\n')
+        f.write('GridPointStressesVolume write_f06 is not implemented...\n')
         return page_num
 
         #raise NotImplementedError()

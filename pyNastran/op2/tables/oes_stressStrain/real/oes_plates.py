@@ -189,7 +189,7 @@ class RealPlateArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -572,7 +572,7 @@ class RealCPLSTRNPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

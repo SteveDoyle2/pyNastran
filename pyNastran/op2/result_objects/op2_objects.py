@@ -244,7 +244,7 @@ class BaseScalarObject(Op2Codes):
     def __repr__(self):
         return ''.join(self.get_stats())
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = 'get_stats is not implemented in %s\n' % self.__class__.__name__
         if not is_release:
             raise NotImplementedError(msg)

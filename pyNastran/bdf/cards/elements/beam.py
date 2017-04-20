@@ -81,7 +81,7 @@ class CBEAM(CBAR):
                         n, value, self.type)
                     raise KeyError(msg)
 
-    def __init__(self, eid, pid, ga, gb, x, g0, offt, bit,
+    def __init__(self, eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
                  pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
         """
         Adds a CBEAM card
@@ -633,7 +633,7 @@ class CBEAM(CBAR):
             assert L > 0.0, 'eid=%s L=%s' % (eid, L)
 
     def raw_fields(self):
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         offt = self.get_offt_bit_defaults()
         ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
@@ -652,7 +652,7 @@ class CBEAM(CBAR):
 
         sa = set_blank_if_default(self.sa, 0)
         sb = set_blank_if_default(self.sb, 0)
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         offt = self.get_offt_bit_defaults()
         ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,

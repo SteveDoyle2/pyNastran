@@ -22,11 +22,15 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 class DTI(BaseCard):
     """
     +-----+-------+-----+------+-------+--------+------+-------------+
+    |  1  |   2   |  3  |   4  |   5   |    6   |   7  |       8     |
+    +=====+=======+=====+======+=======+========+======+=============+
     | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME |   STRESS    |
     +-----+-------+-----+------+-------+--------+------+-------------+
     MSC
 
     +-----+-------+-----+------+-------+--------+------+-------------+
+    |  1  |   2   |  3  |   4  |   5   |    6   |   7  |       8     |
+    +=====+=======+=====+======+=======+========+======+=============+
     | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME | TEMPERATURE |
     +-----+-------+-----+------+-------+--------+------+-------------+
     NX
@@ -91,6 +95,49 @@ class NastranMatrix(BaseCard):
     """
     def __init__(self, name, ifo, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment=''):
+        """
+        Creates a NastranMatrix
+
+        Parameters
+        ----------
+        name : str
+            the name of the matrix
+        ifo : int
+            matrix shape
+            4=Lower Triangular
+            5=Upper Triangular
+            6=Symmetric
+            8=Identity (m=nRows, n=m)
+        tin : int
+            matrix input precision
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        tout : int
+            matrix output precision
+            0=same as tin
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        polar : int; default=0
+            Input format of Ai, Bi
+            Integer=blank or 0 indicates real, imaginary format
+            Integer > 0 indicates amplitude, phase format
+        ncols : int
+            ???
+        GCj  : List[(node, dof)]???
+            the jnode, jDOFs
+        GCi  : List[(node, dof)]???
+            the inode, iDOFs
+        Real : List[float]???
+            The real values
+        Complex : List[float]???; default=None
+            The complex values (if the matrix is complex)
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         if Complex is None:

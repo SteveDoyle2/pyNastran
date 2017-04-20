@@ -41,7 +41,7 @@ from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.msgmesh import CGEN
 
-from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
+from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1, CIHEX2)
@@ -3418,7 +3418,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                                 self._dump_file(crash_name, lines, i+1)
                                 msg = 'There was an invalid filename found while parsing (index).\n'
                                 msg += 'Check the end of %r\n' % crash_name
-                                msg += 'bdf_filename2 = %r\n' % bdf_filename
+                                #msg += 'bdf_filename2 = %r\n' % bdf_filename
                                 msg += 'include_lines = %s' % include_lines
                                 raise IndexError(msg)
                              #print('endswith_quote=%s; %r' % (

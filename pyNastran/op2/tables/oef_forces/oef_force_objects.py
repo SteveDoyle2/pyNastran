@@ -111,7 +111,7 @@ class FailureIndices(RealForceObject):
         self.data[self.itime, self.ielement, :] = [force]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -278,7 +278,7 @@ class RealSpringDamperForceArray(RealForceObject):
         self.data[self.itime, self.ielement, :] = [force]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -508,7 +508,7 @@ class RealRodForceArray(RealForceObject):
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -771,7 +771,7 @@ class RealCBeamForceArray(ScalarObject):
         self.element_node[self.itotal, :] = [eid, nid]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1021,7 +1021,7 @@ class RealCShearForceArray(ScalarObject):
             shear12, shear23, shear34, shear41]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1188,7 +1188,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1431,7 +1431,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             #self.add_new_transient(dt)
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1660,7 +1660,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             raise NotImplementedError('element_type=%s element_name=%s' % (self.element_type, self.element_name))
         return nnodes_element
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1898,7 +1898,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             shear1, shear2, axial, torque]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2110,7 +2110,7 @@ class RealConeAxForceArray(ScalarObject):
         self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2282,7 +2282,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         self.data[self.itime, self.ielement, :] = [sd, bm1, bm2, ts1, ts2, af, trq]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             msg = [
                 '<%s>\n' % self.__class__.__name__,
@@ -2497,7 +2497,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         self.data[self.itime, self.ielement, :] = [fx, sfy, sfz, u, v, w, sv, sw]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2644,7 +2644,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2877,7 +2877,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3169,7 +3169,7 @@ class RealForceVU_Array(ScalarObject):
         #self.bendingZ[eid] = {}
 
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3373,7 +3373,7 @@ class RealCBushForceArray(ScalarObject):
         self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3481,7 +3481,7 @@ class RealForceVU(ScalarObject):  # 191-VUBEAM
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
@@ -3606,7 +3606,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient

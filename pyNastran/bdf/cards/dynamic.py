@@ -1280,6 +1280,22 @@ class TSTEP(BaseCard):
     type = 'TSTEP'
 
     def __init__(self, sid, N, DT, NO, comment=''):
+        """
+        Creates a TSTEP card
+
+        Parameters
+        ----------
+        sid : int
+            the time step id
+        N : List[int/None]
+            ???
+        DT : List[float/None]
+            ???
+        NO : List[int/None]
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -1367,6 +1383,24 @@ class TSTEP1(BaseCard):
     type = 'TSTEP1'
 
     def __init__(self, sid, tend, ninc, nout, comment=''):
+        """
+        Creates a TSTEP1 card
+
+        Parameters
+        ----------
+        sid : int
+            the time step id
+        tend : List[float/None]
+            ???
+        ninc : List[int/None]
+            ???
+        nout : List[int/str/None]
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment = comment
         self.sid = sid
         self.tend = tend
         self.ninc = ninc
@@ -1446,8 +1480,12 @@ class TSTEPNL(BaseCard):
                  rb=0.6, max_r=32., utol=0.1, rtol_b=20.,
                  min_iter=None, comment=''):
         """
+        Creates a TSTEPNL card
+
+        Parameters
+        ----------
         sid : int
-            ???
+            the time step id
         ndt : ???
             ???
         dt : ???
@@ -1484,6 +1522,8 @@ class TSTEPNL(BaseCard):
             ???
         min_iter : int; default=None
             not listed in all QRGs
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -1703,15 +1743,34 @@ class TSTEPNL(BaseCard):
 
 
 class TIC(BaseCard):
-    """Transient Initial Condition"""
+    """
+    Transient Initial Condition
+
+    Defines values for the initial conditions of variables used in
+    structural transient analysis. Both displacement and velocity
+    values may be specified at independent degrees-of-freedom. This
+    entry may not be used for heat transfer analysis.
+    """
     type = 'TIC'
 
     def __init__(self, sid, nodes, components, u0, v0, comment=''):
         """
-        Defines values for the initial conditions of variables used in
-        structural transient analysis. Both displacement and velocity
-        values may be specified at independent degrees-of-freedom. This
-        entry may not be used for heat transfer analysis.
+        Creates a TIC card
+
+        Parameters
+        ----------
+        sid : int
+            ???
+        nodes : int / List[int]
+            the nodes to which apply the initial conditions
+        components : int / List[int]
+            the DOFs to which apply the initial conditions
+        u0 : float / List[float]
+            ???
+        v0 : float / List[float]
+            ???
+        comment : str; default=''
+            a comment for the card
         """
         BaseCard.__init__(self)
         if comment:

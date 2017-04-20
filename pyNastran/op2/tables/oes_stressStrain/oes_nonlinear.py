@@ -138,7 +138,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
         ]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -398,7 +398,7 @@ class RealNonlinearPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -591,7 +591,7 @@ class NonlinearQuad(StressObject):
             #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
@@ -762,7 +762,7 @@ class HyperelasticQuad(StressObject):
             #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         nelements = len(self.eType)
 
         msg = self.get_data_code()

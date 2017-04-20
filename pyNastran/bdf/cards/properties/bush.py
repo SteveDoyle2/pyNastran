@@ -558,15 +558,11 @@ class PBUSH1D(BushingProperty):
 class PBUSH2D(BushingProperty):
     type = 'PBUSH2D'
 
-    def __init__(self, card=None, data=None, comment=''):
-        BushingProperty.__init__(self, card, data)
+    def __init__(self, card=None, comment=''):
+        BushingProperty.__init__(self, card)
         if comment:
             self.comment = comment
-        if card:
-            raise NotImplementedError()
-        else:
-            raise NotImplementedError()
-
+        raise NotImplementedError()
     def write_card(self, size=8, is_double=False):
         """
         Writes the card with the specified width and precision

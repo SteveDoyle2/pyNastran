@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 Defines the DEQATN class and sub-functions.
 
@@ -17,6 +18,10 @@ from numpy import arcsinh as asinh, arccosh as acosh, arctanh as atanh
 from numpy import mean, exp, sqrt, square, sum
 from numpy import log, log10, mod, abs
 from numpy.linalg import norm
+
+def pi(num):
+    """weird way to multiply π by a number"""
+    return np.pi * num
 
 def rss(*args):  # good
     """2-norm; generalized magnitude of vector for N components"""
@@ -58,6 +63,35 @@ class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
 
     def __init__(self, name, equation_id, eqs, comment=''):
+        """
+        Creates a DEQATN card
+
+        Parameters
+        ----------
+        name : int
+            name of the function???
+        equation_id : int
+            the id of the equation
+        eqs : List[str]
+            the equations, which may overbound the field
+            feel free to split them by a semicolon (;)
+        comment : str; default=''
+            a comment for the card
+
+        DEQATN  41      F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R)
+                        + A**2 ⁄ (B – C); F = A + B – F1 * D
+
+        def F1(A, B, C, D, R):
+            F1 = A+B *C–(D**3 + 10.0) + sin(PI(1) * R) + A**2 ⁄ (B – C)
+            F = A + B – F1 * D
+            return F
+
+        name = '???'
+        eqs = [
+            'F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R) + A**2 ⁄ (B – C)',
+            'F = A + B – F1 * D',
+        ]
+        """
         if comment:
             self.comment = comment
         self.dtable = None

@@ -1,4 +1,4 @@
-# pylint: disable=R0902,R0904,R0914,C0111
+# pylint: disable=R0902,R0904,R0914
 """
 All rigid elements are defined in this file.  This includes:
 
@@ -854,7 +854,7 @@ class RBE2(RigidElement):
         self.cm = str(self.cm)
         assert isinstance(self.alpha, float), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
-    def convert_to_MPC(self, mpc_id):
+    def convert_to_mpc(self, mpc_id):
         """
         .. math:: -A_i u_i + A_j u_j = 0
 
@@ -1029,9 +1029,9 @@ class RBE3(RigidElement):
 
         Dependent / UM Set
         ------------------
-          Gmi : List[int, ..., int]
+          Gmi : List[int, ..., int]; default=None -> []
               dependent nodes
-          Cmi : List[str, ..., str]
+          Cmi : List[str, ..., str]; default=None -> []
               dependent components
 
         alpha : float; default=0.0
@@ -1042,6 +1042,11 @@ class RBE3(RigidElement):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
+        if Gmi is None:
+            Gmi = []
+        if Cmi is None:
+            Cmi = []
+
         self.eid = eid
         self.refgrid = refgrid
         self.refc = refc

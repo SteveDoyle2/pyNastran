@@ -34,4 +34,3 @@ try:
     is_pygments = True
 except ImportError:
     is_pygments = False
-    pass

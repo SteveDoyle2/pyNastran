@@ -379,7 +379,7 @@ def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
     from docopt import docopt
     import pyNastran
     msg = "Usage:\n"
-    msg += '  bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+    msg += '  bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
     msg += '  bdf split_cbars_by_pin_flags -h | --help\n'
     msg += '  bdf split_cbars_by_pin_flags -v | --version\n'
     msg += '\n'
@@ -389,8 +389,8 @@ def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
     msg += '\n'
 
     msg += 'Options:\n'
-    msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF file\n\n"
-
+    msg += " -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file\n"
+    msg += " -p PIN, --pin     PIN_FLAGS_CSV_FILENAME  path to pin_flags_csv file\n\n"
     msg += 'Info:\n'
     msg += '  -h, --help      show this help message and exit\n'
     msg += "  -v, --version   show program's version number and exit\n"
@@ -410,9 +410,12 @@ def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
     if bdf_filename_out is None:
         bdf_filename_out = 'model_new.bdf'
 
-    pin_flags_filename = 'pin_flags.csv'
+    pin_flags_filename = data['--pin']
+    if pin_flags_filename is None:
+        pin_flags_filename = 'pin_flags.csv'
+
     split_cbars_by_pin_flag(bdf_filename_in, pin_flags_filename=pin_flags_filename,
-                           bdf_filename_out=bdf_filename_out)
+                            bdf_filename_out=bdf_filename_out)
 
 def cmd_line():  # pragma: no cover
     """command line interface to multiple other command line scripts"""
@@ -423,7 +426,7 @@ def cmd_line():  # pragma: no cover
     msg += '  bdf renumber      IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
     msg += '  bdf mirror        IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
     msg += '  bdf export_mcids  IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
-    msg += '  bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+    msg += '  bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
     if dev:
         msg += '  bdf bin          IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
     msg += '\n'
