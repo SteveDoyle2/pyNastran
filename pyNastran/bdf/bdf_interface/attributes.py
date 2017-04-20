@@ -549,6 +549,7 @@ class BDFAttributes(object):
                 # thermal
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
             ],
+            'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1', 'NSMADD'],
             'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE'],
             'plotels' : ['PLOTEL',],
 

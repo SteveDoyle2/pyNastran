@@ -178,7 +178,7 @@ class GetCard(GetMethods):
 
             #print('card_type=%r' % card_type)
             try:
-                key = rslot_map[card_type]  # update attributes.py ~line 500
+                key = rslot_map[card_type]  # update attributes.py ~line 520
             except:
                 self.log.error("card_type=%r' hasn't been added to "
                                "self._slot_to_type_map...check for typos")

@@ -315,6 +315,23 @@ class WriteMesh(BDFAttributes):
         if self.ao_element_flags:
             for (eid, element) in sorted(iteritems(self.ao_element_flags)):
                 bdf_file.write(element.write_card(size, is_double))
+        self._write_nsm(bdf_file, size, is_double)
+
+    def _write_nsm(self, bdf_file, size=8, is_double=False):
+        """
+        Writes the nsm in a sorted order
+        """
+        if self.nsms:
+            msg = ['$NSM\n']
+            for (key, nsms) in sorted(iteritems(self.nsms)):
+                for nsm in nsms:
+                    try:
+                        msg.append(nsm.write_card(size, is_double))
+                    except:
+                        print('failed printing nsm...type=%s key=%r'
+                              % (nsm.type, key))
+                        raise
+            bdf_file.write(''.join(msg))
 
     def _write_elements_properties(self, bdf_file, size=8, is_double=False):
         """
@@ -375,6 +392,7 @@ class WriteMesh(BDFAttributes):
                 #print("missing_property = ", card
                 msg.append(card)
             bdf_file.write(''.join(msg))
+        self._write_nsm(bdf_file, size, is_double)
 
     def _write_aero(self, bdf_file, size=8, is_double=False):
         """Writes the aero cards"""

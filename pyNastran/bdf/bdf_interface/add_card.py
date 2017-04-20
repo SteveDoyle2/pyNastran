@@ -49,7 +49,7 @@ from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
-from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1
+from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
@@ -358,15 +358,30 @@ class AddCards(AddMethods):
         self._add_mass_object(mass)
         return mass
 
-    def add_nsm(sid, Type, id, value, comment=''):
+    def add_nsm(self, sid, Type, id, value, comment=''):
         nsm = NSM(sid, Type, id, value, comment='')
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsm1(sid, Type, value, ids, comment=''):
+    def add_nsm1(self, sid, Type, value, ids, comment=''):
         nsm = NSM1(sid, Type, value, ids, comment='')
         self._add_nsm_object(nsm)
         return nsm
+
+    def add_nsml(self, sid, Type, id, value, comment=''):
+        nsm = NSML(sid, Type, id, value, comment='')
+        self._add_nsm_object(nsm)
+        return nsm
+
+    def add_nsml1(self, sid, Type, value, ids, comment=''):
+        nsm = NSML1(sid, Type, value, ids, comment='')
+        self._add_nsm_object(nsm)
+        return nsm
+
+    def add_nsmadd(self, sid, sets, comment=''):
+        nsmadd = NSMADD(sid, sets, comment=comment)
+        self._add_nsm_object(nsmadd)
+        return nsmadd
 
     def add_pmass(self, pid, mass, comment=''):
         prop = PMASS(pid, mass, comment=comment)
@@ -1180,6 +1195,13 @@ class AddCards(AddMethods):
                      comment=comment)
         self._add_property_object(prop)
         return prop
+
+    def add_cbeam3(self, eid, pid, ga, gb, gc, x, g0, wa, wb, wc, tw, s,
+                   comment=''):
+        elem = CBEAM3(eid, pid, ga, gb, gc, x, g0, wa, wb, wc, tw, s,
+                      comment=comment)
+        self._add_element_object(elem)
+        return elem
 
     def add_cshear(self, eid, pid, nids, comment=''):
         """
