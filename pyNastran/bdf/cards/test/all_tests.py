@@ -6,7 +6,7 @@ from pyNastran.bdf.cards.test.test_nodes import TestNodes
 from pyNastran.bdf.cards.test.test_aero import TestAero
 from pyNastran.bdf.cards.test.test_constraints import TestConstraints
 from pyNastran.bdf.cards.test.test_sets import TestSets
-#from pyNastran.bdf.cards.test.test_deqatn import TestDEQATN
+from pyNastran.bdf.cards.test.test_deqatn import TestDEQATN
 from pyNastran.bdf.cards.test.test_dynamic import TestDynamic
 
 # standard elements

@@ -168,7 +168,7 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        with open('junk.bdf', 'wb') as f:
+        with open('junk.bdf', 'w') as f:
             model.write_bdf(f, close=False)
             #s.getvalue()
         os.remove('junk.bdf')
@@ -179,10 +179,14 @@ class TestDEQATN(unittest.TestCase):
         func_str += '    return x + y + z + c\n'
         #func = exec(fnc_str)
 
-        s = StringIO()
-        s.write(s)
-        s.close()
-        exec(func_str)
+        #s = StringIO()
+        #s.write(s)
+        #s.close()
+
+        local_dict = {}
+        exec(func_str, {}, local_dict)
+        #print('locals() =', local_dict)
+        f = local_dict['f']
         #out = f(1, 2, 3)
         #func = exec func_str
         assert f(1, 2, 3) == 9, func(1, 2, 3)

@@ -140,9 +140,8 @@ class TestOpt(unittest.TestCase):
                                     dvids, labels, p_min=None, p_max=1e20,
                                     validate=True, comment='')
         equation_id = 100
-        name = 'fstress'
         eqs = ['fstress(x) = x + 10.']
-        deqatn = model.add_deqatn(name, equation_id, eqs, comment='deqatn')
+        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
         #print(deqatn.object_attributes())
         #print(deqatn.func_str)
         #print(deqatn)
@@ -264,9 +263,8 @@ class TestOpt(unittest.TestCase):
         mat10 = model.add_mat10(mid10, bulk, rho, c, ge=0.0, comment='mat10')
 
         equation_id = 42
-        name = 'fstress'
         eqs = ['fstress(x) = x + 10.']
-        deqatn = model.add_deqatn(name, equation_id, eqs, comment='deqatn')
+        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
 
 
         dvmrel1_1.raw_fields()
@@ -352,9 +350,8 @@ class TestOpt(unittest.TestCase):
         nu = 0.3
         mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
 
-        name = 'fx2'
         eqs = ['fx2(x) = x + 10.']
-        deqatn = model.add_deqatn(name, equation_id, eqs, comment='deqatn')
+        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
 
         dvcrel1.raw_fields()
         dvcrel2.raw_fields()
