@@ -57,7 +57,7 @@ def check_length(fem1, fem2, name):
 
 def compare_card_content(fem1, fem2):
     check_obj_names = [
-        'params', 'nodes', 'elements', 'rigid_elements',
+        'params', 'nodes', 'elements', 'rigid_elements', 'nsms',
         'properties', 'materials', 'creep_materials',
         'loads', 'coords',
         'spcs', 'spcoffs', 'mpcs', 'dareas', 'dphases',

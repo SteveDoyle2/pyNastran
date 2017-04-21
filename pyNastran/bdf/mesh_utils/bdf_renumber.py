@@ -206,6 +206,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     eid = None
     pid = None
     mid = None
+    nsm_id = None
     spc_id = None
     mpc_id = None
     load_id = None
@@ -292,9 +293,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             raise NotImplementedError('key=%r' % key)
 
     # build the maps
-    eid_map = {}
     nid_map = {}
     reverse_nid_map = {}
+    eid_map = {}
+    nsm_map = {}
     mid_map = {}
     cid_map = {}
     mpc_map = {}

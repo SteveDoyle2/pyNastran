@@ -160,6 +160,16 @@ class AddMethods(BDFAttributes):
         """adds a DOPTPRM"""
         self.doptprm = doptprm
 
+    def _add_nsm_object(self, nsm, allow_overwrites=False):
+        """adds a nsm object to a nsm set"""
+        key = nsm.sid
+        assert key > 0, 'sid=%s must be positive; nsm=\n%s' % (key, nsm)
+        if key in self.nsms:
+            self.nsms[key].append(nsm)
+        else:
+            self.nsms[key] = [nsm]
+            self._type_to_id_map[nsm.type].append(key)
+
     def _add_mass_object(self, mass, allow_overwrites=False):
         key = mass.eid
         assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)

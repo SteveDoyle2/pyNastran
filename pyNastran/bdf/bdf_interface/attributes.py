@@ -267,9 +267,12 @@ class BDFAttributes(object):
         #: stores PLOTELs
         self.plotels = {}
 
-        #: store CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
+        #: stores CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
         self.masses = {}
-        self.properties_mass = {} # PMASS
+        #: stores PMASS
+        self.properties_mass = {}
+        #: stores NSM, NSM1
+        self.nsms = {}
 
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
@@ -314,7 +317,7 @@ class BDFAttributes(object):
         #        and QVECT entries.
         self.dload_entries = {}
 
-        #self.gusts  = {} # Case Control GUST = 100
+        #self.gusts = {}  # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
 
         #: stores coordinate systems
@@ -546,6 +549,7 @@ class BDFAttributes(object):
                 # thermal
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
             ],
+            'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1', 'NSMADD'],
             'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE'],
             'plotels' : ['PLOTEL',],
 

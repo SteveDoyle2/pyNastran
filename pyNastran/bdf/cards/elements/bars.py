@@ -770,7 +770,7 @@ class CBEAM3(LineElement):  # was CBAR
 
         s = np.array([integer_or_blank(card, 21, 'sa'),
                       integer_or_blank(card, 22, 'sb'),
-                      integer_or_blank(card, 23, 'sc')], dtype='float64')
+                      integer_or_blank(card, 23, 'sc')], dtype='int32')
         assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
         return CBEAM3(eid, pid, ga, gb, gc, x, g0,
                       wa, wb, wc, tw, s, comment='')

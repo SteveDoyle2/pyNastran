@@ -67,7 +67,7 @@ from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
-from pyNastran.bdf.cards.properties.mass import PMASS#, NSM
+from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
@@ -344,6 +344,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
             # mass
             'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+            # nsm
+            'NSM', 'NSM1', 'NSML', 'NSML1', 'NSMADD',
 
             ## elements
             # springs
@@ -1960,6 +1962,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self._add_creep_material_object),
 
+            'NSMADD' : (NSMADD, self._add_nsm_object),
+            'NSM1' : (NSM1, self._add_nsm_object),
+            'NSML1' : (NSML1, self._add_nsm_object),
+
             'CONM1' : (CONM1, self._add_mass_object),
             'CONM2' : (CONM2, self._add_mass_object),
             'CMASS1' : (CMASS1, self._add_mass_object),
@@ -2204,6 +2210,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
             'DEQATN' : self._prepare_dequatn,
 
+            'NSM' : self._prepare_nsm,
+            'NSML' : self._prepare_nsml,
             'PVISC' : self._prepare_pvisc,
             'PELAS' : self._prepare_pelas,
             'PDAMP' : self._prepare_pdamp,
@@ -2377,6 +2385,28 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         if card_obj.field(5):
             class_instance = PELAS.add_card(card_obj, icard=1, comment=comment)
             self._add_property_object(class_instance)
+
+    def _prepare_nsm(self, card, card_obj, comment=''):
+        """adds an NSM"""
+        class_instance = NSM.add_card(card_obj, icard=0, comment=comment)
+        self._add_nsm_object(class_instance)
+        if card_obj.field(5):
+            class_instance = NSM.add_card(card_obj, icard=1, comment=comment)
+            self._add_nsm_object(class_instance)
+        if card_obj.field(7):
+            class_instance = NSM.add_card(card_obj, icard=2, comment=comment)
+            self._add_nsm_object(class_instance)
+
+    def _prepare_nsml(self, card, card_obj, comment=''):
+        """adds an NSML"""
+        class_instance = NSML.add_card(card_obj, icard=0, comment=comment)
+        self._add_nsm_object(class_instance)
+        if card_obj.field(5):
+            class_instance = NSML.add_card(card_obj, icard=1, comment=comment)
+            self._add_nsm_object(class_instance)
+        if card_obj.field(7):
+            class_instance = NSML.add_card(card_obj, icard=2, comment=comment)
+            self._add_nsm_object(class_instance)
 
     def _prepare_pvisc(self, card, card_obj, comment=''):
         """adds a PVISC"""
