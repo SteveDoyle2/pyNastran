@@ -62,14 +62,12 @@ def invdba(dba, pref, f):
 class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
 
-    def __init__(self, name, equation_id, eqs, comment=''):
+    def __init__(self, equation_id, eqs, comment=''):
         """
         Creates a DEQATN card
 
         Parameters
         ----------
-        name : int
-            name of the function???
         equation_id : int
             the id of the equation
         eqs : List[str]
@@ -96,7 +94,6 @@ class DEQATN(BaseCard):  # needs work...
             self.comment = comment
         self.dtable = None
         self.func = None
-        self.name = name
         self.equation_id = equation_id
         self.eqs = eqs
         self.func_str = ''
@@ -180,7 +177,7 @@ class DEQATN(BaseCard):  # needs work...
         _raw_eqs = deepcopy(eqs)  # TODO: temporary
         assert len(eqs) > 0, eqs
         #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(eqID))
-        return DEQATN(name, equation_id, eqs, comment=comment)
+        return DEQATN(equation_id, eqs, comment=comment)
 
     def _setup_equation(self):
         """
@@ -322,7 +319,92 @@ def fortran_to_python_short(line, default_values):
     return d['func']
 
 def fortran_to_python(lines, default_values):
-    #print(lines)
+    msg = ''
+    variables = []
+    assert len(lines) > 0, lines
+    for i, line in enumerate(lines):
+        #print('--------------------')
+        line = line.lower()
+        try:
+            f, eq = line.split('=')
+        except:
+            raise SyntaxError('= not found in %r' % (line))
+        f = f.strip()
+        eq = eq.strip()
+        #print('f=%r eq=%r' % (f, eq))
+
+        if i == 0:
+            func_name, f, msg, out, variables = write_function_header(f, eq, default_values)
+            #print(msg)
+        else:
+            out = f
+            msg += '    %s = %s\n' % (out, eq)
+    msg += '    return %s' % f
+    #print(msg)
+    nargs = len(variables)
+    return func_name, nargs, msg
+
+
+def write_function_header(f, eq, default_values):
+    msg = ''
+    out = ''
+
+    try:
+        float(eq)
+        is_float = True
+    except ValueError:
+        is_float = False
+
+    if is_float:
+        func_name, arguments = f.strip('(,)').split('(')
+        func_name = func_name.strip(' ')
+        variables = arguments.split(',')
+        #print('func_name=%r' % func_name)
+        val = float(eq)
+        vals = []
+        for var in variables:
+            if var in default_values:
+                vals.append('%s=%s' % (var, default_values[var]))
+            else:
+                vals.append('%s=%s' % (var, val))
+        vals2 = ', '.join(vals)
+        msg += 'def %s(%s):\n' % (func_name, vals2)
+        msg += _write_variables(variables)
+        #msg += '    %s = %s' % (func_name, eq)
+    else:
+        #print(eq)
+        #asdf
+        func_name, arguments = f.strip('(,)').split('(')
+        func_name = func_name.strip(' ')
+        variables = arguments.split(',')
+        msg += 'def %s:\n' % f
+
+        msg += _write_variables(variables)
+        #for var in variables:
+            #msg += '    %s = float(%s)\n' % (var, var)
+        #print(msg)
+        is_eq_defined = True
+        #print('out = %r' % out)
+        #print('func_name = %r' % func_name)
+        #print('eq = %r' % eq)
+        #out += eq
+        f = eq
+    return func_name, f, msg, out, variables
+
+def _write_variables(variables):
+    msg = '    try:\n'
+    for var in variables:
+        #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
+        #msg += '        %s = float(%s)\n' % (var, var)
+        msg += '        if isinstance(%s, (int, float, str)):\n' % var
+        msg += '            %s = float(%s)\n' % (var, var)
+    msg += '    except:\n'
+    msg += '        print(locals())\n'
+    msg += '        raise\n'
+    return msg
+
+def fortran_to_python_old(lines, default_values):
+    print(lines)
     msg = ''
     #line0 = lines[0].lower()
     #print('line0=%r' % line0)
@@ -339,7 +421,7 @@ def fortran_to_python(lines, default_values):
             raise SyntaxError('= not found in %r' % (line))
         f = f.strip()
         eq = eq.strip()
-        #print('f=%r eq=%r' % (f, eq))
+        print('f=%r eq=%r' % (f, eq))
 
         if i == 0:
             #print('eq = %r' % eq)
@@ -381,6 +463,7 @@ def fortran_to_python(lines, default_values):
                     msg += '    %s = float(%s)\n' % (var, var)
                 #print(msg)
                 is_eq_defined = True
+                #print('out = %r' % out)
                 out = eq
                 # if nlines > 1:
                     # msg += '    try:\n'

@@ -1471,7 +1471,7 @@ class DRESP2(OptConstraint):
                 elif name == 'DFRFNC':
                     pass
                 else:
-                    raise NotImplementedError(name)
+                    raise NotImplementedError('name=%r\n%s' % (name, card))
                 value_list.append(field)
         params[key] = value_list
 

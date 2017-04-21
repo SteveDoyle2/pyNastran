@@ -3059,8 +3059,8 @@ class AddCards(AddMethods):
         self._add_tf_object(tf)
         return tf
 
-    def add_deqatn(self, name, equation_id, eqs, comment=''):
-        deqatn = DEQATN(name, equation_id, eqs, comment=comment)
+    def add_deqatn(self, equation_id, eqs, comment=''):
+        deqatn = DEQATN(equation_id, eqs, comment=comment)
         self._add_deqatn_object(deqatn)
         return deqatn
 
