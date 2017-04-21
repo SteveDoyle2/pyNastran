@@ -44,31 +44,40 @@ class TestDEQATN(unittest.TestCase):
             model.add_card(card, "DEQATN", is_list=False)
 
     def test_deqatn_1c(self):
-        """works when is_list=True? and some magic flag is set..."""
+        """
+        works when is_list=True? and some magic flag is set..."
+
+        def maxdiff(t1,t2):
+            return abs(t2-t1)/t1
+        """
         model = BDF(debug=None)
-        #model.cards_to_read.add('DEQATN')
-        model.test_deqatn = True
+        #model.test_deqatn = True
         card = ["DEQATN      1000 MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
         model.add_card(card, "DEQATN")
+        model.cross_reference()
+        #print(model.dequations[1000].func_str)
 
-
-    def _test_deqatn_2(self):
+    def test_deqatn_2(self):
+        """
+        this works because is_list=True
+        it does work right now...
+        """
         model = BDF(debug=None)
         #model.cards_to_read.add('DEQATN')
         #model.test_deqatn = True
         card = ["DEQATN", 1000, "MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
-        model.add_card(card, "DEQATN", is_list=True)
-        model.cross_reference()
+        with self.assertRaises(ValueError):  # this used to work....
+            model.add_card(card, "DEQATN", is_list=True)
+        #model.cross_reference()
 
-        bdf_file = StringIO()
-        with self.assertRaises(AttributeError): # TODO: fix this...
-            model.write_bdf(bdf_file)
-        bdf_file.getvalue()
+        #bdf_file = StringIO()
+        #with self.assertRaises(AttributeError): # TODO: fix this...
+        #model.write_bdf(bdf_file)
+        #bdf_file.getvalue()
 
     def test_deqatn_2b(self):
         """the corrected version of 2"""
         model = BDF(debug=None)
-        #model.cards_to_read.add('DEQATN')
         model.test_deqatn = True
         card = ["DEQATN", 1000, "MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
 
@@ -77,17 +86,11 @@ class TestDEQATN(unittest.TestCase):
 
     def test_deqatn_3(self):
         """
+        Much simplier method of using add_card
+
         Creates the following equation:
 
         def maxdiff(t1,t2):
-            try:
-                if isinstance(t1, (int, float, str)):
-                    t1 = float(t1)
-                if isinstance(t2, (int, float, str)):
-                    t2 = float(t2)
-            except:
-                print(locals())
-                raise
             return abs(t2-t1)/t1
         """
         model = BDF(debug=None)
@@ -109,17 +112,8 @@ class TestDEQATN(unittest.TestCase):
         """
         per nast/tpl/ptdmi1.dat
 
-        def f(x=1.0, y=1.0, z=1.0):
-            try:
-                if isinstance(x, (int, float, str)):
-                    x = float(x)
-                if isinstance(y, (int, float, str)):
-                    y = float(y)
-                if isinstance(z, (int, float, str)):
-                    z = float(z)
-            except:
-                print(locals())
-                raise
+        def f(x, y, z):
+            f =  1.
             l = 10.
             b = 4.
             h = 2.
@@ -173,7 +167,7 @@ class TestDEQATN(unittest.TestCase):
             #s.getvalue()
         os.remove('junk.bdf')
 
-    def test_deqatn_6(self):
+    def test_deqatn_6a(self):
         func_str = 'def f(x, y, z):\n'
         func_str += '    c = 3\n'
         func_str += '    return x + y + z + c\n'
@@ -191,21 +185,76 @@ class TestDEQATN(unittest.TestCase):
         #func = exec func_str
         assert f(1, 2, 3) == 9, func(1, 2, 3)
 
+    def test_deqatn_6b(self):
+        """this doesn't work because the commas are missing; see test_deqatn_6c"""
+        model = BDF(debug=False)
+        equation_id = 100
+        eqs = [
+            'f(x,y,z)=1.'  # the defaults
+            'c = 3'
+            'd = x + y + z + c'
+        ]
+        deqatn = model.add_deqatn(equation_id, eqs, comment='')
+        with self.assertRaises(SyntaxError):
+            model.cross_reference()
+        #print(deqatn.func_str)
+
+    def test_deqatn_6c(self):
+        """
+        The add_deqatn version of test_deqatn_6a
+
+        def f(x, y, z):
+            f = 1.
+            c = 3
+            d = x + y + z + c
+            return d
+        """
+        model = BDF(debug=False)
+        equation_id = 100
+        eqs = [
+            'f(x,y,z)=1.',  # the defaults
+            'c = 3',
+            'd = x + y + z + c',
+        ]
+        deqatn = model.add_deqatn(equation_id, eqs, comment='')
+        model.cross_reference()
+        #print(deqatn.func_str)
+
+    def test_deqatn_6d(self):
+        """
+        The add_deqatn version of test_deqatn_6a with defaults
+
+        def f(x, y, z, w=10.0):
+            '''
+            $deqatn
+            DEQATN  100     f(x,y,z,w)=1.;
+                    c = 3;
+                    d = x + y + z + c
+            '''
+            f = 1.
+            c = 3
+            d = x + y + z + c
+            return d
+        """
+        model = BDF(debug=False)
+        equation_id = 100
+        eqs = [
+            'f(x,y,z,w)=1.',  # the defaults
+            'c = 3',
+            'd = x + y + z + c',
+        ]
+        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
+        default_values = {'w' : 10.}
+        model.add_dtable(default_values, comment='dtable')
+        model.cross_reference()
+        #print(deqatn.func_str)
+
     def test_deqatn_7(self):
         """
         per nast/tpl/ptdmi1.dat
 
-        def f(x=1.0, y=1.0, z=1.0):
-            try:
-                if isinstance(x, (int, float, str)):
-                    x = float(x)
-                if isinstance(y, (int, float, str)):
-                    y = float(y)
-                if isinstance(z, (int, float, str)):
-                    z = float(z)
-            except:
-                print(locals())
-                raise
+        def f(x, y, z):
+            f = 1.
             l = 1+2+3++4/min(1,2)
             b = 4.
             h = 2.
@@ -239,7 +288,7 @@ class TestDEQATN(unittest.TestCase):
     @unittest.skipUnless(2 < 1, 'skipping')
     def test_deqatn_8(self):
         """
-        per nast/tpl/ptdmi1.dat
+        based off nast/tpl/ptdmi1.dat
 
         What's going on with the last line?
         """
@@ -267,7 +316,7 @@ class TestDEQATN(unittest.TestCase):
 
     def test_deqatn_9(self):
         """
-        per nast/tpl/ptdmi1.dat
+        based off nast/tpl/ptdmi1.dat
         """
         model = BDF(debug=None)
         model.cards_to_read.add('DEQATN')
@@ -293,19 +342,10 @@ class TestDEQATN(unittest.TestCase):
 
     def test_deqatn_10(self):
         """
-        per nast/tpl/ptdmi1.dat
+        based off nast/tpl/ptdmi1.dat
 
         def f(x=1.0, y=1.0, z=1.0):
-            try:
-                if isinstance(x, (int, float, str)):
-                    x = float(x)
-                if isinstance(y, (int, float, str)):
-                    y = float(y)
-                if isinstance(z, (int, float, str)):
-                    z = float(z)
-            except:
-                print(locals())
-                raise
+            f = 1.
             l = x+y
             return l
         """
@@ -326,19 +366,21 @@ class TestDEQATN(unittest.TestCase):
 
         eq = model.dequations[2]
         x = np.ones(10, dtype='float32')
-        y = 2 * np.ones(10, dtype='float32')
+        y = 2. * np.ones(10, dtype='float32')
+        z = 3. * np.ones(10, dtype='float32')
         #print(model.dequations[2].func_str)
         #z = ones(10, dtype='float32')
         #out = eq.func(x, y, z)
-        out = eq.func(x, y)
-        #out = eq.func(1.0, 2.0)
+        out = eq.func(x, y, z)
+        assert np.array_equal(eq.func(x, y, z), z)
+        assert eq.func(1.0, 2.0, 1.0) == 3.0
         #print('out9 = %r' % out)
 
 
     @unittest.skipUnless(2 < 1, 'skipping')
     def test_deqatn_11(self):
         """
-        per nast/tpl/ptdmi1.dat
+        based off nast/tpl/ptdmi1.dat
 
         What's going on with this...
         """

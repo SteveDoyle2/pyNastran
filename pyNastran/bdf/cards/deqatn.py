@@ -194,11 +194,12 @@ class DEQATN(BaseCard):  # needs work...
         """
         default_values = {}
         if self.dtable is not None:
-            self.dtable_ref.default_values = {}
-        func_name, nargs, func_str = fortran_to_python(self.eqs, default_values)
+            default_values = self.dtable_ref.default_values
+        func_name, nargs, func_str = fortran_to_python(self.eqs, default_values,
+                                                       str(self))
         self.func_str = func_str
         self.func_name = func_name
-        #print('**************', func_str)
+        #print(func_str)
         exec_(func_str)
         #print(locals().keys())
         func = locals()[func_name]
@@ -219,6 +220,7 @@ class DEQATN(BaseCard):  # needs work...
         # TODO: get defaults from DTABLE
         # TODO: get limits from DCONSTR
         self.dtable = model.dtable
+        #print(self.dtable)
         self.dtable_ref = self.dtable
         self._setup_equation()
 
@@ -314,11 +316,11 @@ def fortran_to_python_short(line, default_values):
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
     d = {}
-    print(func_str)
+    #print(func_str)
     exec_(func_str, globals(), d)
     return d['func']
 
-def fortran_to_python(lines, default_values):
+def fortran_to_python(lines, default_values, comment=''):
     msg = ''
     variables = []
     assert len(lines) > 0, lines
@@ -328,13 +330,21 @@ def fortran_to_python(lines, default_values):
         try:
             f, eq = line.split('=')
         except:
-            raise SyntaxError('= not found in %r' % (line))
+            if '=' not in line:
+                raise SyntaxError('= not found in %r' % (line))
+            else:
+                msg = 'only 1 = sign may be found a line\n'
+                msg += 'line = %r\n' % line
+                if len(lines) > 1:
+                    msg += 'lines:\n%s' % '\n'.join(lines)
+                raise SyntaxError(msg)
         f = f.strip()
         eq = eq.strip()
         #print('f=%r eq=%r' % (f, eq))
 
         if i == 0:
-            func_name, f, msg, out, variables = write_function_header(f, eq, default_values)
+            func_name, f, msg, out, variables = write_function_header(
+                f, eq, default_values, comment)
             #print(msg)
         else:
             out = f
@@ -345,7 +355,7 @@ def fortran_to_python(lines, default_values):
     return func_name, nargs, msg
 
 
-def write_function_header(f, eq, default_values):
+def write_function_header(f, eq, default_values, comment=''):
     msg = ''
     out = ''
 
@@ -361,24 +371,21 @@ def write_function_header(f, eq, default_values):
         variables = arguments.split(',')
         #print('func_name=%r' % func_name)
         val = float(eq)
-        vals = []
-        for var in variables:
-            if var in default_values:
-                vals.append('%s=%s' % (var, default_values[var]))
-            else:
-                vals.append('%s=%s' % (var, val))
-        vals2 = ', '.join(vals)
-        msg += 'def %s(%s):\n' % (func_name, vals2)
+
+        msg += _write_function_line(func_name, variables, default_values)
+        msg += _write_comment(comment)
         msg += _write_variables(variables)
-        #msg += '    %s = %s' % (func_name, eq)
+        msg += '    %s = %s\n' % (func_name, eq)
     else:
         #print(eq)
         #asdf
         func_name, arguments = f.strip('(,)').split('(')
         func_name = func_name.strip(' ')
         variables = arguments.split(',')
-        msg += 'def %s:\n' % f
+        #msg += 'def %s:\n' % f
 
+        msg += _write_function_line(func_name, variables, default_values)
+        msg += _write_comment(comment)
         msg += _write_variables(variables)
         #for var in variables:
             #msg += '    %s = float(%s)\n' % (var, var)
@@ -391,7 +398,35 @@ def write_function_header(f, eq, default_values):
         f = eq
     return func_name, f, msg, out, variables
 
+def _write_function_line(func_name, variables, default_values):
+    """writes the def f(x, y, z=1.): part of the function"""
+    vals = []
+    is_default = False
+    #print('default_values = %s' % default_values)
+    for var in variables:
+        if var in default_values:
+            vals.append('%s=%s' % (var, default_values[var]))
+            is_default = True
+        else:
+            vals.append('%s' % (var))
+            if is_default:
+                msg = 'default variables must be set at the end of the function\n'
+                msg += 'variables = %s\n' % variables
+                msg += 'default_values = %s' % default_values
+                raise RuntimeError(msg)
+    vals2 = ', '.join(vals)
+    msg = 'def %s(%s):\n' % (func_name, vals2)
+    return msg
+
+def _write_comment(comment):
+    """writes the deqatn to the comment block"""
+    lines = comment.split('\n')
+    msgi = '\n    '.join(lines)
+    msg = '    """\n    %s"""\n' % msgi
+    return msg
+
 def _write_variables(variables):
+    """type checks the inputs"""
     msg = '    try:\n'
     for var in variables:
         #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
@@ -402,91 +437,3 @@ def _write_variables(variables):
     msg += '        print(locals())\n'
     msg += '        raise\n'
     return msg
-
-def fortran_to_python_old(lines, default_values):
-    print(lines)
-    msg = ''
-    #line0 = lines[0].lower()
-    #print('line0=%r' % line0)
-    #nlines = len(lines)
-    assert len(lines) > 0, lines
-    is_eq_defined = False
-    for i, line in enumerate(lines):
-        #print('line=%r' % line)
-        # line = line.upper()
-        line = line.lower()
-        try:
-            f, eq = line.split('=')
-        except:
-            raise SyntaxError('= not found in %r' % (line))
-        f = f.strip()
-        eq = eq.strip()
-        print('f=%r eq=%r' % (f, eq))
-
-        if i == 0:
-            #print('eq = %r' % eq)
-            try:
-                float(eq)
-                is_float = True
-            except ValueError:
-                is_float = False
-
-            #print('is_float =', is_float)
-            if is_float:
-                func_name, arguments = f.strip('(,)').split('(')
-                func_name = func_name.strip(' ')
-                variables = arguments.split(',')
-                #print('func_name=%r' % func_name)
-                val = float(eq)
-                vals = []
-                for var in variables:
-                    if var in default_values:
-                        vals.append('%s=%s' % (var, default_values[var]))
-                    else:
-                        vals.append('%s=%s' % (var, val))
-                vals2 = ', '.join(vals)
-                msg += 'def %s(%s):\n' % (func_name, vals2)
-                msg += '    try:\n'
-                for var in variables:
-                    #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
-                    #msg += '        %s = float(%s)\n' % (var, var)
-                    msg += '        %s = float(%s)\n' % (var, var)
-                msg += '    except:\n'
-                msg += '        print(locals())\n'
-                msg += '        raise\n'
-            else:
-                func_name, arguments = f.strip('(,)').split('(')
-                func_name = func_name.strip(' ')
-                variables = arguments.split(',')
-                msg += 'def %s:\n' % f
-                for var in variables:
-                    msg += '    %s = float(%s)\n' % (var, var)
-                #print(msg)
-                is_eq_defined = True
-                #print('out = %r' % out)
-                out = eq
-                # if nlines > 1:
-                    # msg += '    try:\n'
-                    # msg += '        pass\n'
-        else:
-            out = f
-            msg += '    %s = %s\n' % (out, eq)
-        #print('  i=%s f=%r eq=%r' % (i, f, eq))
-    #if is_
-    #if nlines > 1:
-        # msg += '    except:\n'
-        # msg += '        print(locals())\n'
-        # msg += '        raise\n'
-    if is_eq_defined:
-        msg += '    return %s\n' % out
-    else:
-        msg = 'def %s(%s):\n' % (func_name, vals2)
-        try:
-            msg += '    return %s\n' % float(eq)
-        except ValueError:
-            msg += '    return %s\n' % str(eq)
-            raise NotImplementedError(msg)
-
-    #print(msg)
-    nargs = len(variables)
-    return func_name, nargs, msg

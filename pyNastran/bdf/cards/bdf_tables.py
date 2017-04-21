@@ -107,11 +107,11 @@ class DTABLE(BaseCard):
         if comment:
             self.comment = comment
         self.default_values = default_values
-        print('default_values = %s' % default_values)
+        #print('default_values = %s' % default_values)
         #for key, value in iteritems(self.default_values):
             #print(key, type(key))
         assert len(self.default_values) > 0, self.default_values
-        print(self)
+        #print(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -151,7 +151,7 @@ class DTABLE(BaseCard):
 
     def raw_fields(self):
         list_fields = ['DTABLE']
-        print('***default_values = %s' % self.default_values)
+        #print('***default_values = %s' % self.default_values)
         assert len(self.default_values) > 0, self.default_values
         for label, value in sorted(iteritems(self.default_values)):
             list_fields += [label, value]
