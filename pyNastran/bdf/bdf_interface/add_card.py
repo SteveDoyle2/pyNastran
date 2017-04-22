@@ -3123,17 +3123,17 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        DEQATN  41      F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R)
+        DEQATN  41      F1(A,B,C,D,R) = A+B *C-(D**3 + 10.0) + sin(PI(1) * R)
                         + A**2 / (B - C); F = A + B - F1 * D
 
         def F1(A, B, C, D, R):
-            F1 = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B – C)
+            F1 = A + B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B - C)
             F = A + B - F1 * D
             return F
 
         eqs = [
-            'F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B – C)',
-            'F = A + B – F1 * D',
+            'F1(A,B,C,D,R) = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B - C)',
+            'F = A + B - F1 * D',
         ]
         >>> deqatn = model.add_deqatn(41, eqs, comment='')
         """

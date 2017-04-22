@@ -496,7 +496,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'FREQ', 'FREQ1', 'FREQ2', #'FREQ4',
 
             # direct matrix input cards
-            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', #'DTI',
+            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
 
             # optimization cards
             'DEQATN', 'DTABLE',
@@ -2190,7 +2190,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'DAREA' : (DAREA, self._add_darea_object),
             'DPHASE' : (DPHASE, self._add_dphase_object),
             'DELAY' : (DELAY, self._add_delay_object),
-            'DTI' : (DTI, self._add_dti_object),
         }
         self._card_parser_prepare = {
             'CORD1R' : self._prepare_cord1r,
@@ -2202,6 +2201,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'CMASS4' : self._prepare_cmass4,
             'CDAMP4' : self._prepare_cdamp4,
 
+            'DTI' : self._prepare_dti,
             'DMIG' : self._prepare_dmig,
             'DMI' : self._prepare_dmi,
             'DMIJ' : self._prepare_dmij,
@@ -2269,6 +2269,19 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         self._increase_card_count(card_name)
         self.rejects.append([_format_comment(comment)] + card_lines)
 
+    def _write_reject_message(self, card_name, card_obj, comment=''):
+        """common method to not write duplicate reject card names"""
+        if card_name not in self.card_count:
+            if ' ' in card_name:
+                msg = (
+                    'No spaces allowed in card name %r.  '
+                    'Should this be a comment?\n%s%s' % (
+                        card_name, comment, card_obj))
+                raise RuntimeError(msg)
+            if card_name in ['SUBCASE ', 'CEND']:
+                raise RuntimeError('No executive/case control deck was defined.')
+            self.log.info('    rejecting card_name = %s' % card_name)
+
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
         card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
@@ -2317,12 +2330,18 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
     def _prepare_dequatn(self, card, card_obj, comment=''):
         """adds a DEQATN"""
-        if hasattr(self, 'test_deqatn') or 1:
-            self._add_deqatn_object(DEQATN.add_card(card_obj, comment=comment))
+        self._add_deqatn_object(DEQATN.add_card(card_obj, comment=comment))
+
+    def _prepare_dti(self, card_name, card_obj, comment=''):
+        """adds a DTI"""
+        name = string(card_obj, 1, 'name')
+        if name == 'UNITS':
+            self._add_dti_object(DTI.add_card(card_obj, comment=comment))
         else:
             if comment:
                 self.rejects.append([comment])
-            self.rejects.append(card)
+            self.reject_cards.append(card_obj)
+            self._write_reject_message(card_name, card_obj, comment=comment)
 
     def _prepare_dmig(self, card, card_obj, comment=''):
         """adds a DMIG"""
@@ -2332,15 +2351,15 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
         if name == 'UACCEL':  # special DMIG card
             if field2 == 0:
-                card = DMIG_UACCEL.add_card(card_obj, comment=comment)
-                self._add_dmig_object(card)
+                dmig = DMIG_UACCEL.add_card(card_obj, comment=comment)
+                self._add_dmig_object(dmig)
             else:
                 self._dmig_temp[name].append((card_obj, comment))
         else:
             field2 = integer_or_string(card_obj, 2, 'flag')
             if field2 == 0:
-                card = DMIG.add_card(card_obj, comment=comment)
-                self._add_dmig_object(card)
+                dmig = DMIG.add_card(card_obj, comment=comment)
+                self._add_dmig_object(dmig)
             else:
                 self._dmig_temp[name].append((card_obj, comment))
 

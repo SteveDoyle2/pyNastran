@@ -1950,22 +1950,25 @@ class CAERO1(BaseCard):
                       cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       comment=comment)
 
-    def _init_ids(self):
+    def _init_ids(self, dtype='int32'):
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
         """
         nchord, nspan = self.shape
         assert nchord >= 1, 'nchord=%s' % nchord
         assert nspan >= 1, 'nspan=%s' % nspan
-        self.box_ids = np.zeros((nchord, nspan), dtype='int32')
-        for ichord in range(nchord):
-            for ispan in range(nspan):
-                try:
+        self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
+
+        try:
+            for ichord in range(nchord):
+                for ispan in range(nspan):
                     self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
-                except OverflowError:
-                    msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
-                        self.eid, ichord, ispan, nchord)
-                    raise OverflowError(msg)
+        except OverflowError:
+            if dtype == 'int64':
+                msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
+                    self.eid, ichord, ispan, nchord)
+                raise OverflowError(msg)
+            self._init_ids(dtype='int64')
 
     #def Points(self):
         #self.deprecated('Points()', 'get_points()', '0.7')

@@ -88,6 +88,8 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
     files = [fname for fname in files
              if not os.path.basename(fname).startswith('out_')
              and '.test_op2.' not in fname # removing test output files
+             and '.test_bdf.' not in fname
+             and 'tecplot' not in fname
              and os.path.basename(fname) not in skip_files]
 
     # nstart = 0

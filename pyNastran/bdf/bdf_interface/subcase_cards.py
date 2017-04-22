@@ -883,9 +883,11 @@ class EXTSEOUT(CaseControlCard):
     EXTSEOUT(STIF,MASS,DAMP,GEOM,EXTID=600)
     """
     type = 'EXTSEOUT'
-    allowed_keys = ['EXTID', 'ASMBULK', 'EXTBULK', 'MATDB', 'MATRIXDB'
+    allowed_keys = ['EXTID', 'ASMBULK', 'EXTBULK', 'MATDB', 'MATRIXDB',
                     'GEOM', 'DMIGSFIX', 'DMIGDB',
-                    'STIFFNESS', 'MASS', 'DAMPING', 'K4DAMP', 'LOADS',
+                    'STIFF', 'STIFFNESS', 'MASS',
+                    'DAMP', 'DAMPING', 'K4DAMP',
+                    'LOADS',
                     'DMIGOP2', 'DMIGPCH',
                     'MATOP4', 'MATRIXOP4']
 
@@ -898,7 +900,7 @@ class EXTSEOUT(CaseControlCard):
         assert line.startswith('EXTSEOUT('), line
         assert line.endswith(')'), line
         data = line[9:-1].split(',')
-        print('data EXTSEOUT =', data)
+        #print('data EXTSEOUT =', data)
         data_list = []
         for key_value in data:
             key_value = key_value.strip()

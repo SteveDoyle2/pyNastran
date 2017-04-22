@@ -21,7 +21,8 @@ np.seterr(all='raise')
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path, integer_types
-from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
+from pyNastran.bdf.errors import (
+    CrossReferenceError, CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
 from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
@@ -359,6 +360,10 @@ def run_and_compare_fems(
         if not dev:
             raise
         print('failed test because CardParseSyntaxError...ignoring')
+    except MissingDeckSections:
+        if not dev:
+            raise
+        print('failed test because MissingDeckSections...ignoring')
     except DuplicateIDsError as e:
         # only temporarily uncomment this when running lots of tests
         if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
@@ -391,8 +396,14 @@ def run_and_compare_fems(
             print(e)
         else:
             raise
-    #except KeyError:  # only temporarily uncomment this when running lots of tests
-        #pass
+    except KeyError as e:  # only temporarily uncomment this when running lots of tests
+        if not dev:
+            raise
+        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
+            print(e)
+        else:
+            raise
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
         #pass
     except SystemExit:
@@ -896,8 +907,10 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         else:
             msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
             raise NotImplementedError(msg)
-
-    elif sol in [1, 5, 21, 61, 68, 76, 100, 187, 401, 601]:
+    elif sol in [114, 115, 116, 118]:
+        # cyclic statics, modes, buckling, frequency
+        pass
+    elif sol in [1, 5, 21, 61, 68, 76, 100, 128, 187, 190, 400, 401, 601, 700, 701]:
         pass
     else:
         msg = 'SOL = %s\n' % (sol)
@@ -961,7 +974,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
-        assert sol in [110, 145], 'sol=%s CMETHOD\n%s' % (sol, subcase)
+        assert sol in [110, 111, 145], 'sol=%s CMETHOD\n%s' % (sol, subcase)
 
     if 'RMETHOD' in subcase:
         rmethod_id = subcase.get_parameter('RMETHOD')[0]
@@ -990,7 +1003,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
-                       108, 109, 110, 112, 144, 145, 153, 400, 601
+                       108, 109, 110, 111, 112, 144, 145, 153, 400, 601,
                       ], 'sol=%s LOAD\n%s' % (sol, subcase)
     else:
         # print('is_load =', subcase.has_parameter('LOAD'))

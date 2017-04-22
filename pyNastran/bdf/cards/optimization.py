@@ -119,7 +119,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
                 #pname_fid = 'C'
             else:
                 raise NotImplementedError('PROD pname_fid=%r is invalid' % pname_fid)
-            assert pname_fid in [4, 'A'], msg
+            assert pname_fid in [4, 'A', 5, 'J'], msg
         elif prop_type == 'PTUBE':
             assert pname_fid in [4, 5], msg
 
@@ -135,7 +135,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         elif prop_type == 'PBEAM':
             assert pname_fid in ['I1', 'I2', 'A', 'J',
                                  'I1(B)', 'I2(B)',
-                                 '-8', '-9', '-10'], msg # -8
+                                 '-8', '-9', '-10', '-14'], msg # -8
         elif prop_type == 'PBEAML':
             assert pname_fid in ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6',
                                  'DIM1(A)',
@@ -174,7 +174,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
             #else:
                 #raise NotImplementedError('PSHELL pname_fid=%r is invalid' % pname_fid)
             #if cp_name in '12I/T**3':
-            assert pname_fid in ['Z0',
+            assert pname_fid in ['Z0', 'SB',
                                  15, 25, 75, 85], msg
 
         #elif prop_type == 'CBUSH':
@@ -1113,8 +1113,8 @@ class DRESP1(OptConstraint):
         response_type : str
             Response type
         property_type : str
-            Element flag (PTYPE = “ELEM”), or property entry name, or panel
-            flag for ERP responses (PTYPE = 'PANEL' – See Remark 34), or
+            Element flag (PTYPE = 'ELEM'), or property entry name, or panel
+            flag for ERP responses (PTYPE = 'PANEL' - See Remark 34), or
             RANDPS ID. Blank for grid point responses. 'ELEM' or property
             name used only with element type responses (stress, strain,
             force, etc.) to identify the relevant element IDs, or the property
@@ -1366,6 +1366,14 @@ class DRESP1(OptConstraint):
             pass
         elif self.response_type == 'ERP':
             assert self.property_type == 'PANEL'
+        elif self.response_type == 'GPFORCP':
+            assert len(self.atti) >= 1, 'atti=%r\n%s' % (self.atti, self)
+            self.atta = model.Node(self.atta, msg=msg)
+            self.atti = model.Nodes(self.atti, msg=msg)
+        elif self.response_type == 'GPFORCE':
+            #self.atta = component
+            eids = [eid for eid in self.atti if eid is not None]
+            self.atti = model.Elements(eids, msg=msg)
         else:
             msg = 'response_type=%r ptype=%r\n' % (self.response_type, self.property_type)
             msg += str(self)
@@ -1428,10 +1436,13 @@ class DRESP1(OptConstraint):
             data = self.atti
             for value in data:
                 assert not isinstance(value, BaseCard), 'response_type=%s value=%s' % (self.response_type, value)
-        elif self.response_type in ['GPFORCP']: # MSC Nastran specific
-            data = self.atti
-            for value in data:
-                assert not isinstance(value, BaseCard), value
+        elif self.response_type in ['GPFORCP']:
+            # MSC Nastran specific
+            data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
+        elif self.response_type in ['GPFORCE']:
+            # MSC
+            data = [elem if isinstance(elem, integer_types) else elem.eid for elem in self.atti
+                    if elem is not None]
         elif self.response_type in ['ERP']:
             msg = 'response_type=%r property_type=%r atta=%r attb=%r atti=%r\n' % (
                 self.response_type, self.property_type, self.atta, self.attb, self.atti)
@@ -1699,7 +1710,7 @@ class DRESP2(OptConstraint):
             the BDF object
         """
         if model.dtable is not None:
-            model.log.debug('dtable = %s' % model.dtable)
+            model.log.debug(model.dtable.rstrip())
         msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):
@@ -1722,12 +1733,10 @@ class DRESP2(OptConstraint):
                 for i, val in enumerate(vals):
                     self.params[key][i] = model.Desvar(val, msg)
             elif name == 'DTABLE':
-                print('model.dtable =')
-                print(model.bdf_filename)
-                print(model.dtable)
-                print('dtable =', model.dtable)
+                model.log.info('bdf_filename = %s' % model.bdf_filename)
+                model.log.info('\n' + model.dtable.rstrip())
                 self.dtable = model.dtable
-                print('dtable =', self.dtable)
+                #print('dtable =', self.dtable)
                 for i, val in enumerate(vals):
                     default_values[val] = self.dtable[val]
             else:
