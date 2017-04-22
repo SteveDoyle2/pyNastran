@@ -1733,8 +1733,8 @@ class DRESP2(OptConstraint):
                 for i, val in enumerate(vals):
                     self.params[key][i] = model.Desvar(val, msg)
             elif name == 'DTABLE':
-                model.log.info('bdf_filename = %s' % model.bdf_filename)
-                model.log.info('\n' + model.dtable.rstrip())
+                #model.log.info('bdf_filename = %s' % model.bdf_filename)
+                #model.log.info('\n' + model.dtable.rstrip())
                 self.dtable = model.dtable
                 #print('dtable =', self.dtable)
                 for i, val in enumerate(vals):

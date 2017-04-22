@@ -2743,7 +2743,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         elif card_name in self._card_parser_prepare:
             add_card_function = self._card_parser_prepare[card_name]
             try:
-                add_card_function(card, card_obj)
+                add_card_function(card, card_obj, comment=comment)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur

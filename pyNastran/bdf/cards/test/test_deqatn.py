@@ -237,6 +237,20 @@ class TestDEQATN(unittest.TestCase):
         model.cross_reference()
         #print(deqatn.func_str)
 
+    def test_deqatn_6e(self):
+        """
+        tests comments
+        """
+        card_lines = [
+            'DEQATN  100     f(x,y,z,w)=1.;',
+            '    c = 3;',
+            '    d = x + y + z + c'
+        ]
+        model = BDF(debug=False)
+        model.add_card(card_lines, 'DEQATN', comment='deqatn', is_list=False)
+        deqatn = model.dequations[100]
+        assert deqatn._comment == '$deqatn\n', '_comment=%r' % deqatn._comment
+
     def test_deqatn_7(self):
         """
         per nast/tpl/ptdmi1.dat
