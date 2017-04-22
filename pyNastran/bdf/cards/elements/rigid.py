@@ -48,7 +48,7 @@ class RROD(RigidElement):
 
     def __init__(self, eid, ga, gb, cma=None, cmb=None, alpha=0.0, comment=''):
         """
-        Creates a RROD
+        Creates a RROD element
 
         Parameters
         ----------
@@ -219,7 +219,7 @@ class RBAR(RigidElement):
 
     def __init__(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
-        Creates a RBAR
+        Creates a RBAR element
 
         Parameters
         ----------
@@ -405,18 +405,18 @@ class RBAR(RigidElement):
 
 
 class RBAR1(RigidElement):
+    """
+    +-------+-----+----+----+-----+-------+
+    |   1   |  2  |  3 |  4 |  5  |   6   |
+    +=======+=====+====+====+=====+=======+
+    | RBAR1 | EID | GA | GB | CB  | ALPHA |
+    +-------+-----+----+----+-----+-------+
+    | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
+    +-------+-----+----+----+-----+-------+
+    """
     type = 'RBAR1'
 
     def __init__(self, eid, ga, gb, cb, alpha=0., comment=''):
-        """
-        +-------+-----+----+----+-----+-------+
-        |   1   |  2  |  3 |  4 |  5  |   6   |
-        +=======+=====+====+====+=====+=======+
-        | RBAR1 | EID | GA | GB | CB  | ALPHA |
-        +-------+-----+----+----+-----+-------+
-        | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
-        +-------+-----+----+----+-----+-------+
-        """
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
@@ -1007,7 +1007,7 @@ class RBE3(RigidElement):
     def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
                  Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
-        Creates an RBE3
+        Creates an RBE3 element
 
         Parameters
         ----------

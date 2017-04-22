@@ -1293,6 +1293,16 @@ class PBMSECT(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBMSECT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : List[str]
+            this card is special and is not a ``BDFCard`` like other cards
+        comment : str; default=''
+            a comment for the card
+        """
         line0 = card[0]
         if '\t' in line0:
             line0 = line0.expandtabs()

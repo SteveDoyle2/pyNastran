@@ -21,8 +21,6 @@ class TestDEQATN(unittest.TestCase):
     def _test_deqatn_1(self):
         """splitting a DEQATN doesnt work with is_list=False if it's a list"""
         model = BDF(debug=None)
-        #model.cards_to_read.add('DEQATN')
-        #model.test_deqatn = True
         card = ["DEQATN", 1000, "MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
         #with self.assertRaises(AttributeError): # TODO: fix this...
         model.add_card(card, "DEQATN", is_list=False)
@@ -37,8 +35,6 @@ class TestDEQATN(unittest.TestCase):
     def _test_deqatn_1b(self):
         """splitting a DEQATN doesnt work with is_list=False if it's a list"""
         model = BDF(debug=None)
-        #model.cards_to_read.add('DEQATN')
-        model.test_deqatn = True
         card = ["DEQATN", 1000, "MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
         with self.assertRaises(ValueError):
             model.add_card(card, "DEQATN", is_list=False)
@@ -48,10 +44,10 @@ class TestDEQATN(unittest.TestCase):
         works when is_list=True? and some magic flag is set..."
 
         def maxdiff(t1,t2):
-            return abs(t2-t1)/t1
+            maxdiff = abs(t2-t1)/t1
+            return maxdiff
         """
         model = BDF(debug=None)
-        #model.test_deqatn = True
         card = ["DEQATN      1000 MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
         model.add_card(card, "DEQATN")
         model.cross_reference()
@@ -60,11 +56,9 @@ class TestDEQATN(unittest.TestCase):
     def test_deqatn_2(self):
         """
         this works because is_list=True
-        it does work right now...
+        it doesn't work right now...
         """
         model = BDF(debug=None)
-        #model.cards_to_read.add('DEQATN')
-        #model.test_deqatn = True
         card = ["DEQATN", 1000, "MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
         with self.assertRaises(ValueError):  # this used to work....
             model.add_card(card, "DEQATN", is_list=True)
@@ -78,7 +72,6 @@ class TestDEQATN(unittest.TestCase):
     def test_deqatn_2b(self):
         """the corrected version of 2"""
         model = BDF(debug=None)
-        model.test_deqatn = True
         card = ["DEQATN", 1000, "MAXDIFF(t1,t2)=abs(t2-t1)/t1"]
 
         with self.assertRaises(ValueError):
@@ -91,11 +84,10 @@ class TestDEQATN(unittest.TestCase):
         Creates the following equation:
 
         def maxdiff(t1,t2):
-            return abs(t2-t1)/t1
+            maxdiff = abs(t2-t1)/t1
+            return maxdiff
         """
         model = BDF(debug=None)
-        model.cards_to_read.add('DEQATN')
-        model.test_deqatn = True
         card = ['DEQATN  1000',
                 '        MAXDIFF(t1,t2)=abs(t2-t1)/t1']
         model.add_card(card, 'DEQATN', is_list=False)
@@ -123,8 +115,6 @@ class TestDEQATN(unittest.TestCase):
             return t
         """
         model = BDF(debug=None)
-        #model.cards_to_read.add('DEQATN')
-        model.test_deqatn = True
         card = [
             'deqatn  2       f(x,y,z)= 1.;',
             '        l=10.;',
@@ -148,8 +138,6 @@ class TestDEQATN(unittest.TestCase):
         per nast/tpl/ptdmi1.dat
         """
         model = BDF(debug=None)
-        model.cards_to_read.add('DEQATN')
-        model.test_deqatn = True
         card = [
             'deqatn  2       f(x,y,z)= 1.;',
             '        l=10.;',
@@ -264,8 +252,6 @@ class TestDEQATN(unittest.TestCase):
             return t
         """
         model = BDF(debug=None)
-        model.cards_to_read.add('DEQATN')
-        model.test_deqatn = True
         card = [
             'deqatn  2       f(x,y,z)= 1.;',
             '        L=1+2+3+',
@@ -293,8 +279,6 @@ class TestDEQATN(unittest.TestCase):
         What's going on with the last line?
         """
         model = BDF(debug=None)
-        model.cards_to_read.add('DEQATN')
-        #model.test_deqatn = True
         card = [
             'deqatn  2       f(x,y,z)= 1.;',
             '        L=1+2+3+',
@@ -319,8 +303,6 @@ class TestDEQATN(unittest.TestCase):
         based off nast/tpl/ptdmi1.dat
         """
         model = BDF(debug=None)
-        model.cards_to_read.add('DEQATN')
-        #model.test_deqatn = True
         card = [
             'deqatn  2       f(x,y,z)= 1.;',
             '        L=1+2+3+',
@@ -344,14 +326,12 @@ class TestDEQATN(unittest.TestCase):
         """
         based off nast/tpl/ptdmi1.dat
 
-        def f(x=1.0, y=1.0, z=1.0):
+        def f(x, y, z):
             f = 1.
             l = x+y
             return l
         """
         model = BDF(debug=None)
-        model.cards_to_read.add('DEQATN')
-        #model.test_deqatn = True
         card = [
             'deqatn  2       f(x,y,z)= 1.;',
             '        L=x+y',
@@ -385,8 +365,6 @@ class TestDEQATN(unittest.TestCase):
         What's going on with this...
         """
         model = BDF(debug=None)
-        #model.cards_to_read.add('DEQATN')
-        #model.test_deqatn = True
         deqatn_card = [
             'deqatn  2       f(x,y,z)= 1.;',
             '        L=x+y',
@@ -428,6 +406,51 @@ class TestDEQATN(unittest.TestCase):
             #model.add_card(desvar, 'DESVAR', is_list=True)
         model.cross_reference()
         model._verify_bdf()
+
+    def test_deqatn_12(self):
+        """
+        made up
+
+        def f1(a, b, c, d, r):
+            f1 = a+b*c-(d**3+10.0)+sin(pi(1)*r)+a**2/(b-c)
+            f = a+b-f1*d
+            return f
+        """
+        model = BDF(debug=None)
+        card_lines = [
+            'DEQATN  41      F1(A,B,C,D,R) = A+B *C-(D**3 + 10.0) + sin(PI(1) * R)',
+            '                + A**2 / (B - C); F = A + B - F1 * D',
+        ]
+        model.add_card(card_lines, 'DEQATN', is_list=False,
+                       has_none=True)
+        model.dequations[41].write_card()
+        eqs = [
+            'f(x,y)=1',
+            'a = x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x',
+            'b = a + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x'
+        ]
+        deqatn = model.add_deqatn(1000, eqs)
+        deqatn.write_card()
+
+        #print(deqatn)
+        model.cross_reference()
+        #print(model.dequations[41].eqs)
+        #print(model.dequations[41].func_str)
+
+    @unittest.expectedFailure
+    def test_deqatn_13(self):
+        """
+        add_deqatn doesnt support semicolons (;) in the eqs
+        You're defining them; break it up
+        """
+        eqs = [
+            'f(x,y)=1',
+            'a = x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x',
+            'b = a + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x; c=42'
+        ]
+        model = BDF(debug=None)
+        deqatn = model.add_deqatn(1001, eqs)
+        model.cross_reference()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -22,6 +22,14 @@ from pyNastran.bdf.cards.utils import build_table_lines
 
 
 def validate_dvcrel(validate, Type, cp_name):
+    """
+    Valdiates the DVCREL1/2
+
+    Notes
+    -----
+    1.  words that start with integers (e.g., 12I/T**3) doesn't support
+        strings
+    """
     if validate:
         msg = 'DVCRELx: Type=%r cp_name=%r is invalid' % (Type, cp_name)
         if Type in ['CQUAD4']:
@@ -43,6 +51,14 @@ def validate_dvcrel(validate, Type, cp_name):
 
 
 def validate_dvmrel(validate, mat_type, mp_name):
+    """
+    Valdiates the DVMREL1/2
+
+    Notes
+    -----
+    1.  words that start with integers (e.g., 12I/T**3) doesn't support
+        strings
+    """
     if validate:
         msg = 'DVMRELx: mat_type=%r mp_name=%r is invalid' % (mat_type, mp_name)
         if mat_type in ['MAT1']:
@@ -368,7 +384,34 @@ class DESVAR(OptConstraint):
     +--------+-----+-------+-------+-----+-----+-------+-------+
     """
     def __init__(self, desvar_id, label, xinit, xlb=-1e20, xub=1e20,
-                 delx=1e20, ddval=None, comment=''):
+                 delx=None, ddval=None, comment=''):
+        """
+        Creates a DESVAR card
+
+        Parameters
+        ----------
+        desvar_id : int
+            design variable id
+        label : str
+            name of the design variable
+        xinit : float
+            the starting point value for the variable
+        xlb : float; default=-1.e20
+            the lower bound
+        xub : float; default=1.e20
+            the lower bound
+        delx : float; default=1.e20
+            fractional change allowed for design variables during
+            approximate optimization
+            NX  if blank : take from DOPTPRM; otherwise 1.0
+            MSC if blank : take from DOPTPRM; otherwise 0.5
+        ddval : int; default=None
+            int : DDVAL id
+                  allows you to set discrete values
+            None : continuous
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.desvar_id = desvar_id
@@ -404,7 +447,7 @@ class DESVAR(OptConstraint):
         xinit = double(card, 3, 'xinit')
         xlb = double_or_blank(card, 4, 'xlb', -1e20)
         xub = double_or_blank(card, 5, 'xub', 1e20)
-        delx = double_or_blank(card, 6, 'delx', 1e20)
+        delx = double_or_blank(card, 6, 'delx')
         ddval = integer_or_blank(card, 7, 'ddval')
         assert len(card) <= 8, 'len(DESVAR card) = %i\ncard=%s' % (len(card), card)
         return DESVAR(desvar_id, label, xinit, xlb=xlb, xub=xub,
@@ -426,13 +469,12 @@ class DESVAR(OptConstraint):
         """
         xlb = set_blank_if_default(self.xlb, -1e20)
         xub = set_blank_if_default(self.xub, 1e20)
-        delx = set_blank_if_default(self.delx, 1e20)
 
         label = self.label.strip()
         if len(label) <= 6:
             label = ' %6s ' % label
         list_fields = ['DESVAR', self.desvar_id, label, self.xinit, xlb,
-                       xub, delx, self.ddval]
+                       xub, self.delx, self.ddval]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -463,6 +505,8 @@ class DDVAL(OptConstraint):
     type = 'DDVAL'
 
     def __init__(self, oid, ddvals, comment=''):
+        """
+        """
         if comment:
             self.comment = comment
         if isinstance(ddvals, float):
@@ -1035,22 +1079,66 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
     return atta, attb, atti
 
 class DRESP1(OptConstraint):
+    """
+    +--------+-------+---------+--------+--------+--------+-------+------+-------+
+    |   1    |  2    |     3   |   4    |   5    |   6    |   7   |   8  |   9   |
+    +========+=======+=========+========+========+========+=======+======+=======+
+    | DRESP1 |  OID  | LABEL   | RTYPE  | PTYPE  | REGION | ATTA  | ATTB | ATTI  |
+    +--------+-------+---------+--------+--------+--------+-------+------+-------+
+
+    +--------+-------+---------+--------+--------+--------+-------+------+-------+
+    | DRESP1 |  103  |  S02    | STRESS | PSHELL |        |  9    |      |   3   |
+    +--------+-------+---------+--------+--------+--------+-------+------+-------+
+    | DRESP1 |  1S1  | CSTRAIN | PCOMP  |        |        | 1     | 1    | 10000 |
+    +--------+-------+---------+--------+--------+--------+-------+------+-------+
+    """
     type = 'DRESP1'
 
     def __init__(self, dresp_id, label, response_type, property_type, region,
                  atta, attb, atti, comment='', validate=False):
         """
-        +--------+-------+---------+--------+--------+--------+-------+------+-------+
-        |   1    |  2    |     3   |   4    |   5    |   6    |   7   |   8  |   9   |
-        +========+=======+=========+========+========+========+=======+======+=======+
-        | DRESP1 |  OID  | LABEL   | RTYPE  | PTYPE  | REGION | ATTA  | ATTB | ATTI  |
-        +--------+-------+---------+--------+--------+--------+-------+------+-------+
+        Creates a DRESP1 card.
 
-        +--------+-------+---------+--------+--------+--------+-------+------+-------+
-        | DRESP1 |  103  |  S02    | STRESS | PSHELL |        |  9    |      |   3   |
-        +--------+-------+---------+--------+--------+--------+-------+------+-------+
-        | DRESP1 |  1S1  | CSTRAIN | PCOMP  |        |        | 1     | 1    | 10000 |
-        +--------+-------+---------+--------+--------+--------+-------+------+-------+
+        A DRESP1 is used to define a "simple" output result that may be
+        optimized on.  A simple result is a result like stress, strain,
+        force, displacement, eigenvalue, etc. for a node/element that
+        may be found in a non-optimization case.
+
+        Parameters
+        ----------
+        dresp_id : int
+            response id
+        lable : str
+            Name of the response
+        response_type : str
+            Response type
+        property_type : str
+            Element flag (PTYPE = “ELEM”), or property entry name, or panel
+            flag for ERP responses (PTYPE = 'PANEL' – See Remark 34), or
+            RANDPS ID. Blank for grid point responses. 'ELEM' or property
+            name used only with element type responses (stress, strain,
+            force, etc.) to identify the relevant element IDs, or the property
+            type and relevant property IDs.
+
+            Must be {ELEM, PBAR, PSHELL, PCOMP, PANEL, etc.)
+            PTYPE = RANDPS ID when RTYPE=PSDDISP, PSDVELO, or PSDACCL.
+        region : str
+            Region identifier for constraint screening
+        atta : int / float / str / blank
+            Response attribute
+        attb : int / float / str / blank
+            Response attribute
+        atti : List[int / float / str]
+            the response values to pull from
+            List[int]:
+                list of grid ids
+                list of property ids
+            List[str]
+                'ALL'
+        comment : str; default=''
+            a comment for the card
+        validate : bool; default=False
+            should the card be validated when it's created
 
         Example 1
         ---------
@@ -1388,15 +1476,96 @@ class DRESP1(OptConstraint):
 
 
 class DRESP2(OptConstraint):
+    """
+    Design Sensitivity Equation Response Quantities
+    Defines equation responses that are used in the design, either as
+    constraints or as an objective.
+
+    DRESP2 ID LABEL EQID or
+    FUNC
+    REGION METHOD C1 C2 C3
+    DESVAR  | DVID1  | DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
+            | DVID8  | etc.   |        |        |        |        |        |
+    DTABLE  | LABL1  | LABL2 | LABL3 LABL4 LABL5 LABL6 LABL7
+            | LABL8  | etc.   |        |        |        |        |        |
+    DRESP1  |  NR1   |   NR2   |NR3 NR4 NR5 NR6 NR7
+            |  NR8   |  etc.  |        |        |        |        |        |
+    DNOD    |   G1   |   C1   |   G2   |   C2   |   G3   |   C3   |        |
+            |   G4   |   C4   |  etc.  |        |        |        |        |
+    DVPREL1 | DPIP1  | DPIP2  | DPIP3  | DPIP4  | DPIP5  | DPIP6  | DPIP7  |
+            | DPIP8  | DPIP9  |  etc.  |        |        |        |        |
+    DVCREL1 | DCIC1  | DCIC2  | DCIC3  | DCIC4  | DCIC5  | DCIC6  | DCIC7  |
+            | DCIC8  | DCIC9  |  etc.  |        |        |        |        |
+    DVMREL1 | DMIM1  | DMIM2  | DMIM3  | DMIM4  | DMIM5  | DMIM6  | DMIM7  |
+            | DMIM8  | DMIM9  |  etc.  |        |        |        |        |
+    DVPREL2 | DPI2P1 | DPI2P2 | DPI2P3 | DPI2P4 | DPI2P5 | DPI2P6 | DPI2P7 |
+            | DPI2P8 | DPI2P9 |  etc.  |        |        |        |        |
+    DVCREL2 | DCI2C1 | DCI2C2 | DCI2C3 | DCI2C4 | DCI2C5 | DCI2C6 | DCI2C7 |
+            | DCI2C8 | DCI2C9 |   etc. |        |        |        |        |
+    DVMREL2 | DMI2M1 | DMI2M2 | DMI2M3 | DMI2M4 | DMI2M5 | DMI2M6 | DMI2M7 |
+            | DMI2M8 | DMI2M9 |   etc. |        |        |        |        |
+    DRESP2  | NRR1   | NRR2   |  NRR3  |  NRR4  |  NRR5  |  NRR6  |  NRR7  |
+            | NRR8   | etc.   |        |        |        |        |        |
+    DVLREL1 | DLIL1  | DLIL2  | DLIL3 | DLIL4 | DLIL5 | DLIL6 | DLIL7 |
+            | DLIL8  | etc.   |        |        |        |        |        |
+    """
     type = 'DRESP2'
 
     def __init__(self, dresp_id, label, dequation, region, params,
                  method='MIN', c1=100., c2=0.005, c3=None, comment='',
                  validate=False):
         """
-        Design Sensitivity Equation Response Quantities
-        Defines equation responses that are used in the design, either as
-        constraints or as an objective.
+        Creates a DRESP2 card.
+
+        A DRESP2 is used to define a "complex" output result that may be
+        optimized on.  A complex result is a result that uses:
+          - simple (DRESP1) results
+          - complex (DRESP2) results
+          - default values (DTABLE)
+          - DVCRELx values
+          - DVMRELx values
+          - DVPRELx values
+          - DESVAR values
+        Then, an equation (DEQATN) is used to formulate an output response.
+
+        Parameters
+        ----------
+        dresp_id : int
+            response id
+        lable : str
+            Name of the response
+        dequation : int
+            DEQATN id
+        region : str
+            Region identifier for constraint screening
+        params : dict[(index, card_type)] = values
+            the storage table for the response function
+            index : int
+                a counter
+            card_type : str
+                the type of card to pull from
+                DESVAR, DVPREL1, DRESP2, etc.
+            values : List[int]
+                the values for this response
+        method : str; default=MIN
+            ???
+            valid options are {MIN, ???}
+        c1 : float; default=100.
+            ???
+        c2 : float; default=0.005
+            ???
+        c3 : ???; default=None
+            ???
+        comment : str; default=''
+            a comment for the card
+        validate : bool; default=False
+            should the card be validated when it's created
+
+        params = {
+           (0, 'DRESP1') = [10, 20],
+           (1, 'DESVAR') = [30],
+           (2, 'DRESP1') = [40],
+        }
         """
         if comment:
             self.comment = comment
@@ -1462,7 +1631,6 @@ class DRESP2(OptConstraint):
                 name = field
             elif field is not None:
                 if name in ['DESVAR', 'DRESP1', 'DRESP2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DVPREL1', 'DVPREL2', 'DNODE']:
-                    ##field = 'cat'
                     #print('field=%s value=%r type=%r should be an integer...\ncard=%s' % (i+9, field, name, card))
                     assert isinstance(field, integer_types), 'field=%i value=%r type=%s should be an integer...\ncard=%s' % (i+9, field, name, card)
                 elif name == 'DTABLE':
@@ -2368,8 +2536,8 @@ class DVCREL2(OptConstraint):
         see the PBEAM for an example of get/set_opt_value
         """
         try:
-            get = self.pid_ref.get_optimization_value(self.pNameFid)
-            out = self.pid_ref.set_optimization_value(self.pNameFid, get)
+            get = self.pid_ref.get_optimization_value(self.cp_name)
+            out = self.pid_ref.set_optimization_value(self.cp_name, get)
         except:
             print('DVCREL2 calculate : %s[%r] = ???' % (self.Type, self.cp_name))
             raise
@@ -2387,7 +2555,7 @@ class DVCREL2(OptConstraint):
 
         #op2_model.log.info('dvids  =', self.dvids)
         #op2_model.log.info('labels =', self.labels)
-        #op2_model.log.info('%s[%r] = %s' % (self.Type, self.pNameFid, out))
+        #op2_model.log.info('%s[%r] = %s' % (self.Type, self.cp_name, out))
         out = self.func(*argsi)
         op2_model.log.info('  deqatn out = %s' % out)
         return out
@@ -2765,7 +2933,7 @@ class DVMREL2(OptConstraint):
 
         #op2_model.log.info('dvids  =', self.dvids)
         #op2_model.log.info('labels =', self.labels)
-        #op2_model.log.info('%s[%r] = %s' % (self.mat_type, self.pNameFid, out))
+        #op2_model.log.info('%s[%r] = %s' % (self.mat_type, self.cp_name, out))
         out = self.func(*argsi)
         op2_model.log.info('  deqatn out = %s' % out)
         return out
@@ -2805,7 +2973,7 @@ class DVMREL2(OptConstraint):
         del self.mid_ref, self.dequation_ref
 
     #def OptValue(self):  #: .. todo:: not implemented
-        #self.pid_ref.OptValue(self.pNameFid)
+        #self.pid_ref.OptValue(self.mp_name)
 
     def raw_fields(self):
         list_fields = ['DVMREL2', self.oid, self.mat_type, self.Mid(),
@@ -3380,7 +3548,7 @@ class DVPREL2(OptConstraint):
         pass
 
     #def OptValue(self):  #: .. todo:: not implemented
-        #self.pid_ref.OptValue(self.pNameFid)
+        #self.pid_ref.OptValue(self.pname_fid)
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),

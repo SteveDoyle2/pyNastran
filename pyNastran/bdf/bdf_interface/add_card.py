@@ -2978,7 +2978,7 @@ class AddCards(AddMethods):
 
     def add_rrod(self, eid, ga, gb, cma='', cmb='', alpha=0.0, comment=''):
         """
-        Creates a RROD
+        Creates a RROD element
 
         Parameters
         ----------
@@ -3032,7 +3032,7 @@ class AddCards(AddMethods):
     def add_rbe3(self, eid, refgrid, refc, weights, comps, Gijs, Gmi=None,
                  Cmi=None, alpha=0.0, comment=''):
         """
-        Creates an RBE3
+        Creates an RBE3 element
 
         Parameters
         ----------
@@ -3070,6 +3070,24 @@ class AddCards(AddMethods):
         return elem
 
     def add_rbar(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
+        """
+        Creates a RBAR element
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        ga / gb : int
+            grid points
+        cna / cnb : str
+            independent DOFs in '123456'
+        cma / cmb : str
+            dependent DOFs in '123456'
+        alpha : float; default=0.0
+            coefficient of thermal expansion
+        comment : str; default=''
+            a comment for the card
+        """
         elem = RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
         return elem
@@ -3092,12 +3110,66 @@ class AddCards(AddMethods):
         return tf
 
     def add_deqatn(self, equation_id, eqs, comment=''):
+        """
+        Creates a DEQATN card
+
+        Parameters
+        ----------
+        equation_id : int
+            the id of the equation
+        eqs : List[str]
+            the equations, which may overbound the field
+            split them by a semicolon (;)
+        comment : str; default=''
+            a comment for the card
+
+        DEQATN  41      F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R)
+                        + A**2 / (B - C); F = A + B - F1 * D
+
+        def F1(A, B, C, D, R):
+            F1 = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B – C)
+            F = A + B - F1 * D
+            return F
+
+        eqs = [
+            'F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B – C)',
+            'F = A + B – F1 * D',
+        ]
+        >>> deqatn = model.add_deqatn(41, eqs, comment='')
+        """
         deqatn = DEQATN(equation_id, eqs, comment=comment)
         self._add_deqatn_object(deqatn)
         return deqatn
 
     def add_desvar(self, desvar_id, label, xinit, xlb=-1e20, xub=1e20,
-                   delx=1e20, ddval=None, comment=''):
+                   delx=None, ddval=None, comment=''):
+        """
+        Creates a DESVAR card
+
+        Parameters
+        ----------
+        desvar_id : int
+            design variable id
+        label : str
+            name of the design variable
+        xinit : float
+            the starting point value for the variable
+        xlb : float; default=-1.e20
+            the lower bound
+        xub : float; default=1.e20
+            the lower bound
+        delx : float; default=1.e20
+            fractional change allowed for design variables during
+            approximate optimization
+            NX  if blank : take from DOPTPRM; otherwise 1.0
+            MSC if blank : take from DOPTPRM; otherwise 0.5
+        ddval : int; default=None
+            int : DDVAL id
+                  allows you to set discrete values
+            None : continuous
+        comment : str; default=''
+            a comment for the card
+        """
         desvar = DESVAR(desvar_id, label, xinit, xlb, xub, delx=delx,
                         ddval=ddval, comment=comment)
         self._add_desvar_object(desvar)

@@ -47,8 +47,20 @@ class PyDialog(QDialog):
         QDialog.__init__(self, win_parent)
         self.out_data = data
         self.win_parent = win_parent
+        self.font_size = None
 
     def set_font_size(self, font_size):
+        """
+        Updates the font size of all objects in the PyDialog
+
+        Parameters
+        ----------
+        font_size : int
+            the font size
+        """
+        if self.font_size == font_size:
+            return
+        self.font_size = font_size
         font = QFont()
         font.setPointSize(font_size)
         self.setFont(font)

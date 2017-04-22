@@ -561,6 +561,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.menu_view.setFont(font)
         self.menu_window.setFont(font)
         self.menu_help.setFont(font)
+
+        if self._legend_window_shown:
+            self._legend_window.set_font_size(font_size)
+        if self._clipping_window_shown:
+            self._clipping_window.set_font_size(font_size)
+        if self._edit_geometry_properties_window_shown:
+            self._edit_geometry_properties.set_font_size(font_size)
+        if self._modify_groups_window_shown:
+            self._modify_groups_window.set_font_size(font_size)
+        if self._label_window_shown:
+            self._label_window.set_font_size(font_size)
+        if self._preferences_window_shown:
+            self._preferences_window.set_font_size(font_size)
+        if self._picker_window_shown:
+            self._picker_window.set_font_size(font_size)
+
         #self.menu_scripts.setFont(font)
         self.log_command('on_set_font_size(%s)' % font_size)
 
@@ -5388,7 +5404,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_low_to_high, is_horizontal_scalar_bar, is_normals)
+            is_low_to_high, is_horizontal_scalar_bar, is_normals, font_size=self.font_size)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 

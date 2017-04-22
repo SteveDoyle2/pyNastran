@@ -10,9 +10,10 @@ if qt_version == 4:
     from PyQt4 import QtCore#, QtGui
     from PyQt4.QtGui import (
         QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QFont)
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
+    from PyQt5.QtGui import QFont
     from PyQt5.QtWidgets import (
         QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
         QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
@@ -20,7 +21,7 @@ elif qt_version == 'pyside':
     from PySide import QtCore#, QtGui
     from PySide.QtGui import (
         QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QFont)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
@@ -60,7 +61,6 @@ class LegendPropertiesWindow(PyDialog):
 
     def __init__(self, data, win_parent=None):
         PyDialog.__init__(self, data, win_parent)
-        self.set_font_size(data['font_size'])
 
         self._updated_legend = False
         self._animation_window_shown = False
@@ -107,6 +107,7 @@ class LegendPropertiesWindow(PyDialog):
         self.create_widgets()
         self.create_layout()
         self.set_connections()
+        self.set_font_size(data['font_size'])
 
     def _update_defaults_to_blank(self):
         """Changes the default (None) to a blank string"""
@@ -137,10 +138,12 @@ class LegendPropertiesWindow(PyDialog):
                       default_data_format, default_scale, default_phase,
                       default_nlabels, default_labelsize,
                       default_ncolors, default_colormap,
-                      is_low_to_high, is_horizontal_scalar_bar, is_normals):
+                      is_low_to_high, is_horizontal_scalar_bar, is_normals,
+                      font_size=8):
         """
         We need to update the legend if there's been a result change request
         """
+        self.set_font_size(font_size)
         if icase != self._default_icase:
             self._icase = icase
             self._default_icase = icase
@@ -494,6 +497,7 @@ class LegendPropertiesWindow(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the buttons"""
         self.name_button.clicked.connect(self.on_default_name)
         self.min_button.clicked.connect(self.on_default_min)
         self.max_button.clicked.connect(self.on_default_max)
@@ -517,6 +521,31 @@ class LegendPropertiesWindow(PyDialog):
             #self.colormap_edit.activated[str].connect(self.onActivated)
         #else:
             # closeEvent???
+
+    def set_font_size(self, font_size):
+        """
+        Updates the font size of the objects
+
+        Parameters
+        ----------
+        font_size : int
+            the font size
+        """
+        if self.font_size == font_size:
+            return
+        self.font_size = font_size
+        font = QFont()
+        font.setPointSize(font_size)
+        self.setFont(font)
+        self.name_edit.setFont(font)
+        self.min_edit.setFont(font)
+        self.max_edit.setFont(font)
+        self.format_edit.setFont(font)
+        self.scale_edit.setFont(font)
+        self.phase_edit.setFont(font)
+        self.nlabels_edit.setFont(font)
+        self.labelsize_edit.setFont(font)
+        self.ncolors_edit.setFont(font)
 
     def on_animate(self):
         name, flag0 = self.check_name(self.name_edit)
@@ -558,42 +587,52 @@ class LegendPropertiesWindow(PyDialog):
             self._animation_window.activateWindow()
 
     def on_default_name(self):
+        """action when user clicks 'Default' for name"""
         name = str(self._default_name)
         self.name_edit.setText(name)
         self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_min(self):
+        """action when user clicks 'Default' for min value"""
         self.min_edit.setText(str(self._default_min))
         self.min_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_max(self):
+        """action when user clicks 'Default' for max value"""
         self.max_edit.setText(str(self._default_max))
         self.max_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_format(self):
+        """action when user clicks 'Default' for the number format"""
         self.format_edit.setText(str(self._default_format))
         self.format_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_scale(self):
+        """action when user clicks 'Default' for scale factor"""
         self.scale_edit.setText(str(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_phase(self):
+        """action when user clicks 'Default' for phase angle"""
         self.phase_edit.setText(str(self._default_phase))
         self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_ncolors(self):
+        """action when user clicks 'Default' for number of colors"""
         self.ncolors_edit.setText(str(self._default_ncolors))
         self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_colormap(self):
+        """action when user clicks 'Default' for the color map"""
         self.colormap_edit.setCurrentIndex(colormap_keys.index(self._default_colormap))
 
     def on_default_nlabels(self):
+        """action when user clicks 'Default' for number of labels"""
         self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
         self.nlabels_edit.setText(str(self._default_nlabels))
 
     def on_default_labelsize(self):
+        """action when user clicks 'Default' for number of labelsize"""
         self.labelsize_edit.setText(str(self._default_labelsize))
         self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
 
