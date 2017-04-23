@@ -238,7 +238,7 @@ class Subcase(object):
         # stress
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
                             'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
-                            'OESVM1', 'OESVM1C']:
+                            'OESVM1', 'OESVM1C', 'OESNL1X']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')

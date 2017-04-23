@@ -6049,6 +6049,38 @@ class SPLINE5(Spline):
             msg += str(self.setg_ref)
             raise RuntimeError(msg)
 
+    def safe_cross_reference(self, model):
+        msg = ' which is required by SPLINE5 eid=%s' % self.eid
+        try:
+            self.cid = model.Coord(self.Cid(), msg=msg)
+            self.cid_ref = self.cid
+        except KeyError:
+            pass
+        try:
+            self.caero = model.CAero(self.CAero(), msg=msg)
+            self.caero_ref = self.caero
+        except KeyError:
+            pass
+
+        try:
+            self.setg = model.Set(self.Set(), msg=msg)
+            self.setg_ref = self.setg
+            nnodes = len(self.setg_ref.ids)
+            if nnodes < 3:
+                msg = 'SPLINE5 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg += str(self)
+                msg += str(self.setg_ref)
+                raise RuntimeError(msg)
+        except KeyError:
+            pass
+
+        try:
+            self.setg.cross_reference(model, 'Node')
+            self.aelist = model.AEList(self.AEList(), msg=msg)
+            self.aelist_ref = self.aelist
+        except KeyError:
+            pass
+
     def uncross_reference(self):
         self.cid = self.Cid()
         self.caero = self.CAero()

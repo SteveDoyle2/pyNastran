@@ -272,7 +272,7 @@ class OP2(OP2_Scalar):
                     msg = '%s is not an Array ... assume equal' % aname
                     print(msg)
                     raise NotImplementedError('%s __eq__' % aname)
-                    continue
+                    #continue
                 if avalue != bvalue:
                     print('key=%s table_type=%r is different; class_name=%r' % (key, table_type, aname))
                     return False
@@ -297,7 +297,11 @@ class OP2(OP2_Scalar):
         a result does not support vectorization.
 
         Vectorization is always True here.
-        :param ask:  Do you want to see a GUI of result types.
+
+        Parameters
+        ----------
+        ask: bool
+            Do you want to see a GUI of result types.
 
         +--------+---------------+---------+------------+
         | Case # | Vectorization |  Ask    | Read Modes |

@@ -142,14 +142,15 @@ class ComplexSolidArray(OES_Object):
             i = 0
             if self.is_sort1():
                 for itime in range(ntimes):
-                    for ieid, eid in enumerate(self.element):
+                    for ieid, eid_nid in enumerate(self.element_node):
+                        eid, nid = eid_nid
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         d = t1 - t2
-                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
-                                        [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        if not np.allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
+                                           [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
                         #if not np.array_equal(t1, t2):
                             msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
                                 eid,

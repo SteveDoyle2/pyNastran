@@ -241,8 +241,8 @@ class EPT(GeomCommon):
             edata = data[n:n+20]
             n += 20
             data_in = list(struct1.unpack(edata))
-            if self.is_debug_file:
-                self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
+            #if self.is_debug_file:
+                #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
             (pid, mid, nsegments, ccf, x) = data_in
             #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
 
@@ -323,7 +323,7 @@ class EPT(GeomCommon):
             pid, mid, group, Type = struct1.unpack(idata)
             fvalues = floats[istarti+6: iendi]
             if self.is_debug_file:
-                self.binary_debug.write('     %s\n' % str(pack))
+                self.binary_debug.write('     %s\n' % str(fvalues))
                 self.log.debug('pid=%i mid=%i group=%r Type=%r' % (pid, mid, group, Type))
                 self.log.debug(fvalues)
             data_in = [pid, mid, group, Type, fvalues]

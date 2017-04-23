@@ -255,28 +255,32 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 64
         for i in range(nelements):
             edata = data[n:n + 64]  # 16*4
-            f, = self.struct_i.unpack(edata[28:32])
+            fe, = self.struct_i.unpack(edata[28:32])
+            # per DMAP: F = FE bit-wise AND with 3
+            f = fe & 3
             if f == 0:
                 out = unpack(b(self._endian + '4i3f3i6f'), edata)
-                (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
+                (eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
                  w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 1:
                 out = unpack(b(self._endian + '4i3f3i6f'), edata)
-                (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
+                (eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
                  w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 2:
-                out = unpack(b(self._endian + '7if2i6f'), edata)
-                (eid, pid, ga, gb, g0, junk, junk, f, pa,
+                out = unpack(b(self._endian + '7ii2i6f'), edata)
+                (eid, pid, ga, gb, g0, junk, junk, _f, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a,
                             w2a, w3a, w1b, w2b, w3b], [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
             elem = CBAR.add_op2_data(data_in)
+            assert f == fe, 'f=%s type(f)=%s fe=%s\n%s' % (f, type(f), fe, elem)
+
             self.add_op2_element(elem)
             n += 64
         self.card_count['CBAR'] = nelements
@@ -909,7 +913,7 @@ class GEOM2(GeomCommon):
         try:
             n, elements = read1(data, n)
         except AssertionError:
-            self.log.info('AssertionError...try again...')
+            self.log.info('AssertionError...try again reading %r' % card_name)
             n, elements = read2(data, n0)
 
         nelements = len(elements)
