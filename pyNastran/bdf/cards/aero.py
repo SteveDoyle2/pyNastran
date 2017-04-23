@@ -4129,7 +4129,7 @@ class FLUTTER(BaseCard):
         return list_fields
 
     #def repr_fields(self):
-        #(imethod, nvalue) = self._reprNValueOMax()
+        #(imethod, nvalue) = self._get_raw_nvalue_omax()
         #list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
         #          self.get_rfreq_vel(), imethod, nvalue, self.epsilon]
         #return list_fields
@@ -4310,7 +4310,6 @@ class MKAERO1(BaseCard):
         cards = []
         nmachs = len(self.machs)
         nreduced_freqs = len(self.reduced_freqs)
-        #print('nmachs=%s nreduced_freqs=%s' % (nmachs > 8, nreduced_freqs > 8))
         if nmachs > 8 or nreduced_freqs > 8:
             cards = []
             mach_sets = []

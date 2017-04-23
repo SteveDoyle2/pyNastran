@@ -777,7 +777,9 @@ class CaseControlDeck(object):
         """
         Takes a case control deck and changes it from a SOL xxx to a SOL 200
 
-        :param model: BDF()
+        Parameters
+        ----------
+        model : BDF()
             the BDF object
 
         .. todo:: not done...

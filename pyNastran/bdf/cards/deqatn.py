@@ -12,7 +12,7 @@ from six import exec_
 from pyNastran.bdf.cards.base_card import BaseCard
 
 import numpy as np
-from numpy import cos, sin, tan, log
+from numpy import cos, sin, tan, log, log10
 from numpy import arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2
 from numpy import arcsinh as asinh, arccosh as acosh, arctanh as atanh
 # atan2h
@@ -173,8 +173,6 @@ class DEQATN(BaseCard):  # needs work...
         comment : str; default=''
             a comment for the card
         """
-        #new_card = ''
-        #found_none = False
         #print(card)
         line0 = card[0]
         if '\t' in line0:
@@ -239,7 +237,6 @@ class DEQATN(BaseCard):  # needs work...
                     is_join = True
             else:
                 # last line
-                #pass
                 is_join = False
             if not is_join:
                 if '=' not in eqi:
@@ -249,10 +246,8 @@ class DEQATN(BaseCard):  # needs work...
         #assert not is_join
         if is_join:
             eqs.append(eqi)
-        #_raw_eqs = deepcopy(eqs)  # TODO: temporary
         assert len(eqs) > 0, eqs
         #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(eqID))
-        #print(eqs)
         return DEQATN(equation_id, eqs, comment=comment)
 
     def _setup_equation(self):
@@ -275,7 +270,6 @@ class DEQATN(BaseCard):  # needs work...
                                                        str(self))
         self.func_str = func_str
         self.func_name = func_name
-        #print(func_str)
         exec_(func_str)
         #print(locals().keys())
         func = locals()[func_name]
@@ -296,7 +290,6 @@ class DEQATN(BaseCard):  # needs work...
         # TODO: get defaults from DTABLE
         # TODO: get limits from DCONSTR
         self.dtable = model.dtable
-        #print(self.dtable)
         self.dtable_ref = self.dtable
         self._setup_equation()
 
@@ -419,7 +412,6 @@ def fortran_to_python_short(line, default_values):
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
     d = {}
-    #print(func_str)
     exec_(func_str, globals(), d)
     return d['func']
 

@@ -231,9 +231,20 @@ def build_thru(packs, max_dv=None, nthru=None):
     list.  This means that [1,1001,2] represents 500 values.
     [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
 
-    :param packs: list of packs (list of 3 values: [first, last, delta] )
-    :param maxDV: integer defining the max allowable delta between two values
-            (default=None; no limit)
+    Parameters
+    ----------
+    packs : List[pack]
+        pack : List[first, last, delta]
+        first, last, delta are integers
+    max_dv : int; default=None -> no limit
+        defines the max allowable delta between two values
+    nthru : ???
+        ???
+
+    Returns
+    -------
+    value : varies
+        the value of the field
     """
     singles = []
     fields = []
@@ -292,11 +303,10 @@ def build_thru_float(packs, max_dv=None):
 
     Parameters
     ----------
-    packs : List[ List[int, int, int], ... ]
-        list of packs
-        pack : List[int, int, int]
-            list of [first, last, delta]
-    max_dv : int/None; default=None
+    packs : List[pack]
+        pack : List[first, last, delta]
+        first, last, delta are integers
+    max_dv : int; default=None -> no limit
         integer defining the max allowable delta between two values
         (default=None; no limit)
     """

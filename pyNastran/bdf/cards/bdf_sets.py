@@ -675,9 +675,7 @@ class SET1(Set):
                 is_skin = True
                 i += 1
         else:
-            #print(card)
             assert len(card) > 2, card
-            #pass
         return SET1(sid, ids[i:], is_skin=is_skin, comment=comment)
 
     #def __eq__(self, set1):
@@ -927,7 +925,7 @@ class SET3(Set):
         if collapse:
             return collapse_thru(self.ids, nthru=1)
         else:
-            return self.IDs
+            return self.ids
 
     def raw_fields(self):
         """Gets the "raw" card without any processing as a list for printing"""
@@ -1349,7 +1347,7 @@ class USET1(ABQSet1):
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = [self.type, self.name, self.components] + collapse_thru(self.node_ids)
+        list_fields = ['USET1', self.name, self.components] + collapse_thru(self.node_ids)
         return list_fields
 
     def __repr__(self):

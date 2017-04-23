@@ -38,7 +38,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 from six.moves import zip, range
 
-#from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru
 )
@@ -260,8 +260,8 @@ class ASET(ABCQSet):
     """
     type = 'ASET'
 
-    def __init__(self, IDs, components, comment=''):
-        ABCQSet.__init__(self, IDs, components, comment)
+    def __init__(self, ids, components, comment=''):
+        ABCQSet.__init__(self, ids, components, comment)
 
 class BSET(ABCQSet):
     """
@@ -276,8 +276,8 @@ class BSET(ABCQSet):
     """
     type = 'BSET'
 
-    def __init__(self, IDs, components, comment=''):
-        ABCQSet.__init__(self, IDs, components, comment)
+    def __init__(self, ids, components, comment=''):
+        ABCQSet.__init__(self, ids, components, comment)
 
 
 class CSET(ABCQSet):
@@ -293,8 +293,8 @@ class CSET(ABCQSet):
     """
     type = 'CSET'
 
-    def __init__(self, IDs, components, comment=''):
-        ABCQSet.__init__(self, IDs, components, comment)
+    def __init__(self, ids, components, comment=''):
+        ABCQSet.__init__(self, ids, components, comment)
 
 
 class QSET(ABCQSet):
@@ -310,8 +310,8 @@ class QSET(ABCQSet):
     """
     type = 'QSET'
 
-    def __init__(self, IDs, components, comment=''):
-        ABCQSet.__init__(self, IDs, components, comment)
+    def __init__(self, ids, components, comment=''):
+        ABCQSet.__init__(self, ids, components, comment)
 
 
 class ABQSet1(Set):
@@ -359,13 +359,16 @@ class ABQSet1(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        components = data[0]
+        components = str(data[0])
         thru_flag = data[1]
         if thru_flag == 0:
             ids = data[2:]
-        else:
+        elif thru_flag == 1:
             assert len(data) == 4, data
-            ids = [data[2], 'THRU', data[3]]
+            #ids = [data[2], 'THRU', data[3]]
+            ids = list(range(data[2], data[3]+1))
+        else:
+            raise NotImplementedError('thru_flag=%s data=%s' % (thru_flag, data))
         return cls(components, ids, comment=comment)
 
     def cross_reference(self, model):
@@ -432,6 +435,8 @@ class SuperABQSet1(Set):
 
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
+        #print('ids =', self.ids)
+        assert None not in self.ids
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -451,15 +456,12 @@ class SuperABQSet1(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        seid = data[0]
-        components = data[1]
-        thru_flag = data[2]
-        if thru_flag == 0:
-            ids = data[3:]
-        else:
-            assert len(data) == 5, data
-            ids = [data[3], 'THRU', data[4]]
-        return cls(seid, components, ids, comment=comment)
+        seid, components, nids = data
+        #assert None not in components, 'Type=%s components=%s' % (self.type, components)
+        assert None not in nids, 'Type=%s nids=%s' % (self.type, nids)
+        assert -1 not in nids, 'nids=%s' % (nids.tolist())
+        assert 0 not in nids, 'nids=%s' % (nids.tolist())
+        return cls(seid, components, nids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -507,15 +509,15 @@ class ASET1(ABQSet1):
     """
     type = 'ASET1'
 
-    def __init__(self, components, IDs, comment=''):
-        ABQSet1.__init__(self, components, IDs, comment)
+    def __init__(self, components, ids, comment=''):
+        ABQSet1.__init__(self, components, ids, comment)
 
 
 class BSET1(ABQSet1):
     type = 'BSET1'
 
-    def __init__(self, components, IDs, comment=''):
-        ABQSet1.__init__(self, components, IDs, comment)
+    def __init__(self, components, ids, comment=''):
+        ABQSet1.__init__(self, components, ids, comment)
 
 
 class CSET1(Set):
@@ -585,8 +587,8 @@ class QSET1(ABQSet1):
     """
     type = 'QSET1'
 
-    def __init__(self, components, IDs, comment=''):
-        ABQSet1.__init__(self, components, IDs, comment)
+    def __init__(self, components, ids, comment=''):
+        ABQSet1.__init__(self, components, ids, comment)
 
 
 class SET1(Set):
@@ -596,7 +598,7 @@ class SET1(Set):
 
     +------+--------+--------+-----+------+-----+-----+------+-----+
     |  1   |    2   |    3   |  4  |   5  |  6  |  7  |   8  |  9  |
-    +======+========+========+=====+======+=====+=====+======+======
+    +======+========+========+=====+======+=====+=====+======+=====+
     | SET1 |  SID   |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     |      |  ID8   | -etc.- |     |      |     |     |      |     |
@@ -921,7 +923,8 @@ class SESET(SetSuper):
         self.clean_ids()
 
     def raw_fields(self):
-        return ['SESET', self.seid] + collapse_thru(self.ids)
+        list_fields = ['SESET', self.seid] + collapse_thru(self.ids)
+        return list_fields
 
     def __repr__(self):
         thru_fields = collapse_thru(self.ids)
@@ -961,40 +964,40 @@ class SEBSET(SuperABCQSet):
     """
     type = 'SEBSET'
 
-    def __init__(self, seid, IDs, components, comment=''):
-        SuperABCQSet.__init__(self, seid, IDs, components, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEBSET1(SuperABQSet1):
     type = 'SEBSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SECSET(SuperABCQSet):
     type = 'SECSET'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABCQSet.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABCQSet.__init__(self, seid, components, ids, comment)
 
 class SECSET1(SuperABQSet1):
     type = 'SECSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SEQSET(SuperABCQSet):
     type = 'SEQSET'
 
-    def __init__(self, seid, IDs, components, comment=''):
-        SuperABCQSet.__init__(self, seid, IDs, components, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEQSET1(SuperABQSet1):
     type = 'SEQSET1'
 
-    def __init__(self, seid, components, IDs, comment=''):
-        SuperABQSet1.__init__(self, seid, components, IDs, comment)
+    def __init__(self, seid, components, ids, comment=''):
+        SuperABQSet1.__init__(self, seid, components, ids, comment)
 
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???

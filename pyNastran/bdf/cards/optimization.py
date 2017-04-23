@@ -505,8 +505,6 @@ class DDVAL(OptConstraint):
     type = 'DDVAL'
 
     def __init__(self, oid, ddvals, comment=''):
-        """
-        """
         if comment:
             self.comment = comment
         if isinstance(ddvals, float):
@@ -1673,7 +1671,6 @@ class DRESP2(OptConstraint):
                 #self._get_values(name, value_list)))
 
     def calculate(self, op2_model, subcase_id):
-        #print(str(self))
         argsi = []
         for key, vals in sorted(iteritems(self.params)):
             j, name = key
@@ -2691,7 +2688,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         dvids = []
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
-        #print "end_fields = ",end_fields
+        #print("end_fields = ",end_fields)
         nfields = len(end_fields) - 1
         if nfields % 2 == 1:
             end_fields.append(None)
@@ -3510,7 +3507,6 @@ class DVPREL2(OptConstraint):
         out = self.func(*argsi)
         op2_model.log.info('  deqatn out = %s' % out)
         return out
-        #raise NotImplementedError('\n' + str(self))
 
     def cross_reference(self, model):
         """
