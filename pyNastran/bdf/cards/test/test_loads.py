@@ -743,7 +743,7 @@ class TestLoads(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu, rho=0.2, a=0.0, tref=0.0, ge=0.0,
-                       St=0.0, Sc=0.0, Ss=0.0, Mcsid=0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
                        comment='')
 
         eid = 3

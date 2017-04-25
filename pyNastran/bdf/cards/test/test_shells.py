@@ -351,7 +351,7 @@ class TestShells(unittest.TestCase):
         #self.St = data[8]
         #self.Sc = data[9]
         #self.Ss = data[10]
-        #self.Mcsid = data[11]
+        #self.mcsid = data[11]
         mid = 1
         E = None
         G = None
@@ -361,13 +361,13 @@ class TestShells(unittest.TestCase):
         St = None
         Sc = None
         Ss = None
-        Mcsid = None
-        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mcsid = None
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         with self.assertRaises(ValueError):
             m = MAT1.add_op2_data(mat1)
 
         G = 42.
-        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         m = MAT1.add_op2_data(mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
@@ -493,13 +493,13 @@ class TestShells(unittest.TestCase):
         St = None
         Sc = None
         Ss = None
-        Mcsid = None
-        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mcsid = None
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         with self.assertRaises(ValueError):
             m = MAT1.add_op2_data(mat1)
 
         G = 42.
-        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         m = MAT1.add_op2_data(mat1)
 
         for iply in range(len(p.plies)):

@@ -309,10 +309,10 @@ class TestShells(unittest.TestCase):
         St = None
         Sc = None
         Ss = None
-        Mcsid = None
-        mat1_a = ['MAT1', mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
-        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
-        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mcsid = None
+        mat1_a = ['MAT1', mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
+        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
+        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         model.add_card(mat1_a, 'MAT1', comment='', is_list=True)
         model.add_card(mat1_b, 'MAT1', comment='', is_list=True)
         model.add_card(mat1_c, 'MAT1', comment='', is_list=True)
@@ -473,10 +473,10 @@ class TestShells(unittest.TestCase):
         St = None
         Sc = None
         Ss = None
-        Mcsid = None
-        mat1_a = ['MAT1', mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
-        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
-        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mcsid = None
+        mat1_a = ['MAT1', mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
+        mat1_b = ['MAT1', mid + 1, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
+        mat1_c = ['MAT1', mid + 2, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
 
         card_count = {
             'PCOMP' : 1,
