@@ -897,6 +897,45 @@ class PCOMPG(CompositeShellProperty):
 
     def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
                  nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
+        """
+        Creates a PCOMPG card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        global_ply_ids : List[int]
+            the ply id
+        mids : List[int, ..., int]
+            material ids for each ply
+        thicknesses : List[float, ..., float]
+            thicknesses for each ply
+        thetas : List[float, ..., float]; default=None
+            ply angle
+            None : [0.] * nplies
+        souts : List[str, ..., str]; default=None
+            should the stress? be printed; {YES, NO}
+            None : [NO] * nplies
+        nsm : float; default=0.
+            nonstructural mass per unit area
+        sb : float; default=0.
+            Allowable shear stress of the bonding material.
+            Used by the failure theory
+        ft : str; default=None
+            failure theory; {HILL, HOFF, TSAI, STRN, None}
+        tref : float; default=0.
+            reference temperature
+        ge : float; default=0.
+            structural damping
+        lam : str; default=None
+            symmetric flag; {SYM, MEM, BEND, SMEAR, SMCORE, None}
+            None : not symmmetric
+        z0 : float; default=None
+            Distance from the reference plane to the bottom surface
+            None : -1/2 * total_thickness
+        comment : str; default=''
+            a comment for the card
+        """
         CompositeShellProperty.__init__(self)
         if comment:
             self.comment = comment

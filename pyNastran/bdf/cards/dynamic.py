@@ -287,6 +287,18 @@ class FREQ(BaseCard):
     type = 'FREQ'
 
     def __init__(self, sid, freqs, comment=''):
+        """
+        Creates a FREQ card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        freqs : List[float]
+            the frequencies for a FREQx object
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -361,7 +373,23 @@ class FREQ1(FREQ):
     """
     type = 'FREQ1'
 
-    def __init__(self, sid, f1, df, ndf, comment=''):
+    def __init__(self, sid, f1, df, ndf=1, comment=''):
+        """
+        Creates a FREQ1 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float
+            first frequency
+        df : float
+            frequency increment
+        ndf : int
+            number of frequency increments
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -409,20 +437,36 @@ class FREQ2(FREQ):
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     |   1   |  2  | 3   |  4  |  5  |  6  |  7  |  8  |  9  |
     +=======+=====+=====+=====+=====+=====+=====+=====+=====+
-    | FREQ2 | SID |  F1 | F2  | NDF |     |     |     |     |
+    | FREQ2 | SID |  F1 | F2  | NF  |     |     |     |     |
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
 
     .. note:: this card rewrites as a FREQ card
     """
     type = 'FREQ2'
 
-    def __init__(self, sid, f1, f2, ndf=1, comment=''):
+    def __init__(self, sid, f1, f2, nf=1, comment=''):
+        """
+        Creates a FREQ2 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float
+            first frequency
+        f1 : float
+            last frequency
+        nf : int; default=1
+            number of logorithmic intervals
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
         self.f1 = f1
         self.f2 = f2
-        self.ndf = ndf
+        self.nf = nf
 
         d = 1. / ndf * log(f2 / f1)
         freqs = []
@@ -445,9 +489,9 @@ class FREQ2(FREQ):
         sid = integer(card, 1, 'sid')
         f1 = double(card, 2, 'f1')  # default=0.0 ?
         f2 = double(card, 3, 'f2')
-        ndf = integer_or_blank(card, 4, 'nf', 1)
+        nf = integer_or_blank(card, 4, 'nf', 1)
         assert len(card) <= 5, 'len(FREQ2 card) = %i\ncard=%s' % (len(card), card)
-        return FREQ2(sid, f1, f2, ndf, comment=comment)
+        return FREQ2(sid, f1, f2, nf, comment=comment)
         #return FREQ(sid, freqs, comment=comment)
 
 

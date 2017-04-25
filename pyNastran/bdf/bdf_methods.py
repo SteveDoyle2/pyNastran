@@ -1801,7 +1801,7 @@ class BDFMethods(BDFAttributes):
             load_case = self.loads[loadcase_id]
         except:
             msg = 'load_case=%s is invalid; ' % loadcase_id
-            msg += 'load_cases = %s\n' % self.loads.keys()
+            msg += 'load_cases = %s\n' % np.unique(list(self.loads.keys()))
             for subcase_id, subcase in iteritems(self.subcases):
                 if 'LOAD' in subcase:
                     load_id = subcase.get_parameter('LOAD')[0]

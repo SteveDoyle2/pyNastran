@@ -1132,6 +1132,24 @@ class TABRNDG(RandomTable):
     type = 'TABRNDG'
 
     def __init__(self, tid, Type, LU, WG, comment=''):
+        """
+        Creates a TABRNDG card
+
+        Parameters
+        ----------
+        tid : int
+            table id
+        Type : int
+           PSD type
+           1 : von Karman
+           2 : Dryden
+        LU : float
+            Scale of turbulence divided by velocity (units of time)
+        WG : float
+            Root-mean-square gust velocity
+        comment : str; default=''
+            a comment for the card
+        """
         RandomTable.__init__(self)
         if comment:
             self.comment = comment

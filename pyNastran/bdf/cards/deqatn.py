@@ -193,61 +193,10 @@ class DEQATN(BaseCard):  # needs work...
 
         equation_id = int(eq_id)
 
-        line0_eq = line0[16:]
-
         # combine the equations into a single organized block
-        eqs_temp = []
-        eqs_temp1 = [line0_eq] + card[1:]
-        for eq in eqs_temp1:
-            eq2 = eq.rstrip(';')
-            if ';' in eq2:
-                eqs_temp += [eqi + ';' for eqi in eq.split(';')]
-            else:
-                eqs_temp.append(eq)
-        #print('eqs_temp = ', eqs_temp)
-
-        eqs = []
-        neqs = len(eqs_temp)
-        is_join = False
-        for i, eq in enumerate(eqs_temp):
-            #print('i=%s join=%s eq=%r' % (i, is_join, eq))
-            if is_join:
-                eq = eqi.rstrip() + eq.lstrip()
-            eqi = eq.strip().replace(' ', '')
-            if i == 0 and eqi == '':
-                #self.eqs.append(eqi)
-                continue
-
-            if i == 0:
-                # first line
-                if eqi.endswith(';'):
-                    eqi = eqi[:-1]
-                    assert not eqi.endswith(';'), eq
-                else:
-                    is_join = True
-                assert len(eqi) <= 56, eqi
-            elif i != neqs-1:
-                # mid line
-                assert len(eqi) <= 64, 'len(eqi)=%s eq=%r' % (len(eqi), eqi)
-                if eqi.endswith(';'):
-                    eqi = eqi[:-1]
-                    is_join = False
-                    assert not eqi.endswith(';'), eq
-                else:
-                    is_join = True
-            else:
-                # last line
-                is_join = False
-            if not is_join:
-                if '=' not in eqi:
-                    raise SyntaxError('line=%r expected an equal sign' % eqi)
-                eqs.append(eqi)
-            #print(i, eqi)
-        #assert not is_join
-        if is_join:
-            eqs.append(eqi)
-        assert len(eqs) > 0, eqs
-        #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(eqID))
+        line0_eq = line0[16:]
+        eqs_temp = [line0_eq] + card[1:]
+        eqs = lines_to_eqs(eqs_temp)
         return DEQATN(equation_id, eqs, comment=comment)
 
     def _setup_equation(self):
@@ -331,6 +280,61 @@ class DEQATN(BaseCard):  # needs work...
         #print(msg)
         return msg
 
+def lines_to_eqs(eq_temps1):
+    """splits the equations"""
+    eqs_temp = []
+    for eq in eqs_temp1:
+        eq2 = eq.rstrip(';')
+        if ';' in eq2:
+            eqs_temp += [eqi + ';' for eqi in eq.split(';')]
+        else:
+            eqs_temp.append(eq)
+    #print('eqs_temp = ', eqs_temp)
+
+    eqs = []
+    neqs = len(eqs_temp)
+    is_join = False
+    for i, eq in enumerate(eqs_temp):
+        #print('i=%s join=%s eq=%r' % (i, is_join, eq))
+        if is_join:
+            eq = eqi.rstrip() + eq.lstrip()
+        eqi = eq.strip().replace(' ', '')
+        if i == 0 and eqi == '':
+            #self.eqs.append(eqi)
+            continue
+
+        if i == 0:
+            # first line
+            if eqi.endswith(';'):
+                eqi = eqi[:-1]
+                assert not eqi.endswith(';'), eq
+            else:
+                is_join = True
+            assert len(eqi) <= 56, eqi
+        elif i != neqs-1:
+            # mid line
+            assert len(eqi) <= 64, 'len(eqi)=%s eq=%r' % (len(eqi), eqi)
+            if eqi.endswith(';'):
+                eqi = eqi[:-1]
+                is_join = False
+                assert not eqi.endswith(';'), eq
+            else:
+                is_join = True
+        else:
+            # last line
+            is_join = False
+        if not is_join:
+            if '=' not in eqi:
+                raise SyntaxError('line=%r expected an equal sign' % eqi)
+            eqs.append(eqi)
+        #print(i, eqi)
+    #assert not is_join
+    if is_join:
+        eqs.append(eqi)
+    assert len(eqs) > 0, eqs
+    #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(eqID))
+    return eqs
+
 def split_equations(lines):
     """takes an overbounded DEQATN card and shortens it"""
     # first line must be < 56
@@ -409,6 +413,7 @@ def _split_equation(lines_out, line, n, isplit=0):
     return lines_out
 
 def fortran_to_python_short(line, default_values):
+    """the function used by the DRESP2"""
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
     d = {}
@@ -467,7 +472,7 @@ def fortran_to_python(lines, default_values, comment=''):
         #print('f=%r eq=%r' % (f, eq))
 
         if i == 0:
-            func_name, f, msg, out, variables = write_function_header(
+            func_name, msg, variables = write_function_header(
                 f, eq, default_values, comment)
             #print(msg)
         else:
@@ -496,9 +501,30 @@ def write_function_header(f, eq, default_values, comment=''):
         except:
             print(locals())
             raise
+
+    Parameters
+    ----------
+    f : str
+        the function header
+        f(a, b, c)
+    eq : str
+        the value on the other side of the equals sign (f=eq)
+        1.
+        max(a, b, c)
+    default_values : dict[name] = value
+        the default values from the DTABLE card
+
+    Returns
+    -------
+    func_name : str
+        the name of the function ``f``
+    msg : str
+        see above
+    variables : List[str]
+        the variables used by the equation header
+        a, b, c
     """
     msg = ''
-    out = ''
 
     try:
         float(eq)
@@ -506,41 +532,32 @@ def write_function_header(f, eq, default_values, comment=''):
     except ValueError:
         is_float = False
 
+    func_name, arguments = f.strip('(,)').split('(')
+    func_name = func_name.strip(' ')
+    variables = arguments.split(',')
+
     if is_float:
-        #print('float', eq)
-        func_name, arguments = f.strip('(,)').split('(')
-        func_name = func_name.strip(' ')
-        variables = arguments.split(',')
-        #print('func_name=%r' % func_name)
-        #val = float(eq)
-
+        # f(a,b,c) = 1.
+        #
+        # means
+        #
+        # def f(a,b,c):
+        #     f = 1.
+        #
         msg += _write_function_line(func_name, variables, default_values)
-        msg += _write_comment(comment)
-        msg += _write_variables(variables)
-        msg += '    %s = %s\n' % (func_name, eq)
     else:
-        #print('not float', eq)
-        #print(eq)
-        #asdf
-        func_name, arguments = f.strip('(,)').split('(')
-        func_name = func_name.strip(' ')
-        variables = arguments.split(',')
-        #msg += 'def %s:\n' % f
-
+        # f(a,b,c) = min(a,b,c)
+        #
+        # means
+        #
+        # def f(a,b,c):
+        #     f = min(a,b,c)
+        #
         msg += _write_function_line(func_name, variables, default_values)
-        msg += _write_comment(comment)
-        msg += _write_variables(variables)
-        #for var in variables:
-            #msg += '    %s = float(%s)\n' % (var, var)
-        #print(msg)
-        #is_eq_defined = True
-        #print('out = %r' % out)
-        #print('func_name = %r' % func_name)
-        #print('eq = %r' % eq)
-        #out += eq
-        msg += '    %s = %s\n' % (func_name, eq)
-        #f = eq
-    return func_name, f, msg, out, variables
+    msg += _write_comment(comment)
+    msg += _write_variables(variables)
+    msg += '    %s = %s\n' % (func_name, eq)
+    return func_name, msg, variables
 
 def _write_function_line(func_name, variables, default_values):
     """writes the ``def f(x, y, z=1.):`` part of the function"""

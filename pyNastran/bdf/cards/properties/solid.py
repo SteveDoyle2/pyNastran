@@ -45,7 +45,27 @@ class PLSOLID(SolidProperty):
     }
 
     def __init__(self, pid, mid, stress_strain='GRID', ge=0., comment=''):
+        """
+        Creates a PLSOLID card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        stress_strain : str
+            Location of stress and strain output
+            valid types = {GRID, GAUSS}
+        ge : float; default=0.
+            damping coefficient
+        comment : str; default=''
+            a comment for the card
+        """
         SolidProperty.__init__(self)
+        if stress_strain == 'GAUS':
+            stress_strain = 'GAUSS'
+
         if comment:
             self.comment = comment
         #: Property ID
@@ -59,6 +79,13 @@ class PLSOLID(SolidProperty):
         assert isinstance(pid, integer_types), type(pid)
         assert isinstance(mid, integer_types), type(mid)
         self._validate_input()
+
+    def _validate_input(self):
+        if self.stress_strain not in ['GRID', 'GAUSS']:
+            raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
+                               'output value set; valid=["GRID", "GAUSS"]\n'
+                               % self.stress_strain)
+
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -95,14 +122,6 @@ class PLSOLID(SolidProperty):
         ge = data[2]
         stress_strain = data[3]
         return PLSOLID(pid, mid, stress_strain, ge, comment=comment)
-
-    def _validate_input(self):
-        if self.stress_strain == 'GAUS':
-            self.stress_strain = 'GAUSS'
-        if self.stress_strain not in ['GRID', 'GAUSS']:
-            raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
-                               'output value set; valid=["GRID", "GAUSS"]\n'
-                               % self.stress_strain)
 
     def cross_reference(self, model):
         """

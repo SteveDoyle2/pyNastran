@@ -359,22 +359,22 @@ class AddCards(AddMethods):
         return mass
 
     def add_nsm(self, sid, Type, id, value, comment=''):
-        nsm = NSM(sid, Type, id, value, comment='')
+        nsm = NSM(sid, Type, id, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
     def add_nsm1(self, sid, Type, value, ids, comment=''):
-        nsm = NSM1(sid, Type, value, ids, comment='')
+        nsm = NSM1(sid, Type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
     def add_nsml(self, sid, Type, id, value, comment=''):
-        nsm = NSML(sid, Type, id, value, comment='')
+        nsm = NSML(sid, Type, id, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
     def add_nsml1(self, sid, Type, value, ids, comment=''):
-        nsm = NSML1(sid, Type, value, ids, comment='')
+        nsm = NSML1(sid, Type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
@@ -1384,6 +1384,45 @@ class AddCards(AddMethods):
 
     def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
                    nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
+        """
+        Creates a PCOMPG card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        global_ply_ids : List[int]
+            the ply id
+        mids : List[int, ..., int]
+            material ids for each ply
+        thicknesses : List[float, ..., float]
+            thicknesses for each ply
+        thetas : List[float, ..., float]; default=None
+            ply angle
+            None : [0.] * nplies
+        souts : List[str, ..., str]; default=None
+            should the stress? be printed; {YES, NO}
+            None : [NO] * nplies
+        nsm : float; default=0.
+            nonstructural mass per unit area
+        sb : float; default=0.
+            Allowable shear stress of the bonding material.
+            Used by the failure theory
+        ft : str; default=None
+            failure theory; {HILL, HOFF, TSAI, STRN, None}
+        tref : float; default=0.
+            reference temperature
+        ge : float; default=0.
+            structural damping
+        lam : str; default=None
+            symmetric flag; {SYM, MEM, BEND, SMEAR, SMCORE, None}
+            None : not symmmetric
+        z0 : float; default=None
+            Distance from the reference plane to the bottom surface
+            None : -1/2 * total_thickness
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PCOMPG(pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
                       nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0,
                       comment=comment)
@@ -1562,6 +1601,23 @@ class AddCards(AddMethods):
         return prop
 
     def add_plsolid(self, pid, mid, stress_strain='GRID', ge=0., comment=''):
+        """
+        Creates a PLSOLID card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        stress_strain : str
+            Location of stress and strain output
+            valid types = {GRID, GAUSS}
+        ge : float; default=0.
+            damping coefficient
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PLSOLID(pid, mid, stress_strain=stress_strain, ge=ge, comment=comment)
         self._add_property_object(prop)
         return prop
@@ -1658,18 +1714,51 @@ class AddCards(AddMethods):
         return mat
 
     def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
-                 Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
+                 Sc=0.0, Ss=0.0, mcsid=0, comment=''):
+        """
+        Creates a MAT1 card
+
+        Parameters
+        ----------
+        mid : int
+            material id
+        E : float / None
+            Young's modulus
+        G : float / None
+            Shear modulus
+        nu : float / None
+            Poisson's ratio
+        rho : float; default=0.
+            density
+        a : float; default=0.
+            coefficient of thermal expansion
+        tref : float; default=0.
+            reference temperature
+        ge : float; default=0.
+            damping coefficient
+        St / Sc / Ss : float; default=0.
+            tensile / compression / shear allowable
+        mcsid : int; default=0
+            material coordinate system id
+            used by PARAM,CURV
+        comment : str; default=''
+            a comment for the card
+
+        If E, G, or nu is None (only 1), it will be calculated
+        """
         mat = MAT1(mid, E, G, nu, rho=rho, a=a, tref=tref, ge=ge, St=St,
-                   Sc=Sc, Ss=Ss, Mcsid=Mcsid, comment=comment)
+                   Sc=Sc, Ss=Ss, mcsid=mcsid, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
-    def add_mat2(self, mid, G11, G12, G13, G22, G23, G33, rho, a1, a2, a3,
+    def add_mat2(self, mid, G11, G12, G13, G22, G23, G33, rho=0.,
+                 a1=None, a2=None, a3=None,
                  tref=0., ge=0., St=None, Sc=None,
-                 Ss=None, Mcsid=None, comment=''):
-        mat = MAT2(mid, G11, G12, G13, G22, G23, G33, rho, a1, a2, a3,
+                 Ss=None, mcsid=None, comment=''):
+        mat = MAT2(mid, G11, G12, G13, G22, G23, G33,
+                   rho, a1, a2, a3,
                    tref=tref, ge=ge, St=St, Sc=Sc,
-                   Ss=Ss, Mcsid=Mcsid, comment=comment)
+                   Ss=Ss, mcsid=mcsid, comment=comment)
         self._add_structural_material_object(mat)
         return mat
 
@@ -1723,6 +1812,39 @@ class AddCards(AddMethods):
     def add_mat10(self, mid, bulk, rho, c, ge=0.0, gamma=None,
                   table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
                   comment=''):
+        """
+        Creates a MAT10 card
+
+        Parameters
+        ----------
+        mid : int
+            material id
+        bulk : float; default=None
+            Bulk modulus
+        rho : float; default=None
+            Density
+        c : float; default=None
+            Speed of sound
+        ge : float; default=0.
+            Damping
+        gamma : float; default=None
+            NX : ratio of imaginary bulk modulus to real bulk modulus; default=0.0
+            MSC : normalized admittance coefficient for porous material
+        table_bulk : int; default=None
+            TABLEDx entry defining bulk modulus vs. frequency
+            None for MSC Nastran
+        table_rho : int; default=None
+            TABLEDx entry defining rho vs. frequency
+            None for MSC Nastran
+        table_ge : int; default=None
+            TABLEDx entry defining ge vs. frequency
+            None for MSC Nastran
+        table_gamma : int; default=None
+            TABLEDx entry defining gamma vs. frequency
+            None for MSC Nastran
+        comment : str; default=''
+            a comment for the card
+        """
         mat = MAT10(mid, bulk, rho, c, ge=ge, gamma=gamma,
                     table_bulk=table_bulk, table_rho=table_rho,
                     table_ge=table_ge, table_gamma=table_gamma,
@@ -1822,12 +1944,46 @@ class AddCards(AddMethods):
         return mat
 
     def add_load(self, sid, scale, scale_factors, load_ids, comment=''):
+        """
+        Creates a LOAD card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            overall scale factor
+        scale_factors : List[float]
+            individual scale factors (corresponds to load_ids)
+        load_ids : List[int]
+            individual load_ids (corresponds to scale_factors)
+        comment : str; default=''
+            a comment for the card
+        """
         load = LOAD(sid, scale, scale_factors, load_ids, comment=comment)
         self._add_load_object(load)
         return load
 
-    def add_lseq(self, sid, excite_id, lid, tid, comment=''):
-        load = LSEQ(sid, excite_id, lid, tid, comment=comment)
+    def add_lseq(self, sid, excite_id, lid, tid=None, comment=''):
+        """
+        Creates a LSEQ card
+
+        Parameters
+        ----------
+        sid : int
+            loadset id; LOADSET points to this
+        excite_id : int
+            set id assigned to this static load vector
+        lid : int
+            load set id of a set of static load entries;
+            LOAD in the Case Control
+        tid : int; default=None
+            temperature set id of a set of thermal load entries;
+            TEMP(LOAD) in the Case Control
+        comment : str; default=''
+            a comment for the card
+        """
+        load = LSEQ(sid, excite_id, lid, tid=tid, comment=comment)
         self._add_lseq_object(load)
         return load
 
@@ -1850,7 +2006,24 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_dload(self, sid, scale, scale_factors, load_ids, comment):
+    def add_dload(self, sid, scale, scale_factors, load_ids, comment=''):
+        """
+        Creates a DLOAD card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. See Remarks 1. and 4. (Integer > 0)
+        scale : float
+            Scale factor. See Remarks 2. and 8. (Real)
+        Si : List[float]
+            Scale factors. See Remarks 2., 7. and 8. (Real)
+        load_ids : List[int]
+            Load set identification numbers of RLOAD1, RLOAD2, TLOAD1,
+            TLOAD2, and ACSRCE entries. See Remarks 3. and 7. (Integer > 0)
+        comment : str; default=''
+            the card comment
+        """
         load = DLOAD(sid, scale, scale_factors, load_ids, comment=comment)
         self._add_dload_object(load)
         return load
@@ -1875,7 +2048,40 @@ class AddCards(AddMethods):
 
     def add_tload1(self, sid, excite_id, delay, tid, Type='LOAD', us0=0.0, vs0=0.0,
                    comment=''):
-        load = TLOAD1(sid, excite_id, delay, tid, Type=Type, us0=us0, vs0=vs0,
+        """
+        Creates a TLOAD1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        tid : int
+            TABLEDi id that defines F(t) for all degrees of freedom in
+            EXCITEID entry
+            float : MSC not supported
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        Type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        us0 : float; default=0.
+            Factor for initial displacements of the enforced degrees-of-freedom
+            MSC only
+        vs0 : float; default=0.
+            Factor for initial velocities of the enforced degrees-of-freedom
+            MSC only
+        comment : str; default=''
+            a comment for the card
+        """
+        load = TLOAD1(sid, excite_id, tid, delay=delay, Type=Type, us0=us0, vs0=vs0,
                       comment=comment)
         self._add_dload_entry(load)
         return load
@@ -1918,6 +2124,26 @@ class AddCards(AddMethods):
         return load
 
     def add_randps(self, sid, j, k, x=0., y=0., tid=0, comment=''):
+        """
+        Creates a RANDPS card
+
+        Parameters
+        ----------
+        sid : int
+            random analysis set id
+            defined by RANDOM in the case control deck
+        j : int
+            Subcase id of the excited load set
+        k : int
+            Subcase id of the applied load set
+            k > j
+        x / y : float
+            Components of the complex number
+        tid : int
+            TABRNDi id that defines G(F)
+        comment : str; default=''
+            a comment for the card
+        """
         load = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
         self._add_load_object(load)
         return load
@@ -1960,11 +2186,45 @@ class AddCards(AddMethods):
         return load
 
     def add_force1(self, sid, node, mag, g1, g2, comment=''):
+        """
+        Creates a FORCE1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        n1 / n2 : int / int
+            defines the load direction
+            n = n2 - n1
+        comment : str; default=''
+            a comment for the card
+        """
         load = FORCE1(sid, node, mag, g1, g2, comment=comment)
         self._add_load_object(load)
         return load
 
     def add_force2(self, sid, node, mag, g1, g2, g3, g4, comment=''):
+        """
+        Creates a FORCE2 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        g1 / g2 / g3 / g4 : int / int / int / int
+            defines the load direction
+            n = (g2 - g1) x (g4 - g3)
+        comment : str; default=''
+            a comment for the card
+        """
         load = FORCE2(sid, node, mag, g1, g2, g3, g4, comment=comment)
         self._add_load_object(load)
         return load
@@ -1993,11 +2253,45 @@ class AddCards(AddMethods):
         return load
 
     def add_moment1(self, sid, node, mag, g1, g2, comment=''):
+        """
+        Creates a MOMENT1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        n1 / n2 : int / int
+            defines the load direction
+            n = n2 - n1
+        comment : str; default=''
+            a comment for the card
+        """
         load = MOMENT1(sid, node, mag, g1, g2, comment=comment)
         self._add_load_object(load)
         return load
 
     def add_moment2(self, sid, node, mag, g1, g2, g3, g4, comment=''):
+        """
+        Creates a MOMENT2 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        g1 / g2 / g3 / g4 : int / int / int / int
+            defines the load direction
+            n = (g2 - g1) x (g4 - g3)
+        comment : str; default=''
+            a comment for the card
+        """
         load = MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz=None, comment=comment)
         self._add_load_object(load)
         return load
@@ -2082,6 +2376,33 @@ class AddCards(AddMethods):
         return load
 
     def add_pload1(self, sid, eid, Type, scale, x1, p1, x2, p2, comment=''):
+        """
+        Creates a PLOAD1 card, which may be applied to a CBAR/CBEAM
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            element to apply the load to
+        Type : str
+            type of load that's applied
+            valid_types = {FX, FY, FZ, FXE, FYE, FZE,
+                           MX, MY, MZ, MXE, MYE, MZE}
+        scale : float
+            local factor
+        x1 / x2 : float / float
+            the starting/end position for the load application
+            the default for x2 is x1
+        p1 / p2 : float / float
+            the magnitude of the load at x1 and x2
+            the default for p2 is p1
+        comment : str; default=''
+            a comment for the card
+
+        Point Load       : x1 == x2
+        Distributed Load : x1 != x2
+        """
         load = PLOAD1(sid, eid, Type, scale, x1, p1, x2, p2, comment=comment)
         self._add_load_object(load)
         return load
@@ -2947,6 +3268,24 @@ class AddCards(AddMethods):
         return table
 
     def add_tabrndg(self, tid, Type, LU, WG, comment=''):
+        """
+        Creates a TABRNDG card
+
+        Parameters
+        ----------
+        tid : int
+            table id
+        Type : int
+           PSD type
+           1 : von Karman
+           2 : Dryden
+        LU : float
+            Scale of turbulence divided by velocity (units of time)
+        WG : float
+            Root-mean-square gust velocity
+        comment : str; default=''
+            a comment for the card
+        """
         table = TABRNDG(tid, Type, LU, WG, comment=comment)
         self._add_random_table_object(table)
         return table
@@ -2957,17 +3296,61 @@ class AddCards(AddMethods):
         return table
 
     def add_freq(self, sid, freqs, comment=''):
+        """
+        Creates a FREQ card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        freqs : List[float]
+            the frequencies for a FREQx object
+        comment : str; default=''
+            a comment for the card
+        """
         freq = FREQ(sid, freqs, comment=comment)
         self._add_freq_object(freq)
         return freq
 
-    def add_freq1(self, sid, f1, df, ndf, comment=''):
-        freq = FREQ1(sid, f1, df, ndf, comment=comment)
+    def add_freq1(self, sid, f1, df, ndf=1, comment=''):
+        """
+        Creates a FREQ1 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float
+            first frequency
+        df : float
+            frequency increment
+        ndf : int; default=1
+            number of frequency increments
+        comment : str; default=''
+            a comment for the card
+        """
+        freq = FREQ1(sid, f1, df, ndf=ndf, comment=comment)
         self._add_freq_object(freq)
         return freq
 
-    def add_freq2(self, sid, f1, f2, ndf=1, comment=''):
-        freq = FREQ2(sid, f1, f2, ndf=ndf, comment=comment)
+    def add_freq2(self, sid, f1, f2, nf=1, comment=''):
+        """
+        Creates a FREQ2 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float
+            first frequency
+        f1 : float
+            last frequency
+        nf : int; default=1
+            number of logorithmic intervals
+        comment : str; default=''
+            a comment for the card
+        """
+        freq = FREQ2(sid, f1, f2, nf=nf, comment=comment)
         self._add_freq_object(freq)
         return freq
 
@@ -3127,7 +3510,7 @@ class AddCards(AddMethods):
                         + A**2 / (B - C); F = A + B - F1 * D
 
         def F1(A, B, C, D, R):
-            F1 = A + B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B - C)
+            F1 = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B - C)
             F = A + B - F1 * D
             return F
 
@@ -3183,7 +3566,7 @@ class AddCards(AddMethods):
         return dresp
 
     def add_dresp2(self, dresp_id, label, dequation, region, params,
-                   method='MIN', c1=100., c2=0.005, c3=None,
+                   method='MIN', c1=1., c2=0.005, c3=10.,
                    comment=''):
         dresp = DRESP2(dresp_id, label, dequation, region, params,
                        method=method, c1=c1, c2=c2, c3=c3, comment=comment)

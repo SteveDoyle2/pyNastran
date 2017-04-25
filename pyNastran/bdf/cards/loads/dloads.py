@@ -243,7 +243,7 @@ class DLOAD(LoadCombination):
 
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         """
-        Creates a DLOAD card.
+        Creates a DLOAD card
 
         Parameters
         ----------
@@ -792,11 +792,62 @@ class TLOAD1(TabularLoad):
       \left\{ P(t) \right\} = \left\{ A \right\} \cdot F(t-\tau)
 
     for use in transient response analysis.
+
+    +--------+-----+----------+-------+------+-----+-----+-----+
+    |    1   |  2  |     3    |   4   |   5  |  6  |  7  |  8  |
+    +========+=====+==========+=======+======+=====+=====+=====+
+    | TLOAD1 | SID | EXCITEID | DELAY | TYPE | TID | US0 | VS0 |
+    +--------+-----+----------+-------+------+-----+-----+-----+
+    MSC 2016.1
+
+    +--------+-----+----------+-------+------+-----+
+    |    1   |  2  |     3    |   4   |   5  |  6  |
+    +========+=====+==========+=======+======+=====+
+    | TLOAD1 | SID | EXCITEID | DELAY | TYPE | TID |
+    +--------+-----+----------+-------+------+-----+
+    NX 11
     """
     type = 'TLOAD1'
 
-    def __init__(self, sid, excite_id, delay, tid, Type='LOAD', us0=0.0, vs0=0.0, comment=''):
+    def __init__(self, sid, excite_id, tid, delay=None, Type='LOAD',
+                 us0=0.0, vs0=0.0, comment=''):
+        """
+        Creates a TLOAD1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        tid : int
+            TABLEDi id that defines F(t) for all degrees of freedom in
+            EXCITEID entry
+            float : MSC not supported
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        Type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        us0 : float; default=0.
+            Factor for initial displacements of the enforced degrees-of-freedom
+            MSC only
+        vs0 : float; default=0.
+            Factor for initial velocities of the enforced degrees-of-freedom
+            MSC only
+        comment : str; default=''
+            a comment for the card
+        """
         TabularLoad.__init__(self)
+        if delay is None:
+            delay = 0
+
         if comment:
             self.comment = comment
         if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
@@ -807,6 +858,8 @@ class TLOAD1(TabularLoad):
             Type = 'VELO'
         elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
             Type = 'ACCE'
+        elif Type in [4, 5, 6, 7, 12, 13]:  # MSC-only
+            pass
         else:
             msg = 'invalid TLOAD1 type  Type=%r' % Type
             raise RuntimeError(msg)
@@ -860,7 +913,7 @@ class TLOAD1(TabularLoad):
         vs0 = double_or_blank(card, 7, 'vs0', 0.0)
 
         assert len(card) <= 8, 'len(TLOAD1 card) = %i\ncard=%s' % (len(card), card)
-        return TLOAD1(sid, excite_id, delay, tid, Type=Type, us0=us0, vs0=vs0, comment=comment)
+        return TLOAD1(sid, excite_id, tid, delay=delay, Type=Type, us0=us0, vs0=vs0, comment=comment)
 
     def get_loads(self):
         return [self]
@@ -974,11 +1027,70 @@ class TLOAD2(TabularLoad):
       P(t) = {A} * t^b * e^(C*t) * cos(2*pi*f*t + phase)  (T1+tau <=   t <= T2+tau)
 
     for use in transient response analysis.
+
+    +--------+-----+----------+-------+------+-----+-----+-----+-----+
+    |    1   |  2  |     3    |   4   |   5  |  6  |  7  |  8  |  9  |
+    +========+=====+==========+=======+======+=====+=====+=====+=====+
+    | TLOAD2 | SID | EXCITEID | DELAY | TYPE | T1  | T2  |  F  |  P  |
+    +--------+-----+----------+-------+------+-----+-----+-----+-----+
+    |        |  C  |     B    |  US0  |  VS0 |     |     |     |     |
+    +--------+-----+----------+-------+------+-----+-----+-----+-----+
+    MSC 2016.1
+
+    +--------+-----+----------+-------+------+-----+-----+-----+-----+
+    |    1   |  2  |     3    |   4   |   5  |  6  |  7  |  8  |  9  |
+    +========+=====+==========+=======+======+=====+=====+=====+=====+
+    | TLOAD2 | SID | EXCITEID | DELAY | TYPE | T1  | T2  |  F  |  P  |
+    +--------+-----+----------+-------+------+-----+-----+-----+-----+
+    |        |  C  |     B    |       |      |     |     |     |     |
+    +--------+-----+----------+-------+------+-----+-----+-----+-----+
+    NX 11
     """
     type = 'TLOAD2'
 
     def __init__(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
                  frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment=''):
+        """
+        Creates a TLOAD1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        Type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        T1 : float; default=0.
+            ???
+        T2 : float; default=None
+            ???
+        frequency : float; default=0.
+            ???
+        phase : float; default=0.
+            ???
+        c : float; default=0.
+            ???
+        b : float; default=0.
+            ???
+        us0 : float; default=0.
+            Factor for initial displacements of the enforced degrees-of-freedom
+            MSC only
+        vs0 : float; default=0.
+            Factor for initial velocities of the enforced degrees-of-freedom
+            MSC only
+        comment : str; default=''
+            a comment for the card
+        """
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
@@ -992,7 +1104,7 @@ class TLOAD2(TabularLoad):
             Type = 'VELO'
         elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
             Type = 'ACCE'
-        elif Type in [5, 6, 7, 12, 13]:
+        elif Type in [5, 6, 7, 12, 13]: # MSC only
             pass
         else:
             msg = 'invalid TLOAD2 type  Type=%r' % Type

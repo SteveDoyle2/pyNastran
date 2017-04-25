@@ -52,7 +52,24 @@ class Load(BaseCard):
 
 
 class LoadCombination(Load):  # LOAD, DLOAD
+    """Common method for LOAD, DLOAD"""
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
+        """
+        Common method for LOAD, DLOAD
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            overall scale factor
+        scale_factors : List[float]
+            individual scale factors (corresponds to load_ids)
+        load_ids : List[int]
+            individual load_ids (corresponds to scale_factors)
+        comment : str; default=''
+            a comment for the card
+        """
         Load.__init__(self)
         if comment:
             self.comment = comment
@@ -142,10 +159,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
         else:
             raise NotImplementedError(lid)
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         """
         .. note:: requires a cross referenced load
@@ -231,7 +244,25 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     type = 'LSEQ'
 
-    def __init__(self, sid, excite_id, lid, tid, comment=''):
+    def __init__(self, sid, excite_id, lid, tid=None, comment=''):
+        """
+        Creates a LSEQ card
+
+        Parameters
+        ----------
+        sid : int
+            loadset id; LOADSET points to this
+        excite_id : int
+            set id assigned to this static load vector
+        lid : int
+            load set id of a set of static load entries;
+            LOAD in the Case Control
+        tid : int; default=None
+            temperature set id of a set of thermal load entries;
+            TEMP(LOAD) in the Case Control
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -256,7 +287,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         lid = integer(card, 3, 'lid')
         tid = integer_or_blank(card, 4, 'tid')
         assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
-        return LSEQ(sid, excite_id, lid, tid, comment=comment)
+        return LSEQ(sid, excite_id, lid, tid=None, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1117,6 +1148,26 @@ class RANDPS(RandomLoad):
     type = 'RANDPS'
 
     def __init__(self, sid, j, k, x=0., y=0., tid=0, comment=''):
+        """
+        Creates a RANDPS card
+
+        Parameters
+        ----------
+        sid : int
+            random analysis set id
+            defined by RANDOM in the case control deck
+        j : int
+            Subcase id of the excited load set
+        k : int
+            Subcase id of the applied load set
+            k > j
+        x / y : float
+            Components of the complex number
+        tid : int
+            TABRNDi id that defines G(F)
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Random analysis set identification number. (Integer > 0)
@@ -1137,6 +1188,9 @@ class RANDPS(RandomLoad):
 
         #: Identification number of a TABRNDi entry that defines G(F).
         self.tid = tid
+
+    def validate(self):
+        assert self.k >= self.j, self
 
     @classmethod
     def add_card(cls, card, comment=''):

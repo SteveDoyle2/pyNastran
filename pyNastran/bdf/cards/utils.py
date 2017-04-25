@@ -20,9 +20,9 @@ def build_table_lines(fields, nstart=1, nend=0):
     ----------
     fields: List[int/float/str]
         the fields to enter, including DESVAR
-    nStart: int; default=1
+    nstart: int; default=1
         the number of blank fields at the start of the line
-    nEnd : int; default=0)
+    nend : int; default=0)
         the number of blank fields at the end of the line
 
     Returns
@@ -30,7 +30,7 @@ def build_table_lines(fields, nstart=1, nend=0):
     fields_out : List[str/None]
         the values ready for card printing
 
-    .. note:: will be used for DVPREL2, RBE1, RBE3
+    .. note:: will be used for DVCREL2, DVMREL2, DVPREL2, RBE1, RBE3, DRESP2, DRESP3
     .. warning:: only works for small field format???
     """
     fields_out = []

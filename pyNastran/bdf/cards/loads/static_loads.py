@@ -41,6 +41,22 @@ class LOAD(LoadCombination):
     type = 'LOAD'
 
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
+        """
+        Creates a LOAD card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            overall scale factor
+        scale_factors : List[float]
+            individual scale factors (corresponds to load_ids)
+        load_ids : List[int]
+            individual load_ids (corresponds to scale_factors)
+        comment : str; default=''
+            a comment for the card
+        """
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
 
@@ -1004,6 +1020,23 @@ class FORCE1(Force):
     type = 'FORCE1'
 
     def __init__(self, sid, node, mag, g1, g2, comment=''):
+        """
+        Creates a FORCE1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        n1 / n2 : int / int
+            defines the load direction
+            n = n2 - n1
+        comment : str; default=''
+            a comment for the card
+        """
         Force.__init__(self)
         if comment:
             self.comment = comment
@@ -1135,16 +1168,32 @@ class FORCE2(Force):
     """
     Defines a static concentrated force at a grid point by specification of a
     magnitude and four grid points that determine the direction.
+
+    +--------+-----+---+---+----+----+----+----+
+    |   1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
+    +========+=====+===+===+====+====+====+====+
+    | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
+    +--------+-----+---+---+----+----+----+----+
     """
     type = 'FORCE2'
 
     def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         """
-        +--------+-----+---+---+----+----+----+----+
-        |   1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
-        +========+=====+===+===+====+====+====+====+
-        | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
-        +--------+-----+---+---+----+----+----+----+
+        Creates a FORCE2 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        g1 / g2 / g3 / g4 : int / int / int / int
+            defines the load direction
+            n = (g2 - g1) x (g4 - g3)
+        comment : str; default=''
+            a comment for the card
         """
         Force.__init__(self)
         if comment:
@@ -1523,18 +1572,35 @@ class MOMENT(Moment):
 
 
 class MOMENT1(Moment):
+    """
+    Defines a static concentrated moment at a grid point by specifying a
+    magnitude and two grid points that determine the direction.::
+
+    +---------+-----+---+---+----+----+
+    |    1    |  2  | 3 | 4 | 5  | 6  |
+    +=========+=====+===+===+====+====+
+    | MOMENT1 | SID | G | M | G1 | G2 |
+    +---------+-----+---+---+----+----+
+    """
     type = 'MOMENT1'
 
     def __init__(self, sid, node, mag, g1, g2, comment=''):
         """
-        Defines a static concentrated moment at a grid point by specifying a
-        magnitude and two grid points that determine the direction.::
+        Creates a MOMENT1 card
 
-        +---------+-----+---+---+----+----+
-        |    1    |  2  | 3 | 4 | 5  | 6  |
-        +=========+=====+===+===+====+====+
-        | MOMENT1 | SID | G | M | G1 | G2 |
-        +---------+-----+---+---+----+----+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        n1 / n2 : int / int
+            defines the load direction
+            n = n2 - n1
+        comment : str; default=''
+            a comment for the card
         """
         Moment.__init__(self)
         if comment:
@@ -1666,18 +1732,35 @@ class MOMENT1(Moment):
 
 
 class MOMENT2(Moment):
+    """
+    Defines a static concentrated moment at a grid point by specification
+    of a magnitude and four grid points that determine the direction.::
+
+    +---------+-----+---+---+----+----+----+----+
+    |    1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
+    +=========+=====+===+===+====+====+====+====+
+    | MOMENT2 | SID | G | M | G1 | G2 | G3 | G4 |
+    +---------+-----+---+---+----+----+----+----+
+    """
     type = 'MOMENT2'
 
     def __init__(self, sid, node, mag, g1, g2, g3, g4, xyz=None, comment=''):
         """
-        Defines a static concentrated moment at a grid point by specification
-        of a magnitude and four grid points that determine the direction.::
+        Creates a MOMENT2 card
 
-        +---------+-----+---+---+----+----+----+----+
-        |    1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
-        +=========+=====+===+===+====+====+====+====+
-        | MOMENT2 | SID | G | M | G1 | G2 | G3 | G4 |
-        +---------+-----+---+---+----+----+----+----+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        g1 / g2 / g3 / g4 : int / int / int / int
+            defines the load direction
+            n = (g2 - g1) x (g4 - g3)
+        comment : str; default=''
+            a comment for the card
         """
         Moment.__init__(self)
         if comment:
@@ -2074,9 +2157,40 @@ class PLOAD1(Load):
                    'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
     valid_scales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
 
-    def __init__(self, sid, eid, Type, scale, x1, p1, x2, p2, comment=''):
+    def __init__(self, sid, eid, Type, scale, x1, p1, x2=None, p2=None, comment=''):
+        """
+        Creates a PLOAD1 card, which may be applied to a CBAR/CBEAM
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            element to apply the load to
+        Type : str
+            type of load that's applied
+            valid_types = {FX, FY, FZ, FXE, FYE, FZE,
+                           MX, MY, MZ, MXE, MYE, MZE}
+        scale : float
+            local factor
+        x1 / x2 : float / float
+            the starting/end position for the load application
+            the default for x2 is x1
+        p1 / p2 : float / float
+            the magnitude of the load at x1 and x2
+            the default for p2 is p1
+        comment : str; default=''
+            a comment for the card
+
+        Point Load       : x1 == x2
+        Distributed Load : x1 != x2
+        """
         if comment:
             self.comment = comment
+        if x2 is None:
+            x2 = x1
+        if p2 is None:
+            p2 = p1
         self.sid = sid
         self.eid = eid
         self.Type = Type
@@ -2227,7 +2341,7 @@ class PLOAD1(Load):
                 load_type = load.Type
 
                 scale = load.scale
-                eType = element.type
+                elem_type = element.type
 
                 if load_type in ['FX', 'FY', 'FZ']:
                     p1 = element.ga_ref.get_position()
@@ -2289,7 +2403,7 @@ class PLOAD1(Load):
 
                 F /= 2.
 
-                if eType in ['CBAR', 'CBEAM']:
+                if elem_type in ['CBAR', 'CBEAM']:
                     if load_type in ['FX', 'FY', 'FZ']:
                         M = p1 * dx3 / 6. + m * (dx4 / 12. - x1 * dx3 / 6.)
                         Mv = M * cross(r, Fv) / 2. # divide by 2 for 2 nodes
@@ -2308,7 +2422,7 @@ class PLOAD1(Load):
                     else:
                         raise NotImplementedError(load_type)
                 else:
-                    raise NotImplementedError(eType)
+                    raise NotImplementedError(elem_type)
             else:
                 msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)
@@ -2679,8 +2793,8 @@ class PLOAD4(Load):
 
         if  self.surf_or_line != 'SURF':
             if norm(self.nvector) != 0.0 or self.cid != 0:
-                vector = self.nvector / np.linalg.norm(load.nvector)
-                assert self.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (self.Cid(), str(load))
+                vector = self.nvector / np.linalg.norm(self.nvector)
+                assert self.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (self.Cid(), str(self))
             else:
                 # normal pressure
                 assert len(self.eids_ref) == 1, 'only 1 element is supported by transform_load on PLOAD4\n%s' % (str(self))
