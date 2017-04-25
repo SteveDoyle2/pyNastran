@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import integer_types
+#from six import integer_types
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject

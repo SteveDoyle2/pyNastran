@@ -9,16 +9,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from copy import deepcopy
 from six import exec_
 
-from pyNastran.bdf.cards.base_card import BaseCard
-
 import numpy as np
-from numpy import cos, sin, tan, log, log10
-from numpy import arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2
-from numpy import arcsinh as asinh, arccosh as acosh, arctanh as atanh
+from numpy import (
+    cos, sin, tan, log, log10, mean, exp, sqrt, square, mod, abs, sum,
+    arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2,
+    arcsinh as asinh, arccosh as acosh, arctanh as atanh)
 # atan2h
-from numpy import mean, exp, sqrt, square, sum
-from numpy import mod, abs
 from numpy.linalg import norm
+
+from pyNastran.bdf.cards.base_card import BaseCard
 
 def pi(num):
     """weird way to multiply π by a number"""
@@ -38,7 +37,7 @@ def ssq(*args):
 
 def logx(x, y):
     """log base_x(y)"""
-    return np.log(y**x) / np.log(x)
+    return log(y**x) / log(x)
 
 def dim(x, y):
     """positive difference"""
@@ -46,7 +45,7 @@ def dim(x, y):
 
 def db(p, pref):
     """sound pressure in decibels"""
-    return 20. * np.log(p / pref)
+    return 20. * log(p / pref)
 
 def atan2h(x, y):
     raise NotImplementedError()
@@ -74,7 +73,7 @@ def dba(p, pref, f):
         acoustic pressure in Decibels
     """
     ta1, ta2 = _get_ta(f)
-    return 20. * np.log(p / pref) + 10 * log(ta1) + 10. * log(ta2)
+    return 20. * log(p / pref) + 10 * log(ta1) + 10. * log(ta2)
 
 def invdba(dbai, pref, f):
     """
@@ -215,8 +214,8 @@ class DEQATN(BaseCard):  # needs work...
         default_values = {}
         if self.dtable is not None:
             default_values = self.dtable_ref.default_values
-        func_name, nargs, func_str = fortran_to_python(self.eqs, default_values,
-                                                       str(self))
+        func_name, nargs, func_str = fortran_to_python(
+            self.eqs, default_values, str(self))
         self.func_str = func_str
         self.func_name = func_name
         exec_(func_str)
@@ -256,7 +255,8 @@ class DEQATN(BaseCard):  # needs work...
         #print('args =', args2)
         if len(args) > self.nargs:
             msg = 'len(args) > nargs\n'
-            msg += 'nargs=%s len(args)=%s; func_name=%s' % (self.nargs, len(args), self.func_name)
+            msg += 'nargs=%s len(args)=%s; func_name=%s' % (
+                self.nargs, len(args), self.func_name)
             raise RuntimeError(msg)
         return self.func(*args)
         #self.func(*args)
@@ -280,7 +280,7 @@ class DEQATN(BaseCard):  # needs work...
         #print(msg)
         return msg
 
-def lines_to_eqs(eq_temps1):
+def lines_to_eqs(eqs_temp1):
     """splits the equations"""
     eqs_temp = []
     for eq in eqs_temp1:
