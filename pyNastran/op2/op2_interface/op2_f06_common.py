@@ -117,6 +117,12 @@ class OP2_F06_Common(object):
         #======================================================================
         # shells
         self.ctria3_force = {}
+        self.ctria3_force_ATO = {}
+        self.ctria3_force_CRM = {}
+        self.ctria3_force_PSD = {}
+        self.ctria3_force_RMS = {}
+        self.ctria3_force_NO = {}
+
         self.ctria6_force = {}
         self.ctriar_force = {}
 
@@ -716,7 +722,7 @@ class OP2_F06_Common(object):
             'cquad8_force',
             'cquadr_force',
 
-            'ctria3_force',
+            'ctria3_force', 'ctria3_force_ATO', 'ctria3_force_CRM', 'ctria3_force_PSD', 'ctria3_force_RMS', 'ctria3_force_NO',
             'ctria6_force',
             'ctriar_force',
 

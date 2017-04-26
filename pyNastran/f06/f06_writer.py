@@ -621,7 +621,7 @@ class F06Writer(OP2_F06_Common):
             self.conrod_force,
             self.crod_force,
             self.cshear_force,
-            self.ctria3_force,
+            self.ctria3_force, self.ctria3_force_ATO, self.ctria3_force_CRM, self.ctria3_force_PSD, self.ctria3_force_RMS, self.ctria3_force_NO,
             self.ctria6_force,
             self.ctriar_force,
             self.ctube_force,
