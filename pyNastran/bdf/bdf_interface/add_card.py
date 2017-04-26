@@ -236,6 +236,29 @@ class AddCards(AddMethods):
 
     def add_cord2r(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
                    comment=''):
+        """
+        Creates the CORD2R card, which defines a rectangular coordinate
+        system using 3 vectors.
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        rid : int; default=0
+            the referenced coordinate system that defines the system the
+            vectors
+        origin : List[float, float, float]; default=None
+            the origin of the coordinate system
+            None : [0., 0., 0.]
+        zaxis : List[float, float, float]; default=None
+            the z-axis of the coordinate system
+            None : [0., 0., 1.]
+        xzplane : List[float, float, float]; default=None
+            a point on the xz plane
+            None : [1., 0., 0.]
+        comment : str; default=''
+            the card comment
+        """
         coord = CORD2R(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
                        comment=comment)
         self._add_coord_object(coord)
@@ -243,6 +266,29 @@ class AddCards(AddMethods):
 
     def add_cord2c(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
                    comment=''):
+        """
+        Creates the CORD2C card, which defines a cylindrical coordinate
+        system using 3 vectors.
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        rid : int; default=0
+            the referenced coordinate system that defines the system the
+            vectors
+        origin : List[float, float, float]; default=None
+            the origin of the coordinate system
+            None : [0., 0., 0.]
+        zaxis : List[float, float, float]; default=None
+            the z-axis of the coordinate system
+            None : [0., 0., 1.]
+        xzplane : List[float, float, float]; default=None
+            a point on the xz plane
+            None : [1., 0., 0.]
+        comment : str; default=''
+            the card comment
+        """
         coord = CORD2C(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
                        comment=comment)
         self._add_coord_object(coord)
@@ -250,22 +296,96 @@ class AddCards(AddMethods):
 
     def add_cord2s(self, cid, rid=0, origin=None, zaxis=None, xzplane=None,
                    comment=''):
+        """
+        Creates the CORD2C card, which defines a spherical coordinate
+        system using 3 vectors.
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        rid : int; default=0
+            the referenced coordinate system that defines the system the
+            vectors
+        origin : List[float, float, float]; default=None
+            the origin of the coordinate system
+            None : [0., 0., 0.]
+        zaxis : List[float, float, float]; default=None
+            the z-axis of the coordinate system
+            None : [0., 0., 1.]
+        xzplane : List[float, float, float]; default=None
+            a point on the xz plane
+            None : [1., 0., 0.]
+        comment : str; default=''
+            the card comment
+        """
         coord = CORD2S(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
                        comment=comment)
         self._add_coord_object(coord)
         return coord
 
     def add_cord1r(self, cid, g1, g2, g3, comment=''):
+        """
+        Creates the CORD1R card, which defines a rectangular coordinate
+        system using 3 GRID points.
+
+        Parameters
+        ----------
+        cid : int
+            the coordinate id
+        g1 : int
+            grid point 1
+        g2 : int
+            grid point 2
+        g3 : int
+            grid point 3
+        comment : str; default=''
+            the card comment
+        """
         coord = CORD1R(cid, g1, g2, g3, comment=comment)
         self._add_coord_object(coord)
         return coord
 
     def add_cord1c(self, cid, g1, g2, g3, comment=''):
+        """
+        Creates the CORD1C card, which defines a cylindrical coordinate
+        system using 3 GRID points.
+
+        Parameters
+        ----------
+        cid : int
+            the coordinate id
+        g1 : int
+            grid point 1
+        g2 : int
+            grid point 2
+        g3 : int
+            grid point 3
+        comment : str; default=''
+            the card comment
+        """
         coord = CORD1C(cid, g1, g2, g3, comment=comment)
         self._add_coord_object(coord)
         return coord
 
     def add_cord1s(self, cid, g1, g2, g3, comment=''):
+        """
+        Creates the CORD1S card, which defines a spherical coordinate
+        system using 3 GRID points.
+
+        Parameters
+        ----------
+        cid : int
+            the coordinate id
+        g1 : int
+            grid point 1
+        g2 : int
+            grid point 2
+        g3 : int
+            grid point 3
+        comment : str; default=''
+            the card comment
+        """
         coord = CORD1S(cid, g1, g2, g3, comment=comment)
         self._add_coord_object(coord)
         return coord
@@ -873,6 +993,31 @@ class AddCards(AddMethods):
         return prop
 
     def add_cbarao(self, eid, scale, x, comment=''):
+        """
+        Creates a CBARAO card, which defines additional output locations
+        for the CBAR card.
+
+        It also changes the OP2 element type from a CBAR-34 to a CBAR-100.
+        However, it is ignored if there are no PLOAD1s in the model.
+        Furthermore, the type is changed for the whole deck, regardless of
+        whether there are PLOAD1s in the other load cases.
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        scale : str
+            defines what x means
+            LE : x is in absolute coordinates along the bar
+            FR : x is in fractional
+        x : List[float]
+            the additional output locations
+            len(x) <= 6
+        comment : str; default=''
+            a comment for the card
+
+        MSC only
+        """
         elem_flag = CBARAO(eid, scale, x, comment=comment)
         self._add_ao_object(elem_flag, allow_overwrites=False)
         return elem_flag
@@ -948,7 +1093,8 @@ class AddCards(AddMethods):
 
     def add_pbarl(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
         """
-        Creates a PBARL card
+        Creates a PBARL card, which defines A, I1, I2, I12, and J using
+        dimensions rather than explicit values.
 
         Parameters
         ----------
@@ -958,8 +1104,10 @@ class AddCards(AddMethods):
             material id
         Type : str
             type of the bar
-            {ROD, TUBE, I, CHAN, T, BOX, BAR, CROSS, H, T1, I1, CHAN1,
-             Z, CHAN2, T2, BOX1, HEXA, HAT, HAT1, DBOX}
+            valid_types = {
+                ROD, TUBE, I, CHAN, T, BOX, BAR, CROSS, H, T1,
+                I1, CHAN1, Z, CHAN2, T2, BOX1, HEXA, HAT, HAT1, DBOX
+            }
         dim : List[float]
             dimensions for cross-section corresponding to Type;
             the length varies
@@ -970,6 +1118,15 @@ class AddCards(AddMethods):
            non-structural mass
         comment : str; default=''
             a comment for the card
+
+        The shear center and neutral axis do not coincide when:
+           - Type = I and dim2 != dim3
+           - Type = CHAN, CHAN1, CHAN2
+           - Type = T
+           - Type = T1, T2
+           - Type = BOX1
+           - Type = HAT, HAT1
+           - Type = DBOX
         """
         prop = PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
         self._add_property_object(prop)
@@ -2370,12 +2527,29 @@ class AddCards(AddMethods):
         load = GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
         self._add_load_object(load)
 
-    def add_pload(self, sid, p, nodes, comment=''):
-        load = PLOAD(sid, p, nodes, comment=comment)
+    def add_pload(self, sid, pressure, nodes, comment=''):
+        """
+        Creates a PLOAD card, which defines a uniform pressure load on a
+        shell/solid face or arbitrarily defined quad/tri face
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply
+        nodes : List[int]
+            The nodes that are used to define the normal are defined
+            using the same method as the CTRIA3/CQUAD4 normal.
+            n = 3 or 4
+        comment : str; default=''
+            a comment for the card
+        """
+        load = PLOAD(sid, pressure, nodes, comment=comment)
         self._add_load_object(load)
         return load
 
-    def add_pload1(self, sid, eid, Type, scale, x1, p1, x2, p2, comment=''):
+    def add_pload1(self, sid, eid, Type, scale, x1, p1, x2=None, p2=None, comment=''):
         """
         Creates a PLOAD1 card, which may be applied to a CBAR/CBEAM
 
@@ -2390,7 +2564,7 @@ class AddCards(AddMethods):
             valid_types = {FX, FY, FZ, FXE, FYE, FZE,
                            MX, MY, MZ, MXE, MYE, MZE}
         scale : float
-            local factor
+            local pressure scaling factor
         x1 / x2 : float / float
             the starting/end position for the load application
             the default for x2 is x1
@@ -2403,11 +2577,26 @@ class AddCards(AddMethods):
         Point Load       : x1 == x2
         Distributed Load : x1 != x2
         """
-        load = PLOAD1(sid, eid, Type, scale, x1, p1, x2, p2, comment=comment)
+        load = PLOAD1(sid, eid, Type, scale, x1, p1, x2=x2, p2=p2, comment=comment)
         self._add_load_object(load)
         return load
 
     def add_pload2(self, sid, pressure, eids, comment=''):
+        """
+        Creates a PLOAD2 card, which defines an applied load normal to the quad/tri face
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply to the elements
+        eids : List[int]
+            the elements to apply pressure to
+            n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
+        comment : str; default=''
+            a comment for the card
+        """
         load = PLOAD2(sid, pressure, eids, comment=comment)
         self._add_load_object(load)
         return load
@@ -2567,6 +2756,47 @@ class AddCards(AddMethods):
 
     def add_caero1(self, eid, pid, igid, p1, x12, p4, x43,
                    cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
+        """
+        Defines a CAERO1 card, which defines a simplified lifting surface
+        (e.g., wing/tail).
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int, PAERO1
+            int : PAERO1 ID
+            PAERO1 : PAERO1 object (xref)
+        igid : int
+            Group number
+        p1 : (1, 3) ndarray float
+            xyz location of point 1 (leading edge; inboard)
+        p4 : (1, 3) ndarray float
+            xyz location of point 4 (leading edge; outboard)
+        x12 : float
+            distance along the flow direction from node 1 to node 2; (typically x, root chord)
+        x43 : float
+            distance along the flow direction from node 4 to node 3; (typically x, tip chord)
+        cp : int, CORDx; default=0
+            int : coordinate system
+            CORDx : Coordinate object (xref)
+        nspan : int; default=0
+            int > 0 : N spanwise boxes distributed evenly
+            int = 0 : use lchord
+        nchord : int; default=0
+            int > 0 : N chordwise boxes distributed evenly
+            int = 0 : use lchord
+        lspan : int, AEFACT; default=0
+            int > 0 : AEFACT reference for non-uniform nspan
+            int = 0 : use nspan
+            AEFACT : AEFACT object  (xref)
+        lchord : int, AEFACT; default=0
+            int > 0 : AEFACT reference for non-uniform nchord
+            int = 0 : use nchord
+            AEFACT : AEFACT object  (xref)
+        comment : str; default=''
+             a comment for the card
+        """
         caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
                        nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                        comment=comment)
@@ -2575,6 +2805,37 @@ class AddCards(AddMethods):
 
     def add_caero2(self, eid, pid, igid, p1, x12, cp=0, nsb=0, nint=0, lsb=0,
                    lint=0, comment=''):
+        """
+        Defines a CAERO2 card, which defines a slender body
+        (e.g., fuselage/wingtip tank).
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int, PAERO2
+            int : PAERO2 ID
+            PAERO2 : PAERO2 object (xref)
+        igid : int
+            Group number
+        p1 : (1, 3) ndarray float
+            xyz location of point 1 (forward position)
+        x12 : float
+            length of the CAERO2
+        cp : int, CORDx; default=0
+            int : coordinate system
+            CORDx : Coordinate object (xref)
+        nsb : int; default=0
+            AEFACT id for defining the location of the slender body elements
+        lsb : int; default=0
+            AEFACT id for defining the location of interference elements
+        nint : int; default=0
+            Number of slender body elements
+        lint : int; default=0
+            Number of interference elements
+        comment : str; default=''
+            a comment for the card
+        """
         caero = CAERO2(eid, pid, igid, p1, x12, cp=cp, nsb=nsb, nint=nint, lsb=lsb,
                        lint=lint, comment=comment)
         self._add_caero_object(caero)
@@ -2602,12 +2863,59 @@ class AddCards(AddMethods):
         return caero
 
     def add_paero1(self, pid, Bi=None, comment=''):
+        """
+        Creates a PAERO1 card, which defines associated bodies for the
+        panels in the Doublet-Lattice method.
+
+        Parameters
+        ----------
+        pid : int
+            PAERO1 id
+        Bi : List[int]; default=None
+            CAERO2 ids that are within the same IGID group
+        comment : str; default=''
+            a comment for the card
+        """
         paero = PAERO1(pid, Bi=Bi, comment=comment)
         self._add_paero_object(paero)
         return paero
 
     def add_paero2(self, pid, orient, width, AR, thi, thn,
                    lrsb=None, lrib=None, lth1=None, lth2=None, comment=''):
+        """
+        Creates a PAERO2 card, which defines additional cross-sectional
+        properties for the CAERO2 geometry.
+
+        Parameters
+        ----------
+        pid : int
+            PAERO1 id
+        orient : str
+            Orientation flag. Type of motion allowed for bodies. Refers
+            to the aerodynamic coordinate system of ACSID. See AERO entry.
+            valid_orientations = {Z, Y, ZY}
+        width : float
+            Reference half-width of body and the width of the constant
+            width interference tube
+        AR : float
+            Aspect ratio of the interference tube (height/width)
+        thi / thn : List[int]
+            The first (thi) and last (thn) interference element of a body
+            to use the theta1/theta2 array
+        lrsb : int; default=None
+            int : AEFACT id containing a list of slender body half-widths
+                  at the end points of the slender body elements
+            None : use width
+        lrib : int; default=None
+            int : AEFACT id containing a list of interference body
+                  half-widths at the end points of the interference elements
+            None : use width
+        lth1 / lth2 : int; default=None
+            AEFACT id for defining theta arrays for interference calculations
+            for theta1/theta2
+        comment : str; default=''
+            a comment for the card
+        """
         paero = PAERO2(pid, orient, width, AR, thi, thn,
                        lrsb, lrib, lth1, lth2, comment=comment)
         self._add_paero_object(paero)
@@ -2635,16 +2943,90 @@ class AddCards(AddMethods):
     def add_spline1(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
                     usage='BOTH', nelements=10,
                     melements=10, comment=''):
+        """
+        Creates a SPLINE1, which defines a surface spline.
+
+        Parameters
+        ----------
+        eid : int
+            spline id
+        caero : int
+            CAEROx id that defines the plane of the spline
+        box1 / box2 : int
+            First/last box id that is used by the spline
+        setg : int
+            SETx id that defines the list of GRID points that are used
+            by the surface spline
+        dz : float; default=0.0
+            linear attachment flexibility
+            dz = 0.; spline passes through all grid points
+        method : str; default=IPS
+            method for spline fit
+            valid_methods = {IPS, TPS, FPS}
+            IPS : Harder-Desmarais Infinite Plate Spline
+            TPS : Thin Plate Spline
+            FPS : Finite Plate Spline
+        usage : str; default=BOTH
+            Spline usage flag to determine whether this spline applies
+            to the force transformation, displacement transformation, or
+            both
+            valid_usage = {FORCE, DISP, BOTH}
+        nelements : int; default=10
+            The number of FE elements along the local spline x-axis if
+            using the FPS option
+        melements : int; default=10
+            The number of FE elements along the local spline y-axis if
+            using the FPS option
+        comment : str; default=''
+            a comment for the card
+        """
         spline = SPLINE1(eid, caero, box1, box2, setg, dz=dz, method=method,
                          usage=usage, nelements=nelements, melements=melements,
                          comment=comment)
         self._add_spline_object(spline)
         return spline
 
-    def add_spline2(self, eid, caero, id1, id2, setg, dz, dtor, cid, dthx,
-                    dthy, usage, comment=''):
-        spline = SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid, dthx,
-                         dthy, usage, comment=comment)
+    def add_spline2(self, eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=0,
+                    dthx=None, dthy=None, usage='BOTH', comment=''):
+        """
+        Creates a SPLINE2 card, which defines a beam spline.
+
+        Parameters
+        ----------
+        eid : int
+            spline id
+        caero : int
+            CAEROx id that defines the plane of the spline
+        id1 / id2 : int
+            First/last box/body id that is used by the spline
+        setg : int
+            SETx id that defines the list of GRID points that are used
+            by the beam spline
+        dz : float; default=0.0
+            linear attachment flexibility
+            dz = 0.; spline passes through all grid points
+        dtor : float; default=1.0
+            Torsional flexibility ratio (EI/GJ).
+            Use 1.0 for bodies (CAERO2).
+        cid : int; default=0
+            Rectangular coordinate system for which the y-axis defines the
+            axis of the spline. Not used for bodies, CAERO2
+        dthx : float; default=None
+            Rotational attachment flexibility.
+            DTHX : Used for rotation about the spline's x-axis (in-plane
+                   bending rotations).  It is not used for bodies (CAERO2).
+            DTHY : Used for rotation about the spline's y-axis (torsion).
+                   It is used for slope of bodies.
+        usage : str; default=BOTH
+            Spline usage flag to determine whether this spline applies
+            to the force transformation, displacement transformation, or
+            both
+            valid_usage = {FORCE, DISP, BOTH}
+        comment : str; default=''
+            a comment for the card
+        """
+        spline = SPLINE2(eid, caero, id1, id2, setg, dz=dz, dtor=dtor, cid=cid,
+                         dthx=dthx, dthy=dthy, usage=usage, comment=comment)
         self._add_spline_object(spline)
         return spline
 
@@ -2699,11 +3081,37 @@ class AddCards(AddMethods):
         return trim
 
     def add_mkaero1(self, machs, reduced_freqs, comment=''):
+        """
+        Creates an MKAERO1 card, which defines a set of mach and
+        reduced frequencies.
+
+        Parameters
+        ----------
+        machs : List[float]
+            series of Mach numbers
+        reduced_freqs : List[float]
+            series of reduced frequencies
+        comment : str; default=''
+            a comment for the card
+        """
         mkaero = MKAERO1(machs, reduced_freqs, comment=comment)
         self._add_mkaero_object(mkaero)
         return mkaero
 
     def add_mkaero2(self, machs, reduced_freqs, comment=''):
+        """
+        Creates an MKAERO2 card, which defines a set of mach and
+        reduced frequency pairs.
+
+        Parameters
+        ----------
+        machs : List[float]
+            series of Mach numbers
+        reduced_freqs : List[float]
+            series of reduced frequencies
+        comment : str; default=''
+            a comment for the card
+        """
         mkaero = MKAERO2(machs, reduced_freqs, comment=comment)
         self._add_mkaero_object(mkaero)
         return mkaero
@@ -2922,8 +3330,50 @@ class AddCards(AddMethods):
 
     def add_flutter(self, sid, method, density, mach, reduced_freq_velocity,
                     imethod='L', nvalue=None,
-                    omax=None, epsilon=None,
-                    comment=''):
+                    omax=None, epsilon=1.0e-3, comment=''):
+        """
+        Creates a FLUTTER card, which is required for a flutter (SOL 145)
+        analysis.
+
+        Parameters
+        ----------
+        sid : int
+            flutter id
+        method : str
+            valid methods = [K, KE,
+                             PKS, PKNLS, PKNL, PKE]
+        density : int
+            defines a series of air densities in units of mass/volume
+            PARAM,WTMASS does not affect this
+            AERO affects this
+            references an FLFACT id
+        mach : int
+            defines a series of the mach numbers
+            references an FLFACT id
+        reduced_freq_velocity : int
+            Defines a series of either:
+               1) reduced frequencies - K, KE
+               2) velocities - PK, PKNL, PKS, PKNLS
+            depending on the method chosen.
+            references an FLFACT id
+        imethod : str; default='L'
+            Choice of interpolation method for aerodynamic matrix interpolation.
+            imethods :
+               1) L - linear
+               2) S - surface
+               3) TCUB - termwise cubic
+        nvalue : int
+            Number of eigenvalues beginning with the first eigenvalue for
+            output and plots
+        omax : float
+            For the PKS and PKNLS methods, OMAX specifies the maximum frequency, in
+            Hz., to be used in he flutter sweep.
+            MSC only.
+        epsilon : float; default=1.0e-3
+            Convergence parameter for k. Used in the PK and PKNL methods only
+        comment : str; default=''
+            a comment for the card
+        """
         flutter = FLUTTER(sid, method, density, mach, reduced_freq_velocity,
                           imethod=imethod, nvalue=nvalue,
                           omax=omax, epsilon=epsilon,
@@ -4242,8 +4692,14 @@ class AddCards(AddMethods):
         return prop
 
     def add_dti(self, name, fields, comment=''):
-        dti = DTI(name, fields, comment=comment)
-        self._add_dti_object(dti)
+        if name.upper() == 'UNITS':
+            dti = DTI(name, fields, comment=comment)
+            self._add_dti_object(dti)
+        else:
+            if comment:
+                self.rejects.append([comment])
+            self.reject_cards.append(card_obj)
+            self._write_reject_message(card_name, card_obj, comment=comment)
         return dti
 
     def add_dmig_uaccel(self, tin, ncol, load_sequences, comment=''):

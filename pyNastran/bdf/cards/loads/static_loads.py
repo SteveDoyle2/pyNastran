@@ -2067,11 +2067,28 @@ class GMLOAD(Load):
 class PLOAD(Load):
     type = 'PLOAD'
 
-    def __init__(self, sid, p, nodes, comment=''):
+    def __init__(self, sid, pressure, nodes, comment=''):
+        """
+        Creates a PLOAD card, which defines a uniform pressure load on a
+        shell/solid face or arbitrarily defined quad/tri face
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply
+        nodes : List[int]
+            The nodes that are used to define the normal are defined
+            using the same method as the CTRIA3/CQUAD4 normal.
+            n = 3 or 4
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
-        self.p = p
+        self.pressure = pressure
         self.nodes = nodes
         assert len(self.nodes) in [3, 4], 'nodes=%s' % self.nodes
 
@@ -2088,7 +2105,7 @@ class PLOAD(Load):
             a comment for the card
         """
         sid = integer(card, 1, 'sid')
-        p = double(card, 2, 'p')
+        pressure = double(card, 2, 'pressure')
         nodes = [integer(card, 3, 'n1'),
                  integer(card, 4, 'n2'),
                  integer(card, 5, 'n3')]
@@ -2096,7 +2113,7 @@ class PLOAD(Load):
         if n4:
             nodes.append(n4)
         assert len(card) <= 7, 'len(PLOAD card) = %i\ncard=%s' % (len(card), card)
-        return PLOAD(sid, p, nodes, comment=comment)
+        return PLOAD(sid, pressure, nodes, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2111,9 +2128,9 @@ class PLOAD(Load):
             a comment for the card
         """
         sid = data[0]
-        p = data[1]
+        pressure = data[1]
         nodes = data[2:]
-        return PLOAD(sid, p, nodes, comment=comment)
+        return PLOAD(sid, pressure, nodes, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2136,7 +2153,7 @@ class PLOAD(Load):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['PLOAD', self.sid, self.p] + self.node_ids
+        list_fields = ['PLOAD', self.sid, self.pressure] + self.node_ids
         return list_fields
 
     def repr_fields(self):
@@ -2172,7 +2189,7 @@ class PLOAD1(Load):
             valid_types = {FX, FY, FZ, FXE, FYE, FZE,
                            MX, MY, MZ, MXE, MYE, MZE}
         scale : float
-            local factor
+            local pressure scaling factor
         x1 / x2 : float / float
             the starting/end position for the load application
             the default for x2 is x1
@@ -2378,7 +2395,7 @@ class PLOAD1(Load):
                     x1 = load.x1 / L
                     x2 = load.x2 / L
                 else:
-                    raise NotImplementedError('scale=%s is not supported.  Use "FR", "LE".')
+                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".')
 
                 assert x1 <= x2, '---load---\n%sx1=%r must be less than x2=%r' % (repr(self), self.x1, self.x2)
                 if  x1 == x2:
@@ -2387,10 +2404,10 @@ class PLOAD1(Load):
                            'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").'
                            % (repr(self), self.x1, self.x2, self.p1, self.p2))
                     raise NotImplementedError(msg)
-                    if p1 != p2:
-                        msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  % (
-                            self.p1, self.p2, self.x1)
-                        raise RuntimeError(msg)
+                    #if p1 != p2:
+                        #msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  % (
+                            #self.p1, self.p2, self.x1)
+                        #raise RuntimeError(msg)
 
                 dx = x2 - x1
                 m = (p2 - p1) / dx
@@ -2455,11 +2472,39 @@ class PLOAD1(Load):
 
 
 class PLOAD2(Load):
+    """
+    +--------+-----+------+------+------+------+------+------+------+
+    |    1   |   2 |  3   |  4   |   5  |   6  |   7  |   8  |   9  |
+    +========+=====+======+======+======+=============+======+======+
+    | PLOAD2 | SID |  P   | EID1 | EID2 | EID3 | EID4 | EID5 | EID6 |
+    +--------+-----+------+------+------+------+------+------+------+
+    | PLOAD2 | 21  | -3.6 |  4   |  16  |  2   |      |      |      |
+    +--------+-----+------+------+------+------+------+------+------+
+    | PLOAD2 | SID |  P   | EID1 | THRU | EID2 |      |      |      |
+    +--------+-----+------+------+------+------+------+------+------+
+    """
     type = 'PLOAD2'
 
     def __init__(self, sid, pressure, eids, comment=''):
+        """
+        Creates a PLOAD2 card, which defines an applied load normal to the quad/tri face
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply to the elements
+        eids : List[int]
+            the elements to apply pressure to
+            n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
+        if isinstance(eids, integer_types):
+            self.eids = [eids]
         self.sid = sid
         self.pressure = pressure
         self.eids = eids

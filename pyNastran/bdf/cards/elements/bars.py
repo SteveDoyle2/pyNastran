@@ -220,6 +220,31 @@ class CBARAO(BaseCard):
     +--------+------+-------+------+-----+--------+-----+----+----+
     """
     def __init__(self, eid, scale, x, comment=''):
+        """
+        Creates a CBARAO card, which defines additional output locations
+        for the CBAR card.
+
+        It also changes the OP2 element type from a CBAR-34 to a CBAR-100.
+        However, it is ignored if there are no PLOAD1s in the model.
+        Furthermore, the type is changed for the whole deck, regardless of
+        whether there are PLOAD1s in the other load cases.
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        scale : str
+            defines what x means
+            LE : x is in absolute coordinates along the bar
+            FR : x is in fractional
+        x : List[float]
+            the additional output locations
+            len(x) <= 6
+        comment : str; default=''
+            a comment for the card
+
+        MSC only
+        """
         if comment:
             self.comment = comment
         self.eid = eid

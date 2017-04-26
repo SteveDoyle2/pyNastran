@@ -1470,7 +1470,7 @@ class BDFMethods(BDFAttributes):
                     msg += 'nunit = %s\n' % nunit
                     raise FloatingPointError(msg)
                 r = centroid - p
-                f = load.p * A * normal * scale
+                f = load.pressure * A * normal * scale
                 m = cross(r, f)
 
                 node_scale = nodesi / float(nnodes)
@@ -1920,7 +1920,7 @@ class BDFMethods(BDFAttributes):
                     msg += 'nunit = %s\n' % nunit
                     raise FloatingPointError(msg)
                 r = centroid - p
-                f = load.p * area * normal * scale
+                f = load.pressure * area * normal * scale
                 m = cross(r, f)
 
                 F += f

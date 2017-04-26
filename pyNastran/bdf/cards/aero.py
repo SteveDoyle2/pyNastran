@@ -1386,13 +1386,23 @@ class AEROS(Aero):
             return self.rcsid
 
     def validate(self):
-        assert isinstance(self.acsid, integer_types), 'acsid=%s type=%s' % (self.acsid, type(self.acsid))
-        assert isinstance(self.rcsid, integer_types), 'rcsid=%s type=%s' % (self.rcsid, type(self.rcsid))
-        assert isinstance(self.cref, float), 'cref=%s type=%s' % (self.cref, type(self.cref))
-        assert isinstance(self.bref, float), 'bref=%s type=%s' % (self.bref, type(self.bref))
-        assert isinstance(self.sref, float), 'sref=%s type=%s' % (self.sref, type(self.sref))
-        assert isinstance(self.sym_xz, integer_types), 'sym_xz=%s type=%s' % (self.sym_xz, type(self.sym_xz))
-        assert isinstance(self.sym_xy, integer_types), 'sym_xy=%s type=%s' % (self.sym_xy, type(self.sym_xy))
+        msg = ''
+        if not isinstance(self.acsid, integer_types):
+            msg += 'acsid=%s must be an integer; type=%s\n' % (self.acsid, type(self.acsid))
+        if not isinstance(self.rcsid, integer_types):
+            msg += 'rcsid=%s must be an integer; type=%s\n' % (self.rcsid, type(self.rcsid))
+        if not isinstance(self.cref, float):
+            msg += 'cref=%s must be an float; type=%s\n' % (self.cref, type(self.cref))
+        if not isinstance(self.bref, float):
+            msg += 'bref=%s must be an float; type=%s\n' % (self.bref, type(self.bref))
+        if not isinstance(self.sref, float):
+            msg += 'sref=%s must be an float; type=%s\n' % (self.sref, type(self.sref))
+        if not isinstance(self.sym_xz, integer_types):
+            msg += 'sym_xz=%s must be an integer; type=%s\n' % (self.sym_xz, type(self.sym_xz))
+        if not isinstance(self.sym_xy, integer_types):
+            msg += 'sym_xy=%s must be an integer; type=%s\n' % (self.sym_xy, type(self.sym_xy))
+        if msg:
+            raise RuntimeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
 
     def cross_reference(self, model):
         """
@@ -1677,43 +1687,54 @@ class CAERO1(BaseCard):
     |        |  X1 | Y1  | Z1 | X12   | X4     | Y4     | Z4     | X43  |
     +--------+-----+-----+----+-------+--------+--------+--------+------+
 
+        ::
+
+          1
+          | \
+          |   \
+          |     \
+          |      4
+          |      |
+          |      |
+          2------3
+
     Attributes
     ----------
-    sid : int
-       element id
+    eid : int
+        element id
     pid : int, PAERO1
-       int : PAERO1 ID
-       PAERO1 : PAERO1 object (xref)
+        int : PAERO1 ID
+        PAERO1 : PAERO1 object (xref)
     igid : int
-       Group number
+        Group number
     p1 : (1, 3) ndarray float
-       xyz location of point 1 (leading edge; inboard)
+        xyz location of point 1 (leading edge; inboard)
     p4 : (1, 3) ndarray float
-       xyz location of point 4 (leading edge; outboard)
+        xyz location of point 4 (leading edge; outboard)
     x12 : float
-       distance along the flow direction from node 1 to node 2; (typically x, root chord)
+        distance along the flow direction from node 1 to node 2; (typically x, root chord)
     x43 : float
-       distance along the flow direction from node 4 to node 3; (typically x, tip chord)
+        distance along the flow direction from node 4 to node 3; (typically x, tip chord)
 
-    cp : int, CORDx; default=0
-       int : coordinate system
-       CORDx : Coordinate object (xref)
-    nspan : int; default=0
-       int > 0 : N spanwise boxes distributed evenly
-       int = 0 : use lchord
-    nchord : int; default=0
-       int > 0 : N chordwise boxes distributed evenly
-       int = 0 : use lchord
-    lspan : int, AEFACT; default=0
-       int > 0 : AEFACT reference for non-uniform nspan
-       int = 0 : use nspan
-       AEFACT : AEFACT object  (xref)
-    lchord : int, AEFACT; default=0
-       int > 0 : AEFACT reference for non-uniform nchord
-       int = 0 : use nchord
-       AEFACT : AEFACT object  (xref)
+    cp : int, CORDx
+        int : coordinate system
+        CORDx : Coordinate object (xref)
+    nspan : int
+        int > 0 : N spanwise boxes distributed evenly
+        int = 0 : use lchord
+    nchord : int
+        int > 0 : N chordwise boxes distributed evenly
+        int = 0 : use lchord
+    lspan : int, AEFACT
+        int > 0 : AEFACT reference for non-uniform nspan
+        int = 0 : use nspan
+        AEFACT : AEFACT object  (xref)
+    lchord : int, AEFACT
+        int > 0 : AEFACT reference for non-uniform nchord
+        int = 0 : use nchord
+        AEFACT : AEFACT object  (xref)
     comment : str; default=''
-        a comment for the card
+         a comment for the card
     """
     type = 'CAERO1'
     _field_map = {
@@ -1776,19 +1797,47 @@ class CAERO1(BaseCard):
 
     def __init__(self, eid, pid, igid, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
-        r"""
-        ::
-
-          1
-          | \
-          |   \
-          |     \
-          |      4
-          |      |
-          |      |
-          2------3
         """
+        Defines a CAERO1 card, which defines a simplified lifting surface
+        (e.g., wing/tail).
 
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int, PAERO1
+            int : PAERO1 ID
+            PAERO1 : PAERO1 object (xref)
+        igid : int
+            Group number
+        p1 : (1, 3) ndarray float
+            xyz location of point 1 (leading edge; inboard)
+        p4 : (1, 3) ndarray float
+            xyz location of point 4 (leading edge; outboard)
+        x12 : float
+            distance along the flow direction from node 1 to node 2; (typically x, root chord)
+        x43 : float
+            distance along the flow direction from node 4 to node 3; (typically x, tip chord)
+        cp : int, CORDx; default=0
+            int : coordinate system
+            CORDx : Coordinate object (xref)
+        nspan : int; default=0
+            int > 0 : N spanwise boxes distributed evenly
+            int = 0 : use lchord
+        nchord : int; default=0
+            int > 0 : N chordwise boxes distributed evenly
+            int = 0 : use lchord
+        lspan : int, AEFACT; default=0
+            int > 0 : AEFACT reference for non-uniform nspan
+            int = 0 : use nspan
+            AEFACT : AEFACT object  (xref)
+        lchord : int, AEFACT; default=0
+            int > 0 : AEFACT reference for non-uniform nchord
+            int = 0 : use nchord
+            AEFACT : AEFACT object  (xref)
+        comment : str; default=''
+             a comment for the card
+        """
         if cp is None:
             cp = 0
         if lspan is None:
@@ -2312,15 +2361,35 @@ class CAERO2(BaseCard):
     def __init__(self, eid, pid, igid, p1, x12,
                  cp=0, nsb=0, nint=0, lsb=0, lint=0, comment=''):
         """
-        ::
+        Defines a CAERO2 card, which defines a slender body
+        (e.g., fuselage/wingtip tank).
 
-          1 \
-          |   \
-          |     \
-          |      3
-          |      |
-          |      |
-          2------4
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int, PAERO2
+            int : PAERO2 ID
+            PAERO2 : PAERO2 object (xref)
+        igid : int
+            Group number
+        p1 : (1, 3) ndarray float
+            xyz location of point 1 (forward position)
+        x12 : float
+            length of the CAERO2
+        cp : int, CORDx; default=0
+            int : coordinate system
+            CORDx : Coordinate object (xref)
+        nsb : int; default=0
+            AEFACT id for defining the location of the slender body elements
+        lsb : int; default=0
+            AEFACT id for defining the location of interference elements
+        nint : int; default=0
+            Number of slender body elements
+        lint : int; default=0
+            Number of interference elements
+        comment : str; default=''
+            a comment for the card
         """
         if lsb is None:
             lsb = 0
@@ -3881,7 +3950,7 @@ class FLUTTER(BaseCard):
     +=========+=====+========+======+======+=======+=======+=============+======+
     | FLUTTER | SID | METHOD | DENS | MACH | RFREQ | IMETH | NVALUE/OMAX | EPS  |
     +---------+-----+--------+------+------+-------+-------+-------------+------+
-    | FLUTTER | 19  | K      | 119  | 219  | 319   |     S | 5           | 1.-4 |
+    | FLUTTER | 19  |   K    | 119  | 219  | 319   |   S   |      5      | 1.-4 |
     +---------+-----+--------+------+------+-------+-------+-------------+------+
     """
     type = 'FLUTTER'
@@ -3936,7 +4005,50 @@ class FLUTTER(BaseCard):
             raise KeyError('Field %r=%r is an invalid FLUTTER entry.' % (n, value))
 
     def __init__(self, sid, method, density, mach, reduced_freq_velocity,
-                 imethod='L', nvalue=None, omax=None, epsilon=None, comment=''):
+                 imethod='L', nvalue=None, omax=None, epsilon=1.0e-3, comment=''):
+        """
+        Creates a FLUTTER card, which is required for a flutter (SOL 145)
+        analysis.
+
+        Parameters
+        ----------
+        sid : int
+            flutter id
+        method : str
+            valid methods = [K, KE,
+                             PKS, PKNLS, PKNL, PKE]
+        density : int
+            defines a series of air densities in units of mass/volume
+            PARAM,WTMASS does not affect this
+            AERO affects this
+            references an FLFACT id
+        mach : int
+            defines a series of the mach numbers
+            references an FLFACT id
+        reduced_freq_velocity : int
+            Defines a series of either:
+               1) reduced frequencies - K, KE
+               2) velocities - PK, PKNL, PKS, PKNLS
+            depending on the method chosen.
+            references an FLFACT id
+        imethod : str; default='L'
+            Choice of interpolation method for aerodynamic matrix interpolation.
+            imethods :
+               1) L - linear
+               2) S - surface
+               3) TCUB - termwise cubic
+        nvalue : int
+            Number of eigenvalues beginning with the first eigenvalue for
+            output and plots
+        omax : float
+            For the PKS and PKNLS methods, OMAX specifies the maximum frequency, in
+            Hz., to be used in he flutter sweep.
+            MSC only.
+        epsilon : float; default=1.0e-3
+            Convergence parameter for k. Used in the PK and PKNL methods only
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -4005,7 +4117,7 @@ class FLUTTER(BaseCard):
             raise NotImplementedError('FLUTTER method=%r' % method)
 
         assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
-        epsilon = double_or_blank(card, 8, 'epsilon')  # not defined in QRG
+        epsilon = double_or_blank(card, 8, 'epsilon', 1e-3)  # not defined in QRG
         assert len(card) <= 9, 'len(FLUTTER card) = %i\ncard=%s' % (len(card), card)
         return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
                        imethod=imethod, nvalue=nvalue, omax=omax,
@@ -4236,6 +4348,19 @@ class MKAERO1(BaseCard):
     type = 'MKAERO1'
 
     def __init__(self, machs, reduced_freqs, comment=''):
+        """
+        Creates an MKAERO1 card, which defines a set of mach and
+        reduced frequencies.
+
+        Parameters
+        ----------
+        machs : List[float]
+            series of Mach numbers
+        reduced_freqs : List[float]
+            series of reduced frequencies
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.machs = np.unique(machs)
@@ -4271,16 +4396,6 @@ class MKAERO1(BaseCard):
         machs = wipe_empty_fields(machs)
         reduced_freqs = wipe_empty_fields(reduced_freqs)
         return MKAERO1(machs, reduced_freqs, comment=comment)
-
-    #def addFreqs(self, mkaero):
-        #self.getMach_rFreqs()
-        #for m in mkaero.machs:
-            #self.machs.append(m)
-        #for f in mkaero.reduced_freqs:
-            #self.reduced_freqs.append(f)
-
-    #def getMach_rFreqs(self):
-        #return self.machs, self.reduced_freqs
 
     def raw_fields(self):
         """
@@ -4366,6 +4481,19 @@ class MKAERO2(BaseCard):
     type = 'MKAERO2'
 
     def __init__(self, machs, reduced_freqs, comment=''):
+        """
+        Creates an MKAERO2 card, which defines a set of mach and
+        reduced frequency pairs.
+
+        Parameters
+        ----------
+        machs : List[float]
+            series of Mach numbers
+        reduced_freqs : List[float]
+            series of reduced frequencies
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.machs = machs
@@ -4404,16 +4532,6 @@ class MKAERO2(BaseCard):
             machs.append(double(card, i, 'mach'))
             reduced_freqs.append(double(card, i + 1, 'rFreq'))
         return MKAERO2(machs, reduced_freqs, comment=comment)
-
-    #def addFreqs(self, mkaero):
-        #self.getMach_rFreqs()
-        #for m in mkaero.machs:
-            #self.machs.append(m)
-        #for f in mkaero.reduced_freqs:
-            #self.reduced_freqs.append(f)
-
-    #def getMach_rFreqs(self):
-        #return self.machs, self.reduced_freqs
 
     def raw_fields(self):
         """
@@ -4469,6 +4587,10 @@ class MONPNT1(BaseCard):
     type = 'MONPNT1'
     def __init__(self, name, label, axes, comp, xyz, cp=0, cd=None, comment=''):
         """
+        Creates a MONPNT1 card
+
+        Parameters
+        ----------
         name : str
             Character string of up to 8 characters identifying the
             monitor point
@@ -4717,6 +4839,19 @@ class PAERO1(BaseCard):
         self.Bi[n - 1] = value
 
     def __init__(self, pid, Bi=None, comment=''):
+        """
+        Creates a PAERO1 card, which defines associated bodies for the
+        panels in the Doublet-Lattice method.
+
+        Parameters
+        ----------
+        pid : int
+            PAERO1 id
+        Bi : List[int]; default=None
+            CAERO2 ids that are within the same IGID group
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.pid = pid
@@ -4841,6 +4976,40 @@ class PAERO2(BaseCard):
     def __init__(self, pid, orient, width, AR,
                  thi, thn, lrsb=None, lrib=None, lth1=None, lth2=None,
                  comment=''):
+        """
+        Creates a PAERO2 card, which defines additional cross-sectional
+        properties for the CAERO2 geometry.
+
+        Parameters
+        ----------
+        pid : int
+            PAERO1 id
+        orient : str
+            Orientation flag. Type of motion allowed for bodies. Refers
+            to the aerodynamic coordinate system of ACSID. See AERO entry.
+            valid_orientations = {Z, Y, ZY}
+        width : float
+            Reference half-width of body and the width of the constant
+            width interference tube
+        AR : float
+            Aspect ratio of the interference tube (height/width)
+        thi / thn : List[int]
+            The first (thi) and last (thn) interference element of a body
+            to use the theta1/theta2 array
+        lrsb : int; default=None
+            int : AEFACT id containing a list of slender body half-widths
+                  at the end points of the slender body elements
+            None : use width
+        lrib : int; default=None
+            int : AEFACT id containing a list of interference body
+                  half-widths at the end points of the interference elements
+            None : use width
+        lth1 / lth2 : int; default=None
+            AEFACT id for defining theta arrays for interference calculations
+            for theta1/theta2
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
 
@@ -4871,7 +5040,7 @@ class PAERO2(BaseCard):
         #: (Integer > 0 or blank)
         self.lrib = lrib
 
-        #: Identification number of AEFACT entries for defining ? arrays for
+        #: Identification number of AEFACT entries for defining theta arrays for
         #: interference calculations. (Integer >= 0)
         self.lth1 = lth1
         self.lth2 = lth2
@@ -5273,6 +5442,43 @@ class SPLINE1(Spline):
 
     def __init__(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
                  usage='BOTH', nelements=10, melements=10, comment=''):
+        """
+        Creates a SPLINE1, which defines a surface spline.
+
+        Parameters
+        ----------
+        eid : int
+            spline id
+        caero : int
+            CAEROx id that defines the plane of the spline
+        box1 / box2 : int
+            First/last box id that is used by the spline
+        setg : int
+            SETx id that defines the list of GRID points that are used
+            by the surface spline
+        dz : float; default=0.0
+            linear attachment flexibility
+            dz = 0.; spline passes through all grid points
+        method : str; default=IPS
+            method for spline fit
+            valid_methods = {IPS, TPS, FPS}
+            IPS : Harder-Desmarais Infinite Plate Spline
+            TPS : Thin Plate Spline
+            FPS : Finite Plate Spline
+        usage : str; default=BOTH
+            Spline usage flag to determine whether this spline applies
+            to the force transformation, displacement transformation, or
+            both
+            valid_usage = {FORCE, DISP, BOTH}
+        nelements : int; default=10
+            The number of FE elements along the local spline x-axis if
+            using the FPS option
+        melements : int; default=10
+            The number of FE elements along the local spline y-axis if
+            using the FPS option
+        comment : str; default=''
+            a comment for the card
+        """
         Spline.__init__(self)
         if comment:
             self.comment = comment
@@ -5434,7 +5640,7 @@ class SPLINE1(Spline):
 class SPLINE2(Spline):
     """
     Linear Spline
-    Defines a surface spline for interpolating motion and/or forces for
+    Defines a beam spline for interpolating motion and/or forces for
     aeroelastic problems on aerodynamic geometries defined by regular
     arrays of aerodynamic points.
 
@@ -5460,8 +5666,45 @@ class SPLINE2(Spline):
         7: 'dtor', 8:'cid', 9:'dthx', 10:'dthy',
     }
 
-    def __init__(self, eid, caero, id1, id2, setg, dz, dtor, cid,
-                 dthx, dthy, usage, comment=''):
+    def __init__(self, eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=0,
+                 dthx=None, dthy=None, usage='BOTH', comment=''):
+        """
+        Creates a SPLINE2 card, which defines a beam spline.
+
+        Parameters
+        ----------
+        eid : int
+            spline id
+        caero : int
+            CAEROx id that defines the plane of the spline
+        id1 / id2 : int
+            First/last box/body id that is used by the spline
+        setg : int
+            SETx id that defines the list of GRID points that are used
+            by the beam spline
+        dz : float; default=0.0
+            linear attachment flexibility
+            dz = 0.; spline passes through all grid points
+        dtor : float; default=1.0
+            Torsional flexibility ratio (EI/GJ).
+            Use 1.0 for bodies (CAERO2).
+        cid : int; default=0
+            Rectangular coordinate system for which the y-axis defines the
+            axis of the spline. Not used for bodies, CAERO2
+        dthx : float; default=None
+            Rotational attachment flexibility.
+            DTHX : Used for rotation about the spline's x-axis (in-plane
+                   bending rotations).  It is not used for bodies (CAERO2).
+            DTHY : Used for rotation about the spline's y-axis (torsion).
+                   It is used for slope of bodies.
+        usage : str; default=BOTH
+            Spline usage flag to determine whether this spline applies
+            to the force transformation, displacement transformation, or
+            both
+            valid_usage = {FORCE, DISP, BOTH}
+        comment : str; default=''
+            a comment for the card
+        """
         Spline.__init__(self)
         if comment:
             self.comment = comment

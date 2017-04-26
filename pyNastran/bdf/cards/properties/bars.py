@@ -983,7 +983,8 @@ class PBARL(LineProperty):
 
     def __init__(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """
-        Creates a PBARL card
+        Creates a PBARL card, which defines A, I1, I2, I12, and J using
+        dimensions rather than explicit values.
 
         Parameters
         ----------
@@ -1005,6 +1006,15 @@ class PBARL(LineProperty):
            non-structural mass
         comment : str; default=''
             a comment for the card
+
+        The shear center and neutral axis do not coincide when:
+           - Type = I and dim2 != dim3
+           - Type = CHAN, CHAN1, CHAN2
+           - Type = T
+           - Type = T1, T2
+           - Type = BOX1
+           - Type = HAT, HAT1
+           - Type = DBOX
         """
         LineProperty.__init__(self)
         if comment:

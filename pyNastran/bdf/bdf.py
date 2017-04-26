@@ -2335,7 +2335,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
     def _prepare_dti(self, card_name, card_obj, comment=''):
         """adds a DTI"""
         name = string(card_obj, 1, 'name')
-        if name == 'UNITS':
+        if name.upper() == 'UNITS':
             self._add_dti_object(DTI.add_card(card_obj, comment=comment))
         else:
             if comment:
