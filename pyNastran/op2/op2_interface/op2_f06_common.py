@@ -124,7 +124,18 @@ class OP2_F06_Common(object):
         self.ctria3_force_NO = {}
 
         self.ctria6_force = {}
+        self.ctria6_force_ATO = {}
+        self.ctria6_force_CRM = {}
+        self.ctria6_force_PSD = {}
+        self.ctria6_force_RMS = {}
+        self.ctria6_force_NO = {}
+
         self.ctriar_force = {}
+        self.ctriar_force_ATO = {}
+        self.ctriar_force_CRM = {}
+        self.ctriar_force_PSD = {}
+        self.ctriar_force_RMS = {}
+        self.ctriar_force_NO = {}
 
         self.cquad4_force = {}
         self.cquad4_force_ATO = {}
@@ -134,7 +145,18 @@ class OP2_F06_Common(object):
         self.cquad4_force_NO = {}
 
         self.cquad8_force = {}
+        self.cquad8_force_ATO = {}
+        self.cquad8_force_CRM = {}
+        self.cquad8_force_PSD = {}
+        self.cquad8_force_RMS = {}
+        self.cquad8_force_NO = {}
+
         self.cquadr_force = {}
+        self.cquadr_force_ATO = {}
+        self.cquadr_force_CRM = {}
+        self.cquadr_force_PSD = {}
+        self.cquadr_force_RMS = {}
+        self.cquadr_force_NO = {}
 
         self.ctria3_stress = {}
         self.ctria6_stress = {}
@@ -719,12 +741,12 @@ class OP2_F06_Common(object):
             'cgap_force',
 
             'cquad4_force', 'cquad4_force_ATO', 'cquad4_force_CRM', 'cquad4_force_PSD', 'cquad4_force_RMS', 'cquad4_force_NO',
-            'cquad8_force',
-            'cquadr_force',
+            'cquad8_force', 'cquad8_force_ATO', 'cquad8_force_CRM', 'cquad8_force_PSD', 'cquad8_force_RMS', 'cquad8_force_NO',
+            'cquadr_force', 'cquadr_force_ATO', 'cquadr_force_CRM', 'cquadr_force_PSD', 'cquadr_force_RMS', 'cquadr_force_NO',
 
             'ctria3_force', 'ctria3_force_ATO', 'ctria3_force_CRM', 'ctria3_force_PSD', 'ctria3_force_RMS', 'ctria3_force_NO',
-            'ctria6_force',
-            'ctriar_force',
+            'ctria6_force', 'ctria6_force_ATO', 'ctria6_force_CRM', 'ctria6_force_PSD', 'ctria6_force_RMS', 'ctria6_force_NO',
+            'ctriar_force', 'ctriar_force_ATO', 'ctriar_force_CRM', 'ctriar_force_PSD', 'ctriar_force_RMS', 'ctriar_force_NO',
 
             'cshear_force',
             #'cquad4_composite_force',
