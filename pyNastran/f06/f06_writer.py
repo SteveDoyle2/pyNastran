@@ -430,12 +430,12 @@ class F06Writer(OP2_F06_Common):
                                       is_mag_phase=is_mag_phase, is_sort1=is_sort1,
                                       quiet=quiet, repr_check=repr_check)
         #self._write_f06_time_based(f06, page_stamp)
-        self.write_matrices(f06, page_stamp, self.page_num)
+        self.write_matrices(f06, page_stamp, self.page_num, quiet=quiet)
         f06.write(make_end(end_flag, self.end_options))
         if close:
             f06.close()
 
-    def write_matrices(self, f06, page_stamp, page_num):
+    def write_matrices(self, f06, page_stamp, page_num, quiet=True):
         if hasattr(self, 'monitor1'):
             page_num = self.monitor1.write(f06, page_stamp=page_stamp, page_num=page_num)
             print('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
@@ -446,7 +446,8 @@ class F06Writer(OP2_F06_Common):
             elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
                 pass
             else:
-                print(matrix)
+                if not quiet:
+                    print(matrix)
                 matrix.write(f06)
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
@@ -615,15 +616,15 @@ class F06Writer(OP2_F06_Common):
             self.celas4_force,
 
             self.cquad4_force, self.cquad4_force_ATO, self.cquad4_force_CRM, self.cquad4_force_PSD, self.cquad4_force_RMS, self.cquad4_force_NO,
-            self.cquad8_force,
-            self.cquadr_force,
+            self.cquad8_force, self.cquad8_force_ATO, self.cquad8_force_CRM, self.cquad8_force_PSD, self.cquad8_force_RMS, self.cquad8_force_NO,
+            self.cquadr_force, self.cquadr_force_ATO, self.cquadr_force_CRM, self.cquadr_force_PSD, self.cquadr_force_RMS, self.cquadr_force_NO,
 
             self.conrod_force,
             self.crod_force,
             self.cshear_force,
             self.ctria3_force, self.ctria3_force_ATO, self.ctria3_force_CRM, self.ctria3_force_PSD, self.ctria3_force_RMS, self.ctria3_force_NO,
-            self.ctria6_force,
-            self.ctriar_force,
+            self.ctria6_force, self.ctria3_force_ATO, self.ctria6_force_CRM, self.ctria6_force_PSD, self.ctria6_force_RMS, self.ctria6_force_NO,
+            self.ctriar_force, self.ctriar_force_ATO, self.ctriar_force_CRM, self.ctriar_force_PSD, self.ctriar_force_RMS, self.ctriar_force_NO,
             self.ctube_force,
 
             # springs

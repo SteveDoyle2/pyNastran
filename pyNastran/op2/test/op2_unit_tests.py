@@ -59,56 +59,56 @@ class TestOP2(Tester):
         res = np.array([1])
         self.assertTrue(np.array_equal(i, res), 'C i=%s res=%s' % (i, res))
 
-        def test_abs_max_min_global(self):
-            #print(iformat('4si3f', 2))
-            print(abs_max_min_global([0.0, 2.0, 1.0]))
-            print(abs_max_min_global([0.0, 2.0, -1.0]))
-            print(abs_max_min_global([0.0, 2.0, -3.0]))
-            print(abs_max_min_global(np.array([0.0, 2.0, -3.0])))
-            print(abs_max_min_global([1.0]))
+    def test_abs_max_min_global(self):
+        #print(iformat('4si3f', 2))
+        print(abs_max_min_global([0.0, 2.0, 1.0]))
+        print(abs_max_min_global([0.0, 2.0, -1.0]))
+        print(abs_max_min_global([0.0, 2.0, -3.0]))
+        print(abs_max_min_global(np.array([0.0, 2.0, -3.0])))
+        print(abs_max_min_global([1.0]))
 
-            # gets the global max/min value
-            print(abs_max_min_global([
-                [0.0, 2.0, -3.0],
-                [0.0, 2.0, -4.0],
-            ]))
-            print(abs_max_min_global(np.array([
-                [0.0, 2.0, -3.0],
-                [0.0, 2.0, -4.0],
-            ])))
+        # gets the global max/min value
+        print(abs_max_min_global([
+            [0.0, 2.0, -3.0],
+            [0.0, 2.0, -4.0],
+        ]))
+        print(abs_max_min_global(np.array([
+            [0.0, 2.0, -3.0],
+            [0.0, 2.0, -4.0],
+        ])))
 
-        def test_abs_max_min_vector(self):
-            print(abs_max_min_vector(np.array([
-                [0.0, 2.0, 1.0],
-                [0.0, 2.0, -1.0],
-                [0.0, 2.0, -3.0],
-            ])))
+    def test_abs_max_min_vector(self):
+        print(abs_max_min_vector(np.array([
+            [0.0, 2.0, 1.0],
+            [0.0, 2.0, -1.0],
+            [0.0, 2.0, -3.0],
+        ])))
 
-            print(abs_max_min_vector([
-                [0.0, 2.0, 1.0],
-                [0.0, 2.0, -1.0],
-                [0.0, 2.0, -3.0],
-                [0.0, 2.0, 4.0],
-            ]))
-            print(abs_max_min_vector(np.array([
-                [0.0, 2.0, 1.0],
-                [0.0, 2.0, -1.0],
-                [0.0, 2.0, -3.0],
-                [0.0, 2.0, 4.0],
-            ])))
+        print(abs_max_min_vector([
+            [0.0, 2.0, 1.0],
+            [0.0, 2.0, -1.0],
+            [0.0, 2.0, -3.0],
+            [0.0, 2.0, 4.0],
+        ]))
+        print(abs_max_min_vector(np.array([
+            [0.0, 2.0, 1.0],
+            [0.0, 2.0, -1.0],
+            [0.0, 2.0, -3.0],
+            [0.0, 2.0, 4.0],
+        ])))
 
-            print(abs_max_min_vector(np.array([
-                [3.0, 2.0, -3.0],
-                [-3.0, 2.0, 3.0],
-            ])))
+        print(abs_max_min_vector(np.array([
+            [3.0, 2.0, -3.0],
+            [-3.0, 2.0, 3.0],
+        ])))
 
-            # not an array
-            #print(abs_max_min([
-                #[0.0, 2.0, 1.0],
-                #[0.0, 2.0, -1.0],
-                #[0.0, 2.0, -3.0],
-                #[0.0, 2.0, 4.0],
-            #]))
+        # not an array
+        #print(abs_max_min([
+            #[0.0, 2.0, 1.0],
+            #[0.0, 2.0, -1.0],
+            #[0.0, 2.0, -3.0],
+            #[0.0, 2.0, 4.0],
+        #]))
 
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""
@@ -1343,6 +1343,66 @@ class TestOP2(Tester):
         eigenvector = model.eigenvectors[isubcase]
         #print(eigenvector)
         assert len(eigenvector.modes) == 2, eigenvector.modes
+
+    def test_random_ctria3(self):
+        """runs a random test"""
+        folder = os.path.join(model_path, 'random')
+        op2_filename = os.path.join(folder, 'random_test_bar_plus_tri.op2')
+        f06_filename = os.path.join(folder, 'random_test_bar_plus_tri.test_op2.f06')
+        op2 = read_op2(op2_filename, debug=False)
+        assert len(op2.displacements_PSD) == 1
+        assert len(op2.displacements_RMS) == 1
+        assert len(op2.displacements_CRM) == 1
+        assert len(op2.displacements_NO) == 1
+        assert len(op2.accelerations_PSD) == 1
+        assert len(op2.accelerations_RMS) == 1
+        assert len(op2.accelerations_CRM) == 1
+        assert len(op2.accelerations_NO) == 1
+        assert len(op2.cbar_force_CRM) == 1
+        assert len(op2.cbar_force_PSD) == 1
+        assert len(op2.cbar_force_RMS) == 1
+        assert len(op2.cbar_force_NO) == 1
+        assert len(op2.cquad4_force_CRM) == 1
+        assert len(op2.cquad4_force_PSD) == 1
+        assert len(op2.cquad4_force_RMS) == 1
+        assert len(op2.cquad4_force_NO) == 1
+        assert len(op2.ctria3_force_CRM) == 1
+        assert len(op2.ctria3_force_PSD) == 1
+        assert len(op2.ctria3_force_RMS) == 1
+        assert len(op2.ctria3_force_NO) == 1
+        assert len(op2.cbar_force_NO) == 1
+        assert len(op2.cbar_force_NO) == 1
+        assert len(op2.cbar_force_NO) == 1
+        assert len(op2.eigenvalues) == 1
+        assert 'BHH' in op2.matrices
+        assert 'KHH' in op2.matrices
+
+        #displacements_PSD[1]
+        #displacements_RMS[1]
+        #displacements_CRM[1]
+        #displacements_NO[1]
+        #accelerations_PSD[1]
+        #accelerations_RMS[1]
+        #accelerations_CRM[1]
+        #accelerations_NO[1]
+        #cbar_force_CRM[1]
+        #cbar_force_PSD[1]
+        #cbar_force_RMS[1]
+        #cbar_force_NO[1]
+        #eigenvalues[u'RANDOM TEST']
+        #cquad4_force_CRM[1]
+        #cquad4_force_PSD[1]
+        #cquad4_force_RMS[1]
+        #cquad4_force_NO[1]
+        #ctria3_force_CRM[1]
+        #ctria3_force_PSD[1]
+        #ctria3_force_RMS[1]
+        #ctria3_force_NO[1]
+        #Matrix['BHH'];   shape=(20, 20); type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
+        #Matrix['KHH'];   shape=(20, 20); type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
+
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

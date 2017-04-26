@@ -1,6 +1,7 @@
 """Defines the Matrix class"""
 from __future__ import print_function
 from scipy.sparse import coo_matrix
+import numpy as np
 
 #from pyNastran.utils import object_attributes
 
@@ -79,8 +80,13 @@ class Matrix(object):
             else:
                 f06.write(str(matrix))
         else:
-            f06.write(str(matrix))
-            print('WARNING: matrix type=%s does not support writing' % type(matrix))
+            f06.write('name=%r; shape=%s; form=%i; Type=%r\n' % (
+                self.name, str(self.data.shape).replace('L', ''),
+                self.form, self.shape_str))
+            if print_full:
+                np.savetxt(f06, self.data, delimiter=",")
+            #f06.write(str(matrix))
+            #print('WARNING: matrix type=%s does not support writing' % type(matrix))
         f06.write('\n\n')
 
     def __repr__(self):
