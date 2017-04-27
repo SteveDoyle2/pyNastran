@@ -423,7 +423,7 @@ class CalculixConverter(BDF):
                     msg += 'a x b = %s\n' % axb
                     msg += 'nunit = %s\n' % nunit
                     raise FloatingPointError(msg)
-                forcei = load.p * A * n * scale / nnodes
+                forcei = load.pressure * A * n * scale / nnodes
 
                 for nid in nodes:
                     i = nid_to_i_map[nid]

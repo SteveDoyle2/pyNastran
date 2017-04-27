@@ -1,5 +1,6 @@
 from __future__ import print_function
 from collections import defaultdict
+from codecs import open
 from numpy import cross, allclose
 from numpy.linalg import norm
 from pyNastran.converters.cart3d.cart3d import Cart3D
@@ -52,7 +53,7 @@ def normal_groups_to_quads(elements, normals, normal_groups):
     return tris, quads
 
 def write_nastran_quads_tris(nodes, tris, quads, bdf_filename='tris_quads.bdf'):
-    with open(bdf_filename, 'wb') as bdf_file:
+    with open(bdf_filename, 'w') as bdf_file:
         bdf_file.write('CEND\n')
         bdf_file.write('BEGIN BULK\n')
         cp = 0

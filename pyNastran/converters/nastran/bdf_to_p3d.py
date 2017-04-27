@@ -181,7 +181,7 @@ class BdfToP3d(object):
         #out += "%s\n%s\n%s\n%s\n" % (x, y, z, w)
         out += '%s\n%s\n%s\n' % (x, y, z)
 
-        with open(p3dname, 'wb') as outfile:
+        with open(p3dname, 'w') as outfile:
             outfile.write(out)
 
     def write_p3d_line(self, elements_line, n0, n1):

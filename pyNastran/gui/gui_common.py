@@ -1850,7 +1850,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_error(msg)
             return is_failed
 
-        lines = open(python_file).read()
+        lines = open(python_file, 'r').read()
         try:
             exec(lines)
         except Exception as e:
@@ -1858,7 +1858,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
             self.log_error(str(e))
-            self.log_error(str(txt))
             return is_failed
         is_failed = False
         self._default_python_file = python_file

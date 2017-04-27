@@ -1,7 +1,8 @@
-from pyNastran.converters.cart3d.cart3d import Cart3D
-from six.moves import zip
+from codecs import open
 from itertools import count
+from six.moves import zip
 from numpy import unique
+from pyNastran.converters.cart3d.cart3d import Cart3D
 
 def cart3d_to_usm3d_bc(cart3d, usm3d_bc_filename):
     """
@@ -21,7 +22,7 @@ def cart3d_to_usm3d_bc(cart3d, usm3d_bc_filename):
     #elements = cart3d.elements
     #regions = cart3d.regions
 
-    with open(usm3d_bc_filename, 'wb') as usm3d_bc:
+    with open(usm3d_bc_filename, 'w') as usm3d_bc:
         patches = unique(regions)
         npatches = len(patches)
         nelements = elements.shape[0]

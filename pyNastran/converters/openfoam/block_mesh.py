@@ -1,10 +1,9 @@
 from __future__ import print_function
-from six import iteritems
-from six.moves import range, zip
-from copy import deepcopy
-
 import os
-from collections import defaultdict, OrderedDict
+from copy import deepcopy
+from codecs import open
+from collections import defaultdict, OrderedDictfrom six import iteritems
+from six.moves import range, zip
 
 import numpy as np
 from numpy import array, cross, unique, where, allclose, zeros, arange, ravel, ones, argsort
@@ -632,7 +631,7 @@ class BlockMesh(object):
         return nodes, hexas, quads, inames, bcs
 
     def write_bdf(self, bdf_filename, nodes, hexas):
-        f = open(bdf_filename, 'wb')
+        f = open(bdf_filename, 'w')
         f.write('CEND\n')
         f.write('BEGIN BULK\n')
         for inode, node in enumerate(nodes):
@@ -806,7 +805,7 @@ class BlockMesh(object):
         nodes = self.nodes
         hexas = self.hexas
         print('writing %s' % blockMesh_name_out)
-        f = open(blockMesh_name_out, 'wb')
+        f = open(blockMesh_name_out, 'w')
 
         f.write('/*--------------------------------*- C++ -*----------------------------------*\\\n')
         f.write('| =========                 |                                                 |\n')
