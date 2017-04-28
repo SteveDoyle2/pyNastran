@@ -1,8 +1,8 @@
 from __future__ import print_function
-from struct import pack, unpack
+#from struct import unpack #pack
 from six import integer_types
 
-from pyNastran.utils.log import get_logger
+#from pyNastran.utils.log import get_logger
 from pyNastran.converters.tetgen.tetgen import Tetgen
 from pyNastran.converters.usm3d.usm3d_reader import write_usm3d_volume
 

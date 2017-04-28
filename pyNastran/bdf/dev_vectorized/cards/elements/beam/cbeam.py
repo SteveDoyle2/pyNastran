@@ -2,15 +2,16 @@
 http://www.ce.memphis.edu/7117/notes/presentations/chapter_04b.pdf
 """
 from six import string_types
-from six.moves import zip, StringIO
-from numpy import array, dot, arange, zeros, unique, searchsorted, nan, full
+from six.moves import zip
+import numpy as np
+from numpy import array, arange, zeros, unique, searchsorted, nan, full
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank,
     double_string_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
@@ -190,25 +191,25 @@ class CBEAM(Element):
         if self.n == 0:
             return 0.0
         return [0.0]
-        if grid_cid0 is None:
-            grid_cid0 = self.model.grid.get_position_by_node_index()
-        p1 = grid_cid0[self.node_ids[:, 0]]
-        p2 = grid_cid0[self.node_ids[:, 1]]
-        L = p2 - p1
-        i = self.model.properties_bar.get_index(self.property_id)
-        A = self.model.properties_bar.get_Area[i]
-        material_id = self.model.properties_bar.material_id[i]
+        #if grid_cid0 is None:
+            #grid_cid0 = self.model.grid.get_position_by_node_index()
+        #p1 = grid_cid0[self.node_ids[:, 0]]
+        #p2 = grid_cid0[self.node_ids[:, 1]]
+        #L = p2 - p1
+        #i = self.model.properties_bar.get_index(self.property_id)
+        #A = self.model.properties_bar.get_Area[i]
+        #material_id = self.model.properties_bar.material_id[i]
 
-        rho, E, J = self.model.Materials.get_rho_E_J(material_id)
-        rho = self.model.Materials.get_rho(self.mid)
-        E = self.model.Materials.get_E(self.mid)
-        J = self.model.Materials.get_J(self.mid)
+        #rho, E, J = self.model.Materials.get_rho_E_J(material_id)
+        #rho = self.model.Materials.get_rho(self.mid)
+        #E = self.model.Materials.get_E(self.mid)
+        #J = self.model.Materials.get_J(self.mid)
 
-        mass = norm(L, axis=1) * A * rho + self.nsm
-        if total:
-            return mass.sum()
-        else:
-            return mass
+        #mass = norm(L, axis=1) * A * rho + self.nsm
+        #if total:
+            #return mass.sum()
+        #else:
+            #return mass
 
     #=========================================================================
     def write_card(self, bdf_file, size=8, element_ids=None):
@@ -271,7 +272,7 @@ class CBEAM(Element):
         return obj
 
     def get_stiffness_matrix(self, model, node_ids, index0s, fnorm=1.0):
-        K = np.zeros((12,12), dtype='float64')
+        K = np.zeros((12, 12), dtype='float64')
         kaxial = E * A / L
         ktorsion = G * J / L
         K[0, 0] = K[6, 6] = kaxial

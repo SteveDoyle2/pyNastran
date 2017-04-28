@@ -1,9 +1,9 @@
 import os
-
+import unittest
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.nastran.nastranIOv import NastranIO
 import pyNastran
-from pyNastran.utils.log import get_logger2
+#from pyNastran.utils.log import get_logger2
 
 class NastranGUI(NastranIO, GUIMethods):
     def __init__(self, inputs=None):
@@ -13,7 +13,7 @@ class NastranGUI(NastranIO, GUIMethods):
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, '..', 'models')
 
-import unittest
+
 
 class TestNastranGUI(unittest.TestCase):
 
@@ -131,7 +131,7 @@ class TestNastranGUI(unittest.TestCase):
     def test_femap_rougv1_01(self):
         """tests the exhaust manifold and it's funny eigenvectors"""
         dirname = os.path.join(model_path, 'femap_exhaust')
-        bdf_filename = os.path.join(dirname, 'modal_example.bdf')
+        #bdf_filename = os.path.join(dirname, 'modal_example.bdf')
         op2_filename = os.path.join(dirname, 'modal_example.op2')
 
         test = NastranGUI()

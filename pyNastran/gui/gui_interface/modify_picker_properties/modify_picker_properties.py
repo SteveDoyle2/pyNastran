@@ -2,7 +2,7 @@
 based on manage_actors.py
 """
 from __future__ import print_function
-from math import log10, ceil, floor
+from math import log10, ceil
 from six import iteritems
 
 from pyNastran.gui.qt_version import qt_version
@@ -138,7 +138,7 @@ class ModifyPickerPropertiesMenu(PyDialog):
 
     def on_apply(self, force=False):
         passed = self.on_validate()
-        if (passed or Force) and self.win_parent is not None:
+        if (passed or force) and self.win_parent is not None:
             self.win_parent.element_picker_size = self._size / 100.
         return passed
 
@@ -169,12 +169,12 @@ def main():
     # Create the QApplication
     app = QApplication(sys.argv)
     #The Main window
-    d = {
+    data = {
         'font_size' : 8,
         'size' : 10.,
         'dim_max' : 502.
     }
-    main_window = ModifyPickerPropertiesMenu(d)
+    main_window = ModifyPickerPropertiesMenu(data)
     main_window.show()
     # Enter the main loop
     app.exec_()
