@@ -2313,7 +2313,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             nodes[ngrids+nspoints:] = self.epoint.points
         return nodes
 
-    def get_xyz_in_coord(self, cid=0, dtype='float64', sort_ids=True):
+    def get_xyz_in_coord(self, cid=0, fdtype='float64', sort_ids=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -2321,7 +2321,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         ----------
         cid : int; default=0
             the desired coordinate system
-        dtype : str; default='float64'
+        fdtype : str; default='float64'
             the data type of the xyz coordinates
         sort_ids : bool; default=True
             sort the ids

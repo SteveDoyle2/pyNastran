@@ -1,7 +1,7 @@
 from __future__ import print_function
-from six import iteritems
 import os
 import sys
+from six import iteritems
 
 from pyNastran.converters.panair.panairGridPatch import PanairGridHelper
 from pyNastran.converters.cart3d.cart3d_reader import Cart3d
@@ -145,7 +145,7 @@ class Cart3dToPanair(PanairGridHelper):
         return pointOut
 
     def run(self, cart3d_geom_filename, oname, varmap):
-        f = open(oname, 'wb')
+        f = open(oname, 'w')
         print("oname", oname)
         self.title = varmap['title']
         self.mach = varmap['mach']

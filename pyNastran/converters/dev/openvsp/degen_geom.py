@@ -100,7 +100,6 @@ class DegenGeom(object):
                 pid += 1
 
     def write_panair(self, panair_filename, panair_case_filename):  # pragma: no cover
-        #panair_file = open(panair_filename, 'wb')
         pan = PanairGrid()
         pan.mach = 0.5
         pan.isEnd = True
@@ -282,7 +281,6 @@ class DegenGeom(object):
             component = Geom(name, lifting_surface_xyz,
                              lifting_surface_nx, lifting_surface_ny)
             self.components[name].append(component)
-
 
 
 def main():  # pragma: no cover
