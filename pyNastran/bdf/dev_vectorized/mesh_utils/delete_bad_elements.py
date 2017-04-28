@@ -56,7 +56,7 @@ def get_bad_shells(model, max_theta=175., max_skew=70.,
 
     shells with a edge length=0.0 are automatically added
     """
-    xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float32')
+    xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
     max_theta = np.radians(max_theta)
     max_skew = np.radians(max_skew)
     eids_failed = []
