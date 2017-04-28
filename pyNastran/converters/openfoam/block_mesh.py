@@ -2,7 +2,8 @@ from __future__ import print_function
 import os
 from copy import deepcopy
 from codecs import open
-from collections import defaultdict, OrderedDictfrom six import iteritems
+from collections import defaultdict, OrderedDict
+from six import iteritems
 from six.moves import range, zip
 
 import numpy as np
