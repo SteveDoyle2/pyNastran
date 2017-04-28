@@ -1,6 +1,7 @@
 from __future__ import print_function
 from copy import deepcopy
 from collections import defaultdict
+import traceback
 
 from six import iteritems
 import numpy as np
@@ -305,9 +306,14 @@ class NastranGuiResults(NastranGuiAttributes):
         #assert isinstance(key, int), key
         assert isinstance(icase, int), icase
         assert isinstance(form_dict, dict), form_dict
-        icase = self._fill_op2_time_centroidal_force(
-            cases, model, key, icase, itime,
-            form_dict, header_dict, is_static)
+        try:
+            icase = self._fill_op2_time_centroidal_force(
+                cases, model, key, icase, itime,
+                form_dict, header_dict, is_static)
+        except IndexError as e:
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
         return icase
 
     def _fill_op2_stress(self, cases, model, key, icase, itime,
@@ -315,9 +321,14 @@ class NastranGuiResults(NastranGuiAttributes):
         """creates the stress plots"""
         assert isinstance(icase, int), icase
         assert isinstance(form_dict, dict), form_dict
-        icase = self._fill_op2_time_centroidal_stress(
-            cases, model, key, icase, itime, form_dict, header_dict,
-            is_static, is_stress=is_stress)
+        try:
+            icase = self._fill_op2_time_centroidal_stress(
+                cases, model, key, icase, itime, form_dict, header_dict,
+                is_static, is_stress=is_stress)
+        except TypeError as e:
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
         return icase
 
     def _fill_op2_strain(self, cases, model, key, icase, itime,
@@ -1064,33 +1075,28 @@ class NastranGuiResults(NastranGuiAttributes):
             bars2 = model.cbar_strain_10nodes
 
         if key in bars2:
-            case = bars[key]
+            case = bars2[key]
             if case.is_complex():
                 pass
             else:
                 dt = case._times[itime]
                 header = self._get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
-                #s1a = case.data[itime, :, 0]
-                #s2a = case.data[itime, :, 1]
-                #s3a = case.data[itime, :, 2]
-                #s4a = case.data[itime, :, 3]
-
-                axial = case.data[itime, :, 4]
-                smaxa = case.data[itime, :, 5]
-                smina = case.data[itime, :, 6]
-                #MSt = case.data[itime, :, 7]
-
-                #s1b = case.data[itime, :, 8]
-                #s2b = case.data[itime, :, 9]
-                #s3b = case.data[itime, :, 10]
-                #s4b = case.data[itime, :, 11]
-
-                smaxb = case.data[itime, :, 12]
-                sminb = case.data[itime, :, 13]
-                #MSc   = case.data[itime, :, 14]
+                #  0    1    2    3    4     5     6     7     8
+                # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
 
                 eidsi = case.element # [:, 0]
+                ueidsi = np.unique(eidsi)
+                istart = np.searchsorted(eidsi, ueidsi)
+                iend = np.hstack(istart[1:], [len(eidsi)])
+                axial = case.data[itime, :, 5]
+
+                nbars = len(eidsi) // 10
+                assert nbars * 10 == len(eidsi), 'nbars=%s neids=%s' % (nbars, len(eidsi))
+                axial = case.data[itime, :, 5].reshape(nbars, 10).min(axis=1)
+                smax = case.data[itime, :, 6].reshape(nbars, 10).max(axis=1)
+                smin = case.data[itime, :, 7].reshape(nbars, 10).min(axis=1)
+
 
                 i = np.searchsorted(eids, eidsi)
                 if len(i) != len(np.unique(i)):
@@ -1103,17 +1109,11 @@ class NastranGuiResults(NastranGuiAttributes):
                 oxx[i] = axial
 
                 ## TODO :not sure if this block is general for multiple CBAR elements
-                samax = np.amax([smaxa, smaxb], axis=0)
-                samin = np.amin([smaxa, smaxb], axis=0)
-                assert len(samax) == len(i), len(samax)
-                assert len(samin) == len(i)
-                savm = np.amax(np.abs(
-                    [smina, sminb,
-                     smaxa, smaxb, axial]), axis=0)
+                svm = np.amax(np.abs([smin, smin]), axis=0)
 
-                max_principal[i] = samax
-                min_principal[i] = samin
-                ovm[i] = savm
+                max_principal[i] = smax
+                min_principal[i] = smin
+                ovm[i] = svm
                 #del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
         del bars2
 

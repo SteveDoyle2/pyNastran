@@ -23,7 +23,8 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None, msg=''
     xyz_compare : (Ncompare, 3) float ndarray
         the xyz points to compare to
     tol : float; default=None
-        the max spherical tolerance; the whole model
+        the max spherical tolerance
+        None : the whole model
     neq_max : int; default=1.0
         the number of "close" points
     msg : str; default=''
