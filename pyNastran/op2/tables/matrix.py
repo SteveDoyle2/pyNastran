@@ -68,26 +68,26 @@ class Matrix(object):
         else:
             raise RuntimeError('form = %s' % self.form)
 
-    def write(self, f06, print_full=True):
+    def write(self, mat, print_full=True):
         """writes to the F06"""
-        f06.write(str(self) + '\n')
+        mat.write(np.compat.asbytes(str(self) + '\n'))
 
         matrix = self.data
         if isinstance(matrix, coo_matrix):
             if print_full:
                 for row, col, value in zip(matrix.row, matrix.col, matrix.data):
-                    f06.write("(%i, %i) %s\n" % (row, col, value))
+                    mat.write(np.compat.asbytes("(%i, %i) %s\n" % (row, col, value)))
             else:
-                f06.write(str(matrix))
+                mat.write(str(matrix))
         else:
-            f06.write('name=%r; shape=%s; form=%i; Type=%r\n' % (
+            mat.write(np.compat.asbytes('name=%r; shape=%s; form=%i; Type=%r\n' % (
                 self.name, str(self.data.shape).replace('L', ''),
-                self.form, self.shape_str))
+                self.form, self.shape_str)))
             if print_full:
-                np.savetxt(f06, self.data, delimiter=",")
+                np.savetxt(mat, self.data, fmt='%.18e', delimiter=',')
             #f06.write(str(matrix))
             #print('WARNING: matrix type=%s does not support writing' % type(matrix))
-        f06.write('\n\n')
+        mat.write(np.compat.asbytes('\n\n'))
 
     def __repr__(self):
         class_name = str(type(self.data)).replace('<class ', '').replace('>', '').replace("'", '') + ';'

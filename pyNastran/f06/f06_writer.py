@@ -5,6 +5,7 @@ defines the F06Writer class and:
 #pylint: disable=W0201,C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import os
 import sys
 import copy
 from datetime import date
@@ -364,7 +365,8 @@ class F06Writer(OP2_F06_Common):
             f06.write(page_stamp % self.page_num)
             self.page_num += 1
 
-    def write_f06(self, f06_outname, is_mag_phase=False, is_sort1=True,
+    def write_f06(self, f06_outname, matrix_filename=None,
+                  is_mag_phase=False, is_sort1=True,
                   delete_objects=True, end_flag=False, quiet=True, repr_check=False,
                   close=True):
         """
@@ -374,6 +376,9 @@ class F06Writer(OP2_F06_Common):
         ----------
         f06_outname : str
             the name of the F06 file to write
+        matrix_filename : str; default=None
+            str : the name of the .mat file to write
+            None : based on f06_outname
         is_mag_phase : bool; default=False
             should complex data be written using Magnitude/Phase
             instead of Real/Imaginary
@@ -394,7 +399,13 @@ class F06Writer(OP2_F06_Common):
         """
         if not quiet:
             print("F06:")
+
         if isinstance(f06_outname, str):
+            if matrix_filename is None:
+                matrix_filename = os.path.splitext(f06_outname)[0] + '.mat'
+            #print("matrix_filename =", matrix_filename)
+            #mat = open(matrix_filename, 'wb')
+
             if PY2:
                 f06 = open(f06_outname, 'wb')
             else:
@@ -407,6 +418,8 @@ class F06Writer(OP2_F06_Common):
             #assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
             f06 = f06_outname
             f06_outname = f06.name
+            if matrix_filename is None:
+                matrix_filename = os.path.splitext(f06_outname)[0] + '.mat'
             if not quiet:
                 print('f06_outname =', f06_outname)
 
@@ -430,25 +443,29 @@ class F06Writer(OP2_F06_Common):
                                       is_mag_phase=is_mag_phase, is_sort1=is_sort1,
                                       quiet=quiet, repr_check=repr_check)
         #self._write_f06_time_based(f06, page_stamp)
-        self.write_matrices(f06, page_stamp, self.page_num, quiet=quiet)
+        self.write_matrices(f06, matrix_filename, page_stamp, self.page_num, quiet=quiet)
         f06.write(make_end(end_flag, self.end_options))
         if close:
             f06.close()
 
-    def write_matrices(self, f06, page_stamp, page_num, quiet=True):
-        if hasattr(self, 'monitor1'):
-            page_num = self.monitor1.write(f06, page_stamp=page_stamp, page_num=page_num)
-            print('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
-        for name, matrix in iteritems(self.matrices):
-            if name == 'MP3F':
-                page_num = self.monitor3.write(f06, page_stamp=page_stamp, page_num=page_num)
-                print('MONPNT3 from MP3F')
-            elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
-                pass
-            else:
-                if not quiet:
-                    print(matrix)
-                matrix.write(f06)
+    def write_matrices(self, f06, matrix_filename, page_stamp, page_num, quiet=True):
+        """writes the f06 matrices"""
+        if len(self.matrices):
+            if hasattr(self, 'monitor1'):
+                page_num = self.monitor1.write(f06, page_stamp=page_stamp, page_num=page_num)
+                print('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
+
+            with open(matrix_filename, 'wb') as mat:
+                for name, matrix in iteritems(self.matrices):
+                    if name == 'MP3F':
+                        page_num = self.monitor3.write(f06, page_stamp=page_stamp, page_num=page_num)
+                        print('MONPNT3 from MP3F')
+                    elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
+                        pass
+                    else:
+                        if not quiet:
+                            print(matrix)
+                        matrix.write(mat)
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
                                  is_mag_phase=False, is_sort1=True, quiet=False,
