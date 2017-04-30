@@ -19,8 +19,7 @@ CASES = [
          ['test_panel_SOL_108', 'panel_SOL_108_corner', [1.0, 9.5]],
         ]
 
-RTOL = 0.01
-ATOL = 0.01
+RTOL = 0.001
 
 def calc_phasedeg(vec):
     return np.round(np.rad2deg(np.arctan2(vec.imag, vec.real)) % 360., 4)
@@ -47,15 +46,18 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     ref_force = np.loadtxt(name)
                     mag = ref_force[0::2]
                     phase = ref_force[1::2]
-                    data = vector.data
+                    if freq == 1.0:
+                        data = vector.data[0]
+                    elif freq == 9.5:
+                        data = vector.data[17]
                     eids = get_eids_from_op2_vector(vector)
                     check = eids != 0
                     if 'cquad8' in vecname:
-                        assert np.allclose(np.abs(data[:, check][:, 0::5, :]), mag[0::5], rtol=RTOL, atol=ATOL)
-                        assert np.allclose(calc_phasedeg(data[:, check][:, 0::5, :]), phase[0::5], rtol=RTOL, atol=ATOL)
+                        assert np.allclose(np.abs(data[check][0::5, :]), mag[0::5], rtol=RTOL)
+                        assert np.allclose(calc_phasedeg(data[check][0::5, :]), phase[0::5], rtol=RTOL)
                     else:
-                        assert np.allclose(np.abs(data[:, check]), mag, rtol=RTOL, atol=ATOL)
-                        assert np.allclose(calc_phasedeg(data[:, check]), phase, rtol=RTOL, atol=ATOL)
+                        assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
+                        assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
 
     def test_stress(self):
         log = get_logger(level='warning')
@@ -71,21 +73,27 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     vector = getattr(op2_new, vecname).get(1)
                     if vector is None:
                         continue
-                    name = os.path.join(basepath, '%s_freq_%1.1f.txt' % (vecname, freq))
+                    if 'center' in prefix:
+                        name = os.path.join(basepath, '%s_center_freq_%1.1f.txt' % (vecname, freq))
+                    else:
+                        name = os.path.join(basepath, '%s_corner_freq_%1.1f.txt' % (vecname, freq))
                     if not os.path.isfile(name):
                         raise AssertionError('Not found reference result {0}'.format(name))
                     ref_stress = np.loadtxt(name)
                     mag = ref_stress[:, 1::2]
                     phase = ref_stress[:, 2::2]
-                    data = vector.data
+                    if freq == 1.0:
+                        data = vector.data[0]
+                    elif freq == 9.5:
+                        data = vector.data[17]
                     eids = get_eids_from_op2_vector(vector)
                     check = eids != 0
                     if 'cquad8' in vecname:
-                        assert np.allclose(np.abs(data[:, check][:, 0::10, :]), mag[0::10], rtol=RTOL, atol=ATOL)
-                        assert np.allclose(calc_phasedeg(data[:, check][:, 1::10, :]), phase[1::10], rtol=RTOL, atol=ATOL)
+                        assert np.allclose(np.abs(data[check][0::10, :]), mag[0::10], rtol=RTOL)
+                        assert np.allclose(calc_phasedeg(data[check][1::10, :]), phase[1::10], rtol=RTOL)
                     else:
-                        assert np.allclose(np.abs(data[:, check]), mag, rtol=RTOL, atol=ATOL)
-                        assert np.allclose(calc_phasedeg(data[:, check]), phase, rtol=RTOL, atol=ATOL)
+                        assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
+                        assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
 
     def test_strain(self):
         log = get_logger(level='warning')
@@ -101,21 +109,27 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     vector = getattr(op2_new, vecname).get(1)
                     if vector is None:
                         continue
-                    name = os.path.join(basepath, '%s_freq_%1.1f.txt' % (vecname, freq))
+                    if 'center' in prefix:
+                        name = os.path.join(basepath, '%s_center_freq_%1.1f.txt' % (vecname, freq))
+                    else:
+                        name = os.path.join(basepath, '%s_corner_freq_%1.1f.txt' % (vecname, freq))
                     if not os.path.isfile(name):
                         raise AssertionError('Not found reference result {0}'.format(name))
                     ref_strain = np.loadtxt(name)
                     mag = ref_strain[:, 1::2]
                     phase = ref_strain[:, 2::2]
-                    data = vector.data
+                    if freq == 1.0:
+                        data = vector.data[0]
+                    elif freq == 9.5:
+                        data = vector.data[17]
                     eids = get_eids_from_op2_vector(vector)
                     check = eids != 0
                     if 'cquad8' in vecname:
-                        assert np.allclose(np.abs(data[:, check][:, 0::10, :]), mag[0::10], rtol=RTOL, atol=ATOL)
-                        assert np.allclose(calc_phasedeg(data[:, check][:, 1::10, :]), phase[1::10], rtol=RTOL, atol=ATOL)
+                        assert np.allclose(np.abs(data[check][0::10, :]), mag[0::10], rtol=RTOL)
+                        assert np.allclose(calc_phasedeg(data[check][1::10, :]), phase[1::10], rtol=RTOL)
                     else:
-                        assert np.allclose(np.abs(data[:, check]), mag, rtol=RTOL, atol=ATOL)
-                        assert np.allclose(calc_phasedeg(data[:, check]), phase, rtol=RTOL, atol=ATOL)
+                        assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
+                        assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
 
 
 if __name__ == '__main__':  # pragma: no cover
