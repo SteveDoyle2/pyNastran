@@ -26,7 +26,7 @@ def calc_phasedeg(vec):
     return np.round(np.rad2deg(np.arctan2(vec.imag, vec.real)) % 360., 4)
 
 
-class TestMaterialCoord(unittest.TestCase):
+class TestMaterialCoordComplex(unittest.TestCase):
     def test_force(self):
         log = get_logger(level='warning')
         for folder, prefix, freqs in CASES:

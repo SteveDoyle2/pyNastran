@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 import pyNastran
+from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
@@ -24,7 +25,7 @@ RTOL = 0.01
 ATOL = 0.01
 
 
-class TestMaterialCoord(unittest.TestCase):
+class TestMaterialCoordReal(unittest.TestCase):
     def test_force(self):
         log = get_logger(level='warning')
         for folder, prefix, subcase in CASES:
@@ -40,7 +41,8 @@ class TestMaterialCoord(unittest.TestCase):
                     continue
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}'.format(name))
+                    raise AssertionError('Not found reference result {0}\n{1}'.format(
+                        name, print_bad_path(name)))
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
@@ -66,7 +68,8 @@ class TestMaterialCoord(unittest.TestCase):
                     continue
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}'.format(name))
+                    raise AssertionError('Not found reference result {0}\n{1}'.format(
+                        name, print_bad_path(name)))
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
@@ -93,7 +96,8 @@ class TestMaterialCoord(unittest.TestCase):
                     continue
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}'.format(name))
+                    raise AssertionError('Not found reference result {0}\n{1}'.format(
+                        name, print_bad_path(name)))
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
