@@ -196,12 +196,14 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
     def about_dialog(self):
         """ Display about dialog """
         if qt_version == 'pyside':
+            word = 'PySide'
             copyright = pyNastran.__copyright__
         else:
+            word = 'PyQt'
             copyright = pyNastran.__pyqt_copyright__
 
         about = [
-            'pyNastran Qt GUI',
+            'pyNastran %s GUI' % word,
             '',
             'pyNastran v%s' % pyNastran.__version__,
             copyright,
@@ -224,7 +226,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             #'h   - show/hide legend & info',
             'CTRL+I - take a screenshot (image)',
             'CTRL+L - cycle the results forwards',
-            'CTRL+L - cycle the results backwards',
+            'CTRL+K - cycle the results backwards',
             #'m/M    - scale up/scale down by 1.1 times',
             #'o/O    - rotate counter-clockwise/clockwise 5 degrees',
             'p      - pick node/element',

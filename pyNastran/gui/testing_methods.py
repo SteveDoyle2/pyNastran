@@ -53,13 +53,11 @@ class GuiAttributes(object):
         #-------------
 
         # window variables
-        self._picker_window_shown = False
         self._legend_window_shown = False
         self._preferences_window_shown = False
         self._clipping_window_shown = False
         self._edit_geometry_properties_window_shown = False
         self._modify_groups_window_shown = False
-        self._label_window_shown = False
         #self._label_window = None
         #-------------
         # inputs dict

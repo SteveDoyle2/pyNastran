@@ -4,16 +4,16 @@ from pyNastran.bdf.utils import (
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
-    from PyQt4 import QtCore
-    from PyQt4.QtGui import QDialog, QLineEdit, QFocusEvent, QFont
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import QDialog, QLineEdit, QFocusEvent, QFont, QPushButton
 elif qt_version == 5:
-    from PyQt5 import QtCore
+    from PyQt5 import QtCore, QtGui
     from PyQt5.QtGui import QFocusEvent, QFont
-    from PyQt5.QtWidgets import QDialog, QLineEdit
+    from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton
 
 elif qt_version == 'pyside':
-    from PySide import QtCore
-    from PySide.QtGui import QDialog, QLineEdit, QFocusEvent, QFont
+    from PySide import QtCore, QtGui
+    from PySide.QtGui import QDialog, QLineEdit, QFocusEvent, QFont, QPushButton
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
@@ -40,9 +40,29 @@ class QElementEdit(QLineEdit):
                                                 force=True)
 
 
-class PyDialog(QDialog):
-    """common class for QDialog so value checking & escape/close code is not repeated"""
+class QPushButtonColor(QPushButton):
+    """Creates a QPushButton with a face color"""
+    def __init__(self, labelcolor_int):
+        QPushButton.__init__(self)
 
+        qcolor = QtGui.QColor()
+        #self.color_edit.setFlat(True)
+        qcolor.setRgb(*labelcolor_int)
+        palette = QtGui.QPalette(self.palette())
+        palette.setColor(QtGui.QPalette.Background, QtGui.QColor('blue'))
+        self.setPalette(palette)
+        self.setStyleSheet(
+            "QPushButton {"
+            "background-color: rgb(%s, %s, %s);" % tuple(labelcolor_int) +
+            #"border:1px solid rgb(255, 170, 255); "
+            "}")
+
+
+class PyDialog(QDialog):
+    """
+    common class for QDialog so value checking & escape/close code
+    is not repeated
+    """
     def __init__(self, data, win_parent):
         QDialog.__init__(self, win_parent)
         self.out_data = data

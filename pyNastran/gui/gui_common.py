@@ -65,8 +65,6 @@ from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
 from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
 from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
 from pyNastran.gui.gui_interface.preferences.interface import set_preferences_menu
-from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
-from pyNastran.gui.gui_interface.modify_label_properties.interface import on_set_labelsize_color_menu
 from pyNastran.gui.gui_interface.groups_modify.interface import on_set_modify_groups
 from pyNastran.gui.gui_interface.groups_modify.groups_modify import Group
 
@@ -434,36 +432,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
             file_tools = [
 
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
-                ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
-                ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
+                ('load_geometry', 'Load &Geometry...', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
+                ('load_results', 'Load &Results...', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
 
-                ('load_csv_user_geom', 'Load CSV User Geometry', '', None, 'Loads custom geometry file', self.on_load_user_geom),
-                ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads CSV points ', self.on_load_csv_points),
+                ('load_csv_user_geom', 'Load CSV User Geometry...', '', None, 'Loads custom geometry file', self.on_load_user_geom),
+                ('load_csv_user_points', 'Load CSV User Points...', 'user_points.png', None, 'Loads CSV points', self.on_load_csv_points),
 
-                ('load_custom_result', 'Load Custom Results', '', None, 'Loads a custom results file', self.on_load_custom_results),
+                ('load_custom_result', 'Load Custom Results...', '', None, 'Loads a custom results file', self.on_load_custom_results),
 
-                ('script', 'Run Python script', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+                ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ]
 
             tools = file_tools + [
-                ('back_color', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
-                #('label_color', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
-                ('text_color', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
+                ('label_clear', 'Clear Current Labels', '', None, 'Clear current labels', self.clear_labels),
+                ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
-                ('label_clear', 'Clear current labels', '', None, 'Clear current labels', self.clear_labels),
-                ('label_modify', 'Modify label color/size', '', None, 'Edit Label Properties', self.on_set_labelsize_color),
-                ('label_reset', 'Clear all labels', '', None, 'Clear all labels', self.reset_labels),
-
-                ('picker_modify', 'Modify picker size', '', None, 'Edit Label Properties', self.on_set_picker_size),
-
-                ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
-                ('clipping', 'Set clipping', '', None, 'Set Clipping', self.set_clipping),
+                ('legend', 'Modify Legend...', 'legend.png', None, 'Set Legend', self.set_legend),
+                ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.set_clipping),
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-                ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
-                ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
+                ('geo_properties', 'Edit Geometry Properties...', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
+                ('modify_groups', 'Modify Groups...', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
 
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
@@ -484,11 +475,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
                 ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
-                ('screenshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
-                ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
+                ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
+                ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
-                ('camera_reset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
-                ('reload', 'Reload model', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
+                ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
+                ('reload', 'Reload Model...', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
 
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
@@ -517,7 +508,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
                 ('text_size_increase', 'Increase Text Size', 'text_up.png', 'Ctrl+Plus', 'Increase Text Size', self.on_increase_text_size),
                 ('text_size_decrease', 'Decrease Text Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Text Size', self.on_decrease_text_size),
-                ('set_preferences', 'Set Preferences', 'preferences.png', None, 'Set Text Size', self.set_preferences_menu),
+                ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set Text Size', self.set_preferences_menu),
 
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.on_area_pick),
@@ -570,12 +561,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self._edit_geometry_properties.set_font_size(font_size)
         if self._modify_groups_window_shown:
             self._modify_groups_window.set_font_size(font_size)
-        if self._label_window_shown:
-            self._label_window.set_font_size(font_size)
         if self._preferences_window_shown:
             self._preferences_window.set_font_size(font_size)
-        if self._picker_window_shown:
-            self._picker_window.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
         self.log_command('on_set_font_size(%s)' % font_size)
@@ -635,8 +622,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
-            'set_preferences', 'back_color', 'text_color', '',
-            'label_modify', 'label_clear', 'label_reset', 'picker_modify', '',
+            'set_preferences', '',
+            'label_clear', 'label_reset', '',
             'legend', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
             #'anti_alias_4', 'anti_alias_8',],
@@ -932,31 +919,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'WARNING')
 
-    def change_background_color(self):
-        """ Choose a background color """
-        self._change_color('background', self.background_color, self.set_background_color)
-
-    def change_label_color(self):
-        """ Choose a label color """
-        self._change_color('label', self.label_color, self.set_label_color)
-
-    def change_text_color(self):
-        """ Choose a text color """
-        self._change_color('text', self.text_color, self.set_text_color)
-
-    def _change_color(self, msg, rgb_color_floats, call_func):
-        """
-        Common method for:
-         - change_background_color
-         - change_label_color
-         - change_text_color
-        """
-        c = [int(255 * i) for i in rgb_color_floats]
-        col = QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a %s color" % msg)
-        if col.isValid():
-            color = col.getRgbF()[:3]
-            call_func(color)
-
     def set_background_color(self, color):
         """
         Set the background color
@@ -968,13 +930,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         self.background_color = color
         self.rend.SetBackground(*color)
+        self.vtk_interactor.Render()
         self.log_command('set_background_color(%s, %s, %s)' % color)
 
     def set_text_color(self, color):
-        """Set the text color"""
+        """
+        Set the text color
+
+        Parameters
+        ----------
+        color : (float, float, float)
+            RGB values as floats
+        """
         self.text_color = color
         for text_actor in itervalues(self.text_actors):
             text_actor.GetTextProperty().SetColor(color)
+        self.vtk_interactor.Render()
         self.log_command('set_text_color(%s, %s, %s)' % color)
 
     def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
@@ -5172,22 +5143,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     #---------------------------------------------------------------------------------------
     # LABEL SIZE/COLOR
-    def on_set_labelsize_color(self):
-        """
-        Opens a dialog box to set:
-
-        +--------+----------+
-        |  Name  |  String  |
-        +--------+----------+
-        |  Min   |  Float   |
-        +--------+----------+
-        |  Max   |  Float   |
-        +--------+----------+
-        | Format | pyString |
-        +--------+----------+
-        """
-        on_set_labelsize_color_menu(self)
-
     def set_labelsize_color(self, size=None, color=None):
         """
         Parameters
@@ -5228,7 +5183,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.vtk_interactor.GetRenderWindow().Render()
             self.log_command('set_labelsize(%s)' % size)
 
-
     def set_label_color(self, color, render=True):
         """
         Set the label color
@@ -5251,23 +5205,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_command('set_label_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------------------
-    # PICKER MENU
-    def on_set_picker_size(self):
-        """
-        Opens a dialog box to set:
-
-        +--------+----------+
-        |  Name  |  String  |
-        +--------+----------+
-        |  Min   |  Float   |
-        +--------+----------+
-        |  Max   |  Float   |
-        +--------+----------+
-        | Format | pyString |
-        +--------+----------+
-        """
-        on_set_picker_size_menu(self)
-
+    # PICKER
     @property
     def node_picker_size(self):
         """Gets the node picker size"""
@@ -5300,10 +5238,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         +--------+----------+
         """
         set_preferences_menu(self)
-
-    def _apply_preferences(self, data):
-        font_size = data['font_size']
-        self.on_set_font_size(font_size)
 
     #---------------------------------------------------------------------------------------
     # CLIPPING MENU

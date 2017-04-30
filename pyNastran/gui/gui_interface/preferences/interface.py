@@ -14,6 +14,14 @@ def set_preferences_menu(self):
         #return
     data = {
         'font_size' : self.font_size,
+        'label_size' : self.label_text_size,
+        'label_color' : self.label_color,
+        'background_color' : self.background_color,
+        'text_color' : self.text_color,
+
+        'picker_size' : self.element_picker_size,
+        'dim_max' : self.dim_max,
+
         'clicked_ok' : False,
         'close' : False,
     }
@@ -27,7 +35,7 @@ def set_preferences_menu(self):
 
     if data['close']:
         if not self._preferences_window._updated_preference:
-            self._apply_preferences(data)
+            self.on_set_font_size(data['font_size'])
         del self._preferences_window
         self._preferences_window_shown = False
     else:
