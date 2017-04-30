@@ -1,8 +1,12 @@
 """
 The preferences menu handles:
  - Font Size
- - Label Size
+ - Background Color
+ - Text Color
  - Label Color
+ - Label Size
+ - Clipping Min
+ - Clipping Max
 """
 from __future__ import print_function
 from math import log10, ceil
@@ -12,23 +16,25 @@ if qt_version == 4:
     from PyQt4 import QtGui
     from PyQt4.QtGui import (
         QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QDoubleSpinBox, QColorDialog)
+        QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
     from PyQt5 import QtGui
     from PyQt5.QtWidgets import (
         QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QDoubleSpinBox, QColorDialog)
+        QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
 elif qt_version == 'pyside':
     #from PySide import QtCore, QtGui
     from PySide import QtGui
     from PySide.QtGui import (
         QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QDoubleSpinBox, QColorDialog)
+        QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
 from pyNastran.gui.gui_interface.common import PyDialog, QPushButtonColor
+from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
+
 
 class PreferencesWindow(PyDialog):
     """
@@ -55,6 +61,8 @@ class PreferencesWindow(PyDialog):
         self._updated_preference = False
 
         self._default_font_size = data['font_size']
+        self._default_clipping_min = data['clipping_min']
+        self._default_clipping_max = data['clipping_max']
 
         #label_color_float = data['label_color']
         self._label_size = data['label_size']
@@ -126,6 +134,17 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.setValue(self._picker_size)
 
         #-----------------------------------------------------------------------
+        # Clipping Min
+        self.clipping_min = QLabel("Clipping Min:")
+        self.clipping_min_edit = QLineEdit(str(self._default_clipping_min))
+        self.clipping_min_button = QPushButton("Default")
+
+        # Clipping Max
+        self.clipping_max = QLabel("Clipping Max:")
+        self.clipping_max_edit = QLineEdit(str(self._default_clipping_max))
+        self.clipping_max_button = QPushButton("Default")
+
+        #-----------------------------------------------------------------------
         # closing
         self.apply_button = QPushButton("Apply")
         self.ok_button = QPushButton("OK")
@@ -153,6 +172,14 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.picker_size, 5, 0)
         grid.addWidget(self.picker_size_edit, 5, 1)
 
+        #grid.addWidget(self.clipping_min, 6, 0)
+        #grid.addWidget(self.clipping_min_edit, 6, 1)
+        #grid.addWidget(self.clipping_min_button, 6, 2)
+
+        #grid.addWidget(self.clipping_max, 7, 0)
+        #grid.addWidget(self.clipping_max_edit, 7, 1)
+        #grid.addWidget(self.clipping_max_button, 7, 2)
+
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
@@ -179,6 +206,9 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
         self.picker_size_edit.editingFinished.connect(self.on_picker_size)
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
+
+        self.clipping_min_button.clicked.connect(self.on_default_clipping_min)
+        self.clipping_max_button.clicked.connect(self.on_default_clipping_max)
 
         self.apply_button.clicked.connect(self.on_apply)
         self.ok_button.clicked.connect(self.on_ok)
@@ -268,22 +298,30 @@ class PreferencesWindow(PyDialog):
         self.font_size_edit.setValue(self._default_font_size)
         self.on_set_font(self._default_font_size)
 
+    def on_default_clipping_min(self):
+        self.clipping_min_edit.setText(str(self._default_clipping_min))
+        self.clipping_min_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_default_clipping_max(self):
+        self.clipping_max_edit.setText(str(self._default_clipping_max))
+        self.clipping_max_edit.setStyleSheet("QLineEdit{background: white;}")
+
     @staticmethod
     def check_float(cell):
         text = cell.text()
         value = float(text)
         return value, True
 
-    #@staticmethod
-    #def check_float(cell):
-        #text = cell.text()
-        #try:
-            #value = eval_float_from_string(text)
-            #cell.setStyleSheet("QLineEdit{background: white;}")
-            #return value, True
-        #except ValueError:
-            #cell.setStyleSheet("QLineEdit{background: red;}")
-            #return None, False
+    @staticmethod
+    def check_label_float(cell):
+        text = cell.text()
+        try:
+            value = eval_float_from_string(text)
+            cell.setStyleSheet("QLineEdit{background: white;}")
+            return value, True
+        except ValueError:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
 
     def on_validate(self):
         font_size_value, flag0 = self.check_float(self.font_size_edit)
@@ -292,10 +330,16 @@ class PreferencesWindow(PyDialog):
         assert isinstance(self.label_color_int[0], int), self.label_color_int
         picker_size_value, flag2 = self.check_float(self.picker_size_edit)
 
-        if flag0 and flag1 and flag2:
+        clipping_min_value, flag3 = self.check_label_float(self.clipping_min_edit)
+        clipping_max_value, flag4 = self.check_label_float(self.clipping_max_edit)
+
+        if all([flag0, flag1, flag2, flag3, flag4]):
             self._label_size = label_size_value
             self._picker_size = picker_size_value
+
             self.out_data['font_size'] = int(font_size_value)
+            self.out_data['clipping_min'] = min(clipping_min_value, clipping_max_value)
+            self.out_data['clipping_max'] = max(clipping_min_value, clipping_max_value)
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -304,8 +348,11 @@ class PreferencesWindow(PyDialog):
         passed = self.on_validate()
         if (passed or force) and self.win_parent is not None:
             self.win_parent.on_set_font_size(self.out_data['font_size'])
+
             #self.win_parent.set_labelsize_color(self._label_size, self.label_color_float)
             #self.win_parent.element_picker_size = self._picker_size / 100.
+        if passed and self.win_parent is not None:
+            self.win_parent._apply_clipping(self.out_data)
         return passed
 
     def on_ok(self):
@@ -339,12 +386,15 @@ def main():
     #The Main window
     data = {
         'font_size' : 8,
+        'background_color' : (0., 0., 0.), # black
+        'text_color' : (0., 1., 0.), # green
+
         'label_color' : (1., 0., 0.), # red
         'label_size' : 10.,
         'picker_size' : 10.,
 
-        'background_color' : (0., 0., 0.), # black
-        'text_color' : (0., 1., 0.), # green
+        'clipping_min' : 0.,
+        'clipping_max' : 10,
 
         'dim_max' : 502.
 

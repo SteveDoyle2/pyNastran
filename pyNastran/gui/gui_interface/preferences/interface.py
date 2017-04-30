@@ -12,6 +12,9 @@ def set_preferences_menu(self):
     #if not hasattr(self, 'case_keys'):  # TODO: maybe include...
         #self.log_error('No model has been loaded.')
         #return
+
+    camera = self.GetCamera()
+    min_clip, max_clip = camera.GetClippingRange()
     data = {
         'font_size' : self.font_size,
         'label_size' : self.label_text_size,
@@ -21,6 +24,9 @@ def set_preferences_menu(self):
 
         'picker_size' : self.element_picker_size,
         'dim_max' : self.dim_max,
+
+        'clipping_min' : min_clip,
+        'clipping_max' : max_clip,
 
         'clicked_ok' : False,
         'close' : False,

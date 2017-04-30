@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PELAS, read_bdf, get_logger2
+from pyNastran.bdf.bdf import BDF, BDFCard, PELAS, read_bdf
 
 class TestSprings(unittest.TestCase):
     def test_pelas_01(self):
@@ -85,6 +85,8 @@ class TestSprings(unittest.TestCase):
         k = 1.0e7
         nids = [10, 21]
         celas4 = model.add_celas4(eid, k, nids, comment='celas4')
+        celas4.raw_fields()
+        celas4.write_card(size=8, is_double=False)
 
         ge = 0.0
         s = 0.
