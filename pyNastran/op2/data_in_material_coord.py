@@ -2,6 +2,7 @@
 Defines:
  - data_in_material_coord(bdf, op2, in_place=False)
 """
+from __future__ import print_function
 import copy
 
 import numpy as np
@@ -265,6 +266,9 @@ def data_in_material_coord(bdf, op2, in_place=False):
             Syy = vector.data[:, :, 1]
             Sxy = vector.data[:, :, 2]
             if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
+                op2.log.warning('force neids = %s' % len(veceids))
+                op2.log.warning('force Sxy.shape = %s' % str(Sxy.shape).replace('L', ''))
+                op2.log.warning('vecthetarad.shape = %s' % str(vecthetarad.shape).replace('L', ''))
                 Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(Sxx.real, Syy.real, Sxy.real, vecthetarad)
                 new_vector.data[:, :, 0].real = Sxx_theta_real
                 new_vector.data[:, :, 1].real = Syy_theta_real
@@ -345,6 +349,8 @@ def data_in_material_coord(bdf, op2, in_place=False):
                 Syy = vector.data[:, :, 1][:, check]
                 Sxy = vector.data[:, :, 2][:, check]
             if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
+                #op2.log.warning('stress neids = %s' % len(veceids))
+                #op2.log.warning('stress Sxy.shape = %s' % str(Sxy.shape).replace('L', ''))
                 Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(Sxx.real, Syy.real, Sxy.real, vecthetarad)
                 Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(Sxx.imag, Syy.imag, Sxy.imag, vecthetarad)
                 tmp = np.zeros_like(new_vector.data[:, :, 0][:, check])
@@ -393,6 +399,8 @@ def data_in_material_coord(bdf, op2, in_place=False):
                 eyy = vector.data[:, :, 1][:, check]
                 exy = vector.data[:, :, 2][:, check] / 2.
             if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
+                #op2.log.warning('strain neids = %s' % len(veceids))
+                #op2.log.warning('strain exx.shape = %s' % str(exx.shape).replace('L', ''))
                 exx_theta_real, eyy_theta_real, exy_theta_real = transf_Mohr(exx.real, eyy.real, exy.real, vecthetarad)
                 exx_theta_imag, eyy_theta_imag, exy_theta_imag = transf_Mohr(exx.imag, eyy.imag, exy.imag, vecthetarad)
                 tmp = np.zeros_like(new_vector.data[:, :, 0][:, check])

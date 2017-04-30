@@ -36,7 +36,10 @@ class ResultSet(object):
     def remove(self, results):
         for result in results:
             if result not in self.allowed:
-                raise RuntimeError('%r is not a valid result to remove; allowed=%s' % (result, self.allowed))
+                allowed = list(self.allowed)
+                allowed.sort()
+                raise RuntimeError('%r is not a valid result to remove; allowed=[%s]' % (
+                    result, ', '.join(allowed)))
 
         for result in results:
             if result in self.saved:

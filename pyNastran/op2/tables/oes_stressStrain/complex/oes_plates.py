@@ -47,7 +47,6 @@ class ComplexPlateArray(OES_Object):
         #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = self.get_nnodes()
@@ -55,6 +54,9 @@ class ComplexPlateArray(OES_Object):
         #self.names = []
         #self.nelements //= nnodes
         self.nelements //= self.ntimes
+        #print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
+            #self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
+
         self.ntotal = self.nelements * nnodes * 2
         #self.ntotal
         self.itime = 0
@@ -383,14 +385,14 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
 
 def get_nnodes(self):
     if self.element_type in [64, 82, 144]:  # ???, CQUADR, CQUAD4 bilinear
-        nnodes = 4 # + 1 centroid
+        nnodes = 4 + 1 # centroid
     elif self.element_type in [70, 75]:   #???, CTRIA6
-        nnodes = 3 # + 1 centroid
-    elif self.element_type in [74, 33]:  # CTRIA3, CQUAD4 linear
+        nnodes = 3 + 1 # centroid
+    elif self.element_type in [144, 74, 33]:  # CTRIA3, CQUAD4 linear
         nnodes = 1
     else:
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
-    return nnodes + 1  # + 1 centroid
+    return nnodes
 
 class ComplexPlateStressArray(ComplexPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

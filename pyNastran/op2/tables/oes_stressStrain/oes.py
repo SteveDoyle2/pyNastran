@@ -575,6 +575,7 @@ class OES(OP2Common):
             (144, 1, 87, b'OES1X1') : ('cquad4_stress', RealPlateStressArray),
             (144, 1, 87, b'OES1') : ('cquad4_stress', RealPlateStressArray),
             (144, 2, 77, b'OES1X') : ('cquad4_stress', ComplexPlateStressArray),
+            (144, 3, 77, b'OES1X') :  ('cquad4_stress', ComplexPlateStressArray),
             #(144, 3, 77) : ('cquad4_stress', ComplexPlateStressArray),
             #(64, 1, 47) : ('cquad8_stress', RandomPlateStressArray), # random
             #(70, 1, 39) : ('ctriar_stress', RandomPlateStressArray),
@@ -851,12 +852,18 @@ class OES(OP2Common):
             (68, 2, 102, b'OESVM1') : ('cpenta', 'NA'),
         }
 
+        key = (self.element_type, self.format_code, self.num_wide, self.table_name)
         try:
-            return stress_mapper[self.element_type, self.format_code, self.num_wide, self.table_name]
+            return stress_mapper[key]
         except KeyError:
-            print(self.code_information())
+            self.log.error(self.code_information())
+            msg = ('stress_mapper (~line 850 of oes.py) does not contain the '
+                   'following key and must be added\n'
+                   'key=(element_type=%r, format_code=%r, num_wide=%r, table_name=%r) ' % key)
+            self.log.error(msg)
+            #raise KeyError(msg)
             raise
-            return None, None
+            #return None, None
 
     def _apply_oes_ato_crm_psd_rms_no(self, result_name):
         """

@@ -1,7 +1,7 @@
 from __future__ import print_function
 import sys
 from copy import deepcopy
-from struct import unpack, Struct
+from struct import unpack
 from six import iteritems, b
 from six.moves import range
 
@@ -14,7 +14,8 @@ from pyNastran.utils import object_attributes
     #imajor, minor1, minor2 = sys.version_info[:3]
     ## makes sure we don't get the following bug:
     ##   Issue #19099: The struct module now supports Unicode format strings.
-    #raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (imajor, minor1, minor2))
+    #raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (
+        #imajor, minor1, minor2))
 
 class FortranFormat(object):
     def __init__(self):
@@ -230,7 +231,8 @@ class FortranFormat(object):
             data = self.read_block()
             imarker, = self.struct_i.unpack(data)
             if marker != imarker:
-                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (marker, imarker, markers, i, self.table_name)
+                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (
+                    marker, imarker, markers, i, self.table_name)
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
@@ -261,12 +263,14 @@ class FortranFormat(object):
             self.n = ni
             self.f.seek(self.n)
             #for i in range(n):
-                #self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (i, macro_rewind or rewind))
+                #self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (
+                    #i, macro_rewind or rewind))
         else:
             #if not macro_rewind:
             if self.is_debug_file:
                 for i in range(n):
-                    self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (i, macro_rewind or rewind))
+                    self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (
+                        i, macro_rewind or rewind))
         return markers
 
     def get_marker1(self, rewind=True, macro_rewind=False):
@@ -567,12 +571,15 @@ class FortranFormat(object):
                     self.obj.ntimes += 1
                     ntotal = record_len // (self.num_wide * 4) * self._data_factor
 
-                    # this has a problem with XYPLOT data if there is a result request in the same format
-                    #    e.g. OESNLXD/OES1X1 tables if they both have the same element ID
+                    # this has a problem with XYPLOT data if there is a result
+                    #    request in the same format (e.g. OESNLXD/OES1X1 tables
+                    #    if they both have the same element ID)
+                    #
                     #class_name = self.obj.__class__.__name__
                     #if class_name == 'RealBush1DStressArray':
                         #print('%s.ntotal = %s' % (class_name, ntotal))
-                        #print('num_wide=%s factor=%s len=%s ntotal=%s' % (self.num_wide, self._data_factor, record_len, ntotal))
+                        #print('num_wide=%s factor=%s len=%s ntotal=%s' % (
+                            #self.num_wide, self._data_factor, record_len, ntotal))
                     self.obj.ntotal = ntotal
                     self.obj._ntotals.append(ntotal)
 
@@ -714,7 +721,8 @@ class FortranFormat(object):
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
         record, nrecord = self._read_block_ndata()
         if self.is_debug_file and debug:
-            self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
+            self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (
+                nrecord, nrecord))
         if(markers0[0]*4) != len(record):
             raise FortranMarkerError('markers0=%s*4 len(record)=%s; table_name=%r' % (
                 markers0[0]*4, len(record), self.table_name))
