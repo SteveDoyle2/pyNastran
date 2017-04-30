@@ -63,12 +63,9 @@ class TestMaterialCoordComplex(unittest.TestCase):
                         data = vector.data[17]
                     eids = get_eids_from_op2_vector(vector)
                     check = eids != 0
-                    if 'cquad8' in vecname:
-                        assert np.allclose(np.abs(data[check][0::5, :]), mag[0::5], rtol=RTOL)
-                        assert np.allclose(calc_phasedeg(data[check][0::5, :]), phase[0::5], rtol=RTOL)
-                    else:
-                        assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
-                        assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
+                    assert np.allclose(np.abs(data[check][0::5, :]), mag[0::5], rtol=RTOL)
+                    assert np.allclose(calc_phasedeg(data[check][0::5, :]), phase[0::5], rtol=RTOL)
+
         if is_failed:
             raise ValueError('see previous message')
 
