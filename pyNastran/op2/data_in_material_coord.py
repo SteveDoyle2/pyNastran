@@ -325,11 +325,11 @@ def data_in_material_coord(bdf, op2, in_place=False):
                     new_vector.data[:, s, 6] = Qx_new
                     new_vector.data[:, s, 7] = Qy_new
 
-                #TODO implement transformation for corner nodes
-                #     for now we just zero the wrong values
-                if 'quad8' in vecname:
-                    for j in [1, 2, 3, 4]:
-                        new_vector.data[:, slice(j, vector.data[1], step), :] = 0
+            #TODO implement transformation for corner nodes
+            #     for now we just zero the wrong values
+            if 'quad8' in vecname:
+                for j in [1, 2, 3, 4]:
+                    new_vector.data[:, j, :] = 0
 
     for vecname in stress_vectors:
         op2_vectors = getattr(op2, vecname)
