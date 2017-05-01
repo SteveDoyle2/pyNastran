@@ -908,7 +908,7 @@ class TestOP2(Tester):
         #print(op2.ctria3_stress.keys())
         ctria3_stress = op2.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements # TODO: wrong
-        assert ctria3_stress.data.shape == (7, 32, 3), ctria3_stress.data.shape
+        assert ctria3_stress.data.shape == (7, 16, 3), ctria3_stress.data.shape
 
         ctetra_stress = op2.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
