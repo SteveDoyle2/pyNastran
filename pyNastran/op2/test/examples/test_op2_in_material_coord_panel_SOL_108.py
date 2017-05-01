@@ -17,12 +17,17 @@ pkg_path = pyNastran.__path__[0]
 CASES = [
     ['test_panel_SOL_108', 'panel_SOL_108_center', [1.0, 9.5]],
     ['test_panel_SOL_108', 'panel_SOL_108_corner', [1.0, 9.5]],
+    ['test_panel_SOL_108', 'panel_SOL_108_center_tria', [1.0]],
+    ['test_panel_SOL_108', 'panel_SOL_108_corner_tria', [1.0]],
 ]
 
 RTOL = 0.001
 
 def calc_phasedeg(vec):
-    return np.round(np.rad2deg(np.arctan2(vec.imag, vec.real)) % 360., 4)
+    out = np.round(np.rad2deg(np.arctan2(vec.imag, vec.real)) % 360., 4)
+    out[np.isclose(vec.real, 0)] = 0
+    return out
+
 
 
 class TestMaterialCoordComplex(unittest.TestCase):
@@ -51,7 +56,10 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     vector = getattr(op2_new, vecname).get(1)
                     if vector is None:
                         continue
-                    name = os.path.join(basepath, '%s_freq_%1.1f.txt' % (vecname, freq))
+                    if 'center' in prefix:
+                        name = os.path.join(basepath, '%s_center_freq_%1.1f.txt' % (vecname, freq))
+                    else:
+                        name = os.path.join(basepath, '%s_corner_freq_%1.1f.txt' % (vecname, freq))
                     if not os.path.isfile(name):
                         raise AssertionError('Not found reference result {0}'.format(name))
                     ref_force = np.loadtxt(name)
@@ -61,14 +69,11 @@ class TestMaterialCoordComplex(unittest.TestCase):
                         data = vector.data[0]
                     elif freq == 9.5:
                         data = vector.data[17]
-                    eids = get_eids_from_op2_vector(vector)
-                    check = eids != 0
-                    if 'cquad8' in vecname:
-                        assert np.allclose(np.abs(data[check][0::5, :]), mag[0::5], rtol=RTOL)
-                        assert np.allclose(calc_phasedeg(data[check][0::5, :]), phase[0::5], rtol=RTOL)
-                    else:
-                        assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
-                        assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
+                    #eids = get_eids_from_op2_vector(vector)
+                    #check = eids != 0
+                    assert np.allclose(np.abs(data[:, :]), mag, rtol=RTOL)
+                    assert np.allclose(calc_phasedeg(data), phase, rtol=RTOL)
+
         if is_failed:
             raise ValueError('see previous message')
 
@@ -162,12 +167,9 @@ class TestMaterialCoordComplex(unittest.TestCase):
                         data = vector.data[17]
                     eids = get_eids_from_op2_vector(vector)
                     check = eids != 0
-                    if 'cquad8' in vecname:
-                        assert np.allclose(np.abs(data[check][0::10, :]), mag[0::10], rtol=RTOL)
-                        assert np.allclose(calc_phasedeg(data[check][1::10, :]), phase[1::10], rtol=RTOL)
-                    else:
-                        assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
-                        assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
+                    assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
+                    phase[np.isclose(mag, 0)] = 0
+                    assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
         if is_failed:
             raise ValueError('see previous message')
 
