@@ -36,10 +36,12 @@ class ResultSet(object):
     def remove(self, results):
         for result in results:
             if result not in self.allowed:
-                allowed = list(self.allowed)
-                allowed.sort()
-                raise RuntimeError('%r is not a valid result to remove; allowed=[%s]' % (
-                    result, ', '.join(allowed)))
+                #allowed = list(self.allowed)
+                #allowed.sort()
+                #raise RuntimeError('%r is not a valid result to remove\nallowed=[%s]' % (
+                    #result, ', '.join(allowed)))
+                raise RuntimeError('%r is not a valid result to remove\n%s' % (
+                                   result, self))
 
         for result in results:
             if result in self.saved:
@@ -59,3 +61,12 @@ class ResultSet(object):
     #def add_found_result(self, result):
         #pass
 
+    def __repr__(self):
+        msg = 'ResultSet:\n'
+        msg += ' results:\n'
+        for result in sorted(self.allowed):
+            if result in self.saved:
+                msg += '  %s\n' % result
+            else:
+                msg += '  %s (disabled)\n' % result
+        return msg
