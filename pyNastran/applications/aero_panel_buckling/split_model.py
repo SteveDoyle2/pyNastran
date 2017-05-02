@@ -90,13 +90,14 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
     msg = ''
 
     assert len(op2_filenames) > 0, 'op2_filenames=%s' % op2_filenames
-    print('eig_min=%s eig_max=%s' % (eig_min, eig_max))
+    bdf_model.log.info('eig_min=%s eig_max=%s' % (eig_min, eig_max))
     for op2_filename in op2_filenames:
         bdf_model.log.info('op2_filename = %r' % op2_filename)
         if not os.path.exists(op2_filename):
-            print(op2_filename)
+            bdf_model.log.warning(op2_filename)
             continue
-        patch_id_str = op2_filename.split('_')[1].split('.')[0]
+        op2_filename_base = os.path.basename(op2_filename)
+        patch_id_str = op2_filename_base.split('_')[1].split('.')[0]
         patch_id = int(patch_id_str)
 
         sym_patch_id = None
@@ -119,7 +120,7 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
                               debug=False, mode='msc')
         except FatalError:
             #os.remove(op2_filename)
-            print('fatal on %r' % op2_filename)
+            bdf_model.log.error('fatal on %r' % op2_filename)
             msg += '%s\n' % op2_filename
             continue
         cases = model2.eigenvectors.keys()
@@ -143,7 +144,7 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
         # lambda > 0
         i = np.where(eigrs >= 0.0)[0]
         if len(i) == 0:
-            pos_eigenvalue = eig_default  # TODO: no buckling eigenvalue...wat?
+            pos_eigenvalue = eig_default  # TODO: no buckling eigenvalue...what?
             pos_reserve_factor = eig_default
         else:
             pos_eigenvalue = eigrs[i].min()
@@ -154,7 +155,7 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
         if 0:
             j = np.where(eigrs < 0.0)[0]
             if len(j) == 0:
-                neg_eigenvalue = eig_default  # TODO: no buckling eigenvalue...wat?
+                neg_eigenvalue = eig_default  # TODO: no buckling eigenvalue...what?
                 neg_reserve_factor = eig_default
             else:
                 neg_eigenvalue = np.abs(eigrs[j]).min()
@@ -174,7 +175,7 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
         min_eigenvalue_by_patch_id[patch_id] = reserve_factor
         if is_sym_regions:
             min_eigenvalue_by_patch_id[sym_patch_id] = reserve_factor
-    print(msg)
+    bdf_model.log.info(msg)
 
     bdf_model.log.info('finished parsing eigenvalues...')
     #model = BDF(debug=False)

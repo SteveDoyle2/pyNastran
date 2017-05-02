@@ -3,7 +3,6 @@ import os
 import sys
 import glob
 import subprocess
-import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np

@@ -20,7 +20,6 @@ class TestPanelBuckling(unittest.TestCase):
         op2_filename = os.path.join(workpath, 'bwb_saero.op2')
         #op2_filename = 'bwb_saero.op2'
 
-
         if workpath is not None:
             if not os.path.exists(workpath):
                 os.makedirs(workpath)
@@ -32,15 +31,20 @@ class TestPanelBuckling(unittest.TestCase):
             'bat' : 'no',
             'news' : 'no',
         }
-        if not os.path.exists(op2_filename):
+        if not os.path.exists(op2_filename) and 0:
             run_nastran(bdf_filename, keywords=keywords)
+        if not os.path.exists(op2_filename):
+            op2_filename = None
 
         run_panel_buckling(
             bdf_filename=bdf_filename,
             op2_filename=op2_filename,
             isubcase=1, workpath=workpath,
-            build_model=True, rebuild_patches=True,
-            run_nastran=True, nastran_keywords=keywords,
+            build_model=False, rebuild_patches=True, write_buckling_bdfs=False,
+            mode='displacement',
+            parse_eigenvalues=False,
+
+            run_nastran=False, nastran_keywords=keywords,
             overwrite_op2_if_exists=True,
             op2_filenames=None)
 

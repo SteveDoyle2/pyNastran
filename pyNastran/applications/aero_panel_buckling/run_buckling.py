@@ -7,7 +7,7 @@ import glob
 from six import iteritems
 
 from pyNastran.applications.aero_panel_buckling.find_surface_panels import (
-    find_surface_panels, get_bdf_object, get_op2_object)
+    create_plate_buckling_models, get_bdf_object, get_op2_object)
 from pyNastran.applications.aero_panel_buckling.split_model import (
     split_model_by_pid_panel, load_regions, load_regions_and_create_eigenvalue_csv)
 from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import run_bdfs
@@ -16,8 +16,10 @@ from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import
 
 def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2',
                        isubcase=1, workpath=None,
-                       build_model=True, rebuild_patches=True, create_regions_filename=True,
+                       build_model=True, rebuild_patches=True, write_buckling_bdfs=True,
+                       create_regions_filename=True,
                        run_nastran=True, nastran_keywords=None, overwrite_op2_if_exists=True,
+                       parse_eigenvalues=True,
                        op2_filenames=None,
                        mode='displacement',
                        eig_min=-1.0, eig_max=1.0, eig_default=3.0):
@@ -30,17 +32,39 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     op2_filename/op2_model : str/OP2(); default=model_144.op2
         the path to the SOL 144 solution
         OP2 : an OP2 model
-    build_model : bool; default=True
-        builds the patch model
     isubcase : int; default=1
         the case to analyze
     workpath : str; default=cwd/results
         the location the models will be created
+    build_model : bool; default=True
+        builds the edge_*.csv, patch_*.csv, patch_*.bdf files
+        True : sets rebuild_patches=True and write_buckling_bdfs=True
+        False : set rebuild_patches and write_buckling_bdfs by hand
+    rebuild_patches : bool; default=True
+        True : rebuilds the edge_*.csv, patch_*.csv files
+        False : does not create these files
+    write_buckling_bdfs : bool; default=True
+        True : creates the patch_*.bdf files
+        False : does not create these files
+    create_regions_filename : bool; default=True
+        True : creates regions.txt from patch_filenames
+        False : assumes the file already exists
+        # pid, ipanel, eids
+        2, 18, 22016, 22017, 22018, 22019...
+        20301, 15, 3584, 3585, 3586, ...
+    mode : str; default='displacement'
+        'displacement' : extract displacements from the op2 and apply
+            interface displacements for each patch
+        'load' : extract loads from the op2 and apply interface loads to
+            each patch and constrain a boundary node
+    parse_eigenvalues : bool; default=True
+        calculate the outputs
+        requires patch_*.op2 files exist
 
     Step 2 - Run Jobs
     =================
     run_nastran : bool; default=True
-        runs Nastran
+        runs Nastran on the patch_*.bdf files
     nastran_keywords : dict; default=None
         key : nastran key
         value : value for key
@@ -68,6 +92,18 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     eig_default : float
         the default eigenvalue for cases that do not calculate eigenvectors
         because there were no eigenvalues in the range
+
+    Returns
+    -------
+    min_eigenvalue_by_patch_id : dict
+        key : patch_id : int
+            the integer patch id
+        value : eigenvalue or reserve factor
+           the reserve factor eigenvalue for buckling
+        None if parse_eigenvalues=False
+    eigenvalues : (n, ) float ndarray
+        the minimum eigenvalues
+        None if parse_eigenvalues=False
     """
     if workpath is None:
         workpath = os.path.join(os.getcwd(), 'results')
@@ -78,18 +114,25 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     else:
         op2_model = None
 
-    bdf_model.log.info('build_model=%s rebuild_patches=%s' % (build_model, rebuild_patches))
+    bdf_model.log.info('build_model=%s rebuild_patches=%s write_buckling_bdfs=%s' % (
+        build_model, rebuild_patches, write_buckling_bdfs))
 
     # isubcase=2 -> 2.5g pullup at Mach=0.85 at 11 km
     patch_dir = os.path.join(workpath, 'patches')
-    if build_model:
-        patch_filenames, edge_filenames = find_surface_panels(
+    if any([build_model, rebuild_patches, write_buckling_bdfs]):
+        if build_model:
+            rebuild_patches = True
+            write_buckling_bdfs = True
+        patch_filenames, edge_filenames = create_plate_buckling_models(
             bdf_model, op2_model, mode=mode, isubcase=isubcase, consider_pids=True,
-            rebuild_patches=rebuild_patches, workpath=workpath)
+            rebuild_patches=rebuild_patches, write_buckling_bdfs=write_buckling_bdfs,
+            workpath=workpath)
         create_regions_filename = True
     else:
         patch_filenames = get_patch_filenames(patch_dir, extension='.bdf')
 
+    if not write_buckling_bdfs:
+        return None, None
     if create_regions_filename:
         regions_filename = split_model_by_pid_panel(patch_filenames, workpath)
 
@@ -122,7 +165,6 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
             for region_id, sym_region_id in sorted(iteritems(sym_regions_map)):
                 sym_regions_file.write('%s, %s\n' % (region_id, sym_region_id))
 
-
         condensed_regions_filename = 'condensed_regions.txt'
         with open(condensed_regions_filename, 'w') as condensed_regions_file:
             condensed_regions_file.write('# pid, ipanel, eids\n')
@@ -140,26 +182,49 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
                 ipanel += 1
 
     if run_nastran:
-        print('calling run_bdfs...')
+        bdf_model.log.info('run_nastran=True')
         op2_filenames = run_bdfs(
             patch_filenames, nastran_keywords=nastran_keywords,
             workpath=patch_dir, overwrite_op2_if_exists=overwrite_op2_if_exists)
-    else:
-        if op2_filenames is None:
-            op2_filenames = get_patch_filenames(patch_dir, extension='.op2')
+    elif op2_filenames is None:
+        bdf_model.log.info('run_nastran=False; automatically determining op2s...')
+        op2_filenames = get_patch_filenames(patch_dir, extension='.op2')
+        #print(op2_filenames)
         #op2_filenames = glob.glob(r'Y:\work\panel_buckling\patches\patch_*.op2')
 
     #sym_regions_filename = 'sym_regions_map.csv'
     sym_regions_filename = None
     split_model_by_pid_panel(patch_filenames, workpath=workpath)  # outputs regions.txt
 
-    min_eigenvalue_by_patch_id, eigenvalues = load_regions_and_create_eigenvalue_csv(
-        bdf_model, op2_filenames, 'regions.txt',
-        eig_min=eig_min, eig_max=eig_max, eig_default=eig_default,
-        sym_regions_filename=sym_regions_filename)
-    return min_eigenvalue_by_patch_id, eigenvalues
+    if parse_eigenvalues:
+        bdf_model.log.info('parse_eigenvalues=True...')
+        min_eigenvalue_by_patch_id, eigenvalues = load_regions_and_create_eigenvalue_csv(
+            bdf_model, op2_filenames, 'regions.txt',
+            eig_min=eig_min, eig_max=eig_max, eig_default=eig_default,
+            sym_regions_filename=sym_regions_filename)
+        return min_eigenvalue_by_patch_id, eigenvalues
+    else:
+        bdf_model.log.info('skipping parse_eigenvalues...')
+
+    return None, None
 
 def get_patch_filenames(patch_dir, extension='.bdf'):
+    """
+    Gets all the patch_*.bdf files
+
+    Parameters
+    ----------
+    patch_dir : str
+        the path to the patch_*.bdf files
+    extension : str; default='.bdf'
+        the file extension
+
+    Returns
+    -------
+    patch_filenames : List[str]
+        the BDFs to run
+        [patch_0.csv, patch_1.csv, ...]
+    """
     patch_filenames = []
     bdf_filenames = [fname for fname in os.listdir(patch_dir)]
     for bdf_filename2 in bdf_filenames:
@@ -184,6 +249,6 @@ def get_patch_filenames(patch_dir, extension='.bdf'):
         #bdf_filenames2.append(bdf_filename2)
     return patch_filenames
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     run_panel_buckling()
 

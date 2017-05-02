@@ -622,35 +622,54 @@ def load_patches(patches_filename):
         patches.append(patch)
     return patches
 
-def create_plate_buckling_models(bdf_model, op2_model, mode, isubcase=1,
+def create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
                                  workpath='results',
-                                 is_symmetric=True, rebuild_patches=True, consider_pids=False):
+                                 is_symmetric=True, consider_pids=False,
+                                 rebuild_patches=True, write_buckling_bdfs=True,
+                                 ):
     """
-    Create the input decks for buckling
+    Create the input decks for buckling.  This is done in the following steps:
+      1.  Build the patches (rebuild_patches=False skips this)
+      2.  Build the patch_*.bdf files (write_buckling_bdfs=False skips this)
 
     Parameters
     ----------
-    bdf_model : BDF()
-        a bdf object
-    op2_model : OP2()
-        the OP2 object
+    bdf_filename : str / BDF()
+        a BDF object to break
+    op2_filename : str / OP2()
+        the OP2 object for loads/displacement extraction
     mode : str
         'load' : extract loads from the op2 and apply interface loads to
             each patch and constrain a boundary node
         'displacement' : extract displacements from the op2 and apply
             interface displacements for each patch
     is_symmetric : bool; default=True
-        is the model symmetric (???)
-        full model : set to False (???)
-        half model : set to True (???)
+        Flag for model symmetry.  If there is no inboard rib for a half
+        model, it doesn't matter, which option you pick.
+        True : half model with an inboard rib at y>=0 is a separate panel(s)
+        False : full model or half model with no inboard rib
+    rebuild_patches : bool; default=True
+        True : rebuilds the edge_*.csv, patch_*.csv files
+        False : does not create these files
+    write_buckling_bdfs : bool; default=True
+        True : creates the patch_*.bdf files
+        False : does not create these files
+    consider_pids : bool; default=False
+        is a property id break identify a panel break
 
     Returns
     -------
-    patch_filenames : List[str, str, ...]
+    patch_filenames : List[str]
         the BDFs to run
-    edge_filenames : List[str, str, ...]
+        [patch_0.bdf, patch_1.bdf, ...]
+    edge_filenames : List[str]
         the list of xyz locations that define the edges for the patch
+        [edge_0.csv, edge_1.csv, ...]
     """
+    bdf_model = get_bdf_object(bdf_filename)
+    if write_buckling_bdfs:
+        op2_model = get_op2_object(op2_filename)
+
     # cleanup
     if workpath != '':
         print('workpath =', workpath)
@@ -693,13 +712,15 @@ def create_plate_buckling_models(bdf_model, op2_model, mode, isubcase=1,
 
         #workpath = 'results'
         patch_edges_array, eids_on_edge, patches = load_patch_info(workpath=workpath)
-    patch_filenames, edge_filenames = write_buckling_bdfs(
-        bdf_model, op2_model, xyz_cid0,
-        patches, patch_edges_array,
-        subcase_id=isubcase,
-        eig_min=-1.0, eig_max=3.0, nroots=5,
-        mode=mode, workpath=workpath)
-    return patch_filenames, edge_filenames
+    if write_buckling_bdfs:
+        patch_filenames, edge_filenames = write_buckling_bdfs(
+            bdf_model, op2_model, xyz_cid0,
+            patches, patch_edges_array,
+            subcase_id=isubcase,
+            eig_min=-1.0, eig_max=3.0, nroots=5,
+            mode=mode, workpath=workpath)
+        return patch_filenames, edge_filenames
+    return None, None
 
 
 def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_array,
@@ -1300,7 +1321,7 @@ def get_bdf_object(bdf_filename, xref=True):
         raise TypeError('type(bdf_filename)=%s' % type(bdf_filename))
     return model
 
-def get_op2_object(op2_filename):
+def get_op2_object(op2_filename, debug=False):
     """
     Loads a BDF from a string or just uses the existing BDF object.
 
@@ -1308,37 +1329,10 @@ def get_op2_object(op2_filename):
               created (in regards to xref).
     """
     if isinstance(op2_filename, string_types):
-        model = read_op2(op2_filename)
+        model = read_op2(op2_filename, debug=debug,
+                         include_results=['displacements', 'grid_point_forces'])
     elif isinstance(op2_filename, OP2):
         model = op2_filename
     else:
         raise TypeError('type(op2_filename)=%s' % type(op2_filename))
     return model
-
-def find_surface_panels(bdf_filename, op2_filename, isubcase=1,
-                        consider_pids=False, rebuild_patches=True,
-                        mode='displacement',
-                        workpath='results'):
-    """
-    prevents bleedover of data
-
-    Returns
-    -------
-    patch_filenames : List[str, str, ...]
-        the BDFs to run
-    edge_filenames : List[str, str, ...]
-        the list of xyz locations that define the edges for the patch
-    """
-    bdf_model = get_bdf_object(bdf_filename)
-    op2_model = get_op2_object(op2_filename)
-
-    #create_plate_buckling_models(model, op2_model, 'load')
-    patch_filenames, edge_filenames = create_plate_buckling_models(
-        bdf_model, op2_model, mode,
-        workpath=workpath, isubcase=isubcase,
-        consider_pids=consider_pids,
-        rebuild_patches=rebuild_patches)
-    return patch_filenames, edge_filenames
-
-#if __name__ == '__main__':
-    #find_surface_panels()
