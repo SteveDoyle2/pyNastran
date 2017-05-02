@@ -40,7 +40,7 @@ class TestPanelBuckling(unittest.TestCase):
             bdf_filename=bdf_filename,
             op2_filename=op2_filename,
             isubcase=1, workpath=workpath,
-            build_model=False, rebuild_patches=True, write_buckling_bdfs=False,
+            build_model=False, rebuild_patches=True, rebulid_buckling_bdfs=False,
             mode='displacement',
             parse_eigenvalues=False,
 

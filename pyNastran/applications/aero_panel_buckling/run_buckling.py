@@ -16,7 +16,7 @@ from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import
 
 def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2',
                        isubcase=1, workpath=None,
-                       build_model=True, rebuild_patches=True, write_buckling_bdfs=True,
+                       build_model=True, rebuild_patches=True, rebulid_buckling_bdfs=True,
                        create_regions_filename=True,
                        run_nastran=True, nastran_keywords=None, overwrite_op2_if_exists=True,
                        parse_eigenvalues=True,
@@ -38,13 +38,21 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
         the location the models will be created
     build_model : bool; default=True
         builds the edge_*.csv, patch_*.csv, patch_*.bdf files
-        True : sets rebuild_patches=True and write_buckling_bdfs=True
-        False : set rebuild_patches and write_buckling_bdfs by hand
+        True : sets rebuild_patches=True and rebulid_buckling_bdfs=True
+        False : set rebuild_patches and rebulid_buckling_bdfs by hand
     rebuild_patches : bool; default=True
-        True : rebuilds the edge_*.csv, patch_*.csv files
+        True : rebuilds the following files:
+                - element_edges.csv
+                - element_patches.csv
+                - free_edge_nodes.csv
+                - free_edge_nodes_xyz.csv
+                - nodal_edges.csv
+                - patch_edges_array.csv
+                - patch_edges_xyz.csv
+                - patches.csv
         False : does not create these files
-    write_buckling_bdfs : bool; default=True
-        True : creates the patch_*.bdf files
+    rebulid_buckling_bdfs : bool; default=True
+        True : creates the edge_*.csv, patch_*.csv, patch_*.bdf files
         False : does not create these files
     create_regions_filename : bool; default=True
         True : creates regions.txt from patch_filenames
@@ -114,25 +122,26 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     else:
         op2_model = None
 
-    bdf_model.log.info('build_model=%s rebuild_patches=%s write_buckling_bdfs=%s' % (
-        build_model, rebuild_patches, write_buckling_bdfs))
+    bdf_model.log.info('build_model=%s rebuild_patches=%s rebulid_buckling_bdfs=%s' % (
+        build_model, rebuild_patches, rebulid_buckling_bdfs))
 
     # isubcase=2 -> 2.5g pullup at Mach=0.85 at 11 km
     patch_dir = os.path.join(workpath, 'patches')
-    if any([build_model, rebuild_patches, write_buckling_bdfs]):
+    if any([build_model, rebuild_patches, rebulid_buckling_bdfs]):
         if build_model:
             rebuild_patches = True
-            write_buckling_bdfs = True
+            rebulid_buckling_bdfs = True
         patch_filenames, edge_filenames = create_plate_buckling_models(
             bdf_model, op2_model, mode=mode, isubcase=isubcase, consider_pids=True,
-            rebuild_patches=rebuild_patches, write_buckling_bdfs=write_buckling_bdfs,
+            rebuild_patches=rebuild_patches, rebulid_buckling_bdfs=rebulid_buckling_bdfs,
             workpath=workpath)
         create_regions_filename = True
+
+        if not rebulid_buckling_bdfs:
+            return patch_filenames, edge_filenames
     else:
         patch_filenames = get_patch_filenames(patch_dir, extension='.bdf')
 
-    if not write_buckling_bdfs:
-        return None, None
     if create_regions_filename:
         regions_filename = split_model_by_pid_panel(patch_filenames, workpath)
 

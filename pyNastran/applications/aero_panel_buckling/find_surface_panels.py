@@ -625,12 +625,12 @@ def load_patches(patches_filename):
 def create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
                                  workpath='results',
                                  is_symmetric=True, consider_pids=False,
-                                 rebuild_patches=True, write_buckling_bdfs=True,
+                                 rebuild_patches=True, rebulid_buckling_bdfs=True,
                                  ):
     """
     Create the input decks for buckling.  This is done in the following steps:
       1.  Build the patches (rebuild_patches=False skips this)
-      2.  Build the patch_*.bdf files (write_buckling_bdfs=False skips this)
+      2.  Build the patch_*.bdf files (rebulid_buckling_bdfs=False skips this)
 
     Parameters
     ----------
@@ -649,10 +649,18 @@ def create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
         True : half model with an inboard rib at y>=0 is a separate panel(s)
         False : full model or half model with no inboard rib
     rebuild_patches : bool; default=True
-        True : rebuilds the edge_*.csv, patch_*.csv files
+        True : rebuilds the following files:
+                - element_edges.csv
+                - element_patches.csv
+                - free_edge_nodes.csv
+                - free_edge_nodes_xyz.csv
+                - nodal_edges.csv
+                - patch_edges_array.csv
+                - patch_edges_xyz.csv
+                - patches.csv
         False : does not create these files
-    write_buckling_bdfs : bool; default=True
-        True : creates the patch_*.bdf files
+    rebulid_buckling_bdfs : bool; default=True
+        True : creates the edge_*.csv, patch_*.csv, patch_*.bdf files
         False : does not create these files
     consider_pids : bool; default=False
         is a property id break identify a panel break
@@ -667,7 +675,7 @@ def create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
         [edge_0.csv, edge_1.csv, ...]
     """
     bdf_model = get_bdf_object(bdf_filename)
-    if write_buckling_bdfs:
+    if rebulid_buckling_bdfs:
         op2_model = get_op2_object(op2_filename)
 
     # cleanup
@@ -677,9 +685,9 @@ def create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
             os.makedirs(workpath)
         os.chdir(workpath)
 
-    patch_filenames = glob.glob('patch_*.bdf')
-    edge_filenames = glob.glob('edge_*.csv')
-    for fname in patch_filenames + edge_filenames:
+    edge_filenames = glob.glob('edges/edge_*.csv')
+    patch_filenames = glob.glob('patches/patch_*.bdf')
+    for fname in edge_filenames + patch_filenames:
         os.remove(fname)
 
     #-------------------------
@@ -712,7 +720,7 @@ def create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
 
         #workpath = 'results'
         patch_edges_array, eids_on_edge, patches = load_patch_info(workpath=workpath)
-    if write_buckling_bdfs:
+    if rebulid_buckling_bdfs:
         patch_filenames, edge_filenames = write_buckling_bdfs(
             bdf_model, op2_model, xyz_cid0,
             patches, patch_edges_array,
