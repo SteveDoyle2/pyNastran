@@ -2885,13 +2885,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if isinstance(element, ShellElement):
                 ie = None
                 element_dimi = 2
-                #try:
-                normali = element.Normal()
+                try:
+                    normali = element.Normal()
                 #except AttributeError:
                     #raise
-                #except RuntimeError:
+                except RuntimeError:
+                    # this happens when you have a degenerate tri
+                    msg = 'eid=%i normal=nan...setting to [2, 2, 2]\n'
+                    msg += '%s' % (element)
+                    for node in element.nodes:
+                        msg += str(node)
+                    self.log.error(msg)
+                    normali = np.ones(3) * 2.
                     #raise
-                    #normali = np.ones(3) * 2.
 
                 prop = element.pid
                 ptype = prop.type

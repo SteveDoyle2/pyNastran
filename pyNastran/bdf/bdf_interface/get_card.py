@@ -461,10 +461,13 @@ class GetCard(GetMethods):
 
         for key, dvprel in iteritems(self.dvprels):
             if dvprel.type == 'DVPREL1':
-                prop_type = dvprel.Type
+                prop_type = dvprel.prop_type
                 desvars = dvprel.dvids
                 coeffs = dvprel.coeffs
-                pid = dvprel.pid.pid
+                if hasattr(dvprel, 'pid_ref'):
+                    pid = dvprel.pid_ref.pid
+                else:
+                    pid = dvprel.pid
                 var_to_change = dvprel.pname_fid
                 assert len(desvars) == 1, len(desvars)
 
@@ -477,22 +480,26 @@ class GetCard(GetMethods):
                         lower_bound = 0.
                         upper_bound = 0.
                         for desvar, coeff in zip(desvars, coeffs):
-                            xiniti = desvar.xinit
-                            if desvar.xlb != -1e20:
-                                xiniti = max(xiniti, desvar.xlb)
-                                lower_bound = desvar.xlb
-                            if desvar.xub != 1e20:
-                                xiniti = min(xiniti, desvar.xub)
-                                upper_bound = desvar.xub
+                            if isinstance(desvar, integer_types):
+                                desvar_ref = self.desvars[desvar]
+                            else:
+                                desvar_ref = desvar.desvar_ref
+                            xiniti = desvar_ref.xinit
+                            if desvar_ref.xlb != -1e20:
+                                xiniti = max(xiniti, desvar_ref.xlb)
+                                lower_bound = desvar_ref.xlb
+                            if desvar_ref.xub != 1e20:
+                                xiniti = min(xiniti, desvar_ref.xub)
+                                upper_bound = desvar_ref.xub
 
                             # code validation
-                            if desvar.delx is not None and desvar.delx != 1e20:
+                            if desvar_ref.delx is not None and desvar_ref.delx != 1e20:
                                 pass
 
                             # TODO: haven't quite decided what to do
-                            if desvar.ddval is not None:
-                                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
-                            assert desvar.ddval is None, desvar
+                            if desvar_ref.ddval is not None:
+                                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
+                            assert desvar_ref.ddval is None, desvar_ref
                             xinit = coeff * xiniti
                         dvprel_t_init[i] = xinit
                         dvprel_t_min[i] = lower_bound
