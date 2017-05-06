@@ -1,4 +1,4 @@
-#pylint: disable=C0301,W0613,W0612,R0913
+#pylint: disable=W0613,W0612,R0913
 """
 Defines the OP2 class.
 """
@@ -9,7 +9,7 @@ import os
 from struct import unpack, Struct
 from collections import Counter
 
-from six import string_types, iteritems, PY2, b
+from six import string_types, iteritems, PY2, PY3, b
 from six.moves import range
 
 from numpy import array
@@ -573,6 +573,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         .. code-block:: python
           times = {subcase_id_1: [time1, time2],
                    subcase_id_2: [time3, time4]}
+
+        .. warning:: I'm not sure this still works...
         """
         expected_times = {}
         for (isubcase, etimes) in iteritems(times):
@@ -958,7 +960,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'AEDISP' : [self._table_passer, self._table_passer], # matrix?
             #b'TOLB2' : [self._table_passer, self._table_passer], # matrix?
 
-            # EDT - element deformation, aerodynamics, p-element, divergence analysis, and iterative solver input (includes SET1 entries)
+            # EDT - element deformation, aerodynamics, p-element, divergence analysis,
+            #       and iterative solver input (includes SET1 entries)
             b'EDT' : [self._table_passer, self._table_passer],
             b'EDTS' : [self._table_passer, self._table_passer],
 
@@ -967,7 +970,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
-            # DSCMCOL - Correlation table for normalized design sensitivity coefficient matrix. Output by DSTAP2.
+            # DSCMCOL - Correlation table for normalized design sensitivity coefficient matrix.
+            #           Output by DSTAP2.
             # DBCOPT - Design optimization history table for
             b'CONTACT' : [self._table_passer, self._table_passer],
             b'CONTACTS' : [self._table_passer, self._table_passer],
@@ -1053,7 +1057,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _not_available(self, data, ndata):
         """testing function"""
         if ndata > 0:
-            raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, ndata))
+            raise RuntimeError('this should never be called...'
+                               'table_name=%r len(data)=%s' % (self.table_name, ndata))
 
     def _read_aemonpt(self):
         """reads the AEMONPT table"""
@@ -1263,12 +1268,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             seid = out[13]
 
             if response_type == 1:
-                #                                                  -----    WEIGHT RESPONSE    -----
-                #     ---------------------------------------------------------------------------------------------------------------------------
-                #          INTERNAL    DRESP1    RESPONSE     ROW       COLUMN         LOWER          INPUT         OUTPUT          UPPER
-                #             ID         ID       LABEL        ID         ID           BOUND          VALUE          VALUE          BOUND
-                #     ---------------------------------------------------------------------------------------------------------------------------
-                #               1         1      WEIGHT        3          3              N/A        2.9861E+05    2.9852E+05       N/A
+                #                             -----  WEIGHT RESPONSE  -----
+                # ---------------------------------------------------------------------------------
+                #  INTERNAL  DRESP1  RESPONSE  ROW  COLUMN  LOWER     INPUT      OUTPUT     UPPER
+                #     ID       ID     LABEL     ID    ID    BOUND     VALUE       VALUE     BOUND
+                # ---------------------------------------------------------------------------------
+                #       1       1    WEIGHT     3     3       N/A   2.9861E+05  2.9852E+05   N/A
                 #(1, 1,    1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
                 #(1, 1000, 1, 'W       ', 0, 1,    3, 3, 0, 0, 0, 0, 0, 0)
                 #print(out)
@@ -1277,7 +1282,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 # these should be blank?
                 row_id = out[6]
                 column_id = out[7]
-
                 seid_weight = out[8]
 
                 assert np.abs(out[8:-1]).sum() == 0.0, 'out=%s 8=%s' % (out, out[8:-1])
@@ -1288,8 +1292,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #dunno_11 = out[11]
                 #dunno_12 = out[12]
                 #dunno_13 = out[13]
-                #msg = 'WEIGHT - response_type=%r response_label=%r row_id=%r column_id=%r 6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
-                    #response_type, response_label, row_id, column_id, dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13)
+                #msg = ('WEIGHT - response_type=%r response_label=%r row_id=%r column_id=%r '
+                       #'6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
+                           #response_type, response_label, row_id, column_id,
+                           #dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13))
                 #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
                 #print(out)
                 msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
@@ -1307,17 +1313,19 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 # (???, NA, comp, ???, ???, ???, ???, ???)
                 pass
             elif response_type == 6:  # STRESS
-                #                                                 -----    STRESS RESPONSES    -----
-                #     ---------------------------------------------------------------------------------------------------------------------------
-                #        INTERNAL   DRESP1   RESPONSE   ELEMENT    VIEW    COMPONENT      LOWER         INPUT        OUTPUT         UPPER
-                #           ID        ID      LABEL        ID     ELM ID      NO.         BOUND         VALUE         VALUE         BOUND
-                #     ---------------------------------------------------------------------------------------------------------------------------
-                #              21       209  S09L       1447476                  17       N/A        4.8561E+04    5.0000E+04    5.0000E+04
-                # (21, 209, 6, 'S09L    ', 30, 1011, 17, 0, 1447476, 0, 0, 0, 0, 0)
+                #                              -----   STRESS RESPONSES   -----
+                #  -------------------------------------------------------------------------------------------
+                #   INTERNAL  DRESP1  RESPONSE  ELEMENT   VIEW   COMPONENT  LOWER   INPUT    OUTPUT    UPPER
+                #      ID       ID     LABEL       ID    ELM ID     NO.     BOUND   VALUE     VALUE    BOUND
+                #  -------------------------------------------------------------------------------------------
+                #         21      209  S09L      144747             17       N/A   4.85E+04  5.00E+04  5.00E+04
+                # (21, 209, 6, 'S09L    ', 30, 1011, 17, 0, 144747, 0, 0, 0, 0, 0)
                 stress_code = out[6]
                 pid = out[8]
-                msg = 'STRESS - response_type=%r label=%r region=%s subcase=%s stress_code=%s pid=%s' % (
-                    response_type, response_label, region, subcase, stress_code, pid)
+                msg = ('STRESS - response_type=%r label=%r region=%s subcase=%s '
+                       'stress_code=%s pid=%s' % (
+                           response_type, response_label, region, subcase,
+                           stress_code, pid))
 
             #elif response_type == 5:  # DISP
                 #pass
@@ -1354,8 +1362,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 velocity = out[8]
                 density = out[9]
                 flutter_id = out[10]
-                msg = 'FLUTTER - _count=%s label=%r region=%s subcase=%s mode=%s mach=%s velocity=%s density=%s flutter_id=%s' % (
-                    self._count, response_label, region, subcase, mode, mach, velocity, density, flutter_id)
+                msg = ('FLUTTER - _count=%s label=%r region=%s subcase=%s mode=%s '
+                       'mach=%s velocity=%s density=%s flutter_id=%s' % (
+                           self._count, response_label, region, subcase, mode,
+                           mach, velocity, density, flutter_id))
                 self.flutter_response.append(internal_id, dresp_id, response_label, region,
                                              subcase, type_flag, seid,
                                              mode, mach, velocity, density, flutter_id)
@@ -1388,7 +1398,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
             title = 'Please select a OP2 to load'
-            op2_filename, wildcard_level = load_file_dialog(title, wildcard_wx, wildcard_qt, dirname='')
+            op2_filename, wildcard_level = load_file_dialog(
+                title, wildcard_wx, wildcard_qt, dirname='')
             assert op2_filename is not None, op2_filename
         return op2_filename
 
@@ -1683,8 +1694,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_matrix(table_name)
             else:
                 msg = 'geom/results split: %r\n\n' % table_name
+                msg += 'If you the table is a result table, see:\n'
+                msg += '  model.set_additional_result_tables_to_read(methods_dict)\n'
+                msg += "  methods_dict = {\n"
+                msg += "      b'OUGV1' : [method3, method4],\n"
+                msg += "      b'OES1X1' : False,\n"
+                msg += '  }\n'
                 msg += 'If you have matrices that you want to read, see:\n'
-                msg += '  model.set_additional_matrices(matrices)'
+                msg += '  model.set_additional_matrices_to_read(matrices)'
+                msg += '  matrices = {\n'
+                msg += "      b'BHH' : True,\n"
+                msg += "      b'KHH' : False,\n"
+                msg += '  }\n'
                 raise NotImplementedError(msg)
 
             table_name = self._read_table_name(rewind=True, stop_on_failure=False)
@@ -1817,8 +1838,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_matpool_matrix()
             except:
                 raise
-                self._goto(i)
-                self._skip_table(self.table_name)
+                #self._goto(i)
+                #self._skip_table(self.table_name)
         #else:
             #try:
                 #self._read_matrix_mat()
@@ -2049,7 +2070,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         apply_symmetry = True
         make_matrix_symmetric = apply_symmetry and matrix_shape == 'symmetric'
-        j1, j2, nj1, nj2, nj = self.grids_comp_array_to_index(
+        j1, j2, nj1, nj2, nj = grids_comp_array_to_index(
             grids1, comps1, grids2, comps2, make_matrix_symmetric)
         assert len(j1) == len(j2), 'nj1=%s nj2=%s' % (len(j1), len(j2))
         assert len(grids1) == len(real_array), 'ngrids1=%s nreals=%s' % (len(j1), len(real_array))
@@ -2142,65 +2163,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.read_markers([-5, 1, 0, 0])
             return
         raise RuntimeError('failed on read_matpool_matrix')
-
-    def grids_comp_array_to_index(self, grids1, comps1, grids2, comps2,
-                                  make_matrix_symmetric):
-        """maps the dofs"""
-        #from pyNastran.utils.mathematics import unique2d
-        ai = np.vstack([grids1, comps1]).T
-        bi = np.vstack([grids2, comps2]).T
-        #print('grids2 =', grids2)
-        #print('comps2 =', comps2)
-        from itertools import count
-        #c = np.vstack([a, b])
-        #assert c.shape[1] == 2, c.shape
-        #urows = unique2d(c)
-        #urows = c
-
-        nid_comp_to_dof_index = {}
-        j = 0
-        a_keys = set()
-        for nid_dof in ai:
-            #nid_dof = (int(nid), int(dof))
-            nid_dof = tuple(nid_dof)
-            if nid_dof not in a_keys:
-                a_keys.add(nid_dof)
-                if nid_dof not in nid_comp_to_dof_index:
-                    nid_comp_to_dof_index[nid_dof] = j
-                    j += 1
-        nja = len(a_keys)
-        del a_keys
-
-        b_keys = set()
-        for nid_dof in bi:
-            nid_dof = tuple(nid_dof)
-            if nid_dof not in b_keys:
-                b_keys.add(nid_dof)
-            if nid_dof not in nid_comp_to_dof_index:
-                nid_comp_to_dof_index[nid_dof] = j
-                j += 1
-        njb = len(b_keys)
-        del b_keys
-
-
-        nj = len(nid_comp_to_dof_index)
-        if make_matrix_symmetric:
-            ja = np.zeros(nj, dtype='int32')
-            for i, nid_dof in zip(count(), ai):
-                j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-            for i, nid_dof in zip(count(), bi):
-                j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-            return j, j, nj, nj, nj
-        else:
-            ja = np.zeros(grids1.shape, dtype='int32')
-            for i, nid_dof in zip(count(), ai.tolist()):
-                ja[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-
-            jb = np.zeros(grids2.shape, dtype='int32')
-            for i, nid_dof in zip(count(), bi.tolist()):
-                jb[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-
-            return ja, jb, nja, njb, nj
 
     def _read_matrix_mat(self):
         """
@@ -2424,8 +2386,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                             real_array = real_array.reshape(mrows, ncols)
                             self.log.info('created %s' % self.table_name)
                         else:
-                            msg = 'cant reshape because invalid sizes : created %s' % self.table_name
-                            self.log.warning(msg)
+                            self.log.warning('cant reshape because invalid sizes : created %s' %
+                                             self.table_name)
 
                         matrix = real_array
 
@@ -2584,7 +2546,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self.read_markers([0], macro_rewind=rewind)
                 except:
                     # if we hit this block, we have a FATAL error
-                    raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nlast table=%r' % self.table_name)
+                    raise FatalError('There was a Nastran FATAL Error.  '
+                                     'Check the F06.\nlast table=%r' % self.table_name)
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind
@@ -2595,16 +2558,77 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.f.seek(self.n)
         return table_name
 
-    def set_additional_matrices_to_read(self, matrices):
+    def set_additional_result_tables_to_read(self, matrices):
         """
+        Adds methods to read additional result tables.
+        This is expected to really only be used for skipping
+        unsupported tables or disabling enabled tables that are
+        buggy (e.g., OUGV1).
+
         Parameters
         ----------
-        matrices : Dict[str] = bool
+        matrices : Dict[bytes] = varies
+            a dictionary of key=name, value=list[method3, method4]/False,
+            False : skips a table
+                applies self._table_passer to method3 and method4
+            method3 : function
+                function to read table 3 results (e.g., metadata)
+            method4 : function
+                function to read table 4 results (e.g., the actual results)
+        """
+        global NX_RESULT_TABLES
+        global MSC_RESULT_TABLES
+        global RESULT_TABLES
+        failed_keys = []
+        keys = list(matrices.keys())
+        for _key in keys:
+            if PY3:
+                if not isinstance(_key, bytes):
+                    failed_keys.append(_key)
+            if self.is_nx:
+                NX_RESULT_TABLES.append(_key)
+            else:
+                MSC_RESULT_TABLES.append(_key)
+        if failed_keys:
+            failed_keys_str = [str(_key) for _key in failed_keys]
+            raise TypeError('[%s] must be bytes' % ', '. join(failed_keys_str))
+        RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
+
+        #RESULT_TABLES.sort()
+        #assert 'OESXRMS1' in RESULT_TABLES, RESULT_TABLES
+
+        table_mapper = self._get_table_mapper()
+        #is_added = False
+        def func():
+            """overloaded version of _get_table_mapper"""
+            #if is_added:
+                #return table_mapper
+            for _key, methods in iteritems(matrices):
+                if methods is False:
+                    table_mapper[_key] = [self._table_passer, self._table_passer]
+                else:
+                    assert len(methods) == 2, methods
+                    table_mapper[_key] = methods
+            #is_added = True
+            return table_mapper
+        self._get_table_mapper = func
+
+    def set_additional_matrices_to_read(self, matrices):
+        """
+        Matrices (e.g., KHH) can be sparse or dense.
+
+        Parameters
+        ----------
+        matrices : Dict[bytes] = bool
             a dictionary of key=name, value=True/False,
             where True/False indicates the matrix should be read
 
-        .. note:: If you use an already defined table (e.g. OUGV1), it will be ignored.
-                  If the table you requested doesn't exist, there will be no effect.
+        .. note:: If you use an already defined table (e.g. KHH), it
+                  will be ignored.  If the table you requested doesn't
+                  exist, there will be no effect.
+        .. note:: Do not use this for result tables like OUGV1, which
+                  store results like displacement.  Those are not matrices.
+                  Matrices are things like DMIGs.
         """
         self.additional_matrices = matrices
         if PY2:
@@ -2629,6 +2653,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._skip_subtables()
 
     def _read_omm2(self):
+        """reads the OMM2 table"""
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -2639,7 +2664,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if len(data) == 28:
             subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
+                    subtable_name, month, day, year, zero, one))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self._print_month(month, day, year, zero, one)
         else:
@@ -2648,6 +2674,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_fol(self):
         """
+        Reads the FOL table
         Frequency response frequency output list
 
         +------+---------+-------+-----------------+
@@ -2695,6 +2722,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_subtables()
 
     def _read_gpl(self):
+        """reads the GPL table (grid point list?)"""
         self.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.is_debug_file:
@@ -3021,11 +3049,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # it seems to apply to one step before this one
             conv_result = 'best_design'
         else:
-            self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
-                design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
+            self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s '
+                           'obj_final=%s constraint_max=%s row_constraint_max=%s' % (
+                               design_iter, iconvergence, conv_result, obj_intial,
+                               obj_final, constraint_max, row_constraint_max))
             raise NotImplementedError('conv_result=%s' % conv_result)
-        #self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
-            #design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
+        #self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s '
+                       #'obj_final=%s constraint_max=%s row_constraint_max=%s' % (
+                           #design_iter, iconvergence, conv_result, obj_intial,
+                           #obj_final, constraint_max, row_constraint_max))
 
         ndvs = len(data) // 4 - 7
         desvar_values = unpack('%sf' % ndvs, data[28:])
@@ -3053,10 +3085,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             a list of nmarker integers
         """
         markers = []
-        s = Struct('3i')
+        struc = Struct('3i')
         for i in range(nmarkers):
             block = self.f.read(12)
-            marker = s.unpack(block)
+            marker = struc.unpack(block)
             markers.append(marker)
         return markers
 
@@ -3109,7 +3141,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if ndata == 16:
             subtable_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (subtable_name, dummy_a, dummy_b))
+                self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (
+                    subtable_name, dummy_a, dummy_b))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
                 assert dummy_a == 170, dummy_a
                 assert dummy_b == 170, dummy_b
@@ -3155,7 +3188,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         elif ndata == 28:
             subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
+                    subtable_name, month, day, year, zero, one))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self._print_month(month, day, year, zero, one)
         elif ndata == 612: # ???
@@ -3175,7 +3209,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             msg += 'floats   = %r' % str(floats)
             raise NotImplementedError(msg)
         if hasattr(self, 'subtable_name'):
-            raise RuntimeError('the file hasnt been cleaned up; subtable_name_old=%s new=%s' % (self.subtable_name, subtable_name))
+            raise RuntimeError('the file hasnt been cleaned up; subtable_name_old=%s new=%s' % (
+                self.subtable_name, subtable_name))
         self.subtable_name = subtable_name
         self._read_subtables()
 
@@ -3201,7 +3236,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
         #if self.is_debug_file:
         if self.is_debug_file:
-            self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
+            self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, '
+                                    'zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 
@@ -3218,6 +3254,65 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.obj = None
         if hasattr(self, 'subtable_name'):
             del self.subtable_name
+
+def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
+                              make_matrix_symmetric):
+    """maps the dofs"""
+    #from pyNastran.utils.mathematics import unique2d
+    ai = np.vstack([grids1, comps1]).T
+    bi = np.vstack([grids2, comps2]).T
+    #print('grids2 =', grids2)
+    #print('comps2 =', comps2)
+    from itertools import count
+    #c = np.vstack([a, b])
+    #assert c.shape[1] == 2, c.shape
+    #urows = unique2d(c)
+    #urows = c
+
+    nid_comp_to_dof_index = {}
+    j = 0
+    a_keys = set()
+    for nid_dof in ai:
+        #nid_dof = (int(nid), int(dof))
+        nid_dof = tuple(nid_dof)
+        if nid_dof not in a_keys:
+            a_keys.add(nid_dof)
+            if nid_dof not in nid_comp_to_dof_index:
+                nid_comp_to_dof_index[nid_dof] = j
+                j += 1
+    nja = len(a_keys)
+    del a_keys
+
+    b_keys = set()
+    for nid_dof in bi:
+        nid_dof = tuple(nid_dof)
+        if nid_dof not in b_keys:
+            b_keys.add(nid_dof)
+        if nid_dof not in nid_comp_to_dof_index:
+            nid_comp_to_dof_index[nid_dof] = j
+            j += 1
+    njb = len(b_keys)
+    del b_keys
+
+
+    nj = len(nid_comp_to_dof_index)
+    if make_matrix_symmetric:
+        ja = np.zeros(nj, dtype='int32')
+        for i, nid_dof in zip(count(), ai):
+            j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+        for i, nid_dof in zip(count(), bi):
+            j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+        return j, j, nj, nj, nj
+    else:
+        ja = np.zeros(grids1.shape, dtype='int32')
+        for i, nid_dof in zip(count(), ai.tolist()):
+            ja[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+
+        jb = np.zeros(grids2.shape, dtype='int32')
+        for i, nid_dof in zip(count(), bi.tolist()):
+            jb[i] = nid_comp_to_dof_index[tuple(nid_dof)]
+
+        return ja, jb, nja, njb, nj
 
 
 def main():  # pragma: no cover
