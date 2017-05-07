@@ -912,9 +912,13 @@ class AddMethods(BDFAttributes):
         key = freq.sid
         assert key > 0
         if key in self.frequencies:
-            self.frequencies[key].add_frequency_object(freq)
+            freq0 = self.frequencies[key][0]
+            if freq0.type == 'FREQ':
+                freq0.add_frequency_object(freq)
+            else:
+                self.frequencies[key].append(freq)
         else:
-            self.frequencies[key] = freq
+            self.frequencies[key] = [freq]
             self._type_to_id_map[freq.type].append(key)
 
     def _add_set_object(self, set_obj):

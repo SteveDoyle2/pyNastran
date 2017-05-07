@@ -1,3 +1,6 @@
+"""
+defines readers for BDF objects in the OP2 MPT/MPTS table
+"""
 #pylint: disable=C0111,C0103,C0301,W0612,W0613,R0914,R0201
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -465,7 +468,7 @@ class MPT(GeomCommon):
         return n
 
     def _read_nlpci(self, data, n):
-        self.log.debug('skipping NLPCI in MPT')
+        self.log.info('skipping NLPCI in MPT')
         return len(data)
 
     def _read_tstepnl(self, data, n):

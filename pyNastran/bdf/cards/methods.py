@@ -569,6 +569,10 @@ class EIGR(Method):
         Method.__init__(self)
         if comment:
             self.comment = comment
+        if G == 0:
+            G = None
+        if C == 0:
+            C = None
 
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid

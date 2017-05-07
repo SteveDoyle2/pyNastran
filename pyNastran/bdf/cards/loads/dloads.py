@@ -335,7 +335,6 @@ class RLOAD1(TabularLoad):
         else:
             msg += 'invalid RLOAD1 type  Type=%r\n' % Type
             raise ValueError(msg)
-
         self.sid = sid
         self.excite_id = excite_id
         self.delay = delay
@@ -343,6 +342,7 @@ class RLOAD1(TabularLoad):
         self.tc = tc
         self.td = td
         self.Type = Type
+        assert sid > 0, self
 
     def validate(self):
         msg = ''

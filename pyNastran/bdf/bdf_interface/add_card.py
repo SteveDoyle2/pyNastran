@@ -2294,16 +2294,16 @@ class AddCards(AddMethods):
         k : int
             Subcase id of the applied load set
             k > j
-        x / y : float
+        x / y : float; default=0.0
             Components of the complex number
-        tid : int
+        tid : int; default=0
             TABRNDi id that defines G(F)
         comment : str; default=''
             a comment for the card
         """
-        load = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
-        self._add_load_object(load)
-        return load
+        randps = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
+        self._add_load_object(randps)
+        return randps
 
     def add_acsrce(self, sid, excite_id, rho, b, delay=0, dphase=0, power=0,
                    comment=''):
@@ -3158,7 +3158,8 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        method = EIGR(sid, method, f1, f2, ne, nd, norm, G, C, comment=comment)
+        method = EIGR(sid, method=method, f1=f1, f2=f2, ne=ne, nd=nd,
+                      norm=norm, G=G, C=C, comment=comment)
         self._add_method_object(method)
         return method
 
@@ -3702,8 +3703,24 @@ class AddCards(AddMethods):
         self._add_tablem_object(table)
         return table
 
-    def add_tables1(self, tid, Type, x, y, comment=''):
-        table = TABLES1(tid, Type, x, y, comment=comment)
+    def add_tables1(self, tid, x, y, Type=1, comment=''):
+        """
+        Adds a TABLES1 card, which defines a stress dependent material
+
+        Parameters
+        ----------
+        tid : int
+            Table ID
+        Type : int; default=1
+            Type of stress-strain curve (1 or 2)
+            1 - Cauchy (true) stress vs. total true strain
+            2 - Cauchy (true) stress vs. plastic true strain (MSC only)
+        x, y : List[float]
+            table values
+        comment : str; default=''
+            a comment for the card
+        """
+        table = TABLES1(tid, x, y, Type=Type, comment=comment)
         self._add_table_object(table)
         return table
 
@@ -3804,7 +3821,7 @@ class AddCards(AddMethods):
         self._add_freq_object(freq)
         return freq
 
-    def add_freq4(self, sid, f1, f2, fspread, nfm, comment=''):
+    def add_freq4(self, sid, f1, f2, fspread=0.1, nfm=3, comment=''):
         freq = FREQ4(sid, f1, f2, fspread, nfm, comment=comment)
         self._add_freq_object(freq)
         return freq
@@ -4278,9 +4295,6 @@ class AddCards(AddMethods):
         dphase = DPHASE(sid, nodes, components, phase_leads, comment=comment)
         self._add_dphase_object(dphase)
         return dphase
-
-    #def add_randps(self, sid, j, k, x=0., y=0., tid=0, comment=''):
-        #randps = RANDPS(sid, j, k, x=x, y=y, tid=tid, comment=comment)
 
     def add_rotorg(self, sid, nids, comment=''):
         rotor = ROTORG(sid, nids, comment=comment)

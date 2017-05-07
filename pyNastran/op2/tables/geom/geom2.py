@@ -1,4 +1,7 @@
-# pylint: disable=W0612,C0103,C0302,W0613,C0111,R0914,R0201
+"""
+defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
+"""
+# pylint: disable=W0612,C0103,C0302,W0613,C011,R0914,R0201
 from struct import unpack, Struct
 from six import b
 from six.moves import range
@@ -289,11 +292,37 @@ class GEOM2(GeomCommon):
     def _read_cbarao(self, data, n):
         """
         CBARAO(4001,40,275) - the marker for Record 9
+
+        1 EID   I Element identification number
+        2 SCALE I Scale of Xi values
+        3 X1 RS 1st intermediate station for data recovery
+        4 X2 RS 2nd intermediate station for data recovery
+        5 X3 RS 3rd intermediate station for data recovery
+        6 X4 RS 4th intermediate station for data recovery
+        7 X5 RS 5th intermediate station for data recovery
+        8 X6 RS 6th intermediate station for data recovery
+        9 UNDEF none Not used
         """
-        self.log.info('skipping CBARAO in GEOM2\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CBARAO in GEOM2\n')
-        return len(data)
+        #self.log.info('skipping CBARAO in GEOM2\n')
+        #if self.is_debug_file:
+            #self.binary_debug.write('skipping CBARAO in GEOM2\n')
+        #return len(data)
+        nelements = (len(data) - n) // 36
+        for i in range(nelements):
+            edata = data[n:n + 36]  # 9*4
+            out = unpack(b(self._endian + '2i7f'), edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CBARAO=%s\n' % str(out))
+            (eid, scale, x1, x2, x3, x4, x5, x6, null) = out
+            if scale == 2:
+                scale = 'FR'
+            else:
+                NotImplementedError('CBARAO scale=%r; 2=FR' % scale)
+            x = [x1, x2, x3, x4, x5, x6]
+            self.add_cbarao(eid, scale, x, comment='')
+            n += 36
+        self.card_count['CBARAO'] = nelements
+        return n
 
     def _read_cbeam(self, data, n):
         """

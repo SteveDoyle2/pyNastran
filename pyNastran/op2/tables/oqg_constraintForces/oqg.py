@@ -461,6 +461,33 @@ class OQG(OP2Common):
             raise RuntimeError(self.code_information())
         return n
 
+    def _read_oqg_spc_ato(self, data, ndata):
+        """
+        table_code = ???
+        """
+        if self.thermal == 0:
+            if self.table_code in [3]:
+                assert self.table_name in [b'OQGATO2'], 'self.table_name=%r' % self.table_name
+                result_name = 'spc_forces_ATO'
+            #elif self.table_code in [603]:
+                #assert self.table_name in [b'OQGATO2'], 'self.table_name=%r' % self.table_name
+                #result_name = 'mpc_forces_PSD'
+            else:
+                print(self.table_code)
+                raise RuntimeError(self.code_information())
+
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            storage_obj = getattr(self, result_name)
+            n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                        RealSPCForcesArray, 'node',
+                                        random_code=self.random_code)
+        else:
+            raise RuntimeError(self.code_information())
+        assert n is not None, n
+        return n
+
     def _read_oqg_spc_crm(self, data, ndata):
         """
         table_code = 3/???/?10/?11

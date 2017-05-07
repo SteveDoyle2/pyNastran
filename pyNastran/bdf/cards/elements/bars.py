@@ -249,7 +249,7 @@ class CBARAO(BaseCard):
             self.comment = comment
         self.eid = eid
         self.scale = scale
-        self.x = x
+        self.x = np.unique(x).tolist()
 
     @classmethod
     def add_card(cls, card, comment=''):

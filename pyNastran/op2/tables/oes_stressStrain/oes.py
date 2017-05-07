@@ -469,7 +469,7 @@ class OES(OP2Common):
 
             (3, 1, 5, b'OES1X1') : ('ctube_stress', RealRodStressArray),
             (3, 1, 5, b'OES1X') : ('ctube_stress', RealRodStressArray),
-            #(3, 2, 5) : ('ctube_stress', ComplexRodStressArray),
+            (3, 2, 5, b'OES1X') : ('ctube_stress', ComplexRodStressArray),
             #(3, 3, 5) : ('ctube_stress', ComplexRodStressArray),
 
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
@@ -502,6 +502,7 @@ class OES(OP2Common):
             (13, 1, 2, b'OES1X1') : ('celas3_stress', RealSpringStressArray),
             (13, 2, 3) : ('celas3_stress', ComplexSpringStressArray),
             (13, 3, 3) : ('celas3_stress', ComplexSpringStressArray),
+            (13, 2, 3, b'OES1X') : ('celas3_stress', RealSpringStressArray),
 
             (14, 1, 2) : ('celas4_stress', RealSpringStressArray),
             (14, 2, 3) : ('celas4_stress', ComplexSpringStressArray),

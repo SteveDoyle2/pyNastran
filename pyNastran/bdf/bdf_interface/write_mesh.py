@@ -641,8 +641,9 @@ class WriteMesh(BDFAttributes):
                 msg.append(tstep.write_card(size, is_double))
             for (unused_id, tstepnl) in sorted(iteritems(self.tstepnls)):
                 msg.append(tstepnl.write_card(size, is_double))
-            for (unused_id, freq) in sorted(iteritems(self.frequencies)):
-                msg.append(freq.write_card(size, is_double))
+            for (unused_id, freqs) in sorted(iteritems(self.frequencies)):
+                for freq in freqs:
+                    msg.append(freq.write_card(size, is_double))
             for (unused_id, delay) in sorted(iteritems(self.delays)):
                 msg.append(delay.write_card(size, is_double))
             for (unused_id, rotor) in sorted(iteritems(self.rotors)):

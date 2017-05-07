@@ -493,7 +493,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'TIC', ## initial conditions - sid (set ID)
 
             ## frequencies
-            'FREQ', 'FREQ1', 'FREQ2', #'FREQ4',
+            'FREQ', 'FREQ1', 'FREQ2', 'FREQ4',
 
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
@@ -917,8 +917,9 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         for pid, pelast in sorted(iteritems(self.pelast)):
             pelast.validate()
 
-        for pid, frequency in sorted(iteritems(self.frequencies)):
-            frequency.validate()
+        for pid, freqs in sorted(iteritems(self.frequencies)):
+            for freq in freqs:
+                freq.validate()
         #------------------------------------------------
         for key, dmi in sorted(iteritems(self.dmis)):
             dmi.validate()
@@ -2836,7 +2837,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
             'dequations',
 
-            # frequencies - dict
+            # frequencies - dict[List[FREQ]]
             'frequencies',
 
             # optimization - dict

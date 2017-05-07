@@ -1,3 +1,6 @@
+"""
+defines readers for BDF objects in the OP2 DIT/DITS table
+"""
 from __future__ import print_function
 from struct import unpack
 from six.moves import range
@@ -6,7 +9,7 @@ import numpy as np
 from pyNastran.bdf.cards.aero import GUST
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABRND1, TABDMP1)
+                                            TABRND1, TABDMP1, TABLES1)
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
@@ -23,13 +26,13 @@ class DIT(GeomCommon):
             (1105, 11, 133): ['TABLED1', self._read_tabled1],  # record 4
             (1205, 12, 134): ['TABLED2', self._read_tabled2],  # record 5
             (1305, 13, 140): ['TABLED3', self._read_tabled3],  # record 6
-            #(1405, 14, 141) : ['TABLED4', self._read_tabled4],  # record 7-MSC
+            (1405, 14, 141) : ['TABLED4', self._read_tabled4],  # record 7-MSC
             #(4201, 42, 648) : ['TABLEDR', self._read_tabledr], # record 8-MSC
 
-            #(105, 1, 93): ['TABLEM1', self._read_tablem1], # record 9
+            (105, 1, 93): ['TABLEM1', self._read_tablem1], # record 9
             (205, 2, 94): ['TABLEM2', self._read_tablem2],  # record 10
             (305, 3, 95): ['TABLEM3', self._read_tablem3],  # record 11
-            #(405, 4, 96): ['TABLEM4', self._read_tablem4], # record 12
+            (405, 4, 96): ['TABLEM4', self._read_tablem4], # record 12
 
             (55, 25, 191) : ['TABRND1', self._read_tabrnd1],
             (15, 21, 162): ['TABDMP1', self._read_tabdmp1],   # NX
@@ -53,19 +56,13 @@ class DIT(GeomCommon):
         datan = data[n:]
         ints = np.fromstring(data[n:], self.idtype)
         floats = np.fromstring(data[n:], self.fdtype)
-        iminus1 = np.where(ints == -1)[0]
-        delta = iminus1[1:] - iminus1[:-1]
-        idelta = np.where(delta == 1)[0]
-        iminus1_delta = iminus1[delta] - 1
+        iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
-        #self.show_data(data[n:], 'if')
         for iend in iminus1_delta:
             datai = data[n+istart*4 : n+iend*4]
             tid = ints[istart]
-            #codex = ints[istart + 1]
-            #codey = ints[istart + 2]
-            #print('  sid=%s global_scale=%s' % (sid, global_scale))
+            #print('tid = %s' % tid)
             deltai = iend - istart - 8 # subtract 2 for sid, global scale
             assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
 
@@ -74,20 +71,21 @@ class DIT(GeomCommon):
             y = xy[:, 1]
             table = TABDMP1(tid, x, y, Type='G')
             self._add_table_sdamping_object(table)
-            istart = iend + 1
+            istart = iend + 2
             nentries += 1
         self._increase_card_count('TABDMP1', nentries)
         return n
 
     def _read_tabrndg(self, data, n):
-        """(56, 26, 303)"""
+        """TABRNDG(56, 26, 303)"""
         self.log.info('skipping TABRNDG in DIT\n')
         return len(data)
 
     def _read_tables1(self, data, n):
-        """(3105, 31, 97)"""
-        self.log.info('skipping TABLES1 in DIT\n')
-        return len(data)
+        """TABLES1(3105, 31, 97)"""
+        n = self._read_table1(TABLES1, self._add_table_object, data, n, 'TABLES1',
+                              add_codes=False)
+        return n
 
     def _read_gust(self, data, n):
         """
@@ -113,28 +111,31 @@ class DIT(GeomCommon):
         n = self._read_table1(TABLED1, self._add_tabled_object, data, n, 'TABLED1')
         return n
 
-    def _read_table1(self, cls, add_method, data, n, table_name):
+    def _read_table1(self, cls, add_method, data, n, table_name, add_codes=True):
         nentries = 0
         ndata = len(data)
         while ndata - n >= 40:
             edata = data[n:n + 40]
             out = unpack('8iff', edata)
             (sid, code_x, code_y, a, a, a, a, a, x, y) = out
-            data_in = [sid, code_x, code_y]
+            if add_codes:
+                data_in = [sid, code_x, code_y, x, y]
+            else:
+                data_in = [sid, x, y]
+
             n += 40
             while 1:
                 (xint, yint) = unpack('ii', data[n:n + 8])
                 (x, y) = unpack('ff', data[n:n + 8])
 
                 n += 8
-                if [xint, yint] != [-1, -1]:
-                    n += 8
+                if [xint, yint] == [-1, -1]:
                     break
                 else:
                     data_in += [x, y]
 
-            data_in += [x, y]
-            table = cls.add_op2_data(out)
+            #print('data_in =', data_in)
+            table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
         self._increase_card_count(table_name, nentries)
@@ -157,27 +158,24 @@ class DIT(GeomCommon):
         10 Y RS Y  value
         Words 9 through 10 repeat until (-1,-1) occurs
         """
-        #self.show_data(data[n:], 'if')
         ndata = len(data)
         nentries = 0
         while n < ndata:
             edata = data[n:n + 40]
             out = unpack('ifiiiiiiff', edata)
             (sid, x1, a, a, a, a, a, a, x, y) = out
-            data_in = [sid, x1]
+            data_in = [sid, x1, x, y]
             n += 40
             while 1:
                 (xint, yint) = unpack('ii', data[n:n + 8])
                 (x, y) = unpack('ff', data[n:n + 8])
 
                 n += 8
-                if [xint, yint] != [-1, -1]:
-                    n += 8
+                if [xint, yint] == [-1, -1]:
                     break
                 else:
                     data_in += [x, y]
-            data_in += [x, y]
-            table = cls.add_op2_data(out)
+            table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
         self._increase_card_count(table_name, nentries)
@@ -234,30 +232,57 @@ class DIT(GeomCommon):
             edata = data[n:n + 40]
             out = unpack('iffiiiiiff', edata)
             (sid, x1, x2, a, a, a, a, a, x, y) = out
-            data_in = [sid, x1, x2]
+            data_in = [sid, x1, x2, x, y]
             n += 40
             while 1:
                 (xint, yint) = unpack('ii', data[n:n + 8])
                 (x, y) = unpack('ff', data[n:n + 8])
 
                 n += 8
-                if [xint, yint] != [-1, -1]:
-                    n += 8
+                if [xint, yint] == [-1, -1]:
                     break
                 else:
                     data_in += [x, y]
-            data_in += [x, y]
-            table = cls.add_op2_data(out)
+            table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
         self._increase_card_count(table_name, nentries)
         return n
 
     def _read_table4(self, cls, add_method, data, n, table_name):
-        self.log.info('skipping %s in DIT\n' % table_name)
-        return len(data)
+        """
+        1 ID I Table identification number
+        2 X1 RS X-axis shift
+        3 X2 RS X-axis normalization
+        4 X3 RS X value when x is less than X3
+        5 X4 RS X value when x is greater than X4
+        6 UNDEF(3 ) None
+        9 A RS
+        Word 9 repeats until End of Record (-1)
+        """
+        nentries = 0
+        ndata = len(data)
+        while ndata - n >= 36:
+            edata = data[n:n + 36]
+            out = unpack('i 4f 3i f', edata)
+            (sid, x1, x2, x3, x4, a, b, c, x) = out
+            data_in = [sid, x1, x2, x3, x4, x]
+            n += 40
+            while 1:
+                xint, = unpack('i', data[n:n + 4])
+                x, = unpack('f', data[n:n + 4])
 
-#TABLES1
+                n += 4
+                if xint == -1:
+                    break
+                else:
+                    data_in.append(x)
+            table = cls.add_op2_data(data_in)
+            add_method(table)
+            nentries += 1
+        self._increase_card_count(table_name, nentries)
+        return n
+
 #TABLEST
     def _read_tabrnd1(self, data, n):
         """
@@ -277,10 +302,7 @@ class DIT(GeomCommon):
         datan = data[n:]
         ints = np.fromstring(data[n:], self.idtype)
         floats = np.fromstring(data[n:], self.fdtype)
-        iminus1 = np.where(ints == -1)[0]
-        delta = iminus1[1:] - iminus1[:-1]
-        idelta = np.where(delta == 1)[0]
-        iminus1_delta = iminus1[delta] - 1
+        iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
         for iend in iminus1_delta:
@@ -310,9 +332,28 @@ class DIT(GeomCommon):
 
             table = TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis)
             self._add_random_table_object(table)
-            istart = iend + 1
+            istart = iend + 2
             nentries += 1
         self._increase_card_count('TABRND1', nentries)
         return n
 
-#TABRNDG
+def get_iend_from_ints(ints):
+    """
+    istart = iend + 2
+    for (-1, -1) flag to end a table
+    """
+    debug = True
+    iminus1 = np.where(ints == -1)[0]
+    delta = iminus1[1:] - iminus1[:-1]
+    #if debug:
+        #print("ints =", ints)
+        #print("iminus1 =", iminus1)
+        #print("delta =", delta)
+    idelta = np.where(delta == 1)[0]
+    #if debug:
+        #print("idelta =", idelta)
+        #print('delta[idelta] =', delta[idelta])
+    iminus1_delta = iminus1[idelta]
+    #if debug:
+        #print("iminus1_delta =", iminus1_delta)
+    return iminus1_delta

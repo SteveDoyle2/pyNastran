@@ -945,7 +945,7 @@ class OUG(OP2Common):
         table_code = 901  # /610/611
         """
         if self.thermal == 0:
-            if self.table_code in [42]: # fake
+            if self.table_code == 1:
                 result_name = 'displacements_ATO'
                 storage_obj = self.displacements_ATO
                 assert self.table_name in [b'OUGATO1', b'OUGATO2'], 'self.table_name=%r' % self.table_name
@@ -954,6 +954,26 @@ class OUG(OP2Common):
                 self._results._found_result(result_name)
                 n = self._read_random_table(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, 'node',
+                                            random_code=self.random_code)
+            elif self.table_code == 10:
+                result_name = 'velocities_ATO'
+                storage_obj = self.velocities_ATO
+                assert self.table_name in [b'OVGATO1', b'OVGATO2'], 'self.table_name=%r' % self.table_name
+                if self._results.is_not_saved(result_name):
+                    return ndata
+                self._results._found_result(result_name)
+                n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                            RealVelocityArray, 'node',
+                                            random_code=self.random_code)
+            elif self.table_code == 11:
+                result_name = 'accelerations_ATO'
+                storage_obj = self.accelerations_ATO
+                assert self.table_name in [b'OAGATO1', b'OAGATO2'], 'self.table_name=%r' % self.table_name
+                if self._results.is_not_saved(result_name):
+                    return ndata
+                self._results._found_result(result_name)
+                n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                            RealAccelerationArray, 'node',
                                             random_code=self.random_code)
             #elif self.table_code == 610:
                 #result_name = 'velocities_PSD'

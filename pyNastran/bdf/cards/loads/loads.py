@@ -496,6 +496,7 @@ class DAREA(BaseCard):
         self.nodes = nodes
         self.components = components
 
+        assert isinstance(components, list), 'components=%r' % components
         for component in components:
             assert 0 <= component <= 6, component
         self.scales = scales
@@ -1162,9 +1163,9 @@ class RANDPS(RandomLoad):
         k : int
             Subcase id of the applied load set
             k > j
-        x / y : float
+        x / y : float; default=0.0
             Components of the complex number
-        tid : int
+        tid : int; default=0
             TABRNDi id that defines G(F)
         comment : str; default=''
             a comment for the card

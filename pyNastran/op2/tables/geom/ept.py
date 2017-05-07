@@ -1,3 +1,6 @@
+"""
+defines readers for BDF objects in the OP2 EPT/EPTS table
+"""
 #pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)

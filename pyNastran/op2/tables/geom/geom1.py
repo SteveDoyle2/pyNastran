@@ -1,3 +1,6 @@
+"""
+defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
+"""
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
 from struct import unpack, Struct
 from six import b

@@ -60,13 +60,6 @@ class Table(BaseCard):
     def __init__(self):
         pass
 
-    def _map_axis(self, axis):
-        if axis == 0:
-            axis_type = 'LINEAR'
-        else:
-            raise ValueError('axis=%r' % axis)
-        return axis_type
-
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
 
@@ -221,11 +214,11 @@ class TABLED1(Table):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         tid = data[0]
-        xaxis = cls._map_axis(data[1])
-        yaxis = cls._map_axis(data[2])
+        xaxis = _map_axis(data[1])
+        yaxis = _map_axis(data[2])
         xy = data[3:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
@@ -338,7 +331,6 @@ class TABLED2(Table):
         x1 = data[1]
         xy = data[2:]
         xy = np.array(xy, dtype='float64')
-
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
@@ -633,7 +625,7 @@ class TABLEM1(Table):
         tid = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM1(tid, x, y, comment=comment)
@@ -698,7 +690,7 @@ class TABLEM2(Table):
         x1 = data[1]
         xy = data[2:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM2(tid, x1, x, y, comment=comment)
@@ -769,7 +761,7 @@ class TABLEM3(Table):
         x2 = data[2]
         xy = data[3:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM3(tid, x1, x2, x, y, comment=comment)
@@ -865,7 +857,23 @@ class TABLEM4(Table):
 class TABLES1(Table):
     type = 'TABLES1'
 
-    def __init__(self, tid, Type, x, y, comment=''):
+    def __init__(self, tid, x, y, Type=1, comment=''):
+        """
+        Adds a TABLES1 card, which defines a stress dependent material
+
+        Parameters
+        ----------
+        tid : int
+            Table ID
+        Type : int; default=1
+            Type of stress-strain curve (1 or 2)
+            1 - Cauchy (true) stress vs. total true strain
+            2 - Cauchy (true) stress vs. plastic true strain (MSC only)
+        x, y : List[float]
+            table values
+        comment : str; default=''
+            a comment for the card
+        """
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -906,7 +914,7 @@ class TABLES1(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
         x, y = make_xy(tid, 'TABLES1', xy)
-        return TABLES1(tid, Type, x, y, comment=comment)
+        return TABLES1(tid, x, y, Type=Type, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -923,11 +931,10 @@ class TABLES1(Table):
         tid = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        #return TABLES1(tid, Type, x, y, comment=comment)
-        raise NotImplementedError(data)
+        return TABLES1(tid, x, y, Type=1, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -999,7 +1006,7 @@ class TABLEST(Table):
         tid = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEST(tid, x, y, comment=comment)
@@ -1086,8 +1093,8 @@ class TABRND1(RandomTable):
             a comment for the card
         """
         tid = data[0]
-        xaxis = cls._map_axis(data[1])
-        yaxis = cls._map_axis(data[2])
+        xaxis = _map_axis(data[1])
+        yaxis = _map_axis(data[2])
         xy = data[3:]
         xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
@@ -1096,13 +1103,6 @@ class TABRND1(RandomTable):
 
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
-
-    def _map_axis(self, axis):
-        if axis == 0:
-            axis_type = 'LINEAR'
-        else:
-            raise ValueError('axis=%r' % (axis))
-        return axis_type
 
     def raw_fields(self):
         xy = []
@@ -1189,3 +1189,11 @@ class TABRNDG(RandomTable):
 
     def repr_fields(self):
         return self.raw_fields()
+
+
+def _map_axis(axis):
+    if axis == 0:
+        axis_type = 'LINEAR'
+    else:
+        raise ValueError('axis=%r' % axis)
+    return axis_type

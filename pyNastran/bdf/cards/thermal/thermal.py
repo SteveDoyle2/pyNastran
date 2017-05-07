@@ -616,8 +616,12 @@ class CHBDYP(ThermalElement):
             Type = 'POINT'
         elif Type == 2:
             Type = 'LINE'
+        elif Type == 6:
+            Type = 'ELCYL'
         elif Type == 7:
             Type = 'FTUBE'
+        elif Type == 10:
+            Type = 'TUBE'
         else:
             raise NotImplementedError('CHBDYP Type=%r data=%s' % (Type, data))
         #assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)

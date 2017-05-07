@@ -36,7 +36,6 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
-
 class DELAY(BaseCard):
     type = 'DELAY'
 
@@ -51,6 +50,12 @@ class DELAY(BaseCard):
         if comment:
             self.comment = comment
 
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        if isinstance(components, integer_types):
+            components = [components]
+        if isinstance(delays, float):
+            delays = [delays]
         #: Identification number of DELAY entry. (Integer > 0)
         self.sid = sid
         #: Grid, extra, or scalar point identification number. (Integer > 0)
@@ -169,6 +174,13 @@ class DPHASE(BaseCard):
         """
         if comment:
             self.comment = comment
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        if isinstance(components, integer_types):
+            components = [components]
+        if isinstance(phase_leads, float):
+            phase_leads = [phase_leads]
+
         self.sid = sid
         self.nodes = nodes
         self.components = components
@@ -468,9 +480,9 @@ class FREQ2(FREQ):
         self.f2 = f2
         self.nf = nf
 
-        d = 1. / ndf * log(f2 / f1)
+        d = 1. / nf * log(f2 / f1)
         freqs = []
-        for i in range(ndf):
+        for i in range(nf):
             freqs.append(f1 * exp(i * d))  # 0 based index
         self.freqs = np.unique(freqs)
 
@@ -528,7 +540,7 @@ class FREQ4(FREQ):
     """
     type = 'FREQ4'
 
-    def __init__(self, sid, f1, f2, fspread, nfm, comment=''):
+    def __init__(self, sid, f1, f2, fspread=0.1, nfm=3, comment=''):
         if comment:
             self.comment = comment
         self.sid = sid
@@ -1530,12 +1542,23 @@ class TSTEPNL(BaseCard):
         ----------
         sid : int
             the time step id
-        ndt : ???
+        ndt : int
             ???
-        dt : ???
+        dt : float
             ???
-        no : ???
+        no : int
             ???
+        method : str
+           ???
+           MSC = {AUTO, ITER, ADAPT, SEMI, FNT, PFNT}
+           NX  = {None, TSTEP}
+        kstep : ???; default=None
+            ???
+        max_iter : int; default=10
+            ???
+        conv : str; default='PW'
+            ???
+            PW, W, U
         eps_u : float; default=1.e-2
             ???
         eps_p : float; default=1.e-3
@@ -1686,15 +1709,21 @@ class TSTEPNL(BaseCard):
 
         if method == 1:
             method = 'AUTO'
+        elif method == 2:
+            method = 'TSTEP'
         elif method == 3:
             method = 'ADAPT'
         else:
             raise NotImplementedError('tstepnl=%s method=%r data=%s' % (sid, method, data))
 
-        if conv == 3:
+        if conv == 1:
+            conv = 'W'
+        elif conv == 3:
             conv = 'PW'
         elif conv == 4:
             conv = 'U'
+        elif conv == 7:
+            conv = 'UPW'
         #elif conv == 3:
             #conv = 'ADAPT'
         else:
