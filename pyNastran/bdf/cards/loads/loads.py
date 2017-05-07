@@ -89,6 +89,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
         if isinstance(load_ids, int):
             load_ids = [load_ids]
         self.load_ids = load_ids
+        assert 0 not in load_ids, self
 
     @classmethod
     def add_card(cls, card, comment=''):

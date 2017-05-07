@@ -1130,6 +1130,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
 
+        self._times[self.itime] = dt
         if self.is_unique:
             self.node_element[self.itime, self.itotal, :] = [node_id, eid]
             self.element_names[self.itime, self.itotal] = ename
@@ -1188,7 +1189,6 @@ class ComplexGridPointForcesArray(ScalarObject):
         msg = self._get_f06_msg(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         ntimes = self.data.shape[0]
-
         if self.is_unique:
             for itime in range(ntimes):
                 dt = self._times[itime]

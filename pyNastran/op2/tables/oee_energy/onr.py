@@ -5,7 +5,7 @@ from six.moves import range
 from struct import Struct
 from numpy import fromstring, array
 
-from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 class ONR(OP2Common):
@@ -247,7 +247,7 @@ class ONR(OP2Common):
 
         if self.is_debug_file:
             self.binary_debug.write('cvalares = %s\n' % self.cvalres)
-        if self.num_wide == 4:
+        if self.format_code == 1 and self.num_wide == 4:
             assert self.cvalres in [0, 1], self.cvalres
 
             ntotal = 16
@@ -306,13 +306,16 @@ class ONR(OP2Common):
                         self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
                     self.obj.add_sort1(dt, eid, energy, percent, density)
                     n += ntotal
-        elif self.num_wide == 5:
+        elif self.format_code == 1 and self.num_wide == 5:
             assert self.cvalres in [0, 1, 2], self.cvalres # 0??
             ntotal = 20
             nnodes = ndata // ntotal
+            nelements = nnodes
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealStrainEnergyArray)
+            if auto_return:
+                return nelements * self.num_wide * 4
 
             obj = self.obj
             if self.use_vector:
@@ -349,9 +352,58 @@ class ONR(OP2Common):
                     #eid = self.obj.add_new_eid(out)
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
-                    obj.add(dt, word, energy, percent, density)
+                    obj.add_sort1(dt, word, energy, percent, density)
                     n += ntotal
-        elif self.num_wide == 6:  ## TODO: figure this out...
+        elif self.format_code in [2, 3] and self.num_wide == 5:
+            #ELEMENT-ID   STRAIN-ENERGY (MAG/PHASE)  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
+            #    5         2.027844E-10 /   0.0            1.2581            2.027844E-09
+            ntotal = 20
+            nelements = ndata // ntotal
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, ComplexStrainEnergyArray)
+            if auto_return:
+                return nelements * self.num_wide * 4
+
+            obj = self.obj
+            if self.use_vector:
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                ielement2 = obj.itotal + nelements
+                itotal2 = ielement2
+
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                obj._times[obj.itime] = dt
+
+                #if obj.itime == 0:
+                ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                eids = ints[:, 0] // 10
+                assert eids.min() > 0, eids.min()
+                obj.element[itotal:itotal2] = eids
+                #obj.element_type[obj.itime, itotal:itotal2, :] = s
+
+                #[energyr, energyi, percent, density]
+                obj.element[obj.itime, itotal:itotal2] = eids
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                obj.itotal = itotal2
+                obj.ielement = ielement2
+            else:
+                s = Struct(b(self._endian + 'i4f'))
+                for i in range(nelements):
+                    edata = data[n:n+20]
+                    out = s.unpack(edata)
+                    (eid_device, energyr, energyi, percent, density) = out
+                    eid = eid_device // 10
+                    #if is_magnitude_phase:
+                        #energy = polar_to_real_imag(energyr, energyi)
+                    #else:
+                        #energy = complex(energyr, energyi)
+
+                    if self.is_debug_file:
+                        self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+                    obj.add_sort1(dt, eid, energyr, energyi, percent, density)
+                    n += ntotal
+
+        elif self.format_code == 1 and self.num_wide == 6:  ## TODO: figure this out...
             ntotal = 24
             nnodes = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
@@ -396,5 +448,5 @@ class ONR(OP2Common):
                     obj.add(dt, word, energy, percent, density)
                     n += ntotal
         else:
-            raise NotImplementedError('num_wide = %s' % self.num_wide)
+            raise NotImplementedError(self.code_information())
         return n

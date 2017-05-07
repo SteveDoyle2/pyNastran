@@ -1,12 +1,13 @@
 from __future__ import print_function
 from struct import unpack, Struct
 from six import b
-
+import numpy as np
 
 from pyNastran.bdf.cards.nodes import EPOINTs
 from pyNastran.bdf.cards.loads.loads import DAREA
 from pyNastran.bdf.cards.methods import EIGB
-from pyNastran.bdf.cards.dynamic import TF
+from pyNastran.bdf.cards.dynamic import FREQ1, TF
+from pyNastran.bdf.cards.loads.dloads import RLOAD2
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class DYNAMICS(GeomCommon):
@@ -91,10 +92,47 @@ class DYNAMICS(GeomCommon):
         return len(data)
 
     def _read_dload(self, data, n):
-        """DLOAD(57,5,123) - Record 4"""
-        if self.is_debug_file:
-            self.binary_debug.write('skipping DLOAD in DYNAMICS\n')
-        return len(data)
+        """
+        DLOAD(57,5,123) - Record 4
+
+        1 SID  I Load set identification number
+        2  S   RS Overall scale factor
+        3  SI  RS Scale factor i
+        4  LI  I Load set identification number i
+        Words 3 through 4 repeat until (-1,-1) occurs
+        """
+        ndata = len(data)
+        nfields = (ndata - n) // 4
+
+        datan = data[n:]
+        ints = np.fromstring(data[n:], self.idtype)
+        floats = np.fromstring(data[n:], self.fdtype)
+        iminus1 = np.where(ints == -1)[0]
+        delta = iminus1[1:] - iminus1[:-1]
+        idelta = np.where(delta == 1)[0]
+        iminus1_delta = iminus1[delta] - 1
+        istart = 0
+        nentries = 0
+        for iend in iminus1_delta:
+            datai = data[n+istart*4 : n+iend*4]
+            sid = ints[istart]
+            global_scale = floats[istart + 1]
+            #print('  sid=%s global_scale=%s' % (sid, global_scale))
+            deltai = iend - istart - 2 # subtract 2 for sid, global scale
+            assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
+
+            scales = []
+            load_ids = []
+            for iscale in range(deltai // 2):
+                scale = floats[istart + 2 + 2*iscale]
+                load_id = ints[istart + 3 + 2*iscale]
+                scales.append(scale)
+                load_ids.append(load_id)
+            dload = self.add_dload(sid, global_scale, scales, load_ids)
+            istart = iend + 1
+            nentries += 1
+        self._increase_card_count('DLOAD', nentries)
+        return n
 
     def _read_dphase(self, data, n):
         """DPHASE(77,19,184) - Record 5"""
@@ -172,10 +210,27 @@ class DYNAMICS(GeomCommon):
         return len(data)
 
     def _read_freq1(self, data, n):
-        """FREQ1(1007,10,125) - Record 14"""
-        if self.is_debug_file:
-            self.binary_debug.write('skipping FREQ1 in DYNAMICS\n')
-        return len(data)
+        """FREQ1(1007,10,125) - Record 14
+
+        1 SID I  Set identification number
+        2 F1  RS First frequency
+        3 DF  RS Frequency increment
+        4 NDF I  Number of frequency increments
+        """
+        ntotal = 16
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = unpack('iffi', edata)
+            sid, f1, df, ndf = out
+            if self.is_debug_file:
+                self.binary_debug.write('FREQ1=%s\n' % str(out))
+            #print('out = %s' % str(out))
+            freq = FREQ1(sid, f1, df, ndf=ndf)
+            self._add_freq_object(freq)
+            n += ntotal
+        self._increase_card_count('FREQ1', nentries)
+        return n
 
     def _read_freq2(self, data, n):
         """FREQ2(1107,11,166) - Record 15"""
@@ -216,12 +271,47 @@ class DYNAMICS(GeomCommon):
         return len(data)
 
     def _read_rload2(self, data, n):
-        """RLOAD2(5107,51,131) - Record 27"""
-        if self.is_debug_file:
-            self.binary_debug.write('skipping RLOAD2 in DYNAMICS\n')
-        return len(data)
+        """
+        RLOAD2(5107,51,131) - Record 27
 
-#
+        1 SID     I  Load set identification number
+        2 DAREA   I  DAREA Bulk Data entry identification number
+        3 DELAYI  I  DELAY Bulk Data entry identification number
+        4 DPHASEI I  DPHASE Bulk Data entry identification number
+        5 TBI     I  TABLEDi Bulk Data entry identification number for B(f)
+        6 TPI     I  TABLEDi Bulk Data entry identification number for Phi(f)
+        7 TYPE    I  Nature of the dynamic excitation
+        8 DELAYR  RS If DELAYI = 0, constant value for delay
+        9 DPHASER RS If DPHASEI = 0, constant value for phase
+        10 TBR    RS If TBI = 0, constant value for B(f)
+        11 TPR    RS If TPI = 0, constant value for PHI(f)
+        """
+        ntotal = 44
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = unpack('7i 4f', edata)
+            sid, darea, delayi, dphasei, tbi, tpi, Type, delayr, dphaser, tbr, tpr = out
+            if self.is_debug_file:
+                self.binary_debug.write('RLOAD2=%s\n' % str(out))
+
+            tb = tbi
+            tp = tpi
+            delay = delayi
+            dphase = dphasei
+            if tbi == 0:
+                tb = tbr
+            if dphasei == 0:
+                dphase = dphaser
+            if tpi == 0:
+                tp = tpr
+            dload = RLOAD2(sid, darea, delay=delay, dphase=dphase, tb=tb, tp=tp,
+                           Type=Type, comment='')
+            self._add_dload_entry(dload)
+            n += ntotal
+        self._increase_card_count('RLOAD2', nentries)
+        return n
+
 #RLOAD2(5207,52,132)
 #RGYRO
 #ROTORG

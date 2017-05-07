@@ -55,6 +55,8 @@ GEOM_TABLES = [
     b'EDTS',
     b'MPT', b'MPTS',
 
+    b'DIT', b'DITS',
+
     b'PVT0', b'CASECC',
     b'EDOM', b'OGPFB1',
     # GPDT  - Grid point definition table
@@ -216,7 +218,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OQMATO2', b'OQMCRM2', b'OQMPSD2', b'OQMRMS2', b'OQMNO2',
 
     # stress
-    b'OESATO1', b'OESCRM1', b'OESPSD1', b'OESRMS1', b'OESNO1',
+    b'OESATO1', b'OESCRM1', b'OESPSD1', b'OESRMS1', b'OESNO1', b'OESXRMS1',
     b'OESATO2', b'OESCRM2', b'OESPSD2', b'OESRMS2', b'OESNO2',
 
     # load vector ???
@@ -1032,6 +1034,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESPSD1' : [self._table_passer, self._table_passer],
             b'OESRMS1' : [self._table_passer, self._table_passer],
             b'OESNO1'  : [self._table_passer, self._table_passer],
+            b'OESXRMS1' : [self._table_passer, self._table_passer],
 
             b'OESATO2' : [self._table_passer, self._table_passer],
             b'OESCRM2' : [self._table_passer, self._table_passer],
@@ -1665,8 +1668,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_extdb()
             elif table_name == b'OMM2':
                 self._read_omm2()
-            elif table_name in [b'DIT', b'DITS']:  # tables
-                self._read_dit()
+            #elif table_name in [b'DIT', b'DITS']:  # tables
+                #self._read_dit()
             elif table_name == b'TOL':
                 self._read_tol()
             elif table_name == b'PCOMPTS': # blade

@@ -338,7 +338,8 @@ class TABLED2(Table):
         x1 = data[1]
         xy = data[2:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED2(tid, x1, x, y, comment=comment)
@@ -518,7 +519,7 @@ class TABLED4(Table):
 
 class TABDMP1(Table):
     type = 'TABDMP1'
-    def __init__(self, tid, Type, x, y, comment=''):
+    def __init__(self, tid, x, y, Type='G', comment=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -560,7 +561,7 @@ class TABDMP1(Table):
         string(card, nfields, 'ENDT')
 
         x, y = make_xy(tid, 'TABDMP1', xy)
-        return TABDMP1(tid, Type, x, y, comment=comment)
+        return TABDMP1(tid, x, y, Type=Type, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

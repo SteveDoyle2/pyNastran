@@ -3740,8 +3740,8 @@ class AddCards(AddMethods):
         self._add_random_table_object(table)
         return table
 
-    def add_tabdmp1(self, tid, Type, x, y, comment=''):
-        table = TABDMP1(tid, Type, x, y, comment=comment)
+    def add_tabdmp1(self, tid, x, y, Type='G', comment=''):
+        table = TABDMP1(tid, x, y, Type=Type, comment=comment)
         self._add_table_sdamping_object(table)
         return table
 

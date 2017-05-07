@@ -982,6 +982,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[set_obj.type].append(key)
 
     def _add_table_object(self, table):
+        """adds a TABLES1, TABLEST object"""
         key = table.tid
         assert key not in self.tables, '\nTable=\n%s old_table=\n%s' % (
             table, self.tables[key])
@@ -990,6 +991,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def _add_tabled_object(self, table):
+        """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
         key = table.tid
         assert key not in self.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
             table, self.tables_d[key])
@@ -998,6 +1000,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def _add_tablem_object(self, table):
+        """adds a TABLEM1, TABLEM2, TABLEM3, TABLEM4 object"""
         key = table.tid
         assert key not in self.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (
             table, self.tables_m[key])
@@ -1006,6 +1009,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def _add_table_sdamping_object(self, table):
+        """adds a TABDMP1 object"""
         key = table.tid
         assert key not in self.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
             table, self.tables_sdamping[key])
@@ -1014,6 +1018,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def _add_random_table_object(self, table):
+        """adds a TABRND1, TABRNDG object"""
         key = table.tid
         assert key not in self.random_tables, '\nTable=\n%s old=\n%s' % (
             table, self.random_tables[key])
