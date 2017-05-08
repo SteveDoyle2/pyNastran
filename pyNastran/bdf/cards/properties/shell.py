@@ -1341,10 +1341,10 @@ class PSHEAR(ShellProperty):
         ----------
         pid : int
             property id
-        t : float
-            shear panel thickness
         mid : int
             material id
+        t : float
+            shear panel thickness
         nsm : float; default=0.
             nonstructural mass per unit length
         f1 : float; default=0.0
@@ -1388,7 +1388,7 @@ class PSHEAR(ShellProperty):
         f1 = double_or_blank(card, 5, 'f1', 0.0)
         f2 = double_or_blank(card, 6, 'f2', 0.0)
         assert len(card) <= 7, 'len(PSHEAR card) = %i\ncard=%s' % (len(card), card)
-        return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
+        return PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1409,7 +1409,7 @@ class PSHEAR(ShellProperty):
         f1 = data[4]
         f2 = data[5]
         assert isinstance(mid, integer_types), data
-        return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
+        return PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
 
     def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:

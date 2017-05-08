@@ -655,7 +655,7 @@ class GEOM2(GeomCommon):
             f2, = self.struct_i.unpack(edata[28:32])
             assert f == f2, 'f=%s f2=%s' % (f, f2)
             if f == 2:
-                g0 = self.struct_i.unpack(edata[16:20])
+                g0, = self.struct_i.unpack(edata[16:20])
                 x1 = None
                 x2 = None
                 x3 = None
@@ -929,7 +929,6 @@ class GEOM2(GeomCommon):
         nelements = len(elements)
         for elem in elements:
             self._add_thermal_bc_object(elem, elem.eid)
-
         self.card_count['CONV'] = nelements
         return n
 
@@ -1508,7 +1507,7 @@ class GEOM2(GeomCommon):
 
     def _read_ctube(self, data, n):
         """
-        CTUBE(3701,37,49)    - the marker for Record 104
+        CTUBE(3701,37,49) - the marker for Record 104
         """
         s = Struct(b(self._endian + '4i'))
         nelements = (len(data) - n) // 16
@@ -1595,7 +1594,7 @@ class GEOM2(GeomCommon):
 # RADINT
 # SINT
 
-    def add_spoint(self, spooint):
+    def add_spoint(self, spoint):
         raise RuntimeError('this should be overwritten by the BDF')
 
     def _read_spoint(self, data, n):

@@ -295,7 +295,7 @@ class CGAP(Element):
         cid = data[8]
         if cid == -1:
             cid = None
-        return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
+        return CGAP(eid, ga, gb, x, g0, pid=pid, cid=cid, comment=comment)
 
     def _verify(self, xref=True):
         cid = self.Cid()

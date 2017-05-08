@@ -324,6 +324,8 @@ class EPT(GeomCommon):
             idata = data[n+istarti*4 : n+(istarti+6)*4]
             #print('len(idata)=', len(idata))
             pid, mid, group, Type = struct1.unpack(idata)
+            group = group.decode('latin1')
+            Type = Type.decode('latin1')
             fvalues = floats[istarti+6: iendi]
             if self.is_debug_file:
                 self.binary_debug.write('     %s\n' % str(fvalues))
@@ -334,15 +336,6 @@ class EPT(GeomCommon):
             self._add_op2_property(prop)
         nproperties = len(istart)
         self.card_count['PBEAML'] = nproperties
-        return len(data)
-
-
-        #str = np.fromstring(data, self._endian + '4s')
-        #print(ints)
-        #self.show_data(data)
-        self.log.info('skipping PBEAML in EPT\n')
-        import sys
-        sys.exit()
         return len(data)
 
     def _read_pbend(self, data, n):
@@ -736,8 +729,9 @@ class EPT(GeomCommon):
         for i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
             pid, mid, cid, location, t, csopt = out[:6]
+            location = location.decode('latin1')
             #self.show_data(data[n:n+ntotal], 'ifs')
-            plplane = self.add_plplane(pid, mid, cid=cid, stress_strain_output_location='GRID')
+            plplane = self.add_plplane(pid, mid, cid=cid, stress_strain_output_location=location)
             #print(plplane)
             n += ntotal
         self.card_count['PLPLANE'] = nentries
@@ -766,6 +760,7 @@ class EPT(GeomCommon):
         for i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
             pid, mid, location, csopt, null_a, null_b, null_c = out
+            location = location.decode('latin1')
             #self.show_data(data[n:n+ntotal], 'ifs')
             plsolid = self.add_plsolid(pid, mid, stress_strain=location, ge=0.)
             n += ntotal

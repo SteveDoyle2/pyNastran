@@ -268,9 +268,9 @@ class RBAR(RigidElement):
         for comp in '123456':
             msgi = ''
             if comp not in independent:
-                msgi += '  comp=%s is not nindependent\n' % (comp)
+                msgi += '  comp=%s is not independent\n' % (comp)
         if msgi:
-            msg = 'cna=%s cnb=%s\n%s' % msgi
+            msg = 'cna=%s cnb=%s\n%s' % (self.cna, self.cnb, msgi)
             raise RuntimeError(msg)
 
     @classmethod
@@ -1348,6 +1348,26 @@ class RSPLINE(RigidElement):
     """
     def __init__(self, eid, independent_nid, dependent_nids, dependent_components,
                  diameter_ratio=0.1, comment=''):
+        """
+        Creates a RSPLINE card, which uses multipoint constraints for the
+        interpolation of displacements at grid points
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        independent_nid : int
+            the independent node id
+        dependent_nids : List[int]
+            the dependent node ids
+        dependent_components : List[str]
+            Components to be constrained
+        diameter_ratio : float; default=0.1
+            Ratio of the diameter of the elastic tube to the sum of the
+            lengths of all segments
+        comment : str; default=''
+            a comment for the card
+        """
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
@@ -1440,7 +1460,7 @@ class RSPLINE(RigidElement):
 
     def raw_fields(self):
         list_fields = [self.type, self.eid, self.diameter_ratio, self.independent_nid]
-        for (i, gn, cn) in zip(count(), self.dependent_nids, self.dependent_components):
+        for (gn, cn) in zip(self.dependent_nids, self.dependent_components):
             list_fields += [gn, cn]
         return list_fields
 

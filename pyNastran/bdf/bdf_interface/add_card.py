@@ -1387,10 +1387,10 @@ class AddCards(AddMethods):
         ----------
         pid : int
             property id
-        t : float
-            shear panel thickness
         mid : int
             material id
+        t : float
+            shear panel thickness
         nsm : float; default=0.
             nonstructural mass per unit length
         f1 : float; default=0.0
@@ -1400,7 +1400,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        prop = PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
+        prop = PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
         self._add_property_object(prop)
         return prop
 
@@ -3949,6 +3949,26 @@ class AddCards(AddMethods):
 
     def add_rspline(self, eid, independent_nid, dependent_nids, dependent_components,
                     diameter_ratio=0.1, comment=''):
+        """
+        Creates a RSPLINE card, which uses multipoint constraints for the
+        interpolation of displacements at grid points
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        independent_nid : int
+            the independent node id
+        dependent_nids : List[int]
+            the dependent node ids
+        dependent_components : List[str]
+            Components to be constrained
+        diameter_ratio : float; default=0.1
+            Ratio of the diameter of the elastic tube to the sum of the
+            lengths of all segments
+        comment : str; default=''
+            a comment for the card
+        """
         elem = RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
                        diameter_ratio=diameter_ratio, comment=comment)
         self._add_rigid_element_object(elem)

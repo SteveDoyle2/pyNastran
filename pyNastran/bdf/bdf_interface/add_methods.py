@@ -913,7 +913,7 @@ class AddMethods(BDFAttributes):
         assert key > 0
         if key in self.frequencies:
             freq0 = self.frequencies[key][0]
-            if freq0.type == 'FREQ':
+            if freq0.type == 'FREQ' and freq.type == 'FREQ':
                 freq0.add_frequency_object(freq)
             else:
                 self.frequencies[key].append(freq)

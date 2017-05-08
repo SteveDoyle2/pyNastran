@@ -22,7 +22,7 @@ class DYNAMICS(GeomCommon):
     def __init__(self):
         GeomCommon.__init__(self)
         self._dynamics_map = {
-            (5307, 53, 379) : ['ACSRCE', self._read_fake], # 1
+            (5307, 53, 379) : ['ACSRCE', self._read_acsrce], # 1
             (27, 17, 182): ['DAREA', self._read_darea],  # 2
 
             (37, 18, 183): ['DELAY', self._read_delay],  # 3
@@ -72,7 +72,12 @@ class DYNAMICS(GeomCommon):
             (11101, 111, 368) : ['UNBALNC', self._read_fake],
         }
 
-#ACSRCE (5307,53,379)
+    def _read_acsrce(self, data, n):
+        """ACSRCE(5307,53,379)"""
+        self.log.info('skipping ACSRCE in DYNAMICS\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping ACSRCE in DYNAMICS\n')
+        return len(data)
 
     def _read_darea(self, data, n):
         """
@@ -379,8 +384,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_freq2(self, data, n):
         """
-
         FREQ2(1107,11,166) - Record 15
+
         1 SID  I Set identification number
         2 F1  RS First frequency
         3 F2  RS Last frequency
@@ -557,9 +562,15 @@ class DYNAMICS(GeomCommon):
         return n, dloads
 
     def _read_rload2(self, data, n):
-        """
-        RLOAD2(5107,51,131) - Record 27
+        """common method for reading NX/MSC RLOAD2"""
+        n = self._read_dual_card(data, n, self._read_rload2_nx, self._read_rload2_msc,
+                                 'RLOAD2', self._add_dload_entry)
+        return n
 
+    def _read_rload2_nx(self, data, n):
+        """
+        RLOAD2(5207,52,132) - Record 27
+        NX
         1 SID     I  Load set identification number
         2 DAREA   I  DAREA Bulk Data entry identification number
         3 DELAYI  I  DELAY Bulk Data entry identification number
@@ -572,6 +583,7 @@ class DYNAMICS(GeomCommon):
         10 TBR    RS If TBI = 0, constant value for B(f)
         11 TPR    RS If TPI = 0, constant value for PHI(f)
         """
+        dloads = []
         ntotal = 44
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
@@ -595,12 +607,40 @@ class DYNAMICS(GeomCommon):
                 dphase = dphaser
             dload = RLOAD2(sid, darea, delay=delay, dphase=dphase, tb=tb, tp=tp,
                            Type=Type, comment='')
-            self._add_dload_entry(dload)
+            dloads.append(dload)
             n += ntotal
-        self._increase_card_count('RLOAD2', nentries)
-        return n
+        return n, dloads
 
-#RLOAD2(5207,52,132)
+    def _read_rload2_msc(self, data, n):
+        """
+        RLOAD2(5207,52,132) - Record 27
+        MSC
+        1 SID    I  Load set identification number
+        2 DAREA  I  DAREA Bulk Data entry identification number
+        3 DPHASE I  DPHASE Bulk Data entry identification number
+        4 DELAY  I  DELAY Bulk Data entry identification number
+        5 TB     I  TABLEDi Bulk Data entry identification number for B(f)
+        6 TP     I  TABLEDi Bulk Data entry identification number for Phi(f)
+        7 TYPE   I  Nature of the dynamic excitation
+        8 T      RS Time delay
+        9 PH     RS Phase lead
+        """
+        dloads = []
+        ntotal = 36
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = unpack('7i 2f', edata)
+            sid, darea, delayi, dphasei, tbi, tpi, Type, tau, phase = out
+            if self.is_debug_file:
+                self.binary_debug.write('  RLOAD2=%s\n' % str(out))
+
+            dload = RLOAD2(sid, darea, delay=delayi, dphase=dphasei, tb=tbi, tp=tpi,
+                           Type=Type, comment='')
+            dloads.append(dload)
+            n += ntotal
+        return n, dloads
+
 #RGYRO
 #ROTORG
 #RSPINR

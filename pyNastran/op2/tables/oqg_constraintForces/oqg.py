@@ -514,7 +514,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3, 903]:
-                assert self.table_name in ['OQGNO1', 'OQGNO2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQGNO1', b'OQGNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'spc_forces_NO'
                 storage_obj = self.spc_forces_NO
                 if self._results.is_not_saved(result_name):
@@ -535,7 +535,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMPSD1', 'OQMPSD2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMPSD1', b'OQMPSD2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_PSD'
             elif self.table_code in [603]:
                 assert self.table_name in [b'OQMPSD1', b'OQMPSD2'], 'self.table_name=%r' % self.table_name
@@ -562,7 +562,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMATO1', 'OQMATO2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMATO1', b'OQMATO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_ATO'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
@@ -589,7 +589,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMCRM1', 'OQMCRM2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMCRM1', b'OQMCRM2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_CRM'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
@@ -616,7 +616,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMRMS1', 'OQMRMS2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMRMS1', b'OQMRMS2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_RMS'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
@@ -643,7 +643,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMNO1', 'OQMNO2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMNO1', b'OQMNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_CRM'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name

@@ -336,7 +336,6 @@ class GEOM4(GeomCommon):
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
         self.log.info('skipping MPCADD in GEOM4\n')
-        #mpcadd
         return len(data)
 
     def _read_omit1(self, data, n):
@@ -434,7 +433,6 @@ class GEOM4(GeomCommon):
 
     def _read_rbe3(self, data, n):
         """RBE3(7101,71,187) - Record 25"""
-        #return len(data)
         idata = np.fromstring(data[n:], self.idtype)
         fdata = np.fromstring(data[n:], self.fdtype)
         rbe3s = read_rbe3s_from_idata_fdata(self, idata, fdata)
@@ -592,18 +590,6 @@ class GEOM4(GeomCommon):
             self._add_constraint_spc_object(constraint)
             n += 16
         return n
-
-    #def _read_spcd(self, data, n):
-        #"""SPCD(5110,51,256) - Record 44 - dmap2005"""
-        #n = 0
-        #nentries = len(data) // 20  # 5*4
-        #for i in range(nentries):
-            #edata = data[n:n + 20]
-            #(sid, ID, c, xxx, dx) = unpack(b(self._endian + 'iiiif'), edata)
-            #load = SPCD.add_op2_data(sid, ID, c, dx)
-            #self._add_load_object(load)
-            #n += 20
-        #return n
 
     def _read_spcoff1(self, data, n):
         """
