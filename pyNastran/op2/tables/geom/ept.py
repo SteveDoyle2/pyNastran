@@ -709,12 +709,68 @@ class EPT(GeomCommon):
         return len(data)
 
     def _read_plplane(self, data, n):
-        self.log.info('skipping PLPLANE in EPT\n')
-        return len(data)
+        """
+        PLPLANE(4606,46,375)
+
+        NX 10
+        1 PID     I Property identification number
+        2 MID     I Material identification number
+        3 CID     I Coordinate system identification number
+        4 STR CHAR4 Location of stress and strain output
+        5 T      RS Default membrane thickness for Ti on the connection entry
+        6 CSOPT  I  Reserved for coordinate system definition of plane
+        7 UNDEF(5) None
+
+        MSC 2016
+        PID       I Property identification number
+        2 MID     I Material identification number
+        3 CID     I Coordinate system identification number
+        4 STR CHAR4 Location of stress and strain output
+        5 UNDEF(7 ) none Not used
+
+        .. warning:: CSOPT ad T are not supported
+        """
+        ntotal = 44  # 4*11
+        s = Struct(b(self._endian + '3i 4s f 6i'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n+ntotal])
+            pid, mid, cid, location, t, csopt = out[:6]
+            #self.show_data(data[n:n+ntotal], 'ifs')
+            plplane = self.add_plplane(pid, mid, cid=cid, stress_strain_output_location='GRID')
+            #print(plplane)
+            n += ntotal
+        self.card_count['PLPLANE'] = nentries
+        return n
 
     def _read_plsolid(self, data, n):
-        self.log.info('skipping PLSOLID in EPT\n')
-        return len(data)
+        """
+        MSC 2016
+        1 PID I Property identification number
+        2 MID I Material identification number
+        3 STR CHAR4 Location of stress and strain output
+        4 UNDEF(4 ) none Not used
+
+        NX 10
+        1 PID I Property identification number
+        2 MID I Material identification number
+        3 STR CHAR4 Location of stress and strain output
+        4 CSOPT I Reserved for coordinate system definition of plane
+        5 UNDEF(3) None
+
+        .. warning:: CSOPT is not supported
+        """
+        ntotal = 28  # 4*7
+        s = Struct(b(self._endian + '2i 4s 4i'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n+ntotal])
+            pid, mid, location, csopt, null_a, null_b, null_c = out
+            #self.show_data(data[n:n+ntotal], 'ifs')
+            plsolid = self.add_plsolid(pid, mid, stress_strain=location, ge=0.)
+            n += ntotal
+        self.card_count['PLSOLID'] = nentries
+        return n
 
     def _read_pmass(self, data, n):
         """

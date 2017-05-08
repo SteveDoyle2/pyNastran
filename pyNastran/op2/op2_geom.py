@@ -13,6 +13,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
 
 def read_op2_geom(op2_filename=None, combine=True, subcases=None,
+                  exclude_results=None, include_results=None,
                   validate=True, xref=True,
                   build_dataframe=False, skip_undefined_matrices=True,
                   mode='msc', log=None, debug=True, debug_file=None, encoding=None):
@@ -29,6 +30,9 @@ def read_op2_geom(op2_filename=None, combine=True, subcases=None,
                 will be used for superelements regardless of the option
     subcases : List[int, ...] / int; default=None->all subcases
         list of [subcase1_ID,subcase2_ID]
+    exclude_results / include_results : List[str] / str; default=None
+        a list of result types to exclude/include
+        one of these must be None
     validate : bool
         runs various checks on the BDF (default=True)
     xref :  bool
@@ -59,6 +63,16 @@ def read_op2_geom(op2_filename=None, combine=True, subcases=None,
     """
     model = OP2Geom(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
+    if exclude_results and include_results:
+        msg = 'exclude_results or include_results must be None\n'
+        msg += 'exclude_results=%r\n' % exclude_results
+        msg += 'include_results=%r\n' % include_results
+        raise RuntimeError(msg)
+    elif exclude_results:
+        model.remove_results(exclude_results)
+    elif include_results:
+        model.set_results(include_results)
+
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
                    encoding=encoding)

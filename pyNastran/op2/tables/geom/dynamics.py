@@ -271,7 +271,7 @@ class DYNAMICS(GeomCommon):
             method = method.strip()
             norm = norm.strip()
             eigr = self.add_eigr(sid, method=method, f1=f1, f2=f2, ne=ne, nd=nd,
-                          norm=norm, G=g, C=c, comment='')
+                                 norm=norm, G=g, C=c, comment='')
             eigr.validate()
             n += ntotal
         self._increase_card_count('EIGR', nentries)
@@ -469,11 +469,12 @@ class DYNAMICS(GeomCommon):
 #RANDT1
 
     def _read_rload1(self, data, n):
-        #self.show_data(data[n:], 'if')
-        #n = self._read_dual_card(data, n, self._read_pconv_nx, self._read_pconv_msc,
-        return self._read_rload1_11(data, n)
+        """common method for reading NX/MSC RLOAD1"""
+        n = self._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
+                                 'RLOAD1', self._add_dload_entry)
+        return n
 
-    def _read_rload1_11(self, data, n):
+    def _read_rload1_nx(self, data, n):
         """
         RLOAD1(5107,51,131) - Record 26
 
@@ -487,9 +488,10 @@ class DYNAMICS(GeomCommon):
         7 TYPE     I Nature of the dynamic excitation
         8 DELAYR  RS If DELAYI = 0, constant value for delay
         9 DPHASER RS If DPHASEI = 0, constant value for phase
-        #10 TCR    RS If TCI = 0, constant value for C(f)
-        #11 TDR    RS If TDI = 0, constant value for D(f)
+        10 TCR    RS If TCI = 0, constant value for C(f)
+        11 TDR    RS If TDI = 0, constant value for D(f)
         """
+        dloads = []
         ntotal = 44
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
@@ -514,13 +516,11 @@ class DYNAMICS(GeomCommon):
                 td = tdr
             dload = RLOAD1(sid, darea, delay=delay, dphase=dphase, tc=tc, td=td,
                            Type='LOAD', comment='')
-            #print(dload)
-            self._add_dload_entry(dload)
+            dloads.append(dload)
             n += ntotal
-        self._increase_card_count('RLOAD1', nentries)
-        return n
+        return n, dloads
 
-    def _read_rload1_9(self, data, n):
+    def _read_rload1_msc(self, data, n):
         """
         RLOAD1(5107,51,131) - Record 26
 
@@ -535,6 +535,7 @@ class DYNAMICS(GeomCommon):
         8 T      RS Time delay
         9 PH     RS Phase lead
         """
+        dloads = []
         ntotal = 36
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
@@ -551,11 +552,9 @@ class DYNAMICS(GeomCommon):
             dphase = dphaser
             dload = RLOAD1(sid, darea, delay=delay, dphase=dphase, tc=tc, td=td,
                            Type='LOAD', comment='')
-            #print(dload)
-            self._add_dload_entry(dload)
+            dloads.append(dload)
             n += ntotal
-        self._increase_card_count('RLOAD1', nentries)
-        return n
+        return n, dloads
 
     def _read_rload2(self, data, n):
         """
@@ -705,8 +704,8 @@ class DYNAMICS(GeomCommon):
     def _read_tload2_nx(self, data, n):
         """
         TLOAD2(7207,72,139) - Record 37
-        NX
 
+        NX
         1 SID      I  Load set identification number
         2 DAREA    I DAREA Bulk Data entry identification number
         3 DELAYI   I DELAY Bulk Data entry identification number
