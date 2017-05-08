@@ -23,10 +23,12 @@ for icon_file in icon_files:
     if icon_file.endswith('.png'):
         icon_files2.append(os.path.join(icon_path, icon_file))
 
-packages = find_packages(exclude=['ez_setup', 'examples', 'tests', 'pyNastran.bdf.dev_vectorized'])
 exclude_words = [
-    'pyNastran.bdf.dev_vectorized', 'pyNastran.f06.dev', 'pyNastran.op2.dev',
-    'pyNastran.converters.dev']
+    'pyNastran.bdf.dev_vectorized', 'pyNastran.bdf.dev_vectorized.cards',
+    'pyNastran.f06.dev',
+    'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
+    'pyNastran.converters.dev', 'pyNastran.xdb',]
+packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
 for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
@@ -71,7 +73,7 @@ setup(
             'test_bdf  = pyNastran.bdf.test.test_bdf:main',
             'test_op2  = pyNastran.op2.test.test_op2:main',
             'test_op4  = pyNastran.op4.test.test_op4:main',
-            'test_abaqus = pyNastran.converters.dev.abaqus.test_abaqus:main',
+            'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
             'test_pynastrangui = pyNastran.gui.test.test_gui:main',
 
             'format_converter = pyNastran.converters.type_converter:main',

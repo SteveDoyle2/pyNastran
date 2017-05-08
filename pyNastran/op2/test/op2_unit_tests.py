@@ -418,7 +418,7 @@ class TestOP2(Tester):
         folder = os.path.join(model_path, 'modele_petite_zone')
         op2_filename = os.path.join(folder, 'modele_petite_zone.op2')
         f06_filename = os.path.join(folder, 'modele_petite_zone.test_op2.f06')
-        op2 = read_op2(op2_filename, debug=False)
+        op2 = read_op2_geom(op2_filename, debug=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
@@ -436,7 +436,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2_geom(op2_filename)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -541,7 +541,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename, debug=False)
+        read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -587,7 +587,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename, debug=False)
+        read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -632,7 +632,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename, debug=False)
+        read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -676,7 +676,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename, debug=False)
+        read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -719,7 +719,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename, debug=False)
+        read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -792,7 +792,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename, debug=False)
+        read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -1061,7 +1061,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename, debug=debug)
+        read_op2_geom(op2_filename, debug=debug)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                                  subcases=[], write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -1349,7 +1349,7 @@ class TestOP2(Tester):
         folder = os.path.join(model_path, 'random')
         op2_filename = os.path.join(folder, 'random_test_bar_plus_tri.op2')
         f06_filename = os.path.join(folder, 'random_test_bar_plus_tri.test_op2.f06')
-        op2 = read_op2(op2_filename, debug=False)
+        op2 = read_op2_geom(op2_filename, debug=False)
         assert len(op2.displacements_PSD) == 1
         assert len(op2.displacements_RMS) == 1
         assert len(op2.displacements_CRM) == 1
@@ -1403,6 +1403,13 @@ class TestOP2(Tester):
 
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
+
+    def test_random_ctria3_oesrmx1(self):
+        """runs a random test"""
+        folder = os.path.join(model_path, 'random')
+        op2_filename = os.path.join(folder, 'rms_tri_oesrmx1.op2')
+        bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2 = read_op2_geom(op2_filename, debug=False)
 
 
 if __name__ == '__main__':  # pragma: no cover
