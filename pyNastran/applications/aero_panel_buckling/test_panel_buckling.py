@@ -4,7 +4,6 @@ import unittest
 
 from pyNastran.applications.aero_panel_buckling.run_buckling import run_panel_buckling
 from pyNastran.utils.nastran_utils import run_nastran
-from pyNastran.converters.nastran.nastranIOv import NastranIO
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]
