@@ -1,3 +1,11 @@
+"""
+defines:
+ - run_bdfs_batch
+ - run_bdfs
+ - load_sym_regions_map
+ - get_eigenvalues
+ - get_eigs
+"""
 from __future__ import print_function
 import os
 import sys
@@ -152,7 +160,7 @@ def get_eigs(debug=False):
     for patch_filename in patch_files:
         patch_number = patch_filename.split('_')[1].split('.')[0]
         patch_numbers.append(int(patch_number))
-        model = read_bdf(patch_filename, debug=debug)
+        #model = read_bdf(patch_filename, debug=debug)
 
         #eids = model.elements.keys()
         op2_filename = ''.join([patch_filename[:-4], '.op2'])
@@ -162,7 +170,7 @@ def get_eigs(debug=False):
         evals.append(min_eigenvalue)
         print('Patch:%s  Min eigenvalue:%s' % (patch_number, min_eigenvalue))
 
-    fig = plt.figure(figsize=(12, 9))
+    plt.figure(figsize=(12, 9))
     plt.plot(patch_numbers, evals, label='Eigenvalues')
     plt.xticks(fontsize=12, y=-0.01)
     plt.yticks(fontsize=12, x=-0.01)
@@ -174,6 +182,7 @@ def get_eigs(debug=False):
     plt.close()
 
 def main():  # pragma: no cover
+    """test code"""
     #if not os.path.exists('patch_0.op2'):
     workpath = ''
     bdf_filenames = glob.glob('%s/patches/patch_*.bdf' % workpath)

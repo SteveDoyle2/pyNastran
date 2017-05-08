@@ -268,8 +268,8 @@ class DYNAMICS(GeomCommon):
              null_c, null_d, null_e, null_f, null_g) = out
             if self.is_debug_file:
                 self.binary_debug.write('EIGR=%s\n' % str(out))
-            method = method.strip()
-            norm = norm.strip()
+            method = method.strip().decode('latin1')
+            norm = norm.strip().decode('latin1')
             eigr = self.add_eigr(sid, method=method, f1=f1, f2=f2, ne=ne, nd=nd,
                                  norm=norm, G=g, C=c, comment='')
             eigr.validate()
@@ -308,7 +308,7 @@ class DYNAMICS(GeomCommon):
             #edata = data[n:n+52] # 13*52
             #out = unpack('i 2f 3i f 2i 8s f i', edata)
             #sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
-            #norm = norm.strip()
+            #norm = norm.strip().decode('latin1')
             #print("norm = %r" % norm)
             #print("nums = ", nums)
             #assert nums < 10000, nums

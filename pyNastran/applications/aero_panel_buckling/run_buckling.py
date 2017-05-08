@@ -1,5 +1,8 @@
 """
-this is the main panel buckling file
+This is the main panel buckling file.  Defines:
+ - run_panel_buckling
+ - get_patch_filenames
+ -
 """
 from __future__ import print_function
 import os

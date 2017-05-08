@@ -2,7 +2,6 @@
 Takes a 2D mesh of a structure (e.g. an aircraft) and finds the "2D" skin
 panels in order to do a buckling analysis.
 """
-# pylint: disable=E1101
 from __future__ import print_function
 import os
 import sys
@@ -233,9 +232,9 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
     _free_edge_nids = np.unique(_free_edges.ravel())
 
     free_edge_nodes_filename = os.path.join(workpath, 'free_edge_nodes.csv')
-    with open(free_edge_nodes_filename, 'w') as free_edge_nodes_file:
-        free_edge_nodes_file.write('# X, Y, Z\n')
-        free_edge_nodes_file.write('# Node IDs corresponding to free_edge_nodes_xyz.csv\n')
+    with open(free_edge_nodes_filename, 'wb') as free_edge_nodes_file:
+        free_edge_nodes_file.write(b'# X, Y, Z\n')
+        free_edge_nodes_file.write(b'# Node IDs corresponding to free_edge_nodes_xyz.csv\n')
         np.savetxt(free_edge_nodes_file, _free_edge_nids, fmt='%i', delimiter=',')
 
     free_edge_nodes_xyz_filename = os.path.join(workpath, 'free_edge_nodes_xyz.csv')
@@ -625,8 +624,7 @@ def load_patches(patches_filename):
 def create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
                                  workpath='results',
                                  is_symmetric=True, consider_pids=False,
-                                 rebuild_patches=True, rebulid_buckling_bdfs=True,
-                                 ):
+                                 rebuild_patches=True, rebulid_buckling_bdfs=True):
     """
     Create the input decks for buckling.  This is done in the following steps:
       1.  Build the patches (rebuild_patches=False skips this)
@@ -709,17 +707,17 @@ def create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
             workpath=workpath, is_symmetric=is_symmetric,
             bdf_model=bdf_model, consider_pids=consider_pids)
 
-        eids = bdf_model.element_ids
+        eids = list(bdf_model.element_ids)
         save_patch_info(eids, xyz_cid0, patch_edges_array, eids_on_edge, patches,
                         all_eids=None,
                         workpath=workpath)
     else:
-        msg = ('add ability to start from existing patch/edge files; '
-               'rebuild_patches=%s' % rebuild_patches)
+        #msg = ('add ability to start from existing patch/edge files; '
+               #'rebuild_patches=%s' % rebuild_patches)
         #raise NotImplementedError(msg)
-
         #workpath = 'results'
         patch_edges_array, eids_on_edge, patches = load_patch_info(workpath=workpath)
+
     if rebulid_buckling_bdfs:
         patch_filenames, edge_filenames = write_buckling_bdfs(
             bdf_model, op2_model, xyz_cid0,
@@ -782,7 +780,7 @@ def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_arr
 
     # TODO: doesn't trace COORDs -> nodes -> COORDs -> nodes -> etc.
     nids_on_coords = set([])
-    for cid, coord in iteritems(bdf_model.coords):
+    for coord in itervalues(bdf_model.coords):
         if coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
             nids_on_coords.update(coord.node_ids)
     nids_on_coords = list(nids_on_coords)
@@ -886,30 +884,6 @@ def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_arr
             patch_file.write(prop.write_card(size=size, is_double=is_double))
             #bdf_model._write_properties(patch_file, size, is_double)
 
-        # msg = ['                                     G R I D   P O I N T   F O R C E   B A L A N C E\n',
-            # '  POINT-ID   ELEMENT-ID   SOURCE      T1             T2       T3             R1     R2      R3\n', ]
-            #'0     13683         3736   TRIAX6      4.996584E+00   0.0      1.203093E+02   0.0    0.0     0.0'
-            #'      13683         3737   TRIAX6     -4.996584E+00   0.0     -1.203093E+02   0.0    0.0     0.0'
-            #'      13683                *TOTALS*    6.366463E-12   0.0     -1.364242E-12   0.0    0.0     0.0'
-        zero = ' '
-        if 0:
-            msg = []
-            self = gp_loads
-            for ekey, force in sorted(iteritems(self.force_moment)):
-                for iload, forcei in enumerate(force):
-                    (f1, f2, f3, m1, m2, m3) = forcei
-                    elem_name = self.elemName[ekey][iload]
-                    eid = self.eids[ekey][iload]
-                    # vals = [f1, f2, f3, m1, m2, m3]
-                    # vals2 = write_floats_13e(vals)
-                    # [f1, f2, f3, m1, m2, m3] = vals2
-                    if eid == 0:
-                        eid = ''
-                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        zero, ekey, eid, elem_name, f1, f2, f3, m1, m2, m3))
-                    zero = ' '
-                zero = '0'
-
         if mode == 'displacement':
             # the displacement are in the Cd coordinate frame
             # because we're just carrying along the GRID cards
@@ -1010,24 +984,12 @@ def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_arr
 
             for node_id, cdi in zip(all_nids_on_patch[1:], cd[1:]):
                 print('node_id=%s cdi=%s' % (node_id, cdi))
-                #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
                 #gp_loads = RealGridPointForcesArray(data_code, is_sort1,
                                                        #isubcase,
                                                        #dt)
                 i = np.where(node_id == gp_nodes)[0]
                 force_moment_sum = gp_force_moment[i, :].sum(axis=0)
                 assert len(force_moment_sum) == 6, force_moment_sum
-                if 0:
-                    #force = gp_loads.force_moment[node_id]
-                    force_moment_sum = np.zeros(6, dtype='float32')
-                    for iload, forcei in enumerate(force):
-                        eid = gp_loads.eids[node_id][iload]
-                        element_name = gp_loads.elemName[node_id][iload]
-                        if eid not in patch_eids_array: # neighboring element
-                            force_moment_sum += force[iload]
-                        elif eid == 0 and element_name != '*TOTALS*':
-                            #print(element_name)
-                            force_moment_sum += force[iload]
 
                 abs_force_moment_sum = np.abs(force_moment_sum)
                 forcei = abs_force_moment_sum[:3]
@@ -1118,7 +1080,8 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
     elif isinstance(bdf_filenames, (list, tuple)):
         pass
     else:
-        msg = 'bdf_filenames=%s; expected List[str]; type=%s' % (bdf_filenames, type(bdf_filenames))
+        msg = 'bdf_filenames=%s; expected List[str]; type=%s' % (
+            bdf_filenames, type(bdf_filenames))
         raise TypeError(msg)
 
     if len(subcase_ids) != len(bdf_filenames):
@@ -1129,9 +1092,7 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
         os.makedirs(workpath)
 
     op2_model = read_op2(op2_filename, debug=debug)
-
     case_control_deck = deepcopy(model.case_control_deck)
-    print('**** workpath', workpath)
 
     if model.suport:
         # we don't need rigid body modes in buckling
@@ -1148,9 +1109,7 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
         if spc_id in model.spcs:
             del model.spcs[spc_id]
 
-
         dependent_nid_to_components = model.get_dependent_nid_to_components(mpc_id)
-
         if mode == 'displacement':
             displacements = op2_model.displacements[subcase_id]
             node_ids_full_model = displacements.node_gridtype[:, 0]
@@ -1159,8 +1118,6 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
 
         #edge_nids = np.unique(patch_edges_array.ravel())
         #free_nodes = setdiff1d(node_ids_full_model, edge_nids) # A-B
-
-
         model.case_control_deck = CaseControlDeck(case_control_lines)
         for card in bulk_data_cards:
             model.add_card(card, card[0])
@@ -1248,6 +1205,7 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
 
 
 def create_buckling_header(subcase, eig_min=0., eig_max=100., nroots=20):
+    """creates the case control deck and a few bulk data cards"""
     # TODO: add title, subtitle from the actual load case for cross validation
     case_control = []
     #header += 'SOL 105\n'
