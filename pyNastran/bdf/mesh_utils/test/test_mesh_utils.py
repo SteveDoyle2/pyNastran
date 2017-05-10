@@ -18,6 +18,7 @@ from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tri
 from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
+from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
@@ -549,6 +550,42 @@ class TestMeshUtils(unittest.TestCase):
                                 bdf_filename_out='pin_flags.bdf', debug=False)
         os.remove('pin_flags.csv')
         os.remove('pin_flags.bdf')
+
+
+    def test_split_line_elements(self):
+        """tests split_line_elements"""
+        model = BDF()
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+
+        pid = 1000
+        mid = 1000
+        Type = 'BAR'
+        dim = [1., 2.]
+        model.add_pbarl(pid, mid, Type, dim)
+        E = 3.0e7
+        G = 3.0e6
+        nu = None
+        model.add_mat1(mid, E, G, nu)
+
+        x = [0., 1., 0.]
+        g0 = None
+        #model.add_cbar(1, pid, 1, 2, x, g0, offt='GGG', pa=0, pb=0,
+                       #wa=None, wb=None, comment='reaction')
+        #model.add_cbar(2, pid, 2, 3, x, g0, offt='GGG', pa=0, pb=456,
+                       #wa=None, wb=None, comment='End B')
+        #model.add_cbar(3, pid, 3, 4, x, g0, offt='GGG', pa=456, pb=0,
+                       #wa=None, wb=None, comment='End A')
+        #eids = [1, 2, 3]
+
+        model.add_cbar(1, pid, 1, 2, x, g0, offt='GGG', pa=456, pb=5,
+                       wa=None, wb=None, comment='End A')
+        eids = [1]
+        split_line_elements(model, eids, neids=10,
+                            eid_start=101, nid_start=101)
+        f = StringIO()
+        model.write_bdf(f, close=False)
+        print(f.getvalue())
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
