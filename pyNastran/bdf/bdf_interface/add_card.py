@@ -4206,6 +4206,34 @@ class AddCards(AddMethods):
 
     def add_monpnt1(self, name, label, axes, comp, xyz, cp=0, cd=None,
                     comment=''):
+        """
+        Creates a MONPNT1 card
+
+        Parameters
+        ----------
+        name : str
+            Character string of up to 8 characters identifying the
+            monitor point
+        label : str
+            A string comprising no more than 56 characters
+            that identifies and labels the monitor point.
+        axes : str
+            components {1,2,3,4,5,6}
+        comp : str
+            name of the AECOMP/AECOMPL entry
+        xyz : List[float, float, float]; default=None
+            The coordinates in the CP coordinate system about which the
+            loads are to be monitored.
+            None : [0., 0., 0.]
+        cp : int, CORDx; default=0
+           int : coordinate system
+        cd : int; default=None -> cp
+            the coordinate system for load outputs
+        comment : str; default=''
+            a comment for the card
+
+        CD - MSC specific field
+        """
         monitor_point = MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd,
                                 comment=comment)
         self._add_monpnt_object(monitor_point)

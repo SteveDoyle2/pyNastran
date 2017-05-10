@@ -4625,6 +4625,7 @@ class MONPNT1(BaseCard):
         self.cp = cp
         self.xyz = xyz
         self.cd = cd
+        assert len(xyz) == 3, xyz
 
     @classmethod
     def add_card(cls, card, comment=''):
