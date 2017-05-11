@@ -50,7 +50,7 @@ class CTRIA6(ShellElement):
             double_or_blank(card, 11, 'T1', 1.0),
             double_or_blank(card, 12, 'T2', 1.0),
             double_or_blank(card, 13, 'T3', 1.0), ]
-        self.t_flag[i] = integer_or_blank(card, 14, 'TFlag', 0)
+        self.t_flag[i] = integer_or_blank(card, 14, 'tflag', 0)
         assert len(card) <= 15, 'len(CTRIA6 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
@@ -100,9 +100,9 @@ class CTRIA6(ShellElement):
                 self.element_id[i], self.property_id[i], self.node_ids[i],
                 self.zoffset[i], self.t_flag[i], self.thickness[i]):
                 theta_mcid = None
-                #TFlag = None
+                #tflag = None
                 card = ['CTRIA6', eid, pid, ] + list(n) + [theta_mcid, zoffset,
-                        None] + [None, TFlag] + list(t)
+                        None] + [None, tflag] + list(t)
                 bdf_file.write(print_card_8(card))
 
     def _verify(self):

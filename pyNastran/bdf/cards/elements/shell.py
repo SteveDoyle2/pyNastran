@@ -367,7 +367,7 @@ class CTRIA3(TriShell):
     """
     type = 'CTRIA3'
     _field_map = {
-        1: 'eid', 2:'pid', 6:'theta_mcid', 7:'zoffset', 10:'TFlag',
+        1: 'eid', 2:'pid', 6:'theta_mcid', 7:'zoffset', 10:'tflag',
         11:'T1', 12:'T2', 13:'T3'}
 
     def _update_field_helper(self, n, value):
@@ -380,8 +380,8 @@ class CTRIA3(TriShell):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, zoffset=0.,
-                 theta_mcid=0.0, TFlag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
+    def __init__(self, eid, pid, nids, zoffset=0., theta_mcid=0.0,
+                 tflag=0, T1=None, T2=None, T3=None, comment=''):
         """
         Creates a CTRIA3 card
 
@@ -394,17 +394,19 @@ class CTRIA3(TriShell):
         nids : List[int, int, int]
             node ids
         zoffset : float; default=0.0
-            ???
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
         theta_mcid : float; default=0.0
             float : material coordinate system angle (theta) is defined
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
                   mcid is projected onto the element
-        TFlag : int; default=0
-            0 : ???
-            1 : ???
-        T1 / T2 / T3 : float; default=1.0
-            ???
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 : float; default=None
+            If it is not supplied, then T1 through T3 will be set equal
+            to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
         """
@@ -417,7 +419,7 @@ class CTRIA3(TriShell):
         self.prepare_node_ids(nids)
         self.zoffset = zoffset
         self.theta_mcid = theta_mcid
-        self.TFlag = TFlag
+        self.tflag = tflag
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
@@ -456,7 +458,7 @@ class CTRIA3(TriShell):
         if T3 == -1.0:
             T3 = 1.0
         return CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
-                      TFlag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -486,7 +488,7 @@ class CTRIA3(TriShell):
             blank(card, 8, 'blank')
             blank(card, 9, 'blank')
 
-            tflag = integer_or_blank(card, 10, 'TFlag', 0)
+            tflag = integer_or_blank(card, 10, 'tflag', 0)
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
@@ -499,7 +501,7 @@ class CTRIA3(TriShell):
             T2 = 1.0
             T3 = 1.0
         return CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
-                      TFlag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -576,7 +578,7 @@ class CTRIA3(TriShell):
 
     #def Thickness(self):
         #if self.T1 + self.T2 + self.T3 > 0.0:
-        #    if self.TFlag == 0:
+        #    if self.tflag == 0:
         #        t = self.pid_ref.Thickness()
         #        t1 = self.T1 / t
         #        t2 = self.T2 / t
@@ -606,7 +608,7 @@ class CTRIA3(TriShell):
 
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
-        tflag = set_blank_if_default(self.TFlag, 0)
+        tflag = set_blank_if_default(self.tflag, 0)
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
@@ -621,7 +623,7 @@ class CTRIA3(TriShell):
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
                        [self.theta_mcid, self.zoffset, None] +
-                       [None, self.TFlag, self.T1, self.T2, self.T3])
+                       [None, self.tflag, self.T1, self.T2, self.T3])
         return list_fields
 
     def repr_fields(self):
@@ -632,7 +634,7 @@ class CTRIA3(TriShell):
 
     def write_card(self, size=8, is_double=False):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
-        tflag = set_blank_if_default(self.TFlag, 0)
+        tflag = set_blank_if_default(self.tflag, 0)
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
@@ -815,7 +817,7 @@ class CTRIA6(TriShell):
     +--------+------------+---------+----+----+----+----+----+-----+
     """
     type = 'CTRIA6'
-    def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0., TFlag=0,
+    def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0., tflag=0,
                  T1=None, T2=None, T3=None, comment=''):
         """
         Creates a CTRIA6 card
@@ -829,17 +831,19 @@ class CTRIA6(TriShell):
         nids : List[int, int, int, int/None, int/None, int/None]
             node ids
         zoffset : float; default=0.0
-            ???
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
         theta_mcid : float; default=0.0
             float : material coordinate system angle (theta) is defined
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
                   mcid is projected onto the element
-        TFlag : int; default=0
-            0 : ???
-            1 : ???
-        T1 / T2 / T3 : float; default=1.0
-            ???
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 : float; default=None
+            If it is not supplied, then T1 through T3 will be set equal
+            to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
         """
@@ -850,7 +854,7 @@ class CTRIA6(TriShell):
         self.pid = pid
         self.theta_mcid = theta_mcid
         self.zoffset = zoffset
-        self.TFlag = TFlag
+        self.tflag = tflag
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
@@ -889,7 +893,7 @@ class CTRIA6(TriShell):
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
-            tflag = integer_or_blank(card, 14, 'TFlag', 0)
+            tflag = integer_or_blank(card, 14, 'tflag', 0)
             assert len(card) <= 15, 'len(CTRIA6 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta_mcid = 0.0
@@ -1066,8 +1070,8 @@ class CTRIA6(TriShell):
 
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
-        assert isinstance(self.TFlag, integer_types), self.TFlag
-        tflag = set_blank_if_default(self.TFlag, 0)
+        assert isinstance(self.tflag, integer_types), self.tflag
+        tflag = set_blank_if_default(self.tflag, 0)
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
@@ -1082,7 +1086,7 @@ class CTRIA6(TriShell):
     def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
                        [self.theta_mcid, self.zoffset,
-                        self.T1, self.T2, self.T3, self.TFlag,])
+                        self.T1, self.T2, self.T3, self.tflag,])
         return list_fields
 
     def repr_fields(self):
@@ -1114,7 +1118,7 @@ class CTRIAR(TriShell):
     """
     type = 'CTRIAR'
     def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
-                 TFlag=0, T1=None, T2=None, T3=None, comment=''):
+                 tflag=0, T1=None, T2=None, T3=None, comment=''):
         """
         Creates a CTRIAR card
 
@@ -1127,17 +1131,19 @@ class CTRIAR(TriShell):
         nids : List[int, int, int]
             node ids
         zoffset : float; default=0.0
-            ???
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
         theta_mcid : float; default=0.0
             float : material coordinate system angle (theta) is defined
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
                   mcid is projected onto the element
-        TFlag : int; default=0
-            0 : ???
-            1 : ???
-        T1 / T2 / T3 : float; default=1.0
-            ???
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 : float; default=None
+            If it is not supplied, then T1 through T3 will be set equal
+            to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
         """
@@ -1151,7 +1157,7 @@ class CTRIAR(TriShell):
 
         self.theta_mcid = theta_mcid
         self.zoffset = zoffset
-        self.TFlag = TFlag
+        self.tflag = tflag
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
@@ -1187,13 +1193,13 @@ class CTRIAR(TriShell):
         blank(card, 8, 'blank')
         blank(card, 9, 'blank')
 
-        tflag = integer_or_blank(card, 10, 'TFlag', 0)
+        tflag = integer_or_blank(card, 10, 'tflag', 0)
         T1 = double_or_blank(card, 11, 'T1')
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
         assert len(card) <= 14, 'len(CTRIAR card) = %i\ncard=%s' % (len(card), card)
         return CTRIAR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                      TFlag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1259,7 +1265,7 @@ class CTRIAR(TriShell):
 
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
-        tflag = set_blank_if_default(self.TFlag, 0)
+        tflag = set_blank_if_default(self.tflag, 0)
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
@@ -1298,7 +1304,7 @@ class CTRIAR(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIAR', self.eid, self.Pid()] + self.node_ids +
-                       [self.theta_mcid, self.zoffset, self.TFlag,
+                       [self.theta_mcid, self.zoffset, self.tflag,
                         self.T1, self.T2, self.T3])
         return list_fields
 
@@ -1455,7 +1461,7 @@ class QuadShell(ShellElement):
 
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
-        tflag = set_blank_if_default(self.TFlag, 0)
+        tflag = set_blank_if_default(self.tflag, 0)
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
@@ -1767,7 +1773,7 @@ class CQUAD4(QuadShell):
     """
     type = 'CQUAD4'
     _field_map = {1: 'eid', 2:'pid', 7:'theta_mcid', 8:'zoffset',
-                  10:'TFlag', 11:'T1', 12:'T2', 13:'T3'}
+                  10:'tflag', 11:'T1', 12:'T2', 13:'T3'}
 
     def _update_field_helper(self, n, value):
         if n == 3:
@@ -1782,7 +1788,7 @@ class CQUAD4(QuadShell):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                 TFlag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment=''):
+                 tflag=0, T1=None, T2=None, T3=None, T4=None, comment=''):
         """
         Creates a CQUAD4 card
 
@@ -1795,17 +1801,19 @@ class CQUAD4(QuadShell):
         nids : List[int, int, int, int]
             node ids
         zoffset : float; default=0.0
-            ???
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
         theta_mcid : float; default=0.0
             float : material coordinate system angle (theta) is defined
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
                   mcid is projected onto the element
-        TFlag : int; default=0
-            0 : ???
-            1 : ???
-        T1 / T2 / T3 / T4 : float; default=1.0
-            ???
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 / T4 : float; default=None
+            If it is not supplied, then T1 through T4 will be set equal
+            to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
         """
@@ -1820,7 +1828,7 @@ class CQUAD4(QuadShell):
         self.prepare_node_ids(nids)
         self.zoffset = zoffset
         self.theta_mcid = theta_mcid
-        self.TFlag = TFlag
+        self.tflag = tflag
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
@@ -1851,7 +1859,7 @@ class CQUAD4(QuadShell):
             theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
             zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
             blank(card, 9, 'blank')
-            tflag = integer_or_blank(card, 10, 'TFlag', 0)
+            tflag = integer_or_blank(card, 10, 'tflag', 0)
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
@@ -2277,7 +2285,7 @@ class CQUAD4(QuadShell):
 
     def raw_fields(self):
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.node_ids +
-                       [self.theta_mcid, self.zoffset, None, self.TFlag, self.T1, self.T2,
+                       [self.theta_mcid, self.zoffset, None, self.tflag, self.T1, self.T2,
                         self.T3, self.T4])
         return list_fields
 
@@ -2291,7 +2299,7 @@ class CQUAD4(QuadShell):
         nodes = self.node_ids
 
         row2_data = [self.theta_mcid, self.zoffset,
-                     self.TFlag, self.T1, self.T2, self.T3, self.T4]
+                     self.tflag, self.T1, self.T2, self.T3, self.T4]
         if row2_data == [0.0, 0.0, 0, 1.0, 1.0, 1.0, 1.0]:
             data = [self.eid, self.Pid()] + nodes
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
@@ -2299,7 +2307,7 @@ class CQUAD4(QuadShell):
         else:
             theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
             zoffset = set_blank_if_default(self.zoffset, 0.0)
-            tflag = set_blank_if_default(self.TFlag, 0)
+            tflag = set_blank_if_default(self.tflag, 0)
             T1 = set_blank_if_default(self.T1, 1.0)
             T2 = set_blank_if_default(self.T2, 1.0)
             T3 = set_blank_if_default(self.T3, 1.0)
@@ -2869,7 +2877,7 @@ class CQUADR(QuadShell):
     """
     type = 'CQUADR'
 
-    def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
+    def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                  T1=None, T2=None, T3=None, T4=None, comment=''):
         """
         Creates a CQUADR card
@@ -2883,17 +2891,19 @@ class CQUADR(QuadShell):
         nids : List[int, int, int, int]
             node ids
         zoffset : float; default=0.0
-            ???
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
         theta_mcid : float; default=0.0
             float : material coordinate system angle (theta) is defined
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
                   mcid is projected onto the element
-        TFlag : int; default=0
-            0 : ???
-            1 : ???
-        T1 / T2 / T3 / T4 : float; default=1.0
-            ???
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 / T4 : float; default=None
+            If it is not supplied, then T1 through T4 will be set equal
+            to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
         """
@@ -2906,7 +2916,7 @@ class CQUADR(QuadShell):
         self.pid = pid
         self.theta_mcid = theta_mcid
         self.zoffset = zoffset
-        self.TFlag = TFlag
+        self.tflag = tflag
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
@@ -2936,14 +2946,14 @@ class CQUADR(QuadShell):
         theta_mcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
         zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
 
-        tflag = integer_or_blank(card, 10, 'TFlag', 0)
+        tflag = integer_or_blank(card, 10, 'tflag', 0)
         T1 = double_or_blank(card, 11, 'T1')
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
         T4 = double_or_blank(card, 14, 'T4')
         assert len(card) <= 15, 'len(CQUADR card) = %i\ncard=%s' % (len(card), card)
         return CQUADR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                      TFlag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -3077,7 +3087,7 @@ class CQUADR(QuadShell):
 
     def raw_fields(self):
         list_fields = (['CQUADR', self.eid, self.Pid()] + self.node_ids +
-                       [self.theta_mcid, self.zoffset, None, self.TFlag, self.T1,
+                       [self.theta_mcid, self.zoffset, None, self.tflag, self.T1,
                         self.T2, self.T3, self.T4])
         return list_fields
 
@@ -3109,7 +3119,7 @@ class CPLSTS3(TriShell):
     """
     type = 'CPLSTS3'
     _field_map = {
-        1: 'eid', 2:'pid', 6:'theta', 10:'TFlag',
+        1: 'eid', 2:'pid', 6:'theta', 10:'tflag',
         11:'T1', 12:'T2', 13:'T3'}
 
     def _update_field_helper(self, n, value):
@@ -3123,7 +3133,7 @@ class CPLSTS3(TriShell):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids,
-                 theta=0.0, TFlag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
+                 theta=0.0, tflag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
         TriShell.__init__(self)
         if comment:
             self.comment = comment
@@ -3132,7 +3142,7 @@ class CPLSTS3(TriShell):
         assert len(nids) == 3, nids
         self.prepare_node_ids(nids)
         self.theta = theta
-        self.TFlag = TFlag
+        self.tflag = tflag
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
@@ -3149,7 +3159,7 @@ class CPLSTS3(TriShell):
         #nids = data[2:5]
 
         #theta = data[5]
-        #TFlag = data[7]
+        #tflag = data[7]
         #T1 = data[8]
         #T2 = data[9]
         #T3 = data[10]
@@ -3160,7 +3170,7 @@ class CPLSTS3(TriShell):
         #if T3 == -1.0:
             #T3 = 1.0
         #return CPLSTS3(eid, pid, nids, zoffset, theta,
-                       #TFlag, T1, T2, T3, comment=comment)
+                       #tflag, T1, T2, T3, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3189,14 +3199,14 @@ class CPLSTS3(TriShell):
             blank(card, 8, 'blank')
             blank(card, 9, 'blank')
 
-            tflag = integer_or_blank(card, 10, 'TFlag', 0)
+            tflag = integer_or_blank(card, 10, 'tflag', 0)
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
             assert len(card) <= 14, 'len(CTRIA3 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta = 0.0
-            TFlag = 0
+            tflag = 0
             T1 = 1.0
             T2 = 1.0
             T3 = 1.0
@@ -3262,7 +3272,7 @@ class CPLSTS3(TriShell):
         self.nodes = [n1, n3, n2]
 
     def _get_repr_defaults(self):
-        tflag = set_blank_if_default(self.TFlag, 0)
+        tflag = set_blank_if_default(self.tflag, 0)
         theta = set_blank_if_default(self.theta, 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
@@ -3277,7 +3287,7 @@ class CPLSTS3(TriShell):
     def raw_fields(self):
         list_fields = (['CPLSTS3', self.eid, self.Pid()] + self.node_ids +
                        [self.theta, None, None] +
-                       [None, self.TFlag, self.T1, self.T2, self.T3])
+                       [None, self.tflag, self.T1, self.T2, self.T3])
         return list_fields
 
     def repr_fields(self):
@@ -3319,6 +3329,26 @@ class CQUAD(QuadShell):
     type = 'CQUAD'
 
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
+        """
+        Creates a CQUAD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int, int/None, int/None,
+                    int/None, int/None, int/None]
+            node ids
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        comment : str; default=''
+            a comment for the card
+        """
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -3459,7 +3489,7 @@ class CQUAD8(QuadShell):
     """
     type = 'CQUAD8'
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
-                 TFlag=0, T1=None, T2=None, T3=None, T4=None,
+                 tflag=0, T1=None, T2=None, T3=None, T4=None,
                  comment=''):
         """
         Creates a CQUAD8 card
@@ -3473,17 +3503,19 @@ class CQUAD8(QuadShell):
         nids : List[int, int, int, int, int/None, int/None, int/None, int/None]
             node ids
         zoffset : float; default=0.0
-            ???
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
         theta_mcid : float; default=0.0
             float : material coordinate system angle (theta) is defined
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
                   mcid is projected onto the element
-        TFlag : int; default=0
-            0 : ???
-            1 : ???
-        T1 / T2 / T3 / T4 : float; default=1.0
-            ???
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 / T4 : float; default=None
+            If it is not supplied, then T1 through T4 will be set equal
+            to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
         """
@@ -3498,7 +3530,7 @@ class CQUAD8(QuadShell):
         self.T2 = T2
         self.T3 = T3
         self.T4 = T4
-        self.TFlag = TFlag
+        self.tflag = tflag
         self.theta_mcid = theta_mcid
         self.zoffset = zoffset
         self.prepare_node_ids(nids, allow_empty_nodes=True)
@@ -3533,7 +3565,7 @@ class CQUAD8(QuadShell):
             T4 = double_or_blank(card, 14, 'T4')
             theta_mcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
             zoffset = double_or_blank(card, 16, 'zoffset', 0.0)
-            tflag = integer_or_blank(card, 17, 'TFlag', 0)
+            tflag = integer_or_blank(card, 17, 'tflag', 0)
             assert len(card) <= 18, 'len(CQUAD4 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta_mcid = 0.0
@@ -3544,7 +3576,7 @@ class CQUAD8(QuadShell):
             T4 = 1.0
             tflag = 0
         return CQUAD8(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                      TFlag=tflag, T1=T1, T2=T2, T3=T3, T4=T4,
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4,
                       comment=comment)
 
     @classmethod
@@ -3717,7 +3749,7 @@ class CQUAD8(QuadShell):
     def raw_fields(self):
         list_fields = ['CQUAD8', self.eid, self.Pid()] + self.node_ids + [
             self.T1, self.T2, self.T3, self.T4, self.theta_mcid, self.zoffset,
-            self.TFlag]
+            self.tflag]
         return list_fields
 
     def repr_fields(self):

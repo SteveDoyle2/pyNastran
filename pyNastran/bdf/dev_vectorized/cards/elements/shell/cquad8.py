@@ -55,7 +55,7 @@ class CQUAD8(ShellElement):
 
         #self.theta_mcid[i] = integer_double_or_blank(card, 15, 'theta_mcid', 0.0)
         self.zoffset[i] = double_or_blank(card, 16, 'zoffset', 0.0)
-        self.t_flag[i] = integer_or_blank(card, 17, 'TFlag', 0)
+        self.t_flag[i] = integer_or_blank(card, 17, 'tflag', 0)
         self.i += 1
 
     def build(self):

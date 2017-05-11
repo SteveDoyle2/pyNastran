@@ -749,7 +749,7 @@ class TestLoads(unittest.TestCase):
         eid = 3
         pid = 3
         nids = [1, 2, 3]
-        ctria3 = model.add_ctria3(eid, pid, nids, zoffset=0., theta_mcid=0.0, TFlag=0,
+        ctria3 = model.add_ctria3(eid, pid, nids, zoffset=0., theta_mcid=0.0, tflag=0,
                                   T1=1.0, T2=1.0, T3=1.0,
                                   comment='')
 
@@ -764,7 +764,7 @@ class TestLoads(unittest.TestCase):
         pid = 4
         nids = [1, 2, 3, 4]
         cquad4 = model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                                  TFlag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
+                                  tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
         mids = [mid, mid, mid]
         thicknesses = [0.1, 0.2, 0.3]
         model.add_pcomp(pid, mids, thicknesses, thetas=None, souts=None,

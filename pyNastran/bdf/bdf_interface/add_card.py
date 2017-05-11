@@ -1442,51 +1442,239 @@ class AddCards(AddMethods):
         return prop
 
     def add_ctria3(self, eid, pid, nids, zoffset=0., theta_mcid=0.0,
-                   TFlag=0, T1=1.0, T2=1.0, T3=1.0, comment=''):
+                   tflag=0, T1=None, T2=None, T3=None, comment=''):
+        """
+        Creates a CTRIA3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int]
+            node ids
+        zoffset : float; default=0.0
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 : float; default=None
+            If it is not supplied, then T1 through T3 will be set equal
+            to the value of T on the PSHELL entry.
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
-                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_cquad4(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                   TFlag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0,
+                   tflag=0, T1=None, T2=None, T3=None, T4=None,
                    comment=''):
+        """
+        Creates a CQUAD4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int]
+            node ids
+        zoffset : float; default=0.0
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 / T4 : float; default=None
+            If it is not supplied, then T1 through T4 will be set equal
+            to the value of T on the PSHELL entry.
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CQUAD4(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_ctria6(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
-                   TFlag=0, T1=None, T2=None, T3=None, comment=''):
+                   tflag=0, T1=None, T2=None, T3=None, comment=''):
+        """
+        Creates a CTRIA6 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int/None, int/None, int/None]
+            node ids
+        zoffset : float; default=0.0
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 : float; default=None
+            If it is not supplied, then T1 through T3 will be set equal
+            to the value of T on the PSHELL entry.
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CTRIA6(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_cquad8(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
-                   TFlag=0, T1=None, T2=None, T3=None, T4=None, comment=''):
+                   tflag=0, T1=None, T2=None, T3=None, T4=None, comment=''):
+        """
+        Creates a CQUAD8 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int, int/None, int/None, int/None, int/None]
+            node ids
+        zoffset : float; default=0.0
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 / T4 : float; default=None
+            If it is not supplied, then T1 through T4 will be set equal
+            to the value of T on the PSHELL entry.
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CQUAD8(eid, pid, nids,
                       theta_mcid=theta_mcid, zoffset=zoffset,
-                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cquad(self, eid, pid, nids, comment=''):
+    def add_cquad(self, eid, pid, nids, theta_mcid=0., comment=''):
+        """
+        Creates a CQUAD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int, int/None, int/None,
+                    int/None, int/None, int/None]
+            node ids
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CQUAD(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_ctriar(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
-                   TFlag=0, T1=None, T2=None, T3=None, comment=''):
+                   tflag=0, T1=None, T2=None, T3=None, comment=''):
+        """
+        Creates a CTRIAR card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int]
+            node ids
+        zoffset : float; default=0.0
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 : float; default=None
+            If it is not supplied, then T1 through T3 will be set equal
+            to the value of T on the PSHELL entry.
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CTRIAR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cquadr(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., TFlag=0,
+    def add_cquadr(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                    T1=None, T2=None, T3=None, T4=None, comment=''):
+        """
+        Creates a CQUADR card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int]
+            node ids
+        zoffset : float; default=0.0
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        tflag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        T1 / T2 / T3 / T4 : float; default=None
+            If it is not supplied, then T1 through T4 will be set equal
+            to the value of T on the PSHELL entry.
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CQUADR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
-                      TFlag=TFlag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
         self._add_element_object(elem)
         return elem
 
