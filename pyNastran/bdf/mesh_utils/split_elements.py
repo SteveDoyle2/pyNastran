@@ -26,14 +26,24 @@ def split_line_elements(bdf_model, eids, neids=2,
     nid_start : int; default=1
         the starting node id
 
+    Returns
+    -------
+    eids_out : List[int]
+        the list of elements that have been added
+    eid_end : int; default=1
+        the final element id
+    nid_end : int; default=1
+        the final node id
+
     A-----*-----B; neids=2
     A--*--*--*--B; neids=4
     """
+    eids_out = []
     assert neids >= 2, neids
     dx = np.linspace(0., 1., num=neids+1)
     for eid in eids:
         elem = bdf_model.elements[eid]
-        print(elem.nodes)
+        #print(elem.nodes)
         n1, n2 = elem.nodes
         node1 = bdf_model.nodes[n1]
         node2 = bdf_model.nodes[n2]
@@ -65,11 +75,11 @@ def split_line_elements(bdf_model, eids, neids=2,
 
             if etype == 'CONROD':
                 nids = [n1, new_node]
-                bdf_model.add_conrod(eid_start, elem.mid, nids, elem.A, h=elem.j,
+                bdf_model.add_conrod(eid_start, elem.mid, nids, elem.A, j=elem.j,
                                      c=elem.c, nsm=elem.nsm, comment=comment)
             elif etype == 'CROD':
                 nids = [n1, new_node]
-                bdf_model.add_crod(eid_start, elem.mid, nids, comment=comment)
+                bdf_model.add_crod(eid_start, elem.pid, nids, comment=comment)
             elif etype == 'CBAR':
                 ga = n1
                 gb = new_node
@@ -88,10 +98,11 @@ def split_line_elements(bdf_model, eids, neids=2,
             else:
                 raise NotImplementedError(elem)
             n1 = new_node
+            eids_out.append(eid_start)
             eid_start += 1
             comment = str(eid)
         del bdf_model.elements[eid]
-    return eid_start, nid_start
+    return eids_out, eid_start, nid_start
 
 
 def split_elements(bdf_filename):
