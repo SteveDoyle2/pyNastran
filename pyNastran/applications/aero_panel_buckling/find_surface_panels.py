@@ -1,6 +1,40 @@
 """
 Takes a 2D mesh of a structure (e.g. an aircraft) and finds the "2D" skin
 panels in order to do a buckling analysis.
+
+Really, you should just call:
+ - create_plate_buckling_models
+
+Defines:
+ - get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
+                    bdf_model=None, consider_pids=False, pids_to_skip=None)
+ - find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
+                        workpath='results', is_symmetric=True,
+                        bdf_model=None, consider_pids=False)
+ - get_next_edges(eid_to_edge_map, edge_to_eid_map,
+                   patch, all_patch_edges, patch_edges,
+                   used_eids, used_edges,
+                   edges_to_check, patch_len, free_edges)
+ - save_patch_info(eids, xyz_cid0, patch_edges_array, eids_on_edge, patches,
+                    all_eids=None,
+                    workpath='results')
+ - load_patch_info(workpath='results')
+ - load_patches(patches_filename)
+ - create_plate_buckling_models(bdf_filename, op2_filename, mode, isubcase=1,
+                                 workpath='results',
+                                 is_symmetric=True, consider_pids=False,
+                                 rebuild_patches=True, rebulid_buckling_bdfs=True)
+ - write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_array,
+                        subcase_id=1,
+                        eig_min=-1.0, eig_max=3.0, nroots=20,
+                        mode='displacement', workpath='results')
+ -  write_buckling_bdf(model, op2_filename, nids_to_constrain,
+                       bdf_filenames=None,
+                       subcase_ids=None,
+                       eig_min=-1.0, eig_max=1.1, nroots=100,
+                       mode='displacement', size=8, is_double=False,
+                       debug=False,
+                       workpath='results', base_buckling='buckling_%i.bdf')
 """
 from __future__ import print_function
 import os

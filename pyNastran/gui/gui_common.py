@@ -54,7 +54,7 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
-from pyNastran.gui.gui_utils import save_file_dialog, open_file_dialog
+from pyNastran.gui.gui_utils.dialogs import save_file_dialog, open_file_dialog
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -81,7 +81,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
-from pyNastran.gui.utils import load_csv, load_deflection_csv, load_user_geom
+from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
 
 from pyNastran.converters.nastran.displacements import DisplacementResults
 from pyNastran.gui.gui_objects.gui_result import GuiResult

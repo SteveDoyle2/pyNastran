@@ -24,7 +24,7 @@ else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
 from pyNastran.gui.gui_interface.common import PyDialog
-from pyNastran.gui.gui_utils import open_directory_dialog
+from pyNastran.gui.gui_utils.dialogs import open_directory_dialog
 
 
 class AnimationWindow(PyDialog):

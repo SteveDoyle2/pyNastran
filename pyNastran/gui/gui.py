@@ -34,7 +34,7 @@ else:
 
 
 import pyNastran
-from pyNastran.gui.utils import check_for_newer_version
+from pyNastran.gui.gui_utils.utils import check_for_newer_version
 
 
 # 3rd party
