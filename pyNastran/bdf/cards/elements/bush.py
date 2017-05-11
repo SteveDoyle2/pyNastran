@@ -70,10 +70,50 @@ class CBUSH(BushElement):
                 else:
                     raise KeyError('Field %r=%r is an invalid CBUSH entry.' % (n, value))
 
-    def __init__(self, eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=''):
+    def __init__(self, eid, pid, ga, gb, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment=''):
+        """
+        Creates a CBUSH card
+
+        Parameters
+        ----------
+        eid : int
+            Element id
+        pid : int
+            Property id (PBUSH)
+        ga / gb : int
+            The nodes of the CBUSH.
+            the nodes may be coincident, but then cid is required.
+        x : List[float, float, float]; None
+            List : the directional vector used to define the stiffnesses
+                   or damping from the PBUSH card
+            None : use g0
+        g0 : int/None
+            int : the directional vector used to define the stiffnesses
+                  or damping from the PBUSH card
+            None : use x
+        cid : int; default=None
+            Element coordinate system identification. A 0 means the basic
+            coordinate system. If CID is blank, then the element coordinate
+            system is determined from GO or Xi.
+        s: float; default=0.5
+            Location of spring damper (0 <= s <= 1.0)
+        ocid : int; default=-1
+            Coordinate system identification of spring-damper offset.
+            (Integer > -1; Default = -1, which means the offset
+            point lies on the line between GA and GB)
+        si : List[float, float, float]; default=None
+            Components of spring-damper offset in the OCID coordinate system
+            if OCID > 0.
+            None : [None, None, None]
+        comment : str; default=''
+            a comment for the card
+        """
         BushElement.__init__(self)
         if comment:
             self.comment = comment
+            #: if OCID > 0.
+        if si is None:
+            si = [None, None, None]
         self.eid = eid
         self.pid = pid
         self.ga = ga
@@ -136,7 +176,7 @@ class CBUSH(BushElement):
               double_or_blank(card, 12, 's2'),
               double_or_blank(card, 13, 's3')]
         assert len(card) <= 14, 'len(CBUSH card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
+        return CBUSH(eid, pid, ga, gb, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, f, comment=''):
@@ -151,7 +191,7 @@ class CBUSH(BushElement):
             a comment for the card
         """
         ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
-        return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
+        return CBUSH(eid, pid, ga, gb, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
     @property
     def nodes(self):

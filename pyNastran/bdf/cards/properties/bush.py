@@ -39,6 +39,32 @@ class PBUSH(BushingProperty):
     }
 
     def __init__(self, pid, k, b, ge, rcv, mass_fields=None, comment=''):
+        """
+        Creates a PBUSH card, which defines a property for a CBUSH
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        k : List[float]
+            Nominal stiffness values in directions 1 through 6.
+            len(k) = 6
+        b : List[float]
+            Nominal damping coefficients in direction 1 through 6 in units of
+            force per unit velocity
+            len(b) = 6
+        ge : List[float]
+            Nominal structural damping constant in directions 1 through 6.
+            len(ge) = 6
+        rcv : List[float]
+            [sa, st, ea, et] = rcv
+            length(mass_fields) = 4
+        mass_fields : List[float]; default=None
+            length(mass_fields) = 1
+            This is an MSC only parameter.
+        comment : str; default=''
+            a comment for the card
+        """
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
