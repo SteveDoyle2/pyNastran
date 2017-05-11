@@ -1305,6 +1305,8 @@ def get_element_stats(fem1, fem2, quiet=False):
 
     fem1._verify_bdf()
 
+    if fem1.elements:
+        fem1.get_elements_nodes_by_property_type()
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
     #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
     if not quiet:
