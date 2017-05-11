@@ -1312,7 +1312,19 @@ class GetCard(GetMethods):
             for i, eid in enumerate(eids):
                 elem = self.elements[eid]
                 pid = elem.Pid()
-                nids[i, :] = elem.node_ids
+                nidsi = elem.node_ids
+                try:
+                    nids[i, :] = nidsi
+                except TypeError:
+                    nidsi2 = [nid  if nid is not None else 0
+                             for nid in nidsi]
+                    try:
+                        nids[i, :] = nidsi2
+                    except:
+                        print(elem)
+                        print(nidsi)
+                        print(nidsi2)
+                        raise
                 pids[i] = pid
             output[etype] = [eids, pids, nids]
         assert len(output), 'output is empty...'

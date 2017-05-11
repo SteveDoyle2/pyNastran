@@ -805,6 +805,7 @@ class BDFMethods(BDFAttributes):
             eids2 = eids[all_eids[ieids] == eids]
             return eids2
 
+        etypes_skipped = set([])
         for etype, eids in iteritems(self._type_to_id_map):
             if etype in ['CROD', 'CONROD', 'CTUBE']:
                 eids2 = get_sub_eids(all_eids, eids)
@@ -813,7 +814,7 @@ class BDFMethods(BDFAttributes):
                     n1, n2 = elem.node_ids
                     length = norm(xyz[n2] - xyz[n1])
                     centroid = (xyz[n1] + xyz[n2]) / 2.
-                    mpl = elem.pid_ref.MassPerLength()
+                    mpl = elem.MassPerLength()
                     m = mpl * length
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
             elif etype == 'CBAR':
@@ -839,7 +840,7 @@ class BDFMethods(BDFAttributes):
                     #cda = self.nodes[n1].cid_ref
                     #cdb = self.nodes[n2].cid_ref
 
-                    wa, wb, _ihat, jhat, khat = elem.get_vectors()
+                    is_failed, wa, wb, _ihat, jhat, khat = elem.get_axes(self)
                     p1 = node1 + wa
                     p2 = node2 + wb
                     if prop.type == 'PBEAM':
@@ -929,10 +930,9 @@ class BDFMethods(BDFAttributes):
                         rho_t = prop.get_rho_t()
                         nsm = prop.nsm
                         #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
+                        mpa = sum(rho_t) + nsm
                     else:
                         raise NotImplementedError(prop.type)
-
-                    mpa = sum(rho_t) + nsm
                     m = area * mpa
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
             elif etype in ['CQUAD4', 'CQUAD8', 'CQUAD']:
@@ -970,16 +970,16 @@ class BDFMethods(BDFAttributes):
 
                         mpa = prop.nsm + prop.Rho() * t
                         #mpa = elem.pid_ref.MassPerArea()
-                        m = mpa * area
+                        #m = mpa * area
                     elif prop.type in ['PCOMP', 'PCOMPG']:
                         # PCOMP, PCOMPG
                         rho_t = prop.get_rho_t()
                         nsm = prop.nsm
                         #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
                         mpa = sum(rho_t) + nsm
-                        m = area * mpa
                     else:
                         raise NotImplementedError(prop.type)
+                    m = area * mpa
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
             elif etype == 'CSHEAR':
@@ -1025,11 +1025,12 @@ class BDFMethods(BDFAttributes):
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
                     elem = self.elements[eid]
-                    n1, n2, n3, n4, n5, n6, n7, n8 = elem.node_ids[:6]
+                    n1, n2, n3, n4, n5, n6 = elem.node_ids[:6]
                     area1 = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n2] - xyz[n1]))
                     area2 = 0.5 * norm(cross(xyz[n6] - xyz[n4], xyz[n5] - xyz[n4]))
                     centroid1 = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
                     centroid2 = (xyz[n4] + xyz[n5] + xyz[n6]) / 3.
+                    centroid = (centroid1 + centroid2) / 2.
                     volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                     m = elem.Rho() * volume
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
@@ -1048,6 +1049,7 @@ class BDFMethods(BDFAttributes):
 
                     volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                     m = elem.Rho() * volume
+                    centroid = (centroid1 + centroid2) / 2.
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
             elif etype in no_mass:
@@ -1055,14 +1057,16 @@ class BDFMethods(BDFAttributes):
             elif etype.startswith('C'):
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
+                    elem = self.elements[eid]
                     m = elem.Mass()
                     centroid = elem.Centroid()
                     if m > 0.0:
-                        self.log.info('elem.type=%s is not supported in new mass properties method' %
-                                      elem.type)
+                        self.log.info('elem.type=%s is not supported in new '
+                                      'mass properties method' % elem.type)
                         mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
-                    else:
+                    elif etype not in etypes_skipped:
                         self.log.info('elem.type=%s doesnt have mass' % elem.type)
+                        etypes_skipped.add(etype)
 
         if mass:
             cg /= mass

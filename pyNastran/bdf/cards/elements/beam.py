@@ -515,7 +515,7 @@ class CBEAM(CBAR):
         #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
         #print('   Li=%s' % (Li))
         is_failed = False
-        return is_failed, ihat, yhat, zhat
+        return is_failed, wa, wb, ihat, yhat, zhat
 
     def Mid(self):
         if isinstance(self.pid, integer_types):
