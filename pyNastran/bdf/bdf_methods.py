@@ -807,7 +807,7 @@ class BDFMethods(BDFAttributes):
 
         etypes_skipped = set([])
         for etype, eids in iteritems(self._type_to_id_map):
-            if etype in ['CROD', 'CONROD', 'CTUBE']:
+            if etype in ['CROD', 'CONROD']:
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
                     elem = self.elements[eid]
@@ -815,6 +815,16 @@ class BDFMethods(BDFAttributes):
                     length = norm(xyz[n2] - xyz[n1])
                     centroid = (xyz[n1] + xyz[n2]) / 2.
                     mpl = elem.MassPerLength()
+                    m = mpl * length
+                    mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            elif etype == 'CTUBE':
+                eids2 = get_sub_eids(all_eids, eids)
+                for eid in eids2:
+                    elem = self.elements[eid]
+                    n1, n2 = elem.node_ids
+                    length = norm(xyz[n2] - xyz[n1])
+                    centroid = (xyz[n1] + xyz[n2]) / 2.
+                    mpl = elem.pid_ref.MassPerLength()
                     m = mpl * length
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
             elif etype == 'CBAR':
@@ -862,10 +872,11 @@ class BDFMethods(BDFAttributes):
                             #p1_nsm = p1 + prop.ma
                             #p2_nsm = p2 + prop.mb
                     elif prop.type == 'PBEAML':
-                        mpl = prop.MassPerLength() # includes nsm
+                        #mass_per_lengths = self.get_mass_per_lengths()
+                        mass_per_length = prop.MassPerLength() # includes simplified nsm
                         m = mass_per_length * length
                         nsm_centroid = np.zeros(3)
-                        nsm = 0.
+                        nsm = prop.nsm[0]  # TODO: simplified
                     else:
                         # PBCOMP
                         raise NotImplementedError(prop.type)
@@ -892,7 +903,7 @@ class BDFMethods(BDFAttributes):
                     mass += m + nsm
                     cg += m * centroid + nsm * nsm_centroid
 
-            elif etype in ['CTRIA3', 'CTRIA6']:
+            elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR']:
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
                     elem = self.elements[eid]
@@ -935,7 +946,7 @@ class BDFMethods(BDFAttributes):
                         raise NotImplementedError(prop.type)
                     m = area * mpa
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
-            elif etype in ['CQUAD4', 'CQUAD8', 'CQUAD']:
+            elif etype in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR']:
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
                     elem = self.elements[eid]

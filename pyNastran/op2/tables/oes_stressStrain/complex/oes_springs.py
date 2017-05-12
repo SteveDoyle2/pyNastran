@@ -135,6 +135,7 @@ class ComplexSpringDamperArray(OES_Object):
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)

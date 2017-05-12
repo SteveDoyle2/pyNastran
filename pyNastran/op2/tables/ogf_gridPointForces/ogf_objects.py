@@ -1170,7 +1170,9 @@ class ComplexGridPointForcesArray(ScalarObject):
         #element_names = [name.strip() for name in unique(self.element_names)]
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  ', '.join(headers)))
-        msg.append('  data.shape=%s\n' % str(self.data.shape))
+        msg.append('  node_element.shape=%s\n' % str(self.node_element.shape).replace('L', ''))
+        msg.append('  element_names.shape=%s\n' % str(self.element_names.shape).replace('L', ''))
+        msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg

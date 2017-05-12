@@ -181,7 +181,8 @@ class TableArray(ScalarObject):  # displacement style table
         msg.append('  data: [%s] shape=%s dtype=%s\n'
                    % (headers,
                       [int(i) for i in self.data.shape], self.data.dtype))
-        msg.append('  gridTypes\n  ')
+        msg.append('  node_gridtype.shape = %s\n' % str(self.node_gridtype.shape).replace('L', ''))
+        #msg.append('  gridTypes\n  ')
         msg += self.get_data_code()
         return msg
 

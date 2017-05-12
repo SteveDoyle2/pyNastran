@@ -218,7 +218,8 @@ class RealPlateArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
-        msg.append('  data.shape=%s\n' % str(self.data.shape))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n' % self.element_name)
         msg.append('  s_code: %s\n  ' % self.s_code)
         msg += self.get_data_code()
@@ -598,6 +599,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()

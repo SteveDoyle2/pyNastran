@@ -1098,14 +1098,8 @@ class PBEAML(IntegratedLineProperty):
         return PBEAML(pid, mid, Type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 
-    def MassPerLength(self):
-        r"""
-        Gets the mass per length :math:`\frac{m}{L}` of the PBEAML.
-
-        .. math:: \frac{m}{L} = A(x) \rho + nsm
-
-        .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) dx
-        """
+    def get_mass_per_lengths(self):
+        """helper method for MassPerLength"""
         rho = self.Rho()
         mass_per_lengths = []
         for (dim, nsm) in zip(self.dim, self.nsm):
@@ -1115,6 +1109,17 @@ class PBEAML(IntegratedLineProperty):
             except:
                 msg = "PBEAML a*rho+nsm a=%s rho=%s nsm=%s" % (a, rho, nsm)
                 raise RuntimeError(msg)
+        return mass_per_lengths
+
+    def MassPerLength(self):
+        r"""
+        Gets the mass per length :math:`\frac{m}{L}` of the PBEAML.
+
+        .. math:: \frac{m}{L} = A(x) \rho + nsm
+
+        .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) dx
+        """
+        mass_per_lengths = self.get_mass_per_lengths()
         mass_per_length = integrate_positive_unit_line(self.xxb, mass_per_lengths)
         return mass_per_length
 
