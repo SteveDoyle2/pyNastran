@@ -330,7 +330,7 @@ class AnimationWindow(PyDialog):
         #----------
         #Time
         if 0:
-        grid.addWidget(self.icase_start, 7, 0)
+            grid.addWidget(self.icase_start, 7, 0)
             grid.addWidget(self.icase_start_edit, 7, 1)
             grid.addWidget(self.icase_start_button, 7, 2)
 
