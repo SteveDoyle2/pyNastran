@@ -30,7 +30,6 @@ from pyNastran.gui.colormaps import colormap_keys
 
 from pyNastran.gui.gui_interface.common import PyDialog
 from pyNastran.gui.gui_interface.legend.animation import AnimationWindow
-from pyNastran.gui.gui_utils.write_gif import IS_IMAGEIO
 
 
 class LegendPropertiesWindow(PyDialog):
@@ -411,14 +410,7 @@ class LegendPropertiesWindow(PyDialog):
 
         self.animate_button = QPushButton('Create Animation')
 
-        if (not IS_IMAGEIO) and (self._default_scale > 0.0):
-            self.animate_button.setEnabled(False)
-            self.animate_button.setToolTip('imageio is not available; install it\n'
-                                           'This must be a displacement-like result to animate')
-        elif not IS_IMAGEIO:
-            self.animate_button.setEnabled(False)
-            self.animate_button.setToolTip('imageio is not available; install it')
-        elif self._default_scale == 0.0:
+        if self._default_scale == 0.0:
             self.animate_button.setEnabled(False)
             self.animate_button.setToolTip('This must be a displacement-like result to animate')
 

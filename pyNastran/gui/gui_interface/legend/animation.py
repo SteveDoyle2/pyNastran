@@ -25,6 +25,7 @@ else:
 
 from pyNastran.gui.gui_interface.common import PyDialog
 from pyNastran.gui.gui_utils.dialogs import open_directory_dialog
+from pyNastran.gui.gui_utils.write_gif import IS_IMAGEIO
 
 
 class AnimationWindow(PyDialog):
@@ -87,6 +88,8 @@ class AnimationWindow(PyDialog):
         self.scale = QLabel("Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
         self.scale_button = QPushButton("Default")
+        self.scale_edit.setToolTip('Scale factor of the "deflection"')
+        self.scale_button.setToolTip('Sets the scale factor of the gif to %s' % self._scale)
 
         self.time = QLabel("Total Time (sec):")
         self.time_edit = QDoubleSpinBox(self)
@@ -95,6 +98,8 @@ class AnimationWindow(PyDialog):
         self.time_edit.setDecimals(2)
         self.time_edit.setSingleStep(0.1)
         self.time_button = QPushButton("Default")
+        self.time_edit.setToolTip("Total time of the gif")
+        self.time_button.setToolTip('Sets the total time of the gif to %.2f' % self._default_time)
 
         self.fps = QLabel("Frames/Second:")
         self.fps_edit = QSpinBox(self)
@@ -102,6 +107,8 @@ class AnimationWindow(PyDialog):
         self.fps_edit.setSingleStep(1)
         self.fps_edit.setValue(self._default_fps)
         self.fps_button = QPushButton("Default")
+        self.fps_edit.setToolTip("A higher FPS is smoother, but may not play well for large gifs")
+        self.fps_button.setToolTip('Sets the FPS to %s' % self._default_fps)
 
         self.resolution = QLabel("Resolution Scale:")
         self.resolution_edit = QSpinBox(self)
@@ -109,25 +116,36 @@ class AnimationWindow(PyDialog):
         self.resolution_edit.setSingleStep(1)
         self.resolution_edit.setValue(self._default_resolution)
         self.resolution_button = QPushButton("Default")
+        self.resolution_edit.setToolTip('Scales the window resolution by an integer factor')
+        self.resolution_button.setToolTip('Sets the resolution to %s' % self._default_resolution)
 
         #self.browse = QLabel("Animation File:")
-        self.browse = QLabel("Output Directory:")
+        self.browse = QLabel('Output Directory:')
         self.browse_edit = QLineEdit(str(self._default_dirname))
-        self.browse_button = QPushButton("Browse")
+        self.browse_button = QPushButton('Browse')
+        self.browse_edit.setToolTip('Location to save the png/gif files')
 
         self.gif = QLabel("Gif Filename:")
         self.gif_edit = QLineEdit(str(self._default_name + '.gif'))
-        self.gif_button = QPushButton("Default")
+        self.gif_button = QPushButton('Default')
+        self.gif_edit.setToolTip('Name of the gif')
+        self.gif_button.setToolTip('Sets the name of the gif to %s.gif' % self._default_name)
 
         # scale / phase
         self.animate_scale_radio = QRadioButton("Animate Scale")
         self.animate_phase_radio = QRadioButton("Animate Phase")
         self.animate_time_radio = QRadioButton("Animate Time")
+        self.animate_scale_radio.setToolTip("Animates the scale factor")
+        self.animate_time_radio.setToolTip('Animates the time/load/mode step (not supported)')
+
         self.animate_scale_radio.setChecked(self._default_is_scale)
         self.animate_phase_radio.setChecked(not self._default_is_scale)
         self.animate_time_radio.setChecked(False)
         if self._default_phase is None:
             self.animate_phase_radio.setDisabled(True)
+            self.animate_phase_radio.setToolTip("Animates the phase angle (only for complex results)")
+        else:
+            self.animate_phase_radio.setToolTip("Animates the phase angle")
 
         self.animate_time_radio.setDisabled(True)
         widget = QWidget(self)
@@ -138,7 +156,10 @@ class AnimationWindow(PyDialog):
 
         # one / two sided
         self.onesided_radio = QRadioButton("One Sided")
+        self.onesided_radio.setToolTip("A one sided gif doesn't return to the starting point (e.g., 0 to 360 degrees)")
         self.twosided_radio = QRadioButton("Two Sided")
+        self.twosided_radio.setToolTip('A two sided gif returns to the starting point (e.g., 0 to 10 to 0)')
+
         if self._default_phase is None:
             self.onesided_radio.setChecked(False)
             self.twosided_radio.setChecked(True)
@@ -157,10 +178,16 @@ class AnimationWindow(PyDialog):
         # endless loop
         self.repeat_checkbox = QCheckBox("Repeat?")
         self.repeat_checkbox.setChecked(True)
+        self.repeat_checkbox.setToolTip("Repeating creates an infinitely looping gif")
 
         # endless loop
         self.make_gif_checkbox = QCheckBox("Make Gif?")
-        self.make_gif_checkbox.setChecked(True)
+        if IS_IMAGEIO:
+            self.make_gif_checkbox.setChecked(True)
+        else:
+            self.make_gif_checkbox.setChecked(False)
+            self.make_gif_checkbox.setEnabled(False)
+            self.make_gif_checkbox.setToolTip('imageio is not available; install it')
 
         # bottom buttons
         self.step_button = QPushButton("Step")
