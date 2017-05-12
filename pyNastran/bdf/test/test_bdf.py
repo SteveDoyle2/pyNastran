@@ -1109,7 +1109,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         if sol in [108, 111]:  # direct frequency, modal frequency
             for load2, scale_factor in zip(loads2, scale_factors2):
                 freq_id = subcase.get_parameter('FREQ')[0]
-                freq = fem2.frequencies[freq_id]
+                freq = fem2.frequencies[freq_id][0]
                 fmax = freq.freqs[-1]
                 force = load2.get_load_at_freq(fmax) * scale_factor
         elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
@@ -1305,6 +1305,8 @@ def get_element_stats(fem1, fem2, quiet=False):
 
     fem1._verify_bdf()
 
+    if fem1.elements:
+        fem1.get_elements_nodes_by_property_type()
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
     #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
     if not quiet:

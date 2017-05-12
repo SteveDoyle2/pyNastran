@@ -357,8 +357,8 @@ class BDFMethods(BDFAttributes):
             reference_point = self.nodes[reference_point].get_position()
 
         elements, masses = self._mass_properties_elements_init(element_ids, mass_ids)
-        mass, cg, I = self._mass_properties_sp(elements, masses,
-                                               reference_point=reference_point)
+        mass, cg, I = self._mass_properties(elements, masses,
+                                            reference_point=reference_point)
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
@@ -461,13 +461,13 @@ class BDFMethods(BDFAttributes):
         elements, masses = self._mass_properties_elements_init(element_ids, mass_ids)
         #nelements = len(elements) + len(masses)
 
-        mass, cg, I = self._mass_properties_sp_no_xref(elements, masses,
-                                                       reference_point=reference_point)
+        mass, cg, I = self._mass_properties_no_xref(elements, masses,
+                                                    reference_point=reference_point)
 
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
-    def _mass_properties_sp_no_xref(self, elements, masses, reference_point):  # pragma: no cover
+    def _mass_properties_no_xref(self, elements, masses, reference_point):  # pragma: no cover
         """
         Caclulates mass properties in the global system about the
         reference point.
@@ -556,7 +556,7 @@ class BDFMethods(BDFAttributes):
             cg /= mass
         return (mass, cg, I)
 
-    def _mass_properties_sp(self, elements, masses, reference_point):  # pragma: no cover
+    def _mass_properties(self, elements, masses, reference_point):  # pragma: no cover
         """
         Caclulates mass properties in the global system about the
         reference point.
@@ -643,7 +643,7 @@ class BDFMethods(BDFAttributes):
             cg /= mass
         return (mass, cg, I)
 
-    def _mass_properties_new(self, element_ids, mass_ids, reference_point=None,
+    def _mass_properties_new(self, element_ids=None, mass_ids=None, reference_point=None,
                              sym_axis=None, scale=None, xyz_cid0=None):  # pragma: no cover
         """
         half implemented, not tested, should be faster someday...
@@ -719,9 +719,8 @@ class BDFMethods(BDFAttributes):
         for pid, eids in sorted(iteritems(pid_eids)):
             mass, cg, I = model.mass_properties(element_ids=eids)
         """
-        # element_ids=None, mass_ids=None,
-        if reference_point is None:
-            reference_point = array([0., 0., 0.])
+        #if reference_point is None:
+        reference_point = array([0., 0., 0.])
 
         if xyz_cid0 is None:
             xyz = {}
@@ -732,28 +731,28 @@ class BDFMethods(BDFAttributes):
 
         elements, masses = self._mass_properties_elements_init(element_ids, mass_ids)
 
-        mass = 0.
-        cg = array([0., 0., 0.])
-        I = array([0., 0., 0., 0., 0., 0., ])
-        if isinstance(reference_point, string_types):
-            if reference_point == 'cg':
-                mass = 0.
-                for pack in [elements, masses]:
-                    for element in pack:
-                        try:
-                            p = element.Centroid()
-                            m = element.Mass()
-                            mass += m
-                            cg += m * p
-                        except:
-                            pass
-                if mass == 0.0:
-                    return mass, cg, I
+        #mass = 0.
+        #cg = array([0., 0., 0.])
+        #I = array([0., 0., 0., 0., 0., 0., ])
+        #if isinstance(reference_point, string_types):
+            #if reference_point == 'cg':
+                #mass = 0.
+                #for pack in [elements, masses]:
+                    #for element in pack:
+                        #try:
+                            #p = element.Centroid()
+                            #m = element.Mass()
+                            #mass += m
+                            #cg += m * p
+                        #except:
+                            #pass
+                #if mass == 0.0:
+                    #return mass, cg, I
 
-                reference_point = cg / mass
-            else:
-                # reference_point = [0.,0.,0.] or user-defined array
-                pass
+                #reference_point = cg / mass
+            #else:
+                ## reference_point = [0.,0.,0.] or user-defined array
+                #pass
 
         mass = 0.
         cg = array([0., 0., 0.])
@@ -801,10 +800,12 @@ class BDFMethods(BDFAttributes):
 
         def get_sub_eids(all_eids, eids):
             """supports limiting the element/mass ids"""
+            eids = np.array(eids)
             ieids = np.searchsorted(all_eids, eids)
             eids2 = eids[all_eids[ieids] == eids]
             return eids2
 
+        etypes_skipped = set([])
         for etype, eids in iteritems(self._type_to_id_map):
             if etype in ['CROD', 'CONROD', 'CTUBE']:
                 eids2 = get_sub_eids(all_eids, eids)
@@ -813,10 +814,11 @@ class BDFMethods(BDFAttributes):
                     n1, n2 = elem.node_ids
                     length = norm(xyz[n2] - xyz[n1])
                     centroid = (xyz[n1] + xyz[n2]) / 2.
-                    mpl = elem.pid_ref.MassPerLength()
+                    mpl = elem.MassPerLength()
                     m = mpl * length
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
             elif etype == 'CBAR':
+                eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
                     elem = self.elements[eid]
                     n1, n2 = elem.node_ids
@@ -838,7 +840,7 @@ class BDFMethods(BDFAttributes):
                     #cda = self.nodes[n1].cid_ref
                     #cdb = self.nodes[n2].cid_ref
 
-                    wa, wb, _ihat, jhat, khat = elem.get_vectors()
+                    is_failed, wa, wb, _ihat, jhat, khat = elem.get_axes(self)
                     p1 = node1 + wa
                     p2 = node2 + wb
                     if prop.type == 'PBEAM':
@@ -901,17 +903,17 @@ class BDFMethods(BDFAttributes):
                     if prop.type == 'PSHELL':
                         #T1, T2, T3 = elem.T1, elem.T2, elem.T3
                         tflag = elem.tflag
+                        ti = prop.Thickness()
                         if tflag == 0:
                             # absolute
-                            t1 = self.T1
-                            t2 = self.T2
-                            t3 = self.T3
+                            t1 = elem.T1 if elem.T1 else ti
+                            t2 = elem.T2 if elem.T2 else ti
+                            t3 = elem.T3 if elem.T3 else ti
                         elif tflag == 1:
                             # relative
-                            ti = prop.Thickness()
-                            t1 = self.T1 * ti
-                            t2 = self.T2 * ti
-                            t3 = self.T3 * ti
+                            t1 = elem.T1 * ti if elem.T1 else ti
+                            t2 = elem.T2 * ti if elem.T2 else ti
+                            t3 = elem.T3 * ti if elem.T3 else ti
                         else:
                             raise RuntimeError('tflag=%r' % tflag)
                         assert t1 + t2 + t3 > 0., 't1=%s t2=%s t3=%s' % (t1, t2, t3)
@@ -928,10 +930,9 @@ class BDFMethods(BDFAttributes):
                         rho_t = prop.get_rho_t()
                         nsm = prop.nsm
                         #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
+                        mpa = sum(rho_t) + nsm
                     else:
                         raise NotImplementedError(prop.type)
-
-                    mpa = sum(rho_t) + nsm
                     m = area * mpa
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
             elif etype in ['CQUAD4', 'CQUAD8', 'CQUAD']:
@@ -946,19 +947,19 @@ class BDFMethods(BDFAttributes):
                     if prop.type == 'PSHELL':
                         #T1, T2, T3, T4 = elem.T1, elem.T2, elem.T3, elem.T4
                         tflag = elem.tflag
+                        ti = prop.Thickness()
                         if tflag == 0:
                             # absolute
-                            t1 = self.T1
-                            t2 = self.T2
-                            t3 = self.T3
-                            t4 = self.T4
+                            t1 = elem.T1 if elem.T1 else ti
+                            t2 = elem.T2 if elem.T2 else ti
+                            t3 = elem.T3 if elem.T3 else ti
+                            t4 = elem.T4 if elem.T4 else ti
                         elif tflag == 1:
                             # relative
-                            ti = prop.Thickness()
-                            t1 = self.T1 * ti
-                            t2 = self.T2 * ti
-                            t3 = self.T3 * ti
-                            t4 = self.T4 * ti
+                            t1 = elem.T1 * ti if elem.T1 else ti
+                            t2 = elem.T2 * ti if elem.T2 else ti
+                            t3 = elem.T3 * ti if elem.T3 else ti
+                            t4 = elem.T4 * ti if elem.T4 else ti
                         else:
                             raise RuntimeError('tflag=%r' % tflag)
                         assert t1 + t2 + t3 + t4 > 0., 't1=%s t2=%s t3=%s t4=%s' % (t1, t2, t3, t4)
@@ -969,16 +970,16 @@ class BDFMethods(BDFAttributes):
 
                         mpa = prop.nsm + prop.Rho() * t
                         #mpa = elem.pid_ref.MassPerArea()
-                        m = mpa * area
+                        #m = mpa * area
                     elif prop.type in ['PCOMP', 'PCOMPG']:
                         # PCOMP, PCOMPG
                         rho_t = prop.get_rho_t()
                         nsm = prop.nsm
                         #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
                         mpa = sum(rho_t) + nsm
-                        m = area * mpa
                     else:
                         raise NotImplementedError(prop.type)
+                    m = area * mpa
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
             elif etype == 'CSHEAR':
@@ -1024,11 +1025,12 @@ class BDFMethods(BDFAttributes):
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
                     elem = self.elements[eid]
-                    n1, n2, n3, n4, n5, n6, n7, n8 = elem.node_ids[:6]
+                    n1, n2, n3, n4, n5, n6 = elem.node_ids[:6]
                     area1 = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n2] - xyz[n1]))
                     area2 = 0.5 * norm(cross(xyz[n6] - xyz[n4], xyz[n5] - xyz[n4]))
                     centroid1 = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
                     centroid2 = (xyz[n4] + xyz[n5] + xyz[n6]) / 3.
+                    centroid = (centroid1 + centroid2) / 2.
                     volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                     m = elem.Rho() * volume
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
@@ -1047,6 +1049,7 @@ class BDFMethods(BDFAttributes):
 
                     volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                     m = elem.Rho() * volume
+                    centroid = (centroid1 + centroid2) / 2.
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
             elif etype in no_mass:
@@ -1054,14 +1057,16 @@ class BDFMethods(BDFAttributes):
             elif etype.startswith('C'):
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
+                    elem = self.elements[eid]
                     m = elem.Mass()
                     centroid = elem.Centroid()
                     if m > 0.0:
-                        self.log.info('elem.type=%s is not supported in new mass properties method' %
-                                      elem.type)
+                        self.log.info('elem.type=%s is not supported in new '
+                                      'mass properties method' % elem.type)
                         mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
-                    else:
+                    elif etype not in etypes_skipped:
                         self.log.info('elem.type=%s doesnt have mass' % elem.type)
+                        etypes_skipped.add(etype)
 
         if mass:
             cg /= mass

@@ -580,12 +580,24 @@ class TestMeshUtils(unittest.TestCase):
 
         model.add_cbar(1, pid, 1, 2, x, g0, offt='GGG', pa=456, pb=5,
                        wa=None, wb=None, comment='End A')
-        eids = [1]
+        model.add_cbeam(2, 2000, 1, 2, x, g0, offt='GGG', bit=None, pa=456,
+                       pb=5, wa=None, wb=None, sa=0,
+                       sb=0, comment='')
+        A = 42.
+        model.add_conrod(3, mid, [1, 2], A)
+        model.add_prod(4000, mid, A)
+        model.add_crod(4, 4000, [1, 2])
+
+        Type = 'ROD'
+        xxb = [0.]
+        dims = [[1.]]
+        model.add_pbeaml(2000, mid, Type, xxb, dims)
+        eids = [1, 2, 3, 4]
         split_line_elements(model, eids, neids=10,
                             eid_start=101, nid_start=101)
         f = StringIO()
         model.write_bdf(f, close=False)
-        print(f.getvalue())
+        #print(f.getvalue())
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

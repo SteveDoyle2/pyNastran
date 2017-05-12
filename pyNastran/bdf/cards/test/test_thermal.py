@@ -22,7 +22,7 @@ class TestThermal(unittest.TestCase):
         mid = 1
         nodes = [11, 12, 13, 14]
         model.add_cquad4(eid, pid, nodes, theta_mcid=0.0, zoffset=0.,
-                         TFlag=0,  T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
+                         tflag=0,  T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
         model.add_pshell(pid, mid1=1, t=0.1)
 
         eid = 10

@@ -46,7 +46,7 @@ class CTRIA3(ShellElement):
         blank(card, 8, 'blank')
         blank(card, 9, 'blank')
 
-        self.t_flag[i] = integer_or_blank(card, 10, 'TFlag', 0)
+        self.t_flag[i] = integer_or_blank(card, 10, 'tflag', 0)
         self.thickness[i] = [
             double_or_blank(card, 11, 'T1', 1.0),
             double_or_blank(card, 12, 'T2', 1.0),

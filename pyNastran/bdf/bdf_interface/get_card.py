@@ -1076,9 +1076,9 @@ class GetCard(GetMethods):
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components
 
-    def get_node_ids_with_element(self, eid, msg=''):
-        self.deprecated('get_node_ids_with_element(eid)', 'get_node_ids_with_elements(eid)', '0.9')
-        return self.get_node_ids_with_elements(eid, msg=msg)
+    #def get_node_ids_with_element(self, eid, msg=''):
+        #self.deprecated('get_node_ids_with_element(eid)', 'get_node_ids_with_elements(eid)', '0.9')
+        #return self.get_node_ids_with_elements(eid, msg=msg)
 
     def _get_maps(self, eids=None, map_names=None,
                   consider_0d=True, consider_0d_rigid=True,
@@ -1210,6 +1210,125 @@ class GetCard(GetMethods):
             nids = set(element.node_ids)
             nids2.update(nids)
         return nids2
+
+    def get_elements_nodes_by_property_type(self, dtype='int32',
+                                            save_element_types=False):
+        """
+        Gets a dictionary of (etype, pid) to [eids, node_ids]
+
+        Parameters
+        ----------
+        dtype : str; default='int32'
+            the type of the integers
+        save_element_types : bool; default=False
+            adds the etypes output
+
+        Returns
+        -------
+        etype_pid_to_eids_nids : dict[(etype, pid)] : [eids, nids]
+            etype : str
+                the element type
+            pid : int
+                the property id
+                CONRODS have a pid of 0
+            eids : (neids, ) int ndarray
+                the elements with the property id of pid
+            nids : (neids, nnodes/element) int ndarray
+                the nodes corresponding to the element
+        etype_to_eids_pids_nids : dict[etype] : [eids, pids, nids]
+            Enabled by save_element_types; default=None
+            etype : str
+                the element type
+            eids : (neids, ) int ndarray
+                the elements with the property id of pid
+            pids : (neids, ) int ndarray
+                the property ids
+                CONRODS have a pid of 0
+            nids : (neids, nnodes/element) int ndarray
+                the nodes corresponding to the element
+        """
+        etypes = self.get_element_nodes_by_element_type(dtype=dtype)
+        output = {}
+        for etype, (eids, pids, nids) in iteritems(etypes):
+            upids = np.unique(pids)
+            for upid in upids:
+                ipid = np.where(pids == upid)[0]
+                output[(etype, upid)] = [eids[ipid], nids[ipid, :]]
+        if save_element_types:
+            return output, None
+        else:
+            return output, etypes
+
+    def get_element_nodes_by_element_type(self, dtype='int32'):
+        """
+        Gets a dictionary of element type to [eids, pids, node_ids]
+
+        Parameters
+        ----------
+        dtype : str; default='int32'
+            the type of the integers
+
+        Returns
+        -------
+        etype_to_eids_pids_nids : dict[etype] : [eids, pids, nids]
+            etype : str
+                the element type
+            eids : (neids, ) int ndarray
+                the elements with the property id of pid
+            pids : (neids, ) int ndarray
+                the property ids
+                CONRODS have a pid of 0
+            nids : (neids, nnodes/element) int ndarray
+                the nodes corresponding to the element
+        """
+        etypes = [
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+            'CROD', 'CONROD', 'CTUBE',
+            'CBAR', 'CBEAM', 'CBEND', 'CBEAM3',
+            'CSHEAR', 'CVISC',
+            'CTRIA3', 'CTRIA6', 'CTRIAR',
+            'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
+            'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
+            #'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
+            'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
+            'CQUADX', 'CQUADX4', 'CQUADX8',
+            'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+            'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CFAST', 'CGAP',
+        ]
+        output = {}
+        for etype in etypes:
+            if etype not in self._type_to_id_map:
+                continue
+            eids = np.array(self._type_to_id_map[etype], dtype=dtype)
+            neids = len(eids)
+            eid0 = eids[0]
+
+            elem0 = self.elements[eid0]
+            nnodes = len(elem0.nodes)
+
+            pids = np.zeros(neids, dtype=dtype)
+            nids = np.zeros((neids, nnodes), dtype=dtype)
+            for i, eid in enumerate(eids):
+                elem = self.elements[eid]
+                pid = elem.Pid()
+                nidsi = elem.node_ids
+                try:
+                    nids[i, :] = nidsi
+                except TypeError:
+                    nidsi2 = [nid  if nid is not None else 0
+                             for nid in nidsi]
+                    try:
+                        nids[i, :] = nidsi2
+                    except:
+                        print(elem)
+                        print(nidsi)
+                        print(nidsi2)
+                        raise
+                pids[i] = pid
+            output[etype] = [eids, pids, nids]
+        assert len(output), 'output is empty...'
+        return output
 
     #--------------------
     # ELEMENT CARDS
