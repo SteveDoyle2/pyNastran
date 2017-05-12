@@ -79,7 +79,8 @@ class AnimationWindow(PyDialog):
         self.create_widgets()
         self.create_layout()
         self.set_connections()
-        self.win_parent.is_animate_open = True
+        if hasattr(self.win_parent, 'make_gif'):
+            self.win_parent.is_animate_open = True
 
     def create_widgets(self):
         """creates the menu objects"""
@@ -194,19 +195,24 @@ class AnimationWindow(PyDialog):
         self.browse_edit.setText(dirname)
 
     def on_default_name(self):
+        """sets the default gif name"""
         self.gif_edit.setText(self._default_name + '.gif')
 
     def on_default_scale(self):
+        """sets the default displacement scale factor"""
         self.scale_edit.setText(str(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_time(self):
+        """sets the default gif time"""
         self.time_edit.setValue(self._default_time)
 
     def on_default_fps(self):
+        """sets the default FPS"""
         self.fps_edit.setValue(self._default_fps)
 
     def on_default_resolution(self):
+        """sets the default image resolution scale factor"""
         self.resolution_edit.setValue(self._default_resolution)
 
     def create_layout(self):
@@ -243,19 +249,23 @@ class AnimationWindow(PyDialog):
 
         grid.addWidget(spacer, 7, 0)
 
-        #grid2 = QGridLayout()
-        grid.addWidget(self.animate_scale_radio, 8, 0)
-        grid.addWidget(self.animate_phase_radio, 8, 1)
-        grid.addWidget(self.animate_time_radio, 8, 2)
+        grid2 = QGridLayout()
+        grid2.addWidget(self.animate_scale_radio, 8, 0)
+        grid2.addWidget(self.animate_phase_radio, 8, 1)
+        grid2.addWidget(self.animate_time_radio, 8, 2)
 
-        grid.addWidget(self.twosided_radio, 9, 0)
-        grid.addWidget(self.onesided_radio, 9, 1)
+        grid2.addWidget(self.twosided_radio, 9, 0)
+        grid2.addWidget(self.onesided_radio, 9, 1)
 
-        grid.addWidget(self.repeat_checkbox, 10, 0)
-        grid.addWidget(self.delete_images_checkbox, 10, 1)
-        grid.addWidget(self.make_gif_checkbox, 10, 2)
+        grid2.addWidget(self.repeat_checkbox, 10, 0)
+        grid2.addWidget(self.delete_images_checkbox, 10, 1)
+        grid2.addWidget(self.make_gif_checkbox, 10, 2)
 
-        grid.addWidget(spacer, 11, 0)
+        grid2.addWidget(spacer, 11, 0)
+        grid_hbox = QHBoxLayout()
+        grid_hbox.addWidget(spacer)
+        grid_hbox.addLayout(grid2)
+        grid_hbox.addWidget(spacer)
 
         #grid.addWidget(self.scale_radio, 6, 0)
         #grid.addWidget(self.phase_radio, 6, 1)
@@ -274,7 +284,7 @@ class AnimationWindow(PyDialog):
         vbox = QVBoxLayout()
         vbox.addLayout(grid)
         #vbox.addLayout(checkboxes)
-        #vbox.addLayout(grid2)
+        vbox.addLayout(grid_hbox)
         vbox.addStretch()
         vbox.addLayout(step_run_box)
         vbox.addLayout(ok_cancel_box)
@@ -308,10 +318,15 @@ class AnimationWindow(PyDialog):
         delete_images = self.delete_images_checkbox.isChecked()
         make_gif = self.make_gif_checkbox.isChecked()
         onesided = self.onesided_radio.isChecked()
-        nrepeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
+        bool_repeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
+        if bool_repeat:
+            nrepeat = 0
+        else:
+            nrepeat = 1
+
 
         #self.out_data['is_shown'] = self.show_radio.isChecked()
-        analysis_time = self.get_analysis_time(time, onesided)
+        analysis_time = get_analysis_time(time, onesided)
 
 
         nframes = int(analysis_time * fps)
@@ -329,13 +344,14 @@ class AnimationWindow(PyDialog):
             # animate phase
             phases = np.linspace(0., 360, num=nframes, endpoint=False)
             isteps = np.linspace(0, nframes, num=nframes, endpoint=False)
-            scales = [None] * nframes
+            scales = [scale] * nframes
             assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
             assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
         elif animate_time:
             pass
         else:
-            raise NotImplementedError()
+            raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
+                animate_scale, animate_phase, animate_time))
         if istep is not None:
             assert isinstance(istep, integer_types), 'istep=%r' % istep
             scales = (scales[istep],)
@@ -345,8 +361,8 @@ class AnimationWindow(PyDialog):
         self.out_data['clicked_ok'] = True
         self.out_data['close'] = True
         self.win_parent.win_parent.make_gif(
-            gif_filename, self._icase, scales=scales, phases=phases,
-            isteps=isteps,
+            gif_filename, self._icase, scales,
+            phases=phases, isteps=isteps,
             time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
             onesided=onesided, nrepeat=nrepeat, delete_images=delete_images,
             make_gif=make_gif)
@@ -362,27 +378,9 @@ class AnimationWindow(PyDialog):
         passed = all([flag0, flag1, flag2, flag3, flag4, flag5])
         return passed, (scale, time, fps, magnify, output_dir, gifbase)
 
-    def get_analysis_time(self, time, onesided):
-        """
-        TODO: could we define time as 1/2-sided time so we can do less work?
-        TODO: we could be more accurate regarding dt
-              Nonesided = 5
-              Ntwosided = 2 * Nonesided - 1 = 9
-              Nonesided = (Ntwosided + 1) / 2
-
-              Nframes = int(fps * t)
-              Nonesided = Nframes
-              Ntwosided = 2 * Nonesided - 1 = 9
-              Nonesided = (Ntwosided + 1) / 2
-        """
-        if onesided:
-            analysis_time = time / 2.
-        else:
-            analysis_time = time
-        return analysis_time
-
     @staticmethod
     def check_name(cell):
+        """verifies that the data is string-able"""
         cell_value = cell.text()
         try:
             text = str(cell_value).strip()
@@ -398,6 +396,7 @@ class AnimationWindow(PyDialog):
             return None, False
 
     def check_path(self, cell):
+        """verifies that the path exists"""
         text, passed = self.check_name(cell)
         if not passed:
             return None, False
@@ -422,7 +421,29 @@ class AnimationWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
+def get_analysis_time(time, onesided):
+    """
+    The analysis time is the time that needs to be simulated for the analysis.
+
+    TODO: could we define time as 1/2-sided time so we can do less work?
+    TODO: we could be more accurate regarding dt
+          Nonesided = 5
+          Ntwosided = 2 * Nonesided - 1 = 9
+          Nonesided = (Ntwosided + 1) / 2
+
+          Nframes = int(fps * t)
+          Nonesided = Nframes
+          Ntwosided = 2 * Nonesided - 1 = 9
+          Nonesided = (Ntwosided + 1) / 2
+    """
+    if onesided:
+        analysis_time = time / 2.
+    else:
+        analysis_time = time
+    return analysis_time
+
 def main(): # pragma: no cover
+    """test example for AnimationWindow"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -445,6 +466,10 @@ def main(): # pragma: no cover
         'iframe' : 0,
         'is_scale' : False,
         'dirname' : os.getcwd(),
+        'scale' : 2.0,
+        'default_scale' : 10,
+        'phase' : 0.,
+        'default_phase' : 120.,
     }
     main_window = AnimationWindow(data2)
     main_window.show()

@@ -55,6 +55,7 @@ from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
 from pyNastran.gui.gui_utils.dialogs import save_file_dialog, open_file_dialog
+from pyNastran.gui.gui_utils.write_gif import write_gif
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -4074,7 +4075,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 else:
                     raise NotImplementedError(geom_actor)
 
-    def make_gif(self, gif_filename, icase, scales, phases,
+    def make_gif(self, gif_filename, icase, scales, phases=None,
                  isteps=None, time=2.0, analysis_time=2.0, fps=30, magnify=1,
                  onesided=True, nrepeat=0, delete_images=False, make_gif=True):
         """
@@ -4086,10 +4087,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             path to the output gif & png folder
         icase : int
             the result case to plot the deflection for
-        scales : List[float]; default=None
+        scales : List[float]
             List[float] : the scale factors
-            None -> animate phase
-        scales : List[float]; default=None
+        phases : List[float]; default=None
             List[float] : the phase angles (degrees)
             None -> animate scale
         isteps : List[int]
@@ -4098,7 +4098,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         time : float; default=2.0
             the runtime of the gif (seconds)
         analysis_time : float; default=2.0
-           the time we actually need to simulate (seconds)
+            The time we actually need to simulate (seconds).
+            We don't need to take extra pictures if they're just copies.
         fps : int; default=30
             the frames/second
 
@@ -4106,8 +4107,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         -------
         onesided : bool; default=True
             should the animation go up and back down
-        nrepeat : bool; default=True
-            should this gif loop infinitely
+        nrepeat : int; default=0
+            0 : loop infinitely
+            1 : loop 1 time
+            2 : loop 2 times
 
         Final Control Options
         ---------------------
@@ -4134,8 +4137,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - time should be two-sided
          - analysis_time should be one-sided
          - set onesided=False
-
-        TODO: change nrepeat to an int; default=0 -> endless
         """
         assert fps >= 1, fps
         nframes = ceil(analysis_time * fps)
@@ -4147,25 +4148,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if not os.path.exists(png_dirname):
             os.makedirs(png_dirname)
 
-        if scales is not None and phases is not None:
+        if phases is not None:
             pass
         elif phases is None:
             phases = [None] * len(scales)
-        elif scales is None:
-            scales = [None] * len(phases)
         else:
-            msg = 'scales=None, phases=None; one must be List[floats]'
-            raise ValueError(msg)
+            raise RuntimeError('phases=%r' % phases)
+
         if len(scales) != len(phases):
             msg = 'nscales=%s nphases=%s' % (len(scales), len(phases))
             raise ValueError(msg)
+
         if isteps is None:
             isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
             print("setting isteps in make_gif")
+
         if len(scales) != len(isteps):
             msg = 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
             raise ValueError(msg)
-
 
         png_filenames = []
         fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
@@ -4175,35 +4175,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.on_take_screenshot(fname=png_filename, magnify=magnify)
             png_filenames.append(png_filename)
 
-        if not onesided:
-            # drop the duplicate middle frame
-            # >>> a = [1, 2, 3, 4, 5]
-            # >>> a + a[-2::-1]
-            # [1, 2, 3, 4, 5, 4, 3, 2, 1]
-            png_filenames = png_filenames + png_filenames[-2::-1]
-
-        is_imageio = False
-        try:
-            import imageio
-            is_imageio = True
-        except ImportError:
-            pass
-
-        if make_gif and is_imageio:
-            images = []
-            for png_filename in png_filenames:
-                images.append(imageio.imread(png_filename))
-            if nrepeat is True:
-                nrepeat = 0
-            imageio.mimsave(gif_filename, images, duration=duration,
-                            loop=nrepeat)
-
-        if delete_images:
-            for png_filename in png_filenames:
-                try:
-                    os.remove(png_filename)
-                except OSError:
-                    pass
+        write_gif(gif_filename, png_filenames, time=time,
+                  fps=fps, onesided=onesided,
+                  nrepeat=nrepeat, delete_images=delete_images,
+                  make_gif=make_gif)
 
     def _update_text_size(self, magnify=1.0):
         """Internal method for updating the bottom-left text when we go to take a picture"""
