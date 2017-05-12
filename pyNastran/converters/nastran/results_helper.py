@@ -78,6 +78,7 @@ class NastranGuiResults(NastranGuiAttributes):
             t1 = case.data[itime0, :, 0]
             ndata = t1.shape[0]
             if nnodes != ndata:
+                #print('nnodes=%s ndata=%s' % (nnodes, ndata))
                 nidsi = case.node_gridtype[:, 0]
                 assert len(nidsi) == nnodes
                 j = np.searchsorted(nids, nidsi)  # searching for nidsi
@@ -92,12 +93,16 @@ class NastranGuiResults(NastranGuiAttributes):
                     raise IndexError(msg)
 
             # (itime, nnodes, xyz)
+            # (901, 6673, 3)
             t123 = case.data[:, :, :3]
             if nnodes != ndata:
                 t123i = np.zeros((nnodes, 3), dtype='float32')
                 t123i[j, :] = t123
                 t123 = t123i
-            tnorm = norm(t123, axis=1)
+
+            # (itime, nnodes, xyz)
+            # tnorm (901, 3)
+            tnorm = norm(t123, axis=1)   # I think this is wrong...
             assert len(tnorm) == t123.shape[0]
             ntimes = case.ntimes
             titles = []
@@ -109,9 +114,17 @@ class NastranGuiResults(NastranGuiAttributes):
                                                   self.xyz_cid0, t123, tnorm,
                                                   scales, #deflects=deflects,
                                                   uname='NastranResult')
+
+                dmax = []
                 for itime in range(ntimes):
                     dt = case._times[itime]
 
+                    if name == 'Displacement':
+                        # (6673, )
+                        normiii = np.linalg.norm(t123[itime, :, :], axis=1)
+                        #print(normiii.shape)
+                        #print('Displacement; itime=%s time=%s tnorm=%s' % (itime, dt, normiii.max()))
+                        dmax.append(normiii.max())
                     # mode = 2; freq = 75.9575 Hz
                     header = self._get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
@@ -132,6 +145,10 @@ class NastranGuiResults(NastranGuiAttributes):
                     formii = (title1, icase, [])
                     form_dict[(key, itime)].append(formii)
                     icase += 1
+
+                if name == 'Displacement':
+                    # Displacement; itime=361 time=3.61 tnorm=1.46723
+                    print('dmax = ', max(dmax))
                 nastran_res.save_defaults()
             else:
                 nastran_res = ForceTableResults(subcase_idi, titles, headers,
@@ -153,7 +170,6 @@ class NastranGuiResults(NastranGuiAttributes):
                     #scale = self.dim_max
                     #if tnorm_abs_max > 0.0:
                         #scale = self.dim_max / tnorm_abs_max * 0.25
-
                     scale = 1.
                     scales.append(scale)
                     titles.append(title1)
@@ -534,7 +550,10 @@ class NastranGuiResults(NastranGuiAttributes):
             eigi2 = case.eigrs[itime] #  but |eigi| = sqrt(|eign|)
             cycle = np.sqrt(np.abs(eigr2)) / (2. * np.pi)
             header += '; freq = %g Hz' % cycle
-
+        elif hasattr(case, 'dt'):
+            time = case._times[itime]
+            header += 'time = %g sec' % time
+            pass
         elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
             pass
             #raise RuntimeError(header)

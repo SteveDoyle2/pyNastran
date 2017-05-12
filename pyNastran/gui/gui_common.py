@@ -4075,9 +4075,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 else:
                     raise NotImplementedError(geom_actor)
 
-    def make_gif(self, gif_filename, icase, scales, phases=None,
-                 isteps=None, time=2.0, analysis_time=2.0, fps=30, magnify=1,
-                 onesided=True, nrepeat=0, delete_images=False, make_gif=True):
+
+    def make_gif(self, gif_filename, icase, scale, istep=None, onesided=True,
+                 animate_scale=True, animate_phase=False, animate_time=False,
+                 nrepeat=0, fps=30, magnify=1,
+                 make_images=True, delete_images=False, make_gif=True):
         """
         Makes an animated gif
 
@@ -4085,13 +4087,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         gif_filename : str
             path to the output gif & png folder
-        icase : int
+        icase : int / List[int]
             the result case to plot the deflection for
-        scales : List[float]
-            List[float] : the scale factors
-        phases : List[float]; default=None
-            List[float] : the phase angles (degrees)
-            None -> animate scale
+        scale : float
+            the deflection scale factor
+        istep : int; default=None
+            the png file number (let's you pick a subset of images)
+            useful for when you press ``Step``
+
+        Pick One
+        --------
+        animate_scale : bool; default=True
+            does a deflection plot (single subcase)
+        animate_phase : bool; default=True
+            does a complex deflection plot (single subcase)
+        animate_time : bool; default=True
+            does a deflection plot (multiple subcases)
         isteps : List[int]
             the png file numbers (let's you pick a subset of images)
             useful for when you press ``Step``
@@ -4102,6 +4113,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
             We don't need to take extra pictures if they're just copies.
         fps : int; default=30
             the frames/second
+
+        Time Plot Options (not supported)
+        ---------------------------------
+        max_value : float; default=None
+            the max value on the plot (not supported)
+        min_value : float; default=None
+            the min value on the plot (not supported)
 
         Options
         -------
@@ -4114,6 +4132,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         Final Control Options
         ---------------------
+        make_images : bool; default=True
+            make the images
         delete_images : bool; default=False
             cleanup the png files at the end
         make_gif : bool; default=True
@@ -4138,6 +4158,151 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - analysis_time should be one-sided
          - set onesided=False
         """
+        analysis_time = get_analysis_time(time, onesided)
+
+        nframes = int(analysis_time * fps)
+        scales = None
+        phases = None
+        if animate_scale:
+            # TODO: we could start from 0 deflection, but that's more work
+            # TODO: we could do a sine wave, but again, more work
+            scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True)
+            phases = [None] * nframes
+            assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+            assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
+        elif animate_phase:
+            # animate phase
+            phases = np.linspace(0., 360, num=nframes, endpoint=False)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False)
+            scales = [scale] * nframes
+            assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
+            assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+        elif animate_time:
+            icase_start = 112 # t=1.01 sec
+            icase_end = 911
+            icase_delta = 5
+            icase = np.arange(icase_start, icase_end+1, icase_delta)
+            #min_value = 0.
+            #max_value = 1.46862
+            nfiles = len(icase)
+
+            # specifying fps and dt makes the problem overdefined
+            # assuming dt
+            #
+            # TDOO: change this to stepping similar to icase_delta
+            #       icase = icase[::5]
+            fps = nfiles / dt
+
+            # our scale will be constant
+            # phases is just None
+            scales = [scale] * nfiles
+            assert len(icase) == nfiles, 'len(icase)=%s nfiles=%s' % (len(icase), nfiles)
+            phases = None
+            assert len(scales) == len(icase), 'nscales=%s len(icase)=%s' % (len(scales), len(icase))
+            #self.make_gif(gif_filename, icase, scales, phases=None,
+            #              isteps=None, time=time, analysis_time=time, fps=30, magnify=1,
+            #              onesided=True, nrepeat=1, delete_images=False, make_gif=False)
+
+            write_gif(gif_filename, png_filenames, time=time,
+                      fps=fps, onesided=onesided,
+                      make_images=make_images, nrepeat=nrepeat, delete_images=delete_images,
+                      make_gif=make_gif)
+            return True
+
+        else:
+            raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
+                animate_scale, animate_phase, animate_time))
+        if istep is not None:
+            assert isinstance(istep, integer_types), 'istep=%r' % istep
+            scales = (scales[istep],)
+            phases = (phases[istep],)
+            isteps = (istep,)
+            #print('')
+
+        return self.make_gif_helper(
+            gif_filename, icases, scales,
+            phases=phases, isteps=isteps,
+            time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
+            onesided=onesided, nrepeat=nrepeat,
+            make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+
+    def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
+                        max_value=None, min_value=None,
+                        time=2.0, analysis_time=2.0, fps=30, magnify=1,
+                        onesided=True, nrepeat=0,
+                        make_images=True, delete_images=False, make_gif=True):
+        """
+        Makes an animated gif
+
+        Parameters
+        ----------
+        gif_filename : str
+            path to the output gif & png folder
+        icase : int / List[int]
+            the result case to plot the deflection for
+        scales : List[float]
+            List[float] : the deflection scale factors
+        phases : List[float]; default=None
+            List[float] : the phase angles (degrees)
+            None -> animate scale
+        max_value : float; default=None
+            the max value on the plot (not supported)
+        min_value : float; default=None
+            the min value on the plot (not supported)
+        isteps : List[int]
+            the png file numbers (let's you pick a subset of images)
+            useful for when you press ``Step``
+        time : float; default=2.0
+            the runtime of the gif (seconds)
+        analysis_time : float; default=2.0
+            The time we actually need to simulate (seconds).
+            We don't need to take extra pictures if they're just copies.
+        fps : int; default=30
+            the frames/second
+
+        Options
+        -------
+        onesided : bool; default=True
+            should the animation go up and back down
+        nrepeat : int; default=0
+            0 : loop infinitely
+            1 : loop 1 time
+            2 : loop 2 times
+
+        Final Control Options
+        ---------------------
+        make_images : bool; default=True
+            make the images
+        delete_images : bool; default=False
+            cleanup the png files at the end
+        make_gif : bool; default=True
+            actually make the gif at the end
+
+        Other local variables
+        ---------------------
+        duration : float
+           frame time (seconds)
+
+        For one sided data
+        ------------------
+         - scales/phases should be one-sided
+         - time should be one-sided
+         - analysis_time should be one-sided
+         - set onesided=True
+
+        For two-sided data
+        ------------------
+         - scales/phases should be one-sided
+         - time should be two-sided
+         - analysis_time should be one-sided
+         - set onesided=False
+        """
+        #icase_start = 6
+        #icase_delta = 1
+        min_value = 0.
+        max_value = 1.46862
+
         assert fps >= 1, fps
         nframes = ceil(analysis_time * fps)
         assert nframes >= 2, nframes
@@ -4155,8 +4320,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             raise RuntimeError('phases=%r' % phases)
 
+        if isinstance(icases, integer_types):
+            icases = [icases] * len(scales)
+
         if len(scales) != len(phases):
             msg = 'nscales=%s nphases=%s' % (len(scales), len(phases))
+            print(msg)
             raise ValueError(msg)
 
         if isteps is None:
@@ -4164,21 +4333,34 @@ class GuiCommon2(QMainWindow, GuiCommon):
             print("setting isteps in make_gif")
 
         if len(scales) != len(isteps):
-            msg = 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+            msg = 'len(scales)=%s len(isteps)=%s analysis_time=%s fps=%s' % (
+                len(scales), len(isteps), analysis_time, fps)
+            print(msg)
             raise ValueError(msg)
 
         png_filenames = []
         fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
-        for i, scale, phase in zip(isteps, scales, phases):
-            png_filename = fmt % i
-            self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
-            self.on_take_screenshot(fname=png_filename, magnify=magnify)
-            png_filenames.append(png_filename)
+        icase0 = -1
+        if make_images:
+            for istep, icase, scale, phase in zip(isteps, icases, scales, phases):
+                png_filename = fmt % istep
 
-        write_gif(gif_filename, png_filenames, time=time,
-                  fps=fps, onesided=onesided,
-                  nrepeat=nrepeat, delete_images=delete_images,
-                  make_gif=make_gif)
+                if icase != icase0:
+                    #self.cycle_results(case=icase)
+                    self.cycle_results_explicit(icase, explicit=True)
+                self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
+                #self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)  # old
+                self.on_take_screenshot(fname=png_filename, magnify=magnify)
+                png_filenames.append(png_filename)
+            else:
+                for istep in isteps:
+                    png_filename = fmt % istep
+                    png_filenames.append(png_filename)
+
+        return write_gif(gif_filename, png_filenames, time=time,
+                         fps=fps, onesided=onesided,
+                         nrepeat=nrepeat, delete_images=delete_images,
+                         make_gif=make_gif)
 
     def _update_text_size(self, magnify=1.0):
         """Internal method for updating the bottom-left text when we go to take a picture"""

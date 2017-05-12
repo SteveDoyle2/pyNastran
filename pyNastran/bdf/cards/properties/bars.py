@@ -288,7 +288,7 @@ class LineProperty(Property):
             raise NotImplementedError(msg)
         return(I1, I2, I12)
 
-def _bar_areaL(class_name, Type, dim):
+def _bar_areaL(class_name, Type, dim, prop):
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
@@ -626,7 +626,8 @@ def _bar_areaL(class_name, Type, dim):
         msg = 'areaL; Type=%s is not supported for %s class...' % (
             Type, class_name)
         raise NotImplementedError(msg)
-    assert A > 0, 'Type=%r dim=%r' % (Type, dim)
+    #assert A > 0, 'Type=%r dim=%r\n%s' % (Type, dim, prop)
+    #A = 1.
     return A
 
 class IntegratedLineProperty(LineProperty):
@@ -1033,6 +1034,8 @@ class PBARL(LineProperty):
         #ndim = self.valid_types[Type]
         #assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         #self.validate()
+        #area = self.Area()
+        #assert area > 0, 'Type=%s dim=%s A=%s\n%s' % (self.Type, self.dim, area, str(self))
 
     def validate(self):
         if self.Type not in self.valid_types:
@@ -1141,7 +1144,7 @@ class PBARL(LineProperty):
         """
         Gets the area :math:`A` of the CBAR.
         """
-        return _bar_areaL('PBARL', self.Type, self.dim)
+        return _bar_areaL('PBARL', self.Type, self.dim, self)
 
     def Nsm(self):
         """

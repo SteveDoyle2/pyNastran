@@ -1063,6 +1063,9 @@ class PBEAML(IntegratedLineProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
+        TODO: this doesn't work right for the calculation of area
+              the card is all messed up
         """
         (pid, mid, group, Type, fvalues) = data
         group = group.strip()
@@ -1103,7 +1106,7 @@ class PBEAML(IntegratedLineProperty):
         rho = self.Rho()
         mass_per_lengths = []
         for (dim, nsm) in zip(self.dim, self.nsm):
-            a = _bar_areaL('PBEAML', self.Type, dim)
+            a = _bar_areaL('PBEAML', self.Type, dim, self)
             try:
                 mass_per_lengths.append(a * rho + nsm)
             except:
@@ -1133,7 +1136,7 @@ class PBEAML(IntegratedLineProperty):
         """
         areas = []
         for dim in self.dim:
-            areas.append(_bar_areaL('PBEAML', self.Type, dim))
+            areas.append(_bar_areaL('PBEAML', self.Type, dim, self))
         try:
             A = integrate_unit_line(self.xxb, areas)
         except ValueError:
