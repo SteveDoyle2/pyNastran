@@ -1,10 +1,5 @@
 from __future__ import print_function
-#from collections import defaultdict
-#from functools import reduce
-
 from six import iteritems, string_types, PY2
-#from six.moves import zip, range
-
 
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
