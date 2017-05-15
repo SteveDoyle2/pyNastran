@@ -203,7 +203,7 @@ class EPT(GeomCommon):
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
             expected_length = valid_types[Type]
-            iformat = b'%if' % expected_length
+            iformat = b('%if' % expected_length)
 
             ndelta = expected_length * 4
             data_in += list(unpack(iformat, data[n:n+ndelta]))
