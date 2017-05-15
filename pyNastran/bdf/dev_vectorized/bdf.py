@@ -412,6 +412,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             self.set_as_msc()
         elif self.is_nx:
             self.set_as_nx()
+        #elif self.is_optistruct:
+            #self.set_as_optistruct()
+        #elif self.is_radioss:
+            #self.set_as_radioss()
         else:
             msg = 'mode=%r is not supported; modes=[msc, nx]' % self._nastran_format
             raise NotImplementedError(msg)
