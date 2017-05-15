@@ -4075,9 +4075,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 else:
                     raise NotImplementedError(geom_actor)
 
-
-    def make_gif(self, gif_filename, icase, scale, istep=None, onesided=True,
+    def make_gif(self, gif_filename, icase, scale, istep=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
+                 time=2.0, onesided=True,
                  nrepeat=0, fps=30, magnify=1,
                  make_images=True, delete_images=False, make_gif=True):
         """
@@ -4099,18 +4099,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         --------
         animate_scale : bool; default=True
             does a deflection plot (single subcase)
-        animate_phase : bool; default=True
+        animate_phase : bool; default=False
             does a complex deflection plot (single subcase)
-        animate_time : bool; default=True
+        animate_time : bool; default=False
             does a deflection plot (multiple subcases)
-        isteps : List[int]
-            the png file numbers (let's you pick a subset of images)
+
+        istep : int
+            the png file number (let's you pick a subset of images)
             useful for when you press ``Step``
         time : float; default=2.0
             the runtime of the gif (seconds)
-        analysis_time : float; default=2.0
-            The time we actually need to simulate (seconds).
-            We don't need to take extra pictures if they're just copies.
         fps : int; default=30
             the frames/second
 
@@ -4166,15 +4164,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if animate_scale:
             # TODO: we could start from 0 deflection, but that's more work
             # TODO: we could do a sine wave, but again, more work
+            icases = icase
             scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=True)
-            phases = [None] * nframes
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            phases = [0.] * nframes
             assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
             assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
         elif animate_phase:
             # animate phase
+            icases = icase
             phases = np.linspace(0., 360, num=nframes, endpoint=False)
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=False)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
             scales = [scale] * nframes
             assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
             assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
@@ -4316,15 +4316,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if phases is not None:
             pass
         elif phases is None:
-            phases = [None] * len(scales)
+            phases = [0.] * len(scales)
         else:
             raise RuntimeError('phases=%r' % phases)
 
         if isinstance(icases, integer_types):
             icases = [icases] * len(scales)
 
-        if len(scales) != len(phases):
-            msg = 'nscales=%s nphases=%s' % (len(scales), len(phases))
+
+        if len(icases) != len(scales):
+            msg = 'ncases=%s nscales=%s' % (len(icases), len(scales))
+            print(msg)
+            raise ValueError(msg)
+
+        if len(icases) != len(phases):
+            msg = 'ncases=%s nphases=%s' % (len(icases), len(phases))
             print(msg)
             raise ValueError(msg)
 
@@ -4337,6 +4343,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 len(scales), len(isteps), analysis_time, fps)
             print(msg)
             raise ValueError(msg)
+        assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
 
         png_filenames = []
         fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
@@ -4352,10 +4359,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)  # old
                 self.on_take_screenshot(fname=png_filename, magnify=magnify)
                 png_filenames.append(png_filename)
-            else:
-                for istep in isteps:
-                    png_filename = fmt % istep
-                    png_filenames.append(png_filename)
+        else:
+            for istep in isteps:
+                png_filename = fmt % istep
+                png_filenames.append(png_filename)
+                assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
         return write_gif(gif_filename, png_filenames, time=time,
                          fps=fps, onesided=onesided,
@@ -6025,3 +6033,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
         prop.SetPointSize(point_size)
+
+def get_analysis_time(time, onesided=True):
+    """
+    The analysis time is the time that needs to be simulated for the analysis.
+
+    TODO: could we define time as 1/2-sided time so we can do less work?
+    TODO: we could be more accurate regarding dt
+          Nonesided = 5
+          Ntwosided = 2 * Nonesided - 1 = 9
+          Nonesided = (Ntwosided + 1) / 2
+
+          Nframes = int(fps * t)
+          Nonesided = Nframes
+          Ntwosided = 2 * Nonesided - 1 = 9
+          Nonesided = (Ntwosided + 1) / 2
+    """
+    if onesided:
+        analysis_time = time / 2.
+    else:
+        analysis_time = time
+    return analysis_time
