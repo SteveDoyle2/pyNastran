@@ -1,9 +1,10 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function, unicode_literals
+import copy
+from itertools import count
+from struct import pack
 from six import text_type, binary_type, iteritems, PY3, string_types
 from six.moves import range
-import copy
-from struct import pack
 import numpy as np
 
 from pyNastran import is_release
@@ -93,8 +94,8 @@ class BaseScalarObject(Op2Codes):
                     self.element_node.shape, table.element_node.shape)
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
-                for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                    msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, eid2)
+                for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):
+                    msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
                 print(msg)
                 raise ValueError(msg)
 

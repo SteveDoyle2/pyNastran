@@ -448,5 +448,22 @@ class ONR(OP2Common):
                     obj.add(dt, word, energy, percent, density)
                     n += ntotal
         else:
-            raise NotImplementedError(self.code_information())
+            #device_code   = 1   Print
+            #analysis_code = 5   Frequency
+            #table_code    = 18  ONRGY1-OEE - Element strain energy
+            #format_code   = 2   Real/Imaginary
+            #sort_method   = 1
+            #sort_code     = 0
+                #sort_bits   = (0, 0, 0)
+                #data_format = 0   Real
+                #sort_type   = 0   Sort1
+                #is_random   = 0   Sorted Responses
+            #random_code   = 0
+            #s_code        = None ???
+            #num_wide      = 4
+            #isubcase      = 1
+            #MSC Nastran
+            msg = self.code_information()
+            return self._not_implemented_or_skip(data, ndata, msg)
+            #raise NotImplementedError(self.code_information())
         return n

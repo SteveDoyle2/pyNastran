@@ -1,3 +1,7 @@
+"""
+Defines:
+ - FortranFormat
+"""
 from __future__ import print_function
 import sys
 from copy import deepcopy
@@ -18,6 +22,7 @@ from pyNastran.utils import object_attributes
         #imajor, minor1, minor2))
 
 class FortranFormat(object):
+    """defines basic methods for reading Fortran formatted data files"""
     def __init__(self):
         self.n = 0
         self.f = None
@@ -31,7 +36,7 @@ class FortranFormat(object):
         self._table_mapper = {}
 
         #: stores if the user entered [] for iSubcases
-        self.isAllSubcases = True
+        self.is_all_subcases = True
         self.valid_subcases = []
 
     def show(self, n, types='ifs', endian=None):
@@ -333,6 +338,7 @@ class FortranFormat(object):
         raise NotImplementedError('this should be overwritten')
 
     def _read_subtables(self):
+        """reads a series of subtables"""
         # this parameters is used for numpy streaming
         self._table4_count = 0
         self.is_table_1 = True
@@ -397,6 +403,27 @@ class FortranFormat(object):
         raise NotImplementedError('overwrite this')
 
     def _read_subtable_3_4(self, table3_parser, table4_parser, passer):
+        """
+        Reads a series of subtable 3/4
+
+        Parameters
+        ----------
+        table3_parser : bool / function
+            None : just to break the code if we're on the array sizing step
+            function : the table 3 reading function
+        table4_parser :bool / function
+            None : just to break the code if we're on the array sizing step
+            function : the table 4 reading function
+        passer : bool
+            flag to see if we're skipping tables
+
+        Returns
+        -------
+        flag : bool
+            True : ???
+            False : failed???
+            None : passed???
+        """
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         if self.is_debug_file:
@@ -450,6 +477,11 @@ class FortranFormat(object):
             the parser function for table 4
         record_len : int
             the length of the record block
+
+        Returns
+        -------
+        n : int
+            the number of bytes that have been read
         """
         datai = b''
         n = 0
@@ -588,6 +620,11 @@ class FortranFormat(object):
                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         else:
             raise RuntimeError(self.read_mode)
+        self._cleanup_data_members()
+        return n
+
+    def _cleanup_data_members(self):
+        """deletes variables from previous tables"""
         del_words = [
             'words',
             #'Title',
@@ -623,7 +660,6 @@ class FortranFormat(object):
         if msg:
             print(object_attributes(self))
             print(msg)
-        return n
 
     def is_valid_subcase(self):
         """
@@ -634,7 +670,7 @@ class FortranFormat(object):
         is_valid : bool
             should this subcase defined by self.isubcase be read?
         """
-        if not self.isAllSubcases:
+        if not self.is_all_subcases:
             if hasattr(self, 'isubcase') and self.isubcase in self.valid_subcases:
                 return True
             return False
@@ -709,7 +745,6 @@ class FortranFormat(object):
             record = self._skip_block()
             markers1 = self.get_nmarkers(1, rewind=True)
         return record
-        # return None #  TODO: which one do I use?
 
     def _stream_record(self, debug=True):
         """
@@ -799,8 +834,8 @@ class FortranFormat(object):
         record, nrecord = self._skip_block_ndata()
 
         if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (
-                nrecord, nrecord, macro_rewind))
+            self.binary_debug.write('read_record - record = [%i, recordi, %i]; '
+                                    'macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
         if markers0[0]*4 != nrecord:
             msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (
                 markers0[0]*4, nrecord, self.table_name)

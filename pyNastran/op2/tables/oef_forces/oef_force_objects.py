@@ -1227,14 +1227,14 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
         if is_sort1:
             msg = [
-                '                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n'
+                '                                   F O R C E S   I N   V I S C   E L E M E N T S   ( C V I S C )\n'
                 ' \n'
                 '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n'
                 '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n'
             ]
         else:
             msg = [
-                '                                   F O R C E S   I N   V I S C   E L E M E N T S   ( C V I S C )'
+                '                                   F O R C E S   I N   V I S C   E L E M E N T S   ( C V I S C )\n'
                 ' \n'
                 '                         AXIAL                                                       AXIAL\n'
                 '       TIME              FORCE         TORQUE                      TIME              FORCE         TORQUE\n'

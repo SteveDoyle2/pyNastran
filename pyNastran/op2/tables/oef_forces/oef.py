@@ -1688,6 +1688,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
+                #return nelements * self.num_wide * 4
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
@@ -2555,9 +2556,9 @@ class OEF(OP2Common):
                         nids_a = ints[:, 1]
                         nids_b = ints[:, 8]
                         assert eids.min() > 0, eids.min()
-                        obj.element_nodes[itotal:itotal2, 0] = eids
-                        obj.element_nodes[itotal:itotal2, 1] = nids_a
-                        obj.element_nodes[itotal:itotal2, 2] = nids_b
+                        obj.element_node[itotal:itotal2, 0] = eids
+                        obj.element_node[itotal:itotal2, 1] = nids_a
+                        obj.element_node[itotal:itotal2, 2] = nids_b
 
                     # [nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
                     #  nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b]
@@ -2627,9 +2628,9 @@ class OEF(OP2Common):
                         assert nids_b.min() > 0, nids_b
                         assert eids.min() > 0, eids.min()
                         #print(nids_b)
-                        obj.element_nodes[itotal:itotal2, 0] = eids
-                        obj.element_nodes[itotal:itotal2, 1] = nids_a
-                        obj.element_nodes[itotal:itotal2, 2] = nids_b
+                        obj.element_node[itotal:itotal2, 0] = eids
+                        obj.element_node[itotal:itotal2, 1] = nids_a
+                        obj.element_node[itotal:itotal2, 2] = nids_b
 
                     real_imag = apply_mag_phase(floats, is_magnitude_phase, ireal, iimag)
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag

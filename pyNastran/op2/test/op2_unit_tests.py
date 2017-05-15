@@ -131,7 +131,7 @@ class TestOP2(Tester):
         op2_filename_m2 = os.path.abspath(os.path.join(
             model_path, 'beam_modes', 'beam_modes_m2.op2'))
         op2_1 = read_op2(op2_filename_m1, debug=False)
-        op2_2 = read_op2(op2_filename_m2, debug=False)
+        op2_2 = read_op2_geom(op2_filename_m2, debug=False)
         op2_1.write_f06(f06_filename)
         os.remove(f06_filename)
 
@@ -297,7 +297,7 @@ class TestOP2(Tester):
 
         subcases = 2
         op2, is_passed = run_op2(
-            op2_filename, make_geom=False, write_bdf=False,
+            op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False, write_xlsx=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
@@ -337,7 +337,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
         f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
         op2, is_passed = run_op2(
-            op2_filename, make_geom=False, write_bdf=False,
+            op2_filename, make_geom=True, write_bdf=False,
             write_f06=False, write_op2=False, write_xlsx=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,

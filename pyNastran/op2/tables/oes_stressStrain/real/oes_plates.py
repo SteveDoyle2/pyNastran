@@ -136,8 +136,8 @@ class RealPlateArray(OES_Object):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element_node):
-                    (eid, nid) = e
+                for ie, element_nodei in enumerate(self.element_node):
+                    (eid, nid) = element_nodei
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
                     (fiber_dist1, oxx1, oyy1, txy1, angle1, majorP1, minorP1, ovm1) = t1

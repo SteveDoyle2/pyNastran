@@ -108,28 +108,50 @@ class RealBush1DStressArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
-                for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, ieid, :]
-                        t2 = table.data[itime, ieid, :]
-                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
-                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
-                        if not np.allclose(t1, t2):
-                        #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
-                                eid,
-                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
-                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
-                            i += 1
-                        if i > 10:
-                            print(msg)
-                            raise ValueError(msg)
+
+            if self.table_name_str == 'OESNLXD':
+                if self.is_sort1():
+                    for itime in range(ntimes):
+                        for ieid, eid, in enumerate(self.element):
+                            t1 = self.data[itime, ieid, [0, 1, 2, 5]]  # these are nan
+                            t2 = table.data[itime, ieid, [0, 1, 2, 5]]  # these are nan
+                            (axial_stress1, equiv_stress1, total_strain1, linear_torsional_stress1) = t1
+                            (axial_stress2, equiv_stress2, total_strain2, linear_torsional_stress2) = t2
+                            if not np.allclose(t1, t2):
+                            #if not np.array_equal(t1, t2):
+                                msg += '%s\n  (%s, %s, %s, %s)\n  (%s, %s, %s, %s)\n' % (
+                                    eid,
+                                    axial_stress1, equiv_stress1, total_strain1, linear_torsional_stress1,
+                                    axial_stress2, equiv_stress2, total_strain2, linear_torsional_stress2)
+                                i += 1
+                            if i > 10:
+                                print(msg)
+                                raise ValueError(msg)
+                else:
+                    raise NotImplementedError(self.is_sort2())
             else:
-                raise NotImplementedError(self.is_sort2())
-            if i > 0:
-                print(msg)
-                raise ValueError(msg)
+                if self.is_sort1():
+                    for itime in range(ntimes):
+                        for ieid, eid, in enumerate(self.element):
+                            t1 = self.data[itime, ieid, :]
+                            t2 = table.data[itime, ieid, :]
+                            (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
+                            (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                            if not np.allclose(t1, t2):
+                            #if not np.array_equal(t1, t2):
+                                msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                    eid,
+                                    axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
+                                    axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                                i += 1
+                            if i > 10:
+                                print(msg)
+                                raise ValueError(msg)
+                else:
+                    raise NotImplementedError(self.is_sort2())
+        if i > 0:
+            print(msg)
+            raise ValueError(msg)
         return True
 
     def add_sort1(self, dt, eid, element_force, axial_displacement, axial_velocity,
