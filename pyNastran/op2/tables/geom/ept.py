@@ -198,7 +198,7 @@ class EPT(GeomCommon):
             Type = Type.strip().decode('latin1')
             group = group.strip().decode('latin1')
             data_in = [pid, mid, group, Type, value]
-            #print("pid=%s mid=%s group=%r Type=%r value=%s" % (
+            #self.log.debug("  pid=%s mid=%s group=%r Type=%r value=%s" % (
                 #pid, mid, group, Type, value))
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')

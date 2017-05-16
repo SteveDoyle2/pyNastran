@@ -626,7 +626,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         msg = 'areaL; Type=%s is not supported for %s class...' % (
             Type, class_name)
         raise NotImplementedError(msg)
-    #assert A > 0, 'Type=%r dim=%r\n%s' % (Type, dim, prop)
+    assert A > 0, 'Type=%r dim=%r\n%s' % (Type, dim, prop)
     #A = 1.
     return A
 

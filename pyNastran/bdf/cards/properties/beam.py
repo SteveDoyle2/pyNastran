@@ -657,10 +657,12 @@ class PBEAM(IntegratedLineProperty):
         (k1, k2, s1, s2, nsia, nsib, cwa, cwb,
          m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = data[-1]
         return PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                     c1, c2, d1, d2, e1, e2,
-                     f1, f2, k1, k2, s1, s2,
-                     nsia, nsib, cwa, cwb, m1a, m2a, m1b,
-                     m2b, n1a, n2a, n1b, n2b, comment=comment)
+                     c1, c2, d1, d2, e1, e2, f1, f2,
+                     k1=k1, k2=k2, s1=s1, s2=s2,
+                     nsia=nsia, nsib=nsib, cwa=cwa, cwb=None,
+                     m1a=m1a, m2a=m2a, m1b=m1b, m2b=m2b,
+                     n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b,
+                     comment=comment)
 
     def set_optimization_value(self, name_str, value):
         if name_str == 'I1(A)':
@@ -981,6 +983,7 @@ class PBEAML(IntegratedLineProperty):
         self.xxb = xxb
         self.so = so
         self.nsm = nsm
+        A = self.Area()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1079,8 +1082,13 @@ class PBEAML(IntegratedLineProperty):
         so = []
         dims = []
         nsm = []
-        for section in sections:
+        for i, section in enumerate(sections):
             xxbi = section[0]
+            if i > 0 and allclose(xxbi, 0.0):
+                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
+                continue
+
+
             sof = section[1]
             if sof == 0.:
                 sos = 'YES'
@@ -1091,13 +1099,11 @@ class PBEAML(IntegratedLineProperty):
 
             dim = list(section[2:-1])
             nsmi = section[-1]
-            #print(dim)
-            #print(section)
+            #print(dim, section)
             xxb.append(xxbi)
             so.append(sos)
             dims.append(dim)
             nsm.append(nsmi)
-
         return PBEAML(pid, mid, Type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 
