@@ -424,7 +424,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 20 # 4*5
         nentries = (len(data) - n) // ntotal
-        s = Struct(b('i 3f i'))
+        struc = Struct(b('i 3f i'))
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
