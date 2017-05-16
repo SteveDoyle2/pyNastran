@@ -1952,7 +1952,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_nodes = zeros((self.nelements, 3), dtype='int32')
+        self.element_node = zeros((self.nelements, 3), dtype='int32')
 
         #[bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
         # bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
@@ -1961,7 +1961,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        element = self.element_nodes[:, 0]
+        element = self.element_node[:, 0]
         self.data_frame = pd.Panel(self.data, items=column_values,
                                    major_axis=element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
@@ -1969,12 +1969,12 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        if not np.array_equal(self.element_nodes, table.element_nodes):
-            assert self.element_nodes.shape == table.element_nodes.shape, 'element_nodes shape=%s table.shape=%s' % (self.element_nodes.shape, table.element_nodes.shape)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_nodes.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid, Nid_A, Nid_B\n'
-            for (eid1, nida1, nidb1), (eid2, nida2, nidb2) in zip(self.element_nodes, table.element_nodes):
+            for (eid1, nida1, nidb1), (eid2, nida2, nidb2) in zip(self.element_node, table.element_node):
                 msg += '(%s, %s, %s), (%s, %s, %s)\n' % (eid1, nida1, nidb1, eid2, nida2, nidb2)
             print(msg)
             raise ValueError(msg)
@@ -1982,7 +1982,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
-            eids = self.element_nodes[:, 0]
+            eids = self.element_node[:, 0]
             for itime in range(self.ntimes):
                 for ie, eid in enumerate(eids):
                     t1 = self.data[itime, ie, :]
@@ -2030,7 +2030,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
 
         self._times[self.itime] = dt
-        self.element_nodes[self.ielement] = [eid, nid_a, nid_b]
+        self.element_node[self.ielement] = [eid, nid_a, nid_b]
         self.data[self.itime, self.ielement, :] = [
             bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
             bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
@@ -2105,9 +2105,9 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         #(ntimes, ntotal, two) = self.data.shape
         ntimes = self.data.shape[0]
 
-        eids = self.element_nodes[:, 0]
-        nid_a = self.element_nodes[:, 1]
-        nid_b = self.element_nodes[:, 2]
+        eids = self.element_node[:, 0]
+        nid_a = self.element_node[:, 1]
+        nid_b = self.element_node[:, 2]
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)

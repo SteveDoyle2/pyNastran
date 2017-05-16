@@ -102,12 +102,12 @@ class RealBush1DStressArray(OES_Object):
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
         self._eq_header(table)
+
+        i = 0
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
-
-            i = 0
 
             if self.table_name_str == 'OESNLXD':
                 if self.is_sort1():
