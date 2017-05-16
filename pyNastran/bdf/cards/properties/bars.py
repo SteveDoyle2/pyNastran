@@ -39,6 +39,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from six import integer_types, string_types
 from numpy import pi, array
+import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
@@ -422,7 +423,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = h1 * w1 + h2 * w2 + h3 * w3
         dim1, dim2, dim3, dim4 = dim
         A2 = 2. * dim1 * dim4 + (dim2 - 2. * dim4) * dim3
-        assert A == A2
+        assert np.allclose(A, A2), 'A=%s A2=%s' % (A, A2)
 
     #CHAN1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
     elif Type == 'CHAN1':
@@ -434,19 +435,37 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = h1 * w1 + h2 * w2
         dim1, dim2, dim3, dim4 = dim
         A2 = dim2 * dim3 + (dim4 - dim3) * (dim1 + dim2)
-        assert A == A2
+        assert np.allclose(A, A2), 'A=%s A2=%s' % (A, A2)
 
     #CHAN2 = 2*(DIM1*DIM3)+((DIM4-(2*DIM1))*DIM2)
     elif Type == 'CHAN2':
-        h2 = dim[1]
-        w2 = dim[3]
-
-        h1 = dim[2] - h2
-        w1 = dim[0] * 2
-        A = h1 * w1 + h2 * w2
+        #  d1        d1
+        # <-->      <-->
+        # +--+      +--+        ^
+        # |  |      |  |        |
+        # |  |      |  |        | d3
+        # +--+------+--+  ^     |
+        # |            |  | d2  |
+        # +------------+  v     v
+        #
+        # <-----d4----->
+        #
         dim1, dim2, dim3, dim4 = dim
-        A2 = 2 * dim1 * dim3 + (dim4 - 2 * dim1) * dim2
-        assert A == A2
+        hupper = dim3 - dim2
+        hlower = dim2
+        wlower = dim4
+        wupper = dim1
+        A = 2 * hupper * wupper + hlower * wlower
+
+        h2 = dim2
+        w2 = dim4
+
+        h1 = dim3 - h2
+        w1 = dim1 * 2
+        A2 = h1 * w1 + h2 * w2
+        A3 = 2 * dim1 * dim3 + (dim4 - 2 * dim1) * dim2
+        assert np.allclose(A, A2), 'A=%s A2=%s A3=%s' % (A, A2, A3)
+        assert np.allclose(A, A3), 'A=%s A2=%s A3=%s' % (A, A2, A3)
 
     #T = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
     elif Type == 'T':
@@ -507,7 +526,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         # |      |  |
         # |      |  | D2
         # |      |  |
-        # E------D  |
+        # E------D  v
         h1 = dim[1]
         w1 = dim[0]
         A = h1 * w1
@@ -541,11 +560,21 @@ def _bar_areaL(class_name, Type, dim, prop):
 
     #HEXA = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
     elif Type == 'HEXA':
-        hbox = dim[2]
-        wbox = dim[1]
-
-        wtri = dim[0]
-        A = hbox * wbox - wtri * hbox
+        #     _______
+        #   /        \     ^
+        #  /          \    |
+        # *            *   |  d3
+        #  \          /    |
+        #   \        /     |
+        #    \______/      v
+        #           |d1|
+        # <-----d2---->
+        #
+        dim1, dim2, dim3 = dim
+        hbox = dim3
+        wbox = dim2
+        wtri = dim1
+        A = hbox * wbox - 2. * wtri * hbox
 
     #HAT = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
     elif Type == 'HAT':
@@ -955,7 +984,7 @@ class PBARL(LineProperty):
     +-------+------+------+-------+------+------+------+------+------+
     |       | DIM1 | DIM2 | DIM3  | DIM4 | DIM5 | DIM6 | DIM7 | DIM8 |
     +-------+------+------+-------+------+------+------+------+------+
-    |       | DIM9 | etc. | NSM   |      |      |      |      |      |
+    |       | DIM9 | etc. |  NSM  |      |      |      |      |      |
     +-------+------+------+-------+------+------+------+------+------+
     """
     type = 'PBARL'
@@ -1728,20 +1757,37 @@ class PBEND(LineProperty):
     """
     MSC/NX Option A
 
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
     | PBEND | PID  |  MID  | A   | I1 | I2 |   J    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       |  C1  |  C2   | D1  | D2 | E1 |   E2   | F1 |   F2   |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       |  K1  |  K2   | NSM | RC | ZC | DELTAN |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
 
     MSC Option B
 
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
     | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       |      |       | NSM | RC | ZC |        |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
 
     NX Option B
 
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
     | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       | SACL | ALPHA | NSM | RC | ZC | FLANGE |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       |  KX  |  KY   | KZ  |    | SY |   SZ   |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     """
     type = 'PBEND'
 
