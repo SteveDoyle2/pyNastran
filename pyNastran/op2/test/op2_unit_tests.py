@@ -118,7 +118,7 @@ class TestOP2(Tester):
             test_path, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
         op2_filename = os.path.abspath(os.path.join(
             test_path, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
-        op2 = read_op2(op2_filename, debug=False)
+        op2 = read_op2_geom(op2_filename, xref=False, debug=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
