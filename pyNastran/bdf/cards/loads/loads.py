@@ -1190,9 +1190,10 @@ class RANDPS(RandomLoad):
 
         #: Identification number of a TABRNDi entry that defines G(F).
         self.tid = tid
+        assert self.sid > 0, 'sid=%s\n%s' % (self.sid, self)
 
     def validate(self):
-        assert self.k >= self.j, self
+        assert self.k >= self.j, 'k=%s j=%s\n%s' % (self.k, self.j, self)
 
     @classmethod
     def add_card(cls, card, comment=''):

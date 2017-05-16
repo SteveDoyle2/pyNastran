@@ -422,11 +422,12 @@ class DYNAMICS(GeomCommon):
         4 FSPD RS Frequency spread
         5 NFM   I Number of evenly spaced frequencies per spread
         """
-        ntotal = 20
+        ntotal = 20 # 4*5
         nentries = (len(data) - n) // ntotal
+        s = Struct(b('i 3f i'))
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('i3fi', edata)
+            out = struc.unpack(edata)
             sid, f1, f2, fspread, nfm = out
             if self.is_debug_file:
                 self.binary_debug.write('  FREQ4=%s\n' % str(out))
@@ -447,29 +448,80 @@ class DYNAMICS(GeomCommon):
 #NOLIN2
 #NOLIN3
 #NOLIN4
+
     def _read_randps(self, data, n):
+        """common method for reading NX/MSC RLOAD1"""
+        n = self._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
+                                 'RLOAD1', self._add_dload_entry)
+        return n
+
+    def _read_randps_nx(self, data, n):
         """
         RANDPS(2107,21,195)
 
+        NX
+        1 SID   I Set identification number
+        2 J     I Subcase identification number of the excited set
+        3 K     I Subcase identification number of the applied load set
+        4 X    RS X component
+        5 Y    RS Y component
+        6 TIDI  I Identification number of a TABRNDi entry that defines G(f)
+        7 TIDR RS If TIDI = 0, constant value for G(f)
+        """
+        ntotal = 28
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(b('3i 2f if'))
+        for i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            sid, j, k, x, y, tidi, tidf = out
+            tid = tidi
+            if tidi == 0:
+                tid = tidf
+            if self.is_debug_file:
+                self.binary_debug.write('  RANDPS=%s\n' % str(out))
+            #self.log.debug('  RANDPS=%s\n' % str(out))
+            self.add_randps(sid, j, k, x=x, y=y, tid=tid)
+            n += ntotal
+        self._increase_card_count('RANDPS', nentries)
+        return n, []
+
+    def _read_randps_msc(self, data, n):
+        """
+        RANDPS(2107,21,195)
+
+        MSC
         1 SID I  Set identification number
         2 J   I  Subcase identification number of the excited set
         3 K   I  Subcase identification number of the applied load set
         4 X   RS X component
         5 Y   RS Y component
         6 TID I  Identification number of a TABRNDi entry that defines G(F)
+
+        NX
+        1 SID I Set identification number
+        2 J I Subcase identification number of the excited set
+        3 K I Subcase identification number of the applied load set
+        4 X RS X component
+        5 Y RS Y component
+        6 TIDI I Identification number of a TABRNDi entry that defines
+        G(f)
+        7 TIDR RS If TIDI = 0, constant value for G(f)
         """
         ntotal = 24
         nentries = (len(data) - n) // ntotal
+        struc = Struct(b('3i2fi'))
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('3i2fi', edata)
+            out = struc.unpack(edata)
             sid, j, k, x, y, tid = out
             if self.is_debug_file:
                 self.binary_debug.write('  RANDPS=%s\n' % str(out))
+            #self.log.debug('  RANDPS=%s\n' % str(out))
             self.add_randps(sid, j, k, x=x, y=y, tid=tid)
             n += ntotal
         self._increase_card_count('RANDPS', nentries)
-        return n
+        return n, []
 
 #RANDT1
 
