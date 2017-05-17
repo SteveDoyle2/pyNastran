@@ -2713,7 +2713,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             try:
                 print(print_card_8(card_obj).rstrip())
             except:
-                print(print_card_16(card_obj).rstrip())
+                if card in ['DEQATN']:
+                    print(str(card_obj).rstrip())
+                else:
+                    print(print_card_16(card_obj).rstrip())
 
         if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]

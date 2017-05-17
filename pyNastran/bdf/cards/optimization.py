@@ -88,6 +88,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
     -----
     1.  words that start with integers (e.g., 12I/T**3) doesn't support
         strings
+    2.  FID > 0 --> references the Property Card
+    3.  FID < 0 --> references the EPT card
     """
     if validate:
         msg = 'DVPREL1: prop_type=%r pname_fid=%r is invalid' % (prop_type, pname_fid)
@@ -135,7 +137,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         elif prop_type == 'PBEAM':
             assert pname_fid in ['I1', 'I2', 'A', 'J',
                                  'I1(B)', 'I2(B)',
-                                 '-8', '-9', '-10', '-14'], msg # -8
+                                 '-8', '-9', '-10', '-14', '-15', '-16', '-17', '-18', '-19', '-20', '-21'], msg
         elif prop_type == 'PBEAML':
             assert pname_fid in ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6',
                                  'DIM1(A)',
@@ -156,11 +158,15 @@ def validate_dvprel(prop_type, pname_fid, validate):
             #assert pname_fid in ['T', 4, 6], msg
         elif prop_type == 'PCOMP':
             if isinstance(pname_fid, str):
-                word, num = break_word_by_trailing_integer(pname_fid)
-                if word not in ['T', 'THETA']:
-                    raise RuntimeError(msg)
+                if pname_fid in ['Z0', 'SB']:
+                    pass
+                else:
+                    word, num = break_word_by_trailing_integer(pname_fid)
+                    if word not in ['T', 'THETA']:
+                        raise RuntimeError('word=%r\n%s' % (word, msg))
             else:
-                assert pname_fid in [3, #3-z0
+                assert pname_fid in [#'Z0',
+                                     3, #3-z0
                                      # 13-t1, 14-theta1, 17-t2, 18-theta2
                                      13, 14, 17, 18,
                                      23, 24, 27, 28,
@@ -175,6 +181,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
                 #raise NotImplementedError('PSHELL pname_fid=%r is invalid' % pname_fid)
             #if cp_name in '12I/T**3':
             assert pname_fid in ['Z0', 'SB',
+                                 14, 24, 34, 44,
                                  15, 25, 75, 85], msg
 
         #elif prop_type == 'CBUSH':
@@ -1642,10 +1649,6 @@ class DRESP2(OptConstraint):
         c3 = double_or_blank(card, 8, 'c3', 10.)
 
         fields = [interpret_value(field) for field in card[9:]]
-        key = None  # dummy key
-        params = {}
-        value_list = []
-        j = 0
 
         # DRESP2, dresp_id,
         #         DRESP1, 10, 20
@@ -1656,28 +1659,7 @@ class DRESP2(OptConstraint):
         #    (1, 'DESVAR') = [30],
         #    (2, 'DRESP1') = [40],
         # }
-        for (i, field) in enumerate(fields):
-            if i % 8 == 0 and field is not None:
-                if i > 0:
-                    assert len(value_list) > 0, 'key=%s values=%s' % (key, value_list)
-                    params[key] = value_list
-                    j += 1
-                key = (j, field)
-                value_list = []
-                name = field
-            elif field is not None:
-                if name in ['DESVAR', 'DRESP1', 'DRESP2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DVPREL1', 'DVPREL2', 'DNODE']:
-                    #print('field=%s value=%r type=%r should be an integer...\ncard=%s' % (i+9, field, name, card))
-                    assert isinstance(field, integer_types), 'field=%i value=%r type=%s should be an integer...\ncard=%s' % (i+9, field, name, card)
-                elif name == 'DTABLE':
-                    #print('field=%s value=%r type=%r should be an string...\ncard=%s' % (i+9, field, name, card))
-                    assert isinstance(field, string_types), 'field=%i value=%r type=%s should be an string...\ncard=%s' % (i+9, field, name, card)
-                elif name == 'DFRFNC':
-                    pass
-                else:
-                    raise NotImplementedError('name=%r\n%s' % (name, card))
-                value_list.append(field)
-        params[key] = value_list
+        params = parse_table_fields(fields)
 
         #print("--DRESP2 Params--")
         #for key, value_list in sorted(iteritems(params)):
@@ -3503,6 +3485,10 @@ class DVPREL2(OptConstraint):
         ioffset = 9
         iend = len(fields) + ioffset
 
+        #F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\d200m20.dat
+        #params = parse_table_fields(fields)
+        #print(params)
+
         try:
             idesvar = fields.index('DESVAR') + ioffset
         except ValueError:
@@ -3528,7 +3514,7 @@ class DVPREL2(OptConstraint):
                     assert dvid is not 'DESVAR'
                     dvids.append(dvid)
                     n += 1
-        #print('dvids =', dvids)
+
         labels = []
         if idtable:
             n = 1
@@ -3735,3 +3721,40 @@ class DVGRID(OptConstraint):
 
     def _verify(self, xref=True):
         pass
+
+def parse_table_fields(fields, allowed=None):
+    """
+    params = {
+       (0, 'DRESP1') = [10, 20],
+       (1, 'DESVAR') = [30],
+       (2, 'DRESP1') = [40],
+    }
+    """
+    j = 0
+    params = {}
+    value_list = []
+
+    key = None  # dummy key
+    for (i, field) in enumerate(fields):
+        if i % 8 == 0 and field is not None:
+            if i > 0:
+                assert len(value_list) > 0, 'key=%s values=%s' % (key, value_list)
+                params[key] = value_list
+                j += 1
+            key = (j, field)
+            value_list = []
+            name = field
+        elif field is not None:
+            if name in ['DESVAR', 'DRESP1', 'DRESP2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DVPREL1', 'DVPREL2', 'DNODE']:
+                #print('field=%s value=%r type=%r should be an integer...\ncard=%s' % (i+9, field, name, card))
+                assert isinstance(field, integer_types), 'field=%i value=%r type=%s should be an integer...\ncard=%s' % (i+9, field, name, card)
+            elif name == 'DTABLE':
+                #print('field=%s value=%r type=%r should be an string...\ncard=%s' % (i+9, field, name, card))
+                assert isinstance(field, string_types), 'field=%i value=%r type=%s should be an string...\ncard=%s' % (i+9, field, name, card)
+            elif name == 'DFRFNC':
+                pass
+            else:
+                raise NotImplementedError('name=%r\n%s' % (name, card))
+            value_list.append(field)
+    params[key] = value_list
+    return params

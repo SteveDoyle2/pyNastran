@@ -1259,7 +1259,7 @@ class GetCard(GetMethods):
         else:
             return output, etypes
 
-    def get_element_nodes_by_element_type(self, dtype='int32'):
+    def get_element_nodes_by_element_type(self, dtype='int32', solids=None):
         """
         Gets a dictionary of element type to [eids, pids, node_ids]
 
@@ -1280,6 +1280,17 @@ class GetCard(GetMethods):
                 CONRODS have a pid of 0
             nids : (neids, nnodes/element) int ndarray
                 the nodes corresponding to the element
+        solids : dict[etype] : value
+            etype : str
+                the element type
+                should only be CTETRA, CHEXA, CPENTA, CPYRAM
+            value : varies
+                (nnodes_min, nnodes_max) : Tuple(int, int)
+                    the min/max number of nodes for the element
+                (nnodes, ) : Tuple(int, )
+                    the number of nodes
+                    useful if you only have CTETRA4s or only want CTETRA10s
+                    fails if you're wrong
         """
         etypes = [
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -1297,6 +1308,15 @@ class GetCard(GetMethods):
             'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CFAST', 'CGAP',
         ]
         output = {}
+
+        if solids is None:
+            solids = {
+                'CTETRA' : (4, 10),
+                #'CTETRA' : (10, ),
+                'CHEXA' : (8, 20),
+                'CPENTA' : (6, 15),
+                'CPYRAM' : (5, 13),
+            }
         for etype in etypes:
             if etype not in self._type_to_id_map:
                 continue
@@ -1307,26 +1327,68 @@ class GetCard(GetMethods):
             elem0 = self.elements[eid0]
             nnodes = len(elem0.nodes)
 
-            pids = np.zeros(neids, dtype=dtype)
-            nids = np.zeros((neids, nnodes), dtype=dtype)
-            for i, eid in enumerate(eids):
-                elem = self.elements[eid]
-                pid = elem.Pid()
-                nidsi = elem.node_ids
-                try:
-                    nids[i, :] = nidsi
-                except TypeError:
-                    nidsi2 = [nid  if nid is not None else 0
-                             for nid in nidsi]
+            if etype not in solids or len(solids[etype]) == 1:
+                pids = np.zeros(neids, dtype=dtype)
+                nids = np.zeros((neids, nnodes), dtype=dtype)
+                for i, eid in enumerate(eids):
+                    elem = self.elements[eid]
+                    pid = elem.Pid()
+                    nidsi = elem.node_ids
+                    #self.log.info(str(elem))
                     try:
-                        nids[i, :] = nidsi2
-                    except:
-                        print(elem)
-                        print(nidsi)
-                        print(nidsi2)
-                        raise
+                        nids[i, :] = nidsi
+                    except TypeError:
+                        #print(elem)
+                        #print('nidsi =', nidsi)
+                        nidsi2 = [nid  if nid is not None else 0
+                                 for nid in nidsi]
+                        try:
+                            nids[i, :] = nidsi2
+                        except:
+                            print(elem)
+                            print(nidsi)
+                            print(nidsi2)
+                            raise
                 pids[i] = pid
-            output[etype] = [eids, pids, nids]
+                output[etype] = [eids, pids, nids]
+            else:
+                # SOLID elements can be variable length
+                nnodes_min = min(solids[etype])
+                nnodes_max = max(solids[etype])
+                pids = np.zeros(neids, dtype='int32')
+                nids = np.zeros((neids, nnodes_max), dtype=dtype)
+                ieids_max = []
+                ieids_min = []
+                for i, eid in enumerate(eids):
+                    elem = self.elements[eid]
+                    pid = elem.Pid()
+                    nidsi = elem.node_ids
+                    nnodesi = len(nidsi)
+                    if nnodesi == nnodes_max:
+                        ieids_max.append(i)
+                    else:
+                        ieids_min.append(i)
+                    #self.log.info(str(elem))
+                    try:
+                        nids[i, :nnodesi] = nidsi
+                    except TypeError:
+                        #print(elem)
+                        #print('nidsi =', nidsi)
+                        nidsi2 = [nid  if nid is not None else 0
+                                 for nid in nidsi]
+                        try:
+                            nids[i, :] = nidsi2
+                        except:
+                            raise
+                pids[i] = pid
+                if len(ieids_max):
+                    etype_max = elem.type + str(nnodes_max)
+                    ieids_max = np.array(ieids_max, dtype=dtype)
+                    output[etype_max] = [eids[ieids_max], pids[ieids_max], nids[ieids_max, :]]
+                if len(ieids_min):
+                    etype_min = elem.type + str(nnodes_min)
+                    ieids_min = np.array(ieids_min, dtype=dtype)
+                    output[etype_min] = [eids[ieids_min], pids[ieids_min], nids[ieids_min, :nnodes_min]]
         assert len(output), 'output is empty...'
         return output
 

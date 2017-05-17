@@ -761,7 +761,8 @@ class BDFMethods(BDFAttributes):
         no_mass = [
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-            'CBUSH', 'CBUSH1D', 'CBUSH2D', # is this right?
+            'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC', 'CGAP', # is this right?
+            'CFAST',
             'CRAC2D', 'CRAC3D',
 
             'CSSCHD', 'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
@@ -912,7 +913,6 @@ class BDFMethods(BDFAttributes):
                     centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
                     area = 0.5 * norm(cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
                     if prop.type == 'PSHELL':
-                        #T1, T2, T3 = elem.T1, elem.T2, elem.T3
                         tflag = elem.tflag
                         ti = prop.Thickness()
                         if tflag == 0:
@@ -938,10 +938,16 @@ class BDFMethods(BDFAttributes):
                         m = mpa * area
                     elif prop.type in ['PCOMP', 'PCOMPG']:
                         # PCOMP, PCOMPG
-                        rho_t = prop.get_rho_t()
-                        nsm = prop.nsm
+                        #rho_t = prop.get_rho_t()
+                        #nsm = prop.nsm
                         #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
-                        mpa = sum(rho_t) + nsm
+                        #mpa = sum(rho_t) + nsm
+
+                        # works for PCOMP
+                        # F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl\cqr3compbuck.dat
+                        mpa = prop.get_mass_per_area()
+                    elif prop.type == 'PLPLANE':
+                        continue
                     else:
                         raise NotImplementedError(prop.type)
                     m = area * mpa
@@ -956,7 +962,6 @@ class BDFMethods(BDFAttributes):
                     area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
 
                     if prop.type == 'PSHELL':
-                        #T1, T2, T3, T4 = elem.T1, elem.T2, elem.T3, elem.T4
                         tflag = elem.tflag
                         ti = prop.Thickness()
                         if tflag == 0:
@@ -984,10 +989,14 @@ class BDFMethods(BDFAttributes):
                         #m = mpa * area
                     elif prop.type in ['PCOMP', 'PCOMPG']:
                         # PCOMP, PCOMPG
-                        rho_t = prop.get_rho_t()
-                        nsm = prop.nsm
+                        #rho_t = prop.get_rho_t()
+                        #nsm = prop.nsm
                         #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
-                        mpa = sum(rho_t) + nsm
+                        #mpa = sum(rho_t) + nsm
+                        mpa = prop.get_mass_per_area()
+                    elif prop.type == 'PLPLANE':
+                        continue
+                        #raise NotImplementedError(prop.type)
                     else:
                         raise NotImplementedError(prop.type)
                     m = area * mpa
@@ -1208,25 +1217,6 @@ class BDFMethods(BDFAttributes):
         for nid, node in sorted(iteritems(self.nodes)):
             p = node.get_position_wrt(self, cid)
             node.set_position(self, p, cid)
-
-    #def unresolve_grids(self, model_old):
-        #"""
-        #Puts all nodes back to original coordinate system.
-
-        #Parameters
-        #----------
-        #model_old : BDF()
-            #the old model that hasnt lost it's connection to the node cids
-
-        #.. warning:: hasnt been tested well...
-        #"""
-        #for (nid, node_old) in iteritems(model_old.nodes):
-            #coord = node_old.cp_ref
-            #raise RuntimeError('what is self.xyz?')
-            #p = coord.transform_node_to_global(self.xyz)
-            #beta = coord.beta()
-            #p2 = coord.transform_node_to_local(p, beta)
-            #self.nodes[nid].set_position(self, p2, coord.cid)
 
     #def __gravity_load(self, loadcase_id):
         #"""

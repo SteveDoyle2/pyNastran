@@ -1145,10 +1145,18 @@ class PLPLANE(ShellProperty):
     (i.e., large strain and large rotation)
     hyperelastic plane strain or axisymmetric element.
 
-    PLPLANE PID MID CID STR
+    +---------+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |
+    +=========+=====+=====+=====+=====+
+    | PLPLANE | PID | MID | CID | STR |
+    +---------+-----+-----+-----+-----+
     MSC
 
-    PLPLANE PID MID CID STR T
+    +---------+-----+-----+-----+-----+---+
+    |    1    |  2  |  3  |  4  |  5  | 6 |
+    +=========+=====+=====+=====+=====+===+
+    | PLPLANE | PID | MID | CID | STR | T |
+    +---------+-----+-----+-----+-----+---+
     NX
 
     Referenced by:
@@ -1160,6 +1168,25 @@ class PLPLANE(ShellProperty):
     _field_map = {1: 'pid', 2:'mid', 6:'cid', 7:'str'}
 
     def __init__(self, pid, mid, cid=0, stress_strain_output_location='GRID', comment=''):
+        """
+        Creates a PLPLANE card, which defines the properties of a fully
+        nonlinear (i.e., large strain and large rotation) hyperelastic
+        plane strain or axisymmetric element.
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+            MATHP / MATHE
+        cid : int; default=0
+            ???
+        stress_strain_output_location : str; default='GRID'
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         ShellProperty.__init__(self)
         if comment:
             self.comment = comment

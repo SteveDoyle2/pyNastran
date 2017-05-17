@@ -1824,6 +1824,11 @@ class MAT10(Material):
         self.table_ge = table_ge
         self.table_gamma = table_gamma
 
+    def validate(self):
+        assert self.bulk >= 0., self
+        assert self.rho >= 0., self
+        assert self.c >= 0., self
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -1942,7 +1947,7 @@ def _mat10_get_bulk_rho_c(bulk, rho, c):
         elif bulk is not None:
             rho = bulk / c ** 2.
         else:
-            msg = 'c is the only card defined on tbe MAT10'
+            msg = 'c is the only field defined on the MAT10'
             raise RuntimeError(msg)
     elif bulk is not None:
         if rho is not None:
