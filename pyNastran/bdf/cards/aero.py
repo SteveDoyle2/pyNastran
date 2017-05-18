@@ -280,13 +280,13 @@ class AELINK(BaseCard):
     +--------+-------+-------+--------+----+-------+----+-------+----+
     |   1    |   2   |   3   |   4    |  5 |   6   |  7 |   8   |  9 |
     +========+=======+=======+========+====+=======+====+=======+====+
-    | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
+    | AELINK |  ID   | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
     +--------+-------+-------+--------+----+-------+----+-------+----+
-    |        | LABL4 |  C4   | etc.   |    |       |    |       |    |
+    |        | LABL4 |  C4   |  etc.  |    |       |    |       |    |
     +--------+-------+-------+--------+----+-------+----+-------+----+
 
     +--------+-------+-------+-------+------+
-    | AELINK | 10    | INBDA | OTBDA | -2.0 |
+    | AELINK |  10   | INBDA | OTBDA | -2.0 |
     +--------+-------+-------+-------+------+
     """
     type = 'AELINK'
@@ -586,7 +586,7 @@ class AESTAT(BaseCard):
     +--------+------+--------+
     |    1   |   2  |    3   |
     +========+======+========+
-    | AESTAT | ID   | LABEL  |
+    | AESTAT |  ID  | LABEL  |
     +--------+------+--------+
     | AESTAT | 5001 | ANGLEA |
     +--------+------+--------+
@@ -672,7 +672,7 @@ class AESURF(BaseCard):
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
     |    1   |   2    |   3   |   4   |   5   |   6    |    7   |   8    |   9    |
     +========+========+=======+=======+=======+========+========+========+========+
-    | AESURF |   ID   | LABEL | CID1  | ALID1 | CID2   | ALID2  |  EFF   |  LDW   |
+    | AESURF |   ID   | LABEL | CID1  | ALID1 |  CID2  | ALID2  |  EFF   |  LDW   |
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
     |        |  CREFC | CREFS | PLLIM | PULIM | HMLLIM | HMULIM | TQLLIM | TQULIM |
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
@@ -972,7 +972,7 @@ class AESURFS(BaseCard):  # not integrated
     +---------+------+-------+---+-------+---+-------+
     |    1    |  2   |   3   | 4 |   5   | 6 |   7   |
     +=========+======+=======+===+=======+===+=======+
-    | AESURFS | ID   | LABEL |   | LIST1 |   | LIST2 |
+    | AESURFS |  ID  | LABEL |   | LIST1 |   | LIST2 |
     +---------+------+-------+---+-------+---+-------+
     | AESURFS | 6001 | ELEV  |   | 6002  |   | 6003  |
     +---------+------+-------+---+-------+---+-------+
@@ -1114,7 +1114,7 @@ class AERO(Aero):
     +======+=======+==========+======+========+=======+=======+
     | AERO | ACSID | VELOCITY | REFC | RHOREF | SYMXZ | SYMXY |
     +------+-------+----------+------+--------+-------+-------+
-    | AERO | 3     | 1.3+4    | 100. |  1.-5  | 1     | -1    |
+    | AERO |   3   |   1.3+   | 100. |  1.-5  |   1   |  -1   |
     +------+-------+----------+------+--------+-------+-------+
     """
     type = 'AERO'
@@ -1292,15 +1292,15 @@ class AEROS(Aero):
     """
     Gives basic aerodynamic parameters for unsteady aerodynamics.
 
-    +-------+-------+-------+------+------+-------+------+-------+
-    | 1     | 2     | 3     | 4    | 5    | 6     | 7    |   8   |
-    +=======+=======+=======+======+======+=======+======+=======+
-    | AEROS | ACSID | RCSID | REFC | REFB | REFS  |SYMXZ | SYMXY |
-    +-------+-------+-------+------+------+-------+------+-------+
+    +-------+-------+-------+------+------+-------+-------+-------+
+    | 1     | 2     | 3     | 4    | 5    | 6     |   7   |   8   |
+    +=======+=======+=======+======+======+=======+=======+=======+
+    | AEROS | ACSID | RCSID | REFC | REFB | REFS  | SYMXZ | SYMXY |
+    +-------+-------+-------+------+------+-------+-------+-------+
 
-    +-------+-------+-------+------+------+-------+------+-------+
-    | AEROS | 10    | 20    | 10.  | 100. | 1000. | 1    |       |
-    +-------+-------+-------+------+------+-------+------+-------+
+    +-------+-------+-------+------+------+-------+-------+-------+
+    | AEROS |   10  |   20  | 10.  | 100. | 1000. |   1   |       |
+    +-------+-------+-------+------+------+-------+-------+-------+
     """
     type = 'AEROS'
     _field_map = {
@@ -1684,7 +1684,7 @@ class CAERO1(BaseCard):
     +========+=====+=====+====+=======+========+========+========+======+
     | CAERO1 | EID | PID | CP | NSPAN | NCHORD |  LSPAN | LCHORD | IGID |
     +--------+-----+-----+----+-------+--------+--------+--------+------+
-    |        |  X1 | Y1  | Z1 | X12   | X4     | Y4     | Z4     | X43  |
+    |        |  X1 | Y1  | Z1 |  X12  |   X4   |   Y4   |   Z4   | X43  |
     +--------+-----+-----+----+-------+--------+--------+--------+------+
 
         ::
@@ -2019,14 +2019,6 @@ class CAERO1(BaseCard):
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
 
-    #def Points(self):
-        #self.deprecated('Points()', 'get_points()', '0.7')
-        #return self.get_points()
-
-    #def SetPoints(self, points):
-        #self.deprecated('SetPoints(points)', 'set_points(points)', '0.7')
-        #return self.set_points(points)
-
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
@@ -2151,7 +2143,7 @@ class CAERO1(BaseCard):
 
     @property
     def shape(self):
-        """returns (nnodes_nchord, nnodes_span)"""
+        """returns (nelements_nchord, nelements_span)"""
         if self.nchord == 0:
             x = self.lchord_ref.Di
             nchord = len(x) - 1
@@ -2988,7 +2980,7 @@ class CAERO3(BaseCard):
 
     @property
     def shape(self):
-        """returns (nnodes_nchord, nnodes_span)"""
+        """returns (nelements_nchord, nelements_span)"""
         nchord = 2
         nspan = self.pid_ref.nbox
         return nchord, nspan
@@ -3082,9 +3074,52 @@ class CAERO3(BaseCard):
 
 
 class CAERO4(BaseCard):
+    """
+    Aerodynamic Macro-Strip Element Connection
+    Defines an aerodynamic macro element for Strip theory.
+
+    +--------+-----+-----+----+-------+--------+--------+--------+------+
+    |   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
+    +========+=====+=====+====+=======+========+========+========+======+
+    | CAERO4 | EID | PID | CP | NSPAN | NCHORD |        |        |      |
+    +--------+-----+-----+----+-------+--------+--------+--------+------+
+    |        |  X1 | Y1  | Z1 |  X12  |   X4   |   Y4   |   Z4   | X43  |
+    +--------+-----+-----+----+-------+--------+--------+--------+------+
+    """
     type = 'CAERO4'
     def __init__(self, eid, pid, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, comment=''):
+        """
+        Defines a CAERO4 card, which defines a strip theory surface.
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int, PAERO4
+            int : PAERO4 ID
+            PAERO4 : PAERO4 object (xref)
+        p1 : (1, 3) ndarray float
+            xyz location of point 1 (leading edge; inboard)
+        p4 : (1, 3) ndarray float
+            xyz location of point 4 (leading edge; outboard)
+        x12 : float
+            distance along the flow direction from node 1 to node 2; (typically x, root chord)
+        x43 : float
+            distance along the flow direction from node 4 to node 3; (typically x, tip chord)
+        cp : int, CORDx; default=0
+            int : coordinate system
+            CORDx : Coordinate object (xref)
+        nspan : int; default=0
+            int > 0 : N spanwise boxes distributed evenly
+            int = 0 : use lchord
+        lspan : int, AEFACT; default=0
+            int > 0 : AEFACT reference for non-uniform nspan
+            int = 0 : use nspan
+            AEFACT : AEFACT object  (xref)
+        comment : str; default=''
+             a comment for the card
+        """
         if comment:
             self.comment = comment
 
@@ -3169,6 +3204,7 @@ class CAERO4(BaseCard):
 
         self.cp_ref = self.cp
         self.pid_ref = self.pid
+        self._init_ids()
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CAERO4 eid=%s' % self.eid
@@ -3183,6 +3219,7 @@ class CAERO4(BaseCard):
             self.cp_ref = self.cp
         except KeyError:
             pass
+        self._init_ids()
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -3198,6 +3235,103 @@ class CAERO4(BaseCard):
         if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid_ref.pid
+
+    def _init_ids(self, dtype='int32'):
+        """
+        Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
+        """
+        nchord, nspan = self.shape
+        assert nchord >= 1, 'nchord=%s' % nchord
+        assert nspan >= 1, 'nspan=%s' % nspan
+        self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
+
+        try:
+            for ichord in range(nchord):
+                for ispan in range(nspan):
+                    self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
+        except OverflowError:
+            if dtype == 'int64':
+                msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
+                    self.eid, ichord, ispan, nchord)
+                raise OverflowError(msg)
+            self._init_ids(dtype='int64')
+
+    @property
+    def shape(self):
+        """returns (nelements_nchord, nelements_span)"""
+        nchord = 1
+
+        if self.nspan == 0:
+            y = self.lspan_ref.Di
+            nspan = len(y) - 1
+        else:
+            nspan = self.nspan
+        if nspan < 1:
+            msg = 'CAERO4 eid=%s nspan=%s lspan=%s' % (
+                self.eid, self.nspan, self.lspan)
+            raise RuntimeError(msg)
+        return nchord, nspan
+
+    def get_npanel_points_elements(self, box_ids=None):
+        """
+        Gets the number of sub-points and sub-elements for the CAERO card
+
+        Parameters
+        ----------
+        box_ids : ???
+            nothing???
+
+        Returns
+        -------
+        npoints : int
+            The number of nodes for the CAERO
+        nelmements : int
+            The number of elements for the CAERO
+        """
+        nchord, nspan = self.shape
+        nelements = nchord * nspan
+        npoints = (nchord + 1) * (nspan + 1)
+        return npoints, nelements
+
+    @property
+    def xy(self):
+        """
+        Returns
+        -------
+        x : (nchord,) ndarray
+            The percentage x location in the chord-wise direction of each panel
+        y : (nspan,) ndarray
+            The percentage y location in the span-wise direction of each panel
+        """
+        x = np.linspace(0., 1., num=2)  # nchord=1
+
+        if self.nspan == 0:
+            y = self.lspan_ref.Di
+            nspan = len(y) - 1
+        else:
+            nspan = self.nspan
+            y = np.linspace(0., 1., nspan + 1)
+
+        if nspan < 1:
+            msg = 'CAERO4 eid=%s nspan=%s lspan=%s' % (
+                self.eid, self.nspan, self.lspan)
+            raise RuntimeError(msg)
+        return x, y
+
+    def panel_points_elements(self):
+        """
+        Gets the sub-points and sub-elements for the CAERO card
+
+        Returns
+        -------
+        points : (nnodes,3) ndarray of floats
+            the array of points
+        elements : (nelements,4) ndarray of integers
+            the array of point ids
+        """
+        p1, p2, p3, p4 = self.get_points()
+        x, y = self.xy
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
 
     def raw_fields(self):
         """
@@ -3575,9 +3709,9 @@ class PAERO5(BaseCard):
         +--------+-------+--------+--------+---------+-------+-------+-------+
         |   1    |   2   |    3   |   4    |    5    |   6   |   7   |   8   |
         +========+=======+========+========+=========+=======+=======+=======+
-        | PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
+        | PAERO5 |  PID  | NALPHA | LALPHA |  NXIS   | LXIS  | NTAUS | LTAUS |
         +--------+-------+--------+--------+---------+-------+-------+-------+
-        |        | CAOC1 | CAOC2  | CAOC3  | CAOC4   | CAOC5 |       |       |
+        |        | CAOC1 | CAOC2  | CAOC3  |  CAOC4  | CAOC5 |       |       |
         +--------+-------+--------+--------+---------+-------+-------+-------+
 
         +--------+-------+--------+--------+---------+-------+-------+-------+
@@ -3812,7 +3946,7 @@ class FLFACT(BaseCard):
     +--------+-----+-------+------+-------+----+--------+
     |   1    |  2  |  3    |   4  |   5   | 6  |     7  |
     +========+=====+=======+======+=======+====+========+
-    | FLFACT | SID | F1    | THRU | FNF   | NF | FMID   |
+    | FLFACT | SID | F1    | THRU | FNF   | NF |  FMID  |
     +--------+-----+-------+------+-------+----+--------+
     | FLFACT | 201 | 0.200 | THRU | 0.100 | 11 | 0.1333 |
     +--------+-----+-------+------+-------+----+--------+
@@ -4259,9 +4393,9 @@ class GUST(BaseCard):
     +------+-----+-------+-----+-----+------+
     |   1  |  2  |   3   |  4  |  5  |  6   |
     +======+=====+=======+=====+=====+======+
-    | GUST | SID | DLOAD | WG  | X0  | V    |
+    | GUST | SID | DLOAD | WG  | X0  |  V   |
     +------+-----+-------+-----+-----+------+
-    | GUST | 133 | 61    | 1.0 | 0.  | 1.+4 |
+    | GUST | 133 |   61  | 1.0 | 0.  | 1.+4 |
     +------+-----+-------+-----+-----+------+
     """
     type = 'GUST'

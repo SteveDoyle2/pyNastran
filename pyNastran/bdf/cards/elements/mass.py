@@ -877,9 +877,9 @@ class CONM1(PointMassElement):
     def Mass(self):
         return 0.0
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
+
+    def Centroid(self):
+        return np.zeros(3, dtype='float64')
 
     @property
     def node_ids(self):
@@ -1221,10 +1221,6 @@ class CONM2(PointMassElement):
     @property
     def node_ids(self):
         return [self.Nid()]
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     def Nid(self):
         if isinstance(self.nid, integer_types):

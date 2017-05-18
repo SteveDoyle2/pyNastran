@@ -704,7 +704,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if model.caeros:
             caero_points = []
             for eid, caero in sorted(iteritems(model.caeros)):
-                if caero.type == 'CAERO1':
+                if caero.type in ['CAERO1', 'CAERO4']:
                     ncaeros_sub += 1
                     pointsi, elementsi = caero.panel_points_elements()
                     caero_points.append(pointsi)

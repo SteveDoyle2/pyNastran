@@ -1178,8 +1178,7 @@ class PLPLANE(ShellProperty):
         pid : int
             property id
         mid : int
-            material id
-            MATHP / MATHE
+            material id; MATHP / MATHE
         cid : int; default=0
             ???
         stress_strain_output_location : str; default='GRID'
