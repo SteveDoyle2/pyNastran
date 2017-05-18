@@ -761,16 +761,6 @@ class BDFAttributes(object):
             return True
         return False
 
-    #@property
-    #def caseControlDeck(self):
-        #self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
-        #return self.case_control_deck
-
-    #@caseControlDeck.setter
-    #def caseControlDeck(self, value):
-        #self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
-        #self.case_control_deck = value
-
     @property
     def sol(self):
         """gets the solution (e.g. 101, 103)"""

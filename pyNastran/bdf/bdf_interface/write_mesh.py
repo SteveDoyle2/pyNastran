@@ -32,33 +32,6 @@ class WriteMesh(BDFAttributes):
         self._auto_reject = True
         self.cards_to_read = set([])
 
-    #def echo_bdf(self, infile_name):
-        #"""
-        #This method removes all comment lines from the bdf
-        #A write method is stil required.
-
-        #.. todo:: maybe add the write method
-
-        #.. code-block:: python
-
-          #model = BDF()
-          #model.echo_bdf(bdf_filename)
-        #"""
-        #self.deprecated('self.echo_bdf()', 'removed...', '0.8')
-        #self.cards_to_read = set([])
-        #return self.read_bdf(infile_name)
-
-    #def auto_reject_bdf(self, infile_name):
-        #"""
-        #This method parses supported cards, but does not group them into
-        #nodes, elements, properties, etc.
-
-        #.. todo:: maybe add the write method
-        #"""
-        #self.deprecated('self.auto_reject_bdf()', 'removed...', '0.8')
-        #self._auto_reject = True
-        #return self.read_bdf(infile_name)
-
     def get_encoding(self, encoding=None):
         if encoding is not None:
             pass

@@ -69,15 +69,6 @@ class Coord(BaseCard):
         self.origin = None
         self.rid_trace = []
 
-
-    #def XYZtoCoord(self, p):
-        #self.deprecated('XYZtoCoord', 'xyz_to_coord', '0.8')
-        #return self.xyz_to_coord(p)
-
-    #def coordToXYZ(self, p):
-        #self.deprecated('coordToXYZ', 'coord_to_xyz', '0.8')
-        #return self.coord_to_xyz(p)
-
     def Cid(self):
         """Gets the coordinate ID"""
         return self.cid
@@ -1943,11 +1934,6 @@ class Cord1x(Coord):
         if isinstance(self.g3, integer_types):
             return self.g3
         return self.g3_ref.nid
-
-    #def nodeIDs(self):
-        #"""Gets the integers for the node [g1,g2,g3]"""
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):

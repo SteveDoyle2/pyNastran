@@ -395,10 +395,6 @@ class CBUSH1D(BushElement):
     def nodes(self):
         return [self.ga, self.gb]
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
@@ -495,10 +491,6 @@ class CBUSH2D(BushElement):
     @property
     def nodes(self):
         return [self.ga, self.gb]
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):

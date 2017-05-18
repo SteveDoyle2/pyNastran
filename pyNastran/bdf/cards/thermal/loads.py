@@ -677,10 +677,6 @@ class QBDY3(ThermalLoad):
         list_fields = ['QBDY3', self.sid, self.q0, cntrlnd] + collapse_thru_by(eids)
         return list_fields
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         """
         .. todo:: return loads
@@ -933,10 +929,6 @@ class TEMP(ThermalLoad):
     def repr_fields(self):
         """Writes the TEMP card"""
         return self.raw_fields()
-
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
 
     def get_loads(self):
         """

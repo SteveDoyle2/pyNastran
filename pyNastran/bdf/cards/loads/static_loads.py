@@ -2040,10 +2040,6 @@ class GMLOAD(Load):
             #return self.node
         #return self.node_ref.nid
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 

@@ -716,10 +716,6 @@ class RLOAD2(TabularLoad):
         if self.delay > 0:
             del self.delay_ref
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 

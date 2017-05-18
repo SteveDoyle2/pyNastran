@@ -356,10 +356,6 @@ class CGAP(Element):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
@@ -501,10 +497,6 @@ class CRAC2D(CrackElement):
     def get_edge_ids(self):
         return []
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
@@ -581,10 +573,6 @@ class CRAC3D(CrackElement):
 
     def get_edge_ids(self):
         return []
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):

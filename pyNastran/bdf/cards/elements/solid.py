@@ -783,10 +783,6 @@ class CHEXA20(SolidElement):
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
@@ -1102,10 +1098,6 @@ class CPENTA6(SolidElement):
     def raw_fields(self):
         list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allow_empty_nodes=False)
         return list_fields
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1457,10 +1449,6 @@ class CPENTA15(SolidElement):
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
@@ -1635,10 +1623,6 @@ class CPYRAM5(SolidElement):
         area1, c1 = area_centroid(n1, n2, n3, n4)
         volume = area1 / 3. * norm(c1 - n5)
         return abs(volume)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1839,10 +1823,6 @@ class CPYRAM13(SolidElement):
         area1, c1 = area_centroid(n1, n2, n3, n4)
         volume = area1 / 2. * norm(c1 - n5)
         return abs(volume)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -2324,10 +2304,6 @@ class CTETRA10(SolidElement):
         indx = nids.index(nid_opposite)
         nids.pop(indx)
         return nids
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
