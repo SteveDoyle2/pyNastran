@@ -770,10 +770,10 @@ class BDFMethods(BDFAttributes):
             'CORD3G', 'CONV', 'CONVM', 'CSET', 'CSET1', 'CLOAD',
             'CHBDYG', 'CHBDYE', 'CHBDYP',
         ]
-        all_eids = np.array(self.elements.keys(), dtype='int32')
+        all_eids = np.array(list(self.elements.keys()), dtype='int32')
         all_eids.sort()
 
-        all_mass_ids = np.array(self.masses.keys(), dtype='int32')
+        all_mass_ids = np.array(list(self.masses.keys()), dtype='int32')
         all_mass_ids.sort()
 
         #def _increment_inertia0(centroid, reference_point, m, mass, cg, I):

@@ -874,11 +874,12 @@ class CONM1(PointMassElement):
         eid = self.eid
         assert isinstance(eid, integer_types), 'eid=%r' % eid
 
-    def Mass(self):
+    @staticmethod
+    def Mass():
         return 0.0
 
-
-    def Centroid(self):
+    @staticmethod
+    def Centroid():
         return np.zeros(3, dtype='float64')
 
     @property
