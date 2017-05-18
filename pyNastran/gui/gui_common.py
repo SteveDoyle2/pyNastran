@@ -4075,8 +4075,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 else:
                     raise NotImplementedError(geom_actor)
 
-    def make_gif(self, gif_filename, icase, scale, istep=None,
+    def make_gif(self, gif_filename, scale, istep=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
+                 icase=None, icase_start=None, icase_end=None, icase_delta=None,
                  time=2.0, onesided=True,
                  nrepeat=0, fps=30, magnify=1,
                  make_images=True, delete_images=False, make_gif=True):
@@ -4087,8 +4088,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         gif_filename : str
             path to the output gif & png folder
-        icase : int / List[int]
-            the result case to plot the deflection for
         scale : float
             the deflection scale factor
         istep : int; default=None
@@ -4111,6 +4110,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
             the runtime of the gif (seconds)
         fps : int; default=30
             the frames/second
+
+        Case Selection
+        --------------
+        icase : int; default=None
+            None : unused
+            int : the result case to plot the deflection for
+                  active if animate_scale=True or animate_phase=True
+        icase_start : int; default=None
+            starting case id
+            None : unused
+            int : active if animate_time=True
+        icase_end : int; default=None
+            starting case id
+            None : unused
+            int : active if animate_time=True
+        icase_delta : int; default=None
+            step size
+            None : unused
+            int : active if animate_time=True
 
         Time Plot Options (not supported)
         ---------------------------------

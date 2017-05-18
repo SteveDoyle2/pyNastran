@@ -5,8 +5,6 @@ defines:
 from __future__ import print_function
 import os
 from collections import OrderedDict
-#from six import integer_types
-#import numpy as np
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
@@ -671,8 +669,9 @@ class AnimationWindow(PyDialog):
         icase = self._icase
         if self.is_gui:
             self.win_parent.win_parent.make_gif(
-                gif_filename, icase, scale, istep=istep,
+                gif_filename, scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
+                icase=icase, icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
                 time=time, onesided=onesided,
                 nrepeat=nrepeat, fps=fps, magnify=magnify,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,

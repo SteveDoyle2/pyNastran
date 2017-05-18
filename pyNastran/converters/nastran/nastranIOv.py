@@ -1219,7 +1219,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def create_bar_pin_flag_text(self, pin_flag=None):
         """TODO: needs a better interface in the gui"""
-        from collections import defaultdict
         nids = []
         text = []
         #result_name = self.icase

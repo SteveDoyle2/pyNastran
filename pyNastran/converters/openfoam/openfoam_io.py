@@ -7,7 +7,7 @@ from numpy.linalg import norm
 
 import vtk
 #VTK_TRIANGLE = 5
-from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
+from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron)
 

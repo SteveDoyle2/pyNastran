@@ -3,6 +3,7 @@
 """
 All aero cards are defined in this file.  This includes:
 
+ * AECOMP
  * AEFACT
  * AELINK
  * AELIST
@@ -17,9 +18,9 @@ All aero cards are defined in this file.  This includes:
  * FLUTTER
  * GUST
  * MKAERO1 / MKAERO2
- * PAERO1 / PAERO2 / PAERO3
- * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
- * MNTPNT1
+ * PAERO1 / PAERO2 / PAERO3 / PAERO4 / PAERO5
+ * SPLINE1 / SPLINE2 / SPLINE3 / SPLINE4 / SPLINE5
+ * MONPNT1 / MONPNT2 / MONPNT3
 
 All cards are BaseCard objects.
 """
@@ -2161,14 +2162,9 @@ class CAERO1(BaseCard):
             raise RuntimeError(msg)
         return nchord, nspan
 
-    def get_npanel_points_elements(self, box_ids=None):
+    def get_npanel_points_elements(self):
         """
         Gets the number of sub-points and sub-elements for the CAERO card
-
-        Parameters
-        ----------
-        box_ids : ???
-            nothing???
 
         Returns
         -------
@@ -2957,14 +2953,9 @@ class CAERO3(BaseCard):
         x, y = self.xy
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
 
-    def get_npanel_points_elements(self, box_ids=None):
+    def get_npanel_points_elements(self):
         """
         Gets the number of sub-points and sub-elements for the CAERO card
-
-        Parameters
-        ----------
-        box_ids : ???
-            nothing???
 
         Returns
         -------
@@ -3272,14 +3263,9 @@ class CAERO4(BaseCard):
             raise RuntimeError(msg)
         return nchord, nspan
 
-    def get_npanel_points_elements(self, box_ids=None):
+    def get_npanel_points_elements(self):
         """
         Gets the number of sub-points and sub-elements for the CAERO card
-
-        Parameters
-        ----------
-        box_ids : ???
-            nothing???
 
         Returns
         -------
@@ -3987,10 +3973,10 @@ class FLFACT(BaseCard):
 
         # the dumb string_types thing is because we also get floats
         if len(factors) > 1 and isinstance(factors[1], string_types) and factors[1] == 'THRU':
-            msg = 'embedded THRUs not supported yet on FLFACT card\n'
+            #msg = 'embedded THRUs not supported yet on FLFACT card\n'
             nfactors = len(factors)
             if nfactors == 4:
-                (f1, thru, fnf, nf) = factors
+                (f1, _thru, fnf, nf) = factors
                 fmid = (f1 + fnf) / 2.
             elif nfactors == 5:
                 (f1, thru, fnf, nf, fmid) = factors
@@ -4556,11 +4542,11 @@ class MKAERO1(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        cards = []
+        #cards = []
         nmachs = len(self.machs)
         nreduced_freqs = len(self.reduced_freqs)
         if nmachs > 8 or nreduced_freqs > 8:
-            cards = []
+            #cards = []
             mach_sets = []
             rfreq_sets = []
             imach = 0
@@ -4581,7 +4567,6 @@ class MKAERO1(BaseCard):
                         size=size, is_double=is_double)
             return msg
 
-        list_fields = ['MKAERO1']
         machs = [None] * 8
         reduced_freqs = [None] * 8
         cards = []

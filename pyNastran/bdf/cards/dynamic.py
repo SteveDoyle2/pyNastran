@@ -1,20 +1,23 @@
+# coding: utf-8
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All dynamic control cards are defined in this file.  This includes:
 
  * FREQ
  * FREQ1
- * FREQ2 (not implemented)
- * FREQ3
+ * FREQ2
+ * FREQ3 (not implemented)
  * FREQ4
  * FREQ5 (not implemented)
  * NLPCI
  * NLPARM
  * TSTEP
+ * TSTEP1
  * TSTEPNL
  * ROTORG
  * ROTORD
  * TIC
+ * TF
 
 All cards are BaseCard objects.
 """
@@ -37,15 +40,34 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 class DELAY(BaseCard):
+    """
+    +-------+-----+-----------+-----+--------+------+-----+--------+-----+
+    |   1   |  2  |     3     |  4  |   5    |  6   |  7  |   8    |  9  |
+    +=======+=====+===========+=====+========+======+=====+========+=====+
+    | DELAY | SID | POINT ID1 | C1  |   T1   | P2   | C2  |   T2   |     |
+    +-------+-----+-----------+-----+--------+------+-----+--------+-----+
+    """
     type = 'DELAY'
 
     def __init__(self, sid, nodes, components, delays, comment=''):
         """
-        +-------+-----+-----------+-----+--------+------+-----+--------+-----+
-        |   1   |  2  |     3     |  4  |   5    |  6   |  7  |   8    |  9  |
-        +=======+=====+===========+=====+========+======+=====+========+=====+
-        | DELAY | SID | POINT ID1 | C1  |   T1   | P2   | C2  |   T2   |     |
-        +-------+-----+-----------+-----+--------+------+-----+--------+-----+
+        Creates a DELAY card
+
+        Parameters
+        ----------
+        sid : int
+            DELAY id that is referenced by a TLOADx, RLOADx or ACSRCE card
+        nodes : List[int]
+            list of nodes that see the delay
+            len(nodes) = 1 or 2
+        components : List[int]
+            the components corresponding to the nodes that see the delay
+            len(nodes) = len(components)
+        delays : List[float]
+            Time delay (tau) for designated point Pi and component Ci
+            len(nodes) = len(delays)
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -162,15 +184,37 @@ class DELAY(BaseCard):
 
 
 class DPHASE(BaseCard):
+    """
+    Defines the phase lead term θ in the equation of the dynamic
+    loading function.
+
+    +--------+-----+-----------+-----+------+------+-----+-----+-----+
+    |   1    |  2  |     3     |  4  |  5   |  6   |  7  |  8  |  9  |
+    +========+=====+===========+=====+======+======+=====+=====+=====+
+    | DPHASE | SID | POINT ID1 | C1  | TH1  |  P2  | C2  | TH2 |     |
+    +--------+-----+-----------+-----+------+------+-----+-----+-----+
+    """
     type = 'DPHASE'
 
     def __init__(self, sid, nodes, components, phase_leads, comment=''):
         """
-        +--------+-----+-----------+-----+------+------+-----+-----+-----+
-        |   1    |  2  |     3     |  4  |  5   |  6   |  7  |  8  |  9  |
-        +========+=====+===========+=====+======+======+=====+=====+=====+
-        | DPHASE | SID | POINT ID1 | C1  | TH1  |  P2  | C2  | TH2 |     |
-        +--------+-----+-----------+-----+------+------+-----+-----+-----+
+        Creates a DPHASE card
+
+        Parameters
+        ----------
+        sid : int
+            DPHASE id that is referenced by a RLOADx or ACSRCE card
+        nodes : List[int]
+            list of nodes that see the delay
+            len(nodes) = 1 or 2
+        components : List[int]
+            the components corresponding to the nodes that see the delay
+            len(nodes) = len(components)
+        phase_leads : List[float]
+            Phase lead θ in degrees.
+            len(nodes) = len(delays)
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -1826,7 +1870,7 @@ class TIC(BaseCard):
     """
     type = 'TIC'
 
-    def __init__(self, sid, nodes, components, u0, v0, comment=''):
+    def __init__(self, sid, nodes, components, u0=0., v0=0., comment=''):
         """
         Creates a TIC card
 
@@ -1884,7 +1928,7 @@ class TIC(BaseCard):
         comp = parse_components(card, 3, 'C')
         u0 = double_or_blank(card, 4, 'U0', 0.)
         v0 = double_or_blank(card, 5, 'V0', 0.)
-        return TIC(sid, nid, comp, u0, v0, comment=comment)
+        return TIC(sid, nid, comp, u0=u0, v0=v0, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

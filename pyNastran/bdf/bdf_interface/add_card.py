@@ -1,10 +1,11 @@
+# coding: utf-8
+# pylint: disable=R0913, R0914, C0103
 """
 Defines a method to add a card that is faster than add_card
 and far less error prone for a user
 
 That said, there are still a few bugs.
 """
-# pylint: disable=R0913, R0914, C0103
 from __future__ import print_function
 
 import numpy as np
@@ -4505,13 +4506,13 @@ class AddCards(AddMethods):
         self._add_bctpara_object(bctpara)
         return bctpara
 
-    def add_bcrpara(self, crid, surf, offset, Type='FLEX', mgp=0, comment=''):
-        bcrpara = BCRPARA(crid, surf, offset, Type=Type, mgp=mgp, comment=comment)
+    def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX', mgp=0, comment=''):
+        bcrpara = BCRPARA(crid, surf=surf, offset=offset, Type=Type, mgp=mgp, comment=comment)
         self._add_bcrpara_object(bcrpara)
         return bcrpara
 
-    def add_tic(self, sid, nodes, components, u0, v0, comment=''):
-        tic = TIC(sid, nodes, components, u0, v0, comment=comment)
+    def add_tic(self, sid, nodes, components, u0=0., v0=0., comment=''):
+        tic = TIC(sid, nodes, components, u0=u0, v0=v0, comment=comment)
         self._add_tic_object(tic)
         return tic
 
@@ -4560,11 +4561,49 @@ class AddCards(AddMethods):
         return nlpci
 
     def add_delay(self, sid, nodes, components, delays, comment=''):
+        """
+        Creates a DELAY card
+
+        Parameters
+        ----------
+        sid : int
+            DELAY id that is referenced by a TLOADx, RLOADx or ACSRCE card
+        nodes : List[int]
+            list of nodes that see the delay
+            len(nodes) = 1 or 2
+        components : List[int]
+            the components corresponding to the nodes that see the delay
+            len(nodes) = len(components)
+        delays : List[float]
+            Time delay (tau) for designated point Pi and component Ci
+            len(nodes) = len(delays)
+        comment : str; default=''
+            a comment for the card
+        """
         delay = DELAY(sid, nodes, components, delays, comment=comment)
         self._add_delay_object(delay)
         return delay
 
     def add_dphase(self, sid, nodes, components, phase_leads, comment=''):
+        """
+        Creates a DPHASE card
+
+        Parameters
+        ----------
+        sid : int
+            DPHASE id that is referenced by a RLOADx or ACSRCE card
+        nodes : List[int]
+            list of nodes that see the delay
+            len(nodes) = 1 or 2
+        components : List[int]
+            the components corresponding to the nodes that see the delay
+            len(nodes) = len(components)
+        phase_leads : List[float]
+            Phase lead θ in degrees.
+            len(nodes) = len(delays)
+        comment : str; default=''
+            a comment for the card
+        """
         dphase = DPHASE(sid, nodes, components, phase_leads, comment=comment)
         self._add_dphase_object(dphase)
         return dphase
