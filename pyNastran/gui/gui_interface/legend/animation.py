@@ -251,7 +251,7 @@ class AnimationWindow(PyDialog):
 
         if self._phase is not None:
             self.animation_types.append('Animate Phase')
-        #self.animation_types.append('Animate Time')
+        self.animation_types.append('Animate Time')
 
         self.animation_profile = QLabel("Animation Profile:")
 

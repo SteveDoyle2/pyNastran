@@ -4174,6 +4174,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - analysis_time should be one-sided
          - set onesided=False
         """
+        if animate_time or animate_phase:
+            onesided = True
         analysis_time = get_analysis_time(time, onesided)
 
         nframes = int(analysis_time * fps)
@@ -4197,36 +4199,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
             assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
             assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
         elif animate_time:
-            icase_start = 112 # t=1.01 sec
-            icase_end = 911
-            icase_delta = 5
-            icase = np.arange(icase_start, icase_end+1, icase_delta)
+            icases = np.arange(icase_start, icase_end+1, icase_delta)
             #min_value = 0.
             #max_value = 1.46862
-            nfiles = len(icase)
+            nfiles = len(icases)
 
             # specifying fps and dt makes the problem overdefined
             # assuming dt
             #
             # TDOO: change this to stepping similar to icase_delta
-            #       icase = icase[::5]
-            fps = nfiles / dt
+            #       icases = icases[::5]
+            fps = nfiles / time
 
             # our scale will be constant
             # phases is just None
             scales = [scale] * nfiles
-            assert len(icase) == nfiles, 'len(icase)=%s nfiles=%s' % (len(icase), nfiles)
+            assert len(icases) == nfiles, 'len(icases)=%s nfiles=%s' % (len(icases), nfiles)
             phases = None
-            assert len(scales) == len(icase), 'nscales=%s len(icase)=%s' % (len(scales), len(icase))
-            #self.make_gif(gif_filename, icase, scales, phases=None,
-            #              isteps=None, time=time, analysis_time=time, fps=30, magnify=1,
-            #              onesided=True, nrepeat=1, delete_images=False, make_gif=False)
+            assert len(scales) == len(icases), 'nscales=%s len(icases)=%s' % (len(scales), len(icases))
 
-            write_gif(gif_filename, png_filenames, time=time,
-                      fps=fps, onesided=onesided,
-                      make_images=make_images, nrepeat=nrepeat, delete_images=delete_images,
-                      make_gif=make_gif)
-            return True
+            # TODO: this isn't maintained...
+            #assert nframes == nfiles, 'nframes=%s nfiles=%s' % (nframes, nfiles)
+
+            isteps = np.linspace(0, nfiles, num=nfiles, endpoint=True, dtype='int32')
 
         else:
             raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
@@ -4236,7 +4231,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             scales = (scales[istep],)
             phases = (phases[istep],)
             isteps = (istep,)
-            #print('')
 
         return self.make_gif_helper(
             gif_filename, icases, scales,
@@ -4257,7 +4251,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         gif_filename : str
             path to the output gif & png folder
-        icase : int / List[int]
+        icases : int / List[int]
             the result case to plot the deflection for
         scales : List[float]
             List[float] : the deflection scale factors

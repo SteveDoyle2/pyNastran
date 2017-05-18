@@ -683,6 +683,9 @@ class OP2(OP2_Scalar):
             Use this if CD is not rectangular
         debug : bool; default=False
             developer debug
+
+        .. warning:: only works if all nodes are included...
+                     ``test_pynastrangui isat_tran.dat isat_tran.op2 -f nastran``
         """
         #output = {}
         disp_like_dicts = [
@@ -735,12 +738,23 @@ class OP2(OP2_Scalar):
                     if debug:
                         self.log.debug('coord\n%s' % coord)
                         self.log.debug(cid_transform)
-                        self.log.debug('inode = %s' % inode)
+                        self.log.debug('inode = %s' % [str(val).rstrip('L') for val in inode.tolist()])
+                        self.log.debug('data.shape = %s' % str(data.shape))
+                        self.log.debug('len(inode) = %s' % len(inode))
+                        assert np.array_equal(inode, np.unique(inode))
                     if coord_type in ['CORD2R', 'CORD1R']:
                         if is_global_cid:
                             self.log.debug('is_global_cid')
                             continue
                         self.log.debug('rectangular')
+
+
+                        # isat_tran.op2
+                        #  - nspoint = 4
+                        #  - ngrid = 5379
+                        #
+                        #  - ntotal = 5383
+                        #  data.shape = (101, 8, 6)
                         translation = data[:, inode, :3]
                         rotation = data[:, inode, 3:]
                         data[:, inode, :3] = translation.dot(cid_transform)
