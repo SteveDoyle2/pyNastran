@@ -1,13 +1,13 @@
 import os
 import unittest
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastranIOv import NastranIO
 import pyNastran
 #from pyNastran.utils.log import get_logger2
 
-class NastranGUI(NastranIO, GUIMethods):
+class NastranGUI(NastranIO, FakeGUIMethods):
     def __init__(self, inputs=None):
-        GUIMethods.__init__(self, inputs=inputs)
+        FakeGUIMethods.__init__(self, inputs=inputs)
         NastranIO.__init__(self)
 
 pkg_path = pyNastran.__path__[0]

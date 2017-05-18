@@ -7,7 +7,7 @@ warnings.simplefilter('always')
 np.seterr(all='raise')
 
 
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.tetgen.tetgen_io import TetgenIO
 from pyNastran.utils.log import get_logger
 import pyNastran
@@ -17,9 +17,9 @@ model_path = os.path.join(pkg_path, 'converters', 'tetgen')
 STL_PATH = os.path.join(pkg_path, 'converters', 'stl')
 
 
-class TetgenGUI(TetgenIO, GUIMethods):
+class TetgenGUI(TetgenIO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         TetgenIO.__init__(self)
 
 

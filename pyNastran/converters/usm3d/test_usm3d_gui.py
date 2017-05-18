@@ -2,7 +2,7 @@ import os
 import unittest
 
 import pyNastran
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
 #from pyNastran.converters.cart3d.cart3d import Cart3D
@@ -15,9 +15,9 @@ pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'usm3d', 'box')
 
 
-class Usm3dGUI(Usm3dIO, GUIMethods):
+class Usm3dGUI(Usm3dIO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         Usm3dIO.__init__(self)
 
 

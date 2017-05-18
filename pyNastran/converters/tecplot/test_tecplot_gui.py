@@ -1,6 +1,6 @@
 import os
 
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.tecplot.tecplot_io import TecplotIO
 import pyNastran
 
@@ -9,9 +9,9 @@ model_path = os.path.join(pkg_path, 'converters', 'tecplot')
 
 import unittest
 
-class TecplotGUI(TecplotIO, GUIMethods):
+class TecplotGUI(TecplotIO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         TecplotIO.__init__(self)
 
     def _remove_old_cart3d_geometry(self, tecplot_filename):

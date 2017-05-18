@@ -2,7 +2,7 @@ import os
 import unittest
 
 import pyNastran
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.fast.fast_io import FastIO
 #from pyNastran.converters..cart3d import Cart3D
@@ -13,9 +13,9 @@ pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'converters', 'fast')
 
 
-class FastGUI(FastIO, GUIMethods):
+class FastGUI(FastIO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         FastIO.__init__(self)
 
 

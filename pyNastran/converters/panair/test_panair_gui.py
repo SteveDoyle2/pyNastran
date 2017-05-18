@@ -1,7 +1,7 @@
 import os
 
 import pyNastran
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.panair.panair_io import PanairIO
 from pyNastran.utils.log import get_logger
 
@@ -10,9 +10,9 @@ model_path = os.path.join(pkg_path, 'converters', 'panair', 'M100')
 
 import unittest
 
-class PanairGUI(PanairIO, GUIMethods):
+class PanairGUI(PanairIO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         PanairIO.__init__(self)
 
 

@@ -10,7 +10,7 @@ import unittest
 
 import pyNastran
 from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.bdf.mesh_utils.extract_free_faces import write_skin_solid_faces
 from pyNastran.utils.log import get_logger
@@ -20,10 +20,10 @@ model_path = os.path.join(pkg_path, 'converters', 'tecplot', 'models')
 nastran_path = os.path.join(pkg_path, '..', 'models')
 
 
-class UGRID_GUI(UGRID_IO, GUIMethods):
+class UGRID_GUI(UGRID_IO, FakeGUIMethods):
     """defines the UGRID 2D/3D interface"""
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         UGRID_IO.__init__(self)
 
 class TestUgridGui(unittest.TestCase):
