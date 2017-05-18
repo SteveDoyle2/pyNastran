@@ -310,6 +310,8 @@ class OUG(OP2Common):
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
             elif self.table_name == b'OUGV1PAT':
                 n = self._read_oug_displacement(data, ndata, is_cid=True)
+            elif self.table_name == b'OAG1':
+                n = self._read_oug_acceleration(data, ndata, is_cid=False)
             else:
                 raise NotImplementedError(self.code_information())
         elif self.table_code == 7:
@@ -393,7 +395,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2'], self.table_name
+            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,
@@ -519,7 +521,7 @@ class OUG(OP2Common):
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
             self.subcase.add_op2_data(self.data_code, 'acceleration', self.log)
 
-        if self.table_name in [b'OUGV1', b'OUGV2']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'OAG1']:
             result_name = 'accelerations'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
             result_name = 'accelerations_ROUGV1'
@@ -542,7 +544,7 @@ class OUG(OP2Common):
             raise NotImplementedError(msg)
 
         if self.thermal == 0:
-            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2']:
+            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1']:
                 if self._results.is_not_saved(result_name):
                     return ndata
                 storage_obj = getattr(self, result_name)
