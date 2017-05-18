@@ -46,13 +46,42 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.9.0 released 2017/1/??-----------------------
-This is a bug fix release and minor new features.
+-----------------------v0.9.0 released 2017/5/24?-----------------------
+This is a major release.  The focus this time has been on robustness and testing.
+Hopefully, it shows.
 
-Done
-----
+Quick Overview:
+---------------
+BDF : 
+ - This version makes it much easier to programmatically create BDFs with the 
+   ``add_grid``, ``add_ctria3(...)``, etc. methods.  Almost every card has a 
+    method and many have documentation of every parameter.
+
+OP2 : 
+ - Added support for MATPOOL matrices and RANDOM OUG-style tables.
+ - First release of read_op2_geom.  It's not perfect, but it generally works.
+
+GUI : 
+  - Animation plots
+  - NaN colors
+  - improved picking tolerancing
+  - probe result by mouse picking
+  - measure distance by mouse picking
+  - rotation center by mouse picking
+  - area picking nodes/elements
+  - added basic support for Patran *.nod results
+  - significant speedups
 
 BDF:
+ - added cards:
+   - CTRAX3, CTRAX6, CQUADX4, CQUADX8, CIHEX2
+   - PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
+   - CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE, MATG
+   - POINT, PBRSECT, PBMSECT
+   - QVECT
+   - DVGRID
+   - TIC, TSTEP1
+
  - fixed:
     - update_card method:
       # update cards similar to Nastran's optimization
@@ -90,18 +119,33 @@ BDF:
    - fixed FLUTTER unxref bug
    - FLFACT can now write in wide field format
 
- - added cards:
-   - CTRAX3, CTRAX6, CQUADX4, CQUADX8, CIHEX2
-   - PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
-   - CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE, MATG
-   - POINT, PBRSECT, PBMSECT
-   - QVECT
-   - DVGRID
-   - TIC, TSTEP1
+
+OP2:
+ - added:
+   - read_op2(include_results=None, exclude_results=None)
+   - read_op2_geom(include_results=None, exclude_results=None)
+
+   - MSC Nastran 2005R3B supported
+   - Radioss supported
+   - eigenvector_ROUGV1 now supported
+   - random tables (e.g., PSD, ATO, RMS) for OUG-style tables
+
+ - fixed:
+   - MEFF, ASSIG, ASEPS tables now skipped properly
+   - removed beta_transforms from gpforce
+
 
 GUI:
  - added:
-   - marker/arrow plots
+   - marker/arrow (force) plots
+   - animation menu
+
+       Name   Subcase     Time    Scale Factor  Phase Angle
+       -----  --------  --------  ------------  -----------
+       Scale  Constant  Constant    Variable      Constant
+       Freq.  Constant  Constant    Constant      Variable
+       Time   Variable  Variable    Constant      Constant
+
    - NaN colors for invalid results (e.g., normal=NaN for a 
      CTRIA3 that has 2 coincident points)
    - area picking for groups
@@ -114,22 +158,11 @@ GUI:
  - fixed:
    - display issue with CHEXA20 (element was ordered wrong)
    - element selection for quadratic solids no longer crashes
+   - all legend values are now saved (e.g., the ones from cart3d)
  - changes:
    - significant speedups
    - cycle_results now takes an integer instead of a string, so it works
       when you call it with more than 10 results  or have transient solutions
-
-
-OP2:
- - added:
-   - MSC Nastran 2005R3B supported
-   - MEFF, ASSIG, ASEPS tables now skipped properly
-   - eigenvector_ROUGV1 now supported
- - removed beta_transforms from gpforce
- - random tables (e.g., PSD, ATO, RMS) for OUG-style tables
-
-Other
- - all legend values are now saved (e.g., the ones from cart3d)
 
 
 Known Issues
