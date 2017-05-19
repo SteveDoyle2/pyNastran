@@ -44,7 +44,9 @@ from pyNastran.bdf.cards.msgmesh import CGEN
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1, CIHEX2)
+from pyNastran.bdf.cards.elements.solid import (CIHEX1, CIHEX2,
+                                                CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
+                                                CTETRA10, CPYRAM13, CPENTA15, CHEXA20)
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
@@ -1875,10 +1877,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'CSHEAR' : (CSHEAR, self._add_element_object),
             'PSHEAR' : (PSHEAR, self._add_property_object),
 
-            'CTETRA' : (CTETRA, self._add_element_object),
-            'CPYRAM' : (CPYRAM, self._add_element_object),
-            'CPENTA' : (CPENTA, self._add_element_object),
-            'CHEXA' : (CHEXA, self._add_element_object),
             'CIHEX1' : (CIHEX1, self._add_element_object),
             'CIHEX2' : (CIHEX2, self._add_element_object),
             'PIHEX' : (PIHEX, self._add_property_object),
@@ -2193,6 +2191,11 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'DELAY' : (DELAY, self._add_delay_object),
         }
         self._card_parser_prepare = {
+            'CTETRA' : self._prepare_ctetra,
+            'CPENTA' : self._prepare_cpenta,
+            'CHEXA' : self._prepare_chexa,
+            'CPYRAM' : self._prepare_cpyram,
+
             'CORD1R' : self._prepare_cord1r,
             'CORD1C' : self._prepare_cord1c,
             'CORD1S' : self._prepare_cord1s,
@@ -2282,6 +2285,42 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             if card_name in ['SUBCASE ', 'CEND']:
                 raise RuntimeError('No executive/case control deck was defined.')
             self.log.info('    rejecting card_name = %s' % card_name)
+
+    def _prepare_ctetra(self, card, card_obj, comment=''):
+        """adds a CTETRA4/CTETRA10"""
+        if len(card_obj) == 7:
+            elem = CTETRA4.add_card(card_obj, comment=comment)
+        else:
+            elem = CTETRA10.add_card(card_obj, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def _prepare_cpyram(self, card, card_obj, comment=''):
+        """adds a CPYRAM5/CPYRAM13"""
+        if len(card_obj) == 8:
+            elem = CPYRAM5.add_card(card_obj, comment=comment)
+        else:
+            elem = CPYRAM13.add_card(card_obj, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def _prepare_cpenta(self, card, card_obj, comment=''):
+        """adds a CPENTA6/CPENTA15"""
+        if len(card_obj) == 9:
+            elem = CPENTA6.add_card(card_obj, comment=comment)
+        else:
+            elem = CPENTA15.add_card(card_obj, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def _prepare_chexa(self, card, card_obj, comment=''):
+        """adds a CHEXA8/CHEXA20"""
+        if len(card_obj) == 11:
+            elem = CHEXA8.add_card(card_obj, comment=comment)
+        else:
+            elem = CHEXA20.add_card(card_obj, comment=comment)
+        self._add_element_object(elem)
+        return elem
 
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""

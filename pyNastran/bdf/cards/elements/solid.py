@@ -8,6 +8,8 @@ All solid elements are defined in this file.  This includes:
  * CPENTA15
  * CTETRA4
  * CTETRA10
+ * CIHEX1
+ * CIHEX2
 
 All solid elements are SolidElement and Element objects.
 """
@@ -177,114 +179,6 @@ class SolidElement(Element):
 
     def center_of_mass(self):
         return self.Centroid()
-
-class CHEXA(object):
-    def __init__(self, eid, pid, nids, comment=''):
-        if len(nids) == 8:
-            return CHEXA8(eid, pid, nids, comment=comment)
-        elif len(nids) == 20:
-            return CHEXA20(eid, pid, nids, comment=comment)
-        else:
-            msg = 'len(nids)=%s; expected 8 or 20; nids=%s' % (len(nids), nids)
-            raise RuntimeError(msg)
-
-    @classmethod
-    def add_card(cls, card, comment):
-        """
-        Adds a CHEXA8/CHEXA20 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        if card.nfields == 11:
-            return CHEXA8.add_card(card, comment=comment)
-        else:
-            return CHEXA20.add_card(card, comment=comment)
-
-class CTETRA(object):
-    def __init__(self, eid, pid, nids, comment=''):
-        if len(nids) == 4:
-            return CTETRA4(eid, pid, nids, comment=comment)
-        elif len(nids) == 10:
-            return CTETRA10(eid, pid, nids, comment=comment)
-        else:
-            msg = 'len(nids)=%s; expected 8 or 20; nids=%s' % (len(nids), nids)
-            raise RuntimeError(msg)
-
-    @classmethod
-    def add_card(cls, card, comment):
-        """
-        Adds a CTETRA4/CTETRA10 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        if card.nfields == 7:
-            return CTETRA4.add_card(card, comment=comment)
-        else:
-            return CTETRA10.add_card(card, comment=comment)
-
-class CPENTA(object):
-    def __init__(self, eid, pid, nids, comment=''):
-        if len(nids) == 6:
-            return CPENTA6(eid, pid, nids, comment=comment)
-        elif len(nids) == 15:
-            return CPENTA15(eid, pid, nids, comment=comment)
-        else:
-            msg = 'len(nids)=%s; expected 8 or 20; nids=%s' % (len(nids), nids)
-            raise RuntimeError(msg)
-
-    @classmethod
-    def add_card(cls, card, comment):
-        """
-        Adds a CPENTA6/CPENTA15 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        if card.nfields == 9:
-            return CPENTA6.add_card(card, comment=comment)
-        else:
-            return CPENTA15.add_card(card, comment=comment)
-
-class CPYRAM(object):
-    def __init__(self, eid, pid, nids, comment=''):
-        if len(nids) == 5:
-            return CPYRAM5(eid, pid, nids, comment=comment)
-        elif len(nids) == 13:
-            return CPYRAM13(eid, pid, nids, comment=comment)
-        else:
-            msg = 'len(nids)=%s; expected 8 or 20; nids=%s' % (len(nids), nids)
-            raise RuntimeError(msg)
-
-    @classmethod
-    def add_card(cls, card, comment):
-        """
-        Adds a CPYRAM5/CPYRAM13 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        if card.nfields == 8:
-            return CPYRAM5.add_card(card, comment=comment)
-        else:
-            return CPYRAM13.add_card(card, comment=comment)
 
 
 class CHEXA8(SolidElement):
