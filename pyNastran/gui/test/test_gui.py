@@ -18,7 +18,7 @@ from pyNastran.gui.errors import NoGeometry
 from pyNastran.bdf.errors import (CrossReferenceError, CardParseSyntaxError,
                                   DuplicateIDsError, MissingDeckSections)
 
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastranIOv import NastranIO
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.panair.panair_io import PanairIO
@@ -73,7 +73,7 @@ EXTENSION_TO_OUPUT_FORMATS = {
 #pkg_path = pyNastran.__path__[0]
 #model_path = os.path.join(pkg_path, '..', 'models')
 
-class FakeGUI(GUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
+class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
               PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
               #Plot3d_io, ADB_IO, DegenGeomIO,
               # AbaqusIO, AvusIO,
@@ -90,7 +90,7 @@ class FakeGUI(GUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
             pass for the fake gui
         """
         self._formati = formati
-        GUIMethods.__init__(self, inputs=inputs)
+        FakeGUIMethods.__init__(self, inputs=inputs)
         #ADB_IO.__init__(self)
         #AvusIO.__init__(self)
         AbaqusIO.__init__(self)

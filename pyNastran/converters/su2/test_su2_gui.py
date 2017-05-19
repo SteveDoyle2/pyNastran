@@ -7,7 +7,7 @@ warnings.simplefilter('always')
 np.seterr(all='raise')
 
 
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.su2.su2_io import SU2_IO
 import pyNastran
 
@@ -16,9 +16,9 @@ model_path = os.path.join(pkg_path, 'converters', 'su2')
 
 import unittest
 
-class SU2_GUI(SU2_IO, GUIMethods):
+class SU2_GUI(SU2_IO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         SU2_IO.__init__(self)
 
 

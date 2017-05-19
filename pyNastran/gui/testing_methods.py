@@ -490,6 +490,37 @@ class GuiAttributes(object):
         data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
 
+    def _remove_old_geometry(self, geom_filename):
+        skip_reading = False
+        if self.dev:
+            return skip_reading
+
+        params_to_delete = (
+            'case_keys', 'icase', 'iSubcaseNameMap',
+            'result_cases', 'eid_map', 'nid_map',
+        )
+        if geom_filename is None or geom_filename is '':
+            skip_reading = True
+            return skip_reading
+        else:
+            self.turn_text_off()
+            self.grid.Reset()
+
+            self.result_cases = {}
+            self.ncases = 0
+            for param in params_to_delete:
+                if hasattr(self, param):  # TODO: is this correct???
+                    try:
+                        delattr(self, param)
+                    except AttributeError:
+                        msg = 'cannot delete %r; hasattr=%r' % (param, hasattr(self, param))
+                        self.log.warning(msg)
+
+            skip_reading = False
+        #self.scalarBar.VisibilityOff()
+        self.scalarBar.Modified()
+        return skip_reading
+
 
 class CoordProperties(object):
     def __init__(self, label, Type, is_visible, scale):
@@ -568,7 +599,7 @@ class MockResWidget(object):
         pass
 
 
-class GUIMethods(GuiAttributes):
+class FakeGUIMethods(GuiAttributes):
     def __init__(self, inputs=None):
         if inputs is None:
             inputs = {
@@ -687,38 +718,6 @@ class GUIMethods(GuiAttributes):
         else:
             self.icase = -1
             self.ncases = 0
-
-    def _remove_old_geometry(self, geom_filename):
-        skip_reading = False
-        if self.dev:
-            return skip_reading
-
-        params_to_delete = (
-            'case_keys', 'icase', 'iSubcaseNameMap',
-            'result_cases', 'eid_map', 'nid_map',
-        )
-        if geom_filename is None or geom_filename is '':
-            skip_reading = True
-            return skip_reading
-        else:
-            self.turn_text_off()
-            self.grid.Reset()
-
-            self.result_cases = {}
-            self.ncases = 0
-            for param in params_to_delete:
-                if hasattr(self, param):  # TODO: is this correct???
-                    try:
-                        delattr(self, param)
-                    except AttributeError:
-                        msg = 'cannot delete %r; hasattr=%r' % (param, hasattr(self, param))
-                        self.log.warning(msg)
-
-            skip_reading = False
-        #self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
-        return skip_reading
-
 
     def cycle_results(self):
         pass

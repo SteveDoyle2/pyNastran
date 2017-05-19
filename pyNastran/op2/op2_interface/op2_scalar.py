@@ -159,7 +159,8 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     #----------------------
     # displacement/velocity/acceleration/eigenvector/temperature
     # OUPV1 - Scaled Response Spectra - displacements
-    b'OUG1', b'OUGV1', b'BOUGV1', b'OUPV1', b'OUGV1PAT',
+    b'OUG1', b'OAG1',
+    b'OUGV1', b'BOUGV1', b'OUPV1', b'OUGV1PAT',
 
     # OUGV1PAT - Displacements in the basic coordinate system
     # OUGV1  - Displacements in the global coordinate system
@@ -824,6 +825,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # OUG
             # displacement/velocity/acceleration/eigenvector/temperature
             b'OUG1'    : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
+            b'OAG1'    : [self._read_oug1_3, self._read_oug_4],  # accelerations in nodal frame
+
             b'OUGV1'   : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
             b'BOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # OUG1 on the boundary???
             b'OUGV1PAT': [self._read_oug1_3, self._read_oug_4],  # OUG1 + coord ID

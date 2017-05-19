@@ -2,7 +2,7 @@ import os
 import unittest
 
 import pyNastran
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.cart3d.cart3d import Cart3D
@@ -15,9 +15,9 @@ pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
 
 
-class Cart3dGUI(Cart3dIO, GUIMethods):
+class Cart3dGUI(Cart3dIO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         Cart3dIO.__init__(self)
 
 

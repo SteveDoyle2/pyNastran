@@ -572,7 +572,7 @@ class DYNAMICS(GeomCommon):
             if tdi == 0:
                 td = tdr
             dload = RLOAD1(sid, darea, delay=delay, dphase=dphase, tc=tc, td=td,
-                           Type='LOAD', comment='')
+                           Type=Type, comment='')
             dloads.append(dload)
             n += ntotal
         return n, dloads
@@ -598,7 +598,7 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('2i 2f 3i 2f', edata)
-            sid, darea, delayr, dphaser, tci, tdi, Type, tau, phi = out # 36
+            sid, darea, dphaser, delayr, tci, tdi, Type, tau, phi = out # 36
 
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD1=%s\n' % str(out))
@@ -608,7 +608,7 @@ class DYNAMICS(GeomCommon):
             delay = delayr
             dphase = dphaser
             dload = RLOAD1(sid, darea, delay=delay, dphase=dphase, tc=tc, td=td,
-                           Type='LOAD', comment='')
+                           Type=Type, comment='')
             dloads.append(dload)
             n += ntotal
         return n, dloads
@@ -683,7 +683,7 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('7i 2f', edata)
-            sid, darea, delayi, dphasei, tbi, tpi, Type, tau, phase = out
+            sid, darea, dphasei, delayi, tbi, tpi, Type, tau, phase = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
 

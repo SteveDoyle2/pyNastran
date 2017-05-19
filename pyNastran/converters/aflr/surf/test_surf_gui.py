@@ -8,7 +8,7 @@ import unittest
 
 import pyNastran
 from pyNastran.converters.aflr.surf.surf_io import SurfIO
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
@@ -16,10 +16,10 @@ model_path = os.path.join(pkg_path, 'converters', 'tecplot', 'models')
 nastran_path = os.path.join(pkg_path, '..', 'models')
 
 
-class SurfGui(SurfIO, GUIMethods):
+class SurfGui(SurfIO, FakeGUIMethods):
     """defines the UGRID 2D/3D interface"""
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         SurfIO.__init__(self)
 
 class TestSurfGui(unittest.TestCase):

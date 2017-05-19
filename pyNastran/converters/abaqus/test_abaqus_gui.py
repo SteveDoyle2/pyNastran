@@ -3,16 +3,16 @@ import os
 import unittest
 
 import pyNastran
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 from pyNastran.utils.log import get_logger
 
 
-class AbaqusGui(AbaqusIO, GUIMethods):
+class AbaqusGui(AbaqusIO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         AbaqusIO.__init__(self)
 
 class TestAbaqusGui(unittest.TestCase):
