@@ -36,6 +36,7 @@ from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 
 class MinorTables(OP2Common):
+    """reads various tables that don't fit into a larger category"""
     def __init__(self):
         OP2Common.__init__(self)
 
