@@ -2642,20 +2642,6 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
 
     ELTYPE = 191 Beam view element (VUBEAM)
     ---------------------------------------
-    2 PARENT I     Parent p-element identification number
-    3 COORD  I     Coordinate system identification number
-    4 ICORD  CHAR4 Flat/curved and so on
-
-    TCODE,7 = 0 Real
-    5 VUGRID   I  VU grid ID for output grid
-    6 POSIT    RS x/L position of VU grid identification number
-    7 FORCEX   RS Force x
-    8 SHEARY   RS Shear force y
-    9 SHEARZ   RS Shear force z
-    10 TORSION RS Torsional moment x
-    11 BENDY   RS Bending moment y
-    12 BENDZ   RS Bending moment z
-
     TCODE,7 = 1 Real/imaginary or magnitude/phase
     5 VUGRID   I  VU grid identification number for output grid
     6 POSIT    RS x/L position of VU grid identification number

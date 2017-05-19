@@ -42,11 +42,11 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealCBeamForceArray,
     RealBendForceArray,
 
-    RealForceVU_Array,
 
-    # TODO: vectorize 2
+    # TODO: vectorize 1
     RealForce_VU_2D,
-    RealForceVU,
+    RealCBeamForceVUArray,
+
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexRodForceArray,
@@ -3219,28 +3219,42 @@ class OEF(OP2Common):
             slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 20:  # real
-                if self.read_mode == 1:
-                    return ndata
-                raise NotImplementedError('RealForceVU')
+                #ELTYPE = 191 Beam view element (VUBEAM)
+                #---------------------------------------
+                #2 PARENT I     Parent p-element identification number
+                #3 COORD  I     Coordinate system identification number
+                #4 ICORD  CHAR4 Flat/curved and so on
+
+                #TCODE,7 = 0 Real
+                #5 VUGRID   I  VU grid ID for output grid
+                #6 POSIT    RS x/L position of VU grid identification number
+                #7 FORCEX   RS Force x
+                #8 SHEARY   RS Shear force y
+                #9 SHEARZ   RS Shear force z
+                #10 TORSION RS Torsional moment x
+                #11 BENDY   RS Bending moment y
+                #12 BENDZ   RS Bending moment z
+
+                ntotal = self.num_wide * 4 # 80
+                nelements = ndata // ntotal
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealCBeamForceVUArray)
+                if auto_return:
+                    self._data_factor = 2
+                    return nelements * self.num_wide * 4
+
+                obj = self.obj
                 if self.use_vector and is_vectorized:
-                    ntotal = self.num_wide * 4 # 80
-                    nelements = ndata // ntotal
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, RealForceVU_Array)
-                    if auto_return:
-                        return nelements * self.num_wide * 4
-
-                    obj = self.obj
-
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
                     #self.ntimes = 0
                     #self.nelements = 0
                     n = nelements * self.num_wide * 4
-                    itotal = obj.ielement
-                    ielement2 = obj.itotal + nelements
-                    itotal2 = ielement2
+                    itotal = obj.itotal
+                    ielement = obj.ielement
+                    ielement2 = ielement + nelements
+                    itotal2 = itotal + nelements * 2
 
                     # 20 values
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 20)
@@ -3253,32 +3267,28 @@ class OEF(OP2Common):
                     eids = ints[:, 0] // 10
                     parent = ints[:, 1]
                     coord = ints[:, 2]
+                    #icord = ints[:, 3]
+
+                    ints2 = ints[:, 4:].reshape(nelements*2, 8)
+                    nids = ints2[:, 0]
+                    eids2 = np.repeat(eids, 2)
+
                     #icord = ints[:, 3]  is this a string?
                     assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
+                    obj.element_node[itotal:itotal2, 0] = eids2
+                    obj.element_node[itotal:itotal2, 1] = nids
+                    obj.parent_coord[ielement:ielement2, 1] = parent
+                    obj.parent_coord[ielement:ielement2, 1] = coord
 
                     floats2 = floats.reshape(nelements*2, 8)
-                    #[fx. fy, fz, mx, my, mz]
-                    obj.nodes[itotal:itotal2, :] = ints2[:, 0]
-                    obj.position[itotal:itotal2, :] = floats2[:, :2]
-                    obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 2:]
+                    #[xxb, fx. fy, fz, mx, my, mz]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:]
                     obj.itotal = itotal2
                     obj.ielement = ielement2
-
-                    s2 = Struct(b(self._endian + '3i 4s i7f i7f'))
                 else:
-                    # TODO: vectorize
-                    self.create_transient_object(self.cbeam_force_vu, RealForceVU)
-                    # 20 = 4 + 8 * 2 = 4 = 16
-                    nnodes = 2
-                    #ntotal = 16 + 32 * nnodes
-                    ntotal = self.num_wide * 4
-                    nelements = ndata // ntotal
-                    self.create_transient_object(self.cbeam_force_vu, RealForceVU)
-                    obj = self.obj
-
                     s1 = Struct(b(self._endian + '3i 4s'))
                     s2 = Struct(b(self._endian + 'i7f'))
+                    nnodes = 2
                     for i in range(nelements):
                         edata = data[n:n+16]  # 8*4
                         n += 16
@@ -3298,12 +3308,9 @@ class OEF(OP2Common):
                             out = s2.unpack(edata)
                             if self.is_debug_file:
                                 self.binary_debug.write('%s\n' % str(out))
-                            forces.append(out)
-                        data_in.append(forces)
-
+                            nid, xxb, fx, fy, fz, mx, my, mz = out
+                            obj._add_sort1(dt, eid, parent, coord, icord, nid, xxb, fx, fy, fz, mx, my, mz)
                         #data_in = [vugrid, posit, forceX, shearY, shearZ, torsion, bendY, bendZ]
-                        #print "force %s" %(self.get_element_type(self.element_type)), data_in
-                        obj.add(nnodes, dt, data_in)
             elif self.format_code == 1 and self.num_wide == 32:  # random
                 # TODO: vectorize
                 return ndata
