@@ -1876,7 +1876,6 @@ class AddCards(AddMethods):
         nids : List[int]
             node ids; n=4 or 10
         """
-        #elem = CTETRA(eid, pid, nids, comment=comment)
         if len(nids) == 4:
             elem = CTETRA4(eid, pid, nids, comment=comment)
         else:
@@ -1897,7 +1896,6 @@ class AddCards(AddMethods):
         nids : List[int]
             node ids; n=5 or 13
         """
-        #elem = CPYRAM(eid, pid, nids, comment=comment)
         if len(nids) == 5:
             elem = CPYRAM5(eid, pid, nids, comment=comment)
         else:
@@ -1918,7 +1916,6 @@ class AddCards(AddMethods):
         nids : List[int]
             node ids; n=6 or 15
         """
-        #elem = CPENTA(eid, pid, nids, comment=comment)
         if len(nids) == 6:
             elem = CPENTA6(eid, pid, nids, comment=comment)
         else:
@@ -1939,7 +1936,6 @@ class AddCards(AddMethods):
         nids : List[int]
             node ids; n=8 or 20
         """
-        #elem = CHEXA(eid, pid, nids, comment=comment)
         if len(nids) == 8:
             elem = CHEXA8(eid, pid, nids, comment=comment)
         else:

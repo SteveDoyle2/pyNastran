@@ -409,7 +409,9 @@ MSC_MATRIX_TABLES = [
     b'PMRF', b'PERF', b'PFRF', b'PGRF', b'AFRF', b'AGRF', b'MP3F',
 ]
 AUTODESK_MATRIX_TABLES = [
-    b'BELM', b'KELM', b'MELM',
+    b'BELM',
+    b'KELM',
+    b'MELM',
 ]
 # this will be split later
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
@@ -1385,8 +1387,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_extdb()
             elif table_name == b'OMM2':
                 self._read_omm2()
-            #elif table_name in [b'DIT', b'DITS']:  # tables
-                #self._read_dit()
             elif table_name == b'TOL':
                 self._read_tol()
             elif table_name == b'PCOMPTS': # blade
@@ -1397,11 +1397,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_aemonpt()
             elif table_name == b'FOL':
                 self._read_fol()
-            elif table_name in [b'SDF']:
+            elif table_name == b'SDF':
                 self._read_sdf()
             elif table_name in [b'IBULK', b'CDDATA']:
                 self._read_ibulk()
-            elif table_name in [b'CMODEXT']:
+            elif table_name == b'CMODEXT':
                 self._read_cmodext()
 
             elif table_name in MATRIX_TABLES:

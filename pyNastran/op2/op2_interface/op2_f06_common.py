@@ -111,6 +111,9 @@ class OP2_F06_Common(object):
         self.cbeam_force_PSD = {}
         self.cbeam_force_RMS = {}
         self.cbeam_force_NO = {}
+
+        self.cbeam_force_vu = {}
+
         self.cbeam_stress = {}
         self.cbeam_strain = {}
 
@@ -653,6 +656,7 @@ class OP2_F06_Common(object):
             'cbeam_stress',
             'cbeam_strain',
             'cbeam_force', 'cbeam_force_ATO', 'cbeam_force_CRM', 'cbeam_force_PSD', 'cbeam_force_RMS', 'cbeam_force_NO',
+            'cbeam_force_vu',
             'nonlinear_cbeam_stress',
             #'nonlinear_cbeam_strain',
 

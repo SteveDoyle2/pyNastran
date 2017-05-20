@@ -625,6 +625,7 @@ class F06Writer(OP2_F06_Common):
             # beam
             self.cbend_force,
             self.cbeam_force, self.cbeam_force_ATO, self.cbeam_force_CRM, self.cbeam_force_PSD, self.cbeam_force_RMS, self.cbeam_force_NO,
+            self.cbeam_force_vu,
 
             # alphabetical
             self.celas1_force,

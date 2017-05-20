@@ -3,7 +3,7 @@ import os
 import copy
 import unittest
 
-from pyNastran.bdf.bdf import read_bdf, BDF, BDFCard, CPENTA
+from pyNastran.bdf.bdf import read_bdf, BDF, BDFCard
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA4, CHEXA8, CPENTA6,
     #CTETRA10, CHEXA20,
@@ -34,7 +34,7 @@ class TestSolids(unittest.TestCase):
                             209, 210, 217, None, None, None, 213, 214, 218], node_ids
         nids = [201, 202, 203, 205, 206, 207,
                 209, 210, 217, None, None, None, 213, 214, 218]
-        CPENTA.add_card(card, comment='spike')
+        CPENTA15.add_card(card, comment='spike')
         eid = 85
         pid = 22
         bdf.add_cpenta(eid, pid, nids, comment='spike')

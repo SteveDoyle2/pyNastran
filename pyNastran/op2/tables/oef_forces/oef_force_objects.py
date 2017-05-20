@@ -3001,8 +3001,25 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
 
 
 # F:\work\pyNastran\examples\Dropbox\move_tpl\beamp11.op2
-class RealForceVU_Array(ScalarObject):
+class RealCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
     """
+    ELTYPE = 191 Beam view element (VUBEAM)
+    ---------------------------------------
+    2 PARENT I     Parent p-element identification number
+    3 COORD  I     Coordinate system identification number
+    4 ICORD  CHAR4 Flat/curved and so on
+
+    TCODE,7 = 0 Real
+    5 VUGRID   I  VU grid ID for output grid
+    6 POSIT    RS x/L position of VU grid identification number
+    7 FORCEX   RS Force x
+    8 SHEARY   RS Shear force y
+    9 SHEARZ   RS Shear force z
+    10 TORSION RS Torsional moment x
+    11 BENDY   RS Bending moment y
+    12 BENDZ   RS Bending moment z
+
+
           DIRECT TRANSIENT RESPONSE                                           ADAPTIVITY INDEX=      1
     0                                                                         PVAL ID=       1                       SUBCASE=       1
        VU-ELEMENT ID =  100001002
@@ -3022,31 +3039,6 @@ class RealForceVU_Array(ScalarObject):
             ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
        111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982032E-01     0.000000E+00
        111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982032E-01     0.000000E+00
-
-                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
-                        TIME =   2.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
-
-          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
-            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
-       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.999968E-01     0.000000E+00
-       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.999968E-01     0.000000E+00
-
-                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
-                        TIME =   3.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
-
-          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
-            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
-       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     1.001794E+00     0.000000E+00
-       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     1.001794E+00     0.000000E+00
-
-                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
-                        TIME =   4.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
-
-          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
-            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
-       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982129E-01     0.000000E+00
-       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982129E-01     0.000000E+00
-    1    MSC/NASTRAN                                            BEAMP11        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    43
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
@@ -3059,7 +3051,7 @@ class RealForceVU_Array(ScalarObject):
         self.nelements = 0  # result specific
 
         if is_sort1:
-            self.add = self.add_sort1
+            pass
         else:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
@@ -3068,7 +3060,7 @@ class RealForceVU_Array(ScalarObject):
         self.ielement = 0
 
     def get_headers(self):
-        headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
+        headers = ['xxb', 'fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
     def build(self):
@@ -3093,22 +3085,23 @@ class RealForceVU_Array(ScalarObject):
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        self.parent_coord = zeros((self.ntotal, 2), dtype='int32')
 
-        #[fx, fy, fz, mx, my, mz]
-        self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
+        #[xxb, fx, fy, fz, mx, my, mz]
+        self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
     def build_dataframe(self):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
+                                       major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
             self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
+                                       major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -3121,12 +3114,12 @@ class RealForceVU_Array(ScalarObject):
         if self.nonlinear_factor is not None:
             assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                 self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
-            for eid, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid, eid2)
+            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s) (%s, %s)\n' % (eid, nid, eid2, nid2)
             print(msg)
             raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
@@ -3159,11 +3152,16 @@ class RealForceVU_Array(ScalarObject):
                 raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
+    def _add_sort1(self, dt, eid, parent, coord, icord,
+                   nid, xxb, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
-        self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        self.element_node[self.ielement] = [eid, nid]
+        self.parent_coord[self.ielement] = [parent, coord]
+        self.data[self.itime, self.ielement, :] = [xxb, fx, fy, fz, mx, my, mz]
         self.ielement += 1
 
     #def add(self, nnodes, dt, data):
@@ -3205,7 +3203,8 @@ class RealForceVU_Array(ScalarObject):
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  parent_coord.shape = %s\n' % str(self.parent_coord.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -3243,7 +3242,8 @@ class RealForceVU_Array(ScalarObject):
         #(ntimes, ntotal, two) = self.data.shape
         ntimes = self.data.shape[0]
 
-        eids = self.element
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
@@ -3257,7 +3257,7 @@ class RealForceVU_Array(ScalarObject):
             my = self.data[itime, :, 4]
             mz = self.data[itime, :, 5]
 
-            for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
+            for eid, nid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, nids, fx, fy, fz, mx, my, mz):
                 [fxi, fyi, fzi, mxi, myi, mzi] = write_floats_13e([fxi, fyi, fzi, mxi, myi, mzi])
                 f.write('                    %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, fxi, fyi, fzi, mxi, myi, mzi))
                 #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
@@ -3467,128 +3467,6 @@ class RealCBushForceArray(ScalarObject):
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
-
-
-class RealForceVU(ScalarObject):  # 191-VUBEAM
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-        self.coord = {}
-        self.icord = {}
-
-        self.forceX = {}
-        self.shearY = {}
-        self.shearZ = {}
-        self.torsion = {}
-        self.bendingY = {}
-        self.bendingZ = {}
-
-        # handle SORT1 case
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self, short=False):
-        msg = ['  '] + self.get_data_code()
-        nelements = len(self.coord)
-        if self.dt is not None:  # transient
-            ntimes = len(self.forceX)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, coord, icord, forceX, shearY, shearZ, torsion, '
-                   'bendingY, bendingZ\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.forceX[dt] = {}
-        self.shearY[dt] = {}
-        self.shearZ[dt] = {}
-        self.torsion[dt] = {}
-        self.bendingY[dt] = {}
-        self.bendingZ[dt] = {}
-
-    def add(self, nnodes, dt, data):
-        [eid, parent, coord, icord, forces] = data
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-
-        self.forceX[eid] = {}
-        self.shearY[eid] = {}
-        self.shearZ[eid] = {}
-        self.torsion[eid] = {}
-        self.bendingY[eid] = {}
-        self.bendingZ[eid] = {}
-
-        for force in forces:
-            [nid, position, forceX, shearY, shearZ, torsion,
-             bendingY, bendingZ] = force
-            self.forceX[eid][nid] = forceX
-            self.shearY[eid][nid] = shearY
-            self.shearZ[eid][nid] = shearZ
-            self.torsion[eid][nid] = torsion
-            self.bendingY[eid][nid] = bendingY
-            self.bendingZ[eid][nid] = bendingZ
-
-    def add_sort1(self, nnodes, dt, data):
-        """unvectorized method for adding SORT1 transient data"""
-        [eid, parent, coord, icord, forces] = data
-        if dt not in self.forceX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-
-        self.forceX[dt][eid] = {}
-        self.shearY[dt][eid] = {}
-        self.shearZ[dt][eid] = {}
-        self.torsion[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingZ[dt][eid] = {}
-
-        for force in forces:
-            [nid, position, forceX, shearY, shearZ, torsion,
-             bendingY, bendingZ] = force
-            self.forceX[dt][eid][nid] = forceX
-            self.shearY[dt][eid][nid] = shearY
-            self.shearZ[dt][eid][nid] = shearZ
-            self.torsion[dt][eid][nid] = torsion
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingZ[dt][eid][nid] = bendingZ
-
-    def add_sort2(self, nnodes, eid, data):
-        [dt, parent, coord, icord, forces] = data
-        if dt not in self.forceX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-
-        self.forceX[dt][eid] = {}
-        self.shearY[dt][eid] = {}
-        self.shearZ[dt][eid] = {}
-        self.torsion[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingZ[dt][eid] = {}
-        for force in forces:
-            [nid, position, forceX, shearY, shearZ, torsion,
-             bendingY, bendingZ] = force
-            self.forceX[dt][eid][nid] = forceX
-            self.shearY[dt][eid][nid] = shearY
-            self.shearZ[dt][eid][nid] = shearZ
-            self.torsion[dt][eid][nid] = torsion
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingZ[dt][eid][nid] = bendingZ
 
 
 class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD

@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import cycle
 from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, allclose
@@ -2625,124 +2626,323 @@ class ComplexCBushForceArray(ScalarObject):
             page_num += 1
         return page_num
 
+class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
+    """
+    ELTYPE = 191 Beam view element (VUBEAM)
+    ---------------------------------------
+    2 PARENT I     Parent p-element identification number
+    3 COORD  I     CID coordinate system identification number
+    4 ICORD  CHAR4 ICORD flat/curved and so on TCODE,7 =0 Real
+    5 VUGRID I     VU grid ID for output grid
+    6 POSIT  RS    x/L position of VU grid identification number
+    7 POS(3) RS    Y, Z, W coordinate of output point
+    10 NX    RS    Normal x
+    11 TXY   RS    Shear xy
+    12 TZX   RS    Shear zx
 
-class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
+    ELTYPE = 191 Beam view element (VUBEAM)
+    ---------------------------------------
+    TCODE,7 = 1 Real/imaginary or magnitude/phase
+    5 VUGRID   I  VU grid identification number for output grid
+    6 POSIT    RS x/L position of VU grid identification number
+
+    7 FORCEXR  RS Force x real/mag.
+    8 SHEARYR  RS Shear force y real/mag.
+    9 SHEARZR  RS Shear force z real/mag.
+    10 TORSINR RS Torsional moment x real/mag.
+    11 BENDYR  RS Bending moment y real/mag.
+    12 BENDZR  RS Bending moment z real/mag.
+
+    13 FORCEXI RS Force x imag./phase
+    14 SHEARYI RS Shear force y imag./phase
+    15 SHEARZI RS Shear force z imag./phase
+    16 TORSINI RS Torsional moment x imag./phase
+    17 BENDYI  RS Bending moment y imag./phase
+    18 BENDZI  RS Bending moment z imag./phase
+    Words 5 through max repeat 2 times
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-        self.coord = {}
-        self.icord = {}
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.forceX = {}
-        self.shearY = {}
-        self.shearZ = {}
-        self.torsion = {}
-        self.bendingY = {}
-        self.bendingZ = {}
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.ielement = 0
+        self.nelements = 0  # result specific
+        self.nnodes = None
 
-        # TODO if dt=None, handle SORT1 case
-        self.dt = dt
         if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
+            pass
         else:
-            assert dt is not None
-            self.add = self.add_sort2
+            raise NotImplementedError('SORT2')
+
+    def is_real(self):
+        return False
+
+    def is_complex(self):
+        return True
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        return ['xxb', 'force_x', 'shear_y', 'shear_z', 'torsion', 'bending_y', 'bending_z']
+
+    def build(self):
+        #print("self.ielement = %s" % self.ielement)
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+
+        if self.element_type in [191]:  # VUBEAM
+            nnodes_per_element = 2
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+
+        #print('nnodes_per_element[%s, %s] = %s' % (self.isubcase, self.element_type, nnodes_per_element))
+        self.nnodes = nnodes_per_element
+        #self.nelements //= nnodes_per_element
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
+            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, integer_types):
+            dtype = 'int32'
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
+        self.parent_coord = np.zeros((self.ntotal, 2), dtype='int32')
+
+        #[xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z]
+        self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype='complex64')
+
+    #def build_dataframe(self):
+        #headers = self.get_headers()
+
+        #nelements = self.element_node.shape[0] // 2
+        #if self.is_fiber_distance():
+            #fiber_distance = ['Top', 'Bottom'] * nelements
+        #else:
+            #fiber_distance = ['Mean', 'Curvature'] * nelements
+        #fd = np.array(fiber_distance, dtype='unicode')
+        #element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
+
+        #if self.nonlinear_factor is not None:
+            #column_names, column_values = self._build_dataframe_transient_header()
+            #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = column_names
+            #self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
+        #else:
+            ## option B - nice!
+            #df1 = pd.DataFrame(element_node).T
+            #df1.columns = ['ElementID', 'NodeID', 'Location']
+            #df2 = pd.DataFrame(self.data[0])
+            #df2.columns = headers
+            #self.data_frame = df1.join(df2)
+        #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
+        #print(self.data_frame)
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, element_nodei in enumerate(self.element_node):
+                    (eid, nid) = element_nodei
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (xxb1, fx1, fy1, fz1, mx1, my1, mz1) = t1
+                    (xxb2, fx2, fy2, fz2, mx2, my2, mz2) = t2
+
+                    if not np.array_equal(t1, t2):
+                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid, nid,
+                            xxb1, fx1, fy1, fz1, mx1, my1, mz1,
+                            xxb2, fx2, fy2, fz2, mx2, my2, mz2))
+                        i += 1
+                        if i > 10:
+                            #print(msg.replace('+0j,', '0,'))
+                            raise ValueError(msg.replace('0j,', '0,').replace('+0j)', ')'))
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg.replace('0j,', '0,').replace('+0j)', ')'))
+        return True
+
+    def _add_sort1(self, dt, eid, parent, coord, icord,
+                   node_id, xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z):
+        assert eid is not None, eid
+        assert isinstance(node_id, int), node_id
+        self.element_node[self.itotal, :] = [eid, node_id]
+        self.parent_coord[self.itotal, :] = [parent, coord]
+        # TODO: save ICORD
+        #print('parent=%r, coord=%r, icord=%r' % (parent, coord, icord))
+        self.data[self.itime, self.itotal, :] = [xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z]
+        self.itotal += 1
 
     def get_stats(self, short=False):
-        msg = ['  '] + self.get_data_code()
-        nelements = len(self.coord)
-        if self.dt is not None:  # transient
-            ntimes = len(self.forceX)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        nnodes = self.nnodes
+        ntotal = self.ntotal
+        nlayers = 2
+        nelements = self.ntotal // self.nnodes // 2
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
+                self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
+            ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, coord, icord, forceX, shearY, shearZ, torsion, '
-                   'bendingY, bendingZ\n')
+            msgi = '  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
+                self.__class__.__name__, nelements, nnodes, nlayers, ntotal)
+            ntimes_word = '1'
+        msg.append(msgi)
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
+                                                                 str(', '.join(headers))))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n' % self.element_name)
+        msg += self.get_data_code()
         return msg
 
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.forceX[dt] = {}
-        self.shearY[dt] = {}
-        self.shearZ[dt] = {}
-        self.torsion[dt] = {}
-        self.bendingY[dt] = {}
-        self.bendingZ[dt] = {}
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
+        return itot
 
-    def add(self, nnodes, dt, data):
-        [eid, parent, coord, icord, forces] = data
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
+    def eid_to_element_node_index(self, eids):
+        ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
 
-        self.forceX[eid] = {}
-        self.shearY[eid] = {}
-        self.shearZ[eid] = {}
-        self.torsion[eid] = {}
-        self.bendingY[eid] = {}
-        self.bendingZ[eid] = {}
 
-        for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion,
-                bendingY, bendingZ] = force
-            self.forceX[eid][nid] = forceX
-            self.shearY[eid][nid] = shearY
-            self.shearZ[eid][nid] = shearZ
-            self.torsion[eid][nid] = torsion
-            self.bendingY[eid][nid] = bendingY
-            self.bendingZ[eid][nid] = bendingZ
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        """
+                 C O M P L E X   F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                                                                (REAL/IMAGINARY)
+                         VU-ELEMENT ID=  100001001, P-ELEMENT ID =       1, OUTPUT COORD. ID=       0, P OF EDGES =  3
 
-    def add_sort1(self, nnodes, dt, data):
-        """unvectorized method for adding SORT1 transient data"""
-        [eid, parent, coord, icord, forces] = data
-        if dt not in self.forceX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
+           VUGRID VUGRID DIST/    - BENDING MOMENTS -            -WEB  SHEARS -             AXIAL         TOTAL
+             ID.     LENGTH      PLANE 1       PLANE 2        PLANE 1       PLANE 2          FORCE         TORQUE
+        111001001     0.000    0.000000E+00 -1.598690E+05   0.000000E+00 -1.040952E+06   0.000000E+00   0.000000E+00
+                               0.000000E+00  0.000000E+00   0.000000E+00  0.000000E+00   0.000000E+00   0.000000E+00
+        111001002     0.333    0.000000E+00  5.328967E+04   0.000000E+00  1.872484E+05   0.000000E+00   0.000000E+00
+                               0.000000E+00  0.000000E+00   0.000000E+00  0.000000E+00   0.000000E+00   0.000000E+00
 
-        self.forceX[dt][eid] = {}
-        self.shearY[dt][eid] = {}
-        self.shearZ[dt][eid] = {}
-        self.torsion[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingZ[dt][eid] = {}
+                       C O M P L E X    S T R A I N S    I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                                                                 (REAL/IMAGINARY)
+                          VU-ELEMENT ID=  100001003, P-ELEMENT ID =       1, OUTPUT COORD. ID=       0, P OF EDGES =  3
 
-        for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion,
-                bendingY, bendingZ] = force
-            self.forceX[dt][eid][nid] = forceX
-            self.shearY[dt][eid][nid] = shearY
-            self.shearZ[dt][eid][nid] = shearZ
-            self.torsion[dt][eid][nid] = torsion
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingZ[dt][eid][nid] = bendingZ
+            VUGRID VUGRID DIST/     LOCATION         LOCATION         LOCATION         LOCATION
+              ID.     LENGTH           C                D  E                F
+         111001003     0.667    -2.557904E+00    -2.557904E+00     2.557904E+00     2.557904E+00
+                                 0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00
+         111001004     1.000     7.673713E+00     7.673713E+00    -7.673713E+00    -7.673713E+00
+                                 0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00
+        """
 
-    def add_sort2(self, nnodes, eid, data):
-        [dt, parent, coord, icord, forces] = data
-        if dt not in self.forceX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
+        msg = [
+            '                   C O M P L E X   F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )\n'
+            '                                                           (REAL/IMAGINARY)\n'
+            '                    VU-ELEMENT ID=  %9i, P-ELEMENT ID =%8i, OUTPUT COORD. ID=%8i, P OF EDGES =  3\n'
+            '\n'
+            '      VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL                    \n'
+            '        ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE   \n'
+            #'   111001003     0.667     0.000000E+00  5.328967E+04     0.000000E+00 -1.872484E+05     0.000000E+00     0.000000E+00'
+            #'                           0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     0.000000E+00     0.000000E+00'
+            #'   111001004     1.000     0.000000E+00 -1.598690E+05     0.000000E+00  1.040952E+06     0.000000E+00     0.000000E+00'
+            #'                           0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     0.000000E+00     0.000000E+00'
 
-        self.forceX[dt][eid] = {}
-        self.shearY[dt][eid] = {}
-        self.shearZ[dt][eid] = {}
-        self.torsion[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingZ[dt][eid] = {}
-        for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion, bendingY, bendingZ] = force
-            self.forceX[dt][eid][nid] = forceX
-            self.shearY[dt][eid][nid] = shearY
-            self.shearZ[dt][eid][nid] = shearZ
-            self.torsion[dt][eid][nid] = torsion
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingZ[dt][eid][nid] = bendingZ
+            #'                 C O M P L E X    S T R A I N S    I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )\n'
+            #'                                                           (REAL/IMAGINARY)\n'
+            #'                    VU-ELEMENT ID=  %9i, P-ELEMENT ID =       1, OUTPUT COORD. ID=       0, P OF EDGES =  3\n'
+            #'\n'
+            #'      VUGRID VUGRID DIST/     LOCATION         LOCATION         LOCATION         LOCATION                                            \n'
+            #'        ID.     LENGTH           C                D  E                F                                                              \n'
+            #'   111001003     0.667    -2.557904E+00    -2.557904E+00     2.557904E+00     2.557904E+00'
+            #'                           0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00'
+            #'   111001004     1.000     7.673713E+00     7.673713E+00    -7.673713E+00    -7.673713E+00'
+            #'                           0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00'
+        ]
+        if header is None:
+            header = []
+        #msg, nnodes, cen = _get_plate_msg(self)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        parent = self.parent_coord[:, 0]
+        coord = self.parent_coord[:, 1]
+
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+
+            #[xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z]
+            xxb = self.data[itime, :, 0]
+            fx = self.data[itime, :, 1]
+            fy = self.data[itime, :, 2]
+            fz = self.data[itime, :, 3]
+            mx = self.data[itime, :, 4]
+            my = self.data[itime, :, 5]
+            mz = self.data[itime, :, 6]
+
+            for (i, eid, parenti, coordi, nid, xxbi, fxi, fyi, fzi, mxi, myi, mzi) in zip(
+                 cycle(range(2)), eids, parent, coord, nids, xxb, fx, fy, fz, mx, my, mz):
+                if i == 0:
+                    f.write(''.join(header + msg) % (eid, parenti, coordi))
+
+                out = write_imag_floats_13e([fxi, fyi, fzi, mxi, myi, mzi], is_mag_phase=is_mag_phase)
+                [fxri, fyri, fzri, mxri, myri, mzri,
+                 fxii, fyii, fzii, mxii, myii, mzii] = out
+
+                        #   nid   xxb
+                f.write('   %9i     %.3f    %13.6E %13.6E    %13.6E %13.6E    %13.6E    %13.6E\n'
+                        '                          %13.6E %13.6E    %13.6E %13.6E    %13.6E    %13.6E\n' % (
+                    nid, xxbi.real,
+                    myi.real, mzi.real, fyi.real, fzi.real, fxi.real, mxi.real,
+                    myi.imag, mzi.imag, fyi.imag, fzi.imag, fxi.imag, mxi.imag,
+                ))
+
+                # stress/strain
+                #f.write('   %9i     %.3s      %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n'
+                #'                          %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n' % (
+                #nid, xxbi.real,
+                #fxi.real, fyi.real, fzi.real, mxi.real, myi.real, mzi.real,
+                #fxi.imag, fyi.imag, fzi.imag, mxi.imag, myi.imag, mzi.imag,
+                #))
+
+                if i == 1:
+                    f.write(page_stamp % page_num + '\n')
+                    page_num += 1
+        return page_num - 1
 
 
 class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
