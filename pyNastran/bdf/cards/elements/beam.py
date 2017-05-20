@@ -81,7 +81,7 @@ class CBEAM(CBAR):
                         n, value, self.type)
                     raise KeyError(msg)
 
-    def __init__(self, eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+    def __init__(self, eid, pid, nids, x, g0, offt='GGG', bit=None,
                  pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
         """
         Adds a CBEAM card
@@ -92,8 +92,8 @@ class CBEAM(CBAR):
             property id
         mid : int
             material id
-        ga / gb : int
-            grid point at End A/B
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         x : List[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
@@ -138,8 +138,8 @@ class CBEAM(CBAR):
 
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.x = x
         self.g0 = g0
         self.offt = offt
@@ -185,7 +185,7 @@ class CBEAM(CBAR):
         sa = integer_or_blank(card, 17, 'sa', 0)
         sb = integer_or_blank(card, 18, 'sb', 0)
         assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
-        return CBEAM(eid, pid, ga, gb, x, g0, offt, bit,
+        return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
     @classmethod
@@ -260,7 +260,7 @@ class CBEAM(CBAR):
 
         wa = np.array([main[8], main[9], main[10]], 'float64')
         wb = np.array([main[11], main[12], main[13]], 'float64')
-        return CBEAM(eid, pid, ga, gb, x, g0, offt, bit,
+        return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
     def _validate_input(self):

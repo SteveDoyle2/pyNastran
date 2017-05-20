@@ -3072,6 +3072,10 @@ class PLOAD4(Load):
 
 class PLOADX1(Load):
     """
+    Pressure Load on Axisymmetric Element
+
+    Defines surface traction to be used with the CQUADX, CTRIAX, and CTRIAX6
+    axisymmetric element.
     +---------+-----+-----+----+----+----+----+-------+
     |    1    |  2  |  3  |  4 |  5 |  6 |  7 |   8   |
     +=========+=====+=====+====+====+====+====+=======+
@@ -3080,7 +3084,29 @@ class PLOADX1(Load):
     """
     type = 'PLOADX1'
 
-    def __init__(self, sid, eid, pa, ga, gb, pb=None, theta=0., comment=''):
+    def __init__(self, sid, eid, pa, nids, pb=None, theta=0., comment=''):
+        """
+        Creates a PLOADX1 card, which defines surface traction for
+        axisymmetric elements.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            element id (CQUADX, CTRIAX, or CTRIAX6)
+        nids : List[int, int]
+            Corner grid points.
+            GA and GB are any two adjacent corner grid points of the element
+        pa / pb : float / None
+            Surface traction at grid point GA or GB
+            pb : default is None -> pa
+        theta : float; default=0.0
+            Angle between surface traction and inward normal to the line
+            segment.
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         if pb is None:
@@ -3089,8 +3115,8 @@ class PLOADX1(Load):
         self.eid = eid
         self.pa = pa
         self.pb = pb
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.theta = theta
 
     def validate(self):

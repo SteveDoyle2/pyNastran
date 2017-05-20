@@ -746,7 +746,7 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cgap(self, eid, ga, gb, x, g0, pid=None, cid=None, comment=''):
+    def add_cgap(self, eid, pid, nids, x, g0, cid=None, comment=''):
         """
         Creates a CGAP card
 
@@ -754,16 +754,16 @@ class AddCards(AddMethods):
         ----------
         eid : int
             Element ID
-        ga, gb : int
-            Connected grid points at ends A and B
+        pid : int
+            Property ID (PGAP)
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         x : List[float, float, float]
             Components of the orientation vector,
             from GA, in the displacement coordinate system at GA
         g0 : int
             GO Alternate method to supply the orientation vector using
             grid point GO. Direction of is from GA to GO
-        pid : int; default=eid
-            Property ID (PGAP)
         cid : int; default=None
             Element coordinate system identification number.
             CID must be specified if GA and GB are coincident
@@ -771,7 +771,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        elem = CGAP(eid, ga, gb, x, g0, pid=pid, cid=cid, comment=comment)
+        elem = CGAP(eid, pid, nids, x, g0, cid=cid, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -782,9 +782,9 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cfast(self, eid, Type, ida, idb, pid=None, gs=None, ga=None, gb=None,
+    def add_cfast(self, eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,
                   xs=None, ys=None, zs=None, comment=''):
-        elem = CFAST(eid, Type, ida, idb, pid=pid, gs=gs, ga=ga, gb=gb,
+        elem = CFAST(eid, pid, Type, ida, idb, gs=gs, ga=ga, gb=gb,
                      xs=xs, ys=ys, zs=zs, comment=comment)
         self._add_element_object(elem)
         return elem
@@ -820,7 +820,7 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbush(self, eid, pid, ga, gb, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment=''):
+    def add_cbush(self, eid, pid, nids, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment=''):
         """
         Creates a CBUSH card
 
@@ -830,9 +830,9 @@ class AddCards(AddMethods):
             Element id
         pid : int
             Property id (PBUSH)
-        ga / gb : int
-            The nodes of the CBUSH.
-            the nodes may be coincident, but then cid is required.
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
+            The nodes may be coincident, but then cid is required.
         x : List[float, float, float]; None
             List : the directional vector used to define the stiffnesses
                    or damping from the PBUSH card
@@ -858,7 +858,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        elem = CBUSH(eid, pid, ga, gb, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
+        elem = CBUSH(eid, pid, nids, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -867,13 +867,13 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbush1d(self, eid, pid, ga, gb, cid, comment=''):
-        elem = CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+    def add_cbush1d(self, eid, pid, nids, cid, comment=''):
+        elem = CBUSH1D(eid, pid, nids, cid, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cbush2d(self, eid, pid, ga, gb, cid, plane, sptid, comment=''):
-        elem = CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+    def add_cbush2d(self, eid, pid, nids, cid, plane, sptid, comment=''):
+        elem = CBUSH2D(eid, pid, nids, cid, plane, sptid, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -1060,7 +1060,7 @@ class AddCards(AddMethods):
         self._add_ao_object(elem_flag, allow_overwrites=False)
         return elem_flag
 
-    def add_cbar(self, eid, pid, ga, gb, x, g0, offt='GGG', pa=0, pb=0,
+    def add_cbar(self, eid, pid, nids, x, g0, offt='GGG', pa=0, pb=0,
                  wa=None, wb=None, comment=''):
         """
         Adds a CBAR card
@@ -1071,8 +1071,8 @@ class AddCards(AddMethods):
             property id
         mid : int
             material id
-        ga / gb : int
-            grid point at End A/B
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         x : List[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
@@ -1090,7 +1090,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        elem = CBAR(eid, pid, ga, gb, x, g0, offt=offt, pa=pa, pb=pb,
+        elem = CBAR(eid, pid, nids, x, g0, offt=offt, pa=pa, pb=pb,
                     wa=wa, wb=wb, comment=comment)
         self._add_element_object(elem)
         return elem
@@ -1170,7 +1170,7 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbeam(self, eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+    def add_cbeam(self, eid, pid, nids, x, g0, offt='GGG', bit=None,
                   pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
         """
         Adds a CBEAM card
@@ -1181,8 +1181,8 @@ class AddCards(AddMethods):
             property id
         mid : int
             material id
-        ga / gb : int
-            grid point at End A/B
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         x : List[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
@@ -1213,7 +1213,7 @@ class AddCards(AddMethods):
 
         offt/bit are MSC specific fields
         """
-        elem = CBEAM(eid, pid, ga, gb, x, g0, offt=offt, bit=bit,
+        elem = CBEAM(eid, pid, nids, x, g0, offt=offt, bit=bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
         self._add_element_object(elem)
         return elem
@@ -1375,8 +1375,8 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbend(self, eid, pid, ga, gb, g0, x, geom, comment=''):
-        elem = CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
+    def add_cbend(self, eid, pid, nids, g0, x, geom, comment=''):
+        elem = CBEND(eid, pid, nids, g0, x, geom, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -1391,9 +1391,9 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbeam3(self, eid, pid, ga, gb, gc, x, g0, wa, wb, wc, tw, s,
+    def add_cbeam3(self, eid, pid, nids, x, g0, wa, wb, wc, tw, s,
                    comment=''):
-        elem = CBEAM3(eid, pid, ga, gb, gc, x, g0, wa, wb, wc, tw, s,
+        elem = CBEAM3(eid, pid, nids, x, g0, wa, wb, wc, tw, s,
                       comment=comment)
         self._add_element_object(elem)
         return elem
@@ -2869,8 +2869,30 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_ploadx1(self, sid, eid, pa, ga, gb, pb=None, theta=0., comment=''):
-        load = PLOADX1(sid, eid, pa, ga, gb, pb=pb, theta=theta, comment=comment)
+    def add_ploadx1(self, sid, eid, pa, nids, pb=None, theta=0., comment=''):
+        """
+        Creates a PLOADX1 card, which defines surface traction for
+        axisymmetric elements.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            element id (CQUADX, CTRIAX, or CTRIAX6)
+        nids : List[int, int]
+            Corner grid points.
+            GA and GB are any two adjacent corner grid points of the element
+        pa / pb : float / None
+            Surface traction at grid point GA or GB
+            pb : default is None -> pa
+        theta : float; default=0.0
+            Angle between surface traction and inward normal to the line
+            segment.
+        comment : str; default=''
+            a comment for the card
+        """
+        load = PLOADX1(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
         self._add_load_object(load)
         return load
 
@@ -4052,7 +4074,7 @@ class AddCards(AddMethods):
         self._add_freq_object(freq)
         return freq
 
-    def add_rrod(self, eid, ga, gb, cma='', cmb='', alpha=0.0, comment=''):
+    def add_rrod(self, eid, nids, cma='', cmb='', alpha=0.0, comment=''):
         """
         Creates a RROD element
 
@@ -4060,8 +4082,8 @@ class AddCards(AddMethods):
         ----------
         eid : int
             element id
-        ga / gb : int
-            grid points
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         #cna / cnb : str
             #independent DOFs
         cma / cmb : str; default=''
@@ -4071,7 +4093,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        elem = RROD(eid, ga, gb, cma=cma, cmb=cmb, alpha=alpha, comment=comment)
+        elem = RROD(eid, nids, cma=cma, cmb=cmb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 
@@ -4145,7 +4167,7 @@ class AddCards(AddMethods):
         self._add_rigid_element_object(elem)
         return elem
 
-    def add_rbar(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
+    def add_rbar(self, eid, nids, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
         Creates a RBAR element
 
@@ -4153,8 +4175,8 @@ class AddCards(AddMethods):
         ----------
         eid : int
             element id
-        ga / gb : int
-            grid points
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         cna / cnb : str
             independent DOFs in '123456'
         cma / cmb : str
@@ -4164,12 +4186,12 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        elem = RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha=alpha, comment=comment)
+        elem = RBAR(eid, nids, cna, cnb, cma, cmb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 
-    def add_rbar1(self, eid, ga, gb, cb, alpha=0., comment=''):
-        elem = RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
+    def add_rbar1(self, eid, nids, cb, alpha=0., comment=''):
+        elem = RBAR1(eid, nids, cb, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 

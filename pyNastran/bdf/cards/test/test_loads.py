@@ -624,7 +624,7 @@ class TestLoads(unittest.TestCase):
         pa = 200.
         ga = 1
         gb = 2
-        ploadx1 = model.add_ploadx1(sid, eid1, pa, ga, gb, pb=None,
+        ploadx1 = model.add_ploadx1(sid, eid1, pa, [ga, gb], pb=None,
                                     theta=0., comment='ploadx1')
         model.add_grid(1, xyz=[0., 0., 0.])
         model.add_grid(2, xyz=[1., 0., 0.])
@@ -841,16 +841,16 @@ class TestLoads(unittest.TestCase):
         cnb = ''
         cma = ''
         cmb = ''
-        rbar = model.add_rbar(eid, ga, gb, cna, cnb, cma, cmb, alpha=0.,
+        rbar = model.add_rbar(eid, [ga, gb], cna, cnb, cma, cmb, alpha=0.,
                               comment='rbar')
 
         eid = 2
         ga = 10
         gb = 13
-        rrod_a = RROD(eid, ga, gb, cma='42', cmb='33')
+        rrod_a = RROD(eid, [ga, gb], cma='42', cmb='33')
         with self.assertRaises(RuntimeError):
             rrod_a.validate()
-        rrod_b = model.add_rrod(eid, ga, gb, cma='3', cmb=None, alpha=0.0, comment='')
+        rrod_b = model.add_rrod(eid, [ga, gb], cma='3', cmb=None, alpha=0.0, comment='')
 
         conid = 43
         gids = [10, 11]

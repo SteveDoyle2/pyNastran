@@ -97,13 +97,14 @@ class TestElements(unittest.TestCase):
         Type = 'ELEM'
         ida = eid1
         idb = eid2
-        cfast = model.add_cfast(eid, Type, ida, idb, pid=pid,
+        cfast = model.add_cfast(eid, pid, Type, ida, idb,
                                 gs=1, ga=None, gb=None,
                                 xs=None, ys=None, zs=None, comment='cfast')
 
 
         Type = 'fake'
-        cfast2 = CFAST(eid, Type, ida, idb, pid=None,
+        pid2 = None
+        cfast2 = CFAST(eid, pid2, Type, ida, idb,
                        gs=None, ga=None, gb=None,
                        xs=None, ys=None, zs=None, comment='')
         with self.assertRaises(TypeError):
@@ -133,6 +134,7 @@ class TestElements(unittest.TestCase):
         pfast.write_card()
         model._verify_bdf(xref=False)
         model.cross_reference()
+        model.pop_xref_errors()
         model._verify_bdf(xref=True)
         cfast.raw_fields()
         pfast.raw_fields()

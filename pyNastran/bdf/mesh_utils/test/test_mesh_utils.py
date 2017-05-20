@@ -524,11 +524,11 @@ class TestMeshUtils(unittest.TestCase):
 
         x = [0., 1., 0.]
         g0 = None
-        model.add_cbar(1, pid, 1, 2, x, g0, offt='GGG', pa=0, pb=0,
+        model.add_cbar(1, pid, [1, 2], x, g0, offt='GGG', pa=0, pb=0,
                        wa=None, wb=None, comment='reaction')
-        model.add_cbar(2, pid, 2, 3, x, g0, offt='GGG', pa=0, pb=456,
+        model.add_cbar(2, pid, [2, 3], x, g0, offt='GGG', pa=0, pb=456,
                        wa=None, wb=None, comment='End B')
-        model.add_cbar(3, pid, 3, 4, x, g0, offt='GGG', pa=456, pb=0,
+        model.add_cbar(3, pid, [3, 4], x, g0, offt='GGG', pa=456, pb=0,
                        wa=None, wb=None, comment='End A')
         sid = 10
         node = 4
@@ -578,15 +578,16 @@ class TestMeshUtils(unittest.TestCase):
                        #wa=None, wb=None, comment='End A')
         #eids = [1, 2, 3]
 
-        model.add_cbar(1, pid, 1, 2, x, g0, offt='GGG', pa=456, pb=5,
+        nids = [1, 2]
+        model.add_cbar(1, pid, nids, x, g0, offt='GGG', pa=456, pb=5,
                        wa=None, wb=None, comment='End A')
-        model.add_cbeam(2, 2000, 1, 2, x, g0, offt='GGG', bit=None, pa=456,
+        model.add_cbeam(2, 2000, nids, x, g0, offt='GGG', bit=None, pa=456,
                        pb=5, wa=None, wb=None, sa=0,
                        sb=0, comment='')
         A = 42.
-        model.add_conrod(3, mid, [1, 2], A)
+        model.add_conrod(3, mid, nids, A)
         model.add_prod(4000, mid, A)
-        model.add_crod(4, 4000, [1, 2])
+        model.add_crod(4, 4000, nids)
 
         Type = 'ROD'
         xxb = [0.]

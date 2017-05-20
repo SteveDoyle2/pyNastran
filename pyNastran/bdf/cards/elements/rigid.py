@@ -46,7 +46,7 @@ class RROD(RigidElement):
     """
     type = 'RROD'
 
-    def __init__(self, eid, ga, gb, cma=None, cmb=None, alpha=0.0, comment=''):
+    def __init__(self, eid, nids, cma=None, cmb=None, alpha=0.0, comment=''):
         """
         Creates a RROD element
 
@@ -54,8 +54,8 @@ class RROD(RigidElement):
         ----------
         eid : int
             element id
-        ga / gb : int
-            grid points
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         #cna / cnb : str
             #independent DOFs
         cma / cmb : str; default=None
@@ -76,8 +76,8 @@ class RROD(RigidElement):
             cmb = None
 
         self.eid = eid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
@@ -119,7 +119,7 @@ class RROD(RigidElement):
         cmb = components_or_blank(card, 5, 'cmb')
         alpha = double_or_blank(card, 6, 'alpha', 0.0)
         assert len(card) <= 7, 'len(RROD card) = %i\ncard=%s' % (len(card), card)
-        return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
+        return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -139,7 +139,7 @@ class RROD(RigidElement):
         cma = str(data[3])
         cmb = str(data[4])
         alpha = data[5]
-        return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
+        return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -217,7 +217,7 @@ class RBAR(RigidElement):
     """
     type = 'RBAR'
 
-    def __init__(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
+    def __init__(self, eid, nids, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
         Creates a RBAR element
 
@@ -225,8 +225,8 @@ class RBAR(RigidElement):
         ----------
         eid : int
             element id
-        ga / gb : int
-            grid points
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         cna / cnb : str
             independent DOFs in '123456'
         cma / cmb : str
@@ -240,8 +240,8 @@ class RBAR(RigidElement):
         if comment:
             self.comment = comment
         self.eid = eid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         if cna == '0':
             cna = ''
         if cnb == '0':
@@ -294,7 +294,7 @@ class RBAR(RigidElement):
         cmb = components_or_blank(card, 7, 'cmb', '')
         alpha = double_or_blank(card, 8, 'alpha', 0.0)
         assert len(card) <= 9, 'len(RBAR card) = %i\ncard=%s' % (len(card), card)
-        return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
+        return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -316,7 +316,7 @@ class RBAR(RigidElement):
         cma = str(data[5])
         cmb = str(data[6])
         alpha = data[7]
-        return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
+        return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
 
     # def convert_to_MPC(self, mpcID):
     #     """
@@ -416,13 +416,13 @@ class RBAR1(RigidElement):
     """
     type = 'RBAR1'
 
-    def __init__(self, eid, ga, gb, cb, alpha=0., comment=''):
+    def __init__(self, eid, nids, cb, alpha=0., comment=''):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.cb = cb
         self.alpha = alpha
 
@@ -444,7 +444,7 @@ class RBAR1(RigidElement):
         cb = components_or_blank(card, 4, 'cb')
         alpha = double_or_blank(card, 5, 'alpha', 0.0)
         assert len(card) <= 6, 'len(RBAR1 card) = %i\ncard=%s' % (len(card), card)
-        return RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
+        return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -463,7 +463,7 @@ class RBAR1(RigidElement):
         gb = data[2]
         cb = data[3]
         alpha = data[4]
-        return RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
+        return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):

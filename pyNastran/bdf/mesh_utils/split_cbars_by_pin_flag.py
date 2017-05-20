@@ -189,14 +189,14 @@ def split_cbars_by_pin_flag(bdf_filename,
 
             del model.elements[eid]
             if etype == 'CBAR':
-                model.add_cbar(eid, pid, ga, nid_new, x, g0, offt=offt, pa=0, pb=0,
+                model.add_cbar(eid, pid, [ga, nid_new], x, g0, offt=offt, pa=0, pb=0,
                                wa=wa, wb=wc, comment=comment)
-                model.add_cbar(eid_new, pid, nid_new, gb, x, g0, offt=offt, pa=0, pb=0,
+                model.add_cbar(eid_new, pid, [nid_new, gb], x, g0, offt=offt, pa=0, pb=0,
                                wa=wc, wb=wb, comment='')
             else:  # CBEAM
-                model.add_cbeam(eid, pid, ga, nid_new, x, g0, offt=offt, pa=0, pb=0,
+                model.add_cbeam(eid, pid, [ga, nid_new], x, g0, offt=offt, pa=0, pb=0,
                                 wa=wa, wb=wc, sa=0, sb=0, bit=None, comment=comment)
-                model.add_cbeam(eid_new, pid, nid_new, gb, x, g0, offt=offt, pa=0, pb=0,
+                model.add_cbeam(eid_new, pid, [nid_new, gb], x, g0, offt=offt, pa=0, pb=0,
                                 wa=wc, wb=wb, sa=0, sb=0, bit=None, comment='')
             pin_flag_map[eid] = pa
             pin_flag_map[eid_new] = pb

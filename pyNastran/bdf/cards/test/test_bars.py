@@ -184,7 +184,7 @@ class TestBars(unittest.TestCase):
         eid = 42
         x = None
         g0 = None
-        cbar = CBAR(eid, pid, nid1, nid2, x, g0, offt='GGG',
+        cbar = CBAR(eid, pid, [nid1, nid2], x, g0, offt='GGG',
                     pa=0, pb=0, wa=None, wb=None, comment='')
         cbar.validate()
         model.elements[eid] = cbar
@@ -315,11 +315,10 @@ class TestBars(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 1
         pid = 101
-        ga = 1
-        gb = 2
+        nids = [1, 2]
         x = [0., 0., 1.]
         g0 = None
-        cbar = model.add_cbar(eid, pid, ga, gb, x, g0, offt='GGG',
+        cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
                               pa=0, pb=0, wa=None, wb=None,
                               comment='CBAR')
         Type = 'BOX'
@@ -333,7 +332,7 @@ class TestBars(unittest.TestCase):
         pid = 102
         x = None
         g0 = 3
-        cbar = model.add_cbar(eid, pid, ga, gb, x, g0, offt='GGG',
+        cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
                               pa=0, pb=0, wa=None, wb=None,
                               comment='CBAR')
         Type = 'BOX'

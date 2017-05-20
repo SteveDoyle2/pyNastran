@@ -83,13 +83,13 @@ def split_line_elements(bdf_model, eids, neids=2,
             elif etype == 'CBAR':
                 ga = n1
                 gb = new_node
-                bdf_model.add_cbar(eid_start, elem.pid, ga, gb, elem.x, elem.g0, offt=elem.offt,
+                bdf_model.add_cbar(eid_start, elem.pid, [ga, gb], elem.x, elem.g0, offt=elem.offt,
                                    pa=pa, pb=pb, wa=elem.wa, wb=elem.wb, comment=comment)
                 pa = 0
             elif etype == 'CBEAM':
                 ga = n1
                 gb = new_node
-                bdf_model.add_cbeam(eid_start, elem.pid, ga, gb, elem.x, elem.g0,
+                bdf_model.add_cbeam(eid_start, elem.pid, [ga, gb], elem.x, elem.g0,
                                     offt=elem.offt, bit=elem.bit,
                                     pa=pa, pb=pb,
                                     wa=elem.wa, wb=elem.wb, sa=elem.sa, sb=elem.sb,

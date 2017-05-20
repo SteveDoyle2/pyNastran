@@ -442,11 +442,10 @@ class TestBeams(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 1
         pid = 101
-        ga = 1
-        gb = 2
+        nids = [1, 2]
         x = [0., 0., 1.]
         g0 = None
-        cbeam1 = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam1 = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                  pa=0, pb=0, wa=None, wb=None,
                                  sa=0, sb=0, comment='CBEAM')
         Type = 'BOX'
@@ -459,7 +458,7 @@ class TestBeams(unittest.TestCase):
         pid = 102
         x = None
         g0 = 3
-        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
         Type = 'BOX'
@@ -470,11 +469,9 @@ class TestBeams(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 3
         pid = 103
-        ga = 1
-        gb = 2
         x = [0., 0., 1.]
         g0 = None
-        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
         Type = 'BAR'
@@ -485,11 +482,9 @@ class TestBeams(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 4
         pid = 104
-        ga = 1
-        gb = 2
         x = [0., 0., 1.]
         g0 = None
-        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
         Type = 'ROD'
@@ -500,11 +495,9 @@ class TestBeams(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 5
         pid = 105
-        ga = 1
-        gb = 2
         x = [0., 0., 1.]
         g0 = None
-        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
         Type = 'TUBE'
@@ -515,11 +508,9 @@ class TestBeams(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 6
         pid = 106
-        ga = 1
-        gb = 2
         x = [0., 0., 1.]
         g0 = None
-        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
         Type = 'L'
@@ -530,11 +521,9 @@ class TestBeams(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 7
         pid = 107
-        ga = 1
-        gb = 2
         x = [0., 0., 1.]
         g0 = None
-        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
         Type = 'T'
@@ -545,11 +534,9 @@ class TestBeams(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 8
         pid = 108
-        ga = 1
-        gb = 2
         x = [0., 0., 1.]
         g0 = None
-        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
         Type = 'T1'
@@ -560,11 +547,9 @@ class TestBeams(unittest.TestCase):
         #---------------------------------------------------------------
         eid = 9
         pid = 109
-        ga = 1
-        gb = 2
         x = [0., 0., 1.]
         g0 = None
-        cbeam = model.add_cbeam(eid, pid, ga, gb, x, g0, offt='GGG', bit=None,
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
         Type = 'T2'

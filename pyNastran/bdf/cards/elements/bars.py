@@ -355,7 +355,7 @@ class CBAR(LineElement):
                 else:
                     raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, ga, gb,
+    def __init__(self, eid, pid, nids,
                  x, g0, offt='GGG',
                  pa=0, pb=0, wa=None, wb=None, comment=''):
         """
@@ -367,8 +367,8 @@ class CBAR(LineElement):
             property id
         mid : int
             material id
-        ga / gb : int
-            grid point at End A/B
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         x : List[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
@@ -402,8 +402,8 @@ class CBAR(LineElement):
         self.pid = pid
         self.x = x
         self.g0 = g0
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.offt = offt
         self.pa = pa
         self.pb = pb
@@ -462,7 +462,7 @@ class CBAR(LineElement):
                        double_or_blank(card, 15, 'w2b', 0.0),
                        double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
         assert len(card) <= 17, 'len(CBAR card) = %i\ncard=%s' % (len(card), card)
-        return CBAR(eid, pid, ga, gb, x, g0,
+        return CBAR(eid, pid, [ga, gb], x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
     @classmethod
@@ -493,7 +493,7 @@ class CBAR(LineElement):
 
         wa = np.array([main[6], main[7], main[8]], dtype='float64')
         wb = np.array([main[9], main[10], main[11]], dtype='float64')
-        return CBAR(eid, pid, ga, gb, x, g0,
+        return CBAR(eid, pid, [ga, gb], x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
     def _verify(self, xref=False):
@@ -739,16 +739,16 @@ class CBEAM3(LineElement):  # was CBAR
     """
     type = 'CBEAM3'
 
-    def __init__(self, eid, pid, ga, gb, gc, x, g0,
+    def __init__(self, eid, pid, nids, x, g0,
                  wa, wb, wc, tw, s, comment=''):
         LineElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
-        self.gc = gc
+        self.ga = nids[0]
+        self.gb = nids[1]
+        self.gc = nids[2]
         self.x = x
         self.g0 = g0
         self.wa = wa
@@ -797,7 +797,7 @@ class CBEAM3(LineElement):  # was CBAR
                       integer_or_blank(card, 22, 'sb'),
                       integer_or_blank(card, 23, 'sc')], dtype='int32')
         assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
-        return CBEAM3(eid, pid, ga, gb, gc, x, g0,
+        return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
                       wa, wb, wc, tw, s, comment='')
 
     def cross_reference(self, model):
@@ -911,6 +911,7 @@ class CBEAM3(LineElement):  # was CBAR
     def _verify(self, xref=False):
         edges = self.get_edge_ids()
 
+
 class CBEND(LineElement):
     type = 'CBEND'
     _field_map = {
@@ -933,14 +934,34 @@ class CBEND(LineElement):
             else:
                 raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, ga, gb, g0, x, geom, comment=''):
+    def __init__(self, eid, pid, nids, g0, x, geom, comment=''):
+        """
+        Creates a CEND card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PBEND)
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
+        g0 : int
+            ???
+        x : List[float, float, float]
+            ???
+        geom : ???
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         LineElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.g0 = g0
         self.x = x
         self.geom = geom
@@ -982,7 +1003,7 @@ class CBEND(LineElement):
         geom = integer(card, 8, 'geom')
 
         assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
-        return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
+        return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
 
     def get_x_g0_defaults(self):
         if self.g0 is not None:

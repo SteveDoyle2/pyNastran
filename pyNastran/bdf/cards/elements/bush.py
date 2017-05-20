@@ -70,7 +70,7 @@ class CBUSH(BushElement):
                 else:
                     raise KeyError('Field %r=%r is an invalid CBUSH entry.' % (n, value))
 
-    def __init__(self, eid, pid, ga, gb, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment=''):
+    def __init__(self, eid, pid, nids, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment=''):
         """
         Creates a CBUSH card
 
@@ -80,9 +80,9 @@ class CBUSH(BushElement):
             Element id
         pid : int
             Property id (PBUSH)
-        ga / gb : int
-            The nodes of the CBUSH.
-            the nodes may be coincident, but then cid is required.
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
+            The nodes may be coincident, but then cid is required.
         x : List[float, float, float]; None
             List : the directional vector used to define the stiffnesses
                    or damping from the PBUSH card
@@ -116,8 +116,8 @@ class CBUSH(BushElement):
             si = [None, None, None]
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.x = x
         self.g0 = g0
         self.cid = cid
@@ -176,7 +176,7 @@ class CBUSH(BushElement):
               double_or_blank(card, 12, 's2'),
               double_or_blank(card, 13, 's3')]
         assert len(card) <= 14, 'len(CBUSH card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH(eid, pid, ga, gb, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
+        return CBUSH(eid, pid, [ga, gb], x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, f, comment=''):
@@ -191,7 +191,7 @@ class CBUSH(BushElement):
             a comment for the card
         """
         ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
-        return CBUSH(eid, pid, ga, gb, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
+        return CBUSH(eid, pid, [ga, gb], x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
     @property
     def nodes(self):
@@ -300,14 +300,14 @@ class CBUSH1D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid',
     }
 
-    def __init__(self, eid, pid, ga, gb, cid, comment=''):
+    def __init__(self, eid, pid, nids, cid, comment=''):
         if comment:
             self.comment = comment
         BushElement.__init__(self)
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.cid = cid
 
     @classmethod
@@ -328,7 +328,7 @@ class CBUSH1D(BushElement):
         gb = integer_or_blank(card, 4, 'gb')
         cid = integer_or_blank(card, 5, 'cid')
         assert len(card) <= 6, 'len(CBUSH1D card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+        return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
@@ -337,7 +337,7 @@ class CBUSH1D(BushElement):
         #ga = data[2]
         #gb = data[3]
         #raise NotImplementedError(data)
-        #return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+        #return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -419,14 +419,14 @@ class CBUSH2D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
     }
 
-    def __init__(self, eid, pid, ga, gb, cid, plane, sptid, comment=''):
+    def __init__(self, eid, pid, nids, cid, plane, sptid, comment=''):
         BushElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.cid = cid
         self.plane = plane
         self.sptid = sptid
@@ -455,7 +455,7 @@ class CBUSH2D(BushElement):
         plane = string_or_blank(card, 6, 'plane', 'XY')
         sptid = integer_or_blank(card, 7, 'sptid')
         assert len(card) <= 8, 'len(CBUSH2D card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+        return CBUSH2D(eid, pid, [ga, gb], cid, plane, sptid, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
@@ -464,7 +464,7 @@ class CBUSH2D(BushElement):
         #ga = data[2]
         #gb = data[3]
         #raise NotImplementedError(data)
-        #return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+        #return CBUSH2D(eid, pid, [ga, gb], cid, plane, sptid, comment=comment)
 
     def _verify(self, xref=False):
         ga = self.Ga()

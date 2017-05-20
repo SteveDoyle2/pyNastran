@@ -332,7 +332,7 @@ class TestOpt(unittest.TestCase):
         pid = 102
         x = [1., 0., 0.]
         g0 = None
-        cbar = model.add_cbar(eid, pid, nid1, nid2, x, g0, offt='GGG', pa=0, pb=0,
+        cbar = model.add_cbar(eid, pid, [nid1, nid2], x, g0, offt='GGG', pa=0, pb=0,
                               wa=None, wb=None, comment='cbar')
 
         oid = 11

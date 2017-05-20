@@ -28,7 +28,7 @@ class CFAST(Element):
         9:'xs', 10:'ys', 11:'zs',
     }
 
-    def __init__(self, eid, Type, ida, idb, pid=None, gs=None, ga=None, gb=None,
+    def __init__(self, eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,
                  xs=None, ys=None, zs=None, comment=''):
         Element.__init__(self)
         if comment:
@@ -85,7 +85,7 @@ class CFAST(Element):
         zs = double_or_blank(card, 11, 'zs')
         assert len(card) <= 12, 'len(CFAST card) = %i\ncard=%s' % (len(card), card)
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
-        return CFAST(eid, Type, ida, idb, pid=pid, gs=gs, ga=ga, gb=gb,
+        return CFAST(eid, pid, Type, ida, idb, gs=gs, ga=ga, gb=gb,
                      xs=xs, ys=ys, zs=zs, comment=comment)
 
     def cross_reference(self, model):
@@ -197,7 +197,7 @@ class CGAP(Element):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
     }
 
-    def __init__(self, eid, ga, gb, x, g0, pid=None, cid=None, comment=''):
+    def __init__(self, eid, pid, nids, x, g0, cid=None, comment=''):
         """
         Creates a CGAP card
 
@@ -205,16 +205,16 @@ class CGAP(Element):
         ----------
         eid : int
             Element ID
-        ga, gb : int
-            Connected grid points at ends A and B
+        pid : int
+            Property ID (PGAP)
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         x : List[float, float, float]
             Components of the orientation vector,
             from GA, in the displacement coordinate system at GA
         g0 : int
             GO Alternate method to supply the orientation vector using
             grid point GO. Direction of is from GA to GO
-        pid : int; default=eid
-            Property ID (PGAP)
         cid : int; default=None
             Element coordinate system identification number.
             CID must be specified if GA and GB are coincident
@@ -229,8 +229,8 @@ class CGAP(Element):
             pid = eid
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.x = x
         self.g0 = g0
         self.cid = cid
@@ -269,7 +269,7 @@ class CGAP(Element):
             x = [None, None, None]
             cid = None
         assert len(card) <= 9, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
-        return CGAP(eid, ga, gb, x, g0, pid=pid, cid=cid, comment=comment)
+        return CGAP(eid, pid, [ga, gb], x, g0, cid=cid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -295,7 +295,7 @@ class CGAP(Element):
         cid = data[8]
         if cid == -1:
             cid = None
-        return CGAP(eid, ga, gb, x, g0, pid=pid, cid=cid, comment=comment)
+        return CGAP(eid, pid, [ga, gb], x, g0, cid=cid, comment=comment)
 
     def _verify(self, xref=True):
         cid = self.Cid()
