@@ -392,6 +392,7 @@ class CONROD(RodElement):
     +--------+-----+-----+----+-----+---+---+---+-----+
     """
     type = 'CONROD'
+    pid = -10 # 10 is the element type per DMAP
     _field_map = {
         1: 'eid', 4:'mid', 5:'A', 6:'j', 7:'c', 8:'nsm',
     }
@@ -504,7 +505,7 @@ class CONROD(RodElement):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        assert pid is None, 'pid=%r' % pid
+        assert pid == -10, 'pid=%r' % pid
         edges = self.get_edge_ids()
         if xref:  # True
             mid = self.Mid()
@@ -540,7 +541,7 @@ class CONROD(RodElement):
             return self.mid_ref.mid
 
     def Pid(self):
-        return None
+        return self.pid
 
     def MassPerLength(self):
         if isinstance(self.mid, integer_types):
@@ -581,7 +582,7 @@ class CONROD(RodElement):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.mid_ref.rho
 
-    #def writeCodeAster(self):
+    #def write_code_aster(self):
         #msg = ''
         #msg += "    POUTRE=_F(GROUP_MA='CONROD_%s',\n" % self.eid
         #msg += "              SECTION='CERCLE',  # circular section\n"

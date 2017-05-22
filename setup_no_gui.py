@@ -151,7 +151,7 @@ setup(
             #'test_f06  = pyNastran.f06.test.test_f06:main',
 
             'format_converter = pyNastran.converters.type_converter:main',
-            'pyNastranGUI = pyNastran.gui.gui:main',
+            'pyNastranGUI = pyNastran.gui.gui:cmd_line',
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 

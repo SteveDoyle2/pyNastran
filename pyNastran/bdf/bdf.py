@@ -2045,6 +2045,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
             # aero
             'AECOMP' : (AECOMP, self._add_aecomp_object),
+            #'AECOMPL' : (AECOMPL, self._add_aecomp_object),
             'AEFACT' : (AEFACT, self._add_aefact_object),
             'AELINK' : (AELINK, self._add_aelink_object),
             'AELIST' : (AELIST, self._add_aelist_object),

@@ -878,8 +878,14 @@ class BDFMethods(BDFAttributes):
                         m = mass_per_length * length
                         nsm_centroid = np.zeros(3)
                         nsm = prop.nsm[0]  # TODO: simplified
+                    elif prop.type == 'PBCOMP':
+                        mass_per_length = prop.MassPerLength()
+                        m = mass_per_length * length
+                        nsm = prop.nsm
+                        nsm_n1 = (p1 + jhat * prop.m1 + khat * prop.m2)
+                        nsm_n2 = (p2 + jhat * prop.m1 + khat * prop.m2)
+                        nsm_centroid = (nsm_n1 + nsm_n2) / 2.
                     else:
-                        # PBCOMP
                         raise NotImplementedError(prop.type)
 
                     #mpl = elem.pid_ref.MassPerLength()
@@ -952,7 +958,7 @@ class BDFMethods(BDFAttributes):
                         raise NotImplementedError(prop.type)
                     m = area * mpa
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
-            elif etype in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR']:
+            elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
                     elem = self.elements[eid]
@@ -1001,11 +1007,33 @@ class BDFMethods(BDFAttributes):
                         raise NotImplementedError(prop.type)
                     m = area * mpa
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            elif etype == 'CQUAD':
+                eids2 = get_sub_eids(all_eids, eids)
+                for eid in eids2:
+                    elem = self.elements[eid]
+                    n1, n2, n3, n4 = elem.node_ids[:4]
+                    prop = elem.pid_ref
+                    centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
+                    area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
+
+                    if prop.type == 'PSHELL':
+                        t = prop.Thickness()
+                        mpa = prop.nsm + prop.Rho() * t
+                    elif prop.type in ['PCOMP', 'PCOMPG']:
+                        mpa = prop.get_mass_per_area()
+                    elif prop.type == 'PLPLANE':
+                        continue
+                        #raise NotImplementedError(prop.type)
+                    else:
+                        raise NotImplementedError(prop.type)
+                    m = area * mpa
+                    mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
             elif etype == 'CSHEAR':
                 eids2 = get_sub_eids(all_eids, eids)
                 for eid in eids2:
-                    n1, n2, n3, n4 = elem.node_ids[:4]
+                    elem = self.elements[eid]
+                    n1, n2, n3, n4 = elem.node_ids
                     prop = elem.pid_ref
                     centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
                     area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
@@ -1073,6 +1101,9 @@ class BDFMethods(BDFAttributes):
                     mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
             elif etype in no_mass:
+                continue
+            elif etype == 'CBEND':
+                self.log.info('elem.type=%s doesnt have mass' % etype)
                 continue
             elif etype.startswith('C'):
                 eids2 = get_sub_eids(all_eids, eids)

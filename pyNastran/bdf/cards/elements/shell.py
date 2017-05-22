@@ -281,7 +281,7 @@ class TriShell(ShellElement):
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        n1, n2, n3 = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions()[:3]
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
@@ -457,6 +457,7 @@ class CTRIA3(TriShell):
             T2 = 1.0
         if T3 == -1.0:
             T3 = 1.0
+        assert tflag in [0, 1], data
         return CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
@@ -932,6 +933,7 @@ class CTRIA6(TriShell):
         assert isinstance(tflag, integer_types), data
         #prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
+        assert tflag in [0, 1], data
         return CTRIA6(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, comment=comment)
 
@@ -1435,7 +1437,7 @@ class QuadShell(ShellElement):
         """
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
-        (n1, n2, n3, n4) = self.get_node_positions()
+        (n1, n2, n3, n4) = self.get_node_positions()[:4, :]
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         return area
 
@@ -1904,6 +1906,7 @@ class CQUAD4(QuadShell):
             T3 = 1.0
         if T4 == -1.0:
             T4 = 1.0
+        assert tflag in [0, 1], data
         return CQUAD4(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
 
@@ -2978,6 +2981,7 @@ class CQUADR(QuadShell):
             T3 = 1.0
         if T4 == -1.0:
             T4 = 1.0
+        assert tflag in [0, 1], data
         return CQUADR(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
 
@@ -3595,6 +3599,7 @@ class CQUAD8(QuadShell):
         theta_mcid = data[14]
         zoffset = data[14]
         tflag = data[15]
+        assert tflag in [0, 1], data
         return CQUAD8(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
 

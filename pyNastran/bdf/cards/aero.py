@@ -3195,6 +3195,11 @@ class CAERO4(BaseCard):
 
         self.cp_ref = self.cp
         self.pid_ref = self.pid
+
+        if self.nspan == 0:
+            assert isinstance(self.lspan, integer_types), self.lspan
+            self.lspan = model.AEFact(self.lspan, msg)
+            self.lspan_ref = self.lspan
         self._init_ids()
 
     def safe_cross_reference(self, model):
@@ -3203,13 +3208,21 @@ class CAERO4(BaseCard):
             self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
             self.pid_ref = self.pid
         except KeyError:
-            pass
+            self.model.warning('cannot find PAERO4=%r' % self.pid)
 
         try:
             self.cp = model.Coord(self.cp, msg=msg)
             self.cp_ref = self.cp
         except KeyError:
-            pass
+            self.model.warning('cannot find CORDx=%r' % self.cp)
+
+        if self.nspan == 0:
+            assert isinstance(self.lspan, integer_types), self.lspan
+            try:
+                self.lspan = model.AEFact(self.lspan, msg)
+                self.lspan_ref = self.lspan
+            except KeyError:
+                pass
         self._init_ids()
 
     def uncross_reference(self):
@@ -3319,6 +3332,11 @@ class CAERO4(BaseCard):
         x, y = self.xy
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
 
+    def get_LSpan(self):
+        if isinstance(self.lspan, integer_types):
+            return self.lspan
+        return self.lspan_ref.sid
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -3329,7 +3347,7 @@ class CAERO4(BaseCard):
             The fields that define the card
         """
         list_fields = (['CAERO4', self.eid, self.Pid(), self.Cp(), self.nspan,
-                        self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
+                        self.get_LSpan(), None, None, None,] + list(self.p1) + [self.x12] +
                        list(self.p4) + [self.x43])
         return list_fields
 
@@ -3343,8 +3361,12 @@ class CAERO4(BaseCard):
             The fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
-        list_fields = (['CAERO4', self.eid, self.Pid(), cp, self.nspan,
-                        self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
+
+        nspan = set_blank_if_default(self.nspan, 0)
+        lspan = set_blank_if_default(self.get_LSpan(), 0)
+
+        list_fields = (['CAERO4', self.eid, self.Pid(), cp, nspan,
+                        lspan, None, None, None,] + list(self.p1) + [self.x12] +
                        list(self.p4) + [self.x43])
         return list_fields
 
@@ -4764,6 +4786,9 @@ class MONPNT1(BaseCard):
         ]
         cd = integer_or_blank(card, 15, 'cd', cp)
         return MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd, comment=comment)
+
+    #def cross_reference(self):
+        #pass
 
     #def uncross_reference(self):
         #pass

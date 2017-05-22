@@ -706,7 +706,7 @@ class AddMethods(BDFAttributes):
     def _add_monpnt_object(self, monitor_point):
         """adds an MONPNT object"""
         key = monitor_point.name
-        assert key not in self.monitor_points, '\nmonitor_point=\n%soldMNTPNT=\n%s' % (
+        assert key not in self.monitor_points, '\nmonitor_point=\n%soldMOTPNT=\n%s' % (
             monitor_point, self.monitor_points[key])
         self.monitor_points.append(monitor_point)
         self._type_to_id_map[monitor_point.type].append(len(self.monitor_points) - 1)

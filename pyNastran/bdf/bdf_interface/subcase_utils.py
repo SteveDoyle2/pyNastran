@@ -97,8 +97,8 @@ def expand_thru_case_control(set_value):
                             raise RuntimeError(ivalue)
                     else:
                         msg = ('expected data of the form: '
-                               '10 THRU 20 or 10 THRU 20 BY 5\n'
-                               'actual=%r; input=%s' % (ivalue, set_value))
+                               '"10 THRU 20" or "10 THRU 20 BY 5"\n'
+                               'actual=%r; input=%s' % (ivalue.strip(), set_value))
                         raise RuntimeError(msg)
                 else:
                     assert add_mode is True, add_mode

@@ -1720,7 +1720,6 @@ class DRESP2(OptConstraint):
         msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):
-            #assert key is not None, str(self)
             try:
                 j, name = key
             except:
@@ -1840,6 +1839,7 @@ class DRESP2(OptConstraint):
             'DVMREL2' : [1, 0],
             'DRESP2' : [1, 0],
         }
+
         list_fields = []
         for (j, name), value_list in sorted(iteritems(self.params)):
             values_list2 = self._get_values(name, value_list)
@@ -3730,10 +3730,12 @@ def parse_table_fields(fields, allowed=None):
        (2, 'DRESP1') = [40],
     }
     """
-    j = 0
     params = {}
-    value_list = []
+    if not fields:
+        return params
 
+    j = 0
+    value_list = []
     key = None  # dummy key
     for (i, field) in enumerate(fields):
         if i % 8 == 0 and field is not None:

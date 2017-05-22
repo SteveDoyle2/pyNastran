@@ -496,12 +496,13 @@ class OES(OP2Common):
 
             (12, 1, 2, b'OES1X1') : ('celas2_stress', RealSpringStressArray),
             (12, 1, 2, b'OES1X') : ('celas2_stress', RealSpringStressArray),
+            (12, 1, 2, b'OES1') : ('celas2_stress', RealSpringStressArray),
             (12, 2, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
             (12, 3, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
 
             (13, 1, 2, b'OES1X1') : ('celas3_stress', RealSpringStressArray),
-            (13, 2, 3) : ('celas3_stress', ComplexSpringStressArray),
-            (13, 3, 3) : ('celas3_stress', ComplexSpringStressArray),
+            #(13, 2, 3) : ('celas3_stress', ComplexSpringStressArray),
+            #(13, 3, 3) : ('celas3_stress', ComplexSpringStressArray),
             (13, 2, 3, b'OES1X') : ('celas3_stress', RealSpringStressArray),
 
             (14, 1, 2) : ('celas4_stress', RealSpringStressArray),
@@ -2666,10 +2667,10 @@ class OES(OP2Common):
                 ntotal = 100  # 4*25
                 nelements = ndata // ntotal
                 obj_vector_real = RealNonlinearPlateArray
-                if result_name == 'nonlinear_cquad4_stress':
+                #if result_name == 'nonlinear_cquad4_stress':
                     #print(self.code_information())
                     #print('nelements =', nelements)
-                    print('nelements, dt =', '%5s' % nelements, '%.3f' % dt)
+                    #print('nelements, dt =', '%5s' % nelements, '%.3f' % dt)
                     #print('nelements * self.num_wide =', nelements * self.num_wide)
                     #print(result_name, dt)
 

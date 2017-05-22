@@ -483,7 +483,12 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
-            self._add_tstepnl_object(TSTEPNL.add_op2_data(out))
+            method = out[4]
+            if method in [4]:
+                self.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
+            else:
+                self._add_tstepnl_object(TSTEPNL.add_op2_data(out))
+
             n += ntotal
         self.card_count['TSTEPNL'] = nentries
         return n

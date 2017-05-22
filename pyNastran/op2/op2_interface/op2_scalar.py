@@ -76,7 +76,7 @@ GEOM_TABLES = [
 
     # other
     b'CONTACT', b'VIEWTB',
-    b'KDICT',
+    #b'KDICT',
 
     # aero?
     #b'MONITOR',
@@ -245,7 +245,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'STDISP', b'AEDISP', #b'TOLB2',
 
     # autoskip
-    b'MATPOOL',
+    #b'MATPOOL',
     b'CSTM',
     b'AXIC',
     b'BOPHIG',
@@ -409,9 +409,9 @@ MSC_MATRIX_TABLES = [
     b'PMRF', b'PERF', b'PFRF', b'PGRF', b'AFRF', b'AGRF', b'MP3F',
 ]
 AUTODESK_MATRIX_TABLES = [
-    b'BELM',
-    b'KELM',
-    b'MELM',
+    #b'BELM',
+    #b'KELM',
+    #b'MELM',
 ]
 # this will be split later
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES

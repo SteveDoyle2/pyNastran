@@ -520,6 +520,7 @@ class CTRIAX6(TriShell):
       1----2----3
     """
     type = 'CTRIAX6'
+    pid = -53 # uses element type from OP2
     def __init__(self, eid, mid, nids, theta=0., comment=''):
         TriShell.__init__(self)
         if comment:
@@ -591,7 +592,7 @@ class CTRIAX6(TriShell):
         nids = self.node_ids
         edges = self.get_edge_ids()
 
-        assert self.pid == 0, 'pid = %s' % self.pid
+        assert self.pid == -53, 'pid = %s' % self.pid
         assert isinstance(eid, integer_types)
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
@@ -605,7 +606,8 @@ class CTRIAX6(TriShell):
                 assert isinstance(n[i], float)
 
     def Pid(self):
-        raise AttributeError("CTRIAX6 doesn't have a Property")
+        #raise AttributeError("CTRIAX6 doesn't have a Property")
+        return self.pid
 
     def AreaCentroidNormal(self):
         """
@@ -626,6 +628,17 @@ class CTRIAX6(TriShell):
         area = 0.5 * norm(cross(a, b))
         return area
 
+    def Centroid(self):
+        r"""
+        Get the centroid.
+
+        .. math::
+          CG = \frac{1}{3} (n_0+n_1+n_2)
+        """
+        n1, n2, n3, n4, n5, n6 = self.get_node_positions()
+        centroid = (n1 + n3 + n5) / 3.
+        return centroid
+
     def Nsm(self):
         raise AttributeError('CTRIAX6 does not have a non-structural mass')
 
@@ -633,7 +646,8 @@ class CTRIAX6(TriShell):
         raise AttributeError('CTRIAX6 does not have a MassPerArea')
 
     def Mass(self):
-        raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
+        #raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
+        return 0.
 
     def Mid(self):
         if isinstance(self.mid, integer_types):

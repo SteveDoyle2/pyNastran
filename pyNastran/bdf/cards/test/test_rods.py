@@ -43,7 +43,7 @@ class TestRods(unittest.TestCase):
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids
 
-    def test_mass_01(self):
+    def test_rod_mass_01(self):
         """tests a CROD and a CONROD mass"""
         eid = 10
         pid = 67
@@ -141,7 +141,7 @@ class TestRods(unittest.TestCase):
 
         # conrod
         self.assertEqual(conrod.eid, eid)
-        self.assertEqual(conrod.Pid(), None)
+        self.assertEqual(conrod.Pid(), -10)
         self.assertEqual(conrod.Mid(), mid)
         self.assertEqual(conrod.Length(), L)
         self.assertEqual(conrod.Nsm(), nsm)

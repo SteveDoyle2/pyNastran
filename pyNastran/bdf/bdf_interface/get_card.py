@@ -1333,6 +1333,7 @@ class GetCard(GetMethods):
                 for i, eid in enumerate(eids):
                     elem = self.elements[eid]
                     pid = elem.Pid()
+                    assert pid is not None, elem
                     nidsi = elem.node_ids
                     #self.log.info(str(elem))
                     try:
@@ -1362,6 +1363,7 @@ class GetCard(GetMethods):
                 for i, eid in enumerate(eids):
                     elem = self.elements[eid]
                     pid = elem.Pid()
+                    assert pid is not None, elem
                     nidsi = elem.node_ids
                     nnodesi = len(nidsi)
                     if nnodesi == nnodes_max:

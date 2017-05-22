@@ -1632,8 +1632,26 @@ class PBCOMP(LineProperty):
                       k1, k2, m1, m2, n1, n2,
                       symopt, comment=comment)
 
-    #def add_op2_data(self, data, comment=''):
-        #raise NotImplementedError()
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        data1, data2 = data
+        (pid, mid, area, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, nsections) = data1
+        y = []
+        z = []
+        c = []
+        mids = []
+
+        symopt = 5
+        for yi, zi, ci, midi in data2:
+            y.append(yi)
+            z.append(zi)
+            c.append(ci)
+            mids.append(midi)
+        #raise NotImplementedError(data)
+        return PBCOMP(pid, mid, y, z, c, mids,
+                      area, i1, i2, i12, j, nsm,
+                      k1, k2, m1, m2, n1, n2,
+                      symopt, comment=comment)
 
     def _verify(self, xref=True):
         pid = self.Pid()

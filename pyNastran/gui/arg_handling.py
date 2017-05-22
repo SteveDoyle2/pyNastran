@@ -184,7 +184,10 @@ def run_docopt():
             user_geom, is_groups, no_update, data['--log'])
 
 
-def get_inputs():
+def get_inputs(argv=None):
+    if argv is None:
+        argv = sys.argv
+        print('get_inputs; argv was None -> %s' % argv)
     input_format = None
     input_filename = None
     output_filename = None
@@ -204,7 +207,7 @@ def get_inputs():
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
-        if len(sys.argv) > 1:
+        if len(argv) > 1:
             (input_format, input_filename, output_filename, shots, magnify,
              rotation, geom_script, post_script, debug, user_points, user_geom,
              is_groups, no_update, log) = run_docopt()

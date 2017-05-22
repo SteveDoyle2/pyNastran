@@ -91,6 +91,7 @@ class IntStrCard(IntCard):
                 raise ValueError(msg)
 
     def __repr__(self):
+        """writes a card"""
         return '%s = %s\n' % (self.type, self.value)
 
 
@@ -397,6 +398,7 @@ class StringCard(CaseControlCard):
 
     @classmethod
     def add_from_case_control(cls, line, line_upper, lines, i):
+        """add method used by the CaseControl class"""
         value = line_upper.split('=')[1]
         return cls(value)
 
@@ -406,6 +408,7 @@ class StringCard(CaseControlCard):
             raise ValueError(msg)
 
     def __repr__(self):
+        """writes a card"""
         return '%s = %s\n' % (self.type, self.value)
 
     def write(self, spaces):
@@ -471,6 +474,7 @@ class SET(CaseControlCard):
 
     @classmethod
     def add_from_case_control(cls, line_upper, lines, i):
+        """add method used by the CaseControl class"""
         line = lines[i]
         sline = line_upper.split('=')
         assert len(sline) == 2, sline
@@ -632,6 +636,7 @@ class CheckCard(CaseControlCard):
 
     @classmethod
     def add_from_case_control(cls, line, line_upper, lines, i):
+        """add method used by the CaseControl class"""
         equals_count = line.count('=')
         if equals_count == 1:
             if '=' in line:
@@ -719,6 +724,7 @@ class CheckCard(CaseControlCard):
         return msg
 
     def __repr__(self):
+        """writes a card"""
         msg = '%s' % self.type
         if self.data:
             msg += '('
@@ -897,6 +903,7 @@ class EXTSEOUT(CaseControlCard):
 
     @classmethod
     def add_from_case_control(cls, line):
+        """add method used by the CaseControl class"""
         assert line.startswith('EXTSEOUT('), line
         assert line.endswith(')'), line
         data = line[9:-1].split(',')
@@ -906,33 +913,42 @@ class EXTSEOUT(CaseControlCard):
             key_value = key_value.strip()
             if '=' in key_value:
                 key, value = key_value.split('=')
-                key = key.strip()
+                key = cls._update_key(key)
                 value = value.strip()
 
-                #STIFFNESS, DAMPING, K4DAMP, and LOADS may be abbreviated to STIF,
-                #DAMP, K4DA, and LOAD, respectively.
-                if key == 'STIF':
-                    key = 'STIFFNESS'
-                elif key == 'DAMP':
-                    key = 'DAMPING'
-                elif key == 'K4DA':
-                    key = 'K4DAMP'
-                elif key == 'LOAD':
-                    key = 'LOADS'
                 data_list.append((key, value))
             else:
-                key = key_value
+                key = cls._update_key(key_value)
                 data_list.append((key, None))
+
             if key not in cls.allowed_keys:
-                msg = 'key=%r allowed_keys=[%s]' % (key, ', '.join(cls.allowed_keys))
+                msg = 'EXTSEOUT: key=%r allowed_keys=[%s]' % (key, ', '.join(cls.allowed_keys))
                 raise KeyError(msg)
         return EXTSEOUT(data_list)
+
+    @staticmethod
+    def _update_key(key):
+        """
+        STIFFNESS, DAMPING, K4DAMP, and LOADS may be abbreviated to STIF,
+        DAMP, K4DA, and LOAD, respectively.
+        """
+        key = key.strip()
+        if key == 'STIF':
+            key = 'STIFFNESS'
+        elif key == 'DAMP':
+            key = 'DAMPING'
+        elif key == 'K4DA':
+            key = 'K4DAMP'
+        elif key == 'LOAD':
+            key = 'LOADS'
+        return key
 
     def write(self, spaces):
         msg = spaces + str(self)
         return msg
 
     def __repr__(self):
+        """writes a card"""
         msg = 'EXTSEOUT'
         if self.data:
             msg += '('

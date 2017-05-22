@@ -586,11 +586,14 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     #convert(fem1, units_to, units=units_from)
     if xref:
         try:
-            fem1.get_area_breakdown()
-            fem1.get_volume_breakdown()
-            fem1.get_mass_breakdown()
+            if len(fem1.elements) + len(fem1.masses) > 0:
+                fem1.get_area_breakdown()
+                fem1.get_volume_breakdown()
+                fem1.get_mass_breakdown()
+            else:
+                fem1.log.warning('no elements found')
         except RuntimeError:
-            fem1.log.warning('no elements found')
+            fem1.log.warning('there are elements, but none with mass?')
     return fem1
 
 
@@ -910,7 +913,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol in [114, 115, 116, 118]:
         # cyclic statics, modes, buckling, frequency
         pass
-    elif sol in [1, 5, 21, 61, 68, 76, 100, 128, 187, 190, 400, 401, 601, 700, 701]:
+    elif sol in [1, 5, 21, 61, 68, 76, 88, 100, 128, 187, 190, 400, 401, 601, 700, 701]:
         pass
     else:
         msg = 'SOL = %s\n' % (sol)

@@ -14,6 +14,7 @@ All nodes are defined in this file.  This includes:
  * POINT
  * Ring
    * RINGAX
+ * SEQGP
 
 All ungrouped elements are Node objects.
 
@@ -34,7 +35,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string)
+    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
+    integer_or_double)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
@@ -176,6 +178,33 @@ class SEQGP(BaseCard):
         self.nids = nids
         self.seqids = seqids
 
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a SEQGP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        ncard = len(card) - 1
+        n = ncard // 2
+        assert ncard % 2 == 0, card
+        nids = []
+        seqids = []
+        for ifield in range(1, ncard, 2):
+            nid = integer(card, ifield, 'nid')
+            seqid = integer_or_double(card, ifield, 'seqid')
+            nids.append(nid)
+            seqids.append(seqid)
+        return SEQGP(nids, seqids, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
     def append(self, seqgp):
         self.nids += seqgp.nids
         self.seqids += seqgp.seqids
@@ -205,17 +234,9 @@ class SEQGP(BaseCard):
             the fields that define the card
         """
         lists_fields = []
-        if isinstance(self.nid, integer_types):
-            list_fields = [self.type, self.nid]
-            lists_fields.append(list_fields)
-        else:
-            singles, doubles = collapse_thru_packs(self.nid)
-            if singles:
-                list_fields = [self.type] + singles
-            if doubles:
-                for spoint_double in doubles:
-                    list_fields = [self.type] + spoint_double
-                    lists_fields.append(list_fields)
+        for nid, seqid in zip(self.nids, self.seqids):
+            list_fields.append(nid)
+            list_fields.append(seqid)
         return lists_fields
 
     def write_card(self, size=8, is_double=False):
@@ -231,11 +252,7 @@ class SEQGP(BaseCard):
         """
         msg = self.comment
         lists_fields = self.repr_fields()
-        for list_fields in lists_fields:
-            if 'THRU' not in list_fields:
-                msg += print_int_card(list_fields)
-            else:
-                msg += print_card_8(list_fields)
+        msg += print_card_8(list_fields)
         return msg
 
 

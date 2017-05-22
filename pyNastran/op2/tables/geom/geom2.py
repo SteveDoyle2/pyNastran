@@ -1212,7 +1212,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CQUAD8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
              t3, t4, theta, zoffs, tflag) = out
-            self.log.info('cquad8 tflag = %s' % tflag)
+            #self.log.info('cquad8 tflag = %s' % tflag)
             assert tflag in [-1, 0, 1], tflag
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %
                   #(eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
@@ -1428,7 +1428,7 @@ class GEOM2(GeomCommon):
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
                   #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
-            self.log.info('ctria6 tflag = %s' % tflag)
+            #self.log.info('ctria6 tflag = %s' % tflag)
             elem = CTRIA6.add_op2_data(out)
             self.add_op2_element(elem)
             assert tflag in [-1, 0, 1], tflag

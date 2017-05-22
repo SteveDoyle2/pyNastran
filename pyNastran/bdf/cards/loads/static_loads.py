@@ -728,8 +728,8 @@ class Force(Load):
         adjust the vector to a unit length
         scale up the magnitude of the vector
         """
-        assert self.mag > 0, self.mag
-        if self.mag != 0.0:  # enforced displacement
+        assert abs(self.mag) > 0, 'mag=%s\n%s' % (self.mag, self)
+        if abs(self.mag) != 0.0:  # enforced displacement
             norm_xyz = norm(self.xyz)
             if norm_xyz == 0.0:
                 raise RuntimeError('xyz=%s norm_xyz=%s' % (self.xyz, norm_xyz))

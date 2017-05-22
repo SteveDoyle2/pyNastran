@@ -15,7 +15,12 @@ import os.path
 #webbrowser.open("http://xkcd.com/353/")
 
 from pyNastran.gui.arg_handling import get_inputs
-get_inputs()
+if __name__ == '__main__':
+    # yes we're intentionally putting this here to validate the imports
+    # before doing lots of work
+    #
+    # it needs to be here to avoid screwing up jupyter_gui
+    get_inputs()
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
@@ -296,7 +301,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         qApp.quit()
 
 
-def main():
+def cmd_line():
     app = QApplication(sys.argv)
 
     QApplication.setOrganizationName("pyNastran")
@@ -308,5 +313,3 @@ def main():
     window = MainWindow(inputs)
     sys.exit(app.exec_())
 
-if __name__ == '__main__':  # pragma: no cover
-    main()
