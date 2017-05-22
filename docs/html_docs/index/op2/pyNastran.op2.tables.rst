@@ -31,6 +31,16 @@ tables Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`minor_tables` Module
+--------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.minor_tables
+
+.. automodule:: pyNastran.op2.tables.minor_tables
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`monpnt` Module
 --------------------
 
@@ -61,15 +71,6 @@ tables Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`ogs` Module
------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.ogs
-
-.. automodule:: pyNastran.op2.tables.ogs
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 Subpackages
 -----------

@@ -51,14 +51,3 @@ unit Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`test_sum_loads` Module
-----------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.test.unit.test_sum_loads
-
-.. automodule:: pyNastran.bdf.test.unit.test_sum_loads
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-

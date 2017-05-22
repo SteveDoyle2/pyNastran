@@ -210,17 +210,6 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`utils` Module
--------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.utils
-
-.. automodule:: pyNastran.bdf.cards.utils
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 

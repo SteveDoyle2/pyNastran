@@ -11,12 +11,12 @@ oes_stressStrain Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`oes_nonlinear` Module
----------------------------
+:mod:`oes_hyperelastic` Module
+------------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic
 
-.. automodule:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic
     :members:
     :undoc-members:
     :show-inheritance:
@@ -27,6 +27,16 @@ oes_stressStrain Package
 .. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oes_nonlinear_rod` Module
+-------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod
+
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod
     :members:
     :undoc-members:
     :show-inheritance:

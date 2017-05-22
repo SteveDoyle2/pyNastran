@@ -155,6 +155,17 @@ mesh_utils Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`split_cbars_by_pin_flag` Module
+-------------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag
+
+.. automodule:: pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`split_elements` Module
 ----------------------------
 

@@ -88,6 +88,17 @@ bdf_interface Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`get_methods` Module
+-------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.get_methods
+
+.. automodule:: pyNastran.bdf.bdf_interface.get_methods
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`mirror_mesh` Module
 -------------------------
 
@@ -152,16 +163,4 @@ bdf_interface Package
     :private-members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`write_mesh` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.bdf_interface.write_mesh
-
-.. automodule:: pyNastran.bdf.bdf_interface.write_mesh
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 

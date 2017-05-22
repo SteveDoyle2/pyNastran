@@ -12,7 +12,7 @@ import numpy as np
 
 from pyNastran.bdf.cards.properties.mass import PMASS, NSM
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
-from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML
+from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.properties.bush import PBUSH
 from pyNastran.bdf.cards.properties.damper import PDAMP, PVISC
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP
@@ -224,8 +224,52 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbcomp(self, data, n):
-        self.log.info('skipping PBCOMP in EPT\n')
-        return len(data)
+        struct1 = Struct(b(self._endian + '2i 12f i'))
+        struct2 = Struct(b(self._endian + '3f 2i'))
+        nproperties = 0
+        ndata = len(data)
+        while n < ndata:
+            edata = data[n:n+60]  # 4*15
+            n += 60
+            data1 = struct1.unpack(edata)
+            nsections = data1[-1]
+            if self.is_debug_file:
+                (pid, mid, a, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, nsections) = data1
+                self.log.info('PBCOMP pid=%s mid=%s nsections\n' % (pid, mid, nsections))
+
+            data2 = []
+            if nsections in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]:
+                # 16 Y   RS    Lumped area location along element's y-axis
+                # 17 Z   RS    Lumped area location along element's z-axis
+                # 18 C   RS    Fraction of the total area for the lumped area
+                # 19 MID I     Material identification number
+                # 20     UNDEF None
+                # Words 16 through 20 repeat NSECT times
+                for i in range(nsections):
+                    datai = data[n:n+20]
+                    xi, yi, ci, mid, null = struct2.unpack(datai)
+                    data2.append((xi, yi, ci, mid))
+                    n += 20
+            else:
+                raise NotImplementedError('PBCOMP nsections=%r' % nsections)
+
+            if self.is_debug_file:
+                self.binary_debug.write('     %s\n' % str(pack))
+                msg = (
+                    '    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
+                    'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))
+                )
+                self.log.debug(msg)
+            self.log.debug(data1)
+            self.log.debug(data2)
+
+            data_in = [data1, data2]
+            prop = PBCOMP.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            nproperties += 1
+        assert nproperties > 0, 'PBCOMP nproperties=%s' % (nproperties)
+        self.card_count['PBCOMP'] = nproperties
+        return n
 
     def _read_pbeam(self, data, n):
         """
@@ -239,6 +283,8 @@ class EPT(GeomCommon):
         nproperties = (len(data) - n) // ntotal
         #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
         ndata = len(data)
+        #self.show_data(data[12:], 'if')
+        #assert ndata % ntotal == 0, 'ndata-n=%s n=%s ndata%%ntotal=%s' % (len(data)-n, n, ndata % ntotal)
         while n < ndata:
         #while 1: #for i in range(nproperties):
             edata = data[n:n+20]
@@ -271,8 +317,9 @@ class EPT(GeomCommon):
                 elif soi == 1.0:
                     so_str = 'YES'
                 else:
-                    msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; soi not in 0.0 or 1.0' % (pid, i, xxb, soi)
-                    raise NotImplementedError(msg)
+                    so_str = str(soi)
+                    #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; soi not in 0.0 or 1.0' % (pid, i, xxb, soi)
+                    #raise NotImplementedError(msg)
 
                 #if xxb != 0.0:
                     #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; xxb not in 0.0 or 1.0' % (pid, i, xxb, soi)
