@@ -19,8 +19,8 @@ def set_clipping_menu(self):
 
     data = {
         'font_size' : self.font_size,
-        'min' : min_clip,
-        'max' : max_clip,
+        'clipping_min' : min_clip,
+        'clipping_max' : max_clip,
         'clicked_ok' : False,
         'close' : False,
     }

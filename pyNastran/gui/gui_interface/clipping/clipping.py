@@ -40,8 +40,8 @@ class ClippingPropertiesWindow(PyDialog):
 
         self._updated_clipping = False
 
-        self._default_min = data['min']
-        self._default_max = data['max']
+        self._default_min = data['clipping_min']
+        self._default_max = data['clipping_max']
 
         #self.setupUi(self)
         self.setWindowTitle('Clipping Properties')
@@ -91,21 +91,14 @@ class ClippingPropertiesWindow(PyDialog):
 
     def set_connections(self):
         if qt_version == 4:
-            self.connect(self.min_button, QtCore.SIGNAL('clicked()'), self.on_default_min)
-            self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
-
-            self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-            self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
-        else:
-            self.min_button.clicked.connect(self.on_default_min)
-            self.max_button.clicked.connect(self.on_default_max)
-
-            self.apply_button.clicked.connect(self.on_apply)
-            self.ok_button.clicked.connect(self.on_ok)
-            self.cancel_button.clicked.connect(self.on_cancel)
+        #else:
             # closeEvent
+        self.min_button.clicked.connect(self.on_default_min)
+        self.max_button.clicked.connect(self.on_default_max)
+        self.apply_button.clicked.connect(self.on_apply)
+        self.ok_button.clicked.connect(self.on_ok)
+        self.cancel_button.clicked.connect(self.on_cancel)
 
     def on_default_min(self):
         self.min_edit.setText(str(self._default_min))
@@ -131,8 +124,8 @@ class ClippingPropertiesWindow(PyDialog):
         max_value, flag1 = self.check_float(self.max_edit)
 
         if flag0 and flag1:
-            self.out_data['min'] = min(min_value, max_value)
-            self.out_data['max'] = max(min_value, max_value)
+            self.out_data['clipping_min'] = min(min_value, max_value)
+            self.out_data['clipping_max'] = max(min_value, max_value)
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -167,8 +160,8 @@ def main():
     app = QApplication(sys.argv)
     #The Main window
     d = {
-        'min' : 0.,
-        'max' : 10,
+        'clipping_min' : 0.,
+        'clipping_max' : 10,
     }
     main_window = ClippingPropertiesWindow(d)
     main_window.show()

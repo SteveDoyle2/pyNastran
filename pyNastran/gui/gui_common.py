@@ -5431,8 +5431,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         set_clipping_menu(self)
 
     def _apply_clipping(self, data):
-        min_clip = data['min']
-        max_clip = data['max']
+        min_clip = data['clipping_min']
+        max_clip = data['clipping_max']
         self.on_update_clipping(min_clip, max_clip)
 
     def on_update_clipping(self, min_clip=None, max_clip=None):
