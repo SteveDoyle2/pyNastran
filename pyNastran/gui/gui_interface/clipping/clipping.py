@@ -2,12 +2,10 @@ from six import string_types
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
-    #from PyQt4 import QtCore, QtGui
     from PyQt4 import QtCore
     from PyQt4.QtGui import (
         QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
 elif qt_version == 5:
-    #from PyQt5 import QtCore, QtGui
     from PyQt5 import QtCore
     from PyQt5.QtWidgets import (
         QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)

@@ -11,22 +11,10 @@ from numpy import setdiff1d, unique, hstack, ndarray
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore, QtGui
-    #from PyQt4.QtGui import (
-        #QLabel, QLineEdit, QPushButton, QWidget, QApplication,
-        #QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    #)
 elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
-    #from PyQt5.QtWidgets import (
-        #QLabel, QLineEdit, QPushButton, QWidget, QApplication,
-        #QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    #)
 elif qt_version == 'pyside':
     from PySide import QtCore, QtGui
-    #from PySide.QtGui import (
-        #QLabel, QLineEdit, QPushButton, QWidget, QApplication,
-        #QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    #)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 

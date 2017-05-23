@@ -3,20 +3,15 @@ from __future__ import print_function, unicode_literals
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
-    #from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
         QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
         QColorDialog,
     )
-    #QButtonGroup, QCheckBox
-    #from PyQt4.QtCore import QString
 elif qt_version == 5:
-    #from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
         QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
         QColorDialog,
     )
-    #QButtonGroup, QCheckBox
 
 
 

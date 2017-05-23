@@ -614,24 +614,19 @@ class EditGeometryProperties(PyDialog):
 
     def set_connections(self):
         # self.opacity_edit.connect(arg0, QObject, arg1)
-        if qt_version == 4:
-            self.connect(self.opacity_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
-                #self.connect(self.opacity_slider_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
-                #grid.addWidget(self.opacity_slider_edit, irow, 1)
+        #if qt_version == 4:
+            #self.connect(self.opacity_slider_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
+            #grid.addWidget(self.opacity_slider_edit, irow, 1)
 
             # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
             # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
 
             # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_line_width)
             # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_point_size)
-            self.connect(self.line_width_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
-            self.connect(self.point_size_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
-            self.connect(self.bar_scale_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_bar_scale)
-        else:
-            self.opacity_edit.valueChanged.connect(self.on_opacity)
-            self.line_width_edit.valueChanged.connect(self.on_line_width)
-            self.point_size_edit.valueChanged.connect(self.on_point_size)
-            self.bar_scale_edit.valueChanged.connect(self.on_bar_scale)
+        self.opacity_edit.valueChanged.connect(self.on_opacity)
+        self.line_width_edit.valueChanged.connect(self.on_line_width)
+        self.point_size_edit.valueChanged.connect(self.on_point_size)
+        self.bar_scale_edit.valueChanged.connect(self.on_bar_scale)
 
         if self.use_slider:
             self.opacity_slider_edit.valueChanged.connect(self.on_opacity_slider)
@@ -646,20 +641,14 @@ class EditGeometryProperties(PyDialog):
         # self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
 
         if qt_version == 4:
-            self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
-            self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
-            self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
             #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
-
-            # self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-            # self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
-        else:
-            self.color_edit.clicked.connect(self.on_color)
-            self.checkbox_show.clicked.connect(self.on_show)
-            self.checkbox_hide.clicked.connect(self.on_hide)
-            self.cancel_button.clicked.connect(self.on_cancel)
+        self.color_edit.clicked.connect(self.on_color)
+        self.checkbox_show.clicked.connect(self.on_show)
+        self.checkbox_hide.clicked.connect(self.on_hide)
+        self.cancel_button.clicked.connect(self.on_cancel)
             # closeEvent
 
     def keyPressEvent(self, event):

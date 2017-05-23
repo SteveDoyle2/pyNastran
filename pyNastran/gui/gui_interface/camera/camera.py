@@ -121,22 +121,14 @@ class CameraWindow(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        if qt_version == 4:
-            self.connect(self.set_button, QtCore.SIGNAL('clicked()'), self.on_set)
-            self.connect(self.save_button, QtCore.SIGNAL('clicked()'), self.on_save)
-            self.connect(self.delete_button, QtCore.SIGNAL('clicked()'), self.on_delete)
-
-            self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+        #if qt_version == 4:
             #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-            self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
-            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-        else:
-            self.set_button.clicked.connect(self.on_set)
-            self.save_button.clicked.connect(self.on_save)
-            self.delete_button.clicked.connect(self.on_delete)
-            self.apply_button.clicked.connect(self.on_apply)
-            self.close_button.clicked.connect(self.on_close)
-            self.cancel_button.clicked.connect(self.on_cancel)
+        self.set_button.clicked.connect(self.on_set)
+        self.save_button.clicked.connect(self.on_save)
+        self.delete_button.clicked.connect(self.on_delete)
+        self.apply_button.clicked.connect(self.on_apply)
+        self.close_button.clicked.connect(self.on_close)
+        self.cancel_button.clicked.connect(self.on_cancel)
 
     def on_set(self):
         objs = self.table.selectedIndexes()
@@ -144,7 +136,6 @@ class CameraWindow(PyDialog):
             obj = objs[0]
             irow = obj.row()
             name = self.names[irow]
-            #print('name =', name)
             self.set_camera(name)
             return True
         return False

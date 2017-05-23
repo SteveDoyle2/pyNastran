@@ -181,32 +181,18 @@ class GroupsPostView(QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        if qt_version == 4:
-            self.connect(self.set_as_main_button, QtCore.SIGNAL('clicked()'), self.on_set_as_main)
-            self.connect(self.delete_groups_button, QtCore.SIGNAL('clicked()'), self.on_delete_groups)
-            self.connect(self.revert_groups_button, QtCore.SIGNAL('clicked()'), self.on_revert_groups)
+        self.set_as_main_button.clicked.connect(self.on_set_as_main)
+        self.delete_groups_button.clicked.connect(self.on_delete_groups)
+        self.revert_groups_button.clicked.connect(self.on_revert_groups)
 
-            self.connect(self.show_groups_button, QtCore.SIGNAL('clicked()'), self.on_show_groups)
-            self.connect(self.hide_groups_button, QtCore.SIGNAL('clicked()'), self.on_hide_groups)
+        self.show_groups_button.clicked.connect(self.on_show_groups)
+        self.hide_groups_button.clicked.connect(self.on_hide_groups)
 
-            self.connect(self.create_super_group_button, QtCore.SIGNAL('clicked()'), self.on_create_super_group)
+        self.create_super_group_button.clicked.connect(self.on_create_super_group)
 
-            self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-            self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-        else:
-            self.set_as_main_button.clicked.connect(self.on_set_as_main)
-            self.delete_groups_button.clicked.connect(self.on_delete_groups)
-            self.revert_groups_button.clicked.connect(self.on_revert_groups)
-
-            self.show_groups_button.clicked.connect(self.on_show_groups)
-            self.hide_groups_button.clicked.connect(self.on_hide_groups)
-
-            self.create_super_group_button.clicked.connect(self.on_create_super_group)
-
-            self.apply_button.clicked.connect(self.on_apply)
-            self.ok_button.clicked.connect(self.on_ok)
-            self.cancel_button.clicked.connect(self.on_cancel)
+        self.apply_button.clicked.connect(self.on_apply)
+        self.ok_button.clicked.connect(self.on_ok)
+        self.cancel_button.clicked.connect(self.on_cancel)
 
     def closeEvent(self, event):
         event.accept()

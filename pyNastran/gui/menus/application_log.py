@@ -174,16 +174,9 @@ class PythonConsoleWidget(QDockWidget):
         self.setWidget(vbox_widget)
 
     def setup_connections(self):
-        if qt_version == 4:
-            self.connect(self.execute_python_button, QtCore.SIGNAL('clicked()'),
-                         self.on_execute_python_button)
-            self.connect(self.execute_and_clear_python_button, QtCore.SIGNAL('clicked()'),
-                         self.on_execute_and_clear_python_button)
-
-        else:
-            self.execute_python_button.clicked.connect(self.on_execute_python_button)
-            self.execute_and_clear_python_button.clicked.connect(
-                self.on_execute_and_clear_python_button)
+        self.execute_python_button.clicked.connect(self.on_execute_python_button)
+        self.execute_and_clear_python_button.clicked.connect(
+            self.on_execute_and_clear_python_button)
         #self.on_rig
 
         # TODO: enables the right click menu
