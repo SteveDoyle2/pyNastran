@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import shutil
 from importlib import import_module
+from docutils import core
 
 import pyNastran
 from pyNastran.utils import print_bad_path
@@ -83,12 +84,8 @@ def run_import(fname):
 
 def create_html_from_rst(rst_filename, html_filename):
     #os.system('')
-    from docutils import core
-    source = open(rst_filename, 'r')
-    destination = open(html_filename, 'w')
-    core.publish_file(source=source, destination=destination, writer_name='html')
-    source.close()
-    destination.close()
+    with open (rst_filename, 'r') as source, open(html_filename, 'w') as destination:
+        core.publish_file(source=source, destination=destination, writer_name='html')
 
 
 def create_rst_from_python_files():
@@ -112,7 +109,7 @@ def create_rst_from_python_files():
         #and not fname.endswith('.pyc')
         #and not fname.endswith('.html')
         #and not fname.endswith('.txt')
-        ##and not fname.endswith('.rst')
+        #and not fname.endswith('.rst')
     #]
 
     #print(fnames)
@@ -123,7 +120,7 @@ def create_rst_from_python_files():
         #rst_filename = base + '.rst'
         #html_filename = root + '.html'
         #print(rst_filename)
-        ##print(py_filename)
+        #print(py_filename)
         #create_rst_from_python(py_filename, rst_filename)
         #create_html_from_rst(rst_filename, html_filename)
 
@@ -138,13 +135,13 @@ def create_rst_from_python_files():
 def create_rst_from_python(py_filename, rst_filename, debug=False):
     sections = []
     run_import(py_filename)
-    with open(py_filename, 'r') as f:
+    with open(py_filename, 'r') as py_file:
         is_function_active = False
         is_header_active = False
 
         i = 0
         while 1:
-            line = f.readline()
+            line = py_file.readline()
             if 'def main():' in line:
                 section.save_block()
                 break

@@ -146,7 +146,6 @@ class FlutterResponse(object):
         self.ikfreq = 0
         self.ikfreq_inv = 1
 
-        #print(results)
         results = np.asarray(results, dtype='float64')
         if self.method == 'PK':
             self.ivelocity = 2
@@ -595,12 +594,12 @@ class FlutterResponse(object):
 
         #-----------------------------------------------------------------------
         # 2. sort the results based on velocity so we're going low to high
-        nmodes, npoints = self.results.shape[:2]
+        #nmodes, npoints = self.results.shape[:2]
 
-        for imode in range(nmodes):
+        #for imode in range(nmodes):
             #print(self.results[imode, :, self.ivelocity])
-            isort = np.argsort(self.results[imode, :, self.ivelocity])
-            self.results[imode, :, :] = self.results[imode, isort, :]
+            #isort = np.argsort(self.results[imode, :, self.ivelocity])
+            #self.results[imode, :, :] = self.results[imode, isort, :]
 
         #-----------------------------------------------------------------------
         # 3. sort the results based on damping, so we're going abs(high) to low

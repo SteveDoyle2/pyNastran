@@ -1,7 +1,7 @@
 from __future__ import print_function
 from pyNastran.f06.dev.f06_classes import MaxDisplacement  # classes not in op2
 
-class MAX_MIN(object):
+class MaxMin(object):
     def __init__(self):
         pass
 

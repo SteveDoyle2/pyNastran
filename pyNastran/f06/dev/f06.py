@@ -17,7 +17,7 @@ from pyNastran.f06.tables.oug import OUG
 from pyNastran.f06.tables.oqg import OQG
 from pyNastran.f06.tables.oef import OEF
 from pyNastran.f06.tables.lama import LAMA
-from pyNastran.f06.tables.max_min import MAX_MIN
+from pyNastran.f06.tables.max_min import MaxMin
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
@@ -25,7 +25,7 @@ from pyNastran.utils import is_binary_file
 from pyNastran.f06.errors import FatalError
 
 
-class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
+class F06(OES, OEF, OUG, OQG, LAMA, MaxMin, F06Writer):
     def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = stop
 
@@ -42,9 +42,12 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Initializes the F06 object
 
-        :param makeGeom:    reads the BDF tables (default=False)
-        :param debug:       prints data about how the F06 was parsed (default=False)
-        :param log:         a logging object to write debug messages to
+        Parameters
+        ----------
+        debug : bool; default=False
+            prints data about how the F06 was parsed
+        log : Log(); default=None
+            a logging object to write debug messages to
 
         .. seealso:: import logging
         """
@@ -53,7 +56,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         OQG.__init__(self)
         OUG.__init__(self)
         LAMA.__init__(self)
-        MAX_MIN.__init__(self)
+        MaxMin.__init__(self)
         F06Writer.__init__(self)
 
         self.f06_filename = None
