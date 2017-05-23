@@ -550,7 +550,7 @@ def write_patran_syntax_dict(dict_sets):
     return msg.strip().replace('  ', ' ')
 
 
-def parse_patran_syntax_dict(node_sets, pound_dict=None):
+def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -561,6 +561,8 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None):
     pound_dict : List[str] : int
         key : the string
         value : the pound value (e.g. 1:#)
+    msg : str
+        error message; currently unused
 
     Returns
     -------
@@ -670,6 +672,87 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None):
     for key, ints in iteritems(data):
         data[key] = unique(ints)
     return data
+
+
+def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
+    """
+    Parses Patran's syntax for compressing nodes/elements
+
+    Parameters
+    ----------
+    node_sets : str
+        the node_set to parse
+    type_map : dict[key_in] : key_out
+        key_in : str
+            the name of the input string
+        key_out : str
+            the name of the out string
+    #pound_dict : List[str] : int
+        #key : the string
+        #value : the pound value (e.g. 1:#)
+    msg : str
+        error message; currently unused
+
+    Returns
+    -------
+    nodes : Dict[str] = List[int]
+        str : the key
+        values : the integer values for that key
+
+    Example 1
+    ---------
+    .. code-block:: python
+
+      # we drop the coordinate systems because we didn't request them
+      # (coord is not referenced)
+      #
+      node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
+      type_map = {
+          'n' : 'Node',
+          'Node' : 'Node',
+          'e' : 'Element',
+          'Elm' : 'Element',
+          'Element' : 'Element',
+      }
+      data = parse_patran_syntax_dict(node_sets, type_map)
+      data = {
+          'Element' : [1, 2, 3],
+          'Node' : [2, 4, 6, 10, 11, 12, 13, 15],
+      }
+
+    .. todo:: doesn't support pound_dict
+    .. todo:: doesn't support msg
+    """
+    # makes it so we can pass in 'N' and 'n' and still get 'Node' out
+    update_type_map = {}
+    for key, value in iteritems(type_map):
+        if key in update_type_map:
+            assert update_type_map[key] == value
+        update_type_map[key.upper()] = value
+
+    dict_in = parse_patran_syntax_dict(node_sets.upper(), pound_dict=None)
+    dict_temp = {}
+    for key_in, value in sorted(iteritems(dict_in)):
+        key_in2 = key_in.upper()
+        if key_in2 in update_type_map:
+            key_out = update_type_map[key_in2]
+            #print('key_in=%r key_out=%r' % (key_in, key_out))
+            if key_out in dict_temp:
+                dict_temp[key_out].append(value)
+            else:
+                dict_temp[key_out] = [value]
+        else:
+            print('skipping key=%r while parsing %s' % (key_in, msg))
+
+    dict_out = {}
+    for key, value_list in iteritems(dict_temp):
+        if len(value_list) == 1:
+            value = value_list[0]
+        else:
+            value = np.hstack(value_list)
+            value.sort()
+        dict_out[key] = value
+    return dict_out
 
 
 def Position(xyz, cid, model, is_cid_int=True):
