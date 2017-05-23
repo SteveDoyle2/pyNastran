@@ -2411,7 +2411,7 @@ class Solver(OP2):
         self.write_oload_resultant(Fg, xyz_cid0=xyz_cid0)
         return Fg
 
-        #self.gravLoad = array([0., 0., 0.])
+        #self.grav_load = array([0., 0., 0.])
         #for load_set in LoadSet:
             #self.log.info("load_set = %r" % str(load_set))
             ##print("type", type(load_set))
@@ -2436,7 +2436,7 @@ class Solver(OP2):
 
             #if gravity_load != []:
                 #self.log.info("gravity_load = %s" % gravity_load)
-                #self.gravLoad += gravity_load
+                #self.grav_load += gravity_load
 
             #for nid in nids:
                 #self.log.info("nid = %s" % nid)
@@ -2461,7 +2461,7 @@ class Solver(OP2):
                     #if abs(moment[2]) > 0.:
                         #Fg[Dofs[(nid, 6)]] += moment[2]
 
-        #if sum(abs(self.gravLoad)) > 0.0:
+        #if sum(abs(self.grav_load)) > 0.0:
             #for (eid, elem) in sorted(iteritems(model.elements)):  # CROD, CONROD
                 #self.log.info("----------------------------")
                 #node_ids, index0s = self.element_dof_start(elem, nids)
@@ -2469,7 +2469,7 @@ class Solver(OP2):
 
                 ## n_ijv is the position of the values of K in the dof
                 #fnorm = 10.
-                #(Fgi, nGrav) = elem.Fg(model, self.gravLoad, fnorm)
+                #(Fgi, nGrav) = elem.Fg(model, self.grav_load, fnorm)
                 #for (fg, dof) in zip(Fgi, nGrav):
                     ##print("dof = ",dof)
                     #if dof in Dofs:

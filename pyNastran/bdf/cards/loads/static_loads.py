@@ -84,7 +84,6 @@ class LOAD(LoadCombination):
                     raise NotImplementedError(msg)
 
         load_ids = list(set(load_ids))
-        #print("load_ids = ", load_ids)
         return load_ids
 
     def get_load_types(self):
@@ -164,68 +163,7 @@ class LOAD(LoadCombination):
                     msg = ('%s isnt supported in get_reduced_loads method'
                            % load.__class__.__name__)
                     raise NotImplementedError(msg)
-
         return (scale_factors, loads)
-
-    def organize_loads(self, model):
-        """
-        Figures out magnitudes of the loads to be applied to the various nodes.
-        This includes figuring out scale factors.
-        """
-        force_loads = {}  # spc enforced displacement (e.g. FORCE=0)
-        moment_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_loads = []
-
-        types_found = set()
-        (scale_factors, loads) = self.get_reduced_loads(
-            resolve_load_card=False, filter_zero_scale_factors=False)
-
-        for (scale_factor, load) in zip(scale_factors, loads):
-            out = load.transform_load()
-            types_found.add(load.__class__.__name__)
-            if isinstance(load, Force):
-                (is_load, node, vector) = out
-                if is_load:  # load
-                    if node not in force_loads:
-                        force_loads[node] = vector * scale_factor
-                    else:
-                        force_loads[node] += vector * scale_factor
-                else:  # constraint
-                    if node not in force_loads:
-                        force_constraints[node] = vector * scale_factor
-                    else:
-                        force_constraints[node] += vector * scale_factor
-
-            elif isinstance(load, Moment):
-                (is_load, node, vector) = out
-                if is_load:  # load
-                    if node not in moment_loads:
-                        moment_loads[node] = vector * scale_factor
-                    else:
-                        moment_loads[node] += vector * scale_factor
-                else:  # constraint
-                    if node not in moment_loads:
-                        moment_constraints[node] = vector * scale_factor
-                    else:
-                        moment_constraints[node] += vector * scale_factor
-
-            elif isinstance(load, PLOAD4):
-                (is_load, nodes, vectors) = out
-                for (nid, vector) in zip(nodes, vectors):
-                    # not the same vector for all nodes
-                    force_loads[nid] = vector * scale_factor
-
-            elif isinstance(load, GRAV):
-                #(grav) = out
-                gravity_loads.append(out * scale_factor)  # grav
-            else:
-                msg = '%s not supported' % (load.__class__.__name__)
-                raise NotImplementedError(msg)
-
-        return (types_found, force_loads, moment_loads, force_constraints,
-                moment_constraints, gravity_loads)
 
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
@@ -362,17 +300,6 @@ class GRAV(BaseCard):
 
     def get_loads(self):
         return [self]
-
-    def organize_loads(self, model):
-        types_found = [self.type]
-        force_loads = {}
-        moment_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_load = self.transform_load()
-        return (types_found, force_loads, moment_loads,
-                force_constraints, moment_constraints,
-                gravity_load)
 
     def transform_load(self):
         g = self.GravityVector()
@@ -761,18 +688,6 @@ class Force(Load):
         loads = self.F()
         return(scale_factors, loads)
 
-    def organize_loads(self, model):
-        (scale_factors, force_loads) = self.get_reduced_loads(resolve_load_card=False, filter_zero_scale_factors=False)
-
-        types_found = [self.type]
-        moment_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_loads = []
-        return (types_found, force_loads, moment_loads,
-                force_constraints, moment_constraints,
-                gravity_loads)
-
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         if size == 8:
@@ -817,19 +732,6 @@ class Moment(Load):
             self.node: self.M()
         }
         return(scale_factors, loads)
-
-    def organize_loads(self, model):
-        (scale_factors, moment_loads) = self.get_reduced_loads(
-            resolve_load_card=False, filter_zero_scale_factors=False)
-
-        types_found = [self.type]
-        force_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_loads = []
-        return (types_found, force_loads, moment_loads,
-                force_constraints, moment_constraints,
-                gravity_loads)
 
     def M(self):
         return {self.node_id : self.xyz * self.mag}
@@ -2303,15 +2205,12 @@ class PLOAD1(Load):
 
         g0 = self.eid_ref.g0_vector
         #if not isinstance(g0, ndarray):
-        #    g0 = g0.get_position()
+            #g0 = g0.get_position()
 
         x = p2 - p1
         y = p1 - g0
         z = cross(x, y)
         A = [x, y, z]
-        #print("x =", x)
-        #print("y =", y)
-        #print("z =", z)
         #g = self.GravityVector()
         return A
         #(g2, matrix) = self.cid.transformToGlobal(A)
@@ -2328,119 +2227,6 @@ class PLOAD1(Load):
         scale_factors = [1.0]
         loads = [self]
         return scale_factors, loads
-
-    def organize_loads(self, model):
-        """
-        Figures out magnitudes of the loads to be applied to the various nodes.
-        This includes figuring out scale factors.
-        """
-        force_loads = {}  # spc enforced displacement (e.g. FORCE=0)
-        moment_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_loads = []
-
-        types_found = set()
-        (scale_factors, loads) = self.get_reduced_loads(
-            resolve_load_card=False, filter_zero_scale_factors=False)
-
-        for scale_factor, load in zip(scale_factors, loads):
-            out = load.transformLoad()
-            types_found.add(load.__class__.__name__)
-
-            if isinstance(load, PLOAD1): # CBAR/CBEAM
-                element = load.eid
-                (ga, gb) = element.node_ids
-                load_type = load.Type
-
-                scale = load.scale
-                elem_type = element.type
-
-                if load_type in ['FX', 'FY', 'FZ']:
-                    p1 = element.ga_ref.get_position()
-                    p2 = element.gb_ref.get_position()
-                    r = p2 - p1
-
-                if load_type == 'FX':
-                    Fv = array([1., 0., 0.])
-                elif load_type == 'FY':
-                    Fv = array([0., 0., 1.])
-                elif load_type == 'FZ':
-                    Fv = array([0., 0., 1.])
-
-                elif load_type == 'MX':
-                    Fv = array([0., 0., 0.])
-                    Mv = array([1., 0., 0.])
-                elif load_type == 'MY':
-                    Fv = array([0., 0., 0.])
-                    Mv = array([0., 1., 0.])
-                elif load_type == 'MZ':
-                    Fv = array([0., 0., 0.])
-                    Mv = array([0., 0., 1.])
-                # FXE, FYE, FZE, MXE, MYE, MZE
-                else:
-                    raise NotImplementedError(load_type)
-
-                p1 = load.p1
-                p2 = load.p2
-                if scale == 'FR':
-                    x1 = load.x1
-                    x2 = load.x2
-                elif scale == 'LE':
-                    L = element.Length()
-                    x1 = load.x1 / L
-                    x2 = load.x2 / L
-                else:
-                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".')
-
-                assert x1 <= x2, '---load---\n%sx1=%r must be less than x2=%r' % (repr(self), self.x1, self.x2)
-                if  x1 == x2:
-                    msg = ('Point loads are not supported on...\n%s'
-                           'Try setting x1=%r very close to x2=%r and\n'
-                           'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").'
-                           % (repr(self), self.x1, self.x2, self.p1, self.p2))
-                    raise NotImplementedError(msg)
-                    #if p1 != p2:
-                        #msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  % (
-                            #self.p1, self.p2, self.x1)
-                        #raise RuntimeError(msg)
-
-                dx = x2 - x1
-                m = (p2 - p1) / dx
-                #dx * (x2 + x1) = (x2^2-x1^2)
-                dx2 = x2**2 - x1**2
-                dx3 = x2**3 - x1**3
-                dx4 = x2**4 - x1**4
-                #F = (p1 - m * x1) * dx + m * dx2 / 2.
-                F = p1 * dx + m * (dx2 / 2. - x1 * dx)
-
-                F /= 2.
-
-                if elem_type in ['CBAR', 'CBEAM']:
-                    if load_type in ['FX', 'FY', 'FZ']:
-                        M = p1 * dx3 / 6. + m * (dx4 / 12. - x1 * dx3 / 6.)
-                        Mv = M * cross(r, Fv) / 2. # divide by 2 for 2 nodes
-
-                        Fv *= F
-                        #Mv = M
-                        force_loads[ga] = Fv
-                        force_loads[gb] = Fv
-                        moment_loads[ga] = Mv
-                        moment_loads[gb] = Mv
-                    elif load_type in ['MX', 'MY', 'MZ']:
-                        # these are really moments
-                        Mv *= F
-                        moment_loads[ga] = Mv
-                        moment_loads[gb] = Mv
-                    else:
-                        raise NotImplementedError(load_type)
-                else:
-                    raise NotImplementedError(elem_type)
-            else:
-                msg = '%s not supported' % (load.__class__.__name__)
-                raise NotImplementedError(msg)
-        return (types_found, force_loads, moment_loads, force_constraints,
-                moment_constraints, gravity_loads)
 
     def get_loads(self):
         return [self]
@@ -2611,6 +2397,7 @@ class PLOAD4(Load):
     ===============
     Defines a pressure load on a face of a CHEXA, CPENTA, CTETRA,
     CTRIA3, CTRIA6, CTRIAR, CQUAD4, CQUAD8, or CQUADR element.
+
     +--------+-----+-----+----+----+------+------+------+-------+
     |   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
     +========+=====+=====+====+====+======+======+======+=======+
@@ -2968,9 +2755,7 @@ class PLOAD4(Load):
 
     def repr_fields(self):
         eids = self.element_ids
-        #print('eids = ', eids)
         eid = eids[0]
-        #print('eid = ', eid)
         p1 = self.pressures[0]
         p2 = set_blank_if_default(self.pressures[1], p1)
         p3 = set_blank_if_default(self.pressures[2], p1)
@@ -3016,9 +2801,7 @@ class PLOAD4(Load):
 
     def raw_fields(self):
         eids = self.element_ids
-        #print('eids = ', eids)
         eid = eids[0]
-        #print('eid = ', eid)
         p1 = self.pressures[0]
         p2 = self.pressures[1]
         p3 = self.pressures[2]
@@ -3032,11 +2815,9 @@ class PLOAD4(Load):
             list_fields += node_ids
         else:
             if len(eids) > 1:
-                #print("self.eids = %s" %(self.eids))
                 try:
                     list_fields.append('THRU')
                     eidi = eids[-1]
-                    #print('eidi = ', eidi)
                 except:
                     print("g1  = %s" % self.g1)
                     print("g34 = %s" % self.g34)
