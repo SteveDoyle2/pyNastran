@@ -3,7 +3,6 @@ import os
 import unittest
 from pyNastran.op2.dev.op2 import read_post_op2
 from pyNastran.op2.op2 import OP2
-# from original.op2 import rdpostop2
 import timeit
 
 
