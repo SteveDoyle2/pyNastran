@@ -10,43 +10,7 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 
 *** Not done....
 
---------------------------------Future--------------------------------
-Overall Notes
-
-Added BDF
-   - *** SET2,PEALST,DMI,CONM1
-
-Overall OP2
-   - ***added support for SORT2
-
-BDF Bug Fixes
-BDF API Additions
-
-Removed BDF
-
-Overall OP2
-   - added plotting support for "standard" results (***complex)
-      - ***complex results may plot in real/imag or mag/phase or PSD
-        (power spectral density)
-      - ***no temperature, stress, element forces, energy
-
-
-Overall F06
-F06 Reader
-F06 Writer
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse
-        matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices,
-        solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
-
------------------------v0.9.0 released 2017/5/24?-----------------------
+-----------------------v0.9.0 released 2017/5/25-----------------------
 This is a major release.  The focus this time has been on robustness and testing.
 Hopefully, it shows.
 
