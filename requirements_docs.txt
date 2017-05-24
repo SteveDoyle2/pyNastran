@@ -4,7 +4,7 @@ docopt==0.6.2
 #vtk==5.10.0
 pillow>=2.7.0
 six>=1.9.0
-
+cycler>=0.10
 
 # extra modules for docs
 alabaster>=0.7.9
