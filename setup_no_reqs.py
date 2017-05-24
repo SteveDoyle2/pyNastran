@@ -24,7 +24,10 @@ for icon_file in icon_files:
         icon_files2.append(os.path.join(icon_path, icon_file))
 
 exclude_words = [
-]
+    'pyNastran.bdf.dev_vectorized', 'pyNastran.bdf.dev_vectorized.cards',
+    'pyNastran.f06.dev',
+    'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
+    'pyNastran.converters.dev', 'pyNastran.xdb',]
 packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
 for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]
@@ -66,15 +69,20 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
             'test_bdf  = pyNastran.bdf.test.test_bdf:main',
             'test_op2  = pyNastran.op2.test.test_op2:main',
             'test_op4  = pyNastran.op4.test.test_op4:main',
+            'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
             'test_pynastrangui = pyNastran.gui.test.test_gui:main',
 
             'format_converter = pyNastran.converters.type_converter:main',
             'pyNastranGUI = pyNastran.gui.gui:cmd_line',
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
+
+            'pyNastranv = pyNastran.bdf.dev_vectorized.solver.solver:main',
+            'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
         ]
     },
     test_suite='pyNastran.all_tests',

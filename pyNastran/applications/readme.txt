@@ -25,6 +25,12 @@ They are described in order of how current/stable they are:
     - created during v0.7 development
     - enhanced during v0.9; added tests
 
+ 2. hyper
+    - don't really remember how to run it, but it does work
+    - implemented Newtonian impact -> Nastran PLOAD cards
+    - needs a public example problem
+    - created around v0.7-v0.8
+
  3. cart3d_nastran_fsi
     - This was the project that stated pyNastran
     - Used to be fully implemented and validated, but needs some tests
@@ -35,3 +41,11 @@ They are described in order of how current/stable they are:
     - needs a public example problem
     - created around v0.1 (updated since)
     - updated load mapping part to be far more general
+
+ 4. margin_checker
+    - Recommended that you don't use this; created around v0.2
+
+ 5. contact
+    - Recommended that you don't use this; created around v0.2
+     
+     
