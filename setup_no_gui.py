@@ -38,11 +38,11 @@ except ImportError:
 try:
     import scipy
     ver = scipy.version.short_version
-    if ver < '0.17.1':
-        print("scipy.version.short_version = %r < '0.17.1'" % scipy.version.short_version)
-        py_packages.append('scipy >= 0.17.1')
+    if ver < '0.17.0':
+        print("scipy.version.short_version = %r < '0.17.0'" % scipy.version.short_version)
+        py_packages.append('scipy >= 0.17.0')
 except ImportError:
-    py_packages.append('scipy >= 0.17.1')
+    py_packages.append('scipy >= 0.17.0')
 
 try:
     import six
