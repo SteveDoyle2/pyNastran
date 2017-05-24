@@ -84,7 +84,7 @@ def run_docopt():
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
     msg += "Primary Options:\n"
-    msg += "  -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair, plot3d,\n"
+    msg += "  -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair, \n"
     msg += "                                           stl, surf, tetgen, usm3d, ugrid)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
@@ -138,8 +138,7 @@ def run_docopt():
     # None is for custom geometry
     allowed_formats = [
         'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
-        #'plot3d',
-        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
+        'surf', 'lawgs', 'shabp', 'avus', 'fast',
         'usm3d', 'bedge', 'su2', 'tetgen',
         None,
     ]

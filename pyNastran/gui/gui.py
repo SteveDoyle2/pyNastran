@@ -47,7 +47,7 @@ import vtk
 
 # pyNastran
 #from pyNastran.utils import print_bad_path
-from pyNastran.gui.formats import (NastranIO, Cart3dIO,  DegenGeomIO, PanairIO, LaWGS_IO,
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
     AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
     )
@@ -118,13 +118,12 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         html_logging = True
         fmt_order = [
             # results
-            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', #'openvsp',
-            'degen_geom', 'tecplot',
-            'surf', 'ugrid',
+            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d',
+            'tecplot', 'surf', 'ugrid',
 
             # no results
-            'lawgs', 'stl', 'fast', 'avus', 'abaqus', #'plot3d',
-            'bedge', 'su2', 'tetgen'
+            'lawgs', 'stl', 'fast',
+            'bedge', 'su2', 'tetgen',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
@@ -155,7 +154,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             AbaqusIO.__init__(self)
             SU2_IO.__init__(self)
 
-        self.build_fmts(fmt_order, stop_on_failure=True)
+        self.build_fmts(fmt_order, stop_on_failure=False)
 
         logo = os.path.join(icon_path, 'logo.png')
         self.logo = logo

@@ -7,7 +7,6 @@ from pyNastran.converters.fast.test_fast import TestFast
 from pyNastran.converters.panair.test_panair import TestPanair
 from pyNastran.converters.stl.test_stl import TestSTL
 from pyNastran.converters.tecplot.test_tecplot import TestTecplot
-from pyNastran.converters.abaqus.test_unit_abaqus import TestAbaqus
 
 from pyNastran.converters.aflr.aflr2.test_bedge import TestBEdge
 from pyNastran.converters.aflr.ugrid.test_ugrid import TestUgrid
