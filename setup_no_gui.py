@@ -29,11 +29,11 @@ py_packages = []
 try:
     import numpy as np
     ver = np.lib.NumpyVersion(np.__version__)
-    if ver < '1.11.1':
-        print("np.__version__ = %r < '1.11.1'" % np.__version__)
-        py_packages.append('numpy >= 1.11.1')
+    if ver < '1.11.0':
+        print("np.__version__ = %r < '1.11.0'" % np.__version__)
+        py_packages.append('numpy >= 1.11.0')
 except ImportError:
-    py_packages.append('numpy >= 1.11.1')
+    py_packages.append('numpy >= 1.11.0')
 
 try:
     import scipy
@@ -57,7 +57,7 @@ try:
     import matplotlib
     sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
     if sver < [1, 5, 3]:
-        print("matplotlib.__version__ = %r < '1.5.3'" % six.__version__)
+        print("matplotlib.__version__ = %r < '1.5.3'" % matplotlib.__version__)
         py_packages.append('matplotlib >= 1.5.3')
 except ImportError:
     py_packages.append('matplotlib >= 1.5.3')
