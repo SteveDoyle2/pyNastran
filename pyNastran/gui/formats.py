@@ -212,20 +212,26 @@ except ImportError:
             pass
     is_degen_geom = False
 
-#try:
-from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
-is_abaqus = True
-#except ImportError:
+try:
+    from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
+    is_abaqus = True
+except ImportError:
     #raise
-    #class AbaqusIO(object):
-        #"""dummy abaqus gui class"""
-        #def __init__(self):
-            #"""dummy gui init"""
-            #pass
-    #is_abaqus = False
+    class AbaqusIO(object):
+        """dummy abaqus gui class"""
+        def __init__(self):
+            """dummy gui init"""
+            pass
+    is_abaqus = False
 
-#try:
-from pyNastran.converters.su2.su2_io import SU2_IO
-is_su2 = True
-#except ImportError:
+try:
+    from pyNastran.converters.su2.su2_io import SU2_IO
+    SU2_IO = True
+except ImportError:
+    class SU2_IO(object):
+        """dummy SU2 gui class"""
+        def __init__(self):
+            """dummy gui init"""
+            pass
+    is_su2 = False
     #raise
