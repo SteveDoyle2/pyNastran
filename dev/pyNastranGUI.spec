@@ -150,12 +150,12 @@ excludes = [
     'libsodium', 'markupsafe', 'mistune', 'multipledispatch',
     'nbformat', 'nltk', 'node-webkit', 'nose', 'patsy', 'pickleshare',
     'ply', 'pyasn1', 'pycosat', 'pycparser', 'pycrypto', 'pycurl',
-    'pyflakes', 'pyopenssl', 'pyparsing', 'pyreadline', 'pytables',
+    'pyflakes', 'pyopenssl', 'pyreadline', 'pytables', # 'pyparsing', 
     'python-dateutil', 'rope', 'scikit-image', 'simplegeneric',
     'singledispatch', 'sockjs-tornado', 'ssl_match_hostname',
     'statsmodels', 'sympy', 'tk', 'toolz', 'ujson', 'unicodecsv',
     'xlrd', 'xlwt', 'zeromq', 'zlib', 'alabaster',
-    'anaconda-client', 'appdirs', 'astroid', 'astroid', 'astropy'
+    'anaconda-client', 'astroid', 'astroid', 'astropy', #'appdirs', 
     'babel', 'backports_abc', 'blackwidow', 'blaze-core', 'bokeh',
     'boto', 'clyent', 'coverage',
     'curl', 'cycler', 'cytoolz', 'datashape', 'decorator', 'freeimage',
@@ -192,7 +192,12 @@ a = Analysis(analyze_files,
              excludes=excludes,
              hiddenimports=[
                 'vtk.vtkCommonPythonSIP', 'vtk.vtkFilteringPythonSIP',
-                'PyQt4.QtOpenGL', 'vtk.vtkRenderingPythonSIP'],
+                'PyQt4.QtOpenGL', 'vtk.vtkRenderingPythonSIP',
+
+		# not sure why these are needed
+                'pyparsing',
+                'appdirs',
+                ],
              hookspath=None)
 pyz = PYZ(a.pure)
 
