@@ -67,7 +67,7 @@ However, you may distribute an unmodified binary.
 
  - Programmatics:
    - Dropping Python 3.3 support
-   - Adding Python 3.6 support
+   - Adding Python 3.6 support 
 
  - [OP2](http://pynastran-git.readthedocs.io/en/latest/quick_start/op2_demo.html)
    - preliminary random results (ATO/CRM/PSD/RMS/NO)
