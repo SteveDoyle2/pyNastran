@@ -19,7 +19,7 @@
 
 ### v1.0.0
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2017/5/25)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2017/5/25; ready later today...)
 
 <!---
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
@@ -53,7 +53,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 # News
 
-### pyNastran v1.0.0 has been released (5/25/2017)
+### pyNastran v1.0.0 has been released (5/25/2017 later today)
 This is a major release.  The focus this time has been on robustness and testing.
 Hopefully, it shows.  The software has also been relicensed to be BSD-3, which
 is a more permissive license and is the same one that numpy, scipy, and
