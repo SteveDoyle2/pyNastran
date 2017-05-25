@@ -26,11 +26,11 @@ else:
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
-    __version__ = '1.0.0+%s' % revision
-    __releaseDate__ = '2017/5/25'
-    __releaseDate2__ = 'MAY 25, 2017'
+    __version__ = '1.1.0+%s' % revision
+    __releaseDate__ = '2017/5/xx'
+    __releaseDate2__ = 'MAY xx, 2017'
 
-__author__  = 'Steven Doyle, hurlei,  Saullo Castro, Paul Blelloch, Nikita Kalutsky'
+__author__  = 'Steven Doyle, Saullo Castro, hurlei, Paul Blelloch, Nikita Kalutsky'
 __email__   = 'mesheb82@gmail.com'
 __desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __license__     = 'BSD-3'

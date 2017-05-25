@@ -41,7 +41,7 @@ pyNastran is an interface library to the various Nastran file formats (BDF, OP2,
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.  While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a commercial program.
 
-![GUI](https://github.com/SteveDoyle2/pynastran/blob/v0.8/pyNastran/gui/images/caero.png)
+![GUI](https://github.com/SteveDoyle2/pynastran/blob/master/pyNastran/gui/images/caero.png)
 
 
 <!--- Ripped off meshio  --->
