@@ -101,8 +101,12 @@ class DownloadWindow(QDialog):
 
     def set_connections(self):
         if qt_version == 4:
+            self.connect(self.link, QtCore.SIGNAL('clicked()'), self.on_download)
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
-        self.link.clicked.connect(self.on_download)
+        else:
+            self.link.clicked.connect(self.on_download)
+
+        #self.link.linkActivated.connect(self.on_download)
         self.close_button.clicked.connect(self.on_cancel)
 
     def keyPressEvent(self, event):
