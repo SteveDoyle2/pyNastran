@@ -10,12 +10,25 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 
 *** Not done....
 
------------------------v0.9.0 released 2017/5/25-----------------------
+-----------------------v1.0.0 released 2017/5/25-----------------------
 This is a major release.  The focus this time has been on robustness and testing.
-Hopefully, it shows.
+Hopefully, it shows.  The software has also been relicensed to be BSD-3, which
+is a more permissive license and is the same one that numpy, scipy, and
+matplotlib use.
+
+Unfortunately, the GUI is more restrictive and more complicated.
+ - For open source projects : LGPL 2/3
+ - For companies that pay a license to Riverbank : LGPL 2/3
+ - For companies that don't pay a license fee : GPL 2/3
+However, you may distribute an unmodified binary.
 
 Quick Overview:
 ---------------
+
+Programmatics:
+ - Dropping Python 3.3 support
+ - Adding Python 3.6 support
+
 BDF : 
  - This version makes it much easier to programmatically create BDFs with the 
    ``add_grid``, ``add_ctria3(...)``, etc. methods.  Almost every card has a 
@@ -23,7 +36,15 @@ BDF :
 
 OP2 : 
  - Added support for MATPOOL matrices and RANDOM OUG-style tables.
- - First release of read_op2_geom.  It's not perfect, but it generally works.
+ - First release of read_op2_geom.  Much improved OP2 Geometry reading.
+
+F06 :
+ - added a preliminary flutter (SOL 145) parser
+   - supports multiple subcases
+   - PK and PKNL methods supported
+   - `plot_Vg_Vf(...)`, `plot_Vg(...)`, `plot_root_locus(...)`
+   - input/output units
+   - mode switching not fixed yet
 
 GUI : 
   - Animation plots
@@ -36,15 +57,19 @@ GUI :
   - added basic support for Patran *.nod results
   - significant speedups
 
+Detailed Overview:
+------------------
 BDF:
  - added cards:
    - CTRAX3, CTRAX6, CQUADX4, CQUADX8, CIHEX2
    - PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
    - CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE, MATG
-   - POINT, PBRSECT, PBMSECT
+   - POINT, PBRSECT, PBMSECT, CBARAO
    - QVECT
    - DVGRID
    - TIC, TSTEP1
+   - NSM, NSM1, NSML, NSML1, NSMADD
+   - SEQGP
 
  - fixed:
     - update_card method:
@@ -52,6 +77,7 @@ BDF:
       # on grid 1234, update cp (field 2) to a value of 7)
     - model.update_card('GRID', 1234, 2, 7)
     - speed issue on CORD1x cards
+    - get_loads now supports PLOAD4 cid/N123
 
   - other bugs:
     - fixed DIVERG bug (bad key when adding card)
@@ -59,6 +85,9 @@ BDF:
     - really annoying DTABLE/TABLED1 bug (they were both called by DTable, but are very different)
     - fixed bug in SET3 card (multiple THRUs on single card)
     - write_path function works (Windows)
+    - corrections to CBAR/CBEAM area formulas
+    - CBAR/CBEAM MSCBLM0 is not MSCBLMO
+    
  - minor changes
     - simplified comment writing per Jeff Lyon
       >>> card.comment = 'this is a comment'
@@ -67,10 +96,13 @@ BDF:
       card._comment = 
       '$ this is a multi lined\n'
       '$  - comment\n'
+
  - API changes
    - TABLEDx are no longer in tables and instead tables_d
    - TABLEMx are no longer in tables and instead tables_m
-
+   - card init methods now use nids instead of ga/gb so all cards are consistent
+   - frequencies is now a dictionary of lists (not a single value)
+   
  - bdf_renumber
    - removed execs from bdf_renumber, so Python 3 will work
    - fixed bug with handling Nones (caused by exec change)
@@ -93,13 +125,25 @@ OP2:
    - Radioss supported
    - eigenvector_ROUGV1 now supported
    - random tables (e.g., PSD, ATO, RMS) for OUG-style tables
+   - OUG1, OAG1 support
 
+ - vectorized:
+   - RealCBeamForceVUArray -> cbeam_force_vu
+   - ComplexCBeamForceVUArray -> cbeam_force_vu
+   
  - fixed:
    - MEFF, ASSIG, ASEPS tables now skipped properly
    - removed beta_transforms from gpforce
-
-
+   - stress/strain/force transforms now support complex numbers
+ 
+ - API changes:
+   - real eigenvectors have eign; complex eigenvectors have eigi/eigr;
+     thus a different variable and frequency formula is required
+   - 
 GUI:
+ - improved PyQt5 support
+ - significantly faster reading
+
  - added:
    - marker/arrow (force) plots
    - animation menu
@@ -119,10 +163,13 @@ GUI:
    - rotation center by mouse picking
    - Python 2 only: nicer Python console
    - support for PyQt5 (not quite perfect)
+
  - fixed:
    - display issue with CHEXA20 (element was ordered wrong)
    - element selection for quadratic solids no longer crashes
    - all legend values are now saved (e.g., the ones from cart3d)
+   - endian issues
+
  - changes:
    - significant speedups
    - cycle_results now takes an integer instead of a string, so it works
@@ -134,6 +181,10 @@ Known Issues
 BDF:
  - CBEAMs wa/wb NSMs lead to incorrect mass properties
  - write_path function has problems on Linux (low priority; 1/10)
+
+OP2:
+ - SPC bug (component=7)
+ - SOL 601 issues
 
 GUI:
  - node Cd deflection issue for results (high priority, 4/10)
