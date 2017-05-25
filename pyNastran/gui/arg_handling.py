@@ -186,7 +186,7 @@ def run_docopt():
 def get_inputs(argv=None):
     if argv is None:
         argv = sys.argv
-        print('get_inputs; argv was None -> %s' % argv)
+        #print('get_inputs; argv was None -> %s' % argv)
     input_format = None
     input_filename = None
     output_filename = None
