@@ -322,8 +322,7 @@ class OP2(object):
         self._get_key()
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
-        self._label = self._fileh.read(reclen).decode().\
-            strip().replace(' ', '')
+        self._label = self._fileh.read(reclen).decode().strip().replace(' ', '')
         self._fileh.read(4)  # endrec
         self._skip_key(2)
 
@@ -917,7 +916,7 @@ class OP2(object):
         Can currently only read a real eigenvalue table (ACODE,4 = 2,
         TCODE,1 = 1, TCODE,2 = 7, and TCODE,7 in [0, 2]).
         """
-        float2_Str = struct.Struct(self._endian + 'ff')
+        float2_str = struct.Struct(self._endian + 'ff')
         iif6_int = np.dtype(self._endian+'i4')
         iif6_bytes = 32
         if self._ibytes == 4:
@@ -965,7 +964,7 @@ class OP2(object):
                 self.skip_op2_table()
                 return
             self._fileh.read(self._ibytes)  # mode bytes
-            lam[J] = float2_Str.unpack(self._fileh.read(8))[0]
+            lam[J] = float2_str.unpack(self._fileh.read(8))[0]
             # ttl bytes = reclen + 4 + 3*(4+ibytes+4)
             #           = reclen + 28 - 3*ibytes
             # read bytes = 4*ibytes + ibytes + 8 = 8 + 5*ibytes
