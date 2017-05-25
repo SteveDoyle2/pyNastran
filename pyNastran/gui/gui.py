@@ -2,7 +2,6 @@
 creates the pyNastranGUI
 """
 # coding: utf-8
-# pylint: disable=C0111
 from __future__ import division, unicode_literals, print_function
 
 # kills the program when you hit Cntl+C from the command line
@@ -29,7 +28,7 @@ def cmd_line():
     QApplication.setApplicationName("pyNastran")
     QApplication.setApplicationVersion(pyNastran.__version__)
     inputs = get_inputs()
-    window = MainWindow(inputs)
+    MainWindow(inputs)
     sys.exit(app.exec_())
 
 if __name__ == '__main__':

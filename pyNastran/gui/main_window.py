@@ -4,8 +4,6 @@ defines the MainWindow class
 # coding: utf-8
 # pylint: disable=C0111
 from __future__ import division, unicode_literals, print_function
-#from six import string_types, iteritems
-from six.moves import range
 
 # standard library
 import sys
@@ -13,6 +11,10 @@ import os.path
 #import traceback
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
+
+#from six import string_types, iteritems
+from six.moves import range
+
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
@@ -29,20 +31,20 @@ elif qt_version == 'pyside':
 else:
     raise NotImplementedError(qt_version)
 
+# 3rd party
+import vtk
 
 import pyNastran
 from pyNastran.gui.gui_utils.utils import check_for_newer_version
 
 
-# 3rd party
-import vtk
-
 # pyNastran
 #from pyNastran.utils import print_bad_path
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
+from pyNastran.gui.formats import (
+    NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
     AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
-    )
+)
 from pyNastran.gui.gui_common import GuiCommon2
 
 try:
@@ -152,6 +154,12 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         self._check_for_latest_version(inputs['no_update'])
 
     def _check_for_latest_version(self, check=True):
+        """
+        checks the website for information regarding the latest gui version
+
+        Looks for:
+            ## pyNastran v0.7.2 has been Released (4/25/2015)
+        """
         import time
         t0 = time.time()
         version_latest, version_current, is_newer = check_for_newer_version()
@@ -233,7 +241,11 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         ]
 
         #message_box = QMessageBox()
-        #message_box.setStyleSheet('QMessageBox {background-color: #2b5b84; color: white;}\nQPushButton{color: white; font-size: 16px; background-color: #1d1d1d; border-radius: 10px; padding: 10px; text-align: center;}\n QPushButton:hover{color: #2b5b84;}')
+        #message_box.setStyleSheet(
+            #'QMessageBox {background-color: #2b5b84; color: white;}\n'
+            #'QPushButton{color: white; font-size: 16px; background-color: #1d1d1d; '
+            #'border-radius: 10px; padding: 10px; text-align: center;}\n'
+            #' QPushButton:hover{color: #2b5b84;}')
         #message_box.setFont(self.font())
         QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
