@@ -529,30 +529,6 @@ class CTRIA3(TriShell):
             self.theta_mcid = self.theta_mcid_ref.cid
             del self.theta_mcid_ref
 
-    @property
-    def zOffset(self):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        return self.zoffset
-
-    @property
-    def thetaMcid(self):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        return self.theta_mcid
-
-    @zOffset.setter
-    def zOffset(self, zoffset):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        self.zoffset = zoffset
-
-    @thetaMcid.setter
-    def thetaMcid(self, theta_mcid):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        self.theta_mcid = theta_mcid
-
     def _verify(self, xref=True):
         eid = self.eid
         pid = self.Pid()
@@ -957,30 +933,6 @@ class CTRIA6(TriShell):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    @property
-    def zOffset(self):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        return self.zoffset
-
-    @property
-    def thetaMcid(self):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        return self.theta_mcid
-
-    @zOffset.setter
-    def zOffset(self, zoffset):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        self.zoffset = zoffset
-
-    @thetaMcid.setter
-    def thetaMcid(self, theta_mcid):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        self.theta_mcid = theta_mcid
-
     def _verify(self, xref=False):
         eid = self.eid
         pid = self.Pid()
@@ -1222,30 +1174,6 @@ class CTRIAR(TriShell):
         self.nodes = self.node_ids
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
-
-    @property
-    def zOffset(self):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        return self.zoffset
-
-    @property
-    def thetaMcid(self):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        return self.theta_mcid
-
-    @zOffset.setter
-    def zOffset(self, zoffset):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        self.zoffset = zoffset
-
-    @thetaMcid.setter
-    def thetaMcid(self, theta_mcid):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        self.theta_mcid = theta_mcid
 
     def Thickness(self):
         """
@@ -1926,30 +1854,6 @@ class CQUAD4(QuadShell):
         self.pid_ref = self.pid
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
-
-    @property
-    def zOffset(self):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        return self.zoffset
-
-    @property
-    def thetaMcid(self):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        return self.theta_mcid
-
-    @zOffset.setter
-    def zOffset(self, zoffset):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        self.zoffset = zoffset
-
-    @thetaMcid.setter
-    def thetaMcid(self, theta_mcid):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        self.theta_mcid = theta_mcid
 
     #def x(self, eta, xi, xs):
         #"""Calculate the x-coordinate within the element.
@@ -3005,30 +2909,6 @@ class CQUADR(QuadShell):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    @property
-    def zOffset(self):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        return self.zoffset
-
-    @property
-    def thetaMcid(self):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        return self.theta_mcid
-
-    @zOffset.setter
-    def zOffset(self, zoffset):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        self.zoffset = zoffset
-
-    @thetaMcid.setter
-    def thetaMcid(self, theta_mcid):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        self.theta_mcid = theta_mcid
-
     def Thickness(self):
         """
         Returns the thickness
@@ -3622,30 +3502,6 @@ class CQUAD8(QuadShell):
         self.nodes = self.node_ids
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
-
-    @property
-    def zOffset(self):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        return self.zoffset
-
-    @property
-    def thetaMcid(self):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        return self.theta_mcid
-
-    @zOffset.setter
-    def zOffset(self, zoffset):
-        """deprecated"""
-        self.deprecated('self.zOffset', 'self.zoffset', '1.0')
-        self.zoffset = zoffset
-
-    @thetaMcid.setter
-    def thetaMcid(self, theta_mcid):
-        """deprecated"""
-        self.deprecated('self.thetaMcid', 'self.theta_mcid', '1.0')
-        self.theta_mcid = theta_mcid
 
     def _verify(self, xref=False):
         eid = self.eid
