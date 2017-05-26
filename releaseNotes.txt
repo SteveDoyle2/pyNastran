@@ -46,7 +46,7 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.9.0 released 2017/5/25-----------------------
+-----------------------v1.0.0 released 2017/5/25-----------------------
 This is a major release.  The focus this time has been on robustness and testing.
 Hopefully, it shows.  The software has also been relicensed to be BSD-3, which
 is a more permissive license and is the same one that numpy, scipy, and

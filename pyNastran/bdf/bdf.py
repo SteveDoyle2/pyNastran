@@ -593,7 +593,11 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         #del state['spcObject'], state['mpcObject'],
-        del state['_card_parser'], state['_card_parser_b'], state['log']
+        del state['_card_parser'], state['log']
+        if hasattr(self, '_card_parser_b'):
+            del state['_card_parser_b']
+        if hasattr(self, '_card_parser_prepare'):
+            del state['_card_parser_prepare']
         return state
 
     def save(self, obj_filename='model.obj', unxref=True):
@@ -601,8 +605,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         ..warning:: doesn't work right
         """
         #del self.log
-        #del self.spcObject
-        #del self.mpcObject
         #del self._card_parser, self._card_parser_prepare
 
         #try:
