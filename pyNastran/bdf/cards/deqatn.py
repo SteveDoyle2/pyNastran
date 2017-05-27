@@ -243,11 +243,12 @@ class DEQATN(BaseCard):  # needs work...
 
     def uncross_reference(self):
         del self.func
-        del self.f
-        # del getattr(self, self.func_name)
+        #del self.f
+        #del getattr(self, self.func_name)
+        setattr(self, self.func_name, None)
         del self.func_name
         del self.nargs
-        del self.dtable
+        del self.dtable, self.dtable_ref
 
     def evaluate(self, *args):
         """Makes a call to self.func"""

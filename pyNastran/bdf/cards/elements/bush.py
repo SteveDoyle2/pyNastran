@@ -261,12 +261,14 @@ class CBUSH(BushElement):
 
     def uncross_reference(self):
         self.ga = self.Ga()
-        self.gb = self.Gb()
         self.pid = self.Pid()
         self.cid = self.Cid()
+        self.gb = self.Gb()
         if self.cid is not None:
             del self.cid_ref
-        del self.ga_ref, self.gb_ref, self.pid_ref
+        if self.gb is not None:
+            del self.gb_ref
+        del self.ga_ref, self.pid_ref
 
     def raw_fields(self):
         if self.g0 is not None:
@@ -365,7 +367,11 @@ class CBUSH1D(BushElement):
         self.gb = self.Gb()
         self.cid = self.Cid()
         self.pid = self.Pid()
-        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
+        if self.gb:
+            del self.gb_ref
+        if self.cid is not None:
+            del self.cid_ref
+        del self.ga_ref, self.pid_ref
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -431,7 +437,7 @@ class CBUSH2D(BushElement):
         self.plane = plane
         self.sptid = sptid
         if self.plane not in ['XY', 'YZ', 'ZX']:
-            msg = ("plane not in required list, plane=|%s|\n"
+            msg = ("plane not in required list, plane=%r\n"
                    "expected planes = ['XY','YZ','ZX']" % self.plane)
             raise RuntimeError(msg)
 
@@ -523,7 +529,9 @@ class CBUSH2D(BushElement):
         self.gb = self.Gb()
         self.cid = self.Cid()
         self.pid = self.Pid()
-        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
+        if self.cid is not None:
+            del self.cid_ref
+        del self.ga_ref, self.gb_ref, self.pid_ref
 
     def raw_fields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),

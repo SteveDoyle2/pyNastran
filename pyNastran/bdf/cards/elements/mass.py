@@ -177,7 +177,9 @@ class CMASS1(PointMassElement):
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.pid = self.Pid()
-        del self.g1_ref, self.g2_ref, self.pid_ref
+        if isinstance(self.g2, integer_types):
+            del self.g2_ref
+        del self.g1_ref, self.pid_ref
 
     def G1(self):
         if isinstance(self.g1, integer_types):

@@ -1979,6 +1979,9 @@ class GMCORD(BaseCard):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
     def setup(self):
         pass
 
@@ -1990,6 +1993,7 @@ class GMCORD(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class CORD3G(Coord):  # not done
     """
     Defines a general coordinate system using three rotational angles as
@@ -1998,6 +2002,8 @@ class CORD3G(Coord):  # not done
     axes for 3-D composite analysis.
 
     +--------+-----+--------+------+----------+----------+----------+--------+
+    |    1   |  2  |    3   |   4  |    5     |     6    |     7    |    8   |
+    +========+=====+========+======+==========+==========+==========+========+
     | CORD3G | CID | METHOD | FORM | THETAID1 | THETAID2 | THETAID3 | CIDREF |
     +--------+-----+--------+------+----------+----------+----------+--------+
     | CORD3G | 100 |  E313  | EQN  |    110   |    111   |    112   |   0    |

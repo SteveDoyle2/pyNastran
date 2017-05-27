@@ -204,13 +204,13 @@ class MAT1(IsotropicMaterial):
     """
     Defines the material properties for linear isotropic materials.
 
-    +-----+-----+-----+-----+-------+-----+------+------+-----+
-    |  1  |  2  | 3   | 4   |   5   |  6  |  7   |  8   |  9  |
-    +=====+=====+=====+=====+=======+=====+======+======+=====+
-    |MAT1 | MID |  E  |  G  |  NU   | RHO |  A   | TREF | GE  |
-    +-----+-----+-----+-----+-------+-----+------+------+-----+
-    |     | ST  | SC  | SS  | MCSID |     |      |      |     |
-    +-----+-----+-----+-----+-------+-----+------+------+-----+
+    +------+-----+-----+-----+-------+-----+------+------+-----+
+    |   1  |  2  | 3   | 4   |   5   |  6  |  7   |  8   |  9  |
+    +======+=====+=====+=====+=======+=====+======+======+=====+
+    | MAT1 | MID |  E  |  G  |  NU   | RHO |  A   | TREF | GE  |
+    +------+-----+-----+-----+-------+-----+------+------+-----+
+    |      | ST  | SC  | SS  | MCSID |     |      |      |     |
+    +------+-----+-----+-----+-------+-----+------+------+-----+
     """
     type = 'MAT1'
     _field_map = {
@@ -423,11 +423,9 @@ class MAT1(IsotropicMaterial):
 
     def uncross_reference(self):
         if hasattr(self, 'mats1_ref'):
-            self.mats1 = self.Mats1()
             del self.mats1_ref
         if hasattr(self, 'matt1_ref'):
-            self.matt1 = self.Matt1()
-            del self.matt1_Ref
+            del self.matt1_ref
 
     def Mats1(self):
         return self.mats1
@@ -564,15 +562,15 @@ class MAT2(AnisotropicMaterial):
     Defines the material properties for linear anisotropic materials for
     two-dimensional elements.
 
-    +-----+-------+-----+-----+------+-----+------+-----+-----+
-    |  1  |   2   |  3  |  4  |  5   |  6  |  7   | 8   |  9  |
-    +=====+=======+=====+=====+======+=====+======+=====+=====+
-    |MAT2 |  MID  | G11 | G12 | G13  | G22 | G23  | G33 | RHO |
-    +-----+-------+-----+-----+------+-----+------+-----+-----+
-    |     |  A1   | A2  | A3  | TREF | GE  |  ST  | SC  | SS  |
-    +-----+-------+-----+-----+------+-----+------+-----+-----+
-    |     | MCSID |     |     |      |     |      |     |     |
-    +-----+-------+-----+-----+------+-----+------+-----+-----+
+    +------+-------+-----+-----+------+-----+------+-----+-----+
+    |   1  |   2   |  3  |  4  |  5   |  6  |  7   | 8   |  9  |
+    +======+=======+=====+=====+======+=====+======+=====+=====+
+    | MAT2 |  MID  | G11 | G12 | G13  | G22 | G23  | G33 | RHO |
+    +------+-------+-----+-----+------+-----+------+-----+-----+
+    |      |  A1   | A2  | A3  | TREF | GE  |  ST  | SC  | SS  |
+    +------+-------+-----+-----+------+-----+------+-----+-----+
+    |      | MCSID |     |     |      |     |      |     |     |
+    +------+-------+-----+-----+------+-----+------+-----+-----+
     """
     type = 'MAT2'
     _field_map = {
@@ -693,15 +691,18 @@ class MAT2(AnisotropicMaterial):
             self.matt2_ref = self.matt2
 
     def uncross_reference(self):
-        self.matt2 = self.Matt2()
-        del self.matt2_Ref
+        if hasattr(self, 'matt2_ref'):
+            del self.matt2
+            del self.matt2_ref
 
     def _verify(self, xref):
         """
         Verifies all methods for this object work
 
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
         """
         pass
 
@@ -794,13 +795,13 @@ class MAT3(OrthotropicMaterial):
     Defines the material properties for linear orthotropic materials used by
     the CTRIAX6 element entry.
 
-    +-----+-----+----+-----+----+-------+-------+------+-----+
-    |  1  |  2  |  3 |  4  | 5  |   6   |   7   |  8   |  9  |
-    +=====+=====+====+=====+====+=======+=======+======+=====+
-    |MAT3 | MID | EX | ETH | EZ | NUXTH | NUTHZ | NUZX | RHO |
-    +-----+-----+----+-----+----+-------+-------+------+-----+
-    |     |     |    | GZX | AX |  ATH  |  AZ   | TREF | GE  |
-    +-----+-----+----+-----+----+-------+-------+------+-----+
+    +------+-----+----+-----+----+-------+-------+------+-----+
+    |   1  |  2  |  3 |  4  | 5  |   6   |   7   |  8   |  9  |
+    +======+=====+====+=====+====+=======+=======+======+=====+
+    | MAT3 | MID | EX | ETH | EZ | NUXTH | NUTHZ | NUZX | RHO |
+    +------+-----+----+-----+----+-------+-------+------+-----+
+    |      |     |    | GZX | AX |  ATH  |  AZ   | TREF | GE  |
+    +------+-----+----+-----+----+-------+-------+------+-----+
     """
     type = 'MAT3'
     _field_map = {
@@ -899,8 +900,10 @@ class MAT3(OrthotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
         """
         mid = self.Mid()
         assert isinstance(mid, integer_types), 'mid=%r' % mid
@@ -921,6 +924,10 @@ class MAT3(OrthotropicMaterial):
         if self.mid in model.MATT3:
             self.matt3 = model.MATT3[self.mid]  # not using a method...
             self.matt3_ref = self.matt3
+
+    def uncross_reference(self):
+        if hasattr(self, 'matt3_ref'):
+            del self.matt3_ref
 
     def raw_fields(self):
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
@@ -962,13 +969,13 @@ class MAT4(ThermalMaterial):
     generation, reference enthalpy, and latent heat associated with a
     single-phase change.
 
-    +-----+-----+--------+------+-----+----+-----+------+---------+
-    |  1  |  2  |   3    |   4  |  5  | 6  |  7  |  8   |    9    |
-    +=====+=====+========+======+=====+====+=====+======+=========+
-    |MAT4 | MID |   K    |  CP  | RHO | MU |  H  | HGEN | REFENTH |
-    +-----+-----+--------+------+-----+----+-----+------+---------+
-    |     | TCH | TDELTA | QLAT |     |    |     |      |         |
-    +-----+-----+--------+------+-----+----+-----+------+---------+
+    +------+-----+--------+------+-----+----+-----+------+---------+
+    |   1  |  2  |   3    |   4  |  5  | 6  |  7  |  8   |    9    |
+    +======+=====+========+======+=====+====+=====+======+=========+
+    | MAT4 | MID |   K    |  CP  | RHO | MU |  H  | HGEN | REFENTH |
+    +------+-----+--------+------+-----+----+-----+------+---------+
+    |      | TCH | TDELTA | QLAT |     |    |     |      |         |
+    +------+-----+--------+------+-----+----+-----+------+---------+
     """
     type = 'MAT4'
     _field_map = {
@@ -1101,13 +1108,13 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
     Defines the thermal material properties for anisotropic materials.
 
-    +-----+-----+-------+-----+-----+-----+-----+-----+----+
-    |  1  |  2  |   3   |  4  |  5  |  6  |  7  |  8  | 9  |
-    +=====+=====+=======+=====+=====+=====+=====+=====+====+
-    |MAT5 | MID |  KXX  | KXY | KXZ | KYY | KYZ | KZZ | CP |
-    +-----+-----+-------+-----+-----+-----+-----+-----+----+
-    |     | RHO |  HGEN |     |     |     |     |     |    |
-    +-----+-----+-------+-----+-----+-----+-----+-----+----+
+    +------+-----+-------+-----+-----+-----+-----+-----+----+
+    |   1  |  2  |   3   |  4  |  5  |  6  |  7  |  8  | 9  |
+    +======+=====+=======+=====+=====+=====+=====+=====+====+
+    | MAT5 | MID |  KXX  | KXY | KXZ | KYY | KYZ | KZZ | CP |
+    +------+-----+-------+-----+-----+-----+-----+-----+----+
+    |      | RHO |  HGEN |     |     |     |     |     |    |
+    +------+-----+-------+-----+-----+-----+-----+-----+----+
     """
     type = 'MAT5'
     _field_map = {
@@ -1202,7 +1209,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     def uncross_reference(self):
         self.matt5 = self.Matt5()
-        del self.matt5_ref, self.matt5_Ref
+        del self.matt5_ref, self.matt5_ref
 
     def get_density(self):
         return self.rho
@@ -1256,15 +1263,15 @@ class MAT8(OrthotropicMaterial):
     Defines the material property for an orthotropic material for
     isoparametric shell elements.
 
-    +-----+-----+-----+------+------+-----+-----+-----+-----+
-    |  1  |  2  |  3  |  4   |  5   |  6  |  7  |  8  |  9  |
-    +=====+=====+=====+======+======+=====+=====+=====+=====+
-    |MAT8 | MID | E1  |  E2  | NU12 | G12 | G1Z | G2Z | RHO |
-    +-----+-----+-----+------+------+-----+-----+-----+-----+
-    |     | A1  |  A2 | TREF |  Xt  |  Xc |  Yt |  Yc |  S  |
-    +-----+-----+-----+------+------+-----+-----+-----+-----+
-    |     | GE1 | F12 | STRN |      |     |     |     |     |
-    +-----+-----+-----+------+------+-----+-----+-----+-----+
+    +------+-----+-----+------+------+-----+-----+-----+-----+
+    |  1   |  2  |  3  |  4   |  5   |  6  |  7  |  8  |  9  |
+    +======+=====+=====+======+======+=====+=====+=====+=====+
+    | MAT8 | MID | E1  |  E2  | NU12 | G12 | G1Z | G2Z | RHO |
+    +------+-----+-----+------+------+-----+-----+-----+-----+
+    |      | A1  |  A2 | TREF |  Xt  |  Xc |  Yt |  Yc |  S  |
+    +------+-----+-----+------+------+-----+-----+-----+-----+
+    |      | GE1 | F12 | STRN |      |     |     |     |     |
+    +------+-----+-----+------+------+-----+-----+-----+-----+
     """
     type = 'MAT8'
     _field_map = {
@@ -1511,17 +1518,17 @@ class MAT9(AnisotropicMaterial):
     anisotropic materials for solid isoparametric elements (see PSOLID entry
     description).
 
-    +-----+-----+-----+-----+-----+-----+------+-----+-----+
-    |  1  |  2  | 3   | 4   |  5  |  6  |  7   | 8   |  9  |
-    +=====+=====+=====+=====+=====+=====+======+=====+=====+
-    |MAT9 | MID | G11 | G12 | G13 | G14 | G15  | G16 | G22 |
-    +-----+-----+-----+-----+-----+-----+------+-----+-----+
-    |     | G23 | G24 | G25 | G26 | G33 | G34  | G35 | G36 |
-    +-----+-----+-----+-----+-----+-----+------+-----+-----+
-    |     | G44 | G45 | G46 | G55 | G56 | G66  | RHO | A1  |
-    +-----+-----+-----+-----+-----+-----+------+-----+-----+
-    |     | A2  | A3  | A4  | A5  | A6  | TREF | GE  |     |
-    +-----+-----+-----+-----+-----+-----+------+-----+-----+
+    +------+-----+-----+-----+-----+-----+------+-----+-----+
+    |   1  |  2  | 3   | 4   |  5  |  6  |  7   | 8   |  9  |
+    +======+=====+=====+=====+=====+=====+======+=====+=====+
+    | MAT9 | MID | G11 | G12 | G13 | G14 | G15  | G16 | G22 |
+    +------+-----+-----+-----+-----+-----+------+-----+-----+
+    |      | G23 | G24 | G25 | G26 | G33 | G34  | G35 | G36 |
+    +------+-----+-----+-----+-----+-----+------+-----+-----+
+    |      | G44 | G45 | G46 | G55 | G56 | G66  | RHO | A1  |
+    +------+-----+-----+-----+-----+-----+------+-----+-----+
+    |      | A2  | A3  | A4  | A5  | A6  | TREF | GE  |     |
+    +------+-----+-----+-----+-----+-----+------+-----+-----+
     """
     type = 'MAT9'
     _field_map = {
@@ -1887,6 +1894,16 @@ class MAT10(Material):
         if self.table_gamma is not None:
             self.table_gamma_ref = model.TableD(self.table_gamma, msg)
 
+    def uncross_reference(self):
+        if self.table_bulk is not None:
+            del self.table_bulk_ref
+        if self.table_rho is not None:
+            del self.table_rho_ref
+        if self.table_ge is not None:
+            del self.table_gamma_ref
+        if self.table_gamma is not None:
+            del self.table_gamma_ref
+
     def _verify(self, xref):
         """
         Verifies all methods for this object work
@@ -2093,13 +2110,13 @@ class MAT11(Material):
     Defines the material properties for a 3D orthotropic material for
     isoparametric solid elements.
 
-    +------+-----+-----+-----+----+------+------+------+-----+
-    |  1   |  2  |  3  |  4  |  5 |   6  |  7   |  8   |  9  |
-    +======+=====+=====+=====+====+======+======+======+=====+
-    |MAT11 | MID |  E1 | E2  | E3 | NU12 | NU13 | NU23 | G12 |
-    +------+-----+-----+-----+----+------+------+------+-----+
-    |      | G13 | G23 | RHO | A1 |  A2  |  A3  | TREF | GE  |
-    +------+-----+-----+-----+----+------+------+------+-----+
+    +-------+-----+-----+-----+----+------+------+------+-----+
+    |   1   |  2  |  3  |  4  |  5 |   6  |  7   |  8   |  9  |
+    +=======+=====+=====+=====+====+======+======+======+=====+
+    | MAT11 | MID |  E1 | E2  | E3 | NU12 | NU13 | NU23 | G12 |
+    +-------+-----+-----+-----+----+------+------+------+-----+
+    |       | G13 | G23 | RHO | A1 |  A2  |  A3  | TREF | GE  |
+    +-------+-----+-----+-----+----+------+------+------+-----+
     """
     type = 'MAT11'
 
@@ -2211,6 +2228,9 @@ class MAT11(Material):
         xref : bool
             has this model been cross referenced
         """
+        pass
+
+    def uncross_reference(self):
         pass
 
     def _validate_input(self):
@@ -2389,7 +2409,7 @@ class MATHE(HyperelasticMaterial):
 
     model = OGDEN, FOAM
     +-------+-------+--------+-------+-----+--------+-------+
-    | MATHE | MID   | Model  |       |  K  |  RHO   |  TEXP |
+    | MATHE |  MID  | Model  |       |  K  |  RHO   |  TEXP |
     |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
     |       |  MU2  | ALPHA2 | BETA2 | MU3 | ALPHA3 | BETA3 |
     |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |
@@ -2426,7 +2446,7 @@ class MATHE(HyperelasticMaterial):
 
     model = OGDEN, FOAM
     +-------+-------+--------+-------+-----+--------+-------+
-    | MATHE | MID   | Model  |  NOT  |  K  |  RHO   |  TEXP |  # NOT is MSC only
+    | MATHE |  MID  | Model  |  NOT  |  K  |  RHO   |  TEXP |  # NOT is MSC only
     |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
     |       |  MU2  | ALPHA2 | BETA2 | MU3 | ALPHA3 | BETA3 |
     |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |

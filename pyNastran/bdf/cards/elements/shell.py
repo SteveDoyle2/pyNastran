@@ -281,7 +281,7 @@ class TriShell(ShellElement):
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        n1, n2, n3 = self.get_node_positions()[:3]
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
@@ -968,7 +968,7 @@ class CTRIA6(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -976,7 +976,7 @@ class CTRIA6(TriShell):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)"""
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -989,8 +989,8 @@ class CTRIA6(TriShell):
         .. math::
           n = \frac{(n_0-n_1) \times (n_0-n_2)}{\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
-        (n0, n1, n2) = self.get_node_positions()[:3]
-        return _normal(n0 - n1, n0 - n2)
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        return _normal(n1 - n2, n1 - n3)
 
     def Centroid(self):
         r"""
@@ -999,7 +999,7 @@ class CTRIA6(TriShell):
         .. math::
           CG = \frac{1}{3} (n_1+n_2+n_3)
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
@@ -1340,18 +1340,18 @@ class QuadShell(ShellElement):
            c=centroid
            A=area
         """
-        n1, n2, n3, n4 = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         centroid = (n1 + n2 + n3 + n4) / 4.
         return(area, centroid)
 
     def Centroid(self):
-        n1, n2, n3, n4 = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
     def Centroid_no_xref(self, model):
-        n1, n2, n3, n4 = self.get_node_positions_no_xref(model)
+        n1, n2, n3, n4 = self.get_node_positions_no_xref(model, nodes=self.nodes[:4])
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
@@ -1365,7 +1365,7 @@ class QuadShell(ShellElement):
         """
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
-        (n1, n2, n3, n4) = self.get_node_positions()[:4, :]
+        (n1, n2, n3, n4) = self.get_node_positions(nodes=self.nodes[:4])
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         return area
 
@@ -1373,7 +1373,7 @@ class QuadShell(ShellElement):
         """
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
-        (n1, n2, n3, n4) = self.get_node_positions_no_xref(model)
+        (n1, n2, n3, n4) = self.get_node_positions_no_xref(model, nodes=self.nodes[:4])
         area = 0.5 * norm(cross(n3-n1, n4-n2))
         return area
 
@@ -2490,7 +2490,7 @@ class CPLSTN6(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -2498,7 +2498,7 @@ class CPLSTN6(TriShell):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)"""
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -2511,8 +2511,8 @@ class CPLSTN6(TriShell):
         .. math::
           n = \frac{(n_0-n_1) \times (n_0-n_2)}{\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
-        (n0, n1, n2) = self.get_node_positions()[:3]
-        return _normal(n0 - n1, n0 - n2)
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        return _normal(n1 - n2, n1 - n3)
 
     def Centroid(self):
         r"""
@@ -2521,7 +2521,7 @@ class CPLSTN6(TriShell):
         .. math::
           CG = \frac{1}{3} (n_1+n_2+n_3)
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
@@ -2697,7 +2697,7 @@ class CPLSTN8(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
 
     def Normal(self):
-        (n1, n2, n3, n4) = self.get_node_positions()[:4]
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroid(self):
@@ -2717,7 +2717,7 @@ class CPLSTN8(QuadShell):
                c=centroid
                A=area
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         a = n1 - n2
         b = n2 - n4
         area1 = 0.5 * norm(cross(a, b))
@@ -2736,7 +2736,7 @@ class CPLSTN8(QuadShell):
         r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         a = n1 - n3
         b = n2 - n4
         area = 0.5 * norm(cross(a, b))
@@ -3283,7 +3283,7 @@ class CQUAD(QuadShell):
         r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
-        (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         a = n1 - n3
         b = n2 - n4
         area = 0.5 * norm(cross(a, b))
@@ -3546,7 +3546,7 @@ class CQUAD8(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
 
     def Normal(self):
-        (n1, n2, n3, n4) = self.get_node_positions()[:4]
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroid(self):
@@ -3566,7 +3566,7 @@ class CQUAD8(QuadShell):
                c=centroid
                A=area
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         a = n1 - n2
         b = n2 - n4
         area1 = 0.5 * norm(cross(a, b))
@@ -3585,7 +3585,7 @@ class CQUAD8(QuadShell):
         r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         a = n1 - n3
         b = n2 - n4
         area = 0.5 * norm(cross(a, b))

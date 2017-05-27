@@ -267,7 +267,7 @@ class QVECT(ThermalLoad):
         """
         msg = ' which is required by QVECT sid=%s' % self.sid
         self.eids = model.Elements(self.eids, msg=msg)
-        self.eidss_ref = self.eids
+        self.eids_ref = self.eids
 
     def safe_cross_reference(self, model):
         try:
@@ -277,7 +277,7 @@ class QVECT(ThermalLoad):
 
     def uncross_reference(self):
         self.eids = self.element_ids
-        del self.elements_ref
+        del self.eids_ref
 
     def _eid(self, eid):
         if isinstance(eid, integer_types):
@@ -651,6 +651,16 @@ class QBDY3(ThermalLoad):
     def uncross_reference(self):
         self.eids = self.element_ids
         del self.eids_ref
+
+    @property
+    def element_ids(self):
+        eids = []
+        for element in self.eids:
+            eidi = self.Eid(element)
+            eids.append(eidi)
+        return eids
+
+        return self.get_element_ids()
 
     def Eids(self):
         eids = []

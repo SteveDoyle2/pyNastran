@@ -159,6 +159,17 @@ class ACSRCE(BaseCard):
         #self.load_ids = load_ids2
         #self.load_ids_ref = self.load_ids
 
+    def uncross_reference(self):
+        #self.tb = self.Tb()
+        #self.tp = self.Tp()
+        #self.delay = self.delay_id
+        #if self.tb > 0:
+            #del self.tb_ref
+        #if self.tp > 0:
+            #del self.tp_ref
+        if self.delay > 0:
+            del self.delay_ref
+
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 
@@ -431,12 +442,15 @@ class RLOAD1(TabularLoad):
         self.tc = self.Tc()
         self.td = self.Td()
         self.delay = self.delay_id
-        if self.tc > 0:
+        self.dphase = self.dphase_id
+        if isinstance(self.tc, integer_types) and self.tc:
             del self.tc_ref
-        if self.td > 0:
+        if isinstance(self.td, integer_types) and self.td:
             del self.td_ref
         if isinstance(self.delay, integer_types) and self.delay > 0:
             del self.delay_ref
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
+            del self.dphase_ref
 
     def get_loads(self):
         return [self]
@@ -709,12 +723,15 @@ class RLOAD2(TabularLoad):
         self.tb = self.Tb()
         self.tp = self.Tp()
         self.delay = self.delay_id
-        if self.tb > 0:
+        self.dphase = self.dphase_id
+        if isinstance(self.tb, integer_types) and self.tb:
             del self.tb_ref
         if self.tp > 0:
             del self.tp_ref
         if self.delay > 0:
             del self.delay_ref
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
+            del self.dphase_ref
 
     def get_loads(self):
         return [self]

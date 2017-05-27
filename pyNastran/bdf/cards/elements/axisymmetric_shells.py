@@ -1060,6 +1060,9 @@ class CQUADX8(QuadShell):
         """
         pass
 
+    def Mass(self):
+        return 0.0
+
     def raw_fields(self):
         list_fields = ['CQUADX8', self.eid, self.Pid()] + self.node_ids + [self.theta]
         return list_fields

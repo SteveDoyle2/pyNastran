@@ -19,7 +19,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
-    integer_string_or_blank, string_or_blank, string)
+    integer_string_or_blank, string_or_blank, string, integer_or_double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -148,7 +148,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_Ref
+        del self.nodes_ref, self.pid_ref
 
     def Length(self):
         r"""
@@ -207,7 +207,7 @@ class CBARAO(BaseCard):
     +========+======+=======+======+=====+========+=====+====+====+
     | CBARAO | EID  | SCALE |  X1  | X2  |  X3    | X4  | X5 | X6 |
     +--------+------+-------+------+-----+--------+-----+----+----+
-    | CBARAO | 1065 |  FR   | 0.2  | 0.4 | 0.6    | 0.8 |    |    |
+    | CBARAO | 1065 |  FR   | 0.2  | 0.4 |  0.6   | 0.8 |    |    |
     +--------+------+-------+------+-----+--------+-----+----+----+
 
     Alternate form (not supported):
@@ -216,7 +216,7 @@ class CBARAO(BaseCard):
     +========+======+=======+======+=====+========+=====+====+====+
     | CBARAO | EID  | SCALE | NPTS | X1  | DELTAX |     |    |    |
     +--------+------+-------+------+-----+--------+-----+----+----+
-    | CBARAO | 1065 |  FR   |  4   | 0.2 | 0.2    |     |    |    |
+    | CBARAO | 1065 |  FR   |  4   | 0.2 |  0.2   |     |    |    |
     +--------+------+-------+------+-----+--------+-----+----+----+
     """
     def __init__(self, eid, scale, x, comment=''):
@@ -238,7 +238,7 @@ class CBARAO(BaseCard):
             LE : x is in absolute coordinates along the bar
             FR : x is in fractional
         x : List[float]
-            the additional output locations
+            the additional output locations (doesn't include the end points)
             len(x) <= 6
         comment : str; default=''
             a comment for the card
@@ -265,14 +265,23 @@ class CBARAO(BaseCard):
         """
         eid = integer(card, 1, 'eid')
         scale = string(card, 2, 'scale')
-        x = [
-            double_or_blank(card, 3, 'x1'),
-            double_or_blank(card, 4, 'x2'),
-            double_or_blank(card, 5, 'x3'),
-            double_or_blank(card, 6, 'x4'),
-            double_or_blank(card, 7, 'x5'),
-            double_or_blank(card, 8, 'x6'),
-        ]
+        x1_npoints = integer_or_double(card, 3, 'x1/npoints')
+        if isinstance(x1_npoints, integer_types):
+            npoints = x1_npoints
+            x1 = double_or_blank(card, 4, 'x1')
+            delta_x = double_or_blank(card, 4, 'delta_x')
+            x = np.arange(x1, npoints, delta_x)
+            raise NotImplementedError('card=%s x=%s' % (card, x))
+
+        else:
+            x = [
+                x1_npoints,
+                double_or_blank(card, 4, 'x2'),
+                double_or_blank(card, 5, 'x3'),
+                double_or_blank(card, 6, 'x4'),
+                double_or_blank(card, 7, 'x5'),
+                double_or_blank(card, 8, 'x6'),
+            ]
         assert len(card) <= 9, 'len(CBARAO card) = %i\ncard=%s' % (len(card), card)
         return CBARAO(eid, scale, x, comment=comment)
 

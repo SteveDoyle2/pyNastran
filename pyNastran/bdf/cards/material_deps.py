@@ -170,8 +170,15 @@ class MATS1(MaterialDependence):
         """
         Gets E (Young's Modulus) for a given strain.
 
-        :param strain: the strain (None -> linear E value)
-        :returns E:    Young's Modulus
+        Parameters
+        ----------
+        strain : float / None
+            the strain (None -> linear E value)
+
+        Returns
+        -------
+        E : float
+            Young's Modulus
         """
         msg = "E (Young's Modulus) not implemented for MATS1"
         raise NotImplementedError(msg)
@@ -197,8 +204,10 @@ class MATS1(MaterialDependence):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        self.tid = self.Tid()
-        del self.mid_ref, self.tid_ref
+        if self.tid:
+            self.tid = self.Tid()
+            del self.tid_ref
+        del self.mid_ref
 
     def Tid(self):
         if isinstance(self.tid, Table):
@@ -364,6 +373,16 @@ class MATT1(MaterialDependence):
     def uncross_reference(self):
         self.mid = self.Mid()
         ## TODO: remove refs
+
+        self._E_table = self.E_table()
+        self._G_table = self.G_table()
+        self._nu_table = self.nu_table()
+        self._rho_table = self.rho_table()
+        self._A_table = self.A_table()
+        self._ge_table = self.ge_table()
+        self._st_table = self.st_table()
+        self._sc_table = self.sc_table()
+        self._ss_table = self.ss_table()
         del self.mid_ref
 
     def _xref_table(self, model, key, msg):
@@ -519,7 +538,20 @@ class MATT2(MaterialDependence):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        ## TODO: remove refs
+        self._G11_table = self.G11_table()
+        self._G12_table = self.G12_table()
+        self._G13_table = self.G13_table()
+        self._G22_table = self.G22_table()
+        self._G23_table = self.G23_table()
+        self._G33_table = self.G33_table()
+        self._rho_table = self.rho_table()
+        self._A1_table = self.A1_table()
+        self._A2_table = self.A2_table()
+        self._A3_table = self.A3_table()
+        self._ge_table = self.ge_table()
+        self._st_table = self.st_table()
+        self._sc_table = self.sc_table()
+        self._ss_table = self.ss_table()
         del self.mid_ref
 
     def _xref_table(self, model, key, msg):
@@ -688,6 +720,15 @@ class MATT4(MaterialDependence):
 
         self.mid_ref = self.mid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        self._k_table = self.K_table()
+        self._cp_table = self.Cp_table()
+        self._h_table = self.H_table()
+        self._mu_table = self.mu_table()
+        self._hgen_table = self.Hgen_table()
+        del self.mid_ref
+
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
         if slot is not None:
@@ -828,7 +869,14 @@ class MATT5(MaterialDependence):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        ## TODO: remove refs
+        self._kxx_table = self.Kxx_table()
+        self._kxy_table = self.Kxy_table()
+        self._kxz_table = self.Kxz_table()
+        self._kyy_table = self.Kyy_table()
+        self._kyz_table = self.Kyz_table()
+        self._kzz_table = self.Kzz_table()
+        self._cp_table = self.Cp_table()
+        self._hgen_table = self.Hgen_table()
         del self.mid_ref
 
     def _xref_table(self, model, key, msg):

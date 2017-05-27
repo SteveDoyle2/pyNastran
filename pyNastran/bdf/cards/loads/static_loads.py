@@ -602,6 +602,11 @@ class ACCEL1(BaseCard):
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 
+    def uncross_reference(self):
+        self.cid = self.Cid()
+        self.nodes = self.node_ids
+        del self.nodes_ref, self.cid_ref
+
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
@@ -2354,7 +2359,7 @@ class PLOAD2(Load):
 
     @property
     def element_ids(self):
-        if isinstance(self.eids[0], int):
+        if isinstance(self.eids[0], integer_types):
             eids = self.eids
         else:
             eids = [elem.eid for elem in self.eids]

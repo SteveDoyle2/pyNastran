@@ -219,6 +219,25 @@ def fields(f, card, fieldname, i, j=None):
         #fs.append(f(card, ii + i, fieldname + str(ii), default))
     #return fs
 
+def modal_components(card, ifield, fieldname):
+    """
+    Used by TIC
+
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+    """
+    value = integer(card, ifield, fieldname)
+    if not(-1 <= value <= 6):
+        raise SyntaxError('%s=%s (field #%s) on card must be an integer (-1 <= val <= 6).\n'
+                          'card=%s' % (fieldname, value, ifield, card))
+    return value
+
 def integer(card, ifield, fieldname):
     """
     Parameters

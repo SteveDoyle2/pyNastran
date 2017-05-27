@@ -1230,6 +1230,11 @@ class PLPLANE(ShellProperty):
         self.mid_ref = self.mid
         self.cid_ref = self.cid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        self.cid = self.Cid()
+        del self.mid_ref, self.cid_ref
+
     def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
@@ -1242,7 +1247,10 @@ class PLPLANE(ShellProperty):
         #return self.pid
 
     #def Thickness(self):
-        #return self.t
+        #return 0.
+
+    #def MassPerArea(self):
+        #return 0.
 
     def Mid(self):
         if isinstance(self.mid, integer_types):

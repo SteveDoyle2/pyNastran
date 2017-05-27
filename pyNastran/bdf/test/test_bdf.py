@@ -48,7 +48,7 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None, nastran='', encoding=None,
                       size=None, is_double=None, post=None, sum_load=True, dev=True,
-                      crash_cards=None):
+                      crash_cards=None, pickle_obj=True):
     """
     Runs multiple BDFs
 
@@ -87,6 +87,9 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         False : doesn't crash; useful for running many tests
     crash_cards : List[str, str, ...]
         list of cards that are invalid and automatically crash the run
+    pickle_obj : bool; default=True
+        tests pickling
+
     Usage
     -----
     All control lists must be the same length.
@@ -152,7 +155,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                                                   nerrors=0,
                                                   post=post, sum_load=sum_load, dev=dev,
                                                   crash_cards=crash_cards,
-                                                  run_extract_bodies=False)
+                                                  run_extract_bodies=False, pickle_obj=pickle_obj)
                 del fem1
                 del fem2
             diff_cards += diff_cards
@@ -211,7 +214,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
-            nerrors=0, dev=False, crash_cards=None):
+            nerrors=0, dev=False, crash_cards=None, pickle_obj=False):
     """
     Runs a single BDF
 
@@ -267,6 +270,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     dev : bool; default=False
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
+    pickle_obj : bool; default=True
+        tests pickling
     """
     if not quiet:
         print('debug = %s' % debug)
@@ -294,7 +299,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
-        run_extract_bodies=run_extract_bodies,
+        run_extract_bodies=run_extract_bodies, pickle_obj=pickle_obj,
     )
     return fem1, fem2, diff_cards
 
@@ -306,7 +311,7 @@ def run_and_compare_fems(
         stop=False, nastran='', post=-1, dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
-        run_extract_bodies=False,
+        run_extract_bodies=False, pickle_obj=False,
     ):
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
@@ -332,7 +337,7 @@ def run_and_compare_fems(
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
                         size, is_double, cid,
                         run_extract_bodies=run_extract_bodies,
-                        encoding=encoding, crash_cards=crash_cards)
+                        encoding=encoding, crash_cards=crash_cards, pickle_obj=pickle_obj)
         if stop:
             if not quiet:
                 print('card_count:')
@@ -476,7 +481,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
-             run_extract_bodies=False, encoding=None, crash_cards=None):
+             run_extract_bodies=False, encoding=None, crash_cards=None, pickle_obj=False):
     """
     Reads/writes the BDF
 
@@ -538,7 +543,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding,
                                      debug=fem1.debug, log=fem1.log)
 
-                remake = False
+                remake = pickle_obj
                 if remake:
                     #log = fem1.log
                     fem1.save('model.obj')
@@ -1423,11 +1428,11 @@ def main():
     encoding = sys.getdefaultencoding()
     from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L]      [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-d] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-l] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p]                [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s]           [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L]      [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-d] [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-l] [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p]                [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s]           [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -1462,6 +1467,7 @@ def main():
     msg += '                   (pyNastran_dict.bdf)\n'
     msg += '  -f, --profile    Profiles the code (default=False)\n'
     msg += '  -s, --stop       Stop after first read/write (default=False)\n'
+    msg += '  -k, --pickle     Pickles the data objects (default=False)\n'
     msg += "\n"
     msg += "Info:\n"
     msg += '  -h, --help     show this help message and exit\n'
@@ -1531,6 +1537,7 @@ def main():
             encoding=data['--encoding'],
             crash_cards=crash_cards,
             run_extract_bodies=False,
+            pickle_obj=data['--pickle'],
         )
         prof.dump_stats('bdf.profile')
 
@@ -1571,6 +1578,7 @@ def main():
             encoding=data['--encoding'],
             crash_cards=crash_cards,
             run_extract_bodies=False,
+            pickle_obj=data['--pickle'],
         )
     print("total time:  %.2f sec" % (time.time() - time0))
 

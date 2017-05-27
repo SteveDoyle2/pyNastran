@@ -17,6 +17,7 @@ from collections import defaultdict
 
 from six import string_types, iteritems, itervalues, iterkeys, StringIO
 from six.moves.cPickle import load, dump
+#from pickle import load, dump
 
 import numpy as np
 
@@ -264,7 +265,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
     """
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
-    __slots__ = ['_is_dynamic_syntax']
+    #__slots__ = ['_is_dynamic_syntax']
     def __init__(self, debug=True, log=None, mode='msc'):
         """
         Initializes the BDF object
@@ -636,14 +637,14 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
         keys_to_skip = [
             'case_control_deck',
-            'log', #'mpcObject', 'spcObject',
+            'log',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b',
+            '_card_parser', '_card_parser_b', '_card_parser_prepare',
         ]
         for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
             if key.startswith('__') and key.endswith('__'):
@@ -1803,6 +1804,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             @classmethod
             def add_card(cls, card, comment=''):
                 """the method that forces the crash"""
+                #raise CardParseSyntaxError(card)
                 raise NotImplementedError(card)
 
         self._card_parser = {

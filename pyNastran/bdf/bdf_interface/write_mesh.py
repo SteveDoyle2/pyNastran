@@ -762,6 +762,9 @@ class WriteMesh(BDFAttributes):
                 for (unused_nid, node) in sorted(iteritems(self.nodes)):
                     msg.append(node.write_card(size, is_double))
             bdf_file.write(''.join(msg))
+        if self.seqgp:
+            bdf_file.write(self.seqgp.write_card(size, is_double))
+
         #if 0:  # not finished
             #self._write_nodes_associated(bdf_file, size, is_double)
 
