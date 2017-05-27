@@ -906,6 +906,7 @@ class PBEAML(IntegratedLineProperty):
     valid_types = {
         "ROD": 1,
         "TUBE": 2,
+        "TUBE2": 2,
         "L": 4,
         "I": 6,
         "CHAN": 4,
@@ -1030,7 +1031,7 @@ class PBEAML(IntegratedLineProperty):
 
             dim = []
             for ii in range(ndim):
-                dimi = double(card, i, 'dim_n=%i_ii=%i' % (n, ii))
+                dimi = double(card, i, 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1))
                 dim.append(dimi)
                 i += 1
             dims.append(dim)
