@@ -513,6 +513,9 @@ class LegendPropertiesWindow(PyDialog):
 
         self.animate_button.clicked.connect(self.on_animate)
 
+        self.show_radio.clicked.connect(self.on_show_hide)
+        self.hide_radio.clicked.connect(self.on_show_hide)
+
         self.apply_button.clicked.connect(self.on_apply)
         self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
@@ -549,9 +552,14 @@ class LegendPropertiesWindow(PyDialog):
         self.ncolors_edit.setFont(font)
 
     def on_animate(self):
+        """opens the animation window"""
         name, flag0 = self.check_name(self.name_edit)
         if not flag0:
             return
+
+        scale, flag1 = self.check_float(self.scale_edit)
+        if not flag1:
+            scale = self._scale
 
         data = {
             'font_size' : self.out_data['font_size'],
@@ -561,7 +569,7 @@ class LegendPropertiesWindow(PyDialog):
             'frames/sec' : 30,
             'resolution' : 1,
             'iframe' : 0,
-            'scale' : self._scale,
+            'scale' : scale,
             'default_scale' : self._default_scale,
 
             'is_scale' : self._default_phase is None,
@@ -637,6 +645,13 @@ class LegendPropertiesWindow(PyDialog):
         """action when user clicks 'Default' for number of labelsize"""
         self.labelsize_edit.setText(str(self._default_labelsize))
         self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_show_hide(self):
+        """action when user clicks the 'Show/Hide' radio button"""
+        self.colormap_edit.setCurrentIndex(colormap_keys.index(self._default_colormap))
+        is_shown = self.show_radio.isChecked()
+        self.vertical_radio.setEnabled(is_shown)
+        self.horizontal_radio.setEnabled(is_shown)
 
     @staticmethod
     def check_name(cell):
@@ -739,6 +754,7 @@ def main(): # pragma: no cover
     #The Main window
     data1 = {
         'icase' : 1,
+        'font_size' : 8,
         'name' : 'asdf',
         'min' : 0.,
         'max' : 10,
@@ -764,6 +780,7 @@ def main(): # pragma: no cover
         'default_format' : '%s',
         'format' : '%g',
 
+        'is_normals': False,
         'is_low_to_high': True,
         'is_discrete' : False,
         'is_horizontal' : False,

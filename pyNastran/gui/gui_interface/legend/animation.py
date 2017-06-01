@@ -43,6 +43,7 @@ class AnimationWindow(PyDialog):
     +-------------------+
     | Animation         |
     +-------------------------+
+    | icase   ______          |
     | scale   ______  Default |
     | time    ______  Default |
     |                         |
@@ -108,6 +109,17 @@ class AnimationWindow(PyDialog):
 
     def create_widgets(self):
         """creates the menu objects"""
+        icase_max = 1000  # TODO: update 1000
+
+        self.icase = QLabel("iCase:")
+        self.icase_edit = QSpinBox(self)
+        self.icase_edit.setRange(1, icase_max)
+        self.icase_edit.setSingleStep(1)
+        self.icase_edit.setValue(self._icase)
+        self.icase_edit.setToolTip('Case Number for the Scale/Phase Animation Type.\n'
+                                   'Defaults to the result you had shown when you clicked "Create Animation".\n'
+                                   'iCase can be seen by clicking "Apply" on a result.')
+
         self.scale = QLabel("Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
         self.scale_button = QPushButton("Default")
@@ -144,7 +156,6 @@ class AnimationWindow(PyDialog):
 
         #-----------------
         # Time plot
-        icase_max = 1000  # TODO: update 1000
         self.icase_start = QLabel("iCase Start:")
         self.icase_start_edit = QSpinBox(self)
         self.icase_start_edit.setRange(0, icase_max)
@@ -184,7 +195,10 @@ class AnimationWindow(PyDialog):
         self.icase_end_edit.setToolTip(
             'The last frame of the animation\n'
             'Assumes icase_start + nframes * icase_delta = icase_end')
-        self.icase_delta_edit.setToolTip('The frame step size (to skip non-consecutive results)')
+        self.icase_delta_edit.setToolTip('The frame step size (to skip non-consecutive results).\n'
+                                         'Frame skipping can be used to:\n'
+                                         "  - skip across results that you don't want to plot\n"
+                                         '  - adjust the FPS')
 
         self.min_value_edit.setToolTip('Min value of the legend (not supported)')
         self.max_value_edit.setToolTip('Max value of the legend (not supported)')
@@ -445,6 +459,12 @@ class AnimationWindow(PyDialog):
         self.max_value_edit.setEnabled(enabled)
         self.max_value_button.setEnabled(enabled)
 
+        self.icase.setEnabled(not enabled)
+        self.icase_edit.setEnabled(not enabled)
+        self.fps.setEnabled(not enabled)
+        self.fps_edit.setEnabled(not enabled)
+        self.fps_button.setEnabled(not enabled)
+
     def on_browse_folder(self):
         """opens a folder dialog"""
         dirname = open_directory_dialog(self, 'Select a Directory')
@@ -486,13 +506,16 @@ class AnimationWindow(PyDialog):
         """displays the menu objects"""
         grid = QGridLayout()
 
-        grid.addWidget(self.scale, 0, 0)
-        grid.addWidget(self.scale_edit, 0, 1)
-        grid.addWidget(self.scale_button, 0, 2)
+        grid.addWidget(self.icase, 0, 0)
+        grid.addWidget(self.icase_edit, 0, 1)
 
-        grid.addWidget(self.time, 1, 0)
-        grid.addWidget(self.time_edit, 1, 1)
-        grid.addWidget(self.time_button, 1, 2)
+        grid.addWidget(self.scale, 1, 0)
+        grid.addWidget(self.scale_edit, 1, 1)
+        grid.addWidget(self.scale_button, 1, 2)
+
+        grid.addWidget(self.time, 2, 0)
+        grid.addWidget(self.time_edit, 2, 1)
+        grid.addWidget(self.time_button, 2, 2)
 
         # spacer
         spacer = QLabel('')
@@ -523,15 +546,15 @@ class AnimationWindow(PyDialog):
         grid_time = QGridLayout()
         grid_time.addWidget(self.icase_start, 0, 0)
         grid_time.addWidget(self.icase_start_edit, 0, 1)
-        grid_time.addWidget(self.icase_start_button, 0, 2)
+        #grid_time.addWidget(self.icase_start_button, 0, 2)
 
         grid_time.addWidget(self.icase_end, 1, 0)
         grid_time.addWidget(self.icase_end_edit, 1, 1)
-        grid_time.addWidget(self.icase_end_button, 1, 2)
+        #grid_time.addWidget(self.icase_end_button, 1, 2)
 
         grid_time.addWidget(self.icase_delta, 2, 0)
         grid_time.addWidget(self.icase_delta_edit, 2, 1)
-        grid_time.addWidget(self.icase_delta_button, 2, 2)
+        #grid_time.addWidget(self.icase_delta_button, 2, 2)
 
         #grid_time.addWidget(self.min_value, 3, 0)
         #grid_time.addWidget(self.min_value_edit, 3, 1)
@@ -621,7 +644,7 @@ class AnimationWindow(PyDialog):
 
     def _make_gif(self, validate_out, istep=None):
         """interface for making the gif"""
-        scale, time, fps, magnify, output_dir, gifbase = validate_out
+        icase, scale, time, fps, magnify, output_dir, gifbase = validate_out
         if gifbase.lower().endswith('.gif'):
             gifbase = gifbase[:-4]
         gif_filename = os.path.join(output_dir, gifbase + '.gif')
@@ -666,7 +689,7 @@ class AnimationWindow(PyDialog):
         else:
             nrepeat = 1
         #self.out_data['is_shown'] = self.show_radio.isChecked()
-        icase = self._icase
+        #icase = self._icase
         if self.is_gui:
             self.win_parent.win_parent.make_gif(
                 gif_filename, scale, istep=istep,
@@ -682,14 +705,15 @@ class AnimationWindow(PyDialog):
 
     def on_validate(self):
         """checks to see if the input is valid"""
-        scale, flag0 = self.check_float(self.scale_edit)
-        time, flag1 = self.check_float(self.time_edit)
-        fps, flag2 = self.check_float(self.fps_edit)
-        magnify, flag3 = self.check_int(self.resolution_edit)
-        output_dir, flag4 = self.check_path(self.browse_folder_edit)
-        gifbase, flag5 = self.check_name(self.gif_edit)
-        passed = all([flag0, flag1, flag2, flag3, flag4, flag5])
-        return passed, (scale, time, fps, magnify, output_dir, gifbase)
+        icase, flag0 = self.check_int(self.icase_edit)
+        scale, flag1 = self.check_float(self.scale_edit)
+        time, flag2 = self.check_float(self.time_edit)
+        fps, flag3 = self.check_float(self.fps_edit)
+        magnify, flag4 = self.check_int(self.resolution_edit)
+        output_dir, flag5 = self.check_path(self.browse_folder_edit)
+        gifbase, flag6 = self.check_name(self.gif_edit)
+        passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6])
+        return passed, (icase, scale, time, fps, magnify, output_dir, gifbase)
 
     @staticmethod
     def check_name(cell):

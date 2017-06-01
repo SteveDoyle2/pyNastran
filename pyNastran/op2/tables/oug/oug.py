@@ -604,7 +604,7 @@ class OUG(OP2Common):
             self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
         self.subcase.add_op2_data(self.data_code, 'VECTOR', self.log)
 
-        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG', b'OUG1']:
             result_name = 'eigenvectors'
         elif self.table_name == b'RADCONS':
             result_name = 'eigenvectors_RADCONS'
