@@ -324,6 +324,12 @@ class PMASS(PointProperty):
         mass = data[1]
         return PMASS(pid, mass, comment=comment)
 
+    def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
+
     def _verify(self, xref=False):
         pid = self.Pid()
         mass = self.Mass()

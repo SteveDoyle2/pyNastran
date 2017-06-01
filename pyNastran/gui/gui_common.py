@@ -2119,13 +2119,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         elif 1:
             # doesn't work for the BWB_saero.bdf
             flip_flag = True is self._show_flag
-            assert self._show_flag == True, self._show_flag
+            assert self._show_flag is True, self._show_flag
             self._update_ids_mask_show(ids_to_show)
             self._show_flag = True
         elif 1:  # pragma: no cover
             # works
             flip_flag = True is self._show_flag
-            assert self._show_flag == True, self._show_flag
+            assert self._show_flag is True, self._show_flag
             self._update_ids_mask_showTrue(ids_to_show, flip_flag, render=False)
             self._update_ids_mask_showTrue(ids_to_show, False, render=True)
             self._show_flag = True
@@ -2145,14 +2145,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             prop.BackfaceCullingOff()
 
-        if 0:  # pragma: no cover
-            self._hide_ids_mask(ids_to_hide)
-        else:
-            # old; works; slow
-            flip_flag = False is self._show_flag
-            self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False, render=False)
-            self._update_ids_mask(ids_to_hide, False, show_flag=False, render=True)
-            self._show_flag = False
+        #if 0:  # pragma: no cover
+        #self._hide_ids_mask(ids_to_hide)
+        #else:
+        # old; works; slow
+        flip_flag = False is self._show_flag
+        self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False, render=False)
+        self._update_ids_mask(ids_to_hide, False, show_flag=False, render=True)
+        self._show_flag = False
 
     def _show_ids_mask(self, ids_to_show):
         """
@@ -2258,11 +2258,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
 
         self.update_all(render=True)
-        if 0:
-            self.grid_selected.Modified()
-            self.vtk_interactor.Render()
-            render_window = self.vtk_interactor.GetRenderWindow()
-            render_window.Render()
+        #if 0:
+            #self.grid_selected.Modified()
+            #self.vtk_interactor.Render()
+            #render_window = self.vtk_interactor.GetRenderWindow()
+            #render_window.Render()
 
     def _update_ids_mask_showTrue(self, ids_to_show,
                                   flip_flag=True, render=True):  # pragma: no cover
@@ -2711,10 +2711,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # the model has been loaded, so we enable load_results
         if filter_index >= 0:
             self.format = formats[filter_index].lower()
-            if has_results:
-                enable = True
-            else:
-                enable = False
+            enable = has_results
             #self.load_results.Enable(enable)
         else: # no file specified
             return
@@ -3567,9 +3564,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
         icase_to_apply : int
             the key in label_actors to slot the result into
 
-        TOODO: fix the following
+        TODO: fix the following
         correct   : applies to the icase_to_apply
         incorrect : applies to the icase_result
+
+        Example
+        -------
+        .. code-block::
+
+          eids = [16563, 16564, 8916703, 16499, 16500, 8916699,
+                  16565, 16566, 8916706, 16502, 16503, 8916701]
+          icase_result = 22
+          icase_to_apply = 25
+          self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
         """
         if icase_result not in self.label_actors:
             msg = 'icase_result=%r not in label_actors=[%s]' % (
@@ -3590,18 +3597,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         for cell_id in ieids:
             centroid = self.cell_centroid(cell_id)
-            result_name, result_values, xyz = self.get_result_by_cell_id(cell_id, centroid, icase_result)
+            result_name, result_values, xyz = self.get_result_by_cell_id(
+                cell_id, centroid, icase_result)
             texti = '%s' % result_values
             xi, yi, zi = centroid
             self._create_annotation(texti, icase_to_apply, xi, yi, zi)
-        self.log_command('mark_elements_by_different_case(%s, %s, %s)' % (eids, icase_result, icase_to_apply))
+        self.log_command('mark_elements_by_different_case(%s, %s, %s)' % (
+            eids, icase_result, icase_to_apply))
         self.vtk_interactor.Render()
 
-        #eids = [16563, 16564, 8916703, 16499, 16500, 8916699, 16565, 16566, 8916706, 16502, 16503, 8916701]
-
-        #icase_result = 22
-        #icase_to_apply = 25
-        #self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
     def mark_nodes(self, nids, icase, text):
         """
         Marks a series of nodes with custom text labels

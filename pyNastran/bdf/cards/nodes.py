@@ -24,8 +24,9 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import numpy as np
+from itertools import count
 from six import string_types, PY2
+import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
@@ -197,7 +198,7 @@ class SEQGP(BaseCard):
         seqids = []
         for ifield in range(1, ncard, 2):
             nid = integer(card, ifield, 'nid')
-            seqid = integer_or_double(card, ifield, 'seqid')
+            seqid = integer_or_double(card, ifield+1, 'seqid')
             nids.append(nid)
             seqids.append(seqid)
         return SEQGP(nids, seqids, comment=comment)
@@ -233,11 +234,11 @@ class SEQGP(BaseCard):
         fields : List[varies]
             the fields that define the card
         """
-        lists_fields = []
+        list_fields = ['SEQGP']
         for nid, seqid in zip(self.nids, self.seqids):
             list_fields.append(nid)
             list_fields.append(seqid)
-        return lists_fields
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         """
@@ -251,8 +252,15 @@ class SEQGP(BaseCard):
             unused
         """
         msg = self.comment
-        lists_fields = self.repr_fields()
-        msg += print_card_8(list_fields)
+        list_fields = ['SEQGP']
+        for i, nid, seqid in zip(count(), self.nids, self.seqids):
+            if i % 4 == 0 and i > 0:
+                msg += print_card_8(list_fields)
+                list_fields = ['SEQGP']
+            list_fields.append(nid)
+            list_fields.append(seqid)
+        if len(list_fields) > 1:
+            msg += print_card_8(list_fields)
         return msg
 
 
@@ -1335,7 +1343,9 @@ class GRID(BaseCard):
     def uncross_reference(self):
         self.cp = self.Cp()
         self.cd = self.Cd()
-        del self.cp_ref, self.cd_ref
+        if self.cd != -1:
+            del self.cd_ref
+        del self.cp_ref
         if hasattr(self, 'elements'):
             del self.elements
 

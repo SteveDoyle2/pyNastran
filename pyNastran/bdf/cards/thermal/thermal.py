@@ -388,7 +388,7 @@ class CHBDYG(ThermalElement):
     @property
     def node_ids(self):
         # TODO: is this correct?
-        return _node_ids(self, nodes=self.nodes, allow_empty_nodes=False, msg='')
+        return _node_ids(self, nodes=self.nodes, allow_empty_nodes=True, msg='')
 
     def get_edge_ids(self):
         # TODO: not implemented
@@ -404,12 +404,12 @@ class CHBDYG(ThermalElement):
             the BDF object
         """
         msg = ' which is required by CHBDYG eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CHBDYG eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
+        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
 
     def uncross_reference(self):
@@ -1562,6 +1562,7 @@ class RADBC(ThermalBC):
         self.cntrlnd = cntrlnd
 
         #: CHBDYi element identification number
+        print('eids =', eids)
         self.eids = expand_thru_by(eids)
 
         assert self.nodamb > 0

@@ -325,7 +325,7 @@ class PVISC(DamperProperty):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         pass
 
     def _verify(self, xref=False):

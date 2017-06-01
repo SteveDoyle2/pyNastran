@@ -144,9 +144,13 @@ class CDAMP1(LineDamper):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, integer_types), 'nid%i is not an None/integer; nid=%s' %(i, nid)
         if xref:
-            assert self.pid_ref.type in ['PDAMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
-            b = self.B()
-            assert isinstance(b, float)
+            if self.pid_ref.type in 'PDAMP':
+                b = self.B()
+                assert isinstance(b, float)
+            elif self.pid_ref.type in 'PDAMPT':
+                pass
+            else:
+                raise NotImplementedError('pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type))
 
     @property
     def node_ids(self):

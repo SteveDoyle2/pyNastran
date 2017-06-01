@@ -278,6 +278,9 @@ class PCOMPS(SolidProperty):
             mid_ref = model.Material(mid, msg=msg)
             self.mids_ref.append(mid_ref)
 
+    def uncross_reference(self):
+        del self.mids_ref
+
     def raw_fields(self):
         fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
                   self.nb, self.tref, self.ge, None]

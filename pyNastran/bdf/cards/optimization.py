@@ -354,7 +354,7 @@ class DCONSTR(OptConstraint):
         self.uid = self.Uid()
 
         if isinstance(self.lid, integer_types):
-            del self.lid
+            del self.lid_ref
         if isinstance(self.uid, integer_types):
             del self.uid_ref
         del self.dresp_id_ref
@@ -1330,7 +1330,7 @@ class DRESP1(OptConstraint):
         if self.property_type in ['ELEM']:
             self.atti = model.Elements(self.atti, msg=msg)
             self.atti_ref = self.atti
-        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
+        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
                                     'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                                     'PBEAML', 'PSHEAR', 'PTUBE',]:
             self.atti = model.Properties(self.atti, msg=msg)
@@ -1405,7 +1405,7 @@ class DRESP1(OptConstraint):
         ]
         if self.property_type in ['ELEM']:
             data = [elem if isinstance(elem, integer_types) else elem.eid for elem in self.atti]
-        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
+        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
                                     'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                                     'PBEAML', 'PSHEAR', 'PTUBE',
                                     'FRSTRE']:
@@ -1715,8 +1715,8 @@ class DRESP2(OptConstraint):
         model : BDF()
             the BDF object
         """
-        if model.dtable is not None:
-            model.log.debug(model.dtable.rstrip())
+        #if model.dtable is not None:
+            #model.log.debug(model.dtable.rstrip())
         msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):
@@ -1746,6 +1746,11 @@ class DRESP2(OptConstraint):
                     default_values[val] = self.dtable[val]
             else:
                 raise NotImplementedError('  TODO: xref %s' % str(key))
+
+        for key, value_list in sorted(iteritems(self.params)):
+            j, name = key
+            values_list2 = self._get_values(name, value_list)
+            self.params[key] = values_list2
         self.params_ref = self.params
 
         if isinstance(self.DEquation(), integer_types):
@@ -1760,6 +1765,12 @@ class DRESP2(OptConstraint):
     def uncross_reference(self):
         if hasattr(self, 'func'):
             del self.func
+
+        for key, value_list in sorted(iteritems(self.params)):
+            j, name = key
+            values_list2 = self._get_values(name, value_list)
+            self.params[key] = values_list2
+        del self.params_ref
 
         self.dequation = self.DEquation()
         if isinstance(self.dequation, integer_types):
@@ -1975,6 +1986,7 @@ class DRESP3(OptConstraint):
         value_list = []
         for (i, field) in enumerate(list_fields):
             if i % 8 == 0 and field is not None:
+                assert field not in params, 'key=%s params=%s' % (field, params)
                 params[key] = value_list
                 key = field
                 value_list = []
@@ -2110,6 +2122,21 @@ class DRESP3(OptConstraint):
             #self.func = fortran_to_python_short(self.dequation, default_values)
         #else:
             #raise NotImplementedError(self.dequation)
+
+    def uncross_reference(self):
+        if hasattr(self, 'func'):
+            del self.func
+
+        for key, value_list in sorted(iteritems(self.params)):
+            #print(key)
+            #j, name = key
+            values_list2 = self._get_values(key, value_list)
+            self.params[key] = values_list2
+        del self.params_ref
+
+        #self.dequation = self.DEquation()
+        #if isinstance(self.dequation, integer_types):
+            #del self.dequation_ref
 
     def raw_fields(self):
         list_fields = [
@@ -2405,6 +2432,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
     def uncross_reference(self):
         self.eid = self.Eid()
         del self.eid_ref
+        self.dvids = self.desvar_ids
 
     def calculate(self, op2_model, subcase_id):
         raise NotImplementedError('\n' + str(self))
@@ -3290,6 +3318,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     def uncross_reference(self):
         self.pid = self.Pid()
         del self.pid_ref
+        self.dvids = self.desvar_ids
 
     def calculate(self, op2_model, subcase_id):
         raise NotImplementedError('\n' + str(self))

@@ -429,6 +429,9 @@ class LOADCYN(Load):
     def cross_reference(self, model):
         pass
 
+    def uncross_reference(self):
+        pass
+
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 

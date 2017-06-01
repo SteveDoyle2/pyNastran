@@ -559,8 +559,8 @@ class AEPARM(BaseCard):
     def cross_reference(self, model):
         pass
 
-    #def uncross_reference(self):
-        #pass
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         """
@@ -3228,6 +3228,9 @@ class CAERO4(BaseCard):
     def uncross_reference(self):
         self.pid = self.Pid()
         self.cp = self.Cp()
+        if self.nspan == 0:
+            self.lspan = self.get_LSpan()
+            del self.lspan_ref
         del self.pid_ref, self.cp_ref
 
     def Cp(self):

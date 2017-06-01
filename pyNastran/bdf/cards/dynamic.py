@@ -35,6 +35,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string_or_blank, blank, fields, components_or_blank,
     integer_string_or_blank, integer_or_double, parse_components,
+    modal_components,
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -945,20 +946,24 @@ class ROTORD(BaseCard):
         Parameters
         ----------
         sid : int
-            ???
+            Set identifier for all rotors. Must be selected in the case
+            control deck by RMETHOD = SID.
         rstart : float
-            ???
+            Starting value of reference rotor speed.
         rstart : float
-            ???
+            Step-size of reference rotor speed. See Remark 3. (Real ≠ 0.0)
         numstep : int
-            ???
+            Number of steps for reference rotor speed including RSTART.
 
         Parameter Lists
         ---------------
         rids : List[int]
-            ???
+            Identification number of rotor i.
+            (Integer > 0 with RID(i+1) > RIDi; Default = i)
         rsets : List[int]
-            ???
+            Refers to the RSETID value on the ROTORG, ROTORB, and
+            ROTSE bulk entries for rotor RIDi. (Integer > 0 or blank if
+            only one rotor)
         rspeeds : List[int/float, ..., int/float]
             float : rotor speeds
             int : TABLEDi
@@ -972,6 +977,37 @@ class ROTORD(BaseCard):
             ???
         brgsets : List[int]
             ???
+
+        Optional
+        --------
+        refsys : str; default='ROT'
+            Reference system
+                'FIX' analysis is performed in the fixed reference system.
+                'ROT' analysis is performed in the rotational reference system.
+        cmout : float; default=0.0
+            ???
+        runit : str; default=='RPM'
+            ???
+        funit : str; default=='RPM',
+            ???
+        zstein : str; default=='NO'
+            ???
+        orbeps : float; default=1.e-6
+            ???
+        roprt : int; default=0
+            ???
+        sync : int; default=1
+            ???
+        etype : int; default=1
+            ???
+        eorder : float; default=1.0
+            ???
+        threshold : float; default=0.02
+            ???
+        maxiter : int; default=10
+            ???
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -1069,7 +1105,7 @@ class ROTORD(BaseCard):
         brgsets = []
         for irow in range(nrows):
             j = irow * 8 + 17
-            rid = integer(card, j, 'rid_%i' % (irow + 1))
+            rid = integer_or_blank(card, j, 'rid_%i' % (irow + 1), irow + 1)
             rset = integer_or_blank(card, j+1, 'rset_%i' % (irow + 1))
             rspeed = integer_or_double(card, j+2, 'rspeed_%i' % (irow + 1))
             rcord = integer_or_blank(card, j+3, 'rcord_%i' % (irow + 1), 0)
@@ -1925,7 +1961,7 @@ class TIC(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         nid = integer(card, 2, 'G')
-        comp = parse_components(card, 3, 'C')
+        comp = modal_components(card, 3, 'C')
         u0 = double_or_blank(card, 4, 'U0', 0.)
         v0 = double_or_blank(card, 5, 'V0', 0.)
         return TIC(sid, nid, comp, u0=u0, v0=v0, comment=comment)

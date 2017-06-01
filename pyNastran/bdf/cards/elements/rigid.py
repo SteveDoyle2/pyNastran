@@ -1258,10 +1258,8 @@ class RBE3(RigidElement):
         self.refgrid = self.ref_grid_id
 
         Gij = []
-        for Gij in self.Gijs:
-            gij = []
-            for giji in Gij:
-                gij.append(giji.nid)
+        for gij in self.Gijs:
+            gij = self._nodeIDs(nodes=gij, allow_empty_nodes=True)
             Gij.append(gij)
         self.Gijs = Gij
         del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref
