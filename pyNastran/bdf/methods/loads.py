@@ -39,9 +39,9 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
 
     Returns
     -------
-    Forces : NUMPY.NDARRAY shape=(3,)
+    forces : NUMPY.NDARRAY shape=(3,)
         the forces
-    Moments : NUMPY.NDARRAY shape=(3,)
+    moments : NUMPY.NDARRAY shape=(3,)
         the moments
 
     .. warning:: not full validated
@@ -539,9 +539,9 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
 
     Returns
     -------
-    Forces : NUMPY.NDARRAY shape=(3,)
+    forces : NUMPY.NDARRAY shape=(3,)
         the forces
-    Moments : NUMPY.NDARRAY shape=(3,)
+    moments : NUMPY.NDARRAY shape=(3,)
         the moments
 
     Nodal Types  : FORCE, FORCE1, FORCE2,

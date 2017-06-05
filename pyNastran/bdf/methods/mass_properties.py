@@ -81,7 +81,7 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
             masses = [mass for eid, mass in model.masses.items() if eid in mass_ids]
     return elements, masses
 
-def _mass_properties(model, elements, masses, reference_point):  # pragma: no cover
+def _mass_properties(model, elements, masses, reference_point):
     """
     Caclulates mass properties in the global system about the
     reference point.
