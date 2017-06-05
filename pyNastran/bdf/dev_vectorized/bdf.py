@@ -1093,7 +1093,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 msg += 'There are parsing errors.\n\n'
                 for (card, an_error) in self._stored_parse_errors:
                     msg += '%scard=%s\n' % (an_error[0], card)
-                    msg += 'xref errror: %s\n\n'% an_error[0]
+                    msg += 'xref error: %s\n\n'% an_error[0]
                     is_error = True
 
             if is_error:

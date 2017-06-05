@@ -1363,6 +1363,10 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     if msg == '':
                         self.log.warning(self.code_information())
                     self.log.warning(msg)
+                    #if not('VUHEXA' in msg or 'VUPENTA' in msg or 'VUTETRA' in msg
+                           #or 'Element Stress' in self.code_information()
+                           #or 'Element Strain' in self.code_information()):
+                        #aaa
                 #if self.table_name in ['OEFPSD1', 'OEFPSD2',
                 #                       'OEFCRM1', 'OEFCRM2',
                 #                       'OEFNO1', 'OEFNO2',

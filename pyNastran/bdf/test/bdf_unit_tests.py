@@ -241,6 +241,14 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
         self._compare_mass_cg_I(fem1, reference_point='cg')
 
+    def test_bdf_elements_01(self):
+        bdf_filename = os.path.join('elements', 'static_elements.bdf')
+        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
     def test_bdf_transfer_function_01(self):
         bdf_filename = os.path.join('transfer_function', 'actuator_tf_modeling.bdf')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
