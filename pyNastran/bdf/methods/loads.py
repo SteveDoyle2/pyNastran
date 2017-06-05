@@ -1,3 +1,10 @@
+"""
+Defines:
+  - sum_forces_moments
+      find the net force/moment on the model
+  - sum_forces_moments_elements
+      find the net force/moment on the model for a subset of elements
+"""
 from __future__ import print_function
 from six import iteritems
 from pyNastran.utils import integer_types

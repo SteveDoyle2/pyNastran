@@ -1,14 +1,12 @@
 """
 This file contains additional methods that do not directly relate to the
 reading/writing/accessing of BDF data.  Such methods include:
-  - Mass
-      get the mass of the model
-  - Mass Poperties
+  - mass_poperties
       get the mass & moment of inertia of the model
-  - sumMoments / sum_moments
+  - sum_forces_moments
       find the net force/moment on the model
-  - sumForces / sum_forces
-      find the net force on the model
+  - sum_forces_moments_elements
+      find the net force/moment on the model for a subset of elements
   - resolve_grids
       change all nodes to a specific coordinate system
   - unresolve_grids

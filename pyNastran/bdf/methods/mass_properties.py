@@ -1,8 +1,14 @@
+"""
+Defines:
+  - mass_poperties
+      get the mass & moment of inertia of the model
+"""
 from __future__ import print_function
 from six import string_types, iteritems
 from numpy import array, cross, dot
 from numpy.linalg import norm
 import numpy as np
+from pyNastran.utils.mathematics import integrate_positive_unit_line
 
 
 def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
@@ -68,7 +74,7 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
         if element_ids is None:
             elements = []
         else:
-            elements = [element for eid, element in self.elements.items() if eid in element_ids]
+            elements = [element for eid, element in model.elements.items() if eid in element_ids]
         if mass_ids is None:
             masses = []
         else:
@@ -100,7 +106,7 @@ def _mass_properties(model, elements, masses, reference_point):  # pragma: no co
     I : (6, ) float NDARRAY
         moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
 
-    .. seealso:: self.mass_properties
+    .. seealso:: model.mass_properties
     """
     #Ixx Iyy Izz, Ixy, Ixz Iyz
     # precompute the CG location and make it the reference point
@@ -387,10 +393,10 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
         'CTRAX3', 'CTRAX6', 'CQUADX8', 'CQUADX4',
         'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
     ]
-    all_eids = np.array(list(self.elements.keys()), dtype='int32')
+    all_eids = np.array(list(model.elements.keys()), dtype='int32')
     all_eids.sort()
 
-    all_mass_ids = np.array(list(self.masses.keys()), dtype='int32')
+    all_mass_ids = np.array(list(model.masses.keys()), dtype='int32')
     all_mass_ids.sort()
 
     #def _increment_inertia0(centroid, reference_point, m, mass, cg, I):
@@ -532,7 +538,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
         elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR']:
             eids2 = get_sub_eids(all_eids, eids)
             for eid in eids2:
-                elem = self.elements[eid]
+                elem = model.elements[eid]
                 n1, n2, n3 = elem.node_ids[:3]
                 prop = elem.pid_ref
                 centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
