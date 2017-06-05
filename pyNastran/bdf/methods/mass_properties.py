@@ -207,8 +207,8 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
             for pack in [elements, masses]:
                 for element in pack:
                     try:
-                        p = element.Centroid_no_xref(self)
-                        m = element.Mass_no_xref(self)
+                        p = element.Centroid_no_xref(model)
+                        m = element.Mass_no_xref(model)
                         mass += m
                         cg += m * p
                     except:
@@ -227,13 +227,13 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
     for pack in [elements, masses]:
         for element in pack:
             try:
-                p = element.Centroid_no_xref(self)
+                p = element.Centroid_no_xref(model)
             except:
                 #continue
                 raise
 
             try:
-                m = element.Mass_no_xref(self)
+                m = element.Mass_no_xref(model)
                 (x, y, z) = p - reference_point
                 x2 = x * x
                 y2 = y * y
@@ -334,10 +334,10 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
     ---------
     # mass properties of model based on Property ID
     pids = list(model.pids.keys())
-    pid_eids = self.get_element_ids_dict_with_pids(pids)
+    pid_eids = model.get_element_ids_dict_with_pids(pids)
 
     for pid, eids in sorted(iteritems(pid_eids)):
-        mass, cg, I = model.mass_properties(element_ids=eids)
+        mass, cg, I = mass_properties(model, element_ids=eids)
     """
     #if reference_point is None:
     reference_point = array([0., 0., 0.])
@@ -498,7 +498,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                         #p1_nsm = p1 + prop.ma
                         #p2_nsm = p2 + prop.mb
                 elif prop.type == 'PBEAML':
-                    #mass_per_lengths = self.get_mass_per_lengths()
+                    #mass_per_lengths = elem.get_mass_per_lengths()
                     mass_per_length = prop.MassPerLength() # includes simplified nsm
                     m = mass_per_length * length
                     nsm_centroid = np.zeros(3)
@@ -562,7 +562,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                     t = (t1 + t2 + t3) / 3.
 
                     # m/A = rho * A * t + nsm
-                    #mass_per_area = self.nsm + rho * self.t
+                    #mass_per_area = elem.nsm + rho * elem.t
 
                     mpa = prop.nsm + prop.Rho() * t
                     #mpa = elem.pid_ref.MassPerArea()

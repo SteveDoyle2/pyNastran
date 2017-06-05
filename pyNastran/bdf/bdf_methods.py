@@ -27,7 +27,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.methods.mass_properties import (
     _mass_properties_elements_init, _mass_properties_no_xref, _apply_mass_symmetry,
-    _mass_properties)
+    _mass_properties, _mass_properties_new)
 from pyNastran.bdf.methods.loads import sum_forces_moments, sum_forces_moments_elements
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -414,6 +414,13 @@ class BDFMethods(BDFAttributes):
             reference_point=reference_point)
 
         mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
+        return (mass, cg, I)
+
+    def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point=None,
+                             sym_axis=None, scale=None, xyz_cid0=None):  # pragma: no cover
+        mass, cg, I = _mass_properties_new(
+            model, element_ids=element_ids, mass_ids=mass_ids, reference_point=reference_point,
+                             sym_axis=sym_axis, scale=scale, xyz_cid0=xyz_cid0)
         return (mass, cg, I)
 
     def resolve_grids(self, cid=0):
