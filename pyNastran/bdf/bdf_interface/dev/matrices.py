@@ -3,10 +3,164 @@
 defines:
   - make_gpwg(Mgg, reference_point, xyz_cid0, log)
 """
+from __future__ import print_function
 from six import iteritems
 
+def _lambda_1d(v1):
+    """
+    ::
+      3d  [l,m,n,0,0,0]  2x6
+          [0,0,0,l,m,n]
+    """
+    #R = self.Rmatrix(model,is3D)
 
-def make_gpwg(Mgg, reference_point, xyz_cid0, log):
+    #xyz1 = model.Node(n1).get_position()
+    #xyz2 = model.Node(n2).get_position()
+    #v1 = xyz2 - xyz1
+    n = norm(v1)
+    if n == 0:
+        raise ZeroDivisionError(v1)
+    v1 = v1 / n
+    (l, m, n) = v1
+    Lambda = zeros((2, 6), 'd')
+    Lambda[0, 0] = Lambda[1, 3] = l
+    Lambda[0, 1] = Lambda[1, 4] = m
+    Lambda[0, 2] = Lambda[1, 5] = n
+    return Lambda
+
+def make_mass_matrix(model, reference_point):
+    """
+    Performs an accurate mass calculation
+
+    ..todo:: not anywhere close to being done
+    ..todo:: doesn't support SPOINTs/EPOINTs
+    """
+    icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd(
+        fdtype='float64', idtype='int32', sort_ids=True)
+    xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+        xyz_cp, icp_transform, cid=0, in_place=False, atol=1e-6)
+
+    nids = nid_cp_cd[:, 0]
+    cps = nid_cp_cd[:, 1]
+
+    components = {}
+    i = 0
+    inids = {}
+    for j, nid in enumerate(nids):
+        inids[nid] = j
+        components[(nid, 1)] = i
+        components[(nid, 2)] = i + 1
+        components[(nid, 3)] = i + 2
+        components[(nid, 4)] = i + 3
+        components[(nid, 5)] = i + 4
+        components[(nid, 6)] = i + 5
+        i += 6
+    nrows = len(components)
+
+    import scipy as sp
+    mass = sp.sparse.dok_matrix((nrows, nrows), dtype=np.float64)
+
+    no_mass = [
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+        'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC', 'CGAP', # is this right?
+        'CFAST',
+        'CRAC2D', 'CRAC3D',
+
+        'CSSCHD', 'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        'CBARAO', 'CORD1R', 'CORD2R', 'CORD1C', 'CORD2C', 'CORD1S', 'CORD2S',
+        'CORD3G', 'CONV', 'CONVM', 'CSET', 'CSET1', 'CLOAD',
+        'CHBDYG', 'CHBDYE', 'CHBDYP',
+    ]
+    def get_sub_eids(all_eids, eids):
+        """supports limiting the element/mass ids"""
+        eids = np.array(eids)
+        ieids = np.searchsorted(all_eids, eids)
+        eids2 = eids[all_eids[ieids] == eids]
+        return eids2
+
+    etypes_skipped = set([])
+    for etype, eids in iteritems(self._type_to_id_map):
+        if etype in ['CROD', 'CONROD']:
+            eids2 = get_sub_eids(all_eids, eids)
+
+            # lumped
+            mass_mat = np.ones((4, 4))
+            #mass_mat[2, 2] = mass_mat[5, 5] = 0.
+
+            #
+            #mi = (rho * A * L + nsm) / 6.
+            #m = array([[2., 1.],
+                       #[1., 2.]])  # 1D rod
+
+            for eid in eids2:
+                elem = self.elements[eid]
+                n1, n2 = elem.node_ids
+
+                i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
+                j1, j2, j3 = components[(n2, 1)], components[(n2, 2)], components[(n2, 3)]
+                massi = mpl * length / 2.
+                mass[0, 0] = mass[1, 1] = massi
+                mass[2, 2] = mass[3, 3] = massi
+
+                inid1 = inids[n1]
+                inid2 = inids[n2]
+                v1 = xyz[inid2, :] - xyz[inid1, :]
+                length = norm(v1)
+                mpl = elem.MassPerLength()
+                Lambda = _lambda_1d(v1)
+                mass_mat2 = dot(dot(transpose(Lambda), mass_mat), Lambda)
+                assert mass_mat2.shape == (6, 6), mass_mat2
+                mass[i1, i1] = mass_mat2[0, 0]
+                mass[i2, i2] = mass_mat2[1, 1]
+                mass[i3, i3] = mass_mat2[2, 2]
+
+                mass[j1, j1] = mass_mat2[3, 3]
+                mass[j2, j2] = mass_mat2[4, 4]
+                mass[j3, j3] = mass_mat2[5, 5]
+
+                #centroid = (xyz[n1] + xyz[n2]) / 2.
+                #mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+        elif etype == 'CONM2':
+            mass_mat = np.zeros((6, 6))
+            eids2 = get_sub_eids(all_eids, eids)
+            for eid in eids2:
+                elem = self.masses[eid]
+                massi = elem.Mass()
+                rx, ry, rz = elem.X
+                mass_mat[0, 0] = massi
+                mass_mat[1, 1] = massi
+                mass_mat[2, 2] = massi
+                #mass_mat[3, 3] = i11
+                #mass_mat[3, 4] = mass_mat[4, 3] = -i12
+                #mass_mat[3, 5] = mass_mat[5, 3] = -i13
+                #mass_mat[4, 4] = i22
+                #mass_mat[4, 5] = mass_mat[5, 4] = -i23
+                #mass_mat[5, 5] = i33
+                mass_mat[3:5, 3:5] = elem.Inertia()
+
+                i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
+                i4, i5, i6 = components[(n1, 4)], components[(n1, 5)], components[(n1, 6)]
+                j1, j2, j3 = components[(n2, 1)], components[(n2, 2)], components[(n2, 3)]
+                j4, j5, j6 = components[(n2, 4)], components[(n2, 5)], components[(n2, 6)]
+                mass[i1, j1] = mass_mat[0, 0]
+                mass[i2, j2] = mass_mat[1, 1]
+                mass[i3, j3] = mass_mat[2, 2]
+
+                mass[i4, j4] = mass_mat[3, 3]
+                mass[i4, j5] = mass[i5, j4] = mass_mat[3, 4]
+                mass[i4, j6] = mass[i6, j4] = mass_mat[3, 5]
+
+                mass[i5, j5] = mass_mat[4, 4]
+                mass[i5, j6] = mass[i6, j5] = mass_mat[4, 5]
+                mass[i6, j6] = mass_mat[5, 5]
+
+        else:
+            pass
+
+    return make_gpwg(Mgg, reference_point, xyz_cid0, cps, model.coords, model.log)
+
+def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     """
     Parameters
     ----------
@@ -20,8 +174,8 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, log):
         the xyz coordinates of the grids
     grid_cps : (ngrids, ) int ndarray
         array of cp values corresponding to xyz_cid0
-    coord_cps : (ncoords, ) int ndarray
-        array of cp values corresponding to the coordinate systems
+    coords : dict[cp] : Coord()
+        dict of cp values corresponding to the Cp coordinate systems
     log : logger()
         logging object
 

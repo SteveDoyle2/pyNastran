@@ -692,7 +692,9 @@ class TestLoads(unittest.TestCase):
         r"""
         tests CONROD, CTRIA3-PSHELL, CQUAD4-PCOMP,
         CTETRA/CPENTA/CPYRAM/CHEXA-PSOLID
-        FORCE, FORCE1, PLOAD4-CHEXA
+        FORCE, FORCE1,
+        PLOAD4 (CHEXA)
+        PLOAD2 (CTRIA3, CQUAD4)
 
         ^ y
         |
@@ -775,6 +777,10 @@ class TestLoads(unittest.TestCase):
                         nsm=0., sb=0., ft=None,
                         tref=0., ge=0., lam=None,
                         z0=None, comment='pcomp')
+
+        sid = 2
+        pressure = 2.0
+        model.add_pload2(sid, pressure, [3, 4], comment='')  # ctria3, cquad4
 
         pid = 5
         global_ply_ids = [5, 6, 7]
