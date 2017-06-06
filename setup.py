@@ -29,14 +29,16 @@ py3_gui_scripts = []
 py3_packages = []
 
 
-try:
-    import vtk
-    vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
-    if vtk_version < '5.10.1':
-        print("vtk.VTK_VERSION = %r < '5.10.1'" % vtk.VTK_VERSION)
+is_travis = 'TRAVIS' in os.environ
+if sys.version_info <= (3,) or not is_travis:
+    try:
+        import vtk
+        vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
+        if vtk_version < '5.10.1':
+            print("vtk.VTK_VERSION = %r < '5.10.1'" % vtk.VTK_VERSION)
+            py2_packages.append('vtk >= 5.10.1')
+    except ImportError:
         py2_packages.append('vtk >= 5.10.1')
-except ImportError:
-    py2_packages.append('vtk >= 5.10.1')
 
     #try:
         #import PIL
