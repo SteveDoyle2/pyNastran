@@ -480,11 +480,53 @@ class AddCards(AddMethods):
         return mass
 
     def add_nsm(self, sid, Type, id, value, comment=''):
+        """
+        Creates an NSM card
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        id : int
+            property id or element id depending on Type
+        value : float
+            the non-structural pass per unit length/area
+        comment : str; default=''
+            a comment for the card
+        """
         nsm = NSM(sid, Type, id, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
     def add_nsm1(self, sid, Type, value, ids, comment=''):
+        """
+        Creates an NSM1 card
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        value : float
+            the non-structural pass per unit length/area
+        ids : List[int]
+            property ids or element ids depending on Type
+        comment : str; default=''
+            a comment for the card
+        """
         nsm = NSM1(sid, Type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm

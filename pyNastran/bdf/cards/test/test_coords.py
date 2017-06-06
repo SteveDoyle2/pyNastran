@@ -18,7 +18,7 @@ class TestCoords(unittest.TestCase):
         ]
         grids_expected = grids
         coords = []
-        self.get_nodes(grids, grids_expected, coords)
+        get_nodes(grids, grids_expected, coords)
 
     def test_shift(self):
         grids = [
@@ -39,7 +39,7 @@ class TestCoords(unittest.TestCase):
         coords = [  # cid,rid, origin,      zaxis,     xaxis
             [1, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],
         ]
-        self.get_nodes(grids, grids_expected, coords)
+        get_nodes(grids, grids_expected, coords)
 
     def test_rotate(self):
         grids = [
@@ -62,7 +62,7 @@ class TestCoords(unittest.TestCase):
             # cid, rid, origin,      zaxis,     xaxis
             [1, 0, [0., 0., 0.], [1., 0., 0.], [0., 0., 1.]],
         ]
-        self.get_nodes(grids, grids_expected, coords)
+        get_nodes(grids, grids_expected, coords)
 
     def test_rotate2(self):
         grids = [
@@ -84,7 +84,7 @@ class TestCoords(unittest.TestCase):
             # cid, rid, origin,     zaxis        xaxis
             [1, 0, [0., 0., 0.], [0., 0., -1.], [1., 0., 0.]],
         ]
-        self.get_nodes(grids, grids_expected, coords)
+        get_nodes(grids, grids_expected, coords)
 
     def test_rotate3(self):
         grids = [
@@ -106,7 +106,7 @@ class TestCoords(unittest.TestCase):
             # cid, rid, origin,      zaxis          xaxis
             [1, 0, [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
         ]
-        self.get_nodes(grids, grids_expected, coords)
+        get_nodes(grids, grids_expected, coords)
 
     def test_rid_1(self):
         grids = [
@@ -127,7 +127,7 @@ class TestCoords(unittest.TestCase):
             [3, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
             #[3, 0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
         ]
-        self.get_nodes(grids, grids_expected, coords)
+        get_nodes(grids, grids_expected, coords)
 
     def test_cord1r_01(self):
         lines = ['cord1r,2,1,4,3']
@@ -176,6 +176,7 @@ class TestCoords(unittest.TestCase):
         self.assertTrue(allclose(cord2r.j, array([1., 1., 0.]) / 2**0.5), str(delta))
         delta = cord2r.k - array([-1., 1., 0.]) / 2**0.5
         self.assertTrue(allclose(cord2r.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
+
 
     def test_grid_01(self):
         model = BDF(debug=False)
@@ -467,6 +468,27 @@ class TestCoords(unittest.TestCase):
         xyz_cid_31 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=31)
         xyz_cid_32 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=32)
 
+        model2 = BDF()
+        cord2r = model2.add_cord2r(30, rid=2,
+                                   origin=[14., 30., 70.],
+                                   zaxis=[13.431863852, 32.1458443949, 75.2107442927],
+                                   xzplane=[14.4583462334, 33.4569982885, 68.2297989286],
+                                   comment='')
+        cord2c = model2.add_cord2c(31, rid=2,
+                                   origin=[3., 42., -173.],
+                                   zaxis=[2.86526881213, 45.5425615252, 159.180363517],
+                                   xzplane=[3.65222385965, 29.2536614627, -178.631312271],
+                                   comment='')
+        cord2s = model2.add_cord2s(32, rid=2,
+                                   origin=[22., 14., 85.],
+                                   zaxis=[22.1243073983, 11.9537753718, 77.9978191005],
+                                   xzplane=[21.0997242967, 13.1806120497, 88.4824763008],
+                                   comment='')
+
+        assert cord2r == model.coords[cord2r.cid], 'cord2r:\n%r\ncord2r[cid]:\n%r' % (str(cord2r), str(model.coords[cord2r.cid]))
+        assert cord2c == model.coords[cord2c.cid], 'cord2c:\n%r\ncord2c[cid]:\n%r' % (str(cord2c), str(model.coords[cord2c.cid]))
+        assert cord2s == model.coords[cord2s.cid], 'cord2s:\n%r\ncord2s[cid]:\n%r' % (str(cord2s), str(model.coords[cord2s.cid]))
+
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
         card = bdf.process_card(lines)
@@ -544,35 +566,15 @@ class TestCoords(unittest.TestCase):
         #with self.assertRaises(NotImplementedError):
             #self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
-    def get_nodes(self, grids, grids_expected, coords):
-        model = BDF(debug=False)
-
-        for grid in grids:
-            (nid, cid, x, y, z) = grid
-            model.add_card(['GRID', nid, cid, x, y, z], 'GRID')
-
-        for coord in coords:
-            (cid, rid, x, y, z) = coord
-            model.add_card(['CORD2R', cid, rid] + x + y + z, 'CORD2R')
-            #coord_obj = model.Coord(cid)
-
-        model.cross_reference()
-
-        for (i, grid) in enumerate(grids_expected):
-            (nid, cid, x, y, z) = grid
-            node = model.Node(nid)
-            pos = node.get_position()
-            n = array([x, y, z])
-
-            msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)
-            msg += 'n=%s grid=\n%s' % (nid, node)
-            coord = node.cp
-            msg += 'n=%s coord=\n%s' % (node.nid, coord)
-            while coord.rid:
-                msg += 'n=%s rcoord=\n%s' % (node.nid, coord.rid)
-                coord = coord.rid
-            assert allclose(n, pos), msg
-
+        model2 = BDF()
+        cid = 7
+        coord2 = model2.add_cord2r(cid, rid=0,
+                                  origin=[1.135, .089237, -.0676],
+                                  zaxis=[.135, .089237, -.0676],
+                                  xzplane=[1.135, .089237, .9324],
+                                  comment='cord2r')
+        coord2.comment = ''
+        assert coord == coord2, 'coord:\n%r\ncoord2:\n%r' % (str(coord), str(coord2))
 
     def test_coord_xform_a(self):
         origin = array([0., 0., 0.])
@@ -723,6 +725,37 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
         for cid, coord in sorted(iteritems(model.coords)):
             assert coord.i is not None, coord
+
+
+def get_nodes(grids, grids_expected, coords):
+    model = BDF(debug=False)
+
+    for grid in grids:
+        (nid, cid, x, y, z) = grid
+        model.add_card(['GRID', nid, cid, x, y, z], 'GRID')
+
+    for coord in coords:
+        (cid, rid, x, y, z) = coord
+        model.add_card(['CORD2R', cid, rid] + x + y + z, 'CORD2R')
+        #coord_obj = model.Coord(cid)
+
+    model.cross_reference()
+
+    for (i, grid) in enumerate(grids_expected):
+        (nid, cid, x, y, z) = grid
+        node = model.Node(nid)
+        pos = node.get_position()
+        n = array([x, y, z])
+
+        msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)
+        msg += 'n=%s grid=\n%s' % (nid, node)
+        coord = node.cp
+        msg += 'n=%s coord=\n%s' % (node.nid, coord)
+        while coord.rid:
+            msg += 'n=%s rcoord=\n%s' % (node.nid, coord.rid)
+            coord = coord.rid
+        assert allclose(n, pos), msg
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

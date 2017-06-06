@@ -45,6 +45,27 @@ class NSM1(PointProperty):
     ]
 
     def __init__(self, sid, Type, value, ids, comment=''):
+        """
+        Creates an NSM1 card
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        value : float
+            the non-structural pass per unit length/area
+        ids : List[int]
+            property ids or element ids depending on Type
+        comment : str; default=''
+            a comment for the card
+        """
         PointProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -106,6 +127,27 @@ class NSM(PointProperty):
     ]
 
     def __init__(self, sid, Type, id, value, comment=''):
+        """
+        Creates an NSM card
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        id : int
+            property id or element id depending on Type
+        value : float
+            the non-structural pass per unit length/area
+        comment : str; default=''
+            a comment for the card
+        """
         PointProperty.__init__(self)
         if comment:
             self.comment = comment

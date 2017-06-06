@@ -207,6 +207,8 @@ class BaseCard(object):
         return self._is_same_card(card)
 
     def _is_same_card(self, card):
+        if not isinstance(card, self.__class__):
+            return False
         if self.type != card.type:
             return False
         fields1 = self.raw_fields()
