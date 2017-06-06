@@ -14,7 +14,7 @@ This file defines the OUG Table, which contains:
 """
 import numpy as np
 from pyNastran import is_release
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 from pyNastran.op2.tables.oug.oug_displacements import (
     RealDisplacementArray, ComplexDisplacementArray)
@@ -54,7 +54,7 @@ class OUG(OP2Common):
         value = getattr(self, name)
         if value == 0.0:
             #print('table_name=%r mode=%s eigr=%s' % (self.table_name, self.mode, self.eigr))
-            value = np.sqrt(np.abs(self.eigr)) / (2. * np.pi)
+            value = np.sqrt(np.abs(self.eign)) / (2. * np.pi)
             setattr(self, name, value)
             self.data_code[name] = value
 
@@ -97,12 +97,12 @@ class OUG(OP2Common):
         elif self.analysis_code == 2:  # real eigenvalues
             # mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
-            # real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            # eigenvalue
+            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
             # mode or cycle .. todo:: confused on the type - F1???
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)
             self.update_mode_cycle('mode_cycle')
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data, 'i', 5) ## load set number
             #self.data_code['lsdvmn'] = self.lsdvmn
@@ -310,6 +310,8 @@ class OUG(OP2Common):
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
             elif self.table_name == b'OUGV1PAT':
                 n = self._read_oug_displacement(data, ndata, is_cid=True)
+            elif self.table_name == b'OAG1':
+                n = self._read_oug_acceleration(data, ndata, is_cid=False)
             else:
                 raise NotImplementedError(self.code_information())
         elif self.table_code == 7:
@@ -393,7 +395,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2'], self.table_name
+            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,
@@ -519,7 +521,7 @@ class OUG(OP2Common):
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
             self.subcase.add_op2_data(self.data_code, 'acceleration', self.log)
 
-        if self.table_name in [b'OUGV1', b'OUGV2']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'OAG1']:
             result_name = 'accelerations'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
             result_name = 'accelerations_ROUGV1'
@@ -542,7 +544,7 @@ class OUG(OP2Common):
             raise NotImplementedError(msg)
 
         if self.thermal == 0:
-            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2']:
+            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1']:
                 if self._results.is_not_saved(result_name):
                     return ndata
                 storage_obj = getattr(self, result_name)
@@ -602,7 +604,7 @@ class OUG(OP2Common):
             self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
         self.subcase.add_op2_data(self.data_code, 'VECTOR', self.log)
 
-        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG', b'OUG1']:
             result_name = 'eigenvectors'
         elif self.table_name == b'RADCONS':
             result_name = 'eigenvectors_RADCONS'
@@ -945,7 +947,7 @@ class OUG(OP2Common):
         table_code = 901  # /610/611
         """
         if self.thermal == 0:
-            if self.table_code in [42]: # fake
+            if self.table_code == 1:
                 result_name = 'displacements_ATO'
                 storage_obj = self.displacements_ATO
                 assert self.table_name in [b'OUGATO1', b'OUGATO2'], 'self.table_name=%r' % self.table_name
@@ -954,6 +956,26 @@ class OUG(OP2Common):
                 self._results._found_result(result_name)
                 n = self._read_random_table(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, 'node',
+                                            random_code=self.random_code)
+            elif self.table_code == 10:
+                result_name = 'velocities_ATO'
+                storage_obj = self.velocities_ATO
+                assert self.table_name in [b'OVGATO1', b'OVGATO2'], 'self.table_name=%r' % self.table_name
+                if self._results.is_not_saved(result_name):
+                    return ndata
+                self._results._found_result(result_name)
+                n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                            RealVelocityArray, 'node',
+                                            random_code=self.random_code)
+            elif self.table_code == 11:
+                result_name = 'accelerations_ATO'
+                storage_obj = self.accelerations_ATO
+                assert self.table_name in [b'OAGATO1', b'OAGATO2'], 'self.table_name=%r' % self.table_name
+                if self._results.is_not_saved(result_name):
+                    return ndata
+                self._results._found_result(result_name)
+                n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                            RealAccelerationArray, 'node',
                                             random_code=self.random_code)
             #elif self.table_code == 610:
                 #result_name = 'velocities_PSD'

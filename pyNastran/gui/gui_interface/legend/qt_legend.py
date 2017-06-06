@@ -1,3 +1,7 @@
+"""
+defines:
+ - LegendPropertiesWindow
+"""
 from __future__ import print_function
 import os
 
@@ -5,278 +9,28 @@ from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore#, QtGui
     from PyQt4.QtGui import (
-        QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox, QCheckBox)
+        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QFont)
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
+    from PyQt5.QtGui import QFont
     from PyQt5.QtWidgets import (
-        QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox, QCheckBox)
+        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 elif qt_version == 'pyside':
     from PySide import QtCore#, QtGui
     from PySide.QtGui import (
-        QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox, QCheckBox)
+        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QFont)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
-from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
+#from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.colormaps import colormap_keys
 
 from pyNastran.gui.gui_interface.common import PyDialog
-from pyNastran.gui.gui_utils import open_directory_dialog
+from pyNastran.gui.gui_interface.legend.animation import AnimationWindow
 
-
-class AnimationWindow(PyDialog):
-    """
-    +-------------------+
-    | Animation         |
-    +------------------------+
-    | nframes ______ Default |
-    | resolu. ______ Default |
-    | Scale   ______ Default |
-    | Dir     ______ Browse  |
-    | iFrame  ______         |
-    |                        |
-    |   o Scale-animation    |
-    |   o Phase-animation    |
-    |                        |
-    |      Step, RunAll      |
-    |                        |
-    |     Apply, Close       |
-    +------------------------+
-    """
-    def __init__(self, data, win_parent=None):
-        PyDialog.__init__(self, data, win_parent)
-        self._icase = data['icase']
-        self._default_name = data['name']
-        self._default_seconds = data['seconds']
-        self._default_fps = data['frames/sec']
-        self._default_resolution = data['resolution']
-        self._default_is_scale = data['is_scale']
-        self._default_phase = data['default_phase']
-        self._default_dirname = data['dirname']
-        self._default_gif_name = os.path.join(self._default_dirname, data['name'] + '.gif')
-
-        self.setWindowTitle('Animate Model')
-        self.create_widgets()
-        self.create_layout()
-        self.set_connections()
-        self.win_parent.is_animate_open = True
-
-    def create_widgets(self):
-        """creates the menu objects"""
-
-        self.seconds = QLabel("Total Time:")
-        self.seconds_edit = QDoubleSpinBox(self)
-        self.seconds_edit.setValue(self._default_seconds)
-        self.seconds_edit.setRange(0.1, 5.0)
-        self.seconds_edit.setDecimals(1)
-        self.seconds_edit.setSingleStep(0.1)
-        self.seconds_button = QPushButton("Default")
-
-        self.fps = QLabel("Frames/Second:")
-        self.fps_edit = QSpinBox(self)
-        self.fps_edit.setRange(10, 60)
-        self.fps_edit.setSingleStep(1)
-        self.fps_edit.setValue(self._default_fps)
-        self.fps_button = QPushButton("Default")
-
-        self.resolution = QLabel("Resolution Scale:")
-        self.resolution_edit = QSpinBox(self)
-        self.resolution_edit.setRange(1, 5)
-        self.resolution_edit.setSingleStep(1)
-        self.resolution_edit.setValue(self._default_resolution)
-        self.resolution_button = QPushButton("Default")
-
-        #self.browse = QLabel("Animation File:")
-        self.browse = QLabel("Output Directory:")
-        self.browse_edit = QLineEdit(str(self._default_dirname))
-        self.browse_button = QPushButton("Browse")
-
-        self.gif = QLabel("Filename:")
-        self.gif_edit = QLineEdit(str(self._default_name))
-        self.gif_button = QPushButton("Default")
-
-        # scale / phase
-        self.scale_radio = QRadioButton("Animate Scale")
-        self.phase_radio = QRadioButton("Animate Phase")
-        self.scale_radio.setChecked(self._default_is_scale)
-        self.phase_radio.setChecked(not self._default_is_scale)
-        if self._default_phase is None:
-            self.phase_radio.setDisabled(True)
-        widget = QWidget(self)
-        horizontal_vertical_group = QButtonGroup(widget)
-        horizontal_vertical_group.addButton(self.scale_radio)
-        horizontal_vertical_group.addButton(self.phase_radio)
-
-        # delete images when finished
-        self.delete_images_checkbox = QCheckBox("Delete images when finished")
-        self.delete_images_checkbox.setChecked(True)
-
-        # bottom buttons
-        self.step_button = QPushButton("Step")
-        self.run_button = QPushButton("Run All")
-
-        self.apply_button = QPushButton("Apply")
-        self.ok_button = QPushButton("OK")
-        self.cancel_button = QPushButton("Close")
-
-    def set_connections(self):
-        """creates button actions"""
-        self.seconds_button.clicked.connect(self.on_default_seconds)
-        self.fps_button.clicked.connect(self.on_default_fps)
-        self.resolution_button.clicked.connect(self.on_default_resolution)
-        self.browse_button.clicked.connect(self.on_browse)
-        self.gif_button.clicked.connect(self.on_default_name)
-
-        self.step_button.clicked.connect(self.on_step)
-        self.run_button.clicked.connect(self.on_run)
-
-        self.apply_button.clicked.connect(self.on_apply)
-        self.ok_button.clicked.connect(self.on_ok)
-        self.cancel_button.clicked.connect(self.on_cancel)
-
-    def on_browse(self):
-        dirname = open_directory_dialog(self, 'Select a Directory')
-        if not dirname:
-            return
-        self.browse_edit.setText(dirname)
-
-    def on_step(self):
-        pass
-
-    def on_run(self):
-        pass
-
-    def on_default_name(self):
-        self.gif_edit.setText(self._default_name)
-
-    def on_default_seconds(self):
-        self.seconds_edit.setValue(self._default_seconds)
-
-    def on_default_fps(self):
-        self.fps_edit.setValue(self._default_fps)
-
-    def on_default_resolution(self):
-        self.resolution_edit.setValue(self._default_resolution)
-
-    def create_layout(self):
-        """displays the menu objects"""
-        grid = QGridLayout()
-
-        grid.addWidget(self.seconds, 0, 0)
-        grid.addWidget(self.seconds_edit, 0, 1)
-        grid.addWidget(self.seconds_button, 0, 2)
-
-        grid.addWidget(self.fps, 1, 0)
-        grid.addWidget(self.fps_edit, 1, 1)
-        grid.addWidget(self.fps_button, 1, 2)
-
-        grid.addWidget(self.resolution, 2, 0)
-        grid.addWidget(self.resolution_edit, 2, 1)
-        grid.addWidget(self.resolution_button, 2, 2)
-
-        grid.addWidget(self.browse, 3, 0)
-        grid.addWidget(self.browse_edit, 3, 1)
-        grid.addWidget(self.browse_button, 3, 2)
-
-        grid.addWidget(self.gif, 4, 0)
-        grid.addWidget(self.gif_edit, 4, 1)
-        grid.addWidget(self.gif_button, 4, 2)
-
-        #grid2 = QGridLayout()
-        grid.addWidget(self.scale_radio, 5, 0)
-        grid.addWidget(self.phase_radio, 5, 1)
-        grid.addWidget(self.delete_images_checkbox, 6, 0)
-
-
-        # bottom buttons
-        step_run_box = QHBoxLayout()
-        step_run_box.addWidget(self.step_button)
-        step_run_box.addWidget(self.run_button)
-
-        ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
-        ok_cancel_box.addWidget(self.cancel_button)
-
-        vbox = QVBoxLayout()
-        vbox.addLayout(grid)
-        #vbox.addLayout(checkboxes)
-        #vbox.addLayout(grid2)
-        vbox.addStretch()
-        vbox.addLayout(step_run_box)
-        vbox.addLayout(ok_cancel_box)
-        self.setLayout(vbox)
-
-    def make_gif(self):
-        self.gif_filename
-
-    def on_apply(self):
-        """click the Apply button"""
-        passed = self.on_validate()
-        if passed:
-            self.make_gif()
-            #self.win_parent._apply_legend(self.out_data)
-        return passed
-
-    def on_validate(self):
-        name_value, flag0 = self.check_name(self.gif_edit)
-        output_dir, flag1 = self.check_path(self.browse_edit)
-        gifbase, flag2 = self.check_name(self.gif_edit)
-
-        if all([flag0, flag1, flag2]):
-            gifbase = os.path.join(output_dir, gifbase + '.gif')
-
-            delete_images = self.delete_images_checkbox.isChecked()
-            is_scale = self.scale_radio.isChecked()
-            #self.out_data['is_shown'] = self.show_radio.isChecked()
-            self.out_data['clicked_ok'] = True
-            self.out_data['close'] = True
-            return True
-        return False
-
-    @staticmethod
-    def check_name(cell):
-        cell_value = cell.text()
-        try:
-            text = str(cell_value).strip()
-        except UnicodeEncodeError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-        if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    def check_path(self, cell):
-        text, passed = self.check_name(cell)
-        if not passed:
-            return None, False
-
-        if os.path.exists(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    def on_ok(self):
-        """click the OK button"""
-        passed = self.on_apply()
-        if passed:
-            self.win_parent.is_animate_open = False
-            self.close()
-            #self.destroy()
-
-    def on_cancel(self):
-        """click the Cancel button"""
-        self.out_data['close'] = True
-        self.close()
 
 class LegendPropertiesWindow(PyDialog):
     """
@@ -308,9 +62,9 @@ class LegendPropertiesWindow(PyDialog):
     def __init__(self, data, win_parent=None):
         PyDialog.__init__(self, data, win_parent)
 
-        #Init the base class
         self._updated_legend = False
-        self.is_animate_open = False
+        self._animation_window_shown = False
+
         self._icase = data['icase']
         self._default_icase = self._icase
 
@@ -344,6 +98,7 @@ class LegendPropertiesWindow(PyDialog):
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
         self._default_is_shown = data['is_shown']
+        self._is_normals = data['is_normals']
 
         self._update_defaults_to_blank()
 
@@ -352,7 +107,7 @@ class LegendPropertiesWindow(PyDialog):
         self.create_widgets()
         self.create_layout()
         self.set_connections()
-        #self.show()
+        self.set_font_size(data['font_size'])
 
     def _update_defaults_to_blank(self):
         """Changes the default (None) to a blank string"""
@@ -383,11 +138,14 @@ class LegendPropertiesWindow(PyDialog):
                       default_data_format, default_scale, default_phase,
                       default_nlabels, default_labelsize,
                       default_ncolors, default_colormap,
-                      is_low_to_high, is_horizontal_scalar_bar):
+                      is_low_to_high, is_horizontal_scalar_bar, is_normals,
+                      font_size=8):
         """
         We need to update the legend if there's been a result change request
         """
+        self.set_font_size(font_size)
         if icase != self._default_icase:
+            self._icase = icase
             self._default_icase = icase
             self._default_name = default_title
             self._default_min = default_min_value
@@ -402,7 +160,7 @@ class LegendPropertiesWindow(PyDialog):
             self._default_labelsize = default_labelsize
             self._default_ncolors = default_ncolors
             self._default_colormap = default_colormap
-
+            self._is_normals = is_normals
 
             if colormap is None:
                 colormap = 'jet'
@@ -418,19 +176,23 @@ class LegendPropertiesWindow(PyDialog):
             assert isinstance(scale, float), 'scale=%r' % scale
             assert isinstance(default_scale, float), 'default_scale=%r' % default_scale
             if self._default_scale == 0.0:
+                self.scale.setEnabled(False)
                 self.scale_edit.setEnabled(False)
                 self.scale_button.setEnabled(False)
             else:
+                self.scale.setEnabled(True)
                 self.scale_edit.setEnabled(True)
                 self.scale_button.setEnabled(True)
 
             if self._default_phase is None:
+                self._phase = None
                 self.phase.setEnabled(False)
                 self.phase_edit.setEnabled(False)
                 self.phase_button.setEnabled(False)
                 self.phase_edit.setText('0.0')
                 self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
             else:
+                self._phase = phase
                 self.phase.setEnabled(True)
                 self.phase_edit.setEnabled(True)
                 self.phase_button.setEnabled(True)
@@ -443,6 +205,7 @@ class LegendPropertiesWindow(PyDialog):
             #self.on_default_format()
             #self.on_default_scale()
             # reset defaults
+            self._name = name
             self.name_edit.setText(name)
             self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
@@ -455,6 +218,7 @@ class LegendPropertiesWindow(PyDialog):
             self.format_edit.setText(str(data_format))
             self.format_edit.setStyleSheet("QLineEdit{background: white;}")
 
+            self._scale = scale
             self.scale_edit.setText(str(scale))
             self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
@@ -468,9 +232,49 @@ class LegendPropertiesWindow(PyDialog):
             self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
 
             self.colormap_edit.setCurrentIndex(colormap_keys.index(str(colormap)))
+
+            # lots of hacking for the Normal vectors
+            enable = True
+            if self._is_normals:
+                enable = False
+
+            self.max.setVisible(enable)
+            self.min.setVisible(enable)
+            self.max_edit.setVisible(enable)
+            self.min_edit.setVisible(enable)
+            self.max_button.setVisible(enable)
+            self.min_button.setVisible(enable)
+
+            self.show_radio.setVisible(enable)
+            self.hide_radio.setVisible(enable)
+            self.low_to_high_radio.setVisible(enable)
+            self.high_to_low_radio.setVisible(enable)
+
+            self.format.setVisible(enable)
+            self.format_edit.setVisible(enable)
+            self.format_edit.setVisible(enable)
+            self.format_button.setVisible(enable)
+
+            self.nlabels.setVisible(enable)
+            self.nlabels_edit.setVisible(enable)
+            self.nlabels_button.setVisible(enable)
+
+            self.ncolors.setVisible(enable)
+            self.ncolors_edit.setVisible(enable)
+            self.ncolors_button.setVisible(enable)
+
+            self.grid2_title.setVisible(enable)
+            self.vertical_radio.setVisible(enable)
+            self.horizontal_radio.setVisible(enable)
+
+            self.colormap.setVisible(enable)
+            self.colormap_edit.setVisible(enable)
+            self.colormap_button.setVisible(enable)
+
             self.on_apply()
 
     def create_widgets(self):
+        """creates the menu objects"""
         # Name
         self.name = QLabel("Title:")
         self.name_edit = QLineEdit(str(self._default_name))
@@ -486,27 +290,30 @@ class LegendPropertiesWindow(PyDialog):
         self.max_edit = QLineEdit(str(self._default_max))
         self.max_button = QPushButton("Default")
 
+        #---------------------------------------
         # Format
         self.format = QLabel("Format (e.g. %.3f, %g, %.6e):")
         self.format_edit = QLineEdit(str(self._format))
         self.format_button = QPushButton("Default")
 
+        #---------------------------------------
         # Scale
         self.scale = QLabel("Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
         self.scale_button = QPushButton("Default")
         if self._default_scale == 0.0:
-            self.scale_edit.setEnabled(False)
-            self.scale_button.setEnabled(False)
+            self.scale.setVisible(False)
+            self.scale_edit.setVisible(False)
+            self.scale_button.setVisible(False)
 
         # Phase
         self.phase = QLabel("Phase (deg):")
         self.phase_edit = QLineEdit(str(self._phase))
         self.phase_button = QPushButton("Default")
         if self._default_phase is None:
-            self.phase.setEnabled(False)
-            self.phase_edit.setEnabled(False)
-            self.phase_button.setEnabled(False)
+            self.phase.setVisible(False)
+            self.phase_edit.setVisible(False)
+            self.phase_button.setVisible(False)
             self.phase_edit.setText('0.0')
         #tip = QtGui.QToolTip()
         #tip.setTe
@@ -533,6 +340,9 @@ class LegendPropertiesWindow(PyDialog):
             self.colormap_edit.addItem(key)
         self.colormap_edit.setCurrentIndex(colormap_keys.index(self._colormap))
 
+        # --------------------------------------------------------------
+        # the header
+        self.grid2_title = QLabel("Color Scale:")
 
         # red/blue or blue/red
         self.low_to_high_radio = QRadioButton('Low -> High')
@@ -564,7 +374,45 @@ class LegendPropertiesWindow(PyDialog):
         self.show_radio.setChecked(self._default_is_shown)
         self.hide_radio.setChecked(not self._default_is_shown)
 
+        # --------------------------------------------------------------
+
+        if self._is_normals:
+            self.max.hide()
+            self.min.hide()
+            self.max_edit.hide()
+            self.min_edit.hide()
+            self.max_button.hide()
+            self.min_button.hide()
+
+            self.format.hide()
+            self.format_edit.hide()
+            self.format_button.hide()
+
+            self.nlabels.hide()
+            self.nlabels_edit.hide()
+            self.nlabels_button.hide()
+
+            self.ncolors.hide()
+            self.ncolors_edit.hide()
+            self.ncolors_button.hide()
+
+            self.grid2_title.hide()
+            self.vertical_radio.hide()
+            self.horizontal_radio.hide()
+            self.show_radio.hide()
+            self.hide_radio.hide()
+            self.low_to_high_radio.hide()
+            self.high_to_low_radio.hide()
+
+            self.colormap.hide()
+            self.colormap_edit.hide()
+            self.colormap_button.hide()
+
         self.animate_button = QPushButton('Create Animation')
+
+        if self._default_scale == 0.0:
+            self.animate_button.setEnabled(False)
+            self.animate_button.setToolTip('This must be a displacement-like result to animate')
 
         # closing
         self.apply_button = QPushButton("Apply")
@@ -572,6 +420,7 @@ class LegendPropertiesWindow(PyDialog):
         self.cancel_button = QPushButton("Cancel")
 
     def create_layout(self):
+        """displays the menu objects"""
         grid = QGridLayout()
         grid.addWidget(self.name, 0, 0)
         grid.addWidget(self.name_edit, 0, 1)
@@ -620,8 +469,7 @@ class LegendPropertiesWindow(PyDialog):
 
 
         grid2 = QGridLayout()
-        title = QLabel("Color Scale:")
-        grid2.addWidget(title, 0, 0)
+        grid2.addWidget(self.grid2_title, 0, 0)
         grid2.addWidget(self.low_to_high_radio, 1, 0)
         grid2.addWidget(self.high_to_low_radio, 2, 0)
 
@@ -650,6 +498,7 @@ class LegendPropertiesWindow(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the buttons"""
         self.name_button.clicked.connect(self.on_default_name)
         self.min_button.clicked.connect(self.on_default_min)
         self.max_button.clicked.connect(self.on_default_max)
@@ -664,6 +513,9 @@ class LegendPropertiesWindow(PyDialog):
 
         self.animate_button.clicked.connect(self.on_animate)
 
+        self.show_radio.clicked.connect(self.on_show_hide)
+        self.hide_radio.clicked.connect(self.on_show_hide)
+
         self.apply_button.clicked.connect(self.on_apply)
         self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
@@ -674,67 +526,132 @@ class LegendPropertiesWindow(PyDialog):
         #else:
             # closeEvent???
 
+    def set_font_size(self, font_size):
+        """
+        Updates the font size of the objects
+
+        Parameters
+        ----------
+        font_size : int
+            the font size
+        """
+        if self.font_size == font_size:
+            return
+        self.font_size = font_size
+        font = QFont()
+        font.setPointSize(font_size)
+        self.setFont(font)
+        self.name_edit.setFont(font)
+        self.min_edit.setFont(font)
+        self.max_edit.setFont(font)
+        self.format_edit.setFont(font)
+        self.scale_edit.setFont(font)
+        self.phase_edit.setFont(font)
+        self.nlabels_edit.setFont(font)
+        self.labelsize_edit.setFont(font)
+        self.ncolors_edit.setFont(font)
+
     def on_animate(self):
+        """opens the animation window"""
         name, flag0 = self.check_name(self.name_edit)
         if not flag0:
             return
-        if self.is_animate_open:
-            return
-        print('is_animate_open  = %s' % self.is_animate_open)
-        self.is_animate_open = True
+
+        scale, flag1 = self.check_float(self.scale_edit)
+        if not flag1:
+            scale = self._scale
+
         data = {
+            'font_size' : self.out_data['font_size'],
             'icase' : self._icase,
             'name' : name,
-            'seconds' : 2,
+            'time' : 2,
             'frames/sec' : 30,
             'resolution' : 1,
             'iframe' : 0,
+            'scale' : scale,
+            'default_scale' : self._default_scale,
+
             'is_scale' : self._default_phase is None,
+            'phase' : self._phase,
             'default_phase' : self._default_phase,
-            'dirname' : os.path.abspath(os.path.join(os.getcwd(), '..', '..')),
+            'dirname' : os.path.abspath(os.getcwd()),
+            'clicked_ok' : False,
+            'close' : False,
         }
-        window = AnimationWindow(data, win_parent=self)
-        window.show()
+        if not self._animation_window_shown:
+            self._animation_window = AnimationWindow(data, win_parent=self)
+            self._animation_window.show()
+            self._animation_window_shown = True
+            self._animation_window.exec_()
+        else:
+            self._animation_window.activateWindow()
+
+        if data['close']:
+            if not self._animation_window._updated_animation:
+                #self._apply_animation(data)
+                pass
+            self._animation_window_shown = False
+            del self._animation_window
+        else:
+            self._animation_window.activateWindow()
 
     def on_default_name(self):
+        """action when user clicks 'Default' for name"""
         name = str(self._default_name)
         self.name_edit.setText(name)
         self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_min(self):
+        """action when user clicks 'Default' for min value"""
         self.min_edit.setText(str(self._default_min))
         self.min_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_max(self):
+        """action when user clicks 'Default' for max value"""
         self.max_edit.setText(str(self._default_max))
         self.max_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_format(self):
+        """action when user clicks 'Default' for the number format"""
         self.format_edit.setText(str(self._default_format))
         self.format_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_scale(self):
+        """action when user clicks 'Default' for scale factor"""
         self.scale_edit.setText(str(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_phase(self):
+        """action when user clicks 'Default' for phase angle"""
         self.phase_edit.setText(str(self._default_phase))
         self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_ncolors(self):
+        """action when user clicks 'Default' for number of colors"""
         self.ncolors_edit.setText(str(self._default_ncolors))
         self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_colormap(self):
+        """action when user clicks 'Default' for the color map"""
         self.colormap_edit.setCurrentIndex(colormap_keys.index(self._default_colormap))
 
     def on_default_nlabels(self):
+        """action when user clicks 'Default' for number of labels"""
         self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
         self.nlabels_edit.setText(str(self._default_nlabels))
 
     def on_default_labelsize(self):
+        """action when user clicks 'Default' for number of labelsize"""
         self.labelsize_edit.setText(str(self._default_labelsize))
         self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_show_hide(self):
+        """action when user clicks the 'Show/Hide' radio button"""
+        self.colormap_edit.setCurrentIndex(colormap_keys.index(self._default_colormap))
+        is_shown = self.show_radio.isChecked()
+        self.vertical_radio.setEnabled(is_shown)
+        self.horizontal_radio.setEnabled(is_shown)
 
     @staticmethod
     def check_name(cell):
@@ -835,8 +752,9 @@ def main(): # pragma: no cover
     # Create the QApplication
     app = QApplication(sys.argv)
     #The Main window
-    d = {
+    data1 = {
         'icase' : 1,
+        'font_size' : 8,
         'name' : 'asdf',
         'min' : 0.,
         'max' : 10,
@@ -862,24 +780,14 @@ def main(): # pragma: no cover
         'default_format' : '%s',
         'format' : '%g',
 
+        'is_normals': False,
         'is_low_to_high': True,
         'is_discrete' : False,
         'is_horizontal' : False,
         'is_shown' : True,
     }
-    main_window = LegendPropertiesWindow(d)
+    main_window = LegendPropertiesWindow(data1)
 
-    data = {
-        'icase' : 1,
-        'name' : 'cat',
-        'seconds' : 2,
-        'frames/sec' : 30,
-        'resolution' : 1,
-        'iframe' : 0,
-        'is_scale' : False,
-        'dirname' : os.getcwd(),
-    }
-    #main_window = AnimationWindow(data)
     main_window.show()
     # Enter the main loop
     app.exec_()

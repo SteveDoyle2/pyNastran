@@ -23,31 +23,26 @@ packages = find_packages()+['gui/icons/*.*']
     #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
     #extra['use_2to3_fixers'] = ['your.fixers']
 
-py2_gui_scripts = []
 py2_packages = []
-
-if sys.version_info <= (3,):
-    py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
-
 py_packages = []
 
 try:
     import numpy as np
     ver = np.lib.NumpyVersion(np.__version__)
-    if ver < '1.9.2':
-        print("np.__version__ = %r < '1.9.2'" % np.__version__)
-        py_packages.append('numpy >= 1.9.2')
+    if ver < '1.11.0':
+        print("np.__version__ = %r < '1.11.0'" % np.__version__)
+        py_packages.append('numpy >= 1.11.0')
 except ImportError:
-    py_packages.append('numpy >= 1.9.2')
+    py_packages.append('numpy >= 1.11.0')
 
 try:
     import scipy
     ver = scipy.version.short_version
-    if ver < '0.16.0':
-        print("scipy.version.short_version = %r < '0.16.0'" % scipy.version.short_version)
-        py_packages.append('scipy >= 0.16.0')
+    if ver < '0.17.0':
+        print("scipy.version.short_version = %r < '0.17.0'" % scipy.version.short_version)
+        py_packages.append('scipy >= 0.17.0')
 except ImportError:
-    py_packages.append('scipy >= 0.16.0')
+    py_packages.append('scipy >= 0.17.0')
 
 try:
     import six
@@ -58,14 +53,14 @@ try:
 except ImportError:
     py_packages.append('six >= 1.9.0')
 
-try:
-    import matplotlib
-    sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
-    if sver < [1, 5, 0]:
-        print("matplotlib.__version__ = %r < '1.4.0'" % six.__version__)
-        py_packages.append('matplotlib >= 1.4.0, <2')
-except ImportError:
-    py_packages.append('matplotlib >= 1.4.0, <2')
+#try:
+#    import matplotlib
+#    sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
+#    if sver < [1, 5, 1]:
+#        print("matplotlib.__version__ = %r < '1.5.1'" % six.__version__)
+#        py_packages.append('matplotlib >= 1.5.1, <2')
+#except ImportError:
+#    py_packages.append('matplotlib >= 1.5.1, <2')
 
 try:
     import docopt
@@ -100,6 +95,16 @@ for icon_file in icon_files:
     if icon_file.endswith('.png'):
         icon_files2.append(os.path.join(icon_path, icon_file))
 
+exclude_words = [
+    'pyNastran.bdf.dev_vectorized', 'pyNastran.bdf.dev_vectorized.cards',
+    'pyNastran.f06.dev',
+    'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
+    'pyNastran.converters.dev', 'pyNastran.xdb',]
+packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
+for exclude_word in exclude_words:
+    packages = [package for package in packages if exclude_word not in package]
+#print(packages, len(packages)) # 83
+
 setup(
     name='pyNastran',
     version=pyNastran.__version__,
@@ -113,16 +118,16 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords='',
     author=pyNastran.__author__,
     author_email=pyNastran.__email__,
     url=pyNastran.__website__,
     license=pyNastran.__license__,
-    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+    packages=packages,
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
@@ -139,19 +144,21 @@ setup(
         'console_scripts': [
             'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
             'test_bdf  = pyNastran.bdf.test.test_bdf:main',
-            'test_abaqus = pyNastran.converters.dev.abaqus.test_abaqus:main',
             'test_op2  = pyNastran.op2.test.test_op2:main',
             'test_op4  = pyNastran.op4.test.test_op4:main',
+            'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
+            'test_pynastrangui = pyNastran.gui.test.test_gui:main',
             #'test_f06  = pyNastran.f06.test.test_f06:main',
 
             'format_converter = pyNastran.converters.type_converter:main',
+            'pyNastranGUI = pyNastran.gui.gui:cmd_line',
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 
             'pyNastranv = pyNastran.bdf.dev_vectorized.solver.solver:main',
             'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
-        ] + py2_gui_scripts
+        ]# + py2_gui_scripts
     },
     test_suite='pyNastran.all_tests',
 )

@@ -172,10 +172,22 @@ class WriteMeshes(WriteMesh):
                 for (eid, element) in sorted(iteritems(self.elements)):
                     nodes = element.node_ids
                     bdf_file.write(element.write_card(size, is_double))
-                    nodes = [node_id + nid_offset for node_id in nodes]
+                    try:
+                        nodes = [node_id + nid_offset for node_id in nodes]
+                    except TypeError:
+                        msg = 'cannot mirror %r because None exists in nodes=%s' % (
+                            element.type, nodes)
+                        self.log.warning(msg)
+                        continue
+
                     if element.type in ['CTRIA3', 'CQUAD4']:
                         nodes = nodes[::-1]
+                    try:
+                        element.nodes = nodes
+                    except AttributeError:
+                        msg = 'cannot mirror %r because it doesnt have nodes...' % element.type
+                        self.log.warning(msg)
+                        continue
                     element.eid += eid_offset
-                    element.nodes = nodes
                     bdf_file.write(element.write_card(size, is_double))
 

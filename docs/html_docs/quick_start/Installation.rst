@@ -23,9 +23,9 @@ Download Python
 ===============
 The software is tested against:
  - Python 2.7.12 (Windows/Linux)
- - Python 3.3 (Linux)
  - Python 3.4 (Linux)
  - Python 3.5 (Windows/Linux)
+ - Python 3.6 (Linux)
 
 
 Options include:
@@ -49,12 +49,13 @@ Additional packages
 ===================
 The following packages are required.
 
- * `scipy <http://scipy.org/>`_
- * `numpy 1.9+ <http://numpy.org/>`_
+ * `scipy 0.17.0+ <http://scipy.org/>`_
+ * `numpy 1.11+ <http://numpy.org/>`_
  * `vtk 5.x, 6.x, 7.x <http://www.vtk.org/VTK/resources/software.html>`_ (for the GUI)
  * `wxPython <http://wxpython.org/download.php#stable>`_ (for BDF/OP2/OP4 popups)
- * `PyQt4 <http://www.riverbankcomputing.com/software/pyqt/download>`_ (for the GUI; BDF/OP2/OP4 popups in v0.7)
- * `pandas <http://pandas.pydata.org/>`_ (optional way to use the OP2 in iPython; v0.8)
+ * `PyQt4/PyQt5 <http://www.riverbankcomputing.com/software/pyqt/download>`_ (for the GUI; BDF/OP2/OP4 popups in v0.7)
+ * `pandas <http://pandas.pydata.org/>`_ (optional way to use the OP2 in iPython; v0.8=)
+ * imageio 2.1.2 (for the GUI; animations)
 
 PyNastran's package requirements are tested with packages no older than 1 year
 at the time of release.  If you require an older version, try changing version
@@ -110,7 +111,7 @@ Install Procedure - From Source
 Overview
 ========
  * Install Python
- * Install numpy, scipy, pandas, vtk, PyQt4 (GUI)
+ * Install numpy, scipy, pandas, vtk, PyQt (GUI)
  * Install numpy, scipy, pandas (no GUI)
  * Install Sphinx, GraphViz, alabaster (for documentation)
 
@@ -141,7 +142,8 @@ There are two ways to install the dev version of pyNastran
 
  1. Download the most recent `zip version <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_
 
- 2. Clone pyNastran (see below).  Using Git allows you to easily update to the latest dev version when you want to as well as push any commits of your own.
+ 2. Clone pyNastran (see below).  Using Git allows you to easily update to the
+    latest dev version when you want to as well as push any commits of your own.
 
 If you don't want the gui for Python 2.7, use ``setup_no_gui.py`` instead of ``setup.py``.
 

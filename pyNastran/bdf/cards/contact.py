@@ -10,7 +10,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by
-from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_string_or_blank, double_or_blank,
     integer_double_or_blank, string, string_or_blank)
@@ -61,6 +60,16 @@ class BSURF(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BSURF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         #: Number (float)
         nfields = card.nfields
@@ -146,6 +155,16 @@ class BSURFS(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BSURFS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         id = integer(card, 1, 'id')
         eids = []
         g1s = []
@@ -195,7 +214,8 @@ class BCTSET(BaseCard):
     +--------+-------+------+-------+-------+-------+-------+-----+------+
     """
     type = 'BCTSET'
-    def __init__(self, csid, sids, tids, frictions, min_distances, max_distances, comment='', sol=101):
+    def __init__(self, csid, sids, tids, frictions, min_distances, max_distances,
+                 comment='', sol=101):
         if comment:
             self.comment = comment
         #: CSID Contact set identification number. (Integer > 0)
@@ -207,7 +227,7 @@ class BCTSET(BaseCard):
         #: TIDi Target region identification number for contact pair i. (Integer > 0)
         self.tids = tids
 
-        #: FRICi Static coefficient of friction for contact pair i. (Real; Default = 0.0)
+        #: FRICi Static coefficient of friction for contact pair i. (Real; Default=0.0)
         self.frictions = frictions
 
         #: MINDi Minimum search distance for contact. (Real) (Sol 101 only)
@@ -267,7 +287,7 @@ class BCRPARA(BaseCard):
     +---------+------+------+--------+------+-----+---+---+---+----+
     """
     type = 'BCRPARA'
-    def __init__(self, crid, surf, offset, Type='FLEX', mgp=0, comment=''):
+    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', mgp=0, comment=''):
         if comment:
             self.comment = comment
 
@@ -295,12 +315,22 @@ class BCRPARA(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BCRPARA card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         crid = integer(card, 1, 'crid')
         surf = string_or_blank(card, 2, 'surf', 'TOP')
-        offset = double_or_blank(card, 3, 'offset')
+        offset = double_or_blank(card, 3, None)
         Type = string_or_blank(card, 4, 'type', 'FLEX')
         mgp = integer_or_blank(card, 5, 'mpg', 0)
-        return BCRPARA(crid, surf, offset, Type=Type, mgp=mgp, comment=comment)
+        return BCRPARA(crid, surf=surf, offset=offset, Type=Type, mgp=mgp, comment=comment)
 
     def raw_fields(self):
         fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.mgp]
@@ -343,6 +373,16 @@ class BCTPARA(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BCTPARA card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         csid = integer(card, 1, 'csid')
         i = 2
         j = 1
@@ -454,6 +494,16 @@ class BCTADD(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a BCTADD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         csid = integer(card, 1, 'csid')
         S = []
 

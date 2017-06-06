@@ -4,74 +4,63 @@ from copy import deepcopy
 from numpy import zeros
 import numpy as np
 from numpy.linalg import norm
+from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
-
-class NastranComplexDisplacementResults(object):
-    def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
-                 default_scale=40., uname='NastranGeometry'):
-        self.subcase_id = subcase_id
-        self.data_formats = ['%g'] * len(titles)
-        self.xyz = xyz
-        self.dxyz = dxyz
-        self.dxyz_norm = norm(dxyz, axis=1)
-        self.titles = titles
-        self.scale = default_scale
-
-        # displacement results can change the scale, so we need this
-        # for defaulting the result and to not locking out the
-        # displacement
-        self.default_scale = default_scale
-
-        # titles point to the scalar bar and thus can change
-        self.titles_default = deepcopy(titles)
-
-        # data formats are modified on the legend
-        self.data_formats_default = deepcopy(self.data_formats)
-        #self.default_scale = default_scales
-
-        #theta = (2*np.pi * i/frame) % (2 * pi)
-        theta = 0.0
-
-        # calculate deflections
-        eigvs = model.eigenvectors[1000].data[6, :, :]
-        scale = 1.0
-        defl = scale * (np.real(eigvs[:, :3]) * np.cos(theta) +
-                        np.imag(eigvs[:, :3]) * np.sin(theta))
-
-
-class DisplacementResults(object):
-    def __init__(self, subcase_id, titles, headers, xyz, dxyz, scalar,
+class NastranTable(GuiResultCommon):
+    def __init__(self, subcase_id, titles, headers, dxyz, #xyz, scalar,
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 deflects=True, set_max_min=False, uname='NastranGeometry'):
+                 set_max_min=False, uname='NastranGeometry'):
         """
+        Defines a Displacement/Eigenvector result
+
+        Parameters
+        ----------
         subcase_id : int
             the flag that points to self.subcases for a message
         headers : List[str]
             the sidebar word
         titles : List[str]
             the legend title
-        scalars : (nnodes,n) float ndarray
-            #the data to make a contour plot with
-            does nothing
-        scales : ???
-            the deflection scale factors
+
+        #xyz : (nnodes, 3)
+            #the nominal xyz locations
+        #scalars : (nnodes,n) float ndarray
+            ##the data to make a contour plot with
+            #does nothing
+
+        dxyz : (nnodes, 3)
+            the delta xyz values
+
+        scales : List[float]
+            the table (e.g., deflection, SPC Forces) scale factors
+            nominally, this starts as an empty list and is filled later
         data_formats : List[str]
             the type of data result (e.g. '%i', '%.2f', '%.3f')
+        ncolors : int; default=None
+            sets the default for reverting the legend ncolors
+        set_max_min : bool; default=False
+            set default_mins and default_maxs
+
+        Unused
+        ------
+        #deflects : bool; default=True
+            #seems to be an unused parameter...
         uname : str
             some unique name for ...
         """
+        GuiResultCommon.__init__(self)
+
         self.subcase_id = subcase_id
         #assert self.subcase_id > 0, self.subcase_id
 
-        self.xyz = xyz
         self.dxyz = dxyz
         self.dim = len(self.dxyz.shape)
 
         self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
 
-        self.deflects = deflects
+        #self.deflects = deflects
         self.titles = titles
         self.headers = headers
         self.scales = scales
@@ -108,7 +97,7 @@ class DisplacementResults(object):
 
             if not self.is_real:
                 #: stored in degrees
-                self.phase = np.zeros(ntimes)
+                self.phases = np.zeros(ntimes)
         else:
             raise NotImplementedError('dim=%s' % self.dim)
 
@@ -134,7 +123,7 @@ class DisplacementResults(object):
 
         self.min_values = deepcopy(self.default_mins)
         self.max_values = deepcopy(self.default_maxs)
-    #-------------------------------------
+
     # getters
 
     def get_header(self, i, name):
@@ -143,7 +132,9 @@ class DisplacementResults(object):
         return self.headers[i]
 
     def get_phase(self, i, name):
-        return self.phase[i]
+        if self.is_real:
+            return None
+        return self.phases[i]
 
     def get_data_format(self, i, name):
         return self.data_formats[i]
@@ -168,8 +159,10 @@ class DisplacementResults(object):
         self.scales[i] = scale
 
     def set_phase(self, i, name, phase):
+        if self.is_real:
+            return
         #j = self.titles_default.index(name)
-        self.phase[i] = phase
+        self.phases[i] = phase
 
     def set_title(self, i, name, title):
         self.titles[i] = title
@@ -180,9 +173,6 @@ class DisplacementResults(object):
 
     #-------------------------------------
     # default getters
-    def get_default_phase(self, i, name):
-        return 0.0
-
     def get_default_data_format(self, i, name):
         return self.data_formats_default[i]
 
@@ -192,7 +182,8 @@ class DisplacementResults(object):
     def get_nlabels_labelsize_ncolors_colormap(self, i, name):
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
-    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize, ncolors, colormap):
+    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+                                               ncolors, colormap):
         self.nlabels = nlabels
         self.labelsize = labelsize
         self.ncolors = ncolors
@@ -203,6 +194,11 @@ class DisplacementResults(object):
 
     def get_default_scale(self, i, name):
         return self.scales_default[i]
+
+    def get_default_phase(self, i, name):
+        if self.is_real:
+            return None
+        return 0.0
 
     def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
         # TODO: do this right
@@ -215,23 +211,14 @@ class DisplacementResults(object):
     # unmodifyable getters
 
     def get_data_type(self, i, name):
+        """the precision of the data"""
         return self.data_type
 
-    def get_location(self, i, name):
-        return 'node'
-
     def get_vector_size(self, i, name):
+        """the result size"""
         #print(i)
         #j = self.titles_default.index(name)
         return 3
-
-    #-------------------------------------
-
-    def get_methods(self, i):
-        if self.is_real:
-            return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
-        else:
-            return ['node real', 'node imag', 'node magnitude', 'node phase']
 
     def get_plot_value(self, i, name):
         if self.is_real:
@@ -247,12 +234,17 @@ class DisplacementResults(object):
         assert len(dxyz.shape) == 2, dxyz.shape
         return dxyz
 
-    def _get_complex_displacements(self, i):
+    def _get_complex_displacements_by_phase(self, i, phase=0.):
         """
         Get displacements for a complex eigenvector result.
         """
-        theta = np.radians(self.phase[i])
+        theta = np.radians(phase)
         dxyz = self.dxyz[i, :].real * np.cos(theta) + self.dxyz[i, :].imag * np.sin(theta)
+        return dxyz
+
+    def _get_complex_displacements(self, i):
+        """see ``_get_complex_displacements_by_phase``"""
+        dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         return dxyz
 
     def get_result(self, i, name):
@@ -274,32 +266,249 @@ class DisplacementResults(object):
         assert len(dxyz.shape) == 2, dxyz.shape
         return dxyz
 
+    def get_vector_result(self, i, name):
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_real:
+            xyz, deflected_xyz = self.get_vector_result_by_scale_phase(
+                i, name, self.scales[i])
+        else:
+            xyz, deflected_xyz = self.get_vector_result_by_scale_phase(
+                i, name, self.scales[i], self.phases[i])
+        return xyz, deflected_xyz
+
+
+class ForceTableResults(NastranTable):
+    def __init__(self, subcase_id, titles, headers, dxyz, scalar,
+                 scales, data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 set_max_min=False, uname='NastranGeometry'):
+        NastranTable.__init__(
+            self, subcase_id, titles, headers, dxyz, scales,
+            data_formats=data_formats, nlabels=nlabels,
+            labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap, set_max_min=set_max_min,
+            uname=uname)
+
+    def get_methods(self, i):
+        if self.is_real:
+            return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
+        else:
+            return ['node real', 'node imag', 'node magnitude', 'node phase']
+
+    def get_location(self, i, name):
+        """the result type"""
+        return 'node'
+
+    def deflects(self, i, res_name):
+        return False
+
+    def get_vector_result_by_scale_phase(self, i, name, scale, phase=0.):
+        """
+        Gets the real/complex deflection result
+
+        Parameters
+        ----------
+        i : int
+            mode/time/loadstep number
+        name : str
+            unused; useful for debugging
+        scale : float
+            deflection scale factor
+        phase : float; default=0.0
+            phase angle (degrees); unused for real results
+
+        Returns
+        -------
+        xyz : (nnodes, 3) float ndarray
+            the nominal state
+        deflected_xyz : (nnodes, 3) float ndarray
+            the deflected state
+        """
+        xyz = None
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_real:
+            if self.dim == 2:
+                # single result
+                deflected_xyz = self.dxyz
+            elif self.dim == 3:
+                deflected_xyz = self.dxyz[i, :]
+            else:
+                raise NotImplementedError('dim=%s' % self.dim)
+        else:
+            deflected_xyz = self._get_complex_displacements_by_phase(i, phase)
+        assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
+        return xyz, deflected_xyz
+
+
+class DisplacementResults(NastranTable):
+    def __init__(self, subcase_id, titles, headers, xyz, dxyz, scalar,
+                 scales, data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 deflects=True, set_max_min=False, uname='NastranGeometry'):
+        """
+        Defines a Displacement/Eigenvector result
+
+        Parameters
+        ----------
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        headers : List[str]
+            the sidebar word
+        titles : List[str]
+            the legend title
+        xyz : (nnodes, 3)
+            the nominal xyz locations
+        dxyz : (nnodes, 3)
+            the delta xyz values
+        scalars : (nnodes,n) float ndarray
+            #the data to make a contour plot with
+            does nothing
+        scales : List[float]
+            the deflection scale factors
+            nominally, this starts as an empty list and is filled later
+        data_formats : List[str]
+            the type of data result (e.g. '%i', '%.2f', '%.3f')
+        ncolors : int; default=None
+            sets the default for reverting the legend ncolors
+        set_max_min : bool; default=False
+            set default_mins and default_maxs
+
+        Unused
+        ------
+        #deflects : bool; default=True
+            #seems to be an unused parameter...
+        uname : str
+            some unique name for ...
+        """
+        NastranTable.__init__(
+            self, subcase_id, titles, headers, dxyz, scales,
+            data_formats=data_formats, nlabels=nlabels,
+            labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap, set_max_min=set_max_min,
+            uname=uname)
+        #self.subcase_id = subcase_id
+        ##assert self.subcase_id > 0, self.subcase_id
+
+        self.xyz = xyz
+        #self.dxyz = dxyz
+        #self.dim = len(self.dxyz.shape)
+
+        #self.uname = uname
+        ##self.dxyz_norm = norm(dxyz, axis=1)
+
+        #self.deflects = deflects
+        #self.titles = titles
+        #self.headers = headers
+        #self.scales = scales
+        #self.subcase_id = subcase_id
+        #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
+        #self.is_real = True if self.data_type in ['<f4', '<f8'] else False
+        ##print('self.data_type = %r' % self.data_type)
+        #self.is_complex = not self.is_real
+        #self.nlabels = nlabels
+        #self.labelsize = labelsize
+        #self.ncolors = ncolors
+        #self.colormap = colormap
+
+        #self.data_formats = data_formats
+        #self.titles_default = deepcopy(self.titles)
+        #self.headers_default = deepcopy(self.headers)
+        #self.scales_default = deepcopy(self.scales)
+        #self.data_formats_default = deepcopy(self.data_formats)
+        #if self.dim == 2:
+            #ntimes = 1
+            #self.default_mins = zeros(1, dtype=self.dxyz.dtype)
+            #self.default_maxs = zeros(1, dtype=self.dxyz.dtype)
+            #normi = norm(self.dxyz, axis=1)
+            #self.default_mins[0] = normi.min().real
+            #self.default_maxs[0] = normi.max().real
+        #elif self.dim == 3:
+            #ntimes = self.dxyz.shape[0]
+            #self.default_mins = zeros(ntimes)
+            #self.default_maxs = zeros(ntimes)
+            #for itime in range(ntimes):
+                #normi = norm(self.dxyz[itime, :, :], axis=1)
+                #self.default_mins[itime] = normi.min().real
+                #self.default_maxs[itime] = normi.max().real
+
+            #if not self.is_real:
+                ##: stored in degrees
+                #self.phases = np.zeros(ntimes)
+        #else:
+            #raise NotImplementedError('dim=%s' % self.dim)
+
+        #if set_max_min:
+            #self.min_values = deepcopy(self.default_mins)
+            #self.max_values = deepcopy(self.default_maxs)
+        #else:
+            #self.max_values = None
+            #self.min_values = None
+
+    #-------------------------------------
+    # unmodifyable getters
+
+    def deflects(self, i, res_name):
+        return True
+
+    def get_location(self, i, name):
+        """the result type"""
+        return 'node'
+
+    #-------------------------------------
+
+    def get_methods(self, i):
+        if self.is_real:
+            return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
+        else:
+            return ['node real', 'node imag', 'node magnitude', 'node phase']
+
     #@property
     #def scalar(self):
         #return self.dxyz_norm
 
     #def get_scalar(self, i, name):
-        ##print(self.dxyz_norm)
+        #print(self.dxyz_norm)
         #return self.dxyz_norm
 
-    def get_vector_result(self, i, name):
+    def get_vector_result_by_scale_phase(self, i, name, scale, phase=0.):
+        """
+        Gets the real/complex deflection result
+
+        Parameters
+        ----------
+        i : int
+            mode/time/loadstep number
+        name : str
+            unused; useful for debugging
+        scale : float
+            deflection scale factor
+        phase : float; default=0.0
+            phase angle (degrees); unused for real results
+
+        Returns
+        -------
+        xyz : (nnodes, 3) float ndarray
+            the nominal state
+        deflected_xyz : (nnodes, 3) float ndarray
+            the deflected state
+        """
         assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             if self.dim == 2:
                 # single result
-                xyz = self.xyz + self.scales[i] * self.dxyz
+                deflected_xyz = self.xyz + scale * self.dxyz
             elif self.dim == 3:
-                xyz = self.xyz + self.scales[i] * self.dxyz[i, :]
+                deflected_xyz = self.xyz + scale * self.dxyz[i, :]
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
-            dxyz = self._get_complex_displacements(i)
-            xyz = self.xyz + self.scales[i] * dxyz
-
-        assert len(xyz.shape) == 2, xyz.shape
-        return self.xyz, xyz
+            dxyz = self._get_complex_displacements_by_phase(i, phase)
+            deflected_xyz = self.xyz + scale * dxyz
+        assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
+        return self.xyz, deflected_xyz
 
     def __repr__(self):
+        """defines str(self)"""
         msg = 'DisplacementResults\n'
         msg += '    uname=%r\n' % self.uname
         return msg

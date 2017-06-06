@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, ravel
@@ -64,7 +64,7 @@ class RealTriaxArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
@@ -128,6 +128,7 @@ class RealTriaxArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, nid, radial, azimuthal, axial, shear, omax, oms, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, int)
         self._times[self.itime] = dt
         self.element_node[self.itotal, :] = [eid, nid]
@@ -135,7 +136,7 @@ class RealTriaxArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return ['<%s>\n' % self.__class__.__name__,
                     '  ntimes: %i\n' % self.ntimes,
@@ -161,6 +162,7 @@ class RealTriaxArray(OES_Object):
         n = len(headers)
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()

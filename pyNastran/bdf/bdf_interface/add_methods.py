@@ -60,10 +60,6 @@ class AddMethods(BDFAttributes):
             self.params[key] = param
             self._type_to_id_map[param.type].append(key)
 
-    #def add_node(self, node, allow_overwrites=False):
-        #"""deprecated"""
-        #self._add_node_object(node, allow_overwrites)
-
     def _add_node_object(self, node, allow_overwrites=False):
         """adds a GRID card"""
         key = node.nid
@@ -77,6 +73,13 @@ class AddMethods(BDFAttributes):
             assert key > 0, 'nid=%s node=%s' % (key, node)
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
+
+    def _add_seqgp_object(self, seqgp):
+        """adds an SPOINT card"""
+        if self.seqgp is None:
+            self.seqgp = seqgp
+        else:
+            self.seqgp.append(seqgp)
 
     def _add_point_object(self, point, allow_overwrites=False):
         """adds a POINT card"""
@@ -138,9 +141,34 @@ class AddMethods(BDFAttributes):
             self.elements[key] = elem
             self._type_to_id_map[elem.type].append(key)
 
+    def _add_ao_object(self, elem_flag, allow_overwrites=False):
+        """adds a CBARAO"""
+        key = elem_flag.eid
+        assert key > 0, 'eid=%s must be positive; elem_flag=\n%s' % (key, elem_flag)
+        if key in self.ao_element_flags and not allow_overwrites:
+            if not elem_flag._is_same_card(self.ao_element_flags[key]):
+                #self._duplicate_elements.append(elem_flag)
+                #if self._stop_on_duplicate_error:
+                    #self.pop_parse_errors()
+                assert elem_flag.eid not in self.ao_element_flags, 'eid=%s\nold_ao_element=\n%snew_ao_element=\n%s' % (
+                    elem_flag.eid, self.ao_element_flags[elem_flag.eid], elem_flag)
+        else:
+            self.ao_element_flags[key] = elem_flag
+            self._type_to_id_map[elem_flag.type].append(key)
+
     def _add_doptprm_object(self, doptprm, comment=''):
         """adds a DOPTPRM"""
         self.doptprm = doptprm
+
+    def _add_nsm_object(self, nsm, allow_overwrites=False):
+        """adds a nsm object to a nsm set"""
+        key = nsm.sid
+        assert key > 0, 'sid=%s must be positive; nsm=\n%s' % (key, nsm)
+        if key in self.nsms:
+            self.nsms[key].append(nsm)
+        else:
+            self.nsms[key] = [nsm]
+            self._type_to_id_map[nsm.type].append(key)
 
     def _add_mass_object(self, mass, allow_overwrites=False):
         key = mass.eid
@@ -483,14 +511,6 @@ class AddMethods(BDFAttributes):
             self.bcs[key] = [bc]
             self._type_to_id_map[bc.type].append(key)
 
-    #def add_constraint_mpcadd_object(self, constraint):
-        #raise RuntimeError('is this used?')
-        #key = constraint.conid
-        #if key in self.mpcadds:
-            #raise RuntimeError('must have unique MPCADD IDs')
-        #self.mpcadds[key] = constraint
-        #self._type_to_id_map[constraint.type].append(key)
-
     def _add_constraint_mpc_object(self, constraint):
         key = constraint.conid
         if key in self.mpcs:
@@ -499,20 +519,21 @@ class AddMethods(BDFAttributes):
             self.mpcs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
-    #def add_constraint_spcadd_object(self, constraint):
-        #raise RuntimeError('is this used?')
-        #key = constraint.conid
-        #if key in self.spcadds:
-            #raise RuntimeError('must have unique SPCADD IDs')
-        #self.spcadds[key] = constraint
-        #self._type_to_id_map[constraint.type].append(key)
-
     def _add_constraint_spc_object(self, constraint):
         key = constraint.conid
         if key in self.spcs:
             self.spcs[key].append(constraint)
         else:
             self.spcs[key] = [constraint]
+            self._type_to_id_map[constraint.type].append(key)
+
+    def _add_constraint_spcoff_object(self, constraint):
+        """dumb key, but good enough..."""
+        key = constraint.type
+        if key in self.spcoffs:
+            self.spcoffs[key].append(constraint)
+        else:
+            self.spcoffs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
     def _add_sesuport_object(self, se_suport):
@@ -685,7 +706,7 @@ class AddMethods(BDFAttributes):
     def _add_monpnt_object(self, monitor_point):
         """adds an MONPNT object"""
         key = monitor_point.name
-        assert key not in self.monitor_points, '\nmonitor_point=\n%soldMNTPNT=\n%s' % (
+        assert key not in self.monitor_points, '\nmonitor_point=\n%soldMOTPNT=\n%s' % (
             monitor_point, self.monitor_points[key])
         self.monitor_points.append(monitor_point)
         self._type_to_id_map[monitor_point.type].append(len(self.monitor_points) - 1)
@@ -891,9 +912,13 @@ class AddMethods(BDFAttributes):
         key = freq.sid
         assert key > 0
         if key in self.frequencies:
-            self.frequencies[key].add_frequency_object(freq)
+            freq0 = self.frequencies[key][0]
+            if freq0.type == 'FREQ' and freq.type == 'FREQ':
+                freq0.add_frequency_object(freq)
+            else:
+                self.frequencies[key].append(freq)
         else:
-            self.frequencies[key] = freq
+            self.frequencies[key] = [freq]
             self._type_to_id_map[freq.type].append(key)
 
     def _add_set_object(self, set_obj):
@@ -961,6 +986,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[set_obj.type].append(key)
 
     def _add_table_object(self, table):
+        """adds a TABLES1, TABLEST object"""
         key = table.tid
         assert key not in self.tables, '\nTable=\n%s old_table=\n%s' % (
             table, self.tables[key])
@@ -969,6 +995,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def _add_tabled_object(self, table):
+        """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
         key = table.tid
         assert key not in self.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
             table, self.tables_d[key])
@@ -977,6 +1004,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def _add_tablem_object(self, table):
+        """adds a TABLEM1, TABLEM2, TABLEM3, TABLEM4 object"""
         key = table.tid
         assert key not in self.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (
             table, self.tables_m[key])
@@ -985,6 +1013,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def _add_table_sdamping_object(self, table):
+        """adds a TABDMP1 object"""
         key = table.tid
         assert key not in self.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
             table, self.tables_sdamping[key])
@@ -993,6 +1022,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[table.type].append(key)
 
     def _add_random_table_object(self, table):
+        """adds a TABRND1, TABRNDG object"""
         key = table.tid
         assert key not in self.random_tables, '\nTable=\n%s old=\n%s' % (
             table, self.random_tables[key])

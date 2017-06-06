@@ -1,12 +1,12 @@
 from __future__ import print_function
-from six import  iteritems
-from six.moves import zip
 import os
 import unittest
 from math import sqrt
-
-from numpy import array, array_equiv, array_equal, allclose
 from itertools import count
+
+from six import  iteritems
+from six.moves import zip
+from numpy import array, array_equiv, array_equal, allclose
 
 
 #class DummyWriter(object):
@@ -32,7 +32,7 @@ model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 
 def run_model(bdf_name=None, op2_name=None, f06_name=None,
               op4_name=None, dynamic_vars=None, f06_has_weight=True,
-              vectorized=False, encoding=None):
+              vectorized=False, encoding=None):  # pragma: no cover
     outputs = []
     if bdf_name:
         bdf = BDF(debug=False, log=None)
@@ -61,7 +61,7 @@ def run_model(bdf_name=None, op2_name=None, f06_name=None,
 
     if op4_name:
         op4 = OP4()
-        op4.read_op4(op4_name, matrixNames=None, precision='default')
+        op4.read_op4(op4_name, matrix_names=None, precision='default')
         outputs.append(op4)
 
     assert len(outputs) > 0
@@ -70,7 +70,7 @@ def run_model(bdf_name=None, op2_name=None, f06_name=None,
 
 class TestF06(unittest.TestCase):
 
-    def test_blade2dv_fatal_1(self):
+    def test_blade2dv_fatal_1(self):  # pragma: no cover
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         f06 = F06(debug=False, log=None)
         with self.assertRaises(AttributeError):
@@ -78,7 +78,7 @@ class TestF06(unittest.TestCase):
         with self.assertRaises(FatalError):
             f06.read_f06(f06_filename)
 
-    def test_blade2dv_fatal_2(self):
+    def test_blade2dv_fatal_2(self):  # pragma: no cover
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = run_model(bdfname2, dynamic_vars=dynamic_vars)
@@ -101,42 +101,43 @@ class TestF06(unittest.TestCase):
 
         MO = f06.grid_point_weight.MO
         #print("MO %s" % MO)
-        MO_exact = array(
-            [[  1.22085800e-01,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00,  5.33146300e-01,  -1.22767700e-05],
-             [  0.00000000e+00,   1.22085800e-01,   0.00000000e+00,  -5.33146300e-01,  0.00000000e+00,   1.57186600e-01],
-             [  0.00000000e+00,   0.00000000e+00,   1.22085800e-01,   1.22767700e-05, -1.57186600e-01,   0.00000000e+00],
-             [  0.00000000e+00,  -5.33146300e-01,   1.22767700e-05,   3.20227600e+00, -7.13340800e-06,  -6.83890800e-01],
-             [  5.33146300e-01,   0.00000000e+00,  -1.57186600e-01,  -7.13340800e-06,  3.45033400e+00,  -7.35886500e-05],
-             [ -1.22767700e-05,   1.57186600e-01,   0.00000000e+00,  -6.83890800e-01, -7.35886500e-05,   2.50287600e-01]])
+        MO_exact = array([
+            [ 1.220858e-1,  0.000000e+0,  0.000000e+0,  0.000000e+0,  5.331463e-1, -1.227677e-5],
+            [ 0.000000e+0,  1.220858e-1,  0.000000e+0, -5.331463e-1,  0.000000e+0,  1.571866e-1],
+            [ 0.000000e+0,  0.000000e+0,  1.220858e-1,  1.227677e-5, -1.571866e-1,  0.000000e+0],
+            [ 0.000000e+0, -5.331463e-1,  1.227677e-5,  3.202276e+0, -7.133408e-6, -6.838908e-1],
+            [ 5.331463e-1,  0.000000e+0, -1.571866e-1, -7.133408e-6,  3.450334e+0, -7.358865e-5],
+            [-1.227677e-5,  1.571866e-1,  0.000000e+0, -6.838908e-1, -7.358865e-5,  2.502876e-1]])
 
 
         S = f06.grid_point_weight.S
-        S_exact = array([[ 1.,  0.,  0.],
-                         [ 0.,  1.,  0.],
-                         [ 0.,  0.,  1.]])
+        S_exact = array([[1., 0., 0.],
+                         [0., 1., 0.],
+                         [0., 0., 1.]])
         #print("S %s" % S)
 
         mass = f06.grid_point_weight.mass
-        mass_exact = array([ 0.1220858,  0.1220858,  0.1220858])
+        mass_exact = array([0.1220858, 0.1220858, 0.1220858])
         self.assertTrue(array_equiv(mass, mass_exact))
         #print("mass = %s" % mass)
 
         cg = f06.grid_point_weight.cg
         cg_exact = array(
-            [[  0.00000000e+00,   1.00558600e-04,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  1.28751000e+00,   0.00000000e+00,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  1.28751000e+00,   1.00558600e-04,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00]])
+            [[0.000000e+00, 1.005586e-04, 4.366981e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [1.287510e+00, 0.000000e+00, 4.366981e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [1.287510e+00, 1.005586e-04, 0.000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.000000e+00, 0.0e+00, 0.0e+00, 0.0e+00]])
         #print("cg = %s", cg)
         self.assertTrue(array_equiv(cg, cg_exact))
 
         IS = f06.grid_point_weight.IS
         #print("IS = %s" % IS)
-        IS_exact = array([[  8.74036600e-01,  -8.67305300e-06,  -2.54028500e-03],
-                          [ -8.67305300e-06,   9.19714300e-01,   1.99762300e-05],
-                          [ -2.54028500e-03,   1.99762300e-05,   4.79082500e-02]])
+        IS_exact = array([
+            [ 8.74036600e-01, -8.67305300e-06, -2.54028500e-03],
+            [-8.67305300e-06,  9.19714300e-01,  1.99762300e-05],
+            [-2.54028500e-03,  1.99762300e-05,  4.79082500e-02]])
 
         IQ = f06.grid_point_weight.IQ
         #print("IQ %s" % IQ)
@@ -144,7 +145,7 @@ class TestF06(unittest.TestCase):
         msg = 'IQ=%s\nexact=%s' % (str(IQ), str(IQ_exact))
         self.assertTrue(array_equiv(IQ, IQ_exact), msg=msg)
 
-    def test_blade2dv_fatal_3(self):
+    def test_blade2dv_fatal_3(self):  # pragma: no cover
         f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = run_model(bdfname2, dynamic_vars=dynamic_vars)
@@ -164,49 +165,50 @@ class TestF06(unittest.TestCase):
 
         MO = f06.grid_point_weight.MO
         #print("MO = %s" % MO)
-        MO_exact = array(
-            [[  1.22085800e-01,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00,  5.33146300e-01,  -1.22767700e-05],
-             [  0.00000000e+00,   1.22085800e-01,   0.00000000e+00,  -5.33146300e-01,  0.00000000e+00,   1.57186600e-01],
-             [  0.00000000e+00,   0.00000000e+00,   1.22085800e-01,   1.22767700e-05, -1.57186600e-01,   0.00000000e+00],
-             [  0.00000000e+00,  -5.33146300e-01,   1.22767700e-05,   3.20227600e+00, -7.13340800e-06,  -6.83890800e-01],
-             [  5.33146300e-01,   0.00000000e+00,  -1.57186600e-01,  -7.13340800e-06,  3.45033400e+00,  -7.35886500e-05],
-             [ -1.22767700e-05,   1.57186600e-01,   0.00000000e+00,  -6.83890800e-01, -7.35886500e-05,   2.50287600e-01]])
+        MO_exact = array([
+            [ 1.220858e-1,  0.000000e+0,  0.000000e+0,  0.000000e+0,  5.331463e-1, -1.227677e-5],
+            [ 0.000000e+0,  1.220858e-1,  0.000000e+0, -5.331463e-1,  0.000000e+0,  1.571866e-1],
+            [ 0.000000e+0,  0.000000e+0,  1.220858e-1,  1.227677e-5, -1.571866e-1,  0.000000e+0],
+            [ 0.000000e+0, -5.331463e-1,  1.227677e-5,  3.202276e+0, -7.133408e-6, -6.838908e-1],
+            [ 5.331463e-1,  0.000000e+0, -1.571866e-1, -7.133408e-6,  3.450334e+0, -7.358865e-5],
+            [-1.227677e-5,  1.571866e-1,  0.000000e+0, -6.838908e-1, -7.358865e-5,  2.502876e-1]])
 
 
         S = f06.grid_point_weight.S
-        S_exact = array([[ 1.,  0.,  0.],
-                         [ 0.,  1.,  0.],
-                         [ 0.,  0.,  1.]])
+        S_exact = array([[1., 0., 0.],
+                         [0., 1., 0.],
+                         [0., 0., 1.]])
         #print("S %s" % S)
 
         mass = f06.grid_point_weight.mass
-        mass_exact = array([ 0.1220858,  0.1220858,  0.1220858])
+        mass_exact = array([0.1220858, 0.1220858, 0.1220858])
         self.assertTrue(array_equiv(mass, mass_exact))
         #print("mass = %s" % mass)
 
         cg = f06.grid_point_weight.cg
         cg_exact = array(
-            [[  0.00000000e+00,   1.00558600e-04,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  1.28751000e+00,   0.00000000e+00,   4.36698100e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  1.28751000e+00,   1.00558600e-04,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
-             [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00]])
+            [[0.000000e+00, 1.005586e-04, 4.3669810e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [1.287510e+00, 0.000000e+00, 4.3669810e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [1.287510e+00, 1.005586e-04, 0.0000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.0000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.0000000e+00, 0.0e+00, 0.0e+00, 0.0e+00],
+             [0.000000e+00, 0.000000e+00, 0.0000000e+00, 0.0e+00, 0.0e+00, 0.0e+00]])
         #print("cg = %s" % cg)
         self.assertTrue(array_equiv(cg, cg_exact))
 
         IS = f06.grid_point_weight.IS
         #print("IS  %s" % IS)
-        IS_exact = array([[  8.74036600e-01,  -8.67305300e-06,  -2.54028500e-03],
-                          [ -8.67305300e-06,   9.19714300e-01,   1.99762300e-05],
-                          [ -2.54028500e-03,   1.99762300e-05,   4.79082500e-02]])
+        IS_exact = array([
+            [ 8.74036600e-01, -8.67305300e-06, -2.54028500e-03],
+            [-8.67305300e-06,  9.19714300e-01,  1.99762300e-05],
+            [-2.54028500e-03,  1.99762300e-05,  4.79082500e-02]])
 
         IQ = f06.grid_point_weight.IQ
         #print("IQ %s" % IQ)
-        IQ_exact = array([[ 0.04790044, 0.9197143, 0.8740444 ]])
+        IQ_exact = array([[0.04790044, 0.9197143, 0.8740444]])
         self.assertTrue(array_equiv(IQ, IQ_exact))
 
-    def test_complex_tets_1(self):
+    def test_complex_tets_1(self):  # pragma: no cover
         bdfname = None
         bdfname = os.path.join(model_path, 'complex', 'tet10', 'Simple_Example.bdf')
         f06name = os.path.join(model_path, 'complex', 'tet10', 'simple_example.f06')
@@ -225,7 +227,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.chexa_strain) == 0, len(f06.chexa_strain)
         assert len(f06.chexa_stress) == 0, len(f06.chexa_stress)
 
-    def test_beam_modes_1(self):
+    def test_beam_modes_1(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
         op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m1.op2')
         f06name = os.path.join(model_path, 'beam_modes', 'beam_modes.f06')
@@ -234,7 +236,7 @@ class TestF06(unittest.TestCase):
         assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
         assert f06.Title == 'SIMPLE BEAM EXAMPLE', '%r' % f06.Title
 
-        subtitle_label= f06.iSubcaseNameMap[1]
+        subtitle_label = f06.iSubcaseNameMap[1]
         assert subtitle_label[0] == 'MODES', subtitle_label
         assert subtitle_label[1] == 2, subtitle_label  # 2=modal
         assert subtitle_label[2] == '', subtitle_label
@@ -250,7 +252,7 @@ class TestF06(unittest.TestCase):
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
-    def test_beam_modes_2(self):
+    def test_beam_modes_2(self):  # pragma: no cover
         bdfname = None
         op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m2.op2')
         f06name = None
@@ -261,7 +263,7 @@ class TestF06(unittest.TestCase):
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     #@unittest.expectedFailure - fails if subtitle check is different
-    def test_bar3truss_1(self):
+    def test_bar3truss_1(self):  # pragma: no cover
         bdfname = None
         op2name = None
         titles = ['', '', '', 'THIS_IS_A_BAD_TITLE', '']
@@ -302,7 +304,7 @@ class TestF06(unittest.TestCase):
             assert len(f06.chexa_stress) == 0, len(f06.chexa_stress)
 
 
-    def test_fsi_1(self):
+    def test_fsi_1(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'fsi', 'fsi.bdf')
         f06name = os.path.join(model_path, 'fsi', 'fsi.f06')
         op2name = os.path.join(model_path, 'fsi', 'fsi.op2')
@@ -311,7 +313,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.eigenvectors) == 1, len(f06.eigenvectors)  # 1 is correct
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)  # 1 is correct
 
-    def test_cbush_1(self):
+    def test_cbush_1(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'cbush', 'cbush.dat')
         f06name = os.path.join(model_path, 'cbush', 'cbush.f06')
         op2name = os.path.join(model_path, 'cbush', 'cbush.op2')
@@ -325,7 +327,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.cbush_strain) == 0, len(f06.cbush_strain)  # 1 is correct
         assert len(f06.cbush_stress) == 0, len(f06.cbush_stress)  # 1 is correct
 
-    def test_solid_shell_bar_1(self):
+    def test_solid_shell_bar_1(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         f06name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.f06')
         op2name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
@@ -370,7 +372,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.chexa_stress) == 1, len(f06.chexa_stress)
 
     #@unittest.expectedFailure  # fails
-    def test_solid_shell_bar_2(self):
+    def test_solid_shell_bar_2(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
         f06name = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.f06')
         op2name = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.op2')
@@ -426,7 +428,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.chexa_strain) == 1, len(f06.chexa_strain)    # 1 is correct
         assert len(f06.chexa_stress) == 1, len(f06.chexa_stress)    # 1 is correct
 
-    def test_failure_index(self):
+    def test_failure_index(self):  # pragma: no cover
         bdfname = None
         f06name1 = os.path.join(test_path, 'failure_index_test.f06')
         f06name2 = os.path.join(test_path, 'failure_index_test.test_f06.f06')
@@ -457,7 +459,7 @@ class TestF06(unittest.TestCase):
         #T3 = disp.translations[frequency][21][2]
         #self.assertEqual(T3, -1.456074E+02 + -6.035482E+00j)  # T3
 
-    def test_plate_openmdao(self):
+    def test_plate_openmdao(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'plate', 'plate_openmdao.bdf')
         f06name = os.path.join(model_path, 'plate', 'plate.f06')
         op2name = os.path.join(model_path, 'plate', 'plate.op2')
@@ -499,7 +501,7 @@ class TestF06(unittest.TestCase):
         with self.assertRaises(SyntaxError):
             bdf3 = run_model(bdfname, dynamic_vars=dynamic_vars)
 
-    def test_complex_displacement(self):
+    def test_complex_displacement(self):  # pragma: no cover
         bdfname = None
         f06name1 = os.path.join(test_path, 'complex_displacement.f06')
         f06name2 = os.path.join(test_path, 'complex_displacement.test_f06.f06')
@@ -522,7 +524,7 @@ class TestF06(unittest.TestCase):
         #f06.write_f06(f06name2, quiet=True)
         #os.remove(f06name2)
 
-    def test_eigenvectors1(self):
+    def test_eigenvectors1(self):  # pragma: no cover
         bdfname = None
         f06name = os.path.join(test_path, 'test_no_rotations.f06')
         op2name = None
@@ -539,7 +541,7 @@ class TestF06(unittest.TestCase):
         self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][2], array([0., 0., 0.])))
         self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][4], array([0., 0., 0.])))
 
-    def test_eigenvectors2(self):
+    def test_eigenvectors2(self):  # pragma: no cover
         bdfname = None
         f06name = os.path.join(test_path, 'test_with_rotations.f06')
         op2name = None
@@ -556,13 +558,13 @@ class TestF06(unittest.TestCase):
         self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][2], array([1., 1., 1.])))
         self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][4], array([1., 1., 1.])))
 
-    def test_plate_vonmises(self):
+    def test_plate_vonmises(self):  # pragma: no cover
         bdfname = os.path.join(model_path, 'plate', 'plate.bdf')
         f06name = os.path.join(model_path, 'plate', 'plate.f06')
         op2name = os.path.join(model_path, 'plate', 'plate.op2')
 
         bdf, op2, f06 = run_model(bdfname, op2name, f06name, f06_has_weight=False)
-        self.assertEqual(bdf.properties[1].t,  0.3, 't=%s' % bdf.properties[1].t)
+        self.assertEqual(bdf.properties[1].t, 0.3, 't=%s' % bdf.properties[1].t)
 
         self.assertEqual(len(bdf.nodes), 36, bdf.nodes)
         self.assertEqual(len(bdf.elements), 25, bdf.elements)
@@ -578,14 +580,14 @@ class TestF06(unittest.TestCase):
             if stress.is_von_mises():
                 #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'VM_Stress'))
                 #vonMises = 'VON MISES'
-                for eid,ovm in sorted(iteritems(stress.ovmShear)):
+                for eid, ovm in sorted(iteritems(stress.ovmShear)):
                     for nid, ovmi in sorted(iteritems(ovm)):
                         for ilayer, ovmii in enumerate(ovmi):
                             print("%8s %8s %6s %8s" % (eid, nid, ilayer, ovmii))
             else:
                 #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'MaxShear'))
                 #vonMises = 'MAX SHEAR'
-                for eid,ovm in sorted(iteritems(stress.ovmShear)):
+                for eid, ovm in sorted(iteritems(stress.ovmShear)):
                     for nid, ovmi in sorted(iteritems(ovm)):
                         ovmi = ovm[nid]
                         for ilayer, ovmii in enumerate(ovmi):

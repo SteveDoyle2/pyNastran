@@ -49,7 +49,7 @@ class PDAMP(DamperProperty):
         self.b = b
 
     @classmethod
-    def add_card(cls, card, icard, comment=''):
+    def add_card(cls, card, icard=0, comment=''):
         noffset = icard * 2
         pid = integer(card, 1 + noffset, 'pid')
 
@@ -58,6 +58,16 @@ class PDAMP(DamperProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PDAMP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         b = data[1]
         return PDAMP(pid, b, comment=comment)
@@ -68,7 +78,7 @@ class PDAMP(DamperProperty):
     def _verify(self, xref=True):
         pid = self.Pid()
         b = self.B()
-        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert isinstance(pid, integer_types), 'pid=%r\n%s' % (pid, str(self))
         assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
 
     def raw_fields(self):
@@ -110,6 +120,16 @@ class PDAMP5(DamperProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PDAMP5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         b = double(card, 3, 'b')
@@ -118,6 +138,16 @@ class PDAMP5(DamperProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PDAMP5 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         b = data[2]
@@ -182,6 +212,16 @@ class PDAMPT(DamperProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PDAMPT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         tbid = integer_or_blank(card, 2, 'tbid', 0)
         assert len(card) <= 3, 'len(PDAMPT card) = %i\ncard=%s' % (len(card), card)
@@ -189,13 +229,23 @@ class PDAMPT(DamperProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PDAMPT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         tbid = data[1]
         return PDAMPT(pid, tbid, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
 
     def cross_reference(self, model):
         """
@@ -257,6 +307,16 @@ class PVISC(DamperProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PVISC card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         ce = data[1]
         cr = data[2]
@@ -265,12 +325,12 @@ class PVISC(DamperProperty):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self, model):
+    def uncross_reference(self):
         pass
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
 
     def raw_fields(self):
         list_fields = ['PVISC', self.pid, self.ce, self.cr]

@@ -1,10 +1,9 @@
 from __future__ import print_function
 
-try:
-    import numexpr as ne
-except ImportError:
-    pass
-from numpy import array, zeros
+#try:
+    #import numexpr as ne
+#except ImportError:
+    #pass
 
 
 class ScalarResult(object):

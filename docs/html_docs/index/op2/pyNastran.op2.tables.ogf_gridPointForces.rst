@@ -1,25 +1,33 @@
 ogf_gridPointForces Package
 ===========================
 
-:mod:`ogf_Objects` Module
+:mod:`ogf_objects` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects
+.. inheritance-diagram:: pyNastran.op2.tables.ogf_gridPointForces.ogf_objects
 
-.. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects
+.. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogf_objects
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`ogs_surfaceStresses` Module
----------------------------------
+:mod:`ogpf` Module
+------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.ogf_gridPointForces.ogs_surfaceStresses
+.. inheritance-diagram:: pyNastran.op2.tables.ogf_gridPointForces.ogpf
 
-.. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogs_surfaceStresses
+.. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogpf
     :members:
-    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`ogs_surface_stresses` Module
+----------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.ogf_gridPointForces.ogs_surface_stresses
+
+.. automodule:: pyNastran.op2.tables.ogf_gridPointForces.ogs_surface_stresses
+    :members:
     :undoc-members:
     :show-inheritance:
 

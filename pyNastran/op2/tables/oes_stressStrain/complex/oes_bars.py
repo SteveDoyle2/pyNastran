@@ -1,14 +1,16 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 import numpy as np
 from numpy import concatenate, zeros
 try:
     import pandas as pd
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
+from pyNastran.f06.f06_formatting import write_imag_floats_13e
 
 
 class ComplexBarArray(OES_Object):
@@ -40,7 +42,8 @@ class ComplexBarArray(OES_Object):
         return True
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = 1
@@ -62,7 +65,7 @@ class ComplexBarArray(OES_Object):
         self.element = zeros(self.ntotal, 'int32')
 
         # the number is messed up because of the offset for the element's properties
-        if not self.nelements * nnodes == self.ntotal:
+        if self.nelements * nnodes != self.ntotal:
             msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
                                                                            self.nelements, nnodes,
                                                                            self.nelements * nnodes,
@@ -75,7 +78,8 @@ class ComplexBarArray(OES_Object):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -131,7 +135,7 @@ class ComplexBarArray(OES_Object):
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -153,6 +157,7 @@ class ComplexBarArray(OES_Object):
             msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
 
         msg.append('  CBAR\n  ')

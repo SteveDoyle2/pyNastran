@@ -10,8 +10,8 @@ from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
-
-from pyNastran.converters.ugrid.ugrid_reader import read_ugrid
+from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
+from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, '../', 'models')
@@ -22,9 +22,10 @@ class TestNastran(unittest.TestCase):
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
 
         size = 8
-        debug = True
-        model = read_bdf(bdf_filename, log=None, debug=debug)
-        log = model.log
+        debug = False
+        log = get_logger(log=None, level='warning', encoding='utf-8')
+        model = read_bdf(bdf_filename, log=log, debug=debug)
+        #log = model.log
         #model.get_element_faces()
         skin_bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_skin.bdf')
         model.write_skin_solid_faces(skin_bdf_filename, write_solids=True,
@@ -52,7 +53,8 @@ class TestNastran(unittest.TestCase):
         """tests nastran_to_stl"""
         bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
         stl_filename = os.path.join(model_path, 'plate', 'plate.stl')
-        nastran_to_stl(bdf_filename, stl_filename, is_binary=False)
+        log = get_logger(log=None, level='warning', encoding='utf-8')
+        nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=log)
 
 if __name__ == '__main__':  # pragma: no cover
     import time

@@ -1,7 +1,7 @@
 #pylint: disable=C0301,C0111
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import RealSPCForces  # ,ComplexSPCForcesObject
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import RealMPCForces  # ,ComplexMPCForcesObject
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealLoadVector
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import RealSPCForcesArray
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import RealMPCForcesArray
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealLoadVectorArray
 
 class OQG(object):
     def _read_f06_table(self, data_types, debug=False):
@@ -36,7 +36,7 @@ class OQG(object):
             self.load_vectors[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            spc = RealLoadVector(data_code, is_sort1, isubcase, dt)
+            spc = RealLoadVectorArray(data_code, is_sort1, isubcase, dt)
             spc.add_f06_data(data, transient)
             self.load_vectors[isubcase] = spc
         self.iSubcases.append(isubcase)
@@ -62,7 +62,7 @@ class OQG(object):
             self.spc_forces[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            spc = RealSPCForces(data_code, is_sort1, isubcase, dt)
+            spc = RealSPCForcesArray(data_code, is_sort1, isubcase, dt)
             spc.add_f06_data(data, transient)
             self.spc_forces[isubcase] = spc
         self.iSubcases.append(isubcase)
@@ -86,7 +86,7 @@ class OQG(object):
             self.mpc_forces[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            mpc = RealMPCForces(data_code, is_sort1, isubcase, dt)
+            mpc = RealMPCForcesArray(data_code, is_sort1, isubcase, dt)
             mpc.add_f06_data(data, transient)
             self.mpc_forces[isubcase] = mpc
         self.iSubcases.append(isubcase)

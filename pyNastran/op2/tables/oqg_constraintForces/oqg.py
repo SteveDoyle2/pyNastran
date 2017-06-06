@@ -8,7 +8,7 @@ This file defines the OUG Table, which contains:
    - FLUX = ALL
 """
 from six import integer_types
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
     RealSPCForcesArray, ComplexSPCForcesArray,
@@ -69,13 +69,13 @@ class OQG(OP2Common):
         elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
-            ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            ## eigenvalue
+            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
             self.update_mode_cycle('mode_cycle')
             self.data_names = self.apply_data_code_value('data_names',
-                                                         ['mode', 'eigr', 'mode_cycle'])
+                                                         ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
@@ -461,6 +461,33 @@ class OQG(OP2Common):
             raise RuntimeError(self.code_information())
         return n
 
+    def _read_oqg_spc_ato(self, data, ndata):
+        """
+        table_code = ???
+        """
+        if self.thermal == 0:
+            if self.table_code in [3]:
+                assert self.table_name in [b'OQGATO2'], 'self.table_name=%r' % self.table_name
+                result_name = 'spc_forces_ATO'
+            #elif self.table_code in [603]:
+                #assert self.table_name in [b'OQGATO2'], 'self.table_name=%r' % self.table_name
+                #result_name = 'mpc_forces_PSD'
+            else:
+                print(self.table_code)
+                raise RuntimeError(self.code_information())
+
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            storage_obj = getattr(self, result_name)
+            n = self._read_random_table(data, ndata, result_name, storage_obj,
+                                        RealSPCForcesArray, 'node',
+                                        random_code=self.random_code)
+        else:
+            raise RuntimeError(self.code_information())
+        assert n is not None, n
+        return n
+
     def _read_oqg_spc_crm(self, data, ndata):
         """
         table_code = 3/???/?10/?11
@@ -487,7 +514,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3, 903]:
-                assert self.table_name in ['OQGNO1', 'OQGNO2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQGNO1', b'OQGNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'spc_forces_NO'
                 storage_obj = self.spc_forces_NO
                 if self._results.is_not_saved(result_name):
@@ -508,7 +535,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMPSD1', 'OQMPSD2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMPSD1', b'OQMPSD2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_PSD'
             elif self.table_code in [603]:
                 assert self.table_name in [b'OQMPSD1', b'OQMPSD2'], 'self.table_name=%r' % self.table_name
@@ -535,7 +562,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMATO1', 'OQMATO2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMATO1', b'OQMATO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_ATO'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
@@ -562,7 +589,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMCRM1', 'OQMCRM2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMCRM1', b'OQMCRM2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_CRM'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
@@ -589,7 +616,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMRMS1', 'OQMRMS2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMRMS1', b'OQMRMS2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_RMS'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
@@ -616,7 +643,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [39]:
-                assert self.table_name in [b'OQMNO1', 'OQMNO2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQMNO1', b'OQMNO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'mpc_forces_CRM'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name

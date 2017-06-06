@@ -1,8 +1,8 @@
 panair Package
-===============
+==============
 
 :mod:`agps` Module
-------------------------
+------------------
 
 .. inheritance-diagram:: pyNastran.converters.panair.agps
 
@@ -11,42 +11,82 @@ panair Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`panairGrid` Module
--------------------------------
+:mod:`panair_grid` Module
+-------------------------
 
-.. inheritance-diagram:: pyNastran.converters.panair.panairGrid
+.. inheritance-diagram:: pyNastran.converters.panair.panair_grid
 
-.. automodule:: pyNastran.converters.panair.panairGrid
+.. automodule:: pyNastran.converters.panair.panair_grid
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`panairGridPatch` Module
+:mod:`panair_grid_patch` Module
+-------------------------------
+
+.. inheritance-diagram:: pyNastran.converters.panair.panair_grid_patch
+
+.. automodule:: pyNastran.converters.panair.panair_grid_patch
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`panair_io` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.converters.panair.panair_io
+
+.. automodule:: pyNastran.converters.panair.panair_io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`panair_write` Module
+--------------------------
+
+.. inheritance-diagram:: pyNastran.converters.panair.panair_write
+
+.. automodule:: pyNastran.converters.panair.panair_write
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`test_panair` Module
+-------------------------
+
+.. inheritance-diagram:: pyNastran.converters.panair.test_panair
+
+.. automodule:: pyNastran.converters.panair.test_panair
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`test_panair_gui` Module
 -----------------------------
 
-.. inheritance-diagram:: pyNastran.converters.panair.panairGridPatch
+.. inheritance-diagram:: pyNastran.converters.panair.test_panair_gui
 
-.. automodule:: pyNastran.converters.panair.panairGridPatch
+.. automodule:: pyNastran.converters.panair.test_panair_gui
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`panairIO` Module
--------------------------------
+:mod:`to_p3d` Module
+--------------------
 
-.. inheritance-diagram:: pyNastran.converters.panair.panairIO
+.. inheritance-diagram:: pyNastran.converters.panair.to_p3d
 
-.. automodule:: pyNastran.converters.panair.panairIO
+.. automodule:: pyNastran.converters.panair.to_p3d
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`panairWrite` Module
--------------------------------
+:mod:`to_p3d` Module
+--------------------
 
-.. inheritance-diagram:: pyNastran.converters.panair.panairWrite
+.. inheritance-diagram:: pyNastran.converters.panair.to_p3d
 
-.. automodule:: pyNastran.converters.panair.panairWrite
+.. automodule:: pyNastran.converters.panair.to_p3d
     :members:
     :undoc-members:
     :show-inheritance:

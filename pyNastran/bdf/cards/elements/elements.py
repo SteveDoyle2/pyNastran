@@ -28,10 +28,13 @@ class CFAST(Element):
         9:'xs', 10:'ys', 11:'zs',
     }
 
-    def __init__(self, eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs, comment=''):
+    def __init__(self, eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,
+                 xs=None, ys=None, zs=None, comment=''):
         Element.__init__(self)
         if comment:
             self.comment = comment
+        if pid is None:
+            pid = eid
         self.eid = eid
         self.pid = pid
         self.Type = Type
@@ -44,8 +47,31 @@ class CFAST(Element):
         self.ys = ys
         self.zs = zs
 
+    def validate(self):
+        if self.Type not in ['PROP', 'ELEM']:
+            msg = 'CFAST; eid=%s Type=%r must be in [PROP, ELEM]' % (self.eid, self.Type)
+            raise TypeError(msg)
+        if(self.gs is None and
+           (self.ga is None or self.gb is None) and
+           (self.xs is None or self.ys is None or self.zs is None)):
+            msg = ('CFAST; eid=%s; gs=%s is not an integer or\n'
+                   '              [ga=%s, gb=%s] are not integers or \n'
+                   '              [xs=%s, ys=%s, zs=%s] are not floats' % (
+                       self.eid, self.gs, self.ga, self.gb, self.xs, self.ys, self.zs))
+            raise ValueError(msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CFAST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         Type = string(card, 3, 'Type')
@@ -59,8 +85,8 @@ class CFAST(Element):
         zs = double_or_blank(card, 11, 'zs')
         assert len(card) <= 12, 'len(CFAST card) = %i\ncard=%s' % (len(card), card)
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
-        return CFAST(eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
-                     comment=comment)
+        return CFAST(eid, pid, Type, ida, idb, gs=gs, ga=ga, gb=gb,
+                     xs=xs, ys=ys, zs=zs, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -147,28 +173,80 @@ class CFAST(Element):
 
 
 class CGAP(Element):
+    """
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    |  1   |  2  |  3  |  4  |  5  |  6  |  7  |   8  |  9  |
+    +======+=====+=====+=====+=====+=====+=====+======+=====+
+    | CGAP | EID | PID | GA  | GB  | X1  | X2  |  X3  | CID |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    | CGAP | 17  |  2  | 110 | 112 | 5.2 | 0.3 | -6.1 |     |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+
+    or
+
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    |  1   |  2  |  3  |  4  |  5  |  6  |  7  |   8  |  9  |
+    +======+=====+=====+=====+=====+=====+=====+======+=====+
+    | CGAP | EID | PID | GA  | GB  | GO  |     |      | CID |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    | CGAP | 17  |  2  | 110 | 112 | 13  |     |      |     |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    """
     type = 'CGAP'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
     }
 
-    def __init__(self, eid, pid, ga, gb, x, g0, cid, comment=''):
+    def __init__(self, eid, pid, nids, x, g0, cid=None, comment=''):
         """
-        # .. todo:: not done...
+        Creates a CGAP card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        pid : int
+            Property ID (PGAP)
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
+        x : List[float, float, float]
+            Components of the orientation vector,
+            from GA, in the displacement coordinate system at GA
+        g0 : int
+            GO Alternate method to supply the orientation vector using
+            grid point GO. Direction of is from GA to GO
+        cid : int; default=None
+            Element coordinate system identification number.
+            CID must be specified if GA and GB are coincident
+            (distance from GA to GB < 10^-4)
+        comment : str; default=''
+            a comment for the card
         """
         Element.__init__(self)
         if comment:
             self.comment = comment
+        if pid is None:
+            pid = eid
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.x = x
         self.g0 = g0
         self.cid = cid
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CGAP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer_or_blank(card, 3, 'ga')
@@ -191,10 +269,20 @@ class CGAP(Element):
             x = [None, None, None]
             cid = None
         assert len(card) <= 9, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
-        return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
+        return CGAP(eid, pid, [ga, gb], x, g0, cid=cid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CGAP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         ga = data[2]
@@ -207,7 +295,7 @@ class CGAP(Element):
         cid = data[8]
         if cid == -1:
             cid = None
-        return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
+        return CGAP(eid, pid, [ga, gb], x, g0, cid=cid, comment=comment)
 
     def _verify(self, xref=True):
         cid = self.Cid()
@@ -215,11 +303,11 @@ class CGAP(Element):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert cid is None or isinstance(cid, int), 'cid=%r\n%s' % (cid, str(self))
-        assert isinstance(eid, int), 'eid=%r\n%s' % (eid, str(self))
-        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert cid is None or isinstance(cid, integer_types), 'cid=%r\n%s' % (cid, str(self))
+        assert isinstance(eid, integer_types), 'eid=%r\n%s' % (eid, str(self))
+        assert isinstance(pid, integer_types), 'pid=%r\n%s' % (pid, str(self))
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid_ref.type in ['PGAP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
@@ -267,10 +355,6 @@ class CGAP(Element):
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -355,6 +439,16 @@ class CRAC2D(CrackElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CRAC2D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -377,6 +471,16 @@ class CRAC2D(CrackElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CRAC2D card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -387,15 +491,11 @@ class CRAC2D(CrackElement):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
 
     def get_edge_ids(self):
         return []
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -428,6 +528,16 @@ class CRAC3D(CrackElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CRAC3D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         # required 1-10, 19-28
@@ -439,6 +549,16 @@ class CRAC3D(CrackElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CRAC3D card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -448,15 +568,11 @@ class CRAC3D(CrackElement):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
 
     def get_edge_ids(self):
         return []
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -475,6 +591,12 @@ class PLOTEL(BaseCard):
     """
     Defines a 1D dummy element used for plotting.
 
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
     +--------+-----+-----+-----+
     |   1    |  2  |  3  |  4  |
     +========+=====+=====+=====+
@@ -487,6 +609,16 @@ class PLOTEL(BaseCard):
     }
 
     def __init__(self, eid, nodes, comment=''):
+        """
+        Adds a PLOTEL card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : List[int, int]
+            Unique GRID point IDs
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -495,6 +627,16 @@ class PLOTEL(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOTEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         nodes = [
             integer(card, 2, 'g1'),
@@ -505,6 +647,16 @@ class PLOTEL(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOTEL card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         nodes = [data[1], data[2]]
         return PLOTEL(eid, nodes, comment=comment)

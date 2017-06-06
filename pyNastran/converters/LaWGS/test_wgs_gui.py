@@ -1,17 +1,17 @@
 import os
+import unittest
 
-from pyNastran.gui.testing_methods import GUIMethods
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'LaWGS')
 
-import unittest
 
-class LaWGS_GUI(LaWGS_IO, GUIMethods):
+class LaWGS_GUI(LaWGS_IO, FakeGUIMethods):
     def __init__(self):
-        GUIMethods.__init__(self)
+        FakeGUIMethods.__init__(self)
         LaWGS_IO.__init__(self)
 
 

@@ -1,14 +1,19 @@
+"""
+defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
+"""
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
 from struct import unpack, Struct
 from six import b
 from six.moves import range
 import numpy as np
 
-from pyNastran.bdf.cards.nodes import GRID
+from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
 from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,
     CORD2R, CORD2C, CORD2S,
     CORD3G)
+from pyNastran.bdf.cards.elements.damper import CVISC
+from pyNastran.bdf.cards.elements.mass import CMASS2
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class GEOM1(GeomCommon):
@@ -54,13 +59,13 @@ class GEOM1(GeomCommon):
 
             (2301,  23, 304): ['CSUPER',  self._read_fake],  # record 8
             (5501,  55, 297): ['CSUPEXT', self._read_fake],  # record 9
-            (1627,  16, 463): ['EXTRN',   self._read_fake],  # record 10
-            (6101,  61, 388): ['FEEDGE',  self._read_fake],  # record 11
-            (6601,  66, 392): ['GMCURVE', self._read_fake],  # record 12
-            (6201,  62, 389): ['FEFACE',  self._read_fake],  # record 13
-            (6001,  60, 377): ['POINT',   self._read_fake],  # record 14
-            (10101,101, 394): ['GMSURF',  self._read_fake],  # record 15
-            (6401,  64, 402): ['GMCORD',  self._read_fake],  # record 16
+            (1627,  16, 463): ['EXTRN',   self._read_extrn],  # record 10
+            (6101,  61, 388): ['FEEDGE',  self._read_feedge],  # record 11
+            (6601,  66, 392): ['GMCURVE', self._read_gmcurve],  # record 12
+            (6201,  62, 389): ['FEFACE',  self._read_feface],  # record 13
+            (6001,  60, 377): ['POINT',   self._read_point],  # record 14
+            (10101,101, 394): ['GMSURF',  self._read_gmsurf],  # record 15
+            (6401,  64, 402): ['GMCORD',  self._read_gmcord],  # record 16
             # 17 - GRID  (above)
             (1527, 15, 466): ['SEBNDRY', self._read_fake],  # record 18
             (1427, 14, 465): ['SEBULK',  self._read_fake],  # record 19
@@ -82,8 +87,8 @@ class GEOM1(GeomCommon):
             (5801,   58, 324): ['SUPUP', self._read_fake],  # record 33 - CSUPUP in NX; SUPUP in MSC
             (14101, 141, 403): ['SWLDPRM', self._read_fake],  # record 34
 
-            (1101,   11,  66): ['CMASS2', self._read_fake],  # record
-            (3901,   39,  50): ['CVISC', self._read_fake],  # record
+            (1101,   11,  66): ['CMASS2', self._read_cmass2],  # record
+            (3901,   39,  50): ['CVISC', self._read_cvisc],  # record
             (13301, 133, 509): ['', self._read_fake],  # record
             (1127,   11, 461) : ['SELOAD', self._read_fake],  # record NX
             #(4501, 45, 1120001) : ['', self._read_fake],  # record
@@ -266,5 +271,90 @@ class GEOM1(GeomCommon):
 
     def _read_seqgp(self, data, n):
         """(5301,53,4) - the marker for Record 27"""
-        self.log.info('skipping SEQGP in GEOM1\n')
+        s = Struct(b(self._endian + '2i'))
+        nentries = (len(data) - n) // 8
+        for i in range(nentries):
+            edata = data[n:n + 8]  # 2*4
+            out = s.unpack(edata)
+            # (nid, seid) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  SEQGP=%s\n' % str(out))
+            seqgp = SEQGP.add_op2_data(out)
+            self._add_seqgp_object(seqgp)
+            n += 8
+        self._increase_card_count('SEQGP', nentries)
+        return n
+
+    def _read_point(self, data, n):
+        """
+        POINT(6001,60,377)
+        """
+        s = Struct(b(self._endian + '2i3f'))
+        nentries = (len(data) - n) // 20
+        for i in range(nentries):
+            edata = data[n:n + 20]  # 5*4
+            out = s.unpack(edata)
+            # (nid, cid, x1, x2, x3) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  POINT=%s\n' % str(out))
+            point = POINT.add_op2_data(out)
+            self._add_point_object(point)
+            n += 20
+        self._increase_card_count('POINT', nentries)
+        return n
+
+    def _read_cmass2(self, data, n):
+        s = Struct(b(self._endian + 'if4i'))
+        nentries = (len(data) - n) // 24
+        for i in range(nentries):
+            edata = data[n:n + 24]  # 6*4
+            out = s.unpack(edata)
+            # (eid, mass, g1, g2, c1, c2) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CMASS2=%s\n' % str(out))
+            element = CMASS2.add_op2_data(out)
+            self.add_op2_element(element)
+            n += 24
+        self._increase_card_count('CMASS2', nentries)
+        return n
+        #return len(data)
+
+    def _read_cvisc(self, data, n):
+        s = Struct(b(self._endian + '4i'))
+        nentries = (len(data) - n) // 16
+        for i in range(nentries):
+            edata = data[n:n + 16]  # 4*4
+            out = s.unpack(edata)
+            # (eid, pid, n1, n2) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CVISC=%s\n' % str(out))
+            element = CVISC.add_op2_data(out)
+            self.add_op2_element(element)
+            n += 16
+        self._increase_card_count('CVISC', nentries)
+        return n
+
+
+    def _read_extrn(self, data, n):
+        self.log.info('skipping EXTRN in GEOM1\n')
+        return len(data)
+
+    def _read_feedge(self, data, n):
+        self.log.info('skipping FEEDGE in GEOM1\n')
+        return len(data)
+
+    def _read_gmcurve(self, data, n):
+        self.log.info('skipping GMCURVE in GEOM1\n')
+        return len(data)
+
+    def _read_feface(self, data, n):
+        self.log.info('skipping FEFACE in GEOM1\n')
+        return len(data)
+
+    def _read_gmsurf(self, data, n):
+        self.log.info('skipping GMSURF in GEOM1\n')
+        return len(data)
+
+    def _read_gmcord(self, data, n):
+        self.log.info('skipping GMCORD in GEOM1\n')
         return len(data)

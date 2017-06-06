@@ -11,13 +11,91 @@ Introduction
 
 The Graphical User Interface (GUI) looks like:
 
-.. image:: ../../../pyNastran/gui/qt.png
+.. image:: ../../../pyNastran/gui/images/qt.png
 
 A somewhat messy, but more featured image:
 
 .. image:: ../../../pyNastran/gui/images/eigenvectors_groups_legend.png
 
 The GUI also has a sidebar and transient support.
+
+
+Purpose
+=======
+The pyNastran GUI was originally developed to solve a data validation problem.
+It's hard to validate that things like coordinate systems were correct if you
+can't look at the geometry in a native format.  As time went on, niche features
+that were needed (e.g., aero panels) that were not supported natively in
+Patran 2005, were added.  The goal is not to replace a code like Patran, but
+complement it.
+
+Since the intial development, the GUI has become significantly more capable
+by adding features such as displacements and forces, so the need for a code like
+Patran has decreased, but will not be eliminated.
+
+
+Advantages of pyNastranGUI
+--------------------------
+ - command line interface for loading models
+ - simple scripting
+ - nice looking models
+ - intuitive rotation
+ - niche features
+   - aero panels
+   - aero splines
+   - aero spline points
+   - control surfaces
+ - custom results from a CSV file
+ - 64 bit support
+   - Patran 2005 can't read in models that pyNastranGUI can
+   - not an advantage for newer versions
+
+
+Advantages of Patran
+--------------------
+ - CAD geometry support (e.g., IGES, Parasolid)
+ - geometry creation (e.g., points, surfaces)
+ - meshing
+ - edit materials/properties
+ - much better picking support
+ - much better groups
+ - better use of memory
+ - grid point forces
+ - many more...
+
+
+Purpose of additional formats
+=============================
+Over time, pyNastran has also added converter and GUI support for additional
+formats.  Nastran is not just once piece of the analysis puzzle and there is
+a need for niche engineering formats.
+
+While, you could convert a Cart3d model (a simple triangulation) to another
+format like Nastran, you would need to map the geometry/result quantity of
+interest (e.g., Mach Number) to something like Pressure.  That's unintuitive
+and also requires writing an ill-defined format converter.  It's nice to load
+it natively as you can also automatically create other quantities (e.g., the
+bounding CFD box, free edges).
+
+Finally, adding support for alternate formats drives GUI development.  The model
+reload functionality was added to address loading the latest time step of a Usm3d
+model.  It was repurposed to reload the geometry for other formats.  This is very
+useful when creating aero panels and you want to see your changes.  The groups
+functionality benefits all formats.
+
+
+Additonal formats include:
+
+   - panair
+   - cart3d
+   - stl
+   - tecplot
+   - AFLR
+    - bsurf
+    - surf
+    - ugrid
+   - usm3d
+
 
 Setup Note
 ==========
@@ -28,9 +106,15 @@ If you download the source, make sure you follow the `Installation Guide
 <https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use
 **setup.py develop** and not **setup.py install**.
 
-Python 2.7 with ``vtk==5.10.1`` will probably give you the best looking GUI.
-VTK 6 and 7 probably still have some issues.
-The GUI in Python 3 won't save your settings.
+Python 2.7 with ``vtk==5.10.1`` or ``vtk==6.3.0`` will give you the best looking
+GUI.
+
+VTK 7 issues:
+ - edges can't be colored black.
+
+Python 3 issues:
+ - the GUI in Python 3 won't save your settings (e.g., background color).
+
 
 Running the GUI
 ===============
@@ -79,7 +163,7 @@ To view the options:
       --groups                        enables groups
       --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)
       -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)
-    
+
     Info:
       -q, --quiet    prints debug messages (default=True)
       -h, --help     show this help message and exit
@@ -112,25 +196,29 @@ Features
    * custom CSV results
 
  * deflection results
+ * force results
 
  * command line interface
  * scripting capability
  * high resolution screenshot
- * snap to axis
- * change Background Color
  * show/hide elements
- * results may be shown alongside geometry
 
    * can edit properties (e.g. color/opacity/size) using
      ``Edit Geometry Properties...`` on the ``View`` menu
-   * additional points may be added with the ``-u`` option
-   * attach simplistic custom geometry
 
- * legend is more robust
- * clipping customization menu
+ * legend menu
  * save/load view menu
+
+Minor Features
+==============
+ * snap to axis
+ * clipping customization menu
  * edges flippable from menu
  * change label color/size menu
+ * change background color
+ * attach simplistic custom geometry
+ * additional points may be added with the ``-u`` option
+
 
 Nastran Specific Features
 =========================
@@ -178,12 +266,13 @@ Some of the results include:
         * normal
         * shell offset
         * PBAR/PBEAM/PBARL/PBEAML type
-        * maximum interior angle
+        * element quality (min/max interior angle, skew angle, taper ratio, area ratio)
 
-     * results (real only)
-
+     * real results
          * stress, strain
          * displacement, eigenvector, temperature, SPC forces, MPC forces, load vector
+     * complex results
+         * displacement, eigenvector
 
    * **Cart3d** ASCII/binary input (\*.tri); ASCII output (\*.triq)
 
@@ -242,12 +331,34 @@ number format (e.g. float precision) and deflection scale.  Defaults are stored,
 they may always be gone back to.  The geometry will update when Apply/OK is clicked.
 OK/Cancel will close the window.
 
+Animation of Displacment/Mode Shapes
+====================================
+
+The animation menu is a sub-menu found on the Legend Menu.  It supports:
+ - Scale Factor
+ - Total Time (sec)
+ - Frames/Second
+ - Resolution Scale
+ - Output Directory
+ - Filename
+ - scale/phase animation
+ - one/two sided animations
+ - infinite looping
+ - delete images
+ - make gif
+ - TODO: animate time/frequency/loadstep
+ - TODO: progate results based on result locking
+
+You must load the animation menu when a displacement-like result is active.
+You may then change to a scalar result to show during the animation.
+
 
 Picking Results
 ===============
-Hover over an element and press the ``p`` key.  A label will appear.  This label will
-appear at the centroid of an elemental result or the closest node to the selected location.
-The value for the current result quantity will appear on the model.
+Hover over an element and press the ``p`` key.  A label will appear.  This label
+will appear at the centroid of an elemental result or the closest node to the
+selected location.  The value for the current result quantity will appear on the
+model.  You may also use the button.
 
 .. image:: ../../../pyNastran/gui/images/picking_results.png
 
@@ -259,7 +370,7 @@ Text color may also be changed from the ``View`` menu.
 Focal Point
 ===========
 Hover over an element and press the ``f`` key.  The model will now rotate around
-that point.
+that point.  You may also use the button.
 
 
 Model Clipping
@@ -371,9 +482,10 @@ The geometry may be modified from the ``Edit Geometry Properties`` menu.
 
 Custom Scalar Results
 =====================
-Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and length is
-important.  Results must be in nodal/elemental sorted order.  The following example
-has 3 scalar values with 2 locations.  The model must have **only** two nodes.
+Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
+length is important.  Results must be in nodal/elemental sorted order.
+The following example has 3 scalar values with 2 locations.  The model must
+have **only** two nodes.
 
 .. code-block:: console
 
@@ -414,12 +526,14 @@ For example, you can:
  - high resolution screenshots
  - model introspection
 
+
 Using the scripting menu
 ========================
-The scripting menu allows for custom code and experimentation to be written without
-loading a script from a file.  All valid Python is accepted.
+The scripting menu allows for custom code and experimentation to be written
+without loading a script from a file.  All valid Python is accepted.
 Scripting commands should start with ``self.`` as they're left off from the menu.
 Local variables do not need this.
+
 
 Command line scripting
 ======================

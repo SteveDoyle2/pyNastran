@@ -56,6 +56,16 @@ class PROD(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PROD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = double(card, 3, 'A')
@@ -67,6 +77,16 @@ class PROD(Property):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PROD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         A = data[2]
@@ -122,20 +142,6 @@ class PROD(Property):
         msg = ' which is required by PROD mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
-
-    def write_code_aster(self, icut, iface, istart):  # PROD
-        msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" % (self.pid)
-        msg += "              SECTION='CERCLE',  # circular section\n"
-        msg += "              CARA=('R')   # radius\n"
-        #msg += "              VALE=(%g),),\n" % (self.Radius())
-
-        msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A', 'JX')\n"
-        msg += "              VALE=(%g, %g),\n"  %(self.Area(), self.J())
-        msg += "                    CARA='VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return (msg, icut, iface, istart)
 
     def raw_fields(self):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
@@ -196,6 +202,16 @@ class PTUBE(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PTUBE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')
@@ -207,6 +223,16 @@ class PTUBE(Property):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PTUBE card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         OD1 = data[2]

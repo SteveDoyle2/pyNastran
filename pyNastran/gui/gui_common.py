@@ -5,13 +5,16 @@ from __future__ import division, unicode_literals, print_function
 # standard library
 import sys
 import os.path
+import time
 import datetime
 import cgi #  html lib
 import traceback
 from copy import deepcopy
 from collections import OrderedDict
+from itertools import count
+from math import ceil
 
-from six import string_types, iteritems, itervalues, PY2
+from six import string_types, iteritems, itervalues, PY2, PY3
 from six.moves import range
 
 import numpy as np
@@ -45,12 +48,14 @@ from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowIn
 
 import pyNastran
 
+from pyNastran.bdf.utils import write_patran_syntax_dict
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
-from pyNastran.gui.gui_utils import save_file_dialog, open_file_dialog
+from pyNastran.gui.gui_utils.dialogs import save_file_dialog, open_file_dialog
+from pyNastran.gui.gui_utils.write_gif import write_gif
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -60,22 +65,24 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
 from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
 from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
-from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
-from pyNastran.gui.gui_interface.modify_label_properties.interface import on_set_labelsize_color_menu
-from pyNastran.gui.gui_interface.groups_modify import GroupsModify, Group
+from pyNastran.gui.gui_interface.preferences.interface import set_preferences_menu
+from pyNastran.gui.gui_interface.groups_modify.interface import on_set_modify_groups
+from pyNastran.gui.gui_interface.groups_modify.groups_modify import Group
 
 
 from pyNastran.gui.menus.results_sidebar import Sidebar
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 
+from pyNastran.gui.styles.area_pick_style import AreaPickStyle
 from pyNastran.gui.styles.zoom_style import ZoomStyle
 from pyNastran.gui.styles.probe_style import ProbeResultStyle
+from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
-from pyNastran.gui.utils import load_csv, load_deflection_csv, load_user_geom
+from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
 
 from pyNastran.converters.nastran.displacements import DisplacementResults
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -136,13 +143,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             QMainWindow.__init__(self)
             GuiCommon.__init__(self, **kwds)
-            pass
         else:
             raise NotImplementedError(qt_version)
 
         fmt_order = kwds['fmt_order']
         inputs = kwds['inputs']
-        html_logging = kwds['html_logging']
+
+        if inputs['log'] is not None:
+            html_logging = False
+        else:
+            html_logging = kwds['html_logging']
         del kwds['html_logging']
 
         #if qt_version == 4:  # TODO: remove this???
@@ -186,11 +196,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     @property
     def legend_shown(self):
+        """determines if the legend is shown"""
         return self.scalar_bar.is_shown
 
     @property
     def scalarBar(self):
         return self.scalar_bar.scalar_bar
+
+    def hide_legend(self):
+        """hides the legend"""
+        #self.scalar_bar.is_shown = False
+        self.scalarBar.VisibilityOff()
+
+    def show_legend(self):
+        """shows the legend"""
+        #self.scalar_bar.is_shown = True
+        self.scalarBar.VisibilityOn()
 
     @property
     def color_function(self):
@@ -274,8 +295,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._build_menubar()
         #self._hide_menubar()
 
-        # right sidebar
-        self.res_dock.hide()
         if self.run_vtk:
             self.build_vtk_frame()
 
@@ -293,10 +312,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #=========== Logging widget ===================
 
-        if self.html_logging:
+        if self.html_logging is True:
             self.log_dock_widget = ApplicationLogWidget(self)
             self.log_widget = self.log_dock_widget.log_widget
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
+        else:
+            self.log_widget = self.log
 
         if self.execute_python:
             self.python_dock_widget = PythonConsoleWidget(self)
@@ -311,16 +332,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command(txt)
         try:
             exec(txt)
-        except TypeError:
-            print(type(txt))
-            raise
+        except TypeError as e:
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
+            self.log_error(str(txt))
+            self.log_error(str(type(txt)))
+            return
         except Exception as e:
             #self.log_error(traceback.print_stack(f))
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
             self.log_error(str(e))
             self.log_error(str(txt))
-            raise
             return
         if clear:
             self.python_dock_widget.enter_data.clear()
@@ -360,18 +384,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
                             print(msg)
                         return
 
-        name = 'main'
         for i, input_filename in enumerate(input_filenames):
             if i == 0:
                 name = 'main'
             else:
                 name = input_filename
-            print('name =', name)
-            self.name = name
             #form = inputs['format'].lower()
             is_failed = self.on_load_geometry(
                 infile_name=input_filename, name=name, geometry_format=form,
-                plot=plot, raise_error=False)
+                plot=plot, raise_error=True)
         self.name = 'main'
         print('keys =', self.nid_maps.keys())
 
@@ -412,37 +433,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
             file_tools = [
 
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
-                ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
-                ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
+                ('load_geometry', 'Load &Geometry...', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
+                ('load_results', 'Load &Results...', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
 
-                ('load_csv_user_geom', 'Load CSV User Geometry', '', None, 'Loads custom geometry file', self.on_load_user_geom),
-                ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads CSV points ', self.on_load_csv_points),
+                ('load_csv_user_geom', 'Load CSV User Geometry...', '', None, 'Loads custom geometry file', self.on_load_user_geom),
+                ('load_csv_user_points', 'Load CSV User Points...', 'user_points.png', None, 'Loads CSV points', self.on_load_csv_points),
 
-                ('load_csv_nodal', 'Load CSV Nodal Results', '', None, 'Loads a custom nodal results file', self.on_load_nodal_results),
-                ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),
-                ('load_csv_nodal_deflection', 'Load CSV (Nodal) Deflection Results', '', None, 'Loads a custom deflection results file', self.on_load_deflection_results),
-                ('script', 'Run Python script', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+                ('load_custom_result', 'Load Custom Results...', '', None, 'Loads a custom results file', self.on_load_custom_results),
+
+                ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ]
 
             tools = file_tools + [
-                ('back_color', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
-                #('label_color', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
-                ('text_color', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
+                ('label_clear', 'Clear Current Labels', '', None, 'Clear current labels', self.clear_labels),
+                ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
-                ('label_clear', 'Clear current labels', '', None, 'Clear current labels', self.clear_labels),
-                ('label_modify', 'Modify label color/size', '', None, 'Edit Label Properties', self.on_set_labelsize_color),
-                ('label_reset', 'Clear all labels', '', None, 'Clear all labels', self.reset_labels),
-
-                ('picker_modify', 'Modify picker size', '', None, 'Edit Label Properties', self.on_set_picker_size),
-
-                ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
-                ('clipping', 'Set clipping', '', None, 'Set Clipping', self.set_clipping),
+                ('legend', 'Modify Legend...', 'legend.png', None, 'Set Legend', self.set_legend),
+                ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.set_clipping),
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-                ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
-                ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.modify_group),
+                ('geo_properties', 'Edit Geometry Properties...', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
+                ('modify_groups', 'Modify Groups...', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
 
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
@@ -463,13 +476,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
                 ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
-                ('screenshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
-                ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
+                ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
+                ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
-                ('camera_reset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
-                ('reload', 'Reload model', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
+                ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
+                ('reload', 'Reload Model...', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
 
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
+                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
 
                 ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
                 ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
@@ -489,11 +503,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 # new
                 ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center', self.on_rotation_center),
 
-                ('measure_distance', 'Measure Distance', 'tmeasure_distance.png', None, 'Measure the distance between two nodes', self.on_measure_distance),
+                ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.on_measure_distance),
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
+                ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
+                ('text_size_increase', 'Increase Text Size', 'text_up.png', 'Ctrl+Plus', 'Increase Text Size', self.on_increase_text_size),
+                ('text_size_decrease', 'Decrease Text Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Text Size', self.on_decrease_text_size),
+                ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set Text Size', self.set_preferences_menu),
 
-                # TODO: not done...
+                # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.on_area_pick),
             ]
         # print('version =', vtk.VTK_VERSION, self.vtk_version)
@@ -507,6 +525,50 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
         self.tools = tools
         self.checkables = checkables
+
+    def on_increase_text_size(self):
+        self.on_set_font_size(self.font_size + 1)
+
+    def on_decrease_text_size(self):
+        self.on_set_font_size(self.font_size - 1)
+
+    def on_set_font_size(self, font_size, show_command=True):
+        """changes the font size"""
+        is_failed = True
+        if not isinstance(font_size, int):
+            self.log_error('font_size=%r must be an integer; type=%s' % (
+                font_size, type(font_size)))
+            return is_failed
+        if font_size < 6:
+            font_size = 6
+        if self.font_size == font_size:
+            return False
+        self.font_size = font_size
+        font = QtGui.QFont()
+        font.setPointSize(self.font_size)
+        self.setFont(font)
+
+        #self.toolbar.setFont(font)
+        self.menu_file.setFont(font)
+        self.menu_view.setFont(font)
+        self.menu_window.setFont(font)
+        self.menu_help.setFont(font)
+
+        if self._legend_window_shown:
+            self._legend_window.set_font_size(font_size)
+        if self._clipping_window_shown:
+            self._clipping_window.set_font_size(font_size)
+        if self._edit_geometry_properties_window_shown:
+            self._edit_geometry_properties.set_font_size(font_size)
+        if self._modify_groups_window_shown:
+            self._modify_groups_window.set_font_size(font_size)
+        if self._preferences_window_shown:
+            self._preferences_window.set_font_size(font_size)
+
+        #self.menu_scripts.setFont(font)
+        self.log_command('on_set_font_size(%s)' % font_size)
+
+        return False
 
     def deprecated(self, old_name, new_name, deprecated_version):
         deprecated(old_name, new_name, deprecated_version, levels=[-1])
@@ -561,11 +623,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
-            'back_color', 'text_color', '',
-            'label_modify', 'label_clear', 'label_reset', 'picker_modify', '',
+            'set_preferences', '',
+            'label_clear', 'label_reset', '',
             'legend', 'geo_properties',
-            ['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
-             'anti_alias_4', 'anti_alias_8',],
+            #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
+            #'anti_alias_4', 'anti_alias_8',],
         ]
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id',
@@ -585,16 +647,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         menu_file = [
             'load_geometry', 'load_results', '',
-            'load_csv_nodal', 'load_csv_elemental', 'load_csv_nodal_deflection', '',
+            'load_custom_result', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'zoom',
                          'rotate_clockwise', 'rotate_cclockwise',
-                         'rotation_center', 'measure_distance', 'probe_result', #'area_pick',
+                         'rotation_center', 'measure_distance', 'probe_result', 'area_pick',
 
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
+        hidden_tools = ('cycle_results', 'rcycle_results',
+                        'text_size_increase', 'text_size_decrease')
 
         menu_items = []
         if create_menu_bar:
@@ -605,7 +669,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 (self.menu_help, ('about',)),
                 (self.menu_scripts, scripts),
                 (self.toolbar, toolbar_tools),
-                (self.menu_hidden, ('cycle_results',)),
+                (self.menu_hidden, hidden_tools),
                 # (self.menu_scripts, ()),
                 #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
             ]
@@ -722,16 +786,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         for tool in tools:
             (name, txt, icon, shortcut, tip, func) = tool
             if name in self.actions:
-                self.log_error('trying to create a duplicate action %r' % nam)
+                self.log_error('trying to create a duplicate action %r' % name)
                 continue
             #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
-                  #% (nam, txt, icon, shortcut, tip, func))
+                  #% (name, txt, icon, shortcut, tip, func))
             #if icon is None:
-                #print("missing_icon = %r!!!" % nam)
+                #print("missing_icon = %r!!!" % name)
                 #icon = os.path.join(icon_path, 'no.png')
 
             if icon is None:
-                print("missing_icon = %r!!!" % nam)
+                print("missing_icon = %r!!!" % name)
                 ico = None
                 #print(print_bad_path(icon))
             #elif not "/" in icon:
@@ -763,21 +827,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.actions['reswidget'].setStatusTip("Show/Hide results selection")
         return self.actions
 
-    def logg_msg(self, typ, msg):
+    def _logg_msg(self, typ, msg):
         """
         Add message to log widget trying to choose right color for it.
 
         Parameters
         ----------
+        typ : str
+            {DEBUG, INFO, GUI ERROR, COMMAND, WARNING}
         msg : str
             message to be displayed
         """
         if not self.html_logging:
             print(typ, msg)
             return
-        _fr = sys._getframe(4)  # jump to get out of the logger code
-        n = _fr.f_lineno
-        fn = os.path.basename(_fr.f_globals['__file__'])
 
         if typ == 'DEBUG' and not self.show_debug:
             return
@@ -788,15 +851,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
         elif typ == 'COMMAND' and not self.show_command:
             return
 
-        if typ in ['GUI', 'COMMAND']:
-            msg = '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg)
+        _fr = sys._getframe(4)  # jump to get out of the logger code
+        n = _fr.f_lineno
+        filename = os.path.basename(_fr.f_globals['__file__'])
+
+        #if typ in ['GUI', 'COMMAND']:
+        msg = '   fname=%-25s lineNo=%-4s   %s\n' % (filename, n, msg)
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
 
         #message colors
         dark_orange = '#EB9100'
-        cols = {
+        colors = {
             "GUI" : "blue",
             "COMMAND" : "green",
             "GUI ERROR" : "Crimson",
@@ -806,8 +873,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         }
         msg = msg.rstrip().replace('\n', '<br>')
         msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
-        if typ in cols:
-            msg = '<font color="%s"> %s </font>' % (cols[typ], msg)
+        if typ in colors:
+            msg = '<font color="%s"> %s </font>' % (colors[typ], msg)
 
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
@@ -820,48 +887,38 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_mutex.unlock()
 
     def log_info(self, msg):
-        """ Helper funtion: log a messaage msg with a 'INFO:' prefix """
-        assert msg is not None, msg
+        """ Helper funtion: log a message msg with a 'INFO:' prefix """
+        if msg is None:
+            msg = 'msg is None; must be a string'
         self.log.simple_msg(msg, 'INFO')
 
     def log_debug(self, msg):
-        """ Helper funtion: log a messaage msg with a 'DEBUG:' prefix """
-        assert msg is not None, msg
+        """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
+        if msg is None:
+            msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'DEBUG')
 
     def log_command(self, msg):
-        """ Helper funtion: log a messaage msg with a 'COMMAND:' prefix """
-        assert msg is not None, msg
+        """ Helper funtion: log a message msg with a 'COMMAND:' prefix """
+        if msg is None:
+            msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'COMMAND')
 
     def log_error(self, msg):
-        """ Helper funtion: log a messaage msg with a 'GUI ERROR:' prefix """
-        assert msg is not None, msg
+        """ Helper funtion: log a message msg with a 'GUI ERROR:' prefix """
+        if msg is None:
+            msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'GUI ERROR')
 
     def log_warning(self, msg):
-        """ Helper funtion: log a messaage msg with a 'WARNING:' prefix """
-        assert msg is not None, msg
+        """ Helper funtion: log a message msg with a 'WARNING:' prefix """
+        if msg is None:
+            msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'WARNING')
-
-    def change_background_color(self):
-        """ Choose a background color """
-        self._change_color('background', self.background_color, self.set_background_color)
-
-    def change_label_color(self):
-        """ Choose a label color """
-        self._change_color('label', self.label_color, self.set_label_color)
-
-    def change_text_color(self):
-        """ Choose a text color """
-        self._change_color('text', self.text_color, self.set_text_color)
-
-    def _change_color(self, msg, rgb_color_floats, call_func):
-        c = [int(255 * i) for i in rgb_color_floats]
-        col = QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a %s color" % msg)
-        if col.isValid():
-            color = col.getRgbF()[:3]
-            call_func(color)
 
     def set_background_color(self, color):
         """
@@ -874,13 +931,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         self.background_color = color
         self.rend.SetBackground(*color)
+        self.vtk_interactor.Render()
         self.log_command('set_background_color(%s, %s, %s)' % color)
 
     def set_text_color(self, color):
-        """Set the text color"""
+        """
+        Set the text color
+
+        Parameters
+        ----------
+        color : (float, float, float)
+            RGB values as floats
+        """
         self.text_color = color
         for text_actor in itervalues(self.text_actors):
             text_actor.GetTextProperty().SetColor(color)
+        self.vtk_interactor.Render()
         self.log_command('set_text_color(%s, %s, %s)' % color)
 
     def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
@@ -944,25 +1010,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
         axes.SetTotalLength(scale, scale, scale)
         if Type == 'xyz':
             if label:
-                xlabel = 'x%s' % label
-                ylabel = 'y%s' % label
-                zlabel = 'z%s' % label
+                xlabel = u'x%s' % label
+                ylabel = u'y%s' % label
+                zlabel = u'z%s' % label
                 axes.SetXAxisLabelText(xlabel)
                 axes.SetYAxisLabelText(ylabel)
                 axes.SetZAxisLabelText(zlabel)
         else:
             if Type == 'Rtz':  # cylindrical
                 #x = u'R'
-                #y = u'?'
-                #z = 'z'
+                #y = u'θ'
+                #z = u'z'
                 x = 'R'
                 y = 't'
                 z = 'z'
 
             elif Type == 'Rtp':  # spherical
                 xlabel = u'R'
-                #ylabel = u'?'
-                #z = u'?'
+                #ylabel = u'θ'
+                #z = u'Φ'
                 x = 'R'
                 y = 't'
                 z = 'p'
@@ -992,9 +1058,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return self.coord_id
 
     def create_global_axes(self, dim_max):
-        self.create_coordinate_system(dim_max, label='', origin=None, matrix_3x3=None, Type='xyz')
+        self.create_coordinate_system(
+            dim_max, label='', origin=None, matrix_3x3=None, Type='xyz')
 
     def create_corner_axis(self):
+        """creates the axes that sits in the corner"""
         if not self.run_vtk:
             return
         axes = vtk.vtkAxesActor()
@@ -1062,7 +1130,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._camera_mode = 'default'
         self.setup_mouse_buttons(mode='default')
 
-    def setup_mouse_buttons(self, mode=None,
+    def setup_mouse_buttons(self, mode=None, revert=False,
                             left_button_down=None, left_button_up=None,
                             right_button_down=None,
                             end_pick=None,
@@ -1074,6 +1142,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         mode : str
             lets you know what kind of mapping this is
+        revert : bool; default=False
+            does the button revert when it's finished
+
         left_button_down : function (default=None)
             the callback function (None -> depends on the mode)
         left_button_up : function (default=None)
@@ -1084,6 +1155,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             a custom vtkInteractorStyle
             None -> keep the same style, but overwrite the left mouse button
         """
+        assert isinstance(mode, string_types), mode
+        assert revert in [True, False], revert
         #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))
         if mode == self._camera_mode:
             #print('auto return from set mouse mode')
@@ -1100,7 +1173,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # standard rotation
             # Disable default left mouse click function (Rotate)
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-
+            self.vtk_interactor.RemoveObservers('EndPickEvent')
+            self.vtk_interactor.AddObserver('EndPickEvent', self._probe_picker)
             # there should be a cleaner way to revert the trackball Rotate command
             # it apparently requires an (obj, event) argument instead of a void...
             self.set_style_as_trackball()
@@ -1111,36 +1185,34 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # Re-assign left mouse click event to custom function (Point Picker)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.style.Rotate)
 
-        elif mode in ['rotation_center', 'measure_distance', 'probe_result']:
+        elif mode in ['measure_distance']: # 'rotation_center',
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
+
+            self.vtk_interactor.RemoveObservers('EndPickEvent')
+            self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
+        elif mode in ['probe_result']:
+            # hackish b/c the default setting is so bad
+            self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
+
+            self.vtk_interactor.RemoveObservers('EndPickEvent')
+            self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, 1) # on press down
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, -1) # on button up
         elif mode == 'zoom':
             assert style is not None, style
             self.vtk_interactor.SetInteractorStyle(style)
-            self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down) # on press down
-            self.vtk_interactor.AddObserver('LeftButtonReleaseEvent', left_button_up, -1) # on button up
+
+            # on press down
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
+
+            # on button up
+            self.vtk_interactor.AddObserver('LeftButtonReleaseEvent', left_button_up, -1)
             if right_button_down:
                 self.vtk_interactor.AddObserver('RightButtonPressEvent', right_button_down)
 
-        elif mode == 'area_pick':
-            assert style is not None, style
-            self.vtk_interactor.SetInteractorStyle(style)
-            # on button down
-            if left_button_down:
-                self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
-            if right_button_down:
-                self.vtk_interactor.AddObserver('RightButtonPressEvent', right_button_down)
-
-            # button up
-            if left_button_up:
-                self.vtk_interactor.AddObserver('LeftButtonReleaseEvent', left_button_up) # on button up
-
-            if end_pick:
-                self.vtk_interactor.AddObserver('EndPickEvent', end_pick) # on button up
-            #style = vtk.vtkInteractorStyleTrackballCamera()
 
         #elif mode == 'node_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
@@ -1149,29 +1221,40 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_cell_pick_event)
         elif mode == 'cell_pick':
+            #aaa
             #print('set mouse mode as cell_pick')
             self.vtk_interactor.SetPicker(self.cell_picker)
         elif mode == 'node_pick':
+            #bbb
             #print('set mouse mode as node_pick')
             self.vtk_interactor.SetPicker(self.node_picker)
+        elif mode == 'style':
+            self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            self.vtk_interactor.RemoveObservers('RightButtonPressEvent')
+            self.vtk_interactor.SetInteractorStyle(style)
 
         #elif mode == 'area_cell_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_area_cell_pick_event)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent',
+                                            #self.on_area_cell_pick_event)
         #elif mode == 'area_node_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_area_cell_pick_event)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent',
+                                            #self.on_area_cell_pick_event)
         #elif mode == 'polygon_cell_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_polygon_cell_pick_event)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent',
+                                            #self.on_polygon_cell_pick_event)
         #elif mode == 'polygon_node_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_polygon_cell_pick_event)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent',
+                                            #self.on_polygon_cell_pick_event)
 
         #elif mode == 'pan':
             #pass
         else:
             raise NotImplementedError('camera_mode = %r' % self._camera_mode)
+        self.revert = revert
 
     def on_measure_distance(self):
         self.revert_pressed('measure_distance')
@@ -1183,7 +1266,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.setup_mouse_buttons(mode='default')
             return
         self._measure_distance_pick_points = []
-        self.setup_mouse_buttons('measure_distance', self._measure_distance_picker)
+        self.setup_mouse_buttons('measure_distance', left_button_down=self._measure_distance_picker)
 
     def _measure_distance_picker(self, obj, event):
         picker = self.cell_picker
@@ -1242,52 +1325,97 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.setup_mouse_buttons(mode='default')
             return
 
-        #self.vtk_interactor.SetPicker(self.node_picker)
-        method = 'cell'
-        #if method == 'node':
-            #asdf
-            #self.set_node_picker()
-            #self.setup_mouse_buttons('rotation_center', self._rotation_center_node_picker)
-        if method == 'cell':
-            #tol = self.cell_picker.GetTolerance()
-            #print('tol = ', tol)
-            #self.cell_picker.SetTolerance(0.5)
-            #tol = self.cell_picker.GetTolerance()
-            #print('tol = ', tol)
-            self.setup_mouse_buttons('rotation_center', self._rotation_center_cell_picker)
-        else:
-            raise NotImplementedError(method)
-        #focal_point = self.do_point_pick(point)
-        #self.node_picker.RemoveObservers('EndPickEvent')
-        #self.node_picker.AddObserver('EndPickEvent', annotate_cell_picker)
+        style = RotationCenterStyle(parent=self)
+        self.setup_mouse_buttons('style', revert=True, style=style)
 
-    def _rotation_center_cell_picker(self, obj, event):
-        picker = self.cell_picker
-        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        picker.Pick(pixel_x, pixel_y, 0, self.rend)
+    def set_focal_point(self, focal_point):
+        """
+        Parameters
+        ----------
+        focal_point : (3, ) float ndarray
+            The focal point
+            [ 188.25109863 -7. -32.07858658]
+        """
+        camera = self.rend.GetActiveCamera()
+        self.log_command("set_focal_point(focal_point=%s)" % str(focal_point))
 
-        cell_id = picker.GetCellId()
-        #print('_rotation_center_cell_picker', cell_id)
+        # now we can actually modify the camera
+        camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+        camera.OrthogonalizeViewUp()
+        self.vtk_interactor.Render()
 
-        if cell_id < 0:
-            #self.picker_textActor.VisibilityOff()
-            pass
-        else:
-            camera = self.rend.GetActiveCamera()
-            world_position = picker.GetPickPosition()
-            focal_point = self._get_closest_node_xyz(cell_id, world_position)
+    #def _rotation_center_node_picker(self, obj, event):
+        #"""reset the rotation center"""
+        #self.log_command('_rotation_center_node_picker()')
+        #picker = self.node_picker
 
-            #ds = picker.GetDataSet()
+        #print('picker.object_methods =', object_methods(picker))
+        #point_id = picker.GetPointId()
+        #if point_id < 0:
+            ##self.picker_textActor.VisibilityOff()
+            #print('picker.point_id =', point_id)
+        #else:
+            #self.log_command('_rotation_center_node_picker()')
+            #camera = self.rend.GetActiveCamera()
+
+            #world_position = picker.GetPickPosition()
+            #focal_point = world_position
+            #point_id = picker.GetPointId()
+            ##ds = picker.GetDataSet()
             #select_point = picker.GetSelectionPoint()
-            self.log_command("_rotation_center_cell_picker()")
-            self.log_info('focal_point = %s' % str(focal_point))
-            self.setup_mouse_buttons(mode='default')
 
-            # now we can actually modify the camera
-            camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            camera.OrthogonalizeViewUp()
-            rotation_center_button = self.actions['rotation_center']
-            rotation_center_button.setChecked(False)
+            #self.log_command("_rotation_center_node_picker()")
+            #self.log_info('focal_point = %s' % str(focal_point))
+            ##self.log_info('point_id = %s' % point_id)
+            ##self.log_info('data_set = %s' % ds)
+            ##self.log_info('select_point = %s' % str(select_point))
+
+            ##self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
+            ##self.picker_textActor.SetPosition(select_point[:2])
+            ##self.picker_textActor.VisibilityOn()
+            #self.setup_mouse_buttons(mode='default')
+
+            ## now we can actually modify the camera
+            #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+            #camera.OrthogonalizeViewUp()
+            #rotation_center_button = self.actions['rotation_center']
+            #rotation_center_button.setChecked(False)
+
+            ##self.set_cell_picker()
+        ##if self.revert:
+            ##self.setup_mouse_buttons(mode='default')
+
+    #def _rotation_center_cell_picker(self, obj, event):
+        #"""reset the rotation center"""
+        #picker = self.cell_picker
+        #pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        #picker.Pick(pixel_x, pixel_y, 0, self.rend)
+
+        #cell_id = picker.GetCellId()
+        ##print('_rotation_center_cell_picker', cell_id)
+
+        #if cell_id < 0:
+            #print('picker.cell_id =', cell_id)
+            ##self.picker_textActor.VisibilityOff()
+            #pass
+        #else:
+            #camera = self.rend.GetActiveCamera()
+            #world_position = picker.GetPickPosition()
+            #focal_point = self._get_closest_node_xyz(cell_id, world_position)
+
+            ##ds = picker.GetDataSet()
+            ##select_point = picker.GetSelectionPoint()
+            #self.log_command("_rotation_center_cell_picker()")
+            #self.log_info('focal_point = %s' % str(focal_point))
+            #self.setup_mouse_buttons(mode='default')
+
+            ## now we can actually modify the camera
+            #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+            #camera.OrthogonalizeViewUp()
+            #rotation_center_button = self.actions['rotation_center']
+            #rotation_center_button.setChecked(False)
+        ##if self.revert:
+            ##self.setup_mouse_buttons(mode='default')
 
     def revert_pressed(self, active_name):
         if active_name != 'probe_result':
@@ -1333,28 +1461,44 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # revert probe_result
             self.setup_mouse_buttons(mode='default')
             return
-        self.setup_mouse_buttons('probe_result', self._probe_picker)
+        self.setup_mouse_buttons('probe_result', left_button_down=self._probe_picker)
+
         #style = ProbeResultStyle(parent=self)
         #self.vtk_interactor.SetInteractorStyle(style)
 
-    def on_area_pick(self):
+    def on_quick_probe_result(self):
+        self.revert_pressed('probe_result')
+        is_checked = self.actions['probe_result'].isChecked()
+        self.setup_mouse_buttons('probe_result', left_button_down=self._probe_picker, revert=True)
+
+    def on_area_pick_callback(self, eids, nids):
+        """prints the message when area_pick succeeds"""
+        msg = ''
+        if eids is not None and len(eids):
+            msg += write_patran_syntax_dict({'Elem' : eids})
+        if nids is not None and len(nids):
+            msg += '\n' + write_patran_syntax_dict({'Node' : nids})
+        if msg:
+            self.log_info('\n%s' % msg.lstrip())
+
+    def on_area_pick(self, is_eids=True, is_nids=True, callback=None, force=False):
+        """creates a Rubber Band Zoom"""
         self.revert_pressed('area_pick')
         is_checked = self.actions['area_pick'].isChecked()
         if not is_checked:
             # revert area_pick
             self.setup_mouse_buttons(mode='default')
-            return
+            if not force:
+                return
 
         self.log_info('on_area_pick')
         self._picker_points = []
 
-        self.vtk_interactor.SetPicker(self.area_picker)
-        style = vtk.vtkInteractorStyleRubberBand2D()
-        self.setup_mouse_buttons('area_pick',
-                                 left_button_down=self._area_picker_box_up,
-                                 left_button_up=self._area_picker_box_up,
-                                 #end_pick=self._area_picker_up,
-                                 style=style)
+        if callback is None:
+            callback = self.on_area_pick_callback
+        style = AreaPickStyle(parent=self, is_eids=is_eids, is_nids=is_nids,
+                              callback=callback)
+        self.setup_mouse_buttons(mode='style', revert=True, style=style) #, style_name='area_pick'
 
     def on_area_pick_not_square(self):
         self.revert_pressed('area_pick')
@@ -1367,10 +1511,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_info('on_area_pick')
         self.vtk_interactor.SetPicker(self.area_picker)
 
+        def _area_picker_up(*args):
+            pass
         style = vtk.vtkInteractorStyleDrawPolygon()
         self.setup_mouse_buttons('area_pick',
                                  #left_button_down=self._area_picker,
-                                 left_button_up=self._area_picker_up,
+                                 left_button_up=_area_picker_up,
                                  #end_pick=self._area_picker_up,
                                  style=style)
         #self.area_picker = vtk.vtkAreaPicker()  # vtkRenderedAreaPicker?
@@ -1381,24 +1527,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #vtk.vtkInteractorStyleAreaSelectHover
         #vtk.vtkInteractorStyleDrawPolygon
 
-    def _area_picker_up(self, obj, event):
-        self.log_info('_area_picker_up')
-        #pts = self.style.GetPolygonPoints()
-        #pts = self.vtk_interactor.GetPolygonPoints()
-        #print('pts =', pts)
-        props = self.area_picker.GetProp3Ds()
-        print(props)
-        for i in range(props.GetNumberOfItems()):
-            prop = props.GetNextProp3D()
-            print("Picked prop: ", prop)
-        self.vtk_interactor.SetPicker(self.cell_picker)
-
-
-        area_pick = self.actions['area_pick']
-        area_pick.setChecked(False)
-        self.setup_mouse_buttons(mode='default')
-        self.vtk_interactor.Render()
-
     def on_zoom(self):
         """creates a Rubber Band Zoom"""
         #self.revert_pressed('zoom')
@@ -1407,151 +1535,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # revert zoom
             self.setup_mouse_buttons(mode='default')
             return
-
         style = ZoomStyle(parent=self)
-        self.vtk_interactor.SetInteractorStyle(style)
-
-    def _area_picker(self, obj, event):
-        """
-        picks all the nodes/elements in the box
-        TODO: not done
-        """
-        picker = self.area_picker
-        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        picker.Pick(pixel_x, pixel_y, 0, self.rend)
-
-        cell_id = picker.GetCellId()
-        #print('_rotation_center_cell_picker', cell_id)
-
-        if cell_id < 0:
-            pass
-        else:
-            world_position = picker.GetPickPosition()
-            if 0:
-                camera = self.rend.GetActiveCamera()
-                #focal_point = world_position
-                (result_name, result_value, node_id, node_xyz) = self.get_result_by_xyz_cell_id(
-                    world_position, cell_id)
-                self.log_info('focal_point = %s' % str(focal_point))
-                self.setup_mouse_buttons(mode='default')
-
-                # now we can actually modify the camera
-                camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-                camera.OrthogonalizeViewUp()
-                rotation_center_button = self.actions['rotation_center']
-                rotation_center_button.setChecked(False)
-
-
-                world_position = picker.GetPickPosition()
-                cell_id = picker.GetCellId()
-                #ds = picker.GetDataSet()
-                #select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_cell_picker()")
-                self.log_info("XYZ Global = %s" % str(world_position))
-                #self.log_info("cell_id = %s" % cell_id)
-                #self.log_info("data_set = %s" % ds)
-                #self.log_info("selPt = %s" % str(select_point))
-
-                #method = 'get_result_by_cell_id()' # self.model_type
-                #print('pick_state =', self.pick_state)
-
-            icase = self.icase
-            key = self.case_keys[icase]
-            location = self.get_case_location(key)
-
-            if location == 'centroid':
-                out = self._cell_centroid_pick(cell_id, world_position)
-            elif location == 'node':
-                out = self._cell_node_pick(cell_id, world_position)
-            else:
-                raise RuntimeError('invalid pick location=%r' % location)
-
-            return_flag, duplicate_key, result_value, result_name, xyz = out
-            if return_flag is True:
-                return
-
-            # prevent duplicate labels with the same value on the same cell
-            if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
-                return
-            self.label_ids[result_name].add(duplicate_key)
-
-            #if 0:
-                #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
-                #result_value = result_value2
-                #xyz2 = xyz
-            #x, y, z = world_position
-            x, y, z = xyz
-            text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
-            text = str(result_value)
-            assert result_name in self.label_actors, result_name
-            self._create_annotation(text, result_name, x, y, z)
-            self.vtk_interactor.Render()
-
-    def _area_picker_box_up(self, obj, event):
-        """
-        actually picks the points for zooming
-
-        TODO: doesn't handle panning of the camera to center the image
-              with respect to the selected limits
-        """
-        #picker = self.area_picker
-        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        #if len(self._picker_points) == 0:
-        self._picker_points.append((pixel_x, pixel_y))
-        self.area_picker.Pick()
-
-        print(self._picker_points)
-        if len(self._picker_points) == 2:
-            p1x, p1y = self._picker_points[0]
-            p2x, p2y = self._picker_points[1]
-            self._picker_points = []
-            dx = abs(p1x - p2x)
-            dy = abs(p1y - p2y)
-            xmin = min(p1x, p2x)
-            ymin = min(p1y, p2y)
-            xmax = max(p1x, p2x)
-            ymax = max(p1y, p2y)
-            self.area_picker.SetRenderer(self.rend)
-            #self.area_picker.SetPickCoords(xmin, ymin, xmax, ymax)
-            self.area_picker.AreaPick(xmin, ymin, xmax, ymax, self.rend)
-            print(self._picker_points)
-            #print('_rotation_center_cell_picker', cell_id)
-
-            self._picker_points = []
-            if dx > 0 and dy > 0:
-                if 1:
-                    cell_ids = set([])
-                    picker = self.cell_picker
-                    nx = max((xmax - xmin) // 100, 1)
-                    ny = max((ymax - ymin) // 100, 1)
-                    print('nx=%s ny=%s' % (nx, ny))
-                    for xi in range(xmin, xmax, nx):
-                        for yi in range(ymin, ymax, ny):
-                            picker.Pick(xi, yi, 0, self.rend)
-                            cell_id = picker.GetCellId()
-                            if cell_id >= 0:
-                                cell_ids.add(int(cell_id))
-                else:
-                    data = self.area_picker.GetDataSet()
-                    pick_list = self.area_picker.GetPickList()
-
-                    props = self.area_picker.GetProp3Ds()
-                    print('props=', props)
-                    print('data=', data)
-                    for i in range(data.GetNumberOfCells()):
-                        c = data.GetCell(i)
-
-                    print('pick_list=', pick_list)
-                    for i in range(props.GetNumberOfItems()):
-                        prop = props.GetNextProp3D()
-                        print("Picked prop: ", prop)
-
-                self.log_info('cell_ids = %s' % cell_ids)
-
-                area_picker_button = self.actions['area_pick']
-                area_picker_button.setChecked(False)
-                self.setup_mouse_buttons(mode='default')
-            self.vtk_interactor.Render()
+        self.setup_mouse_buttons(mode='style', revert=True, style=style)
+        #self.vtk_interactor.SetInteractorStyle(style)
 
     def _probe_picker(self, obj, event):
         """pick a point and apply the label based on the current displayed result"""
@@ -1560,7 +1546,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
 
         cell_id = picker.GetCellId()
-        #print('_rotation_center_cell_picker', cell_id)
+        #print('_probe_picker', cell_id)
 
         if cell_id < 0:
             pass
@@ -1570,7 +1556,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 camera = self.rend.GetActiveCamera()
                 #focal_point = world_position
                 out = self.get_result_by_xyz_cell_id(world_position, cell_id)
-                result_name, result_value, node_id, node_xyz = out
+                _result_name, result_value, node_id, node_xyz = out
                 focal_point = node_xyz
                 self.log_info('focal_point = %s' % str(focal_point))
                 self.setup_mouse_buttons(mode='default')
@@ -1611,60 +1597,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 return
 
             # prevent duplicate labels with the same value on the same cell
-            if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
+            if duplicate_key is not None and duplicate_key in self.label_ids[icase]:
                 return
-            self.label_ids[result_name].add(duplicate_key)
+            self.label_ids[icase].add(duplicate_key)
 
             #if 0:
-                #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
+                #result_value2, xyz2 = self.convert_units(case_key, result_value, xyz)
                 #result_value = result_value2
                 #xyz2 = xyz
             #x, y, z = world_position
             x, y, z = xyz
             text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
             text = str(result_value)
-            assert result_name in self.label_actors, result_name
-            self._create_annotation(text, result_name, x, y, z)
+            assert icase in self.label_actors, icase
+            self._create_annotation(text, icase, x, y, z)
             self.vtk_interactor.Render()
-
-    def _rotation_center_node_picker(self, obj, event):
-        """reset the rotation center"""
-        self.log_command('_rotation_center_node_picker()')
-        picker = self.node_picker
-        from pyNastran.utils import object_methods
-
-        print('picker.object_methods =', object_methods(picker))
-        point_id = picker.GetPointId()
-        if point_id < 0:
-            #self.picker_textActor.VisibilityOff()
-            print('picker.point_id =', point_id)
-        else:
-            self.log_command('_rotation_center_node_picker()')
-            camera = self.rend.GetActiveCamera()
-
-            world_position = picker.GetPickPosition()
-            focal_point = world_position
-            point_id = picker.GetPointId()
-            #ds = picker.GetDataSet()
-            select_point = picker.GetSelectionPoint()
-            self.log_info('focal_point = %s' % str(focal_point))
-            self.log_info('point_id = %s' % point_id)
-            #self.log_info('data_set = %s' % ds)
-            self.log_info('select_point = %s' % str(select_point))
-
-            #self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
-            #self.picker_textActor.SetPosition(select_point[:2])
-            #self.picker_textActor.VisibilityOn()
+        if self.revert:
             self.setup_mouse_buttons(mode='default')
-
-            # now we can actually modify the camera
-            camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            camera.OrthogonalizeViewUp()
-
-            self.set_cell_picker()
 
     #def remove_picker(self):
         #self.vtk_interactor.
+
     def set_node_picker(self):
         self.vtk_interactor.SetPicker(self.node_picker)
 
@@ -1851,33 +1804,52 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.vtk_interactor.SetInteractorStyle(self.style)
 
     def on_run_script(self, python_file=False):
+        """pulldown for running a python script"""
+        is_failed = True
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
             infile_name = self._create_load_file_dialog(
                 wildcard, title, self._default_python_file)[1]
             if not infile_name:
-                is_failed = True
                 return is_failed # user clicked cancel
 
             #python_file = os.path.join(script_path, infile_name)
             python_file = os.path.join(infile_name)
 
-        print('python_file =', python_file)
-        execfile(python_file)
+        if not os.path.exists(python_file):
+            msg = 'python_file = %r does not exist' % python_file
+            self.log_error(msg)
+            return is_failed
+
+        lines = open(python_file, 'r').read()
+        try:
+            exec(lines)
+        except Exception as e:
+            #self.log_error(traceback.print_stack(f))
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
+            return is_failed
+        is_failed = False
         self._default_python_file = python_file
         self.log_command('self.on_run_script(%r)' % python_file)
+        return is_failed
 
     def on_show_info(self):
+        """sets a flag for showing/hiding INFO messages"""
         self.show_info = not self.show_info
 
     def on_show_debug(self):
+        """sets a flag for showing/hiding DEBUG messages"""
         self.show_debug = not self.show_debug
 
     def on_show_gui(self):
+        """sets a flag for showing/hiding GUI messages"""
         self.show_gui = not self.show_gui
 
     def on_show_command(self):
+        """sets a flag for showing/hiding COMMAND messages"""
         self.show_command = not self.show_command
 
     def on_reset_camera(self):
@@ -1893,7 +1865,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #print('name: %s\nrep: %s' % (
                         #name, self.geometry_properties[name].representation))
                 representation = self.geometry_properties[name].representation
-                if name == 'main' or self.geometry_properties[name].representation in ['main', 'toggle']:
+                if name == 'main' or representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
 
                     prop.SetRepresentationToSurface()
@@ -1983,23 +1955,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def get_edges(self):
         """Create the edge actor"""
         edges = vtk.vtkExtractEdges()
+        edge_mapper = self.edge_mapper
+        edge_actor = self.edge_actor
+
         if self.vtk_version[0] >= 6:
-            # new
             edges.SetInputData(self.grid_selected)
-            self.edge_mapper.SetInputConnection(edges.GetOutputPort())
+            edge_mapper.SetInputConnection(edges.GetOutputPort())
         else:
             edges.SetInput(self.grid_selected)
-            self.edge_mapper.SetInput(edges.GetOutput())
+            edge_mapper.SetInput(edges.GetOutput())
 
-        self.edge_actor.SetMapper(self.edge_mapper)
-        self.edge_actor.GetProperty().SetColor(0, 0, 0)
-        self.edge_mapper.SetLookupTable(self.color_function)
-        self.edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        edge_actor.SetMapper(edge_mapper)
+        edge_actor.GetProperty().SetColor(0., 0., 0.)
+        edge_mapper.SetLookupTable(self.color_function)
+        edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-        prop = self.edge_actor.GetProperty()
-        prop.SetColor(0, 0, 0)
-        self.edge_actor.SetVisibility(self.is_edges)
-        self.rend.AddActor(self.edge_actor)
+        prop = edge_actor.GetProperty()
+        prop.SetColor(0., 0., 0.)
+        edge_actor.SetVisibility(self.is_edges)
+        self.rend.AddActor(edge_actor)
 
     def post_group_by_name(self, name):
         """posts a group with a specific name"""
@@ -2014,11 +1988,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def get_all_eids(self):
         """get the list of all the element IDs"""
-        name, result = self.get_name_result_data(0)
-        if name != 'ElementID':
-            name, result = self.get_name_result_data(1)
-            assert name == 'ElementID', name
-        return result
+        return self.element_ids
+        #name, result = self.get_name_result_data(0)
+        #if name != 'ElementID':
+            #name, result = self.get_name_result_data(1)
+            #assert name == 'ElementID', name
+        #return result
 
     def show_eids(self, eids):
         """shows the specified element IDs"""
@@ -2028,41 +2003,48 @@ class GuiCommon2(QMainWindow, GuiCommon):
         eids = np.intersect1d(all_eids, eids)
 
         # update for indices
-        i = np.searchsorted(all_eids, eids)
+        ishow = np.searchsorted(all_eids, eids)
 
         #eids_off = np.setdiff1d(all_eids, eids)
         #j = np.setdiff1d(all_eids, eids_off)
 
-        self.show_ids_mask(i)
+        self.show_ids_mask(ishow)
 
     def hide_eids(self, eids):
         """hides the specified element IDs"""
         all_eids = self.get_all_eids()
 
+        # remove eids that are out of range
+        eids = np.intersect1d(all_eids, eids)
+
         # A-B
         eids = np.setdiff1d(all_eids, eids)
 
         # update for indices
-        i = np.searchsorted(all_eids, eids)
-        self.show_ids_mask(i)
+        ishow = np.searchsorted(all_eids, eids)
+        self.show_ids_mask(ishow)
 
-    def create_groups_by_visible_result(self):
+    def create_groups_by_visible_result(self, nlimit=50):
         """
         Creates group by the active result
 
-        This should really only be called for integer results < 100-ish.
+        This should really only be called for integer results < 50-ish.
         """
         #self.scalar_bar.title
-
         case_key = self.case_keys[self.icase] # int for object
         result_name = self.result_name
         obj, (i, name) = self.result_cases[case_key]
         default_title = obj.get_default_title(i, name)
+        location = obj.get_location(i, name)
+        if location != 'centroid':
+            self.log.error('not creating result=%r; must be a centroidal result' % result_name)
+            return 0
 
         word = default_title
         prefix = default_title
-        self._create_groups_by_name(word, prefix)
-        self.log_command('create_groups_by_visible_result()')
+        ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
+        self.log_command('create_groups_by_visible_result()'
+                         ' # created %i groups for result_name=%r' % (ngroups, result_name))
 
     def create_groups_by_property_id(self):
         """
@@ -2073,7 +2055,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._create_groups_by_name('PropertyID', 'property')
         self.log_command('create_groups_by_property_id()')
 
-    def _create_groups_by_name(self, name, prefix):
+    def _create_groups_by_name(self, name, prefix, nlimit=50):
         """
         Helper method for `create_groups_by_visible_result` and `create_groups_by_property_id`
         """
@@ -2084,6 +2066,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         result = self.find_result_by_name(name)
         ures = np.unique(result)
+        ngroups = len(ures)
+        if ngroups > nlimit:
+            self.log.error('not creating result; %i new groups would be created; '
+                           'increase nlimit=%i if you really want to' % (ngroups, nlimit))
+            return 0
+
         for uresi in ures:
             ids = np.where(uresi == result)[0]
 
@@ -2095,6 +2083,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             group.element_ids = eids[ids]
             self.log_info('creating group=%r' % name)
             self.groups[name] = group
+        return ngroups
 
     def create_group_with_name(self, name, eids):
         elements_pound = self.groups['main'].elements_pound
@@ -2116,24 +2105,189 @@ class GuiCommon2(QMainWindow, GuiCommon):
         raise RuntimeError('cannot find name=%r' % desired_name)
 
     def show_ids_mask(self, ids_to_show):
-        flip_flag = True == self._show_flag
-        self._update_ids_mask(ids_to_show, flip_flag, show_flag=True, render=False)
-        self._update_ids_mask(ids_to_show, False, show_flag=True, render=True)
-        self._show_flag = True
+        """masks the specific 0-based element ids"""
+        #print('ids_to_show = ', ids_to_show)
+        prop = self.geom_actor.GetProperty()
+        if len(ids_to_show) == self.nElements:
+            #prop.BackfaceCullingOn()
+            pass
+        else:
+            prop.BackfaceCullingOff()
+
+        if 0:  # pragma: no cover
+            self._show_ids_mask(ids_to_show)
+        elif 1:
+            # doesn't work for the BWB_saero.bdf
+            flip_flag = True is self._show_flag
+            assert self._show_flag is True, self._show_flag
+            self._update_ids_mask_show(ids_to_show)
+            self._show_flag = True
+        elif 1:  # pragma: no cover
+            # works
+            flip_flag = True is self._show_flag
+            assert self._show_flag is True, self._show_flag
+            self._update_ids_mask_showTrue(ids_to_show, flip_flag, render=False)
+            self._update_ids_mask_showTrue(ids_to_show, False, render=True)
+            self._show_flag = True
+        else:  # pragma: no cover
+            # old; works; slow
+            flip_flag = True is self._show_flag
+            self._update_ids_mask(ids_to_show, flip_flag, show_flag=True, render=False)
+            self._update_ids_mask(ids_to_show, False, show_flag=True, render=True)
+            self._show_flag = True
 
     def hide_ids_mask(self, ids_to_hide):
-        flip_flag = False == self._show_flag
+        """masks the specific 0-based element ids"""
+        #print('hide_ids_mask = ', hide_ids_mask)
+        prop = self.geom_actor.GetProperty()
+        if len(self.ids_to_hide) == 0:
+            prop.BackfaceCullingOn()
+        else:
+            prop.BackfaceCullingOff()
+
+        #if 0:  # pragma: no cover
+        #self._hide_ids_mask(ids_to_hide)
+        #else:
+        # old; works; slow
+        flip_flag = False is self._show_flag
         self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False, render=False)
         self._update_ids_mask(ids_to_hide, False, show_flag=False, render=True)
         self._show_flag = False
 
+    def _show_ids_mask(self, ids_to_show):
+        """
+        helper method for ``show_ids_mask``
+        .. todo:: doesn't work
+        """
+        all_i = np.arange(self.nElements, dtype='int32')
+        ids_to_hide = np.setdiff1d(all_i, ids_to_show)
+        self._hide_ids_mask(ids_to_hide)
+
+    def _hide_ids_mask(self, ids_to_hide):
+        """
+        helper method for ``hide_ids_mask``
+        .. todo:: doesn't work
+        """
+        #print('_hide_ids_mask = ', ids_to_hide)
+        ids = self.numpy_to_vtk_idtype(ids_to_hide)
+
+        #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+
+        if 1:
+            # sane; doesn't work
+            self.selection_node.SetSelectionList(ids)
+            ids.Modified()
+            self.selection_node.Modified()
+            self.selection.Modified()
+            self.grid_selected.Modified()
+            self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+            self.update_all(render=True)
+        else:  # pragma: no cover
+            # doesn't work
+            self.selection.RemoveAllNodes()
+            self.selection_node = vtk.vtkSelectionNode()
+            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            self.selection.AddNode(self.selection_node)
+            self.selection_node.SetSelectionList(ids)
+
+            #self.selection.RemoveAllNodes()
+            #self.selection.AddNode(self.selection_node)
+            self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+            self.selection_node.SetSelectionList(ids)
+            self.update_all(render=True)
+
+
+    def numpy_to_vtk_idtype(self, ids):
+        #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+        from vtk.util.numpy_support import numpy_to_vtkIdTypeArray
+
+        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
+        if isize == 4:
+            dtype = 'int32' # TODO: can we include endian?
+        elif isize == 8:
+            dtype = 'int64'
+        else:
+            msg = 'ids.dtype=%s' % str(ids.dtype)
+            raise NotImplementedError(msg)
+
+        ids = np.asarray(ids, dtype=dtype)
+        vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
+        return vtk_ids
+
+    def _update_ids_mask_showFalse(self, ids_to_show, flip_flag=True, render=True):
+        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids.Modified()
+
+        if flip_flag:
+            self.selection.RemoveAllNodes()
+            self.selection_node = vtk.vtkSelectionNode()
+            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            self.selection_node.SetSelectionList(ids)
+
+            self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            self.selection.AddNode(self.selection_node)
+        else:
+            self.selection_node.SetSelectionList(ids)
+
+        # dumb; works
+        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+        self.update_all(render=render)
+
+    def _update_ids_mask_show(self, ids_to_show):
+        """helper method for ``show_ids_mask``"""
+        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids.Modified()
+
+        self.selection.RemoveAllNodes()
+        self.selection_node = vtk.vtkSelectionNode()
+        self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+        self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        self.selection_node.SetSelectionList(ids)
+        self.selection_node.Modified()
+        self.selection.Modified()
+
+        self.selection.AddNode(self.selection_node)
+
+        # seems to also work
+        self.extract_selection.Update()
+        #self.update_all(render=False)
+
+        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+
+        self.update_all(render=True)
+        #if 0:
+            #self.grid_selected.Modified()
+            #self.vtk_interactor.Render()
+            #render_window = self.vtk_interactor.GetRenderWindow()
+            #render_window.Render()
+
+    def _update_ids_mask_showTrue(self, ids_to_show,
+                                  flip_flag=True, render=True):  # pragma: no cover
+        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids.Modified()
+
+        if flip_flag:
+            self.selection.RemoveAllNodes()
+            self.selection_node = vtk.vtkSelectionNode()
+            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            self.selection_node.SetSelectionList(ids)
+
+            self.selection.AddNode(self.selection_node)
+        else:
+            self.selection_node.SetSelectionList(ids)
+
+        # dumb; works
+        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+        self.update_all(render=render)
+
     def _update_ids_mask(self, ids_to_show, flip_flag=True, show_flag=True, render=True):
-        ids = vtk.vtkIdTypeArray()
-        ids.SetNumberOfComponents(1)
-        #ids.SetNumberOfValues(len(ids_to_show))
-        ids.Allocate(len(ids_to_show))
-        for idi in ids_to_show:
-            ids.InsertNextValue(idi)
+        print('flip_flag=%s show_flag=%s' % (flip_flag, show_flag))
+
+        ids = self.numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         if flip_flag:
@@ -2153,14 +2307,50 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #ids.Update()
         #self.shown_ids.Modified()
-        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
-        if 0:
-            self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-            self.extract_selection.Update()
+
+        if 0:  # pragma: no cover
+            # doesn't work...
+            if vtk.VTK_MAJOR_VERSION <= 5:
+                self.extract_selection.SetInput(0, self.grid)
+                self.extract_selection.SetInput(1, self.selection)
+            else:
+                self.extract_selection.SetInputData(0, self.grid)
+                self.extract_selection.SetInputData(1, self.selection)
+        else:
+            # dumb; works
+            self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+
+        #if 0:
+            #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            #self.extract_selection.Update()
 
             #self.grid_not_selected = vtk.vtkUnstructuredGrid()
-            self.grid_not_selected.ShallowCopy(self.extract_selection.GetOutput())
+            #self.grid_not_selected.ShallowCopy(self.extract_selection.GetOutput())
         self.update_all(render=render)
+
+    def update_all_2(self, render=True):  # pragma: no cover
+        self.grid_selected.Modified()
+
+        self.selection_node.Modified()
+        self.selection.Modified()
+        self.extract_selection.Update()
+        self.extract_selection.Modified()
+
+        self.grid_selected.Modified()
+        self.grid_mapper.Update()
+        self.grid_mapper.Modified()
+
+        self.iren.Modified()
+        self.rend.Render()
+        self.rend.Modified()
+
+        self.geom_actor.Modified()
+        self.not_selected_actor.Modified()
+
+        if render:
+            self.vtk_interactor.Render()
+            render_window = self.vtk_interactor.GetRenderWindow()
+            render_window.Render()
 
     def update_all(self, render=True):
         self.grid_selected.Modified()
@@ -2209,9 +2399,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ids = vtk.vtkIdTypeArray()
         ids.SetNumberOfComponents(1)
 
+        # the "selection_node" is really a "selection_element_ids"
+        # furthermore, it's an inverse model, so adding elements
+        # hides more elements
         self.selection_node = vtk.vtkSelectionNode()
         self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
         self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)  # added
         self.selection_node.SetSelectionList(ids)
 
         self.selection = vtk.vtkSelection()
@@ -2250,6 +2444,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
 
     def create_text(self, position, label, text_size=18):
+        """creates a text actor"""
         text_actor = vtk.vtkTextActor()
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
@@ -2307,13 +2502,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #return None, None
 
     def start_logging(self):
-        if self.html_logging:
-            log = SimpleLogger('debug', 'utf-8', lambda x, y: self.logg_msg(x, y))
+        if self.html_logging is True:
+            log = SimpleLogger('debug', 'utf-8', lambda x, y: self._logg_msg(x, y))
             # logging needs synchronizing, so the messages from different
             # threads would not be interleave
             self.log_mutex = QtCore.QReadWriteLock()
         else:
-            log = SimpleLogger('debug', 'utf-8', lambda x, y: print(x, y))
+            log = SimpleLogger(
+                level='debug', encoding='utf-8',
+                #log_func=lambda x, y: print(x, y)  # no colorama
+            )
         self.log = log
 
     def build_fmts(self, fmt_order, stop_on_failure=False):
@@ -2349,35 +2547,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if len(fmts) == 0:
             raise RuntimeError('no modules were loaded...')
 
-    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=True):
-        """
-        Loads a baseline geometry
+    def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
+                                plot=True, raise_error=True):
+        """action version of ``on_load_geometry``"""
+        self.on_load_geometry(infile_name=None, geometry_format=None,
+                              name='main', plot=True, raise_error=True)
 
-        Parameters
-        ----------
-        infile_name : str; default=None -> popup
-            path to the filename
-        geometry_format : str; default=None
-            the geometry format for programmatic loading
-        plot : bool; default=True
-            Should the baseline geometry have results created and plotted/rendered?
-            If you're calling the on_load_results method immediately after, set it to False
-        raise_error : bool; default=True
-            stop the code if True
-        """
+    def _load_geometry_filename(self, geometry_format, infile_name):
+        """gets the filename and format"""
         wildcard = ''
         is_failed = False
 
         if geometry_format and geometry_format.lower() not in self.supported_formats:
             is_failed = True
-            #if geometry_format in self.formats:
             msg = 'The import for the %r module failed.\n' % geometry_format
-            #else:
-            #msg += '%r is not a enabled format; enabled_formats=%s\n' % (
-                #geometry_format, self.supported_formats)
             self.log_error(msg)
-            return is_failed
+            return is_failed, None
 
         if infile_name:
             geometry_format = geometry_format.lower()
@@ -2395,9 +2580,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
-                return is_failed
-                #raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (
-                    #infile_name, geometry_format))
+                return is_failed, None
             formats = [geometry_format]
             filter_index = 0
         else:
@@ -2427,20 +2610,55 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #print("infile_name = %r" % infile_name)
                 #print("wildcard_index = %r" % wildcard_index)
                 if not infile_name:
+                    # user clicked cancel
                     is_failed = True
-                    return is_failed # user clicked cancel
+                    return is_failed, None
                 filter_index = wildcard_list.index(wildcard_index)
 
             geometry_format = formats[filter_index]
             load_function = load_functions[filter_index]
             has_results = has_results_list[filter_index]
             #return is_failed
+        return is_failed, (infile_name, load_function, filter_index, formats)
 
+    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
+                         plot=True, raise_error=True):
+        """
+        Loads a baseline geometry
+
+        Parameters
+        ----------
+        infile_name : str; default=None -> popup
+            path to the filename
+        geometry_format : str; default=None
+            the geometry format for programmatic loading
+        plot : bool; default=True
+            Should the baseline geometry have results created and plotted/rendered?
+            If you're calling the on_load_results method immediately after, set it to False
+        raise_error : bool; default=True
+            stop the code if True
+        """
+        is_failed, out = self._load_geometry_filename(
+            geometry_format, infile_name)
+        if is_failed:
+            return
+
+        infile_name, load_function, filter_index, formats = out
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]
 
-            self.grid.Reset()
-            self.grid.Modified()
+            if self.name == '':
+                name = 'main'
+            else:
+                print('name = %r' % name)
+
+            if name != self.name:
+                #scalar_range = self.grid_selected.GetScalarRange()
+                #self.grid_mapper.SetScalarRange(scalar_range)
+                self.grid_mapper.ScalarVisibilityOff()
+                #self.grid_mapper.SetLookupTable(self.color_function)
+            self.name = str(name)
+            self._reset_model(name)
 
             # reset alt grids
             names = self.alt_grids.keys()
@@ -2468,9 +2686,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             # inspect the load_geometry method to see what version it's using
             #args, varargs, keywords, defaults = inspect.getargspec(load_function)
+            #if args[-1] == 'plot':
             try:
-                #if args[-1] == 'plot':
+                t0 = time.time()
                 has_results = load_function(infile_name, self.last_dir, name=name, plot=plot)
+                dt = time.time() - t0
+                print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
                 #else:
                     #name = load_function.__name__
                     #self.log_error(str(args))
@@ -2481,8 +2702,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             except Exception as e:
                 msg = traceback.format_exc()
                 self.log_error(msg)
-                #return
-                if raise_error:
+                if raise_error or self.dev:
                     raise
                 #return
             #self.vtk_panel.Update()
@@ -2491,10 +2711,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # the model has been loaded, so we enable load_results
         if filter_index >= 0:
             self.format = formats[filter_index].lower()
-            if has_results:
-                enable = True
-            else:
-                enable = False
+            enable = has_results
             #self.load_results.Enable(enable)
         else: # no file specified
             return
@@ -2504,11 +2721,59 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #if self.out_filename is not None:
             #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         #else:
-        msg = '%s - %s' % (self.format, self.infile_name)
-        self.window_title = msg
-        self.update_menu_bar()
-        self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (
-            infile_name, self.format))
+
+        if name == 'main':
+            msg = '%s - %s' % (self.format, self.infile_name)
+            self.window_title = msg
+            self.update_menu_bar()
+            main_str = ''
+        else:
+            main_str = ', name=%r' % name
+
+        self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
+            infile_name, self.format, main_str))
+
+    def _reset_model(self, name):
+        """resets the grids; sets up alt_grids"""
+        if hasattr(self, 'main_grids') and name not in self.main_grids:
+            grid = vtk.vtkUnstructuredGrid()
+            grid_mapper = vtk.vtkDataSetMapper()
+            if self.vtk_version[0] <= 5:
+                grid_mapper.SetInputConnection(grid.GetProducerPort())
+            else:
+                grid_mapper.SetInputData(grid)
+
+            geom_actor = vtk.vtkLODActor()
+            geom_actor.DragableOff()
+            geom_actor.SetMapper(grid_mapper)
+            self.rend.AddActor(geom_actor)
+
+            self.grid = grid
+            self.grid_mapper = grid_mapper
+            self.geom_actor = geom_actor
+            self.grid.Modified()
+
+            # link the current "main" to the scalar bar
+            scalar_range = self.grid_selected.GetScalarRange()
+            self.grid_mapper.ScalarVisibilityOn()
+            self.grid_mapper.SetScalarRange(scalar_range)
+            self.grid_mapper.SetLookupTable(self.color_function)
+
+            self.edge_actor = vtk.vtkLODActor()
+            self.edge_actor.DragableOff()
+            self.edge_mapper = vtk.vtkPolyDataMapper()
+
+            # create the edges
+            self.get_edges()
+        else:
+            self.grid.Reset()
+            self.grid.Modified()
+
+        # reset alt grids
+        alt_names = self.alt_grids.keys()
+        for alt_name in alt_names:
+            self.alt_grids[alt_name].Reset()
+            self.alt_grids[alt_name].Modified()
 
     def _update_menu_bar_to_format(self, fmt, method):
         self.menu_bar_format = fmt
@@ -2542,33 +2807,99 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #menu_items = self._create_menu_items()
                     #self._populate_menu(menu_items)
 
-    def on_load_deflection_results(self, out_filename=None):
+    def on_load_custom_results(self, out_filename=None, restype=None):
+        """will be a more generalized results reader"""
+        is_failed = True
         geometry_format = self.format
         if self.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
             self.log_error(msg)
-            raise RuntimeError(msg)
+            return is_failed
 
         if out_filename in [None, False]:
-            title = 'Select a (Nodal) Deflection Results File for %s' % (self.format)
-            out_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
+            title = 'Select a Custom Results File for %s' % (self.format)
+
+            #print('wildcard_level =', wildcard_level)
+            #self.wildcard_delimited = 'Delimited Text (*.txt; *.dat; *.csv)'
+            fmts = [
+                'Node - Delimited Text (*.txt; *.dat; *.csv)',
+                'Element - Delimited Text (*.txt; *.dat; *.csv)',
+                'Nodal Deflection - Delimited Text (*.txt; *.dat; *.csv)',
+                'Patran nod (*.nod)',
+            ]
+            fmt = ';;'.join(fmts)
+            wildcard_level, out_filename = self._create_load_file_dialog(fmt, title)
+            if not out_filename:
+                return is_failed # user clicked cancel
+            iwildcard = fmts.index(wildcard_level)
+        else:
+            fmts = [
+                'node', 'element', 'deflection', 'patran_nod',
+            ]
+            iwildcard = fmts.index(restype.lower())
 
         if out_filename == '':
-            return
+            return is_failed
         if not os.path.exists(out_filename):
             msg = 'result file=%r does not exist' % out_filename
             self.log_error(msg)
-            return
+            return is_failed
 
         try:
-            self._load_deflection(out_filename)
+            if iwildcard == 0:
+                self._on_load_nodal_elemental_results('Nodal', out_filename)
+                restype = 'Node'
+            elif iwildcard == 1:
+                self._on_load_nodal_elemental_results('Elemental', out_filename)
+                restype = 'Element'
+            elif iwildcard == 2:
+                self._load_deflection(out_filename)
+                restype = 'Deflection'
+            elif iwildcard == 3:
+                self._load_load_patran_nod(out_filename)
+                restype = 'Patran_nod'
+            else:
+                raise NotImplementedError('wildcard_level = %s' % wildcard_level)
         except Exception as e:
             msg = traceback.format_exc()
             self.log_error(msg)
-            #return
-            raise
+            return is_failed
+        self.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
+        is_failed = False
+        return is_failed
 
-        self.log_command("on_load_deflection_results(%r)" % out_filename)
+    def _load_load_patran_nod(self, nod_filename):
+        """reads a Patran formatted *.nod file"""
+        from pyNastran.bdf.patran_utils.read_patran import read_patran
+        data_dict = read_patran(nod_filename, fdtype='float32', idtype='int32')
+        nids = data_dict['nids']
+        data = data_dict['data']
+        data_headers = data_dict['headers']
+        ndata = data.shape[0]
+        if len(data.shape) == 1:
+            shape = (ndata, 1)
+            data = data.reshape(shape)
+
+        if ndata != self.node_ids.shape[0]:
+            inids = np.searchsorted(self.node_ids, nids)
+            assert np.array_equal(nids, self.node_ids[inids]), 'the node ids are invalid'
+            data2 = np.full(data.shape, np.nan, data.dtype)
+            data2[inids, :] = data
+        else:
+            data2 = data
+
+        A = {}
+        fmt_dict = {}
+        headers = data_headers['SEC']
+        for i, header in enumerate(headers):
+            A[header] = data2[:, i]
+            fmt_dict[header] = '%f'
+
+        out_filename_short = os.path.relpath(nod_filename)
+        result_type = 'node'
+        self._add_cases_to_form(A, fmt_dict, headers, result_type,
+                                out_filename_short, update=True)
+
 
     def _on_load_nodal_elemental_results(self, result_type, out_filename=None):
         """
@@ -2581,28 +2912,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         out_filename : str / None
             the path to the results file
         """
-        # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
-        # dtype=[('f0', '<f8'), ('f1', '<i4')])
-        # A['f0']
-        # A['f1']
-        geometry_format = self.format
-        if self.format is None:
-            msg = 'on_load_results failed:  You need to load a file first...'
-            self.log_error(msg)
-            raise RuntimeError(msg)
-
-        if out_filename in [None, False]:
-            title = 'Select a %s Results File for %s' % (result_type, self.format)
-            out_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
-
-        if out_filename == '':
-            return
-        if not os.path.exists(out_filename):
-            msg = 'result file=%r does not exist' % out_filename
-            self.log_error(msg)
-            return
-            #raise IOError(msg)
-        # self.last_dir = os.path.split(out_filename)[0]
         try:
             self._load_csv(result_type, out_filename)
         except Exception as e:
@@ -2617,14 +2926,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.window_title = msg
             #self.out_filename = out_filename
 
-        if result_type == 'Nodal':
-            self.log_command("on_load_nodal_results(%r)" % out_filename)
-        elif result_type == 'Elemental':
-            self.log_command("on_load_elemental_results(%r)" % out_filename)
-        else:
-            raise NotImplementedError(result_type)
-
     def _load_deflection(self, out_filename):
+        """loads a deflection file"""
         out_filename_short = os.path.basename(out_filename)
         A, fmt_dict, headers = load_deflection_csv(out_filename)
         #nrows, ncols, fmts
@@ -2644,8 +2947,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
         common method between:
           - on_add_nodal_results(filename)
           - on_add_elemental_results(filename)
+
+        Parameters
+        ----------
+        result_type : str
+            ???
+        out_filename : str
+            the CSV filename to load
         """
-        out_filename_short = os.path.basename(out_filename)
+        out_filename_short = os.path.relpath(out_filename)
         A, fmt_dict, headers = load_csv(out_filename)
         #nrows, ncols, fmts
         header0 = headers[0]
@@ -2655,11 +2965,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if result_type == 'Nodal':
             assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
             result_type2 = 'node'
+            #ids = self.node_ids
         elif result_type == 'Elemental':
             assert nrows == self.nElements, 'nrows=%s nelements=%s' % (nrows, self.nElements)
             result_type2 = 'centroid'
+            #ids = self.element_ids
         else:
             raise NotImplementedError('result_type=%r' % result_type)
+
+        #num_ids = len(ids)
+        #if num_ids != nrows:
+            #A2 = {}
+            #for key, matrix in iteritems(A):
+                #fmt = fmt_dict[key]
+                #assert fmt not in ['%i'], 'fmt=%r' % fmt
+                #if len(matrix.shape) == 1:
+                    #matrix2 = np.full(num_ids, dtype=matrix.dtype)
+                    #iids = np.searchsorted(ids, )
+            #A = A2
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
                                 out_filename_short, update=True)
 
@@ -2669,6 +2992,38 @@ class GuiCommon2(QMainWindow, GuiCommon):
         common method between:
           - _load_csv
           - _load_deflection_csv
+
+        Parameters
+        ----------
+        A : dict[key] = (n, m) array
+            the numpy arrays
+            key : str
+                the name
+            n : int
+                number of nodes/elements
+            m : int
+                secondary dimension
+                N/A : 1D array
+                3 : deflection
+        fmt_dict : dict[header] = fmt
+            the format of the arrays
+            header : str
+                the name
+            fmt : str
+                '%i', '%f'
+        headers : List[str]???
+            the titles???
+        result_type : str
+            'node', 'centroid'
+        out_filename_short : str
+            the display name
+        update : bool; default=True
+            ???
+
+        # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
+        # dtype=[('f0', '<f8'), ('f1', '<i4')])
+        # A['f0']
+        # A['f1']
         """
         #print('A =', A)
         formi = []
@@ -2729,20 +3084,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.result_cases[icase] = (res_obj, (islot, title))
             formi.append((header, icase, []))
 
-            self.label_actors[header] = []
-            self.label_ids[header] = set([])
+            # TODO: double check this should be a string instead of an int
+            self.label_actors[icase] = []
+            self.label_ids[icase] = set([])
             icase += 1
         form.append((out_filename_short, None, formi))
 
         self.ncases += len(headers)
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
-        self.res_widget.update_results(form)
-
-    def on_load_nodal_results(self, out_filename=None):
-        self._on_load_nodal_elemental_results('Nodal', out_filename)
-
-    def on_load_elemental_results(self, out_filename=None):
-        self._on_load_nodal_elemental_results('Elemental', out_filename)
+        self.res_widget.update_results(form, 'main')
 
     def on_load_results(self, out_filename=None):
         """
@@ -2821,6 +3171,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_command("on_load_results(%r)" % out_filenamei)
 
     def setup_gui(self):
+        """
+        Setup the gui
+
+        1.  starts the logging
+        2.  reapplies the settings
+        3.  create pickers
+        4.  create main vtk actors
+        5.  shows the Qt window
+        """
         assert self.fmts != [], 'supported_formats=%s' % self.supported_formats
         self.start_logging()
         settings = QtCore.QSettings()
@@ -2828,46 +3187,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # build GUI and restore saved application state
         #nice_blue = (0.1, 0.2, 0.4)
-        white = (1.0, 1.0, 1.0)
-        black = (0.0, 0.0, 0.0)
-        #red = (1.0, 0.0, 0.0)
-        grey = (119/255., 136/255., 153/255.)
-        screen_shape_default = (1100, 700)
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
+
         if PY2 and qt_version == 4:
             self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-
-        #self.reset_settings = False
-        if self.reset_settings or qt_version in [5, 'pyside']:
-            self.background_color = grey
-            self.label_color = black
-            self.text_color = white
-            self.resize(1100, 700)
+        elif qt_version == 5:  # tested on PY2
+            self.restoreGeometry(settings.value("mainWindowGeometry"))
         else:
-            setting_keys = [str(key) for key in settings.childKeys()]
-            self.background_color = settings.value("backgroundColor", grey).toPyObject()
-            self.label_color = settings.value("labelColor", black).toPyObject()
-            self.text_color = settings.value("textColor", white).toPyObject()
-            screen_shape = settings.value("screen_shape", screen_shape_default).toPyObject()
-            #if 'recent_files' in setting_keys:
-            self.recent_files = settings.value("recent_files", self.recent_files).toPyObject()
+            raise NotImplementedError('PY2=%s PY3=%s qt_version=%s' % (PY2, PY3, qt_version))
 
-            #w = screen_shape.width()
-            #h = screen_shape.height()
-            #try:
-            self.resize(screen_shape[0], screen_shape[1])
-            width, height = screen_shape
-            if 0 and PY3:
-                pos = settings.value("pos", pos_default).toPyObject()
-                x_pos, y_pos = pos
-                #print(pos)
-                #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
-                y_pos = pos_default[0]
-                self.setGeometry(x_pos, y_pos, width, height)
-            #except TypeError:
-                #self.resize(1100, 700)
-
+        self.reset_settings = False
+        #if self.reset_settings or qt_version in [5, 'pyside']:
+            #self._reset_settings()
+        #else:
+        self._reapply_settings(settings)
 
         self.init_ui()
         if self.reset_settings:
@@ -2881,7 +3215,87 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # loading
         self.show()
 
+    def _reset_settings(self):
+        """helper method for ``setup_gui``"""
+        #white = (1.0, 1.0, 1.0)
+        black = (0.0, 0.0, 0.0)
+        #red = (1.0, 0.0, 0.0)
+        grey = (119/255., 136/255., 153/255.)
+        #screen_shape_default = (1100, 700)
+
+        self.background_color = grey
+        self.label_color = black
+        self.text_color = black
+        self.resize(1100, 700)
+
+    def _reapply_settings(self, settings):
+        """helper method for ``setup_gui``"""
+        #white = (1.0, 1.0, 1.0)
+        black = (0.0, 0.0, 0.0)
+        #red = (1.0, 0.0, 0.0)
+        grey = (119/255., 136/255., 153/255.)
+        screen_shape_default = (1100, 700)
+        font_size = 8
+
+        setting_keys = [str(key) for key in settings.childKeys()]
+        try:
+            if qt_version == 4:
+                self.font_size = settings.value("font_size", font_size).toPyObject()
+            elif qt_version == 4:
+                self.font_size = settings.value("font_size", font_size)
+            else:
+                self.font_size = 8
+        except (TypeError, AttributeError):
+            self.font_size = 8
+
+        try:
+            self.background_color = settings.value("backgroundColor", grey).toPyObject()
+        except (TypeError, AttributeError):
+            self.background_color = grey
+
+        try:
+            self.label_color = settings.value("labelColor", black).toPyObject()
+        except (TypeError, AttributeError):
+            self.label_color = black
+
+        try:
+            self.text_color = settings.value("textColor", black).toPyObject()
+        except (TypeError, AttributeError):
+            self.text_color = black
+
+        try:
+            screen_shape = settings.value("screen_shape", screen_shape_default).toPyObject()
+        except (TypeError, AttributeError):
+            screen_shape = screen_shape_default
+
+        #if 'recent_files' in setting_keys:
+        try:
+            self.recent_files = settings.value("recent_files", self.recent_files).toPyObject()
+        except (TypeError, AttributeError):
+            pass
+
+        #w = screen_shape.width()
+        #h = screen_shape.height()
+        #try:
+        self.resize(screen_shape[0], screen_shape[1])
+        width, height = screen_shape
+
+        font = QtGui.QFont()
+        font.setPointSize(self.font_size)
+        self.setFont(font)
+
+        if 0 and PY3:
+            pos = settings.value("pos", pos_default).toPyObject()
+            x_pos, y_pos = pos
+            #print(pos)
+            #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
+            y_pos = pos_default[0]
+            self.setGeometry(x_pos, y_pos, width, height)
+        #except TypeError:
+            #self.resize(1100, 700)
+
     def setup_post(self, inputs):
+        """interface for user defined post-scripts"""
         self.load_batch_inputs(inputs)
 
         shots = inputs['shots']
@@ -2968,6 +3382,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             csv_filename, name, str(color)))
 
     def _add_user_geometry(self, csv_filename, name, color):
+        """helper method for ``on_load_user_geom``"""
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
@@ -2977,7 +3392,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         point_name = name + '_point'
         geom_name = name + '_geom'
-
 
         grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename)
         nbars = len(bars)
@@ -2997,27 +3411,23 @@ class GuiCommon2(QMainWindow, GuiCommon):
                                            line_width=5, representation='toggle')
 
         # allocate
-        npoints = len(grid_ids)
-        self.alt_grids[point_name].Allocate(npoints, 1000)
-        if nelements > 0:
-            self.alt_grids[geom_name].Allocate(npoints, 1000)
+        nnodes = len(grid_ids)
+        #self.alt_grids[point_name].Allocate(npoints, 1000)
+        #if nelements > 0:
+            #self.alt_grids[geom_name].Allocate(npoints, 1000)
 
         # set points
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(npoints)
-
+        points = self.numpy_to_vtk_points(xyz, dtype='<f')
 
         if nelements > 0:
             geom_grid = self.alt_grids[geom_name]
-            for i, point in enumerate(xyz):
-                points.InsertPoint(i, *point)
+            for i in range(nnodes):
                 elem = vtk.vtkVertex()
                 elem.GetPointIds().SetId(0, i)
                 self.alt_grids[point_name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
         else:
-            for i, point in enumerate(xyz):
-                points.InsertPoint(i, *point)
+            for i in range(nnodes):
                 elem = vtk.vtkVertex()
                 elem.GetPointIds().SetId(0, i)
                 self.alt_grids[point_name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
@@ -3114,6 +3524,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             csv_filename, name, str(color)))
 
     def create_cell_picker(self):
+        """creates the vtk picker objects"""
         self.cell_picker = vtk.vtkCellPicker()
         self.node_picker = vtk.vtkPointPicker()
 
@@ -3137,21 +3548,88 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #vtk.vtkLegendScaleActor
         #vtk.vtkLabelPlacer
 
-        self.cell_picker.SetTolerance(0.0005)
-        self.node_picker.SetTolerance(0.5)
+        self.cell_picker.SetTolerance(0.001)
+        self.node_picker.SetTolerance(0.001)
 
-    def mark_nodes(self, nids, result_name, text):
+    def mark_elements_by_different_case(self, eids, icase_result, icase_to_apply):
+        """
+        Marks a series of elements with custom text labels
+
+        Parameters
+        ----------
+        eids : int, List[int]
+            the elements to apply a message to
+        icase_result : int
+            the case to draw the result from
+        icase_to_apply : int
+            the key in label_actors to slot the result into
+
+        TODO: fix the following
+        correct   : applies to the icase_to_apply
+        incorrect : applies to the icase_result
+
+        Example
+        -------
+        .. code-block::
+
+          eids = [16563, 16564, 8916703, 16499, 16500, 8916699,
+                  16565, 16566, 8916706, 16502, 16503, 8916701]
+          icase_result = 22
+          icase_to_apply = 25
+          self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
+        """
+        if icase_result not in self.label_actors:
+            msg = 'icase_result=%r not in label_actors=[%s]' % (
+                icase_result, ', '.join(self.label_actors))
+            self.log_error(msg)
+            return
+        if icase_to_apply not in self.label_actors:
+            msg = 'icase_to_apply=%r not in label_actors=[%s]' % (
+                icase_to_apply, ', '.join(self.label_actors))
+            self.log_error(msg)
+            return
+
+        eids = np.unique(eids)
+        neids = len(eids)
+        #centroids = np.zeros((neids, 3), dtype='float32')
+        ieids = np.searchsorted(self.element_ids, eids)
+        #print('ieids = ', ieids)
+
+        for cell_id in ieids:
+            centroid = self.cell_centroid(cell_id)
+            result_name, result_values, xyz = self.get_result_by_cell_id(
+                cell_id, centroid, icase_result)
+            texti = '%s' % result_values
+            xi, yi, zi = centroid
+            self._create_annotation(texti, icase_to_apply, xi, yi, zi)
+        self.log_command('mark_elements_by_different_case(%s, %s, %s)' % (
+            eids, icase_result, icase_to_apply))
+        self.vtk_interactor.Render()
+
+    def mark_nodes(self, nids, icase, text):
         """
         Marks a series of nodes with custom text labels
 
-        self.mark_nodes(1, 'NodeID', 'max')
-        self.mark_nodes(6, 'NodeID', 'min')
-        self.mark_nodes([1, 6], 'NodeID', 'max')
-        self.mark_nodes([1, 6], 'NodeID', ['max', 'min'])
+        Parameters
+        ----------
+        nids : int, List[int]
+            the nodes to apply a message to
+        icase : int
+            the key in label_actors to slot the result into
+        text : str, List[str]
+            the text to display
+
+        0 corresponds to the NodeID result
+        self.mark_nodes(1, 0, 'max')
+        self.mark_nodes(6, 0, 'min')
+        self.mark_nodes([1, 6], 0, 'max')
+        self.mark_nodes([1, 6], 0, ['max', 'min'])
         """
-        if result_name not in self.label_actors:
-            msg = 'result_name=%r not in label_actors=[%s]' % (result_name, ', '.join(self.label_actors))
+        if icase not in self.label_actors:
+            msg = 'icase=%r not in label_actors=[%s]' % (
+                icase, ', '.join(self.label_actors))
             self.log_error(msg)
+            return
         i = np.searchsorted(self.node_ids, nids)
         if isinstance(text, string_types):
             text = [text] * len(i)
@@ -3160,16 +3638,46 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         xyz = self.xyz_cid0[i, :]
         for (xi, yi, zi), texti in zip(xyz, text):
-            self._create_annotation(texti, result_name, xi, yi, zi)
+            self._create_annotation(texti, icase, xi, yi, zi)
+        self.vtk_interactor.Render()
+
+    def __mark_nodes_by_result(self, nids, icases):
+        """
+        # mark the node 1 with the NodeID (0) result
+        self.mark_nodes_by_result_case(1, 0)
+
+        # mark the nodes 1 and 2 with the NodeID (0) result
+        self.mark_nodes_by_result_case([1, 2], 0)
+
+        # mark the nodes with the NodeID (0) and ElementID (1) result
+        self.mark_nodes_by_result_case([1, 2], [0, 1])
+        """
+        i = np.searchsorted(self.node_ids, nids)
+        if isinstance(icases, int):
+            icases = [icases]
+
+        for icase in icases:
+            if icase not in self.label_actors:
+                msg = 'icase=%r not in label_actors=[%s]' % (
+                    icase, ', '.join(self.label_actors))
+                self.log_error(msg)
+                continue
+
+            for node_id in i:
+                #xyz = self.xyz_cid0[i, :]
+                out = self.get_result_by_xyz_node_id(world_position, node_id)
+                _result_name, result_value, node_id, node_xyz = out
+                self._create_annotation(texti, icase, xi, yi, zi)
         self.vtk_interactor.Render()
 
     def _cell_centroid_pick(self, cell_id, world_position):
         duplicate_key = None
+        icase = self.icase
         if self.pick_state == 'node/centroid':
             return_flag = False
             duplicate_key = cell_id
             result_name, result_value, xyz = self.get_result_by_cell_id(cell_id, world_position)
-            assert result_name in self.label_actors, result_name
+            assert icase in self.label_actors, icase
         else:
             #cell = self.grid.GetCell(cell_id)
             # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
@@ -3193,17 +3701,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return_flag = False
         (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
             world_position, cell_id)
-        assert result_name in self.label_actors, result_name
+        assert self.icase in self.label_actors, result_name
         assert not isinstance(xyz, int), xyz
         return xyz
 
     def _cell_node_pick(self, cell_id, world_position):
         duplicate_key = None
+        icase = self.icase
         if self.pick_state == 'node/centroid':
             return_flag = False
             (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
                 world_position, cell_id)
-            assert result_name in self.label_actors, result_name
+            assert icase in self.label_actors, result_name
             assert not isinstance(xyz, int), xyz
             duplicate_key = node_id
         else:
@@ -3229,99 +3738,35 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.is_pick = False
         if not self.run_vtk:
             return
-
-        def annotate_cell_picker(object, event):
-            if self._camera_mode != 'default':
-                return
-            picker = self.cell_picker
-            if picker.GetCellId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                world_position = picker.GetPickPosition()
-                cell_id = picker.GetCellId()
-                #ds = picker.GetDataSet()
-                #select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_cell_picker()")
-                self.log_info("XYZ Global = %s" % str(world_position))
-                #self.log_info("cell_id = %s" % cell_id)
-                #self.log_info("data_set = %s" % ds)
-                #self.log_info("selPt = %s" % str(select_point))
-
-                #method = 'get_result_by_cell_id()' # self.model_type
-                #print('pick_state =', self.pick_state)
-
-                icase = self.icase
-                key = self.case_keys[icase]
-                location = self.get_case_location(key)
-
-                if location == 'centroid':
-                    out = self._cell_centroid_pick(cell_id, world_position)
-                elif location == 'node':
-                    out = self._cell_node_pick(cell_id, world_position)
-                else:
-                    raise RuntimeError('invalid pick location=%r' % location)
-
-                return_flag, duplicate_key, result_value, result_name, xyz = out
-                if return_flag is True:
-                    return
-
-                # prevent duplicate labels with the same value on the same cell
-                if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
-                    return
-                self.label_ids[result_name].add(duplicate_key)
-
-                #if 0:
-                    #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
-                    #result_value = result_value2
-                    #xyz2 = xyz
-                #x, y, z = world_position
-                x, y, z = xyz
-                text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
-                text = str(result_value)
-                assert result_name in self.label_actors, result_name
-                self._create_annotation(text, result_name, x, y, z)
-
-        def annotate_point_picker(obj, event):
-            self.log_command("annotate_point_picker()")
-            picker = self.cell_picker
-            if picker.GetPointId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                world_position = picker.GetPickPosition()
-                point_id = picker.GetPointId()
-                #ds = picker.GetDataSet()
-                select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_point_picker()")
-                self.log_info("world_position = %s" % str(world_position))
-                self.log_info("point_id = %s" % point_id)
-                #self.log_info("data_set = %s" % ds)
-                self.log_info("select_point = %s" % str(select_point))
-
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pick_pos)
-                #self.picker_textActor.SetPosition(select_point[:2])
-                #self.picker_textActor.VisibilityOn()
-
-        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
-        self.node_picker.AddObserver("EndPickEvent", annotate_point_picker)
+        self.vtk_interactor.SetPicker(self.node_picker)
         self.vtk_interactor.SetPicker(self.cell_picker)
-
-        #self.cell_picker.AddObserver("EndPickEvent", on_cell_picker)
-        #self.node_picker.AddObserver("EndPickEvent", on_node_picker)p
+        self.setup_mouse_buttons(mode='probe_result')
+        self.setup_mouse_buttons(mode='default')
 
     def convert_units(self, result_name, result_value, xyz):
         #self.input_units
         #self.display_units
         return result_value, xyz
 
-    def _create_annotation(self, text, result_name, x, y, z):
-        if not isinstance(result_name, string_types):
-            msg = 'result_name=%r type=%s' % (result_name, type(result_name))
+    def _create_annotation(self, text, icase, x, y, z):
+        """
+        Creates the actual annotation
+
+        Parameters
+        ----------
+        text : str
+            the text to display
+        icase : int
+            the key in label_actors to slot the result into
+        x, y, z : float
+            the position of the label
+        """
+        if not isinstance(icase, integer_types):
+            msg = 'icase=%r type=%s' % (icase, type(icase))
             raise TypeError(msg)
         # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
 
-        #self.convert_units(result_name, result_value, x, y, z)
+        #self.convert_units(icase, result_value, x, y, z)
         if 1:
             source = vtk.vtkVectorText()
             source.SetText(str(text))
@@ -3370,7 +3815,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # finish adding the actor
         self.rend.AddActor(follower)
         follower.SetPickable(False)
-        self.label_actors[result_name].append(follower)
+        self.label_actors[icase].append(follower)
 
         #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
         #camera.GetPosition()
@@ -3448,7 +3893,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         ..todo :: update the GeomeryProperties
         """
-        asdf
+        raise NotImplementedError('show_only')
 
     def hide_actors(self, except_names=None):
         """
@@ -3493,19 +3938,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
-    def hide_legend(self):
-        self.scalarBar.VisibilityOff()
-
-    def show_legend(self):
-        self.scalarBar.VisibilityOn()
-
     def set_background_color_to_white(self):
+        """sets the background color to white; used by gif writing?"""
         white = (1., 1., 1.)
         self.set_background_color(white)
 
 
     def on_take_screenshot(self, fname=None, magnify=None):
-        """ Take a screenshot of a current view and save as a file"""
+        """
+        Take a screenshot of a current view and save as a file
+
+        Parameters
+        ----------
+        fname : str; default=None
+            None : pop open a window
+            str : bypass the popup window
+        magnify : int; default=None
+            None : use self.magnify
+            int : resolution increase factor
+        """
         if fname is None or fname is False:
             filt = QString()
             default_filename = ''
@@ -3628,6 +4079,313 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 else:
                     raise NotImplementedError(geom_actor)
 
+    def make_gif(self, gif_filename, scale, istep=None,
+                 animate_scale=True, animate_phase=False, animate_time=False,
+                 icase=None, icase_start=None, icase_end=None, icase_delta=None,
+                 time=2.0, onesided=True,
+                 nrepeat=0, fps=30, magnify=1,
+                 make_images=True, delete_images=False, make_gif=True):
+        """
+        Makes an animated gif
+
+        Parameters
+        ----------
+        gif_filename : str
+            path to the output gif & png folder
+        scale : float
+            the deflection scale factor
+        istep : int; default=None
+            the png file number (let's you pick a subset of images)
+            useful for when you press ``Step``
+
+        Pick One
+        --------
+        animate_scale : bool; default=True
+            does a deflection plot (single subcase)
+        animate_phase : bool; default=False
+            does a complex deflection plot (single subcase)
+        animate_time : bool; default=False
+            does a deflection plot (multiple subcases)
+
+        istep : int
+            the png file number (let's you pick a subset of images)
+            useful for when you press ``Step``
+        time : float; default=2.0
+            the runtime of the gif (seconds)
+        fps : int; default=30
+            the frames/second
+
+        Case Selection
+        --------------
+        icase : int; default=None
+            None : unused
+            int : the result case to plot the deflection for
+                  active if animate_scale=True or animate_phase=True
+        icase_start : int; default=None
+            starting case id
+            None : unused
+            int : active if animate_time=True
+        icase_end : int; default=None
+            starting case id
+            None : unused
+            int : active if animate_time=True
+        icase_delta : int; default=None
+            step size
+            None : unused
+            int : active if animate_time=True
+
+        Time Plot Options (not supported)
+        ---------------------------------
+        max_value : float; default=None
+            the max value on the plot (not supported)
+        min_value : float; default=None
+            the min value on the plot (not supported)
+
+        Options
+        -------
+        onesided : bool; default=True
+            should the animation go up and back down
+        nrepeat : int; default=0
+            0 : loop infinitely
+            1 : loop 1 time
+            2 : loop 2 times
+
+        Final Control Options
+        ---------------------
+        make_images : bool; default=True
+            make the images
+        delete_images : bool; default=False
+            cleanup the png files at the end
+        make_gif : bool; default=True
+            actually make the gif at the end
+
+        Other local variables
+        ---------------------
+        duration : float
+           frame time (seconds)
+
+        For one sided data
+        ------------------
+         - scales/phases should be one-sided
+         - time should be one-sided
+         - analysis_time should be one-sided
+         - set onesided=True
+
+        For two-sided data
+        ------------------
+         - scales/phases should be one-sided
+         - time should be two-sided
+         - analysis_time should be one-sided
+         - set onesided=False
+        """
+        if animate_time or animate_phase:
+            onesided = True
+        analysis_time = get_analysis_time(time, onesided)
+
+        nframes = int(analysis_time * fps)
+        scales = None
+        phases = None
+        if animate_scale:
+            # TODO: we could start from 0 deflection, but that's more work
+            # TODO: we could do a sine wave, but again, more work
+            icases = icase
+            scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            phases = [0.] * nframes
+            assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+            assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
+        elif animate_phase:
+            # animate phase
+            icases = icase
+            phases = np.linspace(0., 360, num=nframes, endpoint=False)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
+            scales = [scale] * nframes
+            assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
+            assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+        elif animate_time:
+            icases = np.arange(icase_start, icase_end+1, icase_delta)
+            #min_value = 0.
+            #max_value = 1.46862
+            nfiles = len(icases)
+
+            # specifying fps and dt makes the problem overdefined
+            # assuming dt
+            #
+            # TDOO: change this to stepping similar to icase_delta
+            #       icases = icases[::5]
+            fps = nfiles / time
+
+            # our scale will be constant
+            # phases is just None
+            scales = [scale] * nfiles
+            assert len(icases) == nfiles, 'len(icases)=%s nfiles=%s' % (len(icases), nfiles)
+            phases = None
+            assert len(scales) == len(icases), 'nscales=%s len(icases)=%s' % (len(scales), len(icases))
+
+            # TODO: this isn't maintained...
+            #assert nframes == nfiles, 'nframes=%s nfiles=%s' % (nframes, nfiles)
+
+            isteps = np.linspace(0, nfiles, num=nfiles, endpoint=True, dtype='int32')
+
+        else:
+            raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
+                animate_scale, animate_phase, animate_time))
+        if istep is not None:
+            assert isinstance(istep, integer_types), 'istep=%r' % istep
+            scales = (scales[istep],)
+            phases = (phases[istep],)
+            isteps = (istep,)
+
+        return self.make_gif_helper(
+            gif_filename, icases, scales,
+            phases=phases, isteps=isteps,
+            time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
+            onesided=onesided, nrepeat=nrepeat,
+            make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+
+    def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
+                        max_value=None, min_value=None,
+                        time=2.0, analysis_time=2.0, fps=30, magnify=1,
+                        onesided=True, nrepeat=0,
+                        make_images=True, delete_images=False, make_gif=True):
+        """
+        Makes an animated gif
+
+        Parameters
+        ----------
+        gif_filename : str
+            path to the output gif & png folder
+        icases : int / List[int]
+            the result case to plot the deflection for
+        scales : List[float]
+            List[float] : the deflection scale factors
+        phases : List[float]; default=None
+            List[float] : the phase angles (degrees)
+            None -> animate scale
+        max_value : float; default=None
+            the max value on the plot (not supported)
+        min_value : float; default=None
+            the min value on the plot (not supported)
+        isteps : List[int]
+            the png file numbers (let's you pick a subset of images)
+            useful for when you press ``Step``
+        time : float; default=2.0
+            the runtime of the gif (seconds)
+        analysis_time : float; default=2.0
+            The time we actually need to simulate (seconds).
+            We don't need to take extra pictures if they're just copies.
+        fps : int; default=30
+            the frames/second
+
+        Options
+        -------
+        onesided : bool; default=True
+            should the animation go up and back down
+        nrepeat : int; default=0
+            0 : loop infinitely
+            1 : loop 1 time
+            2 : loop 2 times
+
+        Final Control Options
+        ---------------------
+        make_images : bool; default=True
+            make the images
+        delete_images : bool; default=False
+            cleanup the png files at the end
+        make_gif : bool; default=True
+            actually make the gif at the end
+
+        Other local variables
+        ---------------------
+        duration : float
+           frame time (seconds)
+
+        For one sided data
+        ------------------
+         - scales/phases should be one-sided
+         - time should be one-sided
+         - analysis_time should be one-sided
+         - set onesided=True
+
+        For two-sided data
+        ------------------
+         - scales/phases should be one-sided
+         - time should be two-sided
+         - analysis_time should be one-sided
+         - set onesided=False
+        """
+        #icase_start = 6
+        #icase_delta = 1
+        min_value = 0.
+        max_value = 1.46862
+
+        assert fps >= 1, fps
+        nframes = ceil(analysis_time * fps)
+        assert nframes >= 2, nframes
+        duration = time / nframes
+        nframes = int(nframes)
+
+        png_dirname = os.path.dirname(os.path.abspath(gif_filename))
+        if not os.path.exists(png_dirname):
+            os.makedirs(png_dirname)
+
+        if phases is not None:
+            pass
+        elif phases is None:
+            phases = [0.] * len(scales)
+        else:
+            raise RuntimeError('phases=%r' % phases)
+
+        if isinstance(icases, integer_types):
+            icases = [icases] * len(scales)
+
+
+        if len(icases) != len(scales):
+            msg = 'ncases=%s nscales=%s' % (len(icases), len(scales))
+            print(msg)
+            raise ValueError(msg)
+
+        if len(icases) != len(phases):
+            msg = 'ncases=%s nphases=%s' % (len(icases), len(phases))
+            print(msg)
+            raise ValueError(msg)
+
+        if isteps is None:
+            isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
+            print("setting isteps in make_gif")
+
+        if len(scales) != len(isteps):
+            msg = 'len(scales)=%s len(isteps)=%s analysis_time=%s fps=%s' % (
+                len(scales), len(isteps), analysis_time, fps)
+            print(msg)
+            raise ValueError(msg)
+        assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
+
+        png_filenames = []
+        fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
+        icase0 = -1
+        if make_images:
+            for istep, icase, scale, phase in zip(isteps, icases, scales, phases):
+                png_filename = fmt % istep
+
+                if icase != icase0:
+                    #self.cycle_results(case=icase)
+                    self.cycle_results_explicit(icase, explicit=True)
+                self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
+                #self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)  # old
+                self.on_take_screenshot(fname=png_filename, magnify=magnify)
+                png_filenames.append(png_filename)
+        else:
+            for istep in isteps:
+                png_filename = fmt % istep
+                png_filenames.append(png_filename)
+                assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
+
+        return write_gif(gif_filename, png_filenames, time=time,
+                         fps=fps, onesided=onesided,
+                         nrepeat=nrepeat, delete_images=delete_images,
+                         make_gif=make_gif)
+
     def _update_text_size(self, magnify=1.0):
         """Internal method for updating the bottom-left text when we go to take a picture"""
         text_size = int(14 * magnify)
@@ -3685,7 +4443,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.geom_actor.setMapper(self.geom_mapper)
 
         #if 0:
-            ##from vtk.numpy_interface import algorithms
+            #from vtk.numpy_interface import algorithms
             #arrow = vtk.vtkArrowSource()
             #arrow.PickableOff()
 
@@ -3695,7 +4453,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.glyph_transform_filter.SetTransform(self.glyph_transform)
 
             #self.glyph = vtk.vtkGlyph3D()
-            ##self.glyph.setInput(xxx)
+            #self.glyph.setInput(xxx)
             #self.glyph.SetSource(self.glyph_transform_filter.GetOutput())
 
             #self.glyph.SetVectorModeToUseVector()
@@ -3732,6 +4490,59 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #id_filter.CellIdsOff()
             #self.grid_mapper.SetInputConnection(id_filter.GetOutputPort())
         self.rend.AddActor(self.geom_actor)
+        self.build_glyph()
+
+    def build_glyph(self):
+        """builds the glyph actor"""
+        grid = self.grid
+        glyphs = vtk.vtkGlyph3D()
+        #if filter_small_forces:
+            #glyphs.SetRange(0.5, 1.)
+
+        glyphs.SetVectorModeToUseVector()
+        #apply_color_to_glyph = False
+        #if apply_color_to_glyph:
+        #glyphs.SetScaleModeToScaleByScalar()
+        glyphs.SetScaleModeToScaleByVector()
+        glyphs.SetColorModeToColorByScale()
+        #glyphs.SetColorModeToColorByScalar()  # super tiny
+        #glyphs.SetColorModeToColorByVector()  # super tiny
+
+        glyphs.ScalingOn()
+        glyphs.ClampingOn()
+        #glyphs.Update()
+
+        glyph_source = vtk.vtkArrowSource()
+        #glyph_source.InvertOn()  # flip this arrow direction
+        if self.vtk_version[0] == 5:
+            glyphs.SetInput(grid)
+        elif self.vtk_version[0] in [6, 7]:
+            glyphs.SetInputData(grid)
+        else:
+            raise NotImplementedError(vtk.VTK_VERSION)
+
+
+        glyphs.SetSourceConnection(glyph_source.GetOutputPort())
+        #glyphs.SetScaleModeToDataScalingOff()
+        #glyphs.SetScaleFactor(10.0)  # bwb
+        #glyphs.SetScaleFactor(1.0)  # solid-bending
+        glyph_mapper = vtk.vtkPolyDataMapper()
+        glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
+        glyph_mapper.ScalarVisibilityOff()
+
+        arrow_actor = vtk.vtkLODActor()
+        arrow_actor.SetMapper(glyph_mapper)
+
+        prop = arrow_actor.GetProperty()
+        prop.SetColor(1., 0., 0.)
+        self.rend.AddActor(arrow_actor)
+        #self.grid.GetPointData().SetActiveVectors(None)
+        arrow_actor.SetVisibility(False)
+
+        self.glyph_source = glyph_source
+        self.glyphs = glyphs
+        self.glyph_mapper = glyph_mapper
+        self.arrow_actor = arrow_actor
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
         if names_to_ignore is None:
@@ -3940,6 +4751,54 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.set_form(form)
 
     def _finish_results_io2(self, form, cases):
+        """
+        Adds results to the Sidebar
+
+        Parameters
+        ----------
+        form : List[pairs]
+            There are two types of pairs
+            header_pair : (str, None, List[pair])
+                defines a heading
+                str : the sidebar label
+                None : flag that there are sub-results
+                List[pair] : more header/result pairs
+            result_pair : (str, int, List[])
+                str : the sidebar label
+                int : the case id
+                List[] : flag that there are no sub-results
+        cases : dict[case_id] = result
+            case_id : int
+                the case id
+            result : GuiResult
+                the class that stores the result
+
+        form = [
+            'Model', None, [
+                ['NodeID', 0, []],
+                ['ElementID', 1, []]
+                ['PropertyID', 2, []]
+            ],
+            'time=0.0', None, [
+                ['Stress', 3, []],
+                ['Displacement', 4, []]
+            ],
+            'time=1.0', None, [
+                ['Stress', 5, []],
+                ['Displacement', 6, []]
+            ],
+        ]
+        cases = {
+            0 : GuiResult(...),  # NodeID
+            1 : GuiResult(...),  # ElementID
+            2 : GuiResult(...),  # PropertyID
+            3 : GuiResult(...),  # Stress; t=0.0
+            4 : GuiResult(...),  # Displacement; t=0.0
+            5 : GuiResult(...),  # Stress; t=1.0
+            6 : GuiResult(...),  # Displacement; t=1.0
+        }
+        """
+        self.turn_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
         # if isinstance(cases, OrderedDict):
@@ -3977,7 +4836,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             t = (i, [])
             data.append(t)
 
-        self.res_widget.update_results(form)
+        self.res_widget.update_results(form, self.name)
 
         key = self.case_keys[0]
         location = self.get_case_location(key)
@@ -4005,9 +4864,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nElements))
 
-    def get_result_by_cell_id(self, cell_id, world_position):
+    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
         """TODO: should handle multiple cell_ids"""
-        case_key = self.case_keys[self.icase] # int for object
+        if icase is None:
+            icase = self.icase
+        case_key = self.case_keys[icase] # int for object
         result_name = self.result_name
         case = self.result_cases[case_key]
 
@@ -4028,7 +4889,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         points = cell.GetPoints()
         cell_type = cell.GetCellType()
 
-        if cell_type in [5, 9, 22, 23]:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8
+        if cell_type in [5, 9, 22, 23, 28]:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD
             node_xyz = np.zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):
                 point = points.GetPoint(ipoint)
@@ -4054,8 +4915,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             xyz = node_xyz.mean(axis=0)
         else:
             #self.log.error(msg)
-            msg = 'cell_type=%s nnodes=%s; result_name=%s result_values=%s' % (
-                cell_type, nnodes, result_name, result_values)
+            msg = 'cell_type=%s nnodes=%s; icase=%s result_values=%s' % (
+                cell_type, nnodes, icase, result_values)
             self.log.error(msg)
             #VTK_LINE = 3
 
@@ -4078,6 +4939,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #VTK_QUADRATIC_PYRAMID = 27
             raise NotImplementedError(msg)
         return result_name, result_values, xyz
+
+    def cell_centroid(self, cell_id):
+        """gets the cell centroid"""
+        cell = self.grid_selected.GetCell(cell_id)
+        nnodes = cell.GetNumberOfPoints()
+        points = cell.GetPoints()
+        centroid = np.zeros(3, dtype='float32')
+        for ipoint in range(nnodes):
+            point = np.array(points.GetPoint(ipoint), dtype='float32')
+            centroid += point
+        centroid /= nnodes
+        return centroid
 
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
         """won't handle multiple cell_ids/node_xyz"""
@@ -4192,7 +5065,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             data.append(t)
             i += 1
         self.res_widget.update_results(data)
-        # method = 'centroid' if self.is_centroidal else 'nodal'
 
         data2 = [('node/centroid', None, [])]
         self.res_widget.update_methods(data2)
@@ -4213,10 +5085,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #(1, 'ElementID', 1, 'centroid', '%.0f'),
             #(1, 'Region', 1, 'centroid', '%.0f')
         #]
-        for case_key in self.case_keys:
-            result_name = self.get_result_name(case_key)
-            self.label_actors[result_name] = []
-            self.label_ids[result_name] = set([])
+        for icase in self.case_keys:
+            #result_name = self.get_result_name(icase)
+            self.label_actors[icase] = []
+            self.label_ids[icase] = set([])
 
     def _remove_labels(self):
         """
@@ -4228,12 +5100,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
 
         # existing geometry
-        for result_name, actors in iteritems(self.label_actors):
+        for icase, actors in iteritems(self.label_actors):
             for actor in actors:
                 self.rend.RemoveActor(actor)
                 del actor
-            self.label_actors[result_name] = []
-            self.label_ids[result_name] = set([])
+            self.label_actors[icase] = []
+            self.label_ids[icase] = set([])
 
     def clear_labels(self):
         """
@@ -4244,48 +5116,49 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
 
         # existing geometry
-        #case_key = self.case_keys[self.icase]
+        #icase = self.case_keys[self.icase]
+        icase = self.icase
         result_name = self.result_name
 
-        actors = self.label_actors[result_name]
+        actors = self.label_actors[icase]
         for actor in actors:
             self.rend.RemoveActor(actor)
             del actor
-        self.label_actors[result_name] = []
-        self.label_ids[result_name] = set([])
+        self.label_actors[icase] = []
+        self.label_ids[icase] = set([])
 
-    def resize_labels(self, result_names=None, show_msg=True):
+    def resize_labels(self, case_keys=None, show_msg=True):
         """
         This resizes labels for all result cases.
         TODO: not done...
         """
-        if result_names is None:
+        if case_keys is None:
             names = 'None)  # None -> all'
-            result_names = sorted(self.label_actors.keys())
+            case_keys = sorted(self.label_actors.keys())
         else:
-            mid = '%s,' * len(result_names)
+            mid = '%s,' * len(case_keys)
             names = '[' + mid[:-1] + '])'
 
         count = 0
-        for key in result_names:
-            actors = self.label_actors[key]
+        for icase in case_keys:
+            actors = self.label_actors[icase]
             for actor in actors:
                 actor.VisibilityOff()
                 count += 1
         if count and show_msg:
             self.log_command('hide_labels(%s' % names)
 
-    def hide_labels(self, result_names=None, show_msg=True):
-        if result_names is None:
+    def hide_labels(self, case_keys=None, show_msg=True):
+        if case_keys is None:
             names = 'None)  # None -> all'
-            result_names = sorted(self.label_actors.keys())
+            case_keys = sorted(self.label_actors.keys())
         else:
-            mid = '%s,' * len(result_names)
+            mid = '%s,' * len(case_keys)
             names = '[' + mid[:-1] + '])'
 
         count = 0
-        for key in result_names:
-            actors = self.label_actors[key]
+        for icase in case_keys:
+            actors = self.label_actors[icase]
             for actor in actors:
                 actor.VisibilityOff()
                 #prop = actor.GetProperty()
@@ -4293,20 +5166,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if count and show_msg:
             self.log_command('hide_labels(%s' % names)
 
-    def show_labels(self, result_names=None, show_msg=True):
-        if result_names is None:
+    def show_labels(self, case_keys=None, show_msg=True):
+        if case_keys is None:
             names = 'None)  # None -> all'
-            result_names = sorted(self.label_actors.keys())
+            case_keys = sorted(self.label_actors.keys())
         else:
-            mid = '%s,' * len(result_names)
-            names = mid[:-1] % result_names + ')'
+            mid = '%s,' * len(case_keys)
+            names = mid[:-1] % case_keys + ')'
 
         count = 0
-        for key in result_names:
+        for icase in case_keys:
             try:
-                actors = self.label_actors[key]
+                actors = self.label_actors[icase]
             except KeyError:
-                msg = 'Cant find label_actors for key=%r; keys=%s' % (key, self.label_actors.keys())
+                msg = 'Cant find label_actors for icase=%r; keys=%s' % (
+                    icase, self.label_actors.keys())
                 self.log.error(msg)
                 continue
             for actor in actors:
@@ -4357,10 +5231,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
-                                nlabels=nlabels, labelsize=labelsize,
-                                ncolors=ncolors, colormap=colormap,
-                                is_low_to_high=is_low_to_high, is_horizontal=is_horizontal,
-                                is_shown=is_shown)
+                               nlabels=nlabels, labelsize=labelsize,
+                               ncolors=ncolors, colormap=colormap,
+                               is_low_to_high=is_low_to_high, is_horizontal=is_horizontal,
+                               is_shown=is_shown)
 
     #---------------------------------------------------------------------------------------
     # CAMERA MENU
@@ -4450,22 +5324,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     #---------------------------------------------------------------------------------------
     # LABEL SIZE/COLOR
-    def on_set_labelsize_color(self):
-        """
-        Opens a dialog box to set:
-
-        +--------+----------+
-        |  Name  |  String  |
-        +--------+----------+
-        |  Min   |  Float   |
-        +--------+----------+
-        |  Max   |  Float   |
-        +--------+----------+
-        | Format | pyString |
-        +--------+----------+
-        """
-        on_set_labelsize_color_menu(self)
-
     def set_labelsize_color(self, size=None, color=None):
         """
         Parameters
@@ -4498,14 +5356,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """Updates the size of all the labels"""
         assert size >= 0., size
         self.label_text_size = size
-        for result_name, follower_actors in iteritems(self.label_actors):
+        for icase, follower_actors in iteritems(self.label_actors):
             for follower_actor in follower_actors:
                 follower_actor.SetScale(size)
                 follower_actor.Modified()
         if render:
             self.vtk_interactor.GetRenderWindow().Render()
             self.log_command('set_labelsize(%s)' % size)
-
 
     def set_label_color(self, color, render=True):
         """
@@ -4529,23 +5386,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_command('set_label_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------------------
-    # PICKER MENU
-    def on_set_picker_size(self):
-        """
-        Opens a dialog box to set:
-
-        +--------+----------+
-        |  Name  |  String  |
-        +--------+----------+
-        |  Min   |  Float   |
-        +--------+----------+
-        |  Max   |  Float   |
-        +--------+----------+
-        | Format | pyString |
-        +--------+----------+
-        """
-        on_set_picker_size_menu(self)
-
+    # PICKER
     @property
     def node_picker_size(self):
         """Gets the node picker size"""
@@ -4568,6 +5409,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         assert size >= 0., size
         self.cell_picker.SetTolerance(size)
 
+    #---------------------------------------------------------------------------------------
+    def set_preferences_menu(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        """
+        set_preferences_menu(self)
 
     #---------------------------------------------------------------------------------------
     # CLIPPING MENU
@@ -4584,8 +5435,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         set_clipping_menu(self)
 
     def _apply_clipping(self, data):
-        min_clip = data['min']
-        max_clip = data['max']
+        min_clip = data['clipping_min']
+        max_clip = data['clipping_max']
         self.on_update_clipping(min_clip, max_clip)
 
     def on_update_clipping(self, min_clip=None, max_clip=None):
@@ -4655,6 +5506,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         default_phase = obj.get_default_phase(i, name)
         out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
         default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
+        is_normals = obj.is_normal_result(i, name)
 
         assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
@@ -4662,10 +5514,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             name, min_value, max_value, data_format, scale, phase,
             nlabels, labelsize,
             ncolors, colormap,
-            default_title, default_min, default_max, default_data_format, default_scale, default_phase,
+            default_title, default_min, default_max, default_data_format,
+            default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_low_to_high, is_horizontal_scalar_bar)
+            is_low_to_high, is_horizontal_scalar_bar, is_normals, font_size=self.font_size)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
@@ -4758,6 +5611,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # if vector_size == 3:
 
         name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
+        if obj.is_normal_result(i, res_name):
+            return
         norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
 
@@ -4844,6 +5699,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #case = self.result_cases[key]
 
         data = deepcopy(self.geometry_properties)
+        data['font_size'] = self.font_size
         if not self._edit_geometry_properties_window_shown:
             self._edit_geometry_properties = EditGeometryProperties(data, win_parent=self)
             self._edit_geometry_properties.show()
@@ -4883,7 +5739,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 raise NotImplementedError(geom_prop)
 
-    def modify_group(self):
+    def on_set_modify_groups(self):
         """
         Opens a dialog box to set:
 
@@ -4897,49 +5753,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         | Format | pyString |
         +--------+----------+
         """
-        if not len(self.groups):  # no 'main' group
-            self.log_error('No main group to create.')
-            return
-        print('groups.keys() =', self.groups.keys())
+        on_set_modify_groups(self)
 
-        data = {0 : self.groups['main']}
+    def _apply_modify_groups(self, data):
+        """called by on_set_modify_groups when apply is clicked"""
+        self.on_update_modify_groups(data)
+        imain = self._modify_groups_window.imain
+        name = self._modify_groups_window.keys[imain]
+        self.post_group_by_name(name)
 
-        i = 1
-        for name, group in sorted(iteritems(self.groups)):
-            if name == 'main':
-                continue
-            data[i] = group
-            i += 1
-        #data = deepcopy(self.groups)
-
-        if not self._modify_groups_window_shown:
-            self._modify_groups = GroupsModify(
-                data, win_parent=self, group_active=self.group_active)
-            self._modify_groups.show()
-            self._modify_groups_window_shown = True
-            self._modify_groups.exec_()
-        else:
-            self._modify_groups.activateWindow()
-
-        if 'clicked_ok' not in data:
-            self._modify_groups.activateWindow()
-            return
-
-        if data['clicked_ok']:
-            self.on_update_modify_group(data)
-            imain = self._modify_groups.imain
-            name = self._modify_groups.keys[imain]
-            self.post_group_by_name(name)
-            #name =
-            #self._save_geometry_properties(data)
-            del self._modify_groups
-            self._modify_groups_window_shown = False
-        elif data['clicked_cancel']:
-            self.on_update_modify_group(data)
-            del self._modify_groups
-            self._modify_groups_window_shown = False
-
-    def on_update_modify_group(self, out_data):
+    def on_update_modify_groups(self, out_data):
         """
         Applies the changed groups to the different groups if
         something changed.
@@ -5015,20 +5838,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
         changed = False
         #mapper = actor.GetMapper()
         prop = actor.GetProperty()
+        backface_prop = actor.GetBackfaceProperty()
 
-        color1 = prop.GetDiffuseColor()
-        assert color1[1] <= 1.0, color1
-        color2 = group.color_float
-        #print('line2646 - name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
-        #color2 = group.color
-
-        line_width1 = prop.GetLineWidth()
-        line_width2 = group.line_width
-        line_width2 = max(1, line_width2)
+        if backface_prop is None:
+            # don't edit these
+            # we're lying about the colors to make sure the
+            # colors aren't reset for the Normals
+            color1 = prop.GetDiffuseColor()
+            color2 = color1
+            assert color1[1] <= 1.0, color1
+        else:
+            color1 = prop.GetDiffuseColor()
+            assert color1[1] <= 1.0, color1
+            color2 = group.color_float
+            #print('line2646 - name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
+            #color2 = group.color
 
         opacity1 = prop.GetOpacity()
         opacity2 = group.opacity
         opacity2 = max(0.1, opacity2)
+
+        line_width1 = prop.GetLineWidth()
+        line_width2 = group.line_width
+        line_width2 = max(1, line_width2)
 
         point_size1 = prop.GetPointSize()
         point_size2 = group.point_size
@@ -5056,6 +5888,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             prop.SetLineWidth(line_width2)
             changed = True
         if opacity1 != opacity2:
+            #if backface_prop is not None:
+                #backface_prop.SetOpacity(opacity2)
             prop.SetOpacity(opacity2)
             changed = True
         if point_size1 != point_size2:
@@ -5150,17 +5984,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         point_size : int; default=4
             the nominal point size
         """
-        assert os.path.exists(points_filename), print_bad_path(points_filename)
+        assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
         # read input file
         try:
-            user_points = np.loadtxt(points_filename, delimiter=',')
+            user_points = np.loadtxt(csv_points_filename, delimiter=',')
         except ValueError:
-            user_points = loadtxt_nice(points_filename, delimiter=',')
+            user_points = loadtxt_nice(csv_points_filename, delimiter=',')
             # can't handle leading spaces?
             #raise
-        self._add_user_points(user_points, name, color, point_size=point_size)
+        self._add_user_points(user_points, name, color, csv_points_filename, point_size=point_size)
 
-    def _add_user_points(self, user_points, name, color, point_size=4):
+    def _add_user_points(self, user_points, name, color, csv_points_filename='', point_size=4):
         """
         Helper method for adding csv nodes to the gui
 
@@ -5188,7 +6022,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         npoints = user_points.shape[0]
         if npoints == 0:
-            raise RuntimeError('npoints=0 in %r' % points_filename)
+            raise RuntimeError('npoints=0 in %r' % csv_points_filename)
         if len(user_points.shape) == 1:
             user_points = user_points.reshape(1, npoints)
 
@@ -5215,3 +6049,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
         prop.SetPointSize(point_size)
+
+def get_analysis_time(time, onesided=True):
+    """
+    The analysis time is the time that needs to be simulated for the analysis.
+
+    TODO: could we define time as 1/2-sided time so we can do less work?
+    TODO: we could be more accurate regarding dt
+          Nonesided = 5
+          Ntwosided = 2 * Nonesided - 1 = 9
+          Nonesided = (Ntwosided + 1) / 2
+
+          Nframes = int(fps * t)
+          Nonesided = Nframes
+          Ntwosided = 2 * Nonesided - 1 = 9
+          Nonesided = (Ntwosided + 1) / 2
+    """
+    if onesided:
+        analysis_time = time / 2.
+    else:
+        analysis_time = time
+    return analysis_time

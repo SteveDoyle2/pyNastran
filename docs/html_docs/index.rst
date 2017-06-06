@@ -9,7 +9,7 @@ The pyNastran software interfaces to Nastran's complicated input and output
 files and provides a simplified interface to read/edit/write the various files.
 The software is compatible currently being used on Windows, Linux, and Mac.
 
-The **BDF reader/editor/writer** supports 288 cards including coordinate
+The **BDF reader/editor/writer** supports 312 cards including coordinate
 systems. Card objects have methods to access data such as Mass, Area, etc.
 The BDF writer writes a small field formatted file, but makes full use of
 the 8-character Nastran field. The OpenMDAO BDF parametrization syntax
@@ -22,16 +22,11 @@ velocity, acceleration, temperature, eigenvectors, eigenvalues, SPC forces,
 MPC forces, grid point forces, load vectors, applied loads, strain energy,
 as well as stress and strain.
 
-The **F06 reader/writer** works for simple problems, but it's still
-preliminary. At this point, you should just use the OP2 reader. It's faster,
-more robust, and supports more results. The F06 reader is more used as
-a verification tool for the OP2 reader.
-
 The **Python OP4** reader/writer supports reading ASCII/binary sparse and dense
-matrices, and writing ASCII matrices..
+matrices, and writing ASCII matrices.
 
 A simple GUI has been developed that can view BDF models and display static/dynamic
-stress/strain/displacement/eignevectors (they must be real!) results from the OP2.
+displacement/eignevectors (real/complex) and stress/strain (real) results from the OP2.
 Additionally, AVUS, Cart3d, Usm3d, Tetgen, STL, and Panair are somewhat supported and
 included for use.
 

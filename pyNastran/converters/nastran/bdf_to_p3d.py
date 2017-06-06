@@ -1,6 +1,7 @@
 from __future__ import print_function
 from math import radians, degrees, cos, sin
 import copy
+from codecs import open
 from pyNastran.bdf.bdf import BDF
 
 def make_circle(radius, theta0, theta1):
@@ -25,7 +26,7 @@ def make_circle(radius, theta0, theta1):
     return (X, Y)
 
 def read_airfoil(filename):
-    with open(filename, 'rU') as infile:
+    with open(filename, 'r') as infile:
         lines = infile.readlines()
 
     (nupper, nlower) = lines[1].split()
@@ -180,7 +181,7 @@ class BdfToP3d(object):
         #out += "%s\n%s\n%s\n%s\n" % (x, y, z, w)
         out += '%s\n%s\n%s\n' % (x, y, z)
 
-        with open(p3dname, 'wb') as outfile:
+        with open(p3dname, 'w') as outfile:
             outfile.write(out)
 
     def write_p3d_line(self, elements_line, n0, n1):

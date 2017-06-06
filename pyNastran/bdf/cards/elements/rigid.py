@@ -1,4 +1,4 @@
-# pylint: disable=R0902,R0904,R0914,C0111
+# pylint: disable=R0902,R0904,R0914
 """
 All rigid elements are defined in this file.  This includes:
 
@@ -46,16 +46,16 @@ class RROD(RigidElement):
     """
     type = 'RROD'
 
-    def __init__(self, eid, ga, gb, cma=None, cmb=None, alpha=0.0, comment=''):
+    def __init__(self, eid, nids, cma=None, cmb=None, alpha=0.0, comment=''):
         """
-        Creates a RROD
+        Creates a RROD element
 
         Parameters
         ----------
         eid : int
             element id
-        ga / gb : int
-            grid points
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         #cna / cnb : str
             #independent DOFs
         cma / cmb : str; default=None
@@ -70,9 +70,14 @@ class RROD(RigidElement):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
+        if cma == '0':
+            cma = None
+        if cmb == '0':
+            cmb = None
+
         self.eid = eid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
@@ -97,6 +102,16 @@ class RROD(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RROD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
@@ -104,17 +119,27 @@ class RROD(RigidElement):
         cmb = components_or_blank(card, 5, 'cmb')
         alpha = double_or_blank(card, 6, 'alpha', 0.0)
         assert len(card) <= 7, 'len(RROD card) = %i\ncard=%s' % (len(card), card)
-        return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
+        return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RROD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         ga = data[1]
         gb = data[2]
-        cma = data[3]
-        cmb = data[4]
+        cma = str(data[3])
+        cmb = str(data[4])
         alpha = data[5]
-        return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
+        return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -192,20 +217,20 @@ class RBAR(RigidElement):
     """
     type = 'RBAR'
 
-    def __init__(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
+    def __init__(self, eid, nids, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
-        Creates a RBAR
+        Creates a RBAR element
 
         Parameters
         ----------
         eid : int
             element id
-        ga / gb : int
-            grid points
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         cna / cnb : str
-            independent DOFs
+            independent DOFs in '123456'
         cma / cmb : str
-            dependent DOFs
+            dependent DOFs in '123456'
         alpha : float; default=0.0
             coefficient of thermal expansion
         comment : str; default=''
@@ -215,8 +240,16 @@ class RBAR(RigidElement):
         if comment:
             self.comment = comment
         self.eid = eid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
+        if cna == '0':
+            cna = ''
+        if cnb == '0':
+            cnb = ''
+        if cma == '0':
+            cma = ''
+        if cmb == '0':
+            cmb = ''
         self.cna = cna
         self.cnb = cnb
         self.cma = cma
@@ -235,13 +268,23 @@ class RBAR(RigidElement):
         for comp in '123456':
             msgi = ''
             if comp not in independent:
-                msgi += '  comp=%s is not nindependent\n' % (comp)
+                msgi += '  comp=%s is not independent\n' % (comp)
         if msgi:
-            msg = 'cna=%s cnb=%s\n%s' % msgi
+            msg = 'cna=%s cnb=%s\n%s' % (self.cna, self.cnb, msgi)
             raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
@@ -251,19 +294,29 @@ class RBAR(RigidElement):
         cmb = components_or_blank(card, 7, 'cmb', '')
         alpha = double_or_blank(card, 8, 'alpha', 0.0)
         assert len(card) <= 9, 'len(RBAR card) = %i\ncard=%s' % (len(card), card)
-        return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
+        return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RBAR card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         ga = data[1]
         gb = data[2]
-        cna = data[3]
-        cnb = data[4]
-        cma = data[5]
-        cmb = data[6]
+        cna = str(data[3])
+        cnb = str(data[4])
+        cma = str(data[5])
+        cmb = str(data[6])
         alpha = data[7]
-        return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
+        return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
 
     # def convert_to_MPC(self, mpcID):
     #     """
@@ -352,45 +405,65 @@ class RBAR(RigidElement):
 
 
 class RBAR1(RigidElement):
+    """
+    +-------+-----+----+----+-----+-------+
+    |   1   |  2  |  3 |  4 |  5  |   6   |
+    +=======+=====+====+====+=====+=======+
+    | RBAR1 | EID | GA | GB | CB  | ALPHA |
+    +-------+-----+----+----+-----+-------+
+    | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
+    +-------+-----+----+----+-----+-------+
+    """
     type = 'RBAR1'
 
-    def __init__(self, eid, ga, gb, cb, alpha=0., comment=''):
-        """
-        +-------+-----+----+----+-----+-------+
-        |   1   |  2  |  3 |  4 |  5  |   6   |
-        +=======+=====+====+====+=====+=======+
-        | RBAR1 | EID | GA | GB | CB  | ALPHA |
-        +-------+-----+----+----+-----+-------+
-        | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
-        +-------+-----+----+----+-----+-------+
-        """
+    def __init__(self, eid, nids, cb, alpha=0., comment=''):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.cb = cb
         self.alpha = alpha
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBAR1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
         cb = components_or_blank(card, 4, 'cb')
         alpha = double_or_blank(card, 5, 'alpha', 0.0)
         assert len(card) <= 6, 'len(RBAR1 card) = %i\ncard=%s' % (len(card), card)
-        return RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
+        return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RBAR1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         ga = data[1]
         gb = data[2]
         cb = data[3]
         alpha = data[4]
-        return RBAR1(eid, ga, gb, cb, alpha=alpha, comment=comment)
+        return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -503,6 +576,16 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBE1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         ium = card.index('UM')
         if ium > 0:
@@ -691,13 +774,23 @@ class RBE2(RigidElement):
 
         #: Grid point identification numbers at which dependent
         #: degrees-of-freedom are assigned. (Integer > 0)
-        if isinstance(Gmi, int):
+        if isinstance(Gmi, integer_types):
             Gmi = [Gmi]
         self.Gmi = Gmi
         self._validate_input()
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBE2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         gn = integer(card, 2, 'gn')
         cm = components_or_blank(card, 3, 'cm')
@@ -721,6 +814,16 @@ class RBE2(RigidElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RBE2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         gn = data[1]
         cm = data[2]
@@ -751,7 +854,7 @@ class RBE2(RigidElement):
         self.cm = str(self.cm)
         assert isinstance(self.alpha, float), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
-    def convert_to_MPC(self, mpc_id):
+    def convert_to_mpc(self, mpc_id):
         """
         .. math:: -A_i u_i + A_j u_j = 0
 
@@ -904,7 +1007,7 @@ class RBE3(RigidElement):
     def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
                  Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
-        Creates an RBE3
+        Creates an RBE3 element
 
         Parameters
         ----------
@@ -926,9 +1029,9 @@ class RBE3(RigidElement):
 
         Dependent / UM Set
         ------------------
-          Gmi : List[int, ..., int]
+          Gmi : List[int, ..., int]; default=None -> []
               dependent nodes
-          Cmi : List[str, ..., str]
+          Cmi : List[str, ..., str]; default=None -> []
               dependent components
 
         alpha : float; default=0.0
@@ -939,6 +1042,11 @@ class RBE3(RigidElement):
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
+        if Gmi is None:
+            Gmi = []
+        if Cmi is None:
+            Cmi = []
+
         self.eid = eid
         self.refgrid = refgrid
         self.refc = refc
@@ -971,6 +1079,16 @@ class RBE3(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RBE3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
         refgrid = integer(card, 3, 'refgrid')
@@ -1057,6 +1175,22 @@ class RBE3(RigidElement):
         return RBE3(eid, refgrid, refc, weights, comps, Gijs,
                     Gmi=Gmi, Cmi=Cmi, alpha=alpha, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a RBE3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha = data
+        return RBE3(eid, refgrid, refc, weights, comps, gijs,
+                    Gmi=gmi, Cmi=cmi, alpha=alpha, comment=comment)
+
     @property
     def WtCG_groups(self):
         wt_cg_groups = []
@@ -1087,7 +1221,7 @@ class RBE3(RigidElement):
 
     @property
     def ref_grid_id(self):
-        if isinstance(self.refgrid, int) or self.refgrid is None:
+        if isinstance(self.refgrid, integer_types) or self.refgrid is None:
             return self.refgrid
         return self.refgrid.nid
 
@@ -1124,10 +1258,8 @@ class RBE3(RigidElement):
         self.refgrid = self.ref_grid_id
 
         Gij = []
-        for Gij in self.Gijs:
-            gij = []
-            for giji in Gij:
-                gij.append(giji.nid)
+        for gij in self.Gijs:
+            gij = self._nodeIDs(nodes=gij, allow_empty_nodes=True)
             Gij.append(gij)
         self.Gijs = Gij
         del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref
@@ -1214,6 +1346,26 @@ class RSPLINE(RigidElement):
     """
     def __init__(self, eid, independent_nid, dependent_nids, dependent_components,
                  diameter_ratio=0.1, comment=''):
+        """
+        Creates a RSPLINE card, which uses multipoint constraints for the
+        interpolation of displacements at grid points
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        independent_nid : int
+            the independent node id
+        dependent_nids : List[int]
+            the dependent node ids
+        dependent_components : List[str]
+            Components to be constrained
+        diameter_ratio : float; default=0.1
+            Ratio of the diameter of the elastic tube to the sum of the
+            lengths of all segments
+        comment : str; default=''
+            a comment for the card
+        """
         RigidElement.__init__(self)
         if comment:
             self.comment = comment
@@ -1229,6 +1381,16 @@ class RSPLINE(RigidElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RSPLINE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         diameter_ratio = double_or_blank(card, 2, 'diameter_ratio', 0.1)
         nfields = len(card)
@@ -1296,7 +1458,7 @@ class RSPLINE(RigidElement):
 
     def raw_fields(self):
         list_fields = [self.type, self.eid, self.diameter_ratio, self.independent_nid]
-        for (i, gn, cn) in zip(count(), self.dependent_nids, self.dependent_components):
+        for (gn, cn) in zip(self.dependent_nids, self.dependent_components):
             list_fields += [gn, cn]
         return list_fields
 

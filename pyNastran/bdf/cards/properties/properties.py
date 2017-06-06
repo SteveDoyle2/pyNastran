@@ -30,8 +30,32 @@ class PFAST(Property):
         11:'mass', 12:'ge'
     }
 
-    def __init__(self, pid, d, mcid, mflag, kt1, kt2, kt3,
-                 kr1, kr2, kr3, mass, ge, comment=''):
+    def __init__(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
+                 kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
+        """
+        Creates a PAST card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        d : int
+            diameter of the fastener
+        kt1, kt2, kt3 : float
+            stiffness values in directions 1-3
+        mcid : int; default=01
+            specifies the element stiffness coordinate system
+        mflag : int; default=0
+            0-absolute; 1-relative
+        kr1, kr2, kr3 : float; default=0.0
+            rotational stiffness values in directions 1-3
+        mass : float; default=0.0
+            lumped mass of the fastener
+        ge : float; default=0.0
+            structural damping
+        comment : str; default=''
+            a comment for the card
+        """
         Property.__init__(self)
         if comment:
             self.comment = comment
@@ -63,6 +87,16 @@ class PFAST(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PFAST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         d = double(card, 2, 'd')
         mcid = integer_or_blank(card, 3, 'mcid', -1)
@@ -78,15 +112,31 @@ class PFAST(Property):
         mass = double_or_blank(card, 11, 'mass', 0.0)
         ge = double_or_blank(card, 12, 'ge', 0.0)
         assert len(card) <= 13, 'len(PFAST card) = %i\ncard=%s' % (len(card), card)
-        return PFAST(pid, d, mcid, mflag, kt1, kt2, kt3,
-                     kr1, kr2, kr3, mass, ge, comment=comment)
+        return PFAST(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
+                     kr1=kr1, kr2=kr2, kr3=kr3, mass=mass, ge=ge,
+                     comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PFAST card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pid, d, mcid, mflag, kt1, kt2, kt3,
          kr1, kr2, kr3, mass, ge) = data
-        return PFAST(pid, d, mcid, mflag, kt1, kt2, kt3,
-                     kr1, kr2, kr3, mass, ge, comment=comment)
+        return PFAST(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
+                     kr1=kr1, kr2=kr2, kr3=kr3, mass=mass, ge=ge,
+                     comment=comment)
+
+    def _verify(self, xref):
+        assert isinstance(self.Mcid(), integer_types), self.Mcid()
+        assert isinstance(self.Mass(), float), self.mass
 
     def cross_reference(self, model):
         """
@@ -148,14 +198,20 @@ class PGAP(Property):
         8:'mu2', 9:'tmax', 10:'mar', 11:'trmin',
     }
 
-    def __init__(self, pid, u0, f0, ka, kb, mu1, kt, mu2,
-                 tmax, mar, trmin, comment=''):
+    def __init__(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0., kt=None, mu2=None,
+                 tmax=0., mar=100., trmin=0.001, comment=''):
         """
         Defines the properties of the gap element (CGAP entry).
         """
         Property.__init__(self)
         if comment:
             self.comment = comment
+        if kb is None:
+            kb = double_or_blank(card, 5, 'kb', 1e-14 * ka)
+        if kt is None:
+            kt = double_or_blank(card, 6, 'kt', mu1 * ka)
+        if mu2 is None:
+            mu2 = double_or_blank(card, 8, 'mu2', mu1)
 
         #: Property ID
         self.pid = pid
@@ -179,6 +235,16 @@ class PGAP(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PGAP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         u0 = double_or_blank(card, 2, 'u0', 0.)
         f0 = double_or_blank(card, 3, 'f0', 0.)
@@ -196,6 +262,16 @@ class PGAP(Property):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PGAP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         u0 = data[1]
         f0 = data[2]
@@ -305,6 +381,16 @@ class PRAC2D(CrackProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PRAC2D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         thick = double(card, 3, 'thick')
@@ -379,6 +465,16 @@ class PRAC3D(CrackProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PRAC3D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         gamma = double_or_blank(card, 3, 'gamma', 0.5)
@@ -448,6 +544,16 @@ class PCONEAX(Property):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCONEAX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         #: Property ID
         pid = integer(card, 1, 'pid')
         #: Material ID

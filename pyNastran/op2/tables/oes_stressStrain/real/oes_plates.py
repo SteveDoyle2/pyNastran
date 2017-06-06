@@ -2,13 +2,13 @@
 #pylint disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
-from six.moves import zip, range
 from itertools import count
+from six import integer_types
+from six.moves import zip, range
 import numpy as np
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header#, get_key0
 try:
     import pandas as pd
 except ImportError:
@@ -94,7 +94,7 @@ class RealPlateArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
@@ -136,8 +136,8 @@ class RealPlateArray(OES_Object):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element_node):
-                    (eid, nid) = e
+                for ie, element_nodei in enumerate(self.element_node):
+                    (eid, nid) = element_nodei
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
                     (fiber_dist1, oxx1, oyy1, txy1, angle1, majorP1, minorP1, ovm1) = t1
@@ -189,7 +189,7 @@ class RealPlateArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -218,7 +218,8 @@ class RealPlateArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
-        msg.append('  data.shape=%s\n' % str(self.data.shape))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n' % self.element_name)
         msg.append('  s_code: %s\n  ' % self.s_code)
         msg += self.get_data_code()
@@ -226,11 +227,11 @@ class RealPlateArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
         #ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -469,8 +470,8 @@ class RealCPLSTRNPlateArray(OES_Object):
         if is_sort1:
             if dt is not None:
                 self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-                self.addNewNode = self.addNewNodeSort1
+                #self.add_new_eid = self.add_new_eid_sort1
+                #self.addNewNode = self.addNewNodeSort1
         else:
             raise NotImplementedError('SORT2')
 
@@ -492,10 +493,7 @@ class RealCPLSTRNPlateArray(OES_Object):
             #return False
         #elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
             #return True
-        if 0:
-            pass
-        else:
-            raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+        raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
 
     def build(self):
         #print("self.ielement = %s" % self.ielement)
@@ -534,13 +532,13 @@ class RealCPLSTRNPlateArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element = np.zeros(self.ntotal, dtype='int32')
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype='float32')
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -572,7 +570,7 @@ class RealCPLSTRNPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -601,6 +599,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()

@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 import numpy as np
 from numpy import zeros, array_equal
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -63,7 +63,7 @@ class ComplexSpringDamperArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -103,16 +103,14 @@ class ComplexSpringDamperArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, stress):
-        self.add_sort1(dt, eid, stress)
-
     def add_sort1(self, dt, eid, stress):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, 0] = stress
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -137,6 +135,7 @@ class ComplexSpringDamperArray(OES_Object):
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)

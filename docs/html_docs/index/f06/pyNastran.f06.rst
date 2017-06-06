@@ -39,5 +39,5 @@ This is the pyNastran.f06.rst file.
 
 .. toctree::
 
-    pyNastran.f06.test
+   pyNastran.f06.test
 

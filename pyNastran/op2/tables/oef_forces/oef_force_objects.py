@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import cycle
+from six import integer_types
 from six.moves import zip, range
 import numpy as np
 from numpy import zeros, searchsorted, allclose
@@ -82,7 +83,7 @@ class FailureIndices(RealForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -94,23 +95,23 @@ class FailureIndices(RealForceObject):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add(self, dt, eid, force):
-        self.add_sort1(dt, eid, force)
-
     def add_sort1(self, dt, eid, force):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -194,7 +195,7 @@ class RealSpringDamperForceArray(RealForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self.build_data(self.ntimes, self.nelements, dtype)
 
@@ -270,16 +271,14 @@ class RealSpringDamperForceArray(RealForceObject):
                 raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, force):
-        self.add_sort1(dt, eid, force)
-
     def add_sort1(self, dt, eid, force):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -306,6 +305,7 @@ class RealSpringDamperForceArray(RealForceObject):
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
@@ -361,6 +361,7 @@ class RealSpringDamperForceArray(RealForceObject):
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
 
 class RealSpringForceArray(RealSpringDamperForceArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -478,7 +479,7 @@ class RealRodForceArray(RealForceObject):
         self.nelements = nelements
         #self.ntotal = ntimes * nelements
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(ntimes, dtype=dtype)
         self.element = zeros(nelements, dtype='int32')
@@ -490,18 +491,17 @@ class RealRodForceArray(RealForceObject):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add(self, dt, eid, axial, torque):
-        self.add_sort1(dt, eid, axial, torque)
-
     def add_sort1(self, dt, eid, axial, torque):
-        # print('ielement=%s' % self.ielement)
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
@@ -509,7 +509,7 @@ class RealRodForceArray(RealForceObject):
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -532,8 +532,10 @@ class RealRodForceArray(RealForceObject):
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -713,7 +715,8 @@ class RealCBeamForceArray(ScalarObject):
         ]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=element_location, minor_axis=headers[1:]).to_frame()
+            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
+                                       major_axis=element_location, minor_axis=headers[1:]).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Location', 'Item']
         else:
@@ -763,13 +766,14 @@ class RealCBeamForceArray(ScalarObject):
         return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
         self.element_node[self.itotal, :] = [eid, nid]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -789,6 +793,8 @@ class RealCBeamForceArray(ScalarObject):
         #msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
         msg.append('  CBEAM\n  ')
         msg += self.get_data_code()
@@ -935,7 +941,7 @@ class RealCShearForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -950,11 +956,13 @@ class RealCShearForceArray(ScalarObject):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -1004,19 +1012,11 @@ class RealCShearForceArray(ScalarObject):
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid,
-            force41, force14, force21, force12, force32, force23, force43, force34,
-            kick_force1, kick_force2, kick_force3, kick_force4,
-            shear12, shear23, shear34, shear41):
-        self.add_sort1(dt, eid,
-                       force41, force14, force21, force12, force32, force23, force43, force34,
-                       kick_force1, kick_force2, kick_force3, kick_force4,
-                       shear12, shear23, shear34, shear41)
-
     def add_sort1(self, dt, eid,
                   force41, force14, force21, force12, force32, force23, force43, force34,
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -1025,7 +1025,7 @@ class RealCShearForceArray(ScalarObject):
             shear12, shear23, shear34, shear41]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1050,6 +1050,7 @@ class RealCShearForceArray(ScalarObject):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -1164,7 +1165,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -1185,16 +1186,14 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add(self, dt, eid, axial, torque):
-        self.add_sort1(dt, eid, axial, torque)
-
     def add_sort1(self, dt, eid, axial, torque):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1219,6 +1218,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -1227,14 +1227,14 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
         if is_sort1:
             msg = [
-                '                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n'
+                '                                   F O R C E S   I N   V I S C   E L E M E N T S   ( C V I S C )\n'
                 ' \n'
                 '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n'
                 '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n'
             ]
         else:
             msg = [
-                '                                   F O R C E S   I N   V I S C   E L E M E N T S   ( C V I S C )'
+                '                                   F O R C E S   I N   V I S C   E L E M E N T S   ( C V I S C )\n'
                 ' \n'
                 '                         AXIAL                                                       AXIAL\n'
                 '       TIME              FORCE         TORQUE                      TIME              FORCE         TORQUE\n'
@@ -1365,7 +1365,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.ntotal, dtype='int32')
@@ -1378,10 +1378,12 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         assert 0 not in self.element
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -1422,10 +1424,8 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         #self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         #self.ielement += 1
 
-    #def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        #self.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1437,7 +1437,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             #self.add_new_transient(dt)
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1462,6 +1462,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
@@ -1578,7 +1579,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
@@ -1594,7 +1595,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
@@ -1636,10 +1638,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        self.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-
     def add_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element_node[self.itotal] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1667,7 +1667,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             raise NotImplementedError('element_type=%s element_name=%s' % (self.element_type, self.element_name))
         return nnodes_element
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1693,6 +1693,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
@@ -1865,7 +1866,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -1879,22 +1880,22 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             column_names, column_values = self._build_dataframe_transient_header()
             # Create a 3D Panel
             #column_values = [modes, freq]
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             #self.data_frame = self.data_frame.to_frame()
 
             # Define names for column labels
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             #cbar_forces = cbar_forces.to_frame()
             self.data_frame.columns.names = ['Static']
         # Define names for the row labels
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add(self, dt, data):
-        self.add_sort1(dt, data)
-
     def add_sort1(self, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         data = [eid, bending_moment_a1, bending_moment_a2,
                 bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
         self._times[self.itime] = dt
@@ -1905,7 +1906,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
             shear1, shear2, axial, torque]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1930,6 +1931,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -2053,7 +2055,7 @@ class RealConeAxForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -2065,7 +2067,8 @@ class RealConeAxForceArray(ScalarObject):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
@@ -2109,16 +2112,14 @@ class RealConeAxForceArray(ScalarObject):
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
-        self.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
-
     def add_sort1(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2143,6 +2144,7 @@ class RealConeAxForceArray(ScalarObject):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -2242,7 +2244,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -2268,7 +2270,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         ]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=element_location, minor_axis=headers[1:]).to_frame()
+            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
+                                       major_axis=element_location, minor_axis=headers[1:]).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Location', 'Item']
         else:
@@ -2280,10 +2283,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         #print(self.data_frame)
 
-    #def add(self, eid, sd, bm1, bm2, ts1, ts2, af, trq):
-        #self.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
-
     def add_sort1(self, dt, eid, sd, bm1, bm2, ts1, ts2, af, trq):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
 
@@ -2291,7 +2292,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         self.data[self.itime, self.ielement, :] = [sd, bm1, bm2, ts1, ts2, af, trq]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             msg = [
                 '<%s>\n' % self.__class__.__name__,
@@ -2318,6 +2319,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -2327,7 +2329,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         ind = searchsorted(eids, self.element)
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -2353,7 +2355,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + words))
+            f06.write(''.join(header + words))
 
             # sd, bm1, bm2, ts1, ts2, af, trq
             sd = self.data[itime, :, 0]
@@ -2366,11 +2368,9 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             for eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi in zip(eids, sd, bm1, bm2, ts1, ts2, af, trq):
                 [bm1i, bm2i, ts1i, ts2i, afi, trqi] = write_floats_13e([
                     bm1i, bm2i, ts1i, ts2i, afi, trqi])
-            #f.write('     %8i  %4.3f  %-13s  %-13s     %-13s  %-13s     %-13s     %s\n' % (
-                #eid, sd, bm1i, bm2i, ts1i, ts2i, afi, trqi))
-            f.write('     %8i   %4.3f  %-13s  %-13s     %-13s  %-13s         %-13s      %s\n' % (
-                eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi))
-            f.write(page_stamp % page_num)
+                f06.write('     %8i   %4.3f  %-13s  %-13s     %-13s  %-13s         %-13s      %s\n' % (
+                    eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi))
+            f06.write(page_stamp % page_num)
         return page_num
 
     def __eq__(self, table):
@@ -2447,7 +2447,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -2459,11 +2459,13 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -2499,16 +2501,14 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
-        self.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
-
     def add_sort1(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, sfy, sfz, u, v, w, sv, sw]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2533,6 +2533,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -2611,43 +2612,42 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_nodes = zeros((self.nelements, 3), dtype='int32')
+        self.element_node = zeros((self.nelements, 3), dtype='int32')
 
         #[bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
         # bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
         self.data = zeros((self.ntimes, self.nelements, 12), dtype='float32')
 
     def build_dataframe(self):
-        element = self.element_nodes[:, 0]
+        element = self.element_node[:, 0]
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             # TODO: add NodeA, NodeB
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
             #print(self.data_frame)
         else:
-            df1 = pd.DataFrame(self.element_nodes)
+            df1 = pd.DataFrame(self.element_node)
             df1.columns = ['ElementID', 'NodeA', 'NodeB']
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join(df2)
 
-    #def add(self, dt, eid, axial, torque):
-        #self.add_sort1(dt, eid, axial, torque)
-
     def add_sort1(self, dt, eid,
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
+        """unvectorized method for adding SORT1 transient data"""
         bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
         bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
 
         self._times[self.itime] = dt
-        self.element_nodes[self.ielement] = [eid, nid_a, nid_b]
+        self.element_node[self.ielement] = [eid, nid_a, nid_b]
         self.data[self.itime, self.ielement, :] = [
             bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
             bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
@@ -2656,7 +2656,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2681,6 +2681,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -2701,9 +2702,9 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         #(ntimes, ntotal, two) = self.data.shape
         ntimes = self.data.shape[0]
 
-        eids = self.element_nodes[:, 0]
-        nid_a = self.element_nodes[:, 1]
-        nid_b = self.element_nodes[:, 2]
+        eids = self.element_node[:, 0]
+        nid_a = self.element_node[:, 1]
+        nid_b = self.element_node[:, 2]
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):
@@ -2749,12 +2750,12 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
     def __eq__(self, table):
         self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        if not np.array_equal(self.element_nodes, table.element_nodes):
-            assert self.element_nodes.shape == table.element_nodes.shape, 'element_nodes shape=%s table.shape=%s' % (self.element_nodes.shape, table.element_nodes.shape)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid, Nid_A, Nid_B\n'
-            for (eid1, nida1, nidb1), (eid2, nida2, nidb2) in zip(self.element_nodes, table.element_nodes):
+            for (eid1, nida1, nidb1), (eid2, nida2, nidb2) in zip(self.element_node, table.element_node):
                 msg += '(%s, %s, %s), (%s, %s, %s)\n' % (eid1, nida1, nidb1, eid2, nida2, nidb2)
             print(msg)
             raise ValueError(msg)
@@ -2762,19 +2763,16 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
-            eids = self.element_nodes[:, 0]
+            eids = self.element_node[:, 0]
             for itime in range(self.ntimes):
                 for ie, eid in enumerate(eids):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
 
-
-
                     (bending_moment_1a1, bending_moment_2a1, shear_1a1, shear_2a1, axial_a1, torque_a1,
                      bending_moment_1b1, bending_moment_2b1, shear_1b1, shear_2b1, axial_b1, torque_b1) = t1
                     (bending_moment_1a2, bending_moment_2a2, shear_1a2, shear_2a2, axial_a2, torque_a2,
                      bending_moment_1b2, bending_moment_2b2, shear_1b2, shear_2b2, axial_b2, torque_b2) = t2
-
 
                     if not np.array_equal(t1, t2):
                         msg += '(%s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
@@ -2843,7 +2841,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -2882,16 +2880,14 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
-        self.add_sort1(dt, eid, etype, ax, ay, az, vx, vy, vz, pressure)
-
     def add_sort1(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2916,6 +2912,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -3003,6 +3000,272 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         return page_num - 1
 
 
+# F:\work\pyNastran\examples\Dropbox\move_tpl\beamp11.op2
+class RealCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
+    """
+    ELTYPE = 191 Beam view element (VUBEAM)
+    ---------------------------------------
+    2 PARENT I     Parent p-element identification number
+    3 COORD  I     Coordinate system identification number
+    4 ICORD  CHAR4 Flat/curved and so on
+
+    TCODE,7 = 0 Real
+    5 VUGRID   I  VU grid ID for output grid
+    6 POSIT    RS x/L position of VU grid identification number
+    7 FORCEX   RS Force x
+    8 SHEARY   RS Shear force y
+    9 SHEARZ   RS Shear force z
+    10 TORSION RS Torsional moment x
+    11 BENDY   RS Bending moment y
+    12 BENDZ   RS Bending moment z
+
+
+          DIRECT TRANSIENT RESPONSE                                           ADAPTIVITY INDEX=      1
+    0                                                                         PVAL ID=       1                       SUBCASE=       1
+       VU-ELEMENT ID =  100001002
+
+                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                        TIME =   0.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
+
+          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
+            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
+       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     0.000000E+00     0.000000E+00
+       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     0.000000E+00     0.000000E+00
+
+                               F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                        TIME =   1.000000E+00,  P-ELEMENT ID =       1,  OUTPUT COORD. ID =       0,  P OF EDGES =  1
+
+          VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL
+            ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE
+       111001002     0.333     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982032E-01     0.000000E+00
+       111001003     0.667     0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     9.982032E-01     0.000000E+00
+    """
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            pass
+        else:
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = ['xxb', 'fx', 'fy', 'fz', 'mx', 'my', 'mz']
+        return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, integer_types):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        self.parent_coord = zeros((self.ntotal, 2), dtype='int32')
+
+        #[xxb, fx, fy, fz, mx, my, mz]
+        self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s) (%s, %s)\n' % (eid, nid, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (fx1, fy1, fz1, mx1, my1, mz1) = t1
+                        (fx2, fy2, fz2, mx2, my2, mz2) = t2
+                        if not allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                fx1, fy1, fz1, mx1, my1, mz1,
+                                fx2, fy2, fz2, mx2, my2, mz2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
+
+    def _add_sort1(self, dt, eid, parent, coord, icord,
+                   nid, xxb, fx, fy, fz, mx, my, mz):
+        """unvectorized method for adding SORT1 transient data"""
+        self._times[self.itime] = dt
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        self.element_node[self.ielement] = [eid, nid]
+        self.parent_coord[self.ielement] = [parent, coord]
+        self.data[self.itime, self.ielement, :] = [xxb, fx, fy, fz, mx, my, mz]
+        self.ielement += 1
+
+    #def add(self, nnodes, dt, data):
+        #[eid, parent, coord, icord, forces] = data
+        #self.parent[eid] = parent
+        #self.coord[eid] = coord
+        #self.icord[eid] = icord
+
+        #self.forceX[eid] = {}
+        #self.shearY[eid] = {}
+        #self.shearZ[eid] = {}
+        #self.torsion[eid] = {}
+        #self.bendingY[eid] = {}
+        #self.bendingZ[eid] = {}
+
+
+    def get_stats(self, short=False):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = '1'
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  parent_coord.shape = %s\n' % str(self.parent_coord.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = searchsorted(eids, self.element)  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
+
+    def get_f06_header(self):
+        msg = [
+            '                                 F O R C E S   I N   VU ELEMENTS\n'
+            ' \n'
+            '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        return msg
+
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
+        NotImplementedError(self.code_information())
+
+        msg_temp = self.get_f06_header()
+
+        # write the f06
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            fx = self.data[itime, :, 0]
+            fy = self.data[itime, :, 1]
+            fz = self.data[itime, :, 2]
+            mx = self.data[itime, :, 3]
+            my = self.data[itime, :, 4]
+            mz = self.data[itime, :, 5]
+
+            for eid, nid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, nids, fx, fy, fz, mx, my, mz):
+                [fxi, fyi, fzi, mxi, myi, mzi] = write_floats_13e([fxi, fyi, fzi, mxi, myi, mzi])
+                f.write('                    %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, fxi, fyi, fzi, mxi, myi, mzi))
+                #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
 class RealCBushForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
@@ -3046,7 +3309,7 @@ class RealCBushForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -3058,11 +3321,13 @@ class RealCBushForceArray(ScalarObject):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -3113,16 +3378,14 @@ class RealCBushForceArray(ScalarObject):
                 raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, fx, fy, fz, mx, my, mz):
-        self.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
-
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3147,6 +3410,7 @@ class RealCBushForceArray(ScalarObject):
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -3205,127 +3469,6 @@ class RealCBushForceArray(ScalarObject):
         return page_num - 1
 
 
-class RealForce_VU(ScalarObject):  # 191-VUBEAM
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        self.element_type = None
-        self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-        self.coord = {}
-        self.icord = {}
-
-        self.forceX = {}
-        self.shearY = {}
-        self.shearZ = {}
-        self.torsion = {}
-        self.bendingY = {}
-        self.bendingZ = {}
-
-        # handle SORT1 case
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        nelements = len(self.coord)
-        if self.dt is not None:  # transient
-            ntimes = len(self.forceX)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, coord, icord, forceX, shearY, shearZ, torsion, '
-                   'bendingY, bendingZ\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.forceX[dt] = {}
-        self.shearY[dt] = {}
-        self.shearZ[dt] = {}
-        self.torsion[dt] = {}
-        self.bendingY[dt] = {}
-        self.bendingZ[dt] = {}
-
-    def add(self, nnodes, dt, data):
-        [eid, parent, coord, icord, forces] = data
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-
-        self.forceX[eid] = {}
-        self.shearY[eid] = {}
-        self.shearZ[eid] = {}
-        self.torsion[eid] = {}
-        self.bendingY[eid] = {}
-        self.bendingZ[eid] = {}
-
-        for force in forces:
-            [nid, position, forceX, shearY, shearZ, torsion,
-             bendingY, bendingZ] = force
-            self.forceX[eid][nid] = forceX
-            self.shearY[eid][nid] = shearY
-            self.shearZ[eid][nid] = shearZ
-            self.torsion[eid][nid] = torsion
-            self.bendingY[eid][nid] = bendingY
-            self.bendingZ[eid][nid] = bendingZ
-
-    def add_sort1(self, nnodes, dt, data):
-        [eid, parent, coord, icord, forces] = data
-        if dt not in self.forceX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-
-        self.forceX[dt][eid] = {}
-        self.shearY[dt][eid] = {}
-        self.shearZ[dt][eid] = {}
-        self.torsion[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingZ[dt][eid] = {}
-
-        for force in forces:
-            [nid, position, forceX, shearY, shearZ, torsion,
-             bendingY, bendingZ] = force
-            self.forceX[dt][eid][nid] = forceX
-            self.shearY[dt][eid][nid] = shearY
-            self.shearZ[dt][eid][nid] = shearZ
-            self.torsion[dt][eid][nid] = torsion
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingZ[dt][eid][nid] = bendingZ
-
-    def add_sort2(self, nnodes, eid, data):
-        [dt, parent, coord, icord, forces] = data
-        if dt not in self.forceX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-
-        self.forceX[dt][eid] = {}
-        self.shearY[dt][eid] = {}
-        self.shearZ[dt][eid] = {}
-        self.torsion[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingZ[dt][eid] = {}
-        for force in forces:
-            [nid, position, forceX, shearY, shearZ, torsion,
-             bendingY, bendingZ] = force
-            self.forceX[dt][eid][nid] = forceX
-            self.shearY[dt][eid][nid] = shearY
-            self.shearZ[dt][eid][nid] = shearZ
-            self.torsion[dt][eid][nid] = torsion
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingZ[dt][eid][nid] = bendingZ
-
-
 class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
@@ -3354,7 +3497,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
@@ -3408,6 +3551,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             self.shearXZ[eid][nid] = shearXZ
 
     def add_sort1(self, nnodes, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         [eid, parent, coord, icord, theta, forces] = data
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 

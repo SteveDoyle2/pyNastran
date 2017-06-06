@@ -1,4 +1,7 @@
+from __future__ import print_function
 from numpy import array, zeros, empty
+from pyNastran.utils.log import get_logger2
+
 
 def convert_to_int(line):
     sline = line.strip().split()
@@ -11,10 +14,8 @@ def convert_to_float(line):
 
 class AvusGrid(object):
     def __init__(self, log=None, debug=False):
-        self.log = log
-
+        self.log = get_logger2(log=log, debug=debug)
         self.infilename = None
-        self.infile = None
 
         self.zones = None
         self.npoints = None
@@ -28,23 +29,23 @@ class AvusGrid(object):
         self.tet_elements = empty(shape=0)
         self.hexa_elements = empty(shape=0)
 
-    def _read_points(self, zones, npoints):
+    def _read_points(self, infile, zones, npoints):
         npoints_total = sum(npoints)
         points = zeros((npoints_total, 3), dtype='float32')
         for i in range(npoints_total):
-            line = self.infile.readline()
+            line = infile.readline()
             xyz = line.split()
             points[i, :] = xyz
         return points
 
-    def _read_faces(self, nfaces):
+    def _read_faces(self, infile, nfaces):
         """
         # reads faces - needed for viewing
         """
         ipoints = []
         for nf in nfaces:
             for nfi in range(nf):
-                line = self.infile.readline()
+                line = infile.readline()
                 sline = convert_to_int(line)
                 numppf = sline[0] # must be 2 or 3 - dimensionality
 
@@ -64,11 +65,10 @@ class AvusGrid(object):
                 if min(icell) <= 0:
                     # if it's a boundary cell (inner or outer)
                     ipoints.append(ipoint)
-        self.infile.close()
         return ipoints
 
-    def _read_header(self):
-        line = self.infile.readline()
+    def _read_header(self, infile):
+        line = infile.readline()
         ndm, nzones, npatches = convert_to_int(line)
         zones = [z for z in range(nzones)]
 
@@ -78,7 +78,7 @@ class AvusGrid(object):
         mxppfs = []
         mxfpcs = []
         for nz in zones:
-            line = self.infile.readline()
+            line = infile.readline()
             (npoint, nface, ncell, mxppf, mxfpc) = convert_to_int(line)
             sline = line.strip().split()
 
@@ -87,7 +87,8 @@ class AvusGrid(object):
             ncells.append(ncell)
             mxppfs.append(mxppf)
             mxfpcs.append(mxfpc)
-            print("npoint=%s nface=%s ncells=%s mxppf=%s mxfpc=%s" % (npoint, nface, ncell, mxppf, mxfpc))
+            print("npoint=%s nface=%s ncells=%s mxppf=%s mxfpc=%s" % (
+                npoint, nface, ncell, mxppf, mxfpc))
 
         self.ndm = ndm
         self.npatches = npatches
@@ -98,10 +99,12 @@ class AvusGrid(object):
 
     def read_avus_grid(self, avus_filename):
         self.infilename = avus_filename
-        self.infile = open(self.infilename, 'r')
-        (zones, npoints, nfaces, ncells, mxppfs, mxfpcs) = self._read_header()
-        points = self._read_points(zones, npoints)
-        faces = self._read_faces(nfaces)
+        with open(self.infilename, 'r') as infile:
+
+            # TODO: what are mxppfs, mxfpcs???
+            (zones, npoints, nfaces, ncells, mxppfs, mxfpcs) = self._read_header(infile)
+            points = self._read_points(infile, zones, npoints)
+            faces = self._read_faces(infile, nfaces)
 
         self.nodes = points
         self.tri_elements = array(faces, dtype='int32') - 1

@@ -1,4 +1,5 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
+from __future__ import print_function
 from six import string_types
 import numpy as np
 from numpy.linalg import norm
@@ -80,7 +81,7 @@ class CBEAM(CBAR):
                         n, value, self.type)
                     raise KeyError(msg)
 
-    def __init__(self, eid, pid, ga, gb, x, g0, offt, bit,
+    def __init__(self, eid, pid, nids, x, g0, offt='GGG', bit=None,
                  pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment=''):
         """
         Adds a CBEAM card
@@ -91,8 +92,8 @@ class CBEAM(CBAR):
             property id
         mid : int
             material id
-        ga / gb : int
-            grid point at End A/B
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         x : List[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
@@ -137,8 +138,8 @@ class CBEAM(CBAR):
 
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.x = x
         self.g0 = g0
         self.offt = offt
@@ -153,6 +154,16 @@ class CBEAM(CBAR):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBEAM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -174,11 +185,29 @@ class CBEAM(CBAR):
         sa = integer_or_blank(card, 17, 'sa', 0)
         sb = integer_or_blank(card, 18, 'sb', 0)
         assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
-        return CBEAM(eid, pid, ga, gb, x, g0, offt, bit,
+        return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, f, comment=''):
+        """
+        Adds a CBEAM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        f : int
+            beam flag
+            0 : basic
+                [x1, x2, x3] is used
+            1 : cid
+                [x1, x2, x3] is used
+            2 : grid
+                g0 is used instead of [x1, x2, x3]
+        comment : str; default=''
+            a comment for the card
+        """
         #: .. todo:: verify
         assert len(data) == 2, 'data=%s len(data)=%s' % (data, len(data))
         #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
@@ -231,7 +260,7 @@ class CBEAM(CBAR):
 
         wa = np.array([main[8], main[9], main[10]], 'float64')
         wb = np.array([main[11], main[12], main[13]], 'float64')
-        return CBEAM(eid, pid, ga, gb, x, g0, offt, bit,
+        return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
     def _validate_input(self):
@@ -266,6 +295,227 @@ class CBEAM(CBAR):
                    '(float)...field8=%s\n' % (cls.type, field8))
             raise RuntimeError("Card Instantiation: %s" % msg)
         return offt, bit
+
+    def Centroid(self):
+        return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
+
+    def center_of_mass(self):
+        """
+        A          B
+        *----------*
+        ^          ^
+        | wa       | wb
+        |          |
+        1----------2
+
+        1-2 are the nodes of the bar
+        A-B defines the axis of the shear center
+
+
+             ^ z
+        +--+ |
+        |  | |
+        |  | 2---> y
+        |  +--+
+        |     |
+        +-----+
+        """
+        cda = self.ga_ref.cid_ref
+        cdb = self.gb_ref.cid_ref
+        ga = self.ga_ref.get_position() + cda.transform_node_to_global_assuming_rectangular(self.wa)
+        gb = self.gb_ref.get_position() + cdb.transform_node_to_global_assuming_rectangular(self.wb)
+        #x = self.get_orientation_vector()
+        return (ga + gb) / 2.
+
+    def get_axes(self, model, debug=False):
+        """
+        OFFT flag
+        ---------
+        ABC or A-B-C (an example is G-G-G or B-G-G)
+        while the slots are:
+         - A -> orientation; values=[G, B]
+         - B -> End A; values=[G, O]
+         - C -> End B; values=[G, O]
+
+        and the values for A,B,C mean:
+         - B -> basic
+         - G -> global
+         - O -> orientation
+
+        so for example G-G-G, that's global for all terms.
+        BOG means basic orientation, orientation end A, global end B
+
+        so now we're left with what does basic/global/orientation mean?
+        - basic -> the global coordinate system defined by cid=0
+        - global -> the local coordinate system defined by the
+                    CD field on the GRID card, but referenced by
+                    the CBAR/CBEAM
+        - orientation -> ???
+
+        NX Nastran uses GGG implicitly
+        """
+        eid = self.eid
+        (nid1, nid2) = self.node_ids
+        node1 = model.nodes[nid1]
+        node2 = model.nodes[nid2]
+        n1 = node1.get_position()
+        n2 = node2.get_position()
+        centroid = (n1 + n2) / 2.
+        i = n2 - n1
+        Li = norm(i)
+        ihat = i / Li
+
+        is_failed = True
+        if self.g0:
+            #debug = False
+            msg = 'which is required by %s eid=%s\n%s' % (self.type, self.g0, str(self))
+            g0_ref = model.Node(self.g0, msg=msg)
+            if debug:  # pragma: no cover
+                print('  g0 = %s' % self.g0)
+                print('  g0_ref = %s' % g0_ref)
+            n0 = g0_ref.get_position()
+            v = n0 - n1
+        else:
+            #debug = False
+            ga = model.nodes[self.Ga()]
+            cda = ga.Cd()
+            cda_ref = model.Coord(cda)
+            v = cda_ref.transform_node_to_global(self.x)
+            if debug:  # pragma: no cover
+                print('  ga = %s' % self.ga)
+                if cda != 0:
+                    print('  cd = %s' % cda_ref)
+                else:
+                    print('  cd = 0')
+
+                print('  x = %s' % self.x)
+                print('  v = %s' % v)
+            #v = self.x
+
+        offt_vector, offt_end_a, offt_end_b = self.offt
+        if debug:  # pragma: no cover
+            print('  offt vector,A,B=%r' % (self.offt))
+        # if offt_end_a == 'G' or (offt_end_a == 'O' and offt_vector == 'G'):
+
+        cd1 = node1.Cd()
+        cd2 = node2.Cd()
+        cd1_ref = model.Coord(cd1)
+        cd2_ref = model.Coord(cd2)
+        # node1.cd_ref, node2.cd_ref
+
+        if offt_vector == 'G':
+            # end A
+            # global - cid != 0
+            if cd1 != 0:
+                v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
+                #if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
+                    #msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
+                        #node1.cd_ref.type, node1.nid)
+                    #self.log.error(msg)
+                    #continue
+                    #raise NotImplementedError(node1.cd)
+        elif offt_vector == 'B':
+            # basic - cid = 0
+            pass
+        else:
+            msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, self.offt)
+            #self.log.error(msg)
+            return is_failed, msg
+            #raise NotImplementedError(msg)
+        #print('v = %s' % v)
+
+        # rotate wa
+        wa = self.wa
+        if offt_end_a == 'G':
+            if cd1 != 0:
+                #if node1.cd.type not in ['CORD2R', 'CORD1R']:
+                    #continue # TODO: support CD transform
+                # TODO: fixme
+                wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
+        elif offt_end_a == 'B':
+            pass
+        elif offt_end_a == 'O':
+            # TODO: fixme
+            wa = cd1_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
+        else:
+            msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, self.offt)
+            self.log.error(msg)
+            return is_failed, msg
+            #raise NotImplementedError(msg)
+
+        #print('wa = %s' % wa)
+        # rotate wb
+        wb = self.wb
+        if offt_end_b == 'G':
+            if cd2 != 0:
+                #if cd2_ref.type not in ['CORD2R', 'CORD1R']:
+                    #continue # TODO: MasterModelTaxi
+                # TODO: fixme
+                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+
+        elif offt_end_b == 'B':
+            pass
+        elif offt_end_b == 'O':
+            # TODO: fixme
+            wb = cd1_ref.transform_node_to_global_assuming_rectangular(n2 - wb)
+        else:
+            msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, self.offt)
+            model.log.error(msg)
+            return is_failed, msg
+            #raise NotImplementedError(msg)
+
+        #print('wb =', wb)
+        ## concept has a GOO
+        #if not self.offt in ['GGG', 'BGG']:
+            #msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (
+                #self.offt, eid)
+            #self.log.error(msg)
+            #continue
+
+        vhat = v / norm(v) # j
+        try:
+            z = np.cross(ihat, vhat) # k
+        except ValueError:
+            msg = 'Invalid vector length\n'
+            msg += 'n1  =%s\n' % str(n1)
+            msg += 'n2  =%s\n' % str(n2)
+            msg += 'nid1=%s\n' % str(nid1)
+            msg += 'nid2=%s\n' % str(nid2)
+            msg += 'i   =%s\n' % str(i)
+            msg += 'Li  =%s\n' % str(Li)
+            msg += 'ihat=%s\n' % str(ihat)
+            msg += 'v   =%s\n' % str(v)
+            msg += 'vhat=%s\n' % str(vhat)
+            msg += 'z=cross(ihat, vhat)'
+            print(msg)
+            raise ValueError(msg)
+
+        zhat = z / norm(z)
+        yhat = np.cross(zhat, ihat) # j
+        if debug:
+            print('  centroid = %s' % centroid)
+            print('  ihat = %s' % ihat)
+            print('  yhat = %s' % yhat)
+            print('  zhat = %s' % zhat)
+        #if eid == 5570:
+            #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+                  #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+
+        if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
+            print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+                eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+        elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
+            print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
+                  ' v=%s i=%s n%s=%s n%s=%s' % (
+                      eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+
+        #print('adding bar %s' % bar_type)
+        #print('   centroid=%s' % centroid)
+        #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
+        #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
+        #print('   Li=%s' % (Li))
+        is_failed = False
+        return is_failed, wa, wb, ihat, yhat, zhat
 
     def Mid(self):
         if isinstance(self.pid, integer_types):
@@ -362,9 +612,29 @@ class CBEAM(CBAR):
         self.gb = self.Gb()
         del self.ga_ref, self.gb_ref, self.pid_ref
 
+    def _verify(self, xref=False):
+        eid = self.eid
+        pid = self.Pid()
+        edges = self.get_edge_ids()
+        if xref:  # True
+            mid = self.Mid()
+            nsm = self.Nsm()
+            assert isinstance(mid, int), 'mid=%r' % mid
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
+            assert self.pid_ref.type in ['PBEAM', 'PBEAML', 'PBCOMP'], '%s%s' % (self, self.pid_ref)
+            A = self.Area()
+            mpl = self.MassPerLength()
+            L = self.Length()
+            mass = self.Mass()
+            assert isinstance(A, float), 'eid=%s A=%r' % (eid, A)
+            assert isinstance(L, float), 'eid=%s L=%r' % (eid, L)
+            assert isinstance(mpl, float), 'eid=%s mass_per_length=%r' % (eid, mpl)
+            assert isinstance(mass, float), 'eid=%s mass=%r' % (eid, mass)
+            assert L > 0.0, 'eid=%s L=%s' % (eid, L)
+
     def raw_fields(self):
-        (x1, x2, x3) = self.getX_G0_defaults()
-        offt = self.getOfft_Bit_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
+        offt = self.get_offt_bit_defaults()
         ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
                        self.pa, self.pb] + list(self.wa) + list(self.wb) + [self.sa, self.sb]
@@ -377,14 +647,16 @@ class CBEAM(CBAR):
         w1b = set_blank_if_default(self.wb[0], 0.0)
         w2b = set_blank_if_default(self.wb[1], 0.0)
         w3b = set_blank_if_default(self.wb[2], 0.0)
+        pa = set_blank_if_default(self.pa, 0)
+        pb = set_blank_if_default(self.pb, 0)
 
         sa = set_blank_if_default(self.sa, 0)
         sb = set_blank_if_default(self.sb, 0)
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         offt = self.get_offt_bit_defaults()
         ga, gb = self.node_ids
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
-                       self.pa, self.pb, w1a, w2a, w3a,
+                       pa, pb, w1a, w2a, w3a,
                        w1b, w2b, w3b, sa, sb]
         return list_fields
 

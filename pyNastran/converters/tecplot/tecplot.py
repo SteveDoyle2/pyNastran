@@ -3,61 +3,34 @@ models from:
     http://people.sc.fsu.edu/~jburkardt/data/tec/tec.html
 """
 from __future__ import print_function
-from six import iteritems, string_types, PY3
-
 import os
 from struct import unpack
 from collections import defaultdict
+import itertools
 
-from numpy import array, vstack, hstack, where, unique, savetxt, zeros, intersect1d, arange
-import numpy as np
+from six import iteritems, string_types, PY3
+from numpy import (
+    array, vstack, hstack, where, unique, zeros, loadtxt, savetxt, intersect1d, in1d)
+#import numpy as np
 
 from pyNastran.utils import is_binary_file
-from pyNastran.utils.log import get_logger
+#from pyNastran.utils.numpy_utils import unique_rows
+from pyNastran.utils.log import get_logger2
 from pyNastran.op2.fortran_format import FortranFormat
 
-def read_tecplot(tecplot_filename, log=None, debug=False):
+def read_tecplot(tecplot_filename, use_cols=None, dtype=None, log=None, debug=False):
     """loads a tecplot file"""
     tecplot = Tecplot(log=log, debug=debug)
+    if use_cols:
+        tecplot.use_cols = use_cols
+        tecplot.dtype = dtype
     tecplot.read_tecplot(tecplot_filename)
     return tecplot
 
-def unique_rows(A, return_index=False, return_inverse=False):
-    """
-    Similar to MATLAB's unique(A, 'rows'), this returns B, I, J
-    where B is the unique rows of A and I and J satisfy
-    A = B[J,:] and B = A[I,:]
-
-    Returns
-    -------
-    I : ndarray?
-        the index array;
-        returns if return_index=True
-    J : ndarray?
-        the inverse array;
-        returns if return_inverse=True
-
-    Example (not tested)
-    --------------------
-    >>> B       = unique_rows(A, return_index=False, return_inverse=False)
-    >>> B, I    = unique_rows(A, return_index=True,  return_inverse=False)
-    >>> B, J    = unique_rows(A, return_index=False, return_inverse=True)
-    >>> B, I, J = unique_rows(A, return_index=True,  return_inverse=True)
-
-    per https://github.com/numpy/numpy/issues/2871
-    """
-    A = np.require(A, requirements='C')
-    assert A.ndim == 2, "array must be 2-dim'l"
-
-    B = np.unique(A.view([('', A.dtype)]*A.shape[1]),
-               return_index=return_index,
-               return_inverse=return_inverse)
-
-    if return_index or return_inverse:
-        return (B[0].view(A.dtype).reshape((-1, A.shape[1]), order='C'),) \
-            + B[1:]
-    else:
-        return B.view(A.dtype).reshape((-1, A.shape[1]), order='C')
+#class TecplotCommon(object):
+    #def __init__(self, log=None, debug=False):
+        #self.log = get_logger2(log, debug=debug)
+        #self.debug = debug
 
 class Tecplot(FortranFormat):
     """
@@ -65,21 +38,31 @@ class Tecplot(FortranFormat):
     Writes an ASCII Tecplot 10 file (no transient support).
     """
     def __init__(self, log=None, debug=False):
+        # defines binary file specific features
         FortranFormat.__init__(self)
         self.endian = b'<'
-        self.log = get_logger(log, 'debug' if debug else 'info')
-        self.debug = debug
-        self.xyz = array([], dtype='float32')
 
+        self.tecplot_filename = ''
+        self.log = get_logger2(log, debug=debug)
+        self.debug = debug
+
+        # mesh = None : model hasn't been read
+        self.is_mesh = None
+
+        # mesh = True : this is a structured/unstructured grid
+        self.xyz = array([], dtype='float32')
         self.tet_elements = array([], dtype='int32')
         self.hexa_elements = array([], dtype='int32')
-
         self.quad_elements = array([], dtype='int32')
         self.tri_elements = array([], dtype='int32')
-
         self.results = array([], dtype='float32')
-        self.tecplot_filename = ''
         self.variables = []
+
+        # mesh = False : this is a plot file
+        self.use_cols = None
+        self.dtype = None
+        self.A = None
+
 
     @property
     def result_names(self):
@@ -104,6 +87,74 @@ class Tecplot(FortranFormat):
         if is_binary_file(tecplot_filename):
             return self.read_tecplot_binary(tecplot_filename)
         return self.read_tecplot_ascii(tecplot_filename)
+
+    def read_header_lines(self, tecplot_file, line):
+        """
+        reads a tecplot header
+
+        Example 1
+        =========
+        TITLE     = "tecplot geometry and solution file"
+        VARIABLES = "x"
+        "y"
+        "z"
+        "rho"
+        "u"
+        "v"
+        "w"
+        "p"
+        ZONE T="\"processor 1\""
+        n=522437, e=1000503, ZONETYPE=FEBrick
+        DATAPACKING=BLOCK
+
+        Example 2
+        =========
+        title="Force and Momment Data for forces"
+        variables="Iteration"
+        "C_L","C_D","C_M_x","C_M_y","C_M_z""C_x","C_y","C_z","C_Lp","C_Dp", "C_Lv", "C_Dv""C_M_xp"
+        "C_M_yp","C_M_zp","C_M_xv","C_M_yv""C_M_zv","C_xp","C_yp","C_zp","C_xv","C_yv""C_zv
+        "Mass flow","<greek>r</greek>","u"
+        "p/p<sub>0</sub>","T","p<sub>t</sub>/p<sub>0</sub>"
+        "T<sub>t</sub>","Mach"
+        "Simulation Time"
+        zone,t="forces"
+        """
+        i = 0
+        vars_found = []
+        header_lines = []
+        while i < 30:
+            #print(i, line.strip())
+            #self.n = 0
+            if len(line) == 0 or line[0] == '#':
+                line = tecplot_file.readline().strip()
+                i += 1
+                continue
+            if line[0].isdigit() or line[0] == '-':
+                self.log.debug('breaking...')
+                break
+            if 'TITLE' in line:
+                vars_found.append('TITLE')
+            if 'VARIABLES' in line:
+                vars_found.append('VARIABLES')
+            if 'ZONE T' in line:
+                vars_found.append('ZONE T')
+            if 'ZONE' in line:
+                vars_found.append('ZONE')
+            #if 'ZONE N' in line:
+                #vars_found.append('N')
+            if 'ZONETYPE' in line:
+                vars_found.append('ZONETYPE')
+            if 'DATAPACKING' in line:
+                vars_found.append('DATAPACKING')
+            header_lines.append(line.strip())
+            #if len(vars_found) == 5:
+                #break
+            i += 1
+            line = tecplot_file.readline().strip()
+
+        self.log.debug('vars_found = %s' % vars_found)
+
+        return header_lines, i, line
 
     def read_tecplot_ascii(self, tecplot_filename, nnodes=None, nelements=None):
         """
@@ -135,234 +186,43 @@ class Tecplot(FortranFormat):
             line = tecplot_file.readline().strip()
             iblock = 0
             while 1:
-                i = 0
-                vars_found = []
-                header_lines = []
-                while i < 30:
-                    #TITLE     = "tecplot geometry and solution file"
-                    #VARIABLES = "x"
-                    #"y"
-                    #"z"
-                    #"rho"
-                    #"u"
-                    #"v"
-                    #"w"
-                    #"p"
-                    #ZONE T="\"processor 1\""
-                    # n=522437, e=1000503, ZONETYPE=FEBrick
-                    # DATAPACKING=BLOCK
-                    #self.n = 0
-                    if len(line) == 0 or line[0] == '#':
-                        line = tecplot_file.readline().strip()
-                        i += 1
-                        continue
-                    if line[0].isdigit() or line[0] == '-':
-                        break
-                    if 'TITLE' in line:
-                        vars_found.append('TITLE')
-                    if 'VARIABLES' in line:
-                        vars_found.append('VARIABLES')
-                    if 'ZONE T' in line:
-                        vars_found.append('ZONE T')
-                    #if 'ZONE N' in line:
-                        #vars_found.append('N')
-                    if 'ZONETYPE' in line:
-                        vars_found.append('ZONETYPE')
-                    if 'DATAPACKING' in line:
-                        vars_found.append('DATAPACKING')
-                    header_lines.append(line.rstrip())
-                    #if len(vars_found) == 5:
-                        #break
-                    i += 1
-                    line = tecplot_file.readline().strip()
-
+                header_lines, i, line = self.read_header_lines(tecplot_file, line)
                 #print(header_lines)
-                headers_dict = {}
-                if len(header_lines) == 0:
+                headers_dict = _header_lines_to_header_dict(header_lines)
+                if headers_dict is None:
                     break
-                header = ', '.join(header_lines)
-                headers = header.split(',')
-                nheaders = len(headers) - 1
-                for iheader, header in enumerate(headers):
-                    #print('iheader=%s header=%r' % (iheader, header))
-                    if '=' in header:
-                        sline = header.strip().split('=', 1)
-                        parse = False
-                        #print('iheader=%s nheaders=%s' % (iheader, nheaders))
-                        if iheader == nheaders:
-                            parse = True
-                        elif '=' in headers[iheader + 1]:
-                            parse = True
-                    else:
-                        sline += [header.strip()]
-                        parse = False
-                        if iheader == nheaders:
-                            parse = True
-                        elif '=' in headers[iheader + 1]:
-                            parse = True
 
-                    if parse:
-                        #print('  parsing')
-                        key = sline[0].strip().upper()
-                        if key.startswith('ZONE '):
-                            # the key is not "ZONE T" or "ZONE E"
-                            # ZONE is a flag, T is title, E is number of elements
-                            key = key[5:].strip()
-                        value = [val.strip() for val in sline[1:]]
-                        if len(value) == 1:
-                            value = value[0].strip()
-                        #assert not isinstance(value, list), value
-                        headers_dict[key] = value
-                        #print('  ', value)
-                        #value = value.strip()
-
-                        # 'T', 'ZONE T',  ???
-                        allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
-                                        'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
-                                        'I', 'J']
-                        assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
-                        parse = False
                 #print(headers_dict.keys())
-
                 if 'ZONETYPE' in headers_dict:
                     zone_type = headers_dict['ZONETYPE'].upper() # FEBrick
                     data_packing = headers_dict['DATAPACKING'].upper() # block
+                    self._read_zonetype(zone_type, tecplot_file, iblock, headers_dict, line,
+                                        nnodes, nelements,
+                                        xyz_list, hexas_list, tets_list, quads_list, tris_list,
+                                        results_list,
+                                        data_packing=data_packing)
                 elif 'F' in headers_dict:
                     fe = headers_dict['F'] # FEPoint
                     assert isinstance(fe, str), headers_dict
                     zone_type = fe.upper() # FEPoint
                     assert zone_type == 'FEPOINT', zone_type
                     self.log.debug('zone_type = %r' % zone_type[0])
+                    self._read_zonetype(zone_type, tecplot_file, iblock, headers_dict, line,
+                                        nnodes, nelements,
+                                        xyz_list, hexas_list, tets_list, quads_list, tris_list,
+                                        results_list,
+                                        fe=fe)
+                elif (('ZONE' in headers_dict) and
+                      (headers_dict['ZONE'] is None) and
+                      ('T' in headers_dict)):
+                    A, line = self.read_table(tecplot_file, iblock, headers_dict, line)
+                    self.A = A
+                    return
+
                 else:
-                    raise NotImplementedError('headers=%s' % str(headers_dict.keys()))
-                if iblock == 0:
-                    variables = headers_dict['VARIABLES']
-                    self.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
-                    self.log.debug('self.variables = %s' % self.variables)
-                    nresults = len(variables) - 3 # x, y, z, rho, u, v, w, p
-                    self.log.debug('nresults = %s' % nresults)
-
-                self.log.debug(headers_dict)
-                nnodesi = int(headers_dict['N'])
-                nelementsi = int(headers_dict['E'])
-                #print('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
-                xyz = zeros((nnodesi, 3), dtype='float32')
-                results = zeros((nnodesi, nresults), dtype='float32')
-                if zone_type == 'FEBRICK':
-                    # hex
-                    elements = zeros((nelementsi, 8), dtype='int32')
-                elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETETRAHEDRON'):
-                    # quads / tets
-                    elements = zeros((nelementsi, 4), dtype='int32')
-                elif zone_type == 'FETRIANGLE':
-                    # tris
-                    elements = zeros((nelementsi, 3), dtype='int32')
-                #elif zone_type == 'FEBLOCK':
-                    #pass
-                else:
-                    #if isinstance(zone_type, list):
-                        #raise NotImplementedError(zone_type[0])
-                    raise NotImplementedError(zone_type)
-
-                sline = line.strip().split()
-                if zone_type in ('FEBRICK', 'FETETRAHEDRON'):
-                    if data_packing == 'POINT':
-                        for inode in range(nnodesi):
-                            if inode == 0:
-                                self.log.debug('zone_type=%s sline=%s' %(zone_type, sline))
-                            try:
-                                xyz[inode, :] = sline[:3]
-                                results[inode, :] = sline[3:]
-                            except ValueError:
-                                msg = 'i=%s line=%r\n' % (inode, line)
-                                msg += 'sline = %s' % str(sline)
-                                print(msg)
-                                raise
-
-                            line = tecplot_file.readline().strip()
-                            while len(line) == 0 or line[0] == '#':
-                                line = tecplot_file.readline().strip()
-                            sline = line.split()
-                    elif data_packing == 'BLOCK':
-                        for ires in range(3 + nresults):
-                            result = []
-                            i = 0
-                            nresult = 0
-                            nnodes_max = nnodesi + 1
-                            while i < nnodes_max:
-                                result += sline
-                                nresult += len(sline)
-                                if nresult >= nnodesi:
-                                    break
-                                line = tecplot_file.readline().strip()
-                                while line[0] == '#':
-                                    line = tecplot_file.readline().strip()
-                                sline = line.split()
-                                if i == 0:
-                                    self.log.debug('zone_type=%s sline=%s' % (zone_type, sline))
-                                i += len(sline)
-                            assert i < nnodes_max, 'nresult=%s' % nresult
-                            if ires in [0, 1, 2]:
-                                self.log.debug('ires=%s nnodes=%s len(result)=%s' %
-                                               (ires, nnodes, len(result)))
-                                xyz[:, ires] = result
-                            else:
-                                results[:, ires - 3] = result
-                    else:
-                        raise NotImplementedError(data_packing)
-                elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETRIANGLE'):
-                    sline = line.strip().split()
-                    for inode in range(nnodesi):
-                        #print('inode ', inode, sline)
-                        xyz[inode, :] = sline[:3]
-                        #assert abs(xyz[inode, 1]) > 5.0, 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
-                        results[inode, :] = sline[3:]
-                        line = tecplot_file.readline().strip()
-                        while line[0] == '#':
-                            line = tecplot_file.readline().strip()
-                        sline = line.split()
-                else:
-                    raise NotImplementedError(zone_type)
-
-                i = 0
-                #print(elements.shape)
-                #print('xyz[0 , :]', xyz[0, :])
-                #print('xyz[-1, :]', xyz[-1, :])
-                #print(sline)
-                assert '.' not in sline[0], sline
-
-                i = 0
-                for i in range(nelementsi):
-                    try:
-                        elements[i, :] = sline
-                    except IndexError:
-                        raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
-                    except ValueError:
-                        raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
-                    line = tecplot_file.readline()
-                    sline = line.strip().split()
-                #print(f.readline())
-
-                if zone_type == 'FEBRICK':
-                    hexas_list.append(elements + nnodes)
-                elif zone_type == 'FETETRAHEDRON':
-                    tets_list.append(elements + nnodes)
-                elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
-                    quads_list.append(elements + nnodes)
-                elif zone_type == 'FETRIANGLE':
-                    tris_list.append(elements + nnodes)
-                else:
-                    raise NotImplementedError(zone_type)
-                xyz_list.append(xyz)
-                results_list.append(results)
-                nnodes += nnodesi
-                nelements += nelementsi
-                self.log.debug('nnodes=%s nelements=%s' % (nnodes, nelements))
-                del headers_dict
-                iblock += 1
-                if iblock == 10:
-                    break
-                self.log.debug('final sline=%s' % sline)
+                    msg = 'headers=%s\n' % str(headers_dict)
+                    msg += 'line = %r' % line.strip()
+                    raise NotImplementedError(msg)
 
         self.log.debug('stacking elements')
         if len(hexas_list):
@@ -385,28 +245,201 @@ class Tecplot(FortranFormat):
             results = vstack(results_list)
         #self.elements = elements - 1
         #print(self.elements)
-        #tecplot_file.close()
 
         self.xyz = xyz
         self.results = results
 
+    def read_table(self, tecplot_file, iblock, headers_dict, line):
+        """
+        reads a space-separated tabular data block
+        """
+        variables = [var.strip('" ') for var in headers_dict['VARIABLES']]
+        print('variables = %s' % variables)
+        #self.dtype[]
+        use_cols = [variables.index(var) for var in self.use_cols]
+
+        # add on the preceding line to the line "list"
+        # that's not a hack at all...
+        lines = itertools.chain((line, ), iter(tecplot_file))
+        A = loadtxt(lines, dtype=self.dtype, comments='#', delimiter=None,
+                    converters=None, skiprows=0,
+                    usecols=use_cols, unpack=False, ndmin=0)
+        return A, None
+
+    def _read_zonetype(self, zone_type, tecplot_file, iblock, headers_dict, line,
+                       nnodes, nelements,
+                       xyz_list, hexas_list, tets_list, quads_list, tris_list,
+                       results_list,
+                       data_packing=None, fe=None):
+        """
+        reads:
+          - ZONE E
+          - ZONE T
+
+        ZONE is a flag, T is title, E is number of elements
+        """
+        if iblock == 0:
+            variables = headers_dict['VARIABLES']
+            self.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
+            self.log.debug('self.variables = %s' % self.variables)
+            nresults = len(variables) - 3 # x, y, z, rho, u, v, w, p
+            self.log.debug('nresults = %s' % nresults)
+
+        self.log.debug(headers_dict)
+        nnodesi = int(headers_dict['N'])
+        nelementsi = int(headers_dict['E'])
+        self.log.info('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
+        xyz = zeros((nnodesi, 3), dtype='float32')
+        results = zeros((nnodesi, nresults), dtype='float32')
+        if zone_type == 'FEBRICK':
+            # hex
+            elements = zeros((nelementsi, 8), dtype='int32')
+        elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETETRAHEDRON'):
+            # quads / tets
+            elements = zeros((nelementsi, 4), dtype='int32')
+        elif zone_type == 'FETRIANGLE':
+            # tris
+            elements = zeros((nelementsi, 3), dtype='int32')
+        #elif zone_type == 'FEBLOCK':
+            #pass
+        else:
+            #if isinstance(zone_type, list):
+                #raise NotImplementedError(zone_type[0])
+            raise NotImplementedError(zone_type)
+
+        sline = line.strip().split()
+        if zone_type in ('FEBRICK', 'FETETRAHEDRON'):
+            if data_packing == 'POINT':
+                for inode in range(nnodesi):
+                    if inode == 0:
+                        self.log.debug('zone_type=%s sline=%s' %(zone_type, sline))
+                    try:
+                        xyz[inode, :] = sline[:3]
+                        results[inode, :] = sline[3:]
+                    except ValueError:
+                        msg = 'i=%s line=%r\n' % (inode, line)
+                        msg += 'sline = %s' % str(sline)
+                        print(msg)
+                        raise
+
+                    line = tecplot_file.readline().strip()
+                    while len(line) == 0 or line[0] == '#':
+                        line = tecplot_file.readline().strip()
+                    sline = line.split()
+            elif data_packing == 'BLOCK':
+                result = []
+                iresult = 0
+                nresult = 0
+                nnodes_max = (3 + nresults) * nnodesi
+                while iresult < nnodes_max:
+                    result += sline
+                    nresult += len(sline)
+                    if iresult >= nnodes_max:
+                        self.log.debug('breaking...')
+                        #break
+                    line = tecplot_file.readline().strip()
+                    while line[0] == '#':
+                        line = tecplot_file.readline().strip()
+                    sline = line.split()
+                    if iresult == 0:
+                        self.log.debug('zone_type=%s sline=%s' % (zone_type, sline))
+                    iresult += len(sline)
+
+                for ires in range(3 + nresults):
+                    i0 = ires * nnodesi
+                    i1 = (ires + 1) * nnodesi #+ 1
+                    if len(result[i0:i1]) != nnodesi:
+                        msg = 'ires=%s len=%s nnodesi=%s' % (
+                            ires, len(result[i0:i1]), nnodesi)
+                        raise RuntimeError(msg)
+                    if ires in [0, 1, 2]:
+                        self.log.debug('ires=%s nnodesi=%s len(result)=%s' %
+                                       (ires, nnodesi, len(result)))
+                        xyz[:, ires] = result[i0:i1]
+                    else:
+                        results[:, ires - 3] = result[i0:i1]
+            else:
+                raise NotImplementedError(data_packing)
+        elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETRIANGLE'):
+            sline = line.strip().split()
+            for inode in range(nnodesi):
+                #print('inode ', inode, sline)
+                xyz[inode, :] = sline[:3]
+                #if abs(xyz[inode, 1]) <= 5.0:
+                    #msg = 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
+                    #raise RuntimeError(msg)
+
+                results[inode, :] = sline[3:]
+                line = tecplot_file.readline().strip()
+                while line[0] == '#':
+                    line = tecplot_file.readline().strip()
+                sline = line.split()
+        else:
+            raise NotImplementedError(zone_type)
+
+        i = 0
+        #print(elements.shape)
+        #print('xyz[0 , :]', xyz[0, :])
+        #print('xyz[-1, :]', xyz[-1, :])
+        #print(sline)
+        assert '.' not in sline[0], sline
+
+        i = 0
+        for i in range(nelementsi):
+            try:
+                elements[i, :] = sline
+            except IndexError:
+                raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
+            except ValueError:
+                raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
+            line = tecplot_file.readline()
+            sline = line.strip().split()
+        #print(f.readline())
+
+        if zone_type == 'FEBRICK':
+            hexas_list.append(elements + nnodes)
+        elif zone_type == 'FETETRAHEDRON':
+            tets_list.append(elements + nnodes)
+        elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
+            quads_list.append(elements + nnodes)
+        elif zone_type == 'FETRIANGLE':
+            tris_list.append(elements + nnodes)
+        else:
+            raise NotImplementedError(zone_type)
+        xyz_list.append(xyz)
+        results_list.append(results)
+        nnodes += nnodesi
+        nelements += nelementsi
+        self.log.debug('nnodes=%s nelements=%s' % (nnodes, nelements))
+        del headers_dict
+        iblock += 1
+        if iblock == 10:
+            return
+        self.log.debug('final sline=%s' % sline)
+
     @property
     def nnodes(self):
+        """gets the number of nodes in the model"""
         return self.xyz.shape[0]
 
     @property
     def nelements(self):
+        """gets the number of elements in the model"""
         return (self.hexa_elements.shape[0] + self.tet_elements.shape[0] +
                 self.quad_elements.shape[0] + self.tri_elements.shape[0])
 
-    def read_tecplot_binary(self, tecplot_filename, nnodes=None, nelements=None):
+    def read_tecplot_binary(self, tecplot_filename, nnodes=None,
+                            nelements=None):
         """
-        The binary file reader must have ONLY CHEXAs and be Tecplot 360 with
+        The binary file reader must have ONLY CHEXAs and be Tecplot 360
+        with:
         `rho`, `u`, `v`, `w`, and `p`.
         """
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
         with open(tecplot_filename, 'rb') as tecplot_file:
+            # we are using the FortranFormat class, which relies on
+            # self.f
             self.f = tecplot_file
             self.n = 0
             self.variables = ['rho', 'u', 'v', 'w', 'p']
@@ -446,7 +479,7 @@ class Tecplot(FortranFormat):
             self.n += nbytes
             #self.show_data(data, types='if', endian='<') # 'if'?
             s = unpack('2f 9i', data)
-            print(s)
+            self.log.debug(s)
             #assert self.n == 360, self.n
             #print('----------')
 
@@ -518,9 +551,10 @@ class Tecplot(FortranFormat):
             # 1=BLOCK
             is_block = False
 
-            # 0=cell-centered
-            # 1=node-centered
-            value_location = None
+            # value_location:
+            #   0=cell-centered
+            #   1=node-centered
+            #value_location = None
             if is_block:
                 raise NotImplementedError('is_block=%s' % is_block)
             else:
@@ -547,7 +581,7 @@ class Tecplot(FortranFormat):
                 resvals = unpack(b'%sf' % ni, data)
                 results = array(resvals, dtype='float32').reshape(nvars, nnodes).T
 
-                #
+
                 # 7443 elements
                 if zone_type == 5:
                     # CHEXA
@@ -557,7 +591,7 @@ class Tecplot(FortranFormat):
                     # CQUAD4
                     nnodes_per_element = 4
                     nvals = nnodes_per_element * nelements
-                    print('nvals = %s' % nvals)
+                    self.log.debug('nvals = %s' % nvals)
 
                 nbytes = nvals * 4
                 node_ids = unpack(b'%ii' % nvals, self.f.read(nbytes))
@@ -580,7 +614,7 @@ class Tecplot(FortranFormat):
 
         self.xyz = xyz
         self.results = results
-        print('done...')
+        self.log.debug('done...')
 
     def slice_x(self, xslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
@@ -613,6 +647,8 @@ class Tecplot(FortranFormat):
         if zslice is not None:
             zslice = float(zslice)
             inodes.append(where(z < zslice)[0])
+
+        nodes = None
         if len(inodes) == 1:
             nodes = inodes[0]
         elif len(inodes) == 2:
@@ -621,9 +657,10 @@ class Tecplot(FortranFormat):
             nodes = intersect1d(
                 intersect1d(inodes[0], inodes[1], assume_unique=True),
                 inodes[2], assume_unique=True)
-            inodes = arange(self.nodes.shape[0])
+            #inodes = arange(self.nodes.shape[0])
             # nodes = unique(hstack(inodes))
-        self._slice_plane_inodes(nodes)
+        if nodes is not None:
+            self._slice_plane_inodes(nodes)
 
     def _slice_plane(self, y, slice_value):
         """
@@ -632,7 +669,6 @@ class Tecplot(FortranFormat):
         """
         slice_value = float(slice_value)
         inodes = where(y < slice_value)[0]
-        #print('inodes =', inodes)
         self._slice_plane_inodes(inodes)
 
     def _slice_plane_inodes(self, inodes):
@@ -651,7 +687,7 @@ class Tecplot(FortranFormat):
         if nhexas:
             #boolean_hexa = self.hexa_elements.ravel() == inodes
             #boolean_hexa = (self.hexa_elements.ravel() == inodes)#.all(axis=1)
-            boolean_hexa = np.in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
+            boolean_hexa = in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
             # print(boolean_hexa)
             # assert len(boolean_hexa) == self.hexa_elements.shape[0]
             assert True in boolean_hexa
@@ -670,7 +706,8 @@ class Tecplot(FortranFormat):
             # if
         # self.hexa_elements
 
-    def write_tecplot(self, tecplot_filename, res_types=None, is_points=True, adjust_nids=True):
+    def write_tecplot(self, tecplot_filename, res_types=None, is_points=True,
+                      adjust_nids=True):
         """
         Only handles single type writing
 
@@ -679,11 +716,13 @@ class Tecplot(FortranFormat):
         tecplot_filename : str
             the path to the output file
         res_types : str; List[str, str, ...]; default=None -> all
-            the results that will be written (must be consistent with self.variables)
+            the results that will be written (must be consistent with
+            self.variables)
         is_points : bool; default=True
             write in POINT format vs. BLOCK format
         adjust_nids : bool; default=True
-            element_ids are 0-based in binary and must be switched to 1-based in ASCII
+            element_ids are 0-based in binary and must be switched to
+            1-based in ASCII
         """
         self.log.info('writing tecplot %s' % tecplot_filename)
         with open(tecplot_filename, 'w') as tecplot_file:
@@ -742,25 +781,25 @@ class Tecplot(FortranFormat):
                     #print(etype)
                     # is_points = False
                     is_hexas = True
-                    nnodes_per_element = 8
+                    #nnodes_per_element = 8
                     zone_type = 'FEBrick'
                 elif etype == 'CTETRA' and len(elements):
                     #print(etype)
                     # is_points = False
                     is_tets = True
-                    nnodes_per_element = 4
+                    #nnodes_per_element = 4
                     zone_type = 'FETETRAHEDRON'
                 elif etype == 'CTRIA3' and len(elements):
                     #print(etype)
                     # is_points = True
                     is_tris = True
-                    nnodes_per_element = 3
+                    #nnodes_per_element = 3
                     zone_type = 'FETRIANGLE'
                 elif etype == 'CQUAD4' and len(elements):
                     #print(etype)
                     # is_points = True
                     is_quads = True
-                    nnodes_per_element = 4
+                    #nnodes_per_element = 4
                     zone_type = 'FEQUADRILATERAL'
                 else:
                     self.log.info('etype=%r' % etype)
@@ -770,9 +809,11 @@ class Tecplot(FortranFormat):
 
             self.log.info('is_points = %s' % is_points)
             if is_points:
-                msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=POINT\n' % (nnodes, nelements, zone_type)
+                msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=POINT\n' % (
+                    nnodes, nelements, zone_type)
             else:
-                msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=BLOCK\n' % (nnodes, nelements, zone_type)
+                msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=BLOCK\n' % (
+                    nnodes, nelements, zone_type)
             tecplot_file.write(msg)
 
             # xyz
@@ -829,7 +870,6 @@ class Tecplot(FortranFormat):
             self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
                           (is_hexas, is_tets, is_quads, is_tris))
             if is_hexas:
-                # elements
                 efmt = ' %i %i %i %i %i %i %i %i\n'
                 elements = self.hexa_elements
             elif is_tets:
@@ -887,6 +927,7 @@ class Tecplot(FortranFormat):
         return tris, quads
 
     def get_free_faces(self):
+        """get the free faces for hexa elements"""
         self.log.info('start get_free_faces')
         sort_face_to_element_map = defaultdict(list)
         sort_face_to_face = {}
@@ -979,7 +1020,7 @@ class Tecplot(FortranFormat):
 
 
 def main():  # pragma: no cover
-    plt = Tecplot()
+    #plt = Tecplot()
     fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
 
 
@@ -1152,8 +1193,75 @@ def main2():  # pragma: no cover
 
     for iprocessor, tecplot_filename in enumerate(fnames):
         plt.read_tecplot(tecplot_filename)
-        plt.write_tecplot('processor.plt')
+        plt.write_tecplot('processor_%i.plt' % iprocessor)
 
+
+def _header_lines_to_header_dict(header_lines):
+    """parses the parsed header lines"""
+    headers_dict = {}
+    if len(header_lines) == 0:
+        #raise RuntimeError(header_lines)
+        return None
+    header = ','.join(header_lines)
+
+    # this is so overly complicataed and probably not even enough...
+    # what about the following 'quote' style?
+    headers = header.replace('""', '","').split(',')
+
+    nheaders = len(headers) - 1
+    for iheader, header in enumerate(headers):
+        header = header.strip()
+        #print('%2i %s' % (iheader, header))
+        #print('iheader=%s header=%r' % (iheader, header))
+        if '=' in header:
+            sline = header.split('=', 1)
+            parse = False
+            #print('iheader=%s nheaders=%s' % (iheader, nheaders))
+            if iheader == nheaders:
+                parse = True
+            elif '=' in headers[iheader + 1]:
+                parse = True
+        elif header.upper() == 'ZONE':
+            # apparently the null key is also a thing...
+            # we'll use 'ZONE' because...
+            headers_dict['ZONE'] = None
+            parse = True
+            #continue
+        elif '"' in header:
+            sline += [header]
+            parse = False
+            if iheader == nheaders:
+                parse = True
+            elif '=' in headers[iheader + 1]:
+                parse = True
+        else:
+            raise NotImplementedError(header)
+
+        if parse:
+            #print('  parsing')
+            key = sline[0].strip().upper()
+            if key.startswith('ZONE '):
+                # the key is not "ZONE T" or "ZONE E"
+                # ZONE is a flag, T is title, E is number of elements
+                key = key[5:].strip()
+
+            value = [val.strip() for val in sline[1:]]
+            if len(value) == 1:
+                value = value[0].strip()
+            #assert not isinstance(value, list), value
+            headers_dict[key] = value
+            #print('  ', value)
+            #value = value.strip()
+
+            # 'T', 'ZONE T',  ???
+            allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
+                            'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
+                            'I', 'J']
+            assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
+            parse = False
+    #print(headers_dict.keys())
+    assert len(headers_dict) > 0, headers_dict
+    return headers_dict
 
 if __name__ == '__main__':
     main2()

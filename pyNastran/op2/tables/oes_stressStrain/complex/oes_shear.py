@@ -126,13 +126,14 @@ class ComplexShearArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, max_shear, avg_shear):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [max_shear, avg_shear]
         self.element[self.itotal] = eid
         #self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -151,6 +152,7 @@ class ComplexShearArray(OES_Object):
         else:
             msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
         msg.append('  data: [ntimes, nnodes, 2] where 2=[%s]\n' % str(', '.join(self._get_headers())))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  %s\n  ' % self.element_name)
         msg += self.get_data_code()

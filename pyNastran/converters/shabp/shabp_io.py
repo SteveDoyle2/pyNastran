@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for S/HABP.
+"""
 from six import iteritems
 import numpy as np
 from numpy import zeros, array, cross, amax, amin
@@ -6,7 +9,7 @@ from numpy.linalg import norm
 import vtk
 from vtk import vtkQuad
 
-from pyNastran.converters.shabp.shabp import SHABP
+from pyNastran.converters.shabp.shabp import read_shabp
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 is_shabp = True
@@ -22,19 +25,18 @@ class ShabpIO(object):
                 'Shabp (*.out)', self.load_shabp_results)
         return data
 
-    def load_shabp_geometry(self, shabpFilename, dirname, name='main', plot=True):
+    def load_shabp_geometry(self, shabp_filename, dirname, name='main', plot=True):
         self.nid_map = {}
 
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self._remove_old_geometry(shabpFilename)
+        skip_reading = self._remove_old_geometry(shabp_filename)
         if skip_reading:
             return
 
-        self.model = SHABP(log=self.log, debug=self.debug)
+        self.model = read_shabp(shabp_filename, log=self.log, debug=self.debug)
         self.model_type = 'shabp' # model.model_type
-        self.model.read_shabp(shabpFilename)
 
         nodes, elements, patches, components, impact, shadow = self.model.getPointsElementsRegions()
         #for nid,node in enumerate(nodes):
@@ -93,8 +95,7 @@ class ShabpIO(object):
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
 
-        # loadCart3dResults - regions/loads
-        self. turn_text_on()
+        # loadShabpResults - regions/loads
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
@@ -103,14 +104,16 @@ class ShabpIO(object):
         ID = 1
 
         self.log.debug("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
-        form, cases = self._fill_shabp_geometry_case(cases, ID, nodes, elements, patches, components, impact, shadow)
+        form, cases = self._fill_shabp_geometry_case(
+            cases, ID, nodes, elements, patches, components, impact, shadow)
         self._finish_results_io2(form, cases)
 
     def clear_shabp(self):
         del self.elements
         del self.model
 
-    def _fill_shabp_geometry_case(self, cases, ID, nodes, elements, patches, components, impact, shadow):
+    def _fill_shabp_geometry_case(self, cases, ID, nodes, elements, patches,
+                                  components, impact, shadow):
         self.elements = elements
 
         icase = 0

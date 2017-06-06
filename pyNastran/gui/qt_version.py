@@ -29,9 +29,9 @@ if not found_gui:
 if not found_gui:
     raise ImportError('PyQt4 or PyQt5 is required')
 
+# required to make a pretty console
 try:
     import pygments
     is_pygments = True
 except ImportError:
     is_pygments = False
-    pass

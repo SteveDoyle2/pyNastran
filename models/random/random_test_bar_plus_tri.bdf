@@ -1,0 +1,58 @@
+SOL SEMFREQ
+CEND
+  TITLE = random test
+  ECHO = NONE
+  SET 1 = 1, 5
+  DISPLACEMENT(SORT1,PLOT,NORPRINT,PHASE,RALL) = 1
+  SET 2 = 1,5
+  ACCELERATION(SORT1,PLOT,NORPRINT,PHASE,RALL) = 2
+  FORCE(SORT1,PLOT,NORPRINT,PHASE,RALL) = ALL
+  SPC = 1
+  FREQUENCY = 2
+  METHOD = 1
+  SDAMPING = 3
+  RANDOM = 200  
+  DLOAD = 1
+  MPC = 1
+BEGIN BULK
+PARAM,PRGPST,NO
+PARAM,POST,-1
+PARAM,OGEOM,NO
+PARAM,AUTOSPC,YES
+PARAM,K6ROT,100.
+PARAM,GRDPNT,0
+PARAM,WTMASS,.00259
+RANDPS       200       1       1      1.      0.       1
+TABRND1        1     LOG     LOG                                        +       
++            20.      .1   2000.      .1ENDT
+PARAM,RPOSTS1,1
+TABDMP1        3    CRIT                                                +       
++             0.     .01  10000.     .01ENDT
+EIGRL,1,,,20
+TABLED2        1      0.                                                +       
++             0.      1.  10000.      1.ENDT
+RLOAD2       101     102                       1            LOAD
+FORCE        102       1       0      1.    1.+4      0.      0.   
+DLOAD          1      1.      1.     101                                
+FREQ1          2     20.     10.     198
+SPC1           1     456       1
+PBAR           1       1  .01445  1.74-5  1.74-52.9382-5      0.        +       
++          -.085   -.085    .085   -.085    .085    .085   -.085    .085+       
++       .8501176.8501176      0.
+PSHELL         3       1      .1       1               1              0.
+MAT1           12000000.             .33    .098      0.      0.        
+GRID           1       0      0.      0.      0.       0
+GRID           2       0      0.      1.      0.       0
+GRID           3       0      0.      2.      0.       0
+GRID           4       0      0.      3.      0.       0
+GRID           5       0      0.      4.      0.       0
+GRID           6       0      1.      2.      0.       0
+GRID           7       0      1.      3.      0.       0
+CBAR           1       1       1       2      1.      0.      0.
+CBAR           2       1       2       3      1.      0.      0.
+CBAR           3       1       3       4      1.      0.      0.
+CBAR           4       1       4       5      1.      0.      0.
+CQUAD4         5       3       3       6       7       4                
+CONM2         10       1       0  10000.      0.      0.      0.                     
+CTRIA3         6       3       5       4       7    
+enddata

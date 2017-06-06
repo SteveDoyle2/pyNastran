@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=C0103,R0902,R0904,R0914
 """
 All bar properties are defined in this file.  This includes:
  *   PBAR
@@ -9,27 +9,52 @@ All bar properties are defined in this file.  This includes:
 
 All bars are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
+
+Area
+====
+ROD   = pi*(DIM1^2)
+TUBE  = pi*(DIM1^2 - DIM2^2)
+I     = (DIM3*DIM6)+(DIM2*DIM5) + ((DIM1-(DIM5+DIM6))*DIM4)
+I1    = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+CHAN  = (2*(DIM1*DIM4))+((DIM2-(2*DIM4))*DIM3)
+CHAN1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+CHAN2 = 2*(DIM1*DIM3)+((DIM4-(2*DIM1))*DIM2)
+T     = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
+T1    = (DIM1*DIM3)+(DIM2*DIM4)
+T2    = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
+BOX   = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
+BOX1  = (DIM2*DIM6)+(DIM2*DIM5)+((DIM1-DIM5-DIM6)*DIM3)+((DIM1-DIM5-DIM6)*DIM4)
+BAR   = DIM1*DIM2
+CROSS = (DIM2*DIM3)+2*((0.5*DIM1)*DIM4)
+H     = 2*((0.5*DIM2)*DIM3)+(DIM1*DIM4)
+Z     = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+HEXA  = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
+HAT   = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
+HAT1  = (DIM1*DIM5)+(DIM3*DIM4)+((DIM1-DIM3)*DIM4)+2*((DIM2-DIM5-DIM4)*DIM4)
+DBOX  = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
+        (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 from six import integer_types, string_types
 from numpy import pi, array
+import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank, string, string_or_blank,
     blank, integer_or_double, integer_or_blank)
-from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
+from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
-def IyyBeam(b, h):
+def Iyy_beam(b, h):
     return 1 / 12. * b * h ** 3
 
 
-def IBeam(b, h):
+def I_beam(b, h):
     f = 1 / 12. * b * h
     Iyy = f * h * h  # 1/12.*b*h**3
     Izz = f * b * b  # 1/12.*h*b**3
@@ -37,7 +62,7 @@ def IBeam(b, h):
     return (Iyy, Izz, Iyz)
 
 
-def IBeamOffset(b, h, y, z):
+def I_beam_offset(b, h, y, z):
     A = b * h
     f = 1. / 12. * A
 
@@ -51,14 +76,20 @@ def IBeamOffset(b, h, y, z):
     return (Iyy, Izz, Iyz)
 
 
-def getInertiaRectangular(sections):
+def get_inertia_rectangular(sections):
     """
     Calculates the moment of inertia for a section about the CG.
 
-    :param sections: [[b,h,y,z]_1,...] y,z is the centroid
-                     (x in the direction of the beam,
-                      y right, z up)
-    :returns: interiaParameters list of [Area, Iyy, Izz, Iyz]
+    Parameters
+    ----------
+    sections : [[b,h,y,z]_1,...]
+        [[b,h,y,z]_1,...] y,z is the centroid
+        (x in the direction of the beam, y right, z up)
+
+    Returns
+    -------
+    interia_parameters : List[Area, Iyy, Izz, Iyz]
+        the inertia parameters
 
     .. seealso:: http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
     """
@@ -72,8 +103,8 @@ def getInertiaRectangular(sections):
         Ax += A * x
         Ay += A * y
 
-    xCG = Ax / A
-    yCG = Ay / A
+    xcg = Ax / A
+    ycg = Ay / A
     Axx = 0.
     Ayy = 0.
     Axy = 0.
@@ -81,9 +112,9 @@ def getInertiaRectangular(sections):
         (b, h, x, y) = section
         #A = b*h
         #As.append(A)
-        Axx += As[i] * (x - xCG) ** 2
-        Ayy += As[i] * (y - yCG) ** 2
-        Axy += As[i] * (x - xCG) * (y - yCG)
+        Axx += As[i] * (x - xcg) ** 2
+        Ayy += As[i] * (y - ycg) ** 2
+        Axy += As[i] * (x - xcg) * (y - ycg)
     Ixx = Axx / A
     Iyy = Ayy / A
     Ixy = Axy / A
@@ -141,33 +172,6 @@ class LineProperty(Property):
     def Nu(self):
         return self.mid_ref.nu
 
-    def CA_Section(self, iface, istart, dims):
-        """
-        ::
-
-          ---msg1---
-          H1=0.1
-          W1=0.05
-
-          ---msg2---
-          Face_1 = geompy.MakeFaceHW(H1, W1, 1)
-          geompy.addToStudy( Face_1, 'Face_1' )
-
-          ---msg---
-          H1=0.1
-          W1=0.05
-          Face_1 = geompy.MakeFaceHW(H1, W1, 1)
-          geompy.addToStudy( Face_1, 'Face_1' )
-        """
-        msg1 = ''
-        msg2 = 'Face_%s = geompy.MakeFaceHW(' % (iface + 1)
-        for (i, dim) in enumerate(dims):
-            msg1 += 'D%s = %s\n' % (istart + i, dim)
-            msg2 += 'D%s,' % (istart + i)
-        msg2 += '1)\n'
-        msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" % (iface, iface)
-        return msg1 + msg2
-
     def IAreaL(self, dim):
         if self.Type == 'ROD':
             R = dim[0]
@@ -178,6 +182,18 @@ class LineProperty(Property):
         elif self.Type == 'TUBE':
             R1 = dim[0]
             R2 = dim[1]
+            A1 = pi * R1 ** 2
+            Iyy1 = A1 * R1 ** 2 / 4.
+            A2 = pi * R2 ** 2
+            Iyy2 = A2 * R2 ** 2 / 4.
+            A = A1 - A2
+            Iyy = Iyy1 - Iyy2
+            Izz = Iyy
+            Iyz = 0.
+        elif self.Type == 'TUBE2':
+            R1 = dim[0]
+            t = dim[1]
+            R2 = R1 - t
             A1 = pi * R1 ** 2
             Iyy1 = A1 * R1 ** 2 / 4.
             A2 = pi * R2 ** 2
@@ -213,7 +229,7 @@ class LineProperty(Property):
             w2 = dim[3]  # d1
             sections.append([w2, h2, 0., 0.])
 
-            (A, Iyy, Izz, Iyz) = getInertiaRectangular(sections)
+            (A, Iyy, Izz, Iyz) = get_inertia_rectangular(sections)
             assert Iyz == 0.
 
         elif self.Type == 'BAR':
@@ -291,7 +307,7 @@ class LineProperty(Property):
             raise NotImplementedError(msg)
         return(I1, I2, I12)
 
-def _bar_areaL(class_name, Type, dim):
+def _bar_areaL(class_name, Type, dim, prop):
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
@@ -308,115 +324,227 @@ def _bar_areaL(class_name, Type, dim):
     .. note:: internal method
     """
     if Type == 'ROD':
-        """
-        This is a circle if you couldn't tell...
-          __C__
-         /     \
-        |       |
-        F       D
-        |       |
-         \     /
-          \_E_/
-
-        Radius = dim1
-        """
+        # This is a circle if you couldn't tell...
+        #   __C__
+        #  /     \
+        # |       |
+        # F       D
+        # |       |
+        #  \     /
+        #   \_E_/
+        #
+        # Radius = dim1
         A = pi * dim[0] ** 2
     elif Type == 'TUBE':
-        A = pi * (dim[0] ** 2 - dim[1] ** 2)
+        r_outer, r_inner = dim
+        A = pi * (r_outer ** 2 - r_inner ** 2)
+        assert r_outer > r_inner, 'TUBE; r_outer=%s r_inner=%s' % (r_outer, r_inner)
+    elif Type == 'TUBE2':
+        r_outer, thick = dim
+        r_inner = r_outer - thick
+        assert r_outer > r_inner, 'TUBE2; r_outer=%s r_inner=%s' % (r_outer, r_inner)
+        A = pi * (r_outer ** 2 - r_inner ** 2)
+
+    #I = (DIM3*DIM6)+(DIM2*DIM5) + ((DIM1-(DIM5+DIM6))*DIM4)
     elif Type == 'I':
-        h1 = dim[5]
-        w1 = dim[2]
+        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+        #  <----d3---->
+        #
+        #  1----------2      ^
+        #  |    A     |  d6  |
+        # 12-11---4---3      |
+        #     |   |          |
+        #     |   |          |  d1
+        #     | B | <--- d4  |
+        #     |   |          |
+        #  9-10---5---6      |
+        #  |    C     |  d5  |
+        #  8----------7      v
+        #
+        #  <----d2---->
+        #
+        #
+        # h1 = hA = d6
+        # h2 = hB = d1 - d6 - d5
+        # h3 = hC = d5
+        # w1 = wA = d3
+        # w2 = wB = d4
+        # w3 = wC = d5
+        # A = A1 + A2 + A3
+        dim1, dim2, dim3, dim4, dim5, dim6 = dim
 
-        h3 = dim[4]
-        w3 = dim[1]
+        h = dim1
+        a = dim2
+        b = dim3
+        tw = dim4
+        ta = dim5
+        tb = dim6
+        hw = h - (ta + tb)
+        hf = h - 0.5 * (ta + tb)
+        assert hw > 0, 'hw=%s' % hw
+        assert hf > 0, 'hf=%s' % hf
 
-        h2 = dim[0] - h1 - h3
-        w2 = dim[3]
-        A = h1 * w1 + h2 * w2 + h3 * w3
-    elif Type == 'L':
-        """
+        A = ta * a + hw * tw + b * tb
+        #yc = (0.5 * hw * (hw + ta)*tw + hf*tb*b) / A
+        #ys = tb * hf * b**3/(tb * b**3 + ta * a**a)
+        #yna = yc - ys
+        #i1 = (
+        #    1/12 * (h*tb**3 + a*ta**3 + tw*hw**3)
+        #    + (hf-yc)**2*b*tb+yc**2*a*ta
+        #    + (yc - 0.5*(hw+ta))**2*hw*tw
+        #)
+        #i2 = (b**3 * tb + ta * a**3 + hw*tw**3)/12.
+        #i12 = 0.
+        #j = 1/3 * (tb**3*b + ta**3*a + tw**3*hf)
 
-         D4
-        F--C      ^
-        |  |      |
-        |  |      |
-        |  |      | D2
-        |  +---+  |
-        |   D3 |  |
-        E------D  |
+        assert dim1 > dim5+dim6, 'I; required: dim1 > dim5+dim6; dim1=%s dim5=%s dim6=%s\n%s' % (dim1, dim5, dim6, prop)
+        #THE SUM OF THE FLANGE THICKNESSES,DIM5 + DIM6,
+        #CAN NOT BE GREATER THAT THE WEB HEIGHT, DIM1.
 
-        <------> D1
-        """
-        (d1, d2, d3, d4) = dim
-        A1 = d1 * d3
-
-        h2 = (d2 - d3)
-        A2 = h2 * d4
-        A = A1 + A2
-    elif Type == 'CHAN':
-        h1 = dim[3]
-        w1 = dim[0]
-
-        h3 = h1
-        w3 = w1
-        h2 = dim[1] - h1 - h3
-        w2 = dim[2]
-        A = h1 * w1 + h2 * w2 + h3 * w3
-    elif Type == 'T':
-        h1 = dim[2]
-        w1 = dim[0]
-
-        h2 = dim[1] - h1
-        w2 = dim[3]
-        A = h1 * w1 + h2 * w2
-    elif Type == 'BOX':
-        h1 = dim[2]
-        w1 = dim[0]
-
-        h2 = dim[1] - 2 * h1
-        w2 = dim[3]
-        A = 2 * (h1 * w1 + h2 * w2)
-    elif Type == 'BAR':
-        """
-        <------> D1
-
-        F------C  ^
-        |      |  |
-        |      |  | D2
-        |      |  |
-        E------D  |
-        """
-        h1 = dim[1]
-        w1 = dim[0]
-        A = h1 * w1
-    elif Type == 'CROSS':
-        h1 = dim[2]
-        w1 = dim[1]
-
-        h2 = dim[3]
-        w2 = dim[0]
-        A = h1 * w1 + h2 * w2
-    elif Type == 'H':
-        h1 = dim[2]
-        w1 = dim[1]
-
-        h2 = dim[3]
-        w2 = dim[0]
-        A = h1 * w1 + h2 * w2
-    elif Type == 'T1':
-        h1 = dim[0]
-        w1 = dim[2]
-
-        h2 = dim[3]
-        w2 = dim[1]
-        A = h1 * w1 + h2 * w2
+    #I1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
     elif Type == 'I1':
-        h2 = dim[2]
-        w2 = dim[1]
+        #
+        #  d1/2   d2  d1/2
+        #  <---><---><--->
+        #
+        #  1--------------2     ^
+        #  |      A       |     |
+        # 12---11---4-----3     |
+        #       |   |        ^  |
+        #       |   |        |  |  d4
+        #       | B |     d3 |  |
+        #       |   |        v  |
+        #  9----10---5----6     |
+        #  |      C       |     |
+        #  8--------------7     v
+        #
+        #  <----d2---->
+        #
+        #
+        # h1 = hA = (d4 - d3) / 2
+        # h2 = hB = d3
+        #
+        # w1 = wA = d1 + d2
+        # w2 = d2
+        #
+        # A3 = A1
+        # A = A1 + A2 + A3
+        w1 = dim[0] + dim[1]
+        h1 = (dim[3] - dim[2]) / 2.
 
-        h1 = dim[3] - h2
-        w1 = dim[0] + w2
-        A = h1 * w1 + h2 * w2
+        w2 = dim[1]
+        h2 = dim[2]
+
+        A = 2. * (h1 * w1) + h2 * w2
+
+    elif Type == 'L':
+        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+        #
+        #  D4
+        # F---C      ^
+        # |   |      |
+        # | 2 |      |
+        # |   |      | D2
+        # +---+---+  |
+        # |1   D3 |  |
+        # E-------D  v
+        #
+        # <------> D1
+        #
+        (dim1, dim2, dim3, dim4) = dim
+        t1 = dim3
+        t2 = dim4
+        b = dim1 - 0.5 * t2
+        h = dim2 - 0.5 * t1
+        h2 = dim2 - t1
+        b1 = dim1 - t2
+        A = (b + 0.5 * t2) * t1 + h2 * t2
+        #yc = t2*h2 * (h2 + t1) / (2 * A)
+        #zc = t1*b1 * (b1 + t2) / (2 * A)
+        #i1 = (
+        #    t1 ** 3 * (b + 0.5 * t2) / 12. +
+        #    t1 * (b + 0.5 * t2) * yc ** 2 +
+        #    t2 * h ** 3 / 12 +
+        #    h2 * t2 * (0.5 * (h2 + t1) - yc) ** 2
+        #)
+        #i2 = (
+        #    t2 ** 3 * h2 / 12 +
+        #    t1*(b + 0.5 * t2) ** 3 / 12 +
+        #    t1*(b + 0.5 * t2) * (0.5 * b1 - zc) ** 2  # zc is z2 in the docs...
+        #)
+        #i12 = (
+        #    zc * yc * t1 * t2
+        #    - b1 * t1 * yc * (0.5 * (b1 + t2) - zc)
+        #    - h2 * t2 * zc * (0.5 * (h2 + t1) - yc)
+        #)
+        #j = 1/3 * (t1**3*b + t2**3 * h)
+        #k1 = h2 * t2 / A
+        #k2 = b1 * t1 / A
+        #yna = yc
+        #zna = zc
+
+    #CHAN = 2*(DIM1*DIM4) + (DIM2-(2*DIM4))*DIM3
+    elif Type == 'CHAN':
+        #
+        # +-+----+   ^  ^
+        # | |    |   |  | d4
+        # | +----+   |  v
+        # | |        |
+        # | |<-- d3  |
+        # | |        | d2
+        # | |        |
+        # | +----+   |
+        # | |    |   |
+        # +-+----+   v
+        #
+        # <--d1-->
+        #
+
+        dim1, dim2, dim3, dim4 = dim
+        tweb = dim3
+        tf = dim4
+
+        bf = dim1
+        d = dim2 - 2 * tf
+
+        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+        #tw - dim3
+        #tf = dim4
+        #b = dim1 - 0.5 * tw
+        #h = dim2 - tf
+        #bf = dim1 - tw
+        #hw = dim2 - 2 * tf
+
+        A = 2 * tf * bf + (h + tf) * tweb  # I think tt is tf...
+        #zc = bf * tf * (bf + tw) / A
+        #zs = b**2 * tf / (2 * b * tw + h * tf / 3)
+        #i1 = (
+            #h ** 2 * tf * bf / 2
+            #+ bf * tf ** 3 / 6
+            #+ (h + tf) ** 3 * tw / 12
+        #)
+        #i2 = (
+            #(h + tf) * tw**3/12
+            #+ bf**3 * tf / 6
+            #+ 0.5 * (bf + tw) ** 2 * bf * tf
+            #- zc ** 2 * A
+        #)
+        #j = (2 * b * tf **3 + h * tw ** 3) / 3
+
+        # warping coefficient for the cross section relative to the shear center
+        #iw = tf * b**3 * h**2 / 12 * (2 * tw * h + 3 * tf * b) / (tw * h + 6 * tf * b)
+        #k1 = tw * hw / A
+        #k2 = 2 * tf * bf / A
+        #zna = zc + zs
+        hweb = dim2 - 2 * tf
+        A1 = 2 * tf * bf + hweb * tweb
+
+        #A2 = 2. * bf * tf + (dim2 - 2. * dim4) * tweb
+        A2 = 2. * tf * bf + (dim2 - 2. * dim4) * tweb
+        assert np.allclose(A, A2), 'A=%s A1=%s A2=%s' % (A, A2, A2)
+        assert np.allclose(A1, A2), 'A=%s A1=%s A2=%s' % (A, A1, A2)
+
+    #CHAN1 = DIM2*DIM3 + (DIM4-DIM3)*(DIM1+DIM2)
     elif Type == 'CHAN1':
         h2 = dim[2]
         w2 = dim[1]
@@ -424,21 +552,86 @@ def _bar_areaL(class_name, Type, dim):
         h1 = dim[3] - h2
         w1 = dim[0] + w2
         A = h1 * w1 + h2 * w2
-    elif Type == 'Z':
-        h2 = dim[2]
-        w2 = dim[1]
+        dim1, dim2, dim3, dim4 = dim
+        A2 = dim2 * dim3 + (dim4 - dim3) * (dim1 + dim2)
+        assert np.allclose(A, A2), 'A=%s A2=%s' % (A, A2)
 
-        h1 = dim[3] - h2
-        w1 = dim[0]
-        A = h1 * w1 + h2 * w2
+    #CHAN2 = 2*(DIM1*DIM3)+((DIM4-(2*DIM1))*DIM2)
     elif Type == 'CHAN2':
-        h2 = dim[1]
-        w2 = dim[3]
+        #  d1        d1
+        # <-->      <-->
+        # +--+      +--+        ^
+        # |  |      |  |        |
+        # |  |      |  |        | d3
+        # +--+------+--+  ^     |
+        # |            |  | d2  |
+        # +------------+  v     v
+        #
+        # <-----d4----->
+        #
+        dim1, dim2, dim3, dim4 = dim
+        hupper = dim3 - dim2
+        hlower = dim2
+        wlower = dim4
+        wupper = dim1
+        A = 2 * hupper * wupper + hlower * wlower
 
-        h1 = dim[2] - h2
-        w1 = dim[0] * 2
+        h2 = dim2
+        w2 = dim4
+
+        h1 = dim3 - h2
+        w1 = dim1 * 2
+        A2 = h1 * w1 + h2 * w2
+        A3 = 2 * dim1 * dim3 + (dim4 - 2 * dim1) * dim2
+        assert np.allclose(A, A2), 'A=%s A2=%s A3=%s' % (A, A2, A3)
+        assert np.allclose(A, A3), 'A=%s A2=%s A3=%s' % (A, A2, A3)
+
+    #T = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
+    elif Type == 'T':
+        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+        #           ^ y
+        #           |
+        #           |
+        # ^    +-----------+ ^
+        # | d3 |           | |  ----> z
+        # v    +---+  +----+ |
+        #          |  |      |
+        #          |  |      | d2
+        #          |  |      |
+        #          |  |      |
+        #          +--+      v
+        #
+        #          <--> d4
+        #
+        dim1, dim2, dim3, dim4 = dim
+        d = dim1
+        tf = dim3
+        tw = dim4
+        h = dim2 - 0.5 * tf
+        hw = dim2 - tf
+        h1 = dim[2]
+        w1 = dim[0]
+
+        A = d*tf + hw*tw
+        #yna = hw*tw*(hw+tf)/(2*A)
+        #i1 = (
+        #    (d*tf**3 + tw*hw**3) / 12. +
+        #    hw*tw*(yna + 0.5 * (hw +tf))**2 + d*tf*yna**2
+        #)
+        #i2 = (tf*d**3 + hw*tw**3)/12.
+        #i12 = 0.
+        #j = 1/3 * (tf**3*d + tw**3 * h)
+
+    #T1 = (DIM1*DIM3)+(DIM2*DIM4)
+    elif Type == 'T1':
+        h1 = dim[0]
+        w1 = dim[2]
+
+        h2 = dim[3]
+        w2 = dim[1]
         A = h1 * w1 + h2 * w2
 
+    #T2 = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
     elif Type == 'T2':
         h1 = dim[3]
         w1 = dim[1]
@@ -446,6 +639,44 @@ def _bar_areaL(class_name, Type, dim):
         h2 = h1 - dim[2]
         w2 = dim[0]
         A = h1 * w1 + h2 * w2
+
+    #BOX = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
+    elif Type == 'BOX':
+        #
+        # +----------+ ^     ^
+        # |          | | d3  |
+        # |  +----+  | v     |
+        # |  |    |  |       |  d2
+        # |  +----+  |       |
+        # |          |       |
+        # +----------+       v
+        #          <-> d4
+        # <----d1---->
+        #
+        dim1, dim2, dim3, dim4 = dim
+        #h1 = dim3
+        #w1 = dim1
+
+        #h2 = dim2 - 2 * h1
+        #w2 = dim4
+        assert dim1 > 2.*dim4, 'BOX; required: dim1 > 2*dim4; dim1=%s dim4=%s\n%s' % (dim1, dim4, prop)
+        assert dim2 > 2.*dim3, 'BOX; required: dim2 > 2*dim3; dim2=%s dim3=%s\n%s' % (dim2, dim3, prop)
+        #A = 2 * (h1 * w1 + h2 * w2)
+
+        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+        b = dim1
+        h = dim2
+        t1 = dim3
+        t2 = dim4
+        bi = b - 2 * t2
+        hi = h - 2 * t1
+        A = b * h - bi * hi
+        #i1 = (b*h**3 * bi*hi**3) / 12.
+        #i2 = (h*b**3 * hi*bi**3) / 12.
+        #i12 = 0.
+        #j = (2*t2*t1*(b-t2)**2*(h-t1)**2)/(b*t2+h*t1-t2**2-t1**2)
+
+    #BOX1 = (DIM2*DIM6)+(DIM2*DIM5)+((DIM1-DIM5-DIM6)*DIM3)+((DIM1-DIM5-DIM6)*DIM4)
     elif Type == 'BOX1':
         h1 = dim[2]  # top
         w1 = dim[0]
@@ -459,25 +690,99 @@ def _bar_areaL(class_name, Type, dim):
         w4 = dim[4]  # right
         A2 = h3 * (w3 + w4)
         A = A1 + A2
+
+    #BAR   = DIM1*DIM2
+    elif Type == 'BAR':
+        #per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+        # <------> D1
+        #
+        # F------C  ^
+        # |      |  |
+        # |      |  | D2
+        # |      |  |
+        # E------D  v
+        dim1, dim2 = dim
+        b = dim1
+        h = dim2
+        A = b * h
+        #i1 = b*h**3/12.
+        #i2 = b**3*h/12.
+        #i12 = 0.
+        #J = b*h**3*(1/3. - 0.21*h/b*(1-h**4/(12*b**4)))
+
+    #CROSS = (DIM2*DIM3)+2*((0.5*DIM1)*DIM4)
+    elif Type == 'CROSS':
+        h1 = dim[2]
+        w1 = dim[1]
+
+        h2 = dim[3]
+        w2 = dim[0]
+        A = h1 * w1 + h2 * w2
+
+    #H = 2*((0.5*DIM2)*DIM3)+(DIM1*DIM4)
+    elif Type == 'H':
+        h1 = dim[2]
+        w1 = dim[1]
+
+        h2 = dim[3]
+        w2 = dim[0]
+        A = h1 * w1 + h2 * w2
+
+    #Z = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
+    elif Type == 'Z':
+        #dim1, dim2, dim3, dim4 = dim
+        h2 = dim[2]
+        w2 = dim[1]
+
+        h1 = dim[3] - h2
+        w1 = dim[0]
+        A = h1 * w1 + h2 * w2
+
+    #HEXA = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
     elif Type == 'HEXA':
-        hBox = dim[2]
-        wBox = dim[1]
+        #     _______
+        #   /        \     ^
+        #  /          \    |
+        # *            *   |  d3
+        #  \          /    |
+        #   \        /     |
+        #    \______/      v
+        #           |d1|
+        # <-----d2---->
+        #
+        dim1, dim2, dim3 = dim
+        hbox = dim3
+        wbox = dim2
+        wtri = dim1
+        A = hbox * wbox - 2. * wtri * hbox
+        #print('hbox=%s wbox=%s hbox*wbox=%s 2*wtri*hbox=%s A=%s' % (
+            #hbox, wbox, hbox*wbox, 2*wtri*hbox, A))
 
-        wTri = dim[0]
-        A = hBox * wBox - wTri * hBox
+    #HAT = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
     elif Type == 'HAT':
-        w = dim[1]      # constant width (note h is sometimes w)
-        h1 = w           # horizontal lower bar
-        w1 = dim[3]
+        #
+        #        <--------d3------->
+        #
+        #        +-----------------+              ^
+        #   d4   |        A        |   d4         |
+        # <----> +-d2-+-------+-d2-+ <---->       |
+        #        | B  |       |  B |              | d1
+        # +------+----+       +----+------+       |
+        # |     C     |       |     C     | t=d2  |
+        # +-----------+       +-----------+       v
+        dim1, dim2, dim3, dim4 = dim
+        assert dim3 > 2.*dim2, 'HAT; required: dim3 > 2*dim2; dim2=%s dim3=%s; delta=%s\n%s' % (dim2, dim3, dim3-2*dim2, prop)
+        #DIM3, CAN NOT BE LESS THAN THE SUM OF FLANGE
+            #THICKNESSES, 2*DIM2
+        t = dim[1]
+        wa = dim[2]
+        hb = dim[0] - 2. * t
+        wc = dim[3] + t
+        A = wa * t + (2. * wc * t) + (2. * hb * t)
 
-        h2 = dim[0] - 2 * w  # vertical bar
-        w2 = w
-
-        h3 = w           # half of top bar
-        w3 = dim[2] / 2.
-
-        A = 2 * (h1 * w1 + h2 * w2 + h3 * w3)  # symmetrical box
+    #HAT1 = (DIM1*DIM5)+(DIM3*DIM4)+((DIM1-DIM3)*DIM4)+2*((DIM2-DIM5-DIM4)*DIM4)
     elif Type == 'HAT1':
+        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
         w = dim[3]
 
         h0 = dim[4]         # btm bar
@@ -489,11 +794,17 @@ def _bar_areaL(class_name, Type, dim):
         h3 = w              # top bar
         w3 = dim[2] / 2.
 
+        dim1, dim2, dim3, dim4, dim5 = dim
+        assert dim2 > dim4+dim5, 'HAT1; required: dim2 > dim4+dim5; dim2=%s dim4=%s; dim5=%s\n%s' % (dim2, dim4, dim5, prop)
+        #*DIM4+DIM5, CAN NOT BE LARGER THAN THE HEIGHT OF
+            #THE HAT, DIM2.
+
+
         h1 = w              # upper, horizontal lower bar (see HAT)
         w1 = w0 - w3
-
-        A = 2 * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
-
+        A = 2. * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
+    #DBOX = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
+    #       (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
     elif Type == 'DBOX':
         #
         #  |--2------5----
@@ -506,8 +817,8 @@ def _bar_areaL(class_name, Type, dim):
         #0,1,2,6,11
         #1,2,3,7,12
 
-        hTotal = dim[11]
-        wTotal = dim[0]
+        htotal = dim[1]
+        wtotal = dim[0]
 
         h2 = dim[6]
         w2 = dim[3]
@@ -515,16 +826,16 @@ def _bar_areaL(class_name, Type, dim):
         h4 = dim[7]
         w4 = w2
 
-        h1 = hTotal - h2 - h4
+        h1 = htotal - h2 - h4
         w1 = dim[3]
 
         h5 = dim[8]
-        w5 = wTotal - w2
+        w5 = wtotal - w2
 
         h7 = dim[9]
         w7 = w5
 
-        h6 = hTotal - h5 - h7
+        h6 = htotal - h5 - h7
         w6 = dim[5]
 
         h3 = (h1 + h6) / 2.
@@ -536,6 +847,8 @@ def _bar_areaL(class_name, Type, dim):
         msg = 'areaL; Type=%s is not supported for %s class...' % (
             Type, class_name)
         raise NotImplementedError(msg)
+    assert A > 0, 'Type=%r dim=%r A=%s\n%s' % (Type, dim, A, prop)
+    #A = 1.
     return A
 
 class IntegratedLineProperty(LineProperty):
@@ -549,29 +862,29 @@ class IntegratedLineProperty(LineProperty):
         LineProperty.__init__(self)
 
     def Area(self):
-        A = integrate_positive_line(self.xxb, self.A)
+        A = integrate_positive_unit_line(self.xxb, self.A)
         return A
 
     def J(self):
-        J = integrate_positive_line(self.xxb, self.j)
+        J = integrate_positive_unit_line(self.xxb, self.j)
         return J
 
     def I11(self):
-        i1 = integrate_positive_line(self.xxb, self.i1)
+        i1 = integrate_positive_unit_line(self.xxb, self.i1)
         return i1
 
     def I22(self):
-        i2 = integrate_positive_line(self.xxb, self.i2)
+        i2 = integrate_positive_unit_line(self.xxb, self.i2)
         return i2
 
     def I12(self):
-        i12 = integrate_line(self.xxb, self.i12)
+        i12 = integrate_unit_line(self.xxb, self.i12)
         return i12
 
     def Nsm(self):
         #print("xxb = ",self.xxb)
         #print("nsm = ",self.nsm)
-        nsm = integrate_positive_line(self.xxb, self.nsm)
+        nsm = integrate_positive_unit_line(self.xxb, self.nsm)
         return nsm
 
 
@@ -672,6 +985,16 @@ class PBAR(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = double_or_blank(card, 3, 'A', 0.0)
@@ -737,7 +1060,7 @@ class PBAR(LineProperty):
                     f1, f2, k1, k2, comment=comment)
 
     def _verify(self, xref=False):
-        pid = self.Pid()
+        pid = self.pid
         mid = self.Mid()
         A = self.Area()
         J = self.J()
@@ -801,21 +1124,6 @@ class PBAR(LineProperty):
     def I12(self):
         return self.i12
 
-    def write_code_aster(self):  # PBAR
-        a = self.Area()
-        iy = self.I11()
-        iz = self.I22()
-        j = self.J()
-        msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='P%s', # PBAR\n" % (self.pid)
-        msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A','IY','IZ','JX')\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g,)\n" % (a, iy, iz, j)
-        msg += "              ORIENTATION=(\n"
-        msg += "                    CARA=('VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return msg
-
     def raw_fields(self):
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, self.i1, self.i2,
                        self.j, self.nsm, None, self.c1, self.c2, self.d1, self.d2,
@@ -868,13 +1176,14 @@ class PBARL(LineProperty):
     +-------+------+------+-------+------+------+------+------+------+
     |       | DIM1 | DIM2 | DIM3  | DIM4 | DIM5 | DIM6 | DIM7 | DIM8 |
     +-------+------+------+-------+------+------+------+------+------+
-    |       | DIM9 | etc. | NSM   |      |      |      |      |      |
+    |       | DIM9 | etc. |  NSM  |      |      |      |      |      |
     +-------+------+------+-------+------+------+------+------+------+
     """
     type = 'PBARL'
     valid_types = {
         "ROD": 1,
         "TUBE": 2,
+        "TUBE2": 2,
         "I": 6,
         "CHAN": 4,
         "T": 4,
@@ -895,7 +1204,41 @@ class PBARL(LineProperty):
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
+    def __init__(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
+        """
+        Creates a PBARL card, which defines A, I1, I2, I12, and J using
+        dimensions rather than explicit values.
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        Type : str
+            type of the bar
+            {ROD, TUBE, TUBE2, I, CHAN, T, BOX, BAR, CROSS, H, T1, I1,
+            CHAN1, Z, CHAN2, T2, BOX1, HEXA, HAT, HAT1, DBOX}
+        dim : List[float]
+            dimensions for cross-section corresponding to Type;
+            the length varies
+        group : str; default='MSCBML0'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
+        nsm : float; default=0.
+           non-structural mass
+        comment : str; default=''
+            a comment for the card
+
+        The shear center and neutral axis do not coincide when:
+           - Type = I and dim2 != dim3
+           - Type = CHAN, CHAN1, CHAN2
+           - Type = T
+           - Type = T1, T2
+           - Type = BOX1
+           - Type = HAT, HAT1
+           - Type = DBOX
+        """
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -913,6 +1256,8 @@ class PBARL(LineProperty):
         #ndim = self.valid_types[Type]
         #assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         #self.validate()
+        #area = self.Area()
+        #assert area > 0, 'Type=%s dim=%s A=%s\n%s' % (self.Type, self.dim, area, str(self))
 
     def validate(self):
         if self.Type not in self.valid_types:
@@ -933,23 +1278,34 @@ class PBARL(LineProperty):
         assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
         if not isinstance(self.group, string_types):
             raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
-        #if self.group != 'MSCBMLO':
-            #raise ValueError('Invalid group; pid=%s group=%r expected=[MSCBMLO]' % (self.pid, self.group))
+        #if self.group != 'MSCBML0':
+            #msg = 'Invalid group; pid=%s group=%r expected=[MSCBML0]' % (self.pid, self.group)
+            #raise ValueError(msg)
 
         assert None not in self.dim
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBARL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
-        group = string_or_blank(card, 3, 'group', 'MSCBMLO')
+        group = string_or_blank(card, 3, 'group', 'MSCBML0')
         Type = string(card, 4, 'Type')
 
         ndim = cls.valid_types[Type]
 
         dim = []
         for i in range(ndim):
-            dimi = double(card, 9 + i, 'dim%i' % (i + 1))
+            dimi = double(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1))
             dim.append(dimi)
 
         #: dimension list
@@ -987,7 +1343,7 @@ class PBARL(LineProperty):
         del self.mid_ref
 
     def _verify(self, xref=False):
-        pid = self.Pid()
+        pid = self.pid
         mid = self.Mid()
         A = self.Area()
         try:
@@ -997,19 +1353,20 @@ class PBARL(LineProperty):
             print(msg)
             J = 0.0
         nsm = self.Nsm()
-        mpl = self.MassPerLength()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         assert isinstance(A, float), 'pid=%r' % A
         assert isinstance(J, float), 'cid=%r' % J
         assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+        if xref:
+            mpl = self.MassPerLength()
+            assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
 
     def Area(self):
         """
         Gets the area :math:`A` of the CBAR.
         """
-        return _bar_areaL('PBARL', self.Type, self.dim)
+        return _bar_areaL('PBARL', self.Type, self.dim, self)
 
     def Nsm(self):
         """
@@ -1306,29 +1663,13 @@ class PBARL(LineProperty):
     def I22(self):
         return self.I2()
 
-    def write_code_aster(self, icut=0, iface=0, istart=0):  # PBARL
-        msg = '# BAR Type=%s pid=%s\n' % (self.type, self.pid)
-        msg2 = ''
-        msg += self.CA_Section(iface, istart, self.dim)
-        iface += 1
-        istart += len(self.dim)
-
-        msg += self.CA_Section(iface, istart, self.dim)
-        iface += 1
-        msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' % (
-            icut + 1, iface + 1, iface + 2)
-        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
-            icut + 1, icut + 1)
-        istart += len(self.dim)
-        return msg + msg2, icut, iface, istart
-
     def raw_fields(self):
         list_fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type,
                        None, None, None, None] + self.dim + [self.nsm]
         return list_fields
 
     def repr_fields(self):
-        group = set_blank_if_default(self.group, 'MSCBMLO')
+        group = set_blank_if_default(self.group, 'MSCBML0')
         ndim = self.valid_types[self.Type]
         assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
         list_fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None,
@@ -1380,6 +1721,16 @@ class PBRSECT(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBRSECT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : List[str]
+            this card is special and is not a ``BDFCard`` like other cards
+        comment : str; default=''
+            a comment for the card
+        """
         line0 = card[0]
         if '\t' in line0:
             line0 = line0.expandtabs()
@@ -1439,7 +1790,7 @@ class PBRSECT(LineProperty):
         del self.mid_ref
 
     def _verify(self, xref=False):
-        pid = self.Pid()
+        pid = self.pid
         mid = self.Mid()
         #A = self.Area()
         #J = self.J()
@@ -1599,20 +1950,37 @@ class PBEND(LineProperty):
     """
     MSC/NX Option A
 
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
     | PBEND | PID  |  MID  | A   | I1 | I2 |   J    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       |  C1  |  C2   | D1  | D2 | E1 |   E2   | F1 |   F2   |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       |  K1  |  K2   | NSM | RC | ZC | DELTAN |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
 
     MSC Option B
 
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
     | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       |      |       | NSM | RC | ZC |        |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
 
     NX Option B
 
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
     | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       | SACL | ALPHA | NSM | RC | ZC | FLANGE |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     |       |  KX  |  KY   | KZ  |    | SY |   SZ   |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
     """
     type = 'PBEND'
 
@@ -1653,10 +2021,20 @@ class PBEND(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBEND card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
 
-        value3 = integer_or_double(card, 3, 'A_FSI')
+        value3 = integer_or_double(card, 3, 'Area/FSI')
         # MSC/NX option A
         A = None
         i1 = None

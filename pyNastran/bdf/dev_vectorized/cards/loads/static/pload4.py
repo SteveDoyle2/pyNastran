@@ -106,8 +106,8 @@ class PLOAD4(VectorizedLoad):
             double_or_blank(card, 10, 'N1'),
             double_or_blank(card, 11, 'N2'),
             double_or_blank(card, 12, 'N3'), ]
-        self.sorl[i] = string_or_blank(card, 13, 'sorl', 'SURF')
-        self.ldir[i] = string_or_blank(card, 14, 'ldir', 'NORM')
+        self.surf_or_line[i] = string_or_blank(card, 13, 'sorl', 'SURF')
+        self.line_load_dir[i] = string_or_blank(card, 14, 'ldir', 'NORM')
         assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
@@ -127,8 +127,8 @@ class PLOAD4(VectorizedLoad):
 
             self.g1 = full(ncards, nan, 'int32')
             self.g34 = full(ncards, nan, 'int32')
-            self.ldir = full(ncards, nan, '|S4')
-            self.sorl = full(ncards, nan, '|S4')
+            self.line_load_dir = full(ncards, nan, '|S4')
+            self.surf_or_line = full(ncards, nan, '|S4')
             self.cid = zeros(ncards, dtype='int32')
             self.nvector = zeros((ncards, 3), dtype=float_fmt)
         else:
@@ -155,8 +155,8 @@ class PLOAD4(VectorizedLoad):
 
             self.g1 = self.g1[i]
             self.g34 = self.g34[i]
-            self.ldir = self.ldir[i]
-            self.sorl = self.sorl[i]
+            self.line_load_dir = self.line_load_dir[i]
+            self.surf_or_line = self.surf_or_line[i]
             self.cid = self.cid[i]
             self.nvector = self.nvector[i, :]
             #self.n += len(eids)
@@ -182,14 +182,14 @@ class PLOAD4(VectorizedLoad):
 
             #self.model.log.debug('i = %s' % i)
             #n = [None, None, None]
-            #sorl = None
-            #ldir = None
+            #surf_or_line = None
+            #line_load_dir = None
             cid = ['' if cidi == 0 else cidi for cidi in self.cid[i]]
-            sorl = ['' if sorli == 'SURF' else sorli for sorli in self.sorl[i]]
-            ldir = ['' if ldiri == 'NORM' else ldiri for ldiri in self.ldir[i]]
-            for (ii, load_idi, p, n, cidi, sorli, ldiri) in zip(i,
+            surf_or_line = ['' if surf_or_linei == 'SURF' else surf_or_linei for surf_or_linei in self.surf_or_line[i]]
+            line_load_dir = ['' if line_load_diri == 'NORM' else line_load_diri for line_load_diri in self.line_load_dir[i]]
+            for (ii, load_idi, p, n, cidi, surf_or_linei, line_load_diri) in zip(i,
                                                              self.load_id[i], self.pressures[i, :],
-                                                             self.nvector[i, :], cid, sorl, ldir):
+                                                             self.nvector[i, :], cid, surf_or_line, line_load_dir):
                 #self.model.log.debug('ii = %s' % ii)
                 element_id = self.element_ids[ii]
                 #self.model.log.debug('element_id = %s' % element_id)
@@ -204,10 +204,10 @@ class PLOAD4(VectorizedLoad):
 
                 if p.max() == p.min():
                     card = ['PLOAD4', load_idi, eidi, p[0], None, None, None
-                            ] + thru + [cidi] + list(n) + [sorli, ldiri]
+                            ] + thru + [cidi] + list(n) + [surf_or_linei, line_load_diri]
                 else:
                     card = ['PLOAD4', load_idi, eidi] + list(p) + thru + [
-                        cidi] + list(n) + [sorli, ldiri]
+                        cidi] + list(n) + [surf_or_linei, line_load_diri]
 
                 assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
                 bdf_file.write(print_card_8(card))
@@ -235,8 +235,8 @@ class PLOAD4(VectorizedLoad):
 
         obj.g1 = self.g1[i]
         obj.g34 = self.g34[i]
-        obj.ldir = self.ldir[i]
-        obj.sorl = self.sorl[i]
+        obj.line_load_dir = self.line_load_dir[i]
+        obj.surf_or_line = self.surf_or_line[i]
         obj.cid = self.cid[i]
         obj.nvector = self.nvector[i, :]
 

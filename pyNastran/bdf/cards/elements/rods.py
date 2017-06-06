@@ -108,6 +108,16 @@ class CROD(RodElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CROD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -117,6 +127,16 @@ class CROD(RodElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CROD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -147,6 +167,9 @@ class CROD(RodElement):
 
     def Centroid(self):
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def Mid(self):
         if isinstance(self.pid, integer_types):
@@ -255,6 +278,16 @@ class CTUBE(RodElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTUBE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -264,6 +297,16 @@ class CTUBE(RodElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CTUBE card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -328,6 +371,9 @@ class CTUBE(RodElement):
     def Centroid(self):
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def raw_fields(self):
         list_fields = ['CTUBE', self.eid, self.Pid()] + self.node_ids
         return list_fields
@@ -346,6 +392,7 @@ class CONROD(RodElement):
     +--------+-----+-----+----+-----+---+---+---+-----+
     """
     type = 'CONROD'
+    pid = -10 # 10 is the element type per DMAP
     _field_map = {
         1: 'eid', 4:'mid', 5:'A', 6:'j', 7:'c', 8:'nsm',
     }
@@ -395,6 +442,16 @@ class CONROD(RodElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CONROD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         nids = [integer(card, 2, 'n1'),
                 integer(card, 3, 'n2')]
@@ -407,6 +464,16 @@ class CONROD(RodElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CONROD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         nids = data[1:3]
         mid = data[3]
@@ -438,7 +505,7 @@ class CONROD(RodElement):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        assert pid is None, 'pid=%r' % pid
+        assert pid == -10, 'pid=%r' % pid
         edges = self.get_edge_ids()
         if xref:  # True
             mid = self.Mid()
@@ -461,6 +528,9 @@ class CONROD(RodElement):
     def Centroid(self):
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def Mid(self):
         if isinstance(self.mid, integer_types):
             return self.mid
@@ -471,7 +541,7 @@ class CONROD(RodElement):
             return self.mid_ref.mid
 
     def Pid(self):
-        return None
+        return self.pid
 
     def MassPerLength(self):
         if isinstance(self.mid, integer_types):
@@ -512,7 +582,7 @@ class CONROD(RodElement):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.mid_ref.rho
 
-    #def writeCodeAster(self):
+    #def write_code_aster(self):
         #msg = ''
         #msg += "    POUTRE=_F(GROUP_MA='CONROD_%s',\n" % self.eid
         #msg += "              SECTION='CERCLE',  # circular section\n"

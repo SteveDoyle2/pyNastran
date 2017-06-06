@@ -2,6 +2,7 @@
 Defines:
  - data_in_material_coord(bdf, op2, in_place=False)
 """
+from __future__ import print_function
 import copy
 
 import numpy as np
@@ -260,38 +261,75 @@ def data_in_material_coord(bdf, op2, in_place=False):
             #     not in the supplied bdf file
             vecthetarad = np.array([thetarad.get(eid, 0.0) for eid in veceids])
 
-            # membrane terms
-            Sxx = vector.data[:, :, 0]
-            Syy = vector.data[:, :, 1]
-            Sxy = vector.data[:, :, 2]
-            Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
-            new_vector.data[:, :, 0] = Sxx_theta
-            new_vector.data[:, :, 1] = Syy_theta
-            new_vector.data[:, :, 2] = Sxy_theta
+            if veceids.shape[0] == vector.data.shape[1] // 5:
+                steps = [5, 5, 5, 5, 5]
+            else: # assuming  always that veceids.shape[0] == vector.data.shape[1]
+                steps = [1]
 
-            # bending terms
-            Sxx = vector.data[:, :, 3]
-            Syy = vector.data[:, :, 4]
-            Sxy = vector.data[:, :, 5]
-            Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
-            new_vector.data[:, :, 3] = Sxx_theta
-            new_vector.data[:, :, 4] = Syy_theta
-            new_vector.data[:, :, 5] = Sxy_theta
+            for start, step in enumerate(steps):
+                s = slice(start, vector.data.shape[1], step)
+                # membrane terms
+                Sxx = vector.data[:, s, 0]
+                Syy = vector.data[:, s, 1]
+                Sxy = vector.data[:, s, 2]
+                if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
+                    Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(Sxx.real, Syy.real, Sxy.real, vecthetarad)
+                    new_vector.data[:, s, 0].real = Sxx_theta_real
+                    new_vector.data[:, s, 1].real = Syy_theta_real
+                    new_vector.data[:, s, 2].real = Sxy_theta_real
+                    Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(Sxx.imag, Syy.imag, Sxy.imag, vecthetarad)
+                    new_vector.data[:, s, 0].imag = Sxx_theta_imag
+                    new_vector.data[:, s, 1].imag = Syy_theta_imag
+                    new_vector.data[:, s, 2].imag = Sxy_theta_imag
+                else:
+                    Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
+                    new_vector.data[:, s, 0] = Sxx_theta
+                    new_vector.data[:, s, 1] = Syy_theta
+                    new_vector.data[:, s, 2] = Sxy_theta
 
-            # transverse terms
-            Qx = vector.data[:, :, 6]
-            Qy = vector.data[:, :, 7]
-            Qx_new = cos(vecthetarad)*Qx + sin(vecthetarad)*Qy
-            Qy_new = -sin(vecthetarad)*Qx + cos(vecthetarad)*Qy
-            new_vector.data[:, :, 6] = Qx_new
-            new_vector.data[:, :, 7] = Qy_new
+                # bending terms
+                Sxx = vector.data[:, s, 3]
+                Syy = vector.data[:, s, 4]
+                Sxy = vector.data[:, s, 5]
+                if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
+                    Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(Sxx.real, Syy.real, Sxy.real, vecthetarad)
+                    new_vector.data[:, s, 3].real = Sxx_theta_real
+                    new_vector.data[:, s, 4].real = Syy_theta_real
+                    new_vector.data[:, s, 5].real = Sxy_theta_real
+                    Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(Sxx.imag, Syy.imag, Sxy.imag, vecthetarad)
+                    new_vector.data[:, s, 3].imag = Sxx_theta_imag
+                    new_vector.data[:, s, 4].imag = Syy_theta_imag
+                    new_vector.data[:, s, 5].imag = Sxy_theta_imag
+
+                else:
+                    Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
+                    new_vector.data[:, s, 3] = Sxx_theta
+                    new_vector.data[:, s, 4] = Syy_theta
+                    new_vector.data[:, s, 5] = Sxy_theta
+
+                # transverse terms
+                Qx = vector.data[:, s, 6]
+                Qy = vector.data[:, s, 7]
+                if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
+                    Qx_new_real = cos(vecthetarad)*Qx.real + sin(vecthetarad)*Qy.real
+                    Qy_new_real = -sin(vecthetarad)*Qx.real + cos(vecthetarad)*Qy.real
+                    new_vector.data[:, s, 6].real = Qx_new_real
+                    new_vector.data[:, s, 7].real = Qy_new_real
+                    Qx_new_imag = cos(vecthetarad)*Qx.imag + sin(vecthetarad)*Qy.imag
+                    Qy_new_imag = -sin(vecthetarad)*Qx.imag + cos(vecthetarad)*Qy.imag
+                    new_vector.data[:, s, 6].imag = Qx_new_imag
+                    new_vector.data[:, s, 7].imag = Qy_new_imag
+                else:
+                    Qx_new = cos(vecthetarad)*Qx + sin(vecthetarad)*Qy
+                    Qy_new = -sin(vecthetarad)*Qx + cos(vecthetarad)*Qy
+                    new_vector.data[:, s, 6] = Qx_new
+                    new_vector.data[:, s, 7] = Qy_new
 
             #TODO implement transformation for corner nodes
             #     for now we just zero the wrong values
             if 'quad8' in vecname:
-                for i in [1, 2, 3, 4]:
-                    new_vector.data[:, i, :] = 0
-
+                for j in [1, 2, 3, 4]:
+                    new_vector.data[:, j, :] = 0
 
     for vecname in stress_vectors:
         op2_vectors = getattr(op2, vecname)
@@ -306,15 +344,34 @@ def data_in_material_coord(bdf, op2, in_place=False):
             vecthetarad = np.array([thetarad.get(eid, 0.0) for eid in veceids])
 
             # bottom and top in-plane stresses
-            Sxx = vector.data[:, :, 1][:, check]
-            Syy = vector.data[:, :, 2][:, check]
-            Sxy = vector.data[:, :, 3][:, check]
-            Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
-            new_vector.data[:, :, 1][:, check] = Sxx_theta
-            new_vector.data[:, :, 2][:, check] = Syy_theta
-            new_vector.data[:, :, 3][:, check] = Sxy_theta
-            thetadeg_new = thetadeg_to_principal(Sxx_theta, Syy_theta, Sxy_theta)
-            new_vector.data[:, :, 4][:, check] = thetadeg_new
+            if vector.data.shape[2] > 3:
+                Sxx = vector.data[:, :, 1][:, check]
+                Syy = vector.data[:, :, 2][:, check]
+                Sxy = vector.data[:, :, 3][:, check]
+            else:
+                Sxx = vector.data[:, :, 0][:, check]
+                Syy = vector.data[:, :, 1][:, check]
+                Sxy = vector.data[:, :, 2][:, check]
+            if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
+                Sxx_theta_real, Syy_theta_real, Sxy_theta_real = transf_Mohr(Sxx.real, Syy.real, Sxy.real, vecthetarad)
+                Sxx_theta_imag, Syy_theta_imag, Sxy_theta_imag = transf_Mohr(Sxx.imag, Syy.imag, Sxy.imag, vecthetarad)
+                tmp = np.zeros_like(new_vector.data[:, :, 0][:, check])
+                tmp.real = Sxx_theta_real
+                tmp.imag = Sxx_theta_imag
+                new_vector.data[:, :, 0][:, check] = tmp
+                tmp.real = Syy_theta_real
+                tmp.imag = Syy_theta_imag
+                new_vector.data[:, :, 1][:, check] = tmp
+                tmp.real = Sxy_theta_real
+                tmp.imag = Sxy_theta_imag
+                new_vector.data[:, :, 2][:, check] = tmp
+            else:
+                Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
+                new_vector.data[:, :, 1][:, check] = Sxx_theta
+                new_vector.data[:, :, 2][:, check] = Syy_theta
+                new_vector.data[:, :, 3][:, check] = Sxy_theta
+                thetadeg_new = thetadeg_to_principal(Sxx_theta, Syy_theta, Sxy_theta)
+                new_vector.data[:, :, 4][:, check] = thetadeg_new
 
             #TODO implement transformation for corner nodes
             #     for now we just zero the wrong values
@@ -335,15 +392,34 @@ def data_in_material_coord(bdf, op2, in_place=False):
             vecthetarad = np.array([thetarad.get(eid, 0.0) for eid in veceids])
 
             # bottom and top in-plane strains
-            exx = vector.data[:, :, 1][:, check]
-            eyy = vector.data[:, :, 2][:, check]
-            exy = vector.data[:, :, 3][:, check] / 2.
-            exx_theta, eyy_theta, exy_theta = transf_Mohr(exx, eyy, exy, vecthetarad)
-            thetadeg_new = thetadeg_to_principal(exx_theta, eyy_theta, exy_theta)
-            new_vector.data[:, :, 1][:, check] = exx_theta
-            new_vector.data[:, :, 2][:, check] = eyy_theta
-            new_vector.data[:, :, 3][:, check] = exy_theta * 2.
-            new_vector.data[:, :, 4][:, check] = thetadeg_new
+            if vector.data.shape[2] > 3:
+                exx = vector.data[:, :, 1][:, check]
+                eyy = vector.data[:, :, 2][:, check]
+                exy = vector.data[:, :, 3][:, check] / 2.
+            else:
+                exx = vector.data[:, :, 0][:, check]
+                eyy = vector.data[:, :, 1][:, check]
+                exy = vector.data[:, :, 2][:, check] / 2.
+            if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
+                exx_theta_real, eyy_theta_real, exy_theta_real = transf_Mohr(exx.real, eyy.real, exy.real, vecthetarad)
+                exx_theta_imag, eyy_theta_imag, exy_theta_imag = transf_Mohr(exx.imag, eyy.imag, exy.imag, vecthetarad)
+                tmp = np.zeros_like(new_vector.data[:, :, 0][:, check])
+                tmp.real = exx_theta_real
+                tmp.imag = exx_theta_imag
+                new_vector.data[:, :, 0][:, check] = tmp
+                tmp.real = eyy_theta_real
+                tmp.imag = eyy_theta_imag
+                new_vector.data[:, :, 1][:, check] = tmp
+                tmp.real = exy_theta_real * 2.
+                tmp.imag = exy_theta_imag * 2.
+                new_vector.data[:, :, 2][:, check] = tmp
+            else:
+                exx_theta, eyy_theta, exy_theta = transf_Mohr(exx, eyy, exy, vecthetarad)
+                thetadeg_new = thetadeg_to_principal(exx_theta, eyy_theta, exy_theta)
+                new_vector.data[:, :, 1][:, check] = exx_theta
+                new_vector.data[:, :, 2][:, check] = eyy_theta
+                new_vector.data[:, :, 3][:, check] = exy_theta * 2.
+                new_vector.data[:, :, 4][:, check] = thetadeg_new
 
             #TODO implement transformation for corner nodes
             #     for now we just zero the wrong values

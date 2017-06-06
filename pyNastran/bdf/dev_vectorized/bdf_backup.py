@@ -23,12 +23,14 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_field_16
 from pyNastran.bdf.utils import (
     to_fields, get_include_filename,
-    parse_executive_control_deck, clean_empty_lines)
+    parse_executive_control_deck, clean_empty_lines,
+    parse_patran_syntax,
+)
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 
 from pyNastran.utils import _filename, print_bad_path
 from pyNastran.utils.dev import list_print, object_attributes
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 from pyNastran.utils.gui_io import load_file_dialog
 
 # coords
@@ -225,7 +227,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self._relpath = True
         if sys.version_info < (2, 6):
             self._relpath = False
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
         #: list of all read in cards - useful in determining if entire BDF
         #: was read & really useful in debugging
@@ -775,7 +777,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # these don't...
         self.spcs = {}
-        self.spcadds = {}
 
         self.mpcs = {}
         self.mpcadds = {}
@@ -1679,7 +1680,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         if name == 'PARAM':
             param = PARAM.add_card(card_obj, comment=comment)
-            self.add_PARAM(param)
+            self._add_param_object(param)
         elif name == 'BCRPARA':
             pass
         elif name == 'BCTADD':
@@ -1695,9 +1696,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # cshear / pshear
         elif name == 'CSHEAR':
-            self.cshear.add(card_obj, comment=comment)
+            self.cshear.add_card(card_obj, comment=comment)
         elif name == 'PSHEAR':
-            self.pshear.add(card_obj, comment=comment)
+            self.pshear.add_card(card_obj, comment=comment)
         #========================
         # elements_shell
         elif name == 'CTRIA3':
@@ -1759,18 +1760,18 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # conrod/rod
         elif name == 'CROD':
-            self.crod.add(card_obj, comment=comment)
+            self.crod.add_card(card_obj, comment=comment)
         elif name == 'CONROD':
-            self.conrod.add(card_obj, comment=comment)
+            self.conrod.add_card(card_obj, comment=comment)
         elif name == 'PROD':
-            self.prod.add(card_obj, comment=comment)
+            self.prod.add_card(card_obj, comment=comment)
 
         #========================
         # tube
         elif name == 'CTUBE':
-            self.ctube.add(card_obj, comment=comment)
+            self.ctube.add_card(card_obj, comment=comment)
         elif name == 'PTUBE':
-            self.ptube.add(card_obj, comment=comment)
+            self.ptube.add_card(card_obj, comment=comment)
 
         #========================
         # thermal boundary conditions
@@ -1839,7 +1840,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'AELIST':
             pass
         elif name == 'AERO':
-            self.add_AERO(card_obj)
+            self.add_aero(card_obj)
             #self.aero.add(card_obj, comment=comment)
         elif name == 'AEROS':
             #self.aeros.add(card_obj, comment=comment)
@@ -1878,15 +1879,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         elif name == 'SPLINE1':
-            self.spline1.add(card_obj, comment=comment)
+            self.spline1.add_card(card_obj, comment=comment)
         elif name == 'SPLINE2':
-            self.spline2.add(card_obj, comment=comment)
+            self.spline2.add_card(card_obj, comment=comment)
         elif name == 'SPLINE3':
-            self.spline3.add(card_obj, comment=comment)
+            self.spline3.add_card(card_obj, comment=comment)
         elif name == 'SPLINE4':
-            self.spline4.add(card_obj, comment=comment)
+            self.spline4.add_card(card_obj, comment=comment)
         elif name == 'SPLINE5':
-            self.spline5.add(card_obj, comment=comment)
+            self.spline5.add_card(card_obj, comment=comment)
         #========================
         # caero/paero
         elif name == 'CAERO1':
@@ -1912,36 +1913,36 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.paero.add_paero5(card_obj, comment=comment)
 
         elif name == 'SPLINE1':
-            self.spline1.add(card_obj, comment=comment)
+            self.spline1.add_card(card_obj, comment=comment)
 
         elif name == 'TRIM':
             trim = TRIM(self)
-            trim.add(card_obj, comment=comment)
+            trim.add_card(card_obj, comment=comment)
             self.trim[trim.trim_id] = trim
         #========================
         # bushing
         elif name == 'CBUSH':
-            self.cbush.add(card_obj, comment=comment)
+            self.cbush.add_card(card_obj, comment=comment)
         elif name == 'CBUSH1D':
-            self.cbush1d.add(card_obj, comment=comment)
+            self.cbush1d.add_card(card_obj, comment=comment)
         elif name == 'CBUSH2D':
-            self.cbush2d.add(card_obj, comment=comment)
+            self.cbush2d.add_card(card_obj, comment=comment)
         elif name == 'CBUSH':
-            self.cbush.add(card_obj, comment=comment)
+            self.cbush.add_card(card_obj, comment=comment)
         elif name == 'PBUSH':
-            self.pbush.add(card_obj, comment=comment)
+            self.pbush.add_card(card_obj, comment=comment)
         elif name == 'PBUSHT':
             self.pbusht.add(card_obj, comment=comment)
 
         #========================
         # fast
         elif name == 'PFAST':
-            self.pfast.add(card_obj, comment=comment)
+            self.pfast.add_card(card_obj, comment=comment)
         #========================
         # springs
         elif name == 'PELAS':
-            self.pelas.add(card_obj, 0, comment)
-            self.pelas.add(card_obj, 1, comment)
+            self.pelas.add_card(card_obj, 0, comment)
+            self.pelas.add_card(card_obj, 1, comment)
         elif name == 'CELAS1':
             self.elements_spring.add_celas1(card_obj, comment)
         elif name == 'CELAS2':
@@ -1953,24 +1954,24 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # dampers
         elif name == 'PDAMP':
-            self.pdamp.add(card_obj, comment=comment)
+            self.pdamp.add_card(card_obj, comment=comment)
         elif name == 'PDAMPT':
             self.pdampt.add(card_obj, comment=comment)
         elif name == 'CDAMP1':
-            self.elements_damper.cdamp1.add(card_obj, comment=comment)
+            self.elements_damper.cdamp1.add_card(card_obj, comment=comment)
         elif name == 'CDAMP2':
-            self.elements_damper.cdamp2.add(card_obj, comment=comment)
+            self.elements_damper.cdamp2.add_card(card_obj, comment=comment)
         elif name == 'CDAMP3':
-            self.elements_damper.cdamp3.add(card_obj, comment=comment)
+            self.elements_damper.cdamp3.add_card(card_obj, comment=comment)
         elif name == 'CDAMP4':
-            self.elements_damper.cdamp4.add(card_obj, comment=comment)
+            self.elements_damper.cdamp4.add_card(card_obj, comment=comment)
 
         #========================
         # bars
         elif name == 'CBAR':
-            self.cbar.add(card_obj, comment=comment)
+            self.cbar.add_card(card_obj, comment=comment)
         elif name == 'CBAROR':
-            self.cbaror.add(card_obj, comment=comment)
+            self.cbaror.add_card(card_obj, comment=comment)
         elif name == 'PBAR':
             self.properties_bar.add_pbar(card_obj, comment=comment)
         elif name == 'PBARL':
@@ -1978,9 +1979,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # beams
         elif name == 'CBEAM':
-            self.cbeam.add(card_obj, comment=comment)
+            self.cbeam.add_card(card_obj, comment=comment)
         elif name == 'CBEAMOR':
-            self.cbeamor.add(card_obj, comment=comment)
+            self.cbeamor.add_card(card_obj, comment=comment)
         elif name == 'PBEAM':
             self.properties_beam.add_pbeam(card_obj, comment=comment)
         elif name == 'PBEAML':
@@ -2228,20 +2229,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # nodes
         elif name == 'GRID':
-            self.grid.add(card_obj, comment=comment)
+            self.grid.add_card(card_obj, comment=comment)
         elif name == 'GRDSET':
-            self.grdset.add(card_obj, comment=comment)
+            self.grdset.add_card(card_obj, comment=comment)
 
         elif name == 'POINT':
-            self.point.add(card_obj, comment=comment)
+            self.point.add_card(card_obj, comment=comment)
         elif name == 'SPOINT':
-            self.spoint.add(card_obj, comment=comment)
+            self.spoint.add_card(card_obj, comment=comment)
         elif name == 'EPOINT':
-            self.epoint.add(card_obj, comment=comment)
+            self.epoint.add_card(card_obj, comment=comment)
         elif name == 'POINTAX':
-            self.pointax.add(card_obj, comment=comment)
+            self.pointax.add_card(card_obj, comment=comment)
         #elif name == 'RINGAX':
-            #self.ringax.add(card_obj, comment=comment)
+            #self.ringax.add_card(card_obj, comment=comment)
         #========================
         # nonlinear
         elif name == 'TSTEP':
@@ -2261,21 +2262,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             raise NotImplementedError(name)
         return
 
-    def add_AERO(self, card_obj, comment=''):
+    def add_aero(self, card_obj, comment=''):
         assert self.aero is None, self.aero
         aero = AERO.add_card(card_obj, comment=comment)
         #assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (
             #aero, self.aero[key])
         self.aero = aero
 
-    def add_AEROS(self, card_obj, comment=''):
+    def add_aeros(self, card_obj, comment=''):
         assert self.aeros is None, self.aero
         aero = AEROS.add_card(card_obj, comment=comment)
         #assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (
             #aero, self.aeros[key])
         self.aeros = aero
 
-    def add_AEFACT(self, card_obj, comment='', allow_overwrites=False):
+    def add_aefact(self, card_obj, comment='', allow_overwrites=False):
         aefact = AEFACT.add_card(card_obj, comment=comment)
         key = aefact.sid
         if key in self.aefacts and not allow_overwrites:
@@ -2285,7 +2286,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
             self.aefacts[key] = aefact
 
-    def add_AELIST(self, card_obj, comment=''):
+    def add_aelist(self, card_obj, comment=''):
         aelist = AELIST(card_obj, comment=comment)
         key = aelist.sid
         assert key not in self.aelists, '\naelist=\n%s oldAELIST=\n%s' % (
@@ -2293,7 +2294,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         assert key >= 0
         self.aelists[key] = aelist
 
-    def add_AELINK(self, card_obj, comment=''):
+    def add_aelink(self, card_obj, comment=''):
         aelink = AELINK.add_card(card_obj, comment=comment)
         key = aelink.id
         assert key >= 0
@@ -2302,7 +2303,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.aelinks[key].append(aelink)
         #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aelink, self.aelinks[key])
 
-    def add_AEPARM(self, card_obj, comment=''):
+    def add_aeparm(self, card_obj, comment=''):
         aeparam = AEPARM.add_card(card_obj, comment=comment)
         key = aeparam.id
         assert key not in self.aeparams, '\naeparam=\n%s oldAESTAT=\n%s' % (
@@ -2310,7 +2311,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         assert key >= 0
         self.aeparams[key] = aeparam
 
-    def add_AESTAT(self, card_obj, comment=''):
+    def add_aestat(self, card_obj, comment=''):
         aestat = AESTAT.add_card(card_obj, comment=comment)
         key = aestat.id
         assert key not in self.aestats, '\naestat=\n%s oldAESTAT=\n%s' % (
@@ -2318,7 +2319,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         assert key >= 0
         self.aestats[key] = aestat
 
-    def add_AESURF(self, card_obj, comment=''):
+    def add_aesurf(self, card_obj, comment=''):
         aesurf = AESURF.add_card(card_obj, comment=comment)
         key = aesurf.aesid
         assert key not in self.aesurf, '\naesurf=\n%s oldAESURF=\n%s' % (
@@ -2326,13 +2327,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         assert key >= 0
         self.aesurf[key] = aesurf
 
-    def add_AESURFS(self, card_obj, comment=''):
+    def add_aesurfs(self, card_obj, comment=''):
         aesurfs = AESURFS.add_card(card_obj, comment=comment)
-        key = aesurf.aesid
+        key = aesurfs.aesid
         assert key not in self.aesurfs, '\naesurfs=\n%s oldAESURFS=\n%s' % (
             aesurfs, self.aesurfs[key])
         assert key >= 0
-        self.aesurfs[key] = aesurf
+        self.aesurfs[key] = aesurfs
 
     def get_bdf_stats(self, return_type='string'):
         """

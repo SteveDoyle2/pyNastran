@@ -1,4 +1,4 @@
-from numpy import zeros, array
+#from numpy import array #zeros,
 
 class Ansys(object):
     def __init__(self, log=None, debug=False):
@@ -8,7 +8,7 @@ class Ansys(object):
         with open(ansys_filename, 'r') as ansys_file:
             lines = ansys_file.readlines()
 
-        nodes = []
+        #nodes = []
         elements = {}
 
         i = 0

@@ -5,13 +5,14 @@ from six.moves import zip
 from numpy import array, cross, dot, abs as npabs
 from numpy.linalg import norm, solve #, cond
 
-from pyNastran.applications.cart3d_nastran_fsi.math_functions import is_list_ranged, list_print, shepard_weight
+from pyNastran.applications.cart3d_nastran_fsi.math_functions import (
+    is_list_ranged, list_print, shepard_weight)
 #from pyNastran.applications.cart3d_nastran_fsi.matTest import fIsNatural
 from pyNastran.bdf.field_writer_8 import print_card_8
 
-from logger import dummyLogger
-logger_obj = dummyLogger()
-log = logger_obj.startLog('debug') # or info
+from pyNastran.utils.log import get_logger
+
+log = get_logger(log=None, level='debug', encoding='utf-8')
 
 #------------------------------------------------------------------
 

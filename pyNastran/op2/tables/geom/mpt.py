@@ -1,3 +1,6 @@
+"""
+defines readers for BDF objects in the OP2 MPT/MPTS table
+"""
 #pylint: disable=C0111,C0103,C0301,W0612,W0613,R0914,R0201
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -7,7 +10,7 @@ from six.moves import range
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)
-from pyNastran.bdf.cards.material_deps import MATS1 # MATT1
+from pyNastran.bdf.cards.material_deps import MATS1, MATT1, MATT4, MATT5
 from pyNastran.bdf.cards.dynamic import NLPARM, TSTEPNL # TSTEP
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -52,11 +55,11 @@ class MPT(GeomCommon):
             (3003, 30, 286): ['NLPARM', self._read_nlparm],   # record 27
             (3104, 32, 350): ['NLPCI', self._read_nlpci],     # record 28
             (3103, 31, 337): ['TSTEPNL', self._read_tstepnl], # record 29
-            (3303, 33, 988) : ['MATT11', self._read_fake],
+            (3303, 33, 988) : ['MATT11', self._read_matt11],
 
-            (903, 9, 336) : ['MATT8', self._read_fake],
-            (8902, 89, 423) : ['RADMT', self._read_fake],
-            (9002, 90, 410) : ['RADBND', self._read_fake],
+            (903, 9, 336) : ['MATT8', self._read_matt8],
+            (8902, 89, 423) : ['RADMT', self._read_radmt],
+            (9002, 90, 410) : ['RADBND', self._read_radbnd],
         }
 
     def add_op2_material(self, mat):
@@ -319,47 +322,95 @@ class MPT(GeomCommon):
         return n
 
     def _read_matt1(self, data, n):
-        self.log.info('skipping MATT1 in MPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping MATT1 in MPT\n')
-        return len(data)
+        """
+        MATT1(703,7,91)
+        checked NX-10.1, MSC-2016
+        """
+        s = Struct(b(self._endian + '12i'))
+        ntotal = 48 # 12*4
+        ncards = (len(data) - n) // ntotal
+        for i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  MATT1=%s\n' % str(out))
+            #(mid, tableid, ...., None) = out
+            mat = MATT1.add_op2_data(out)
+            self._add_material_dependence_object(mat)
+            n += ntotal
+        self._increase_card_count('MATT1', ncards)
+        return n
 
     def _read_matt2(self, data, n):
         self.log.info('skipping MATT2 in MPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping MATT2 in MPT\n')
         return len(data)
 
     def _read_matt3(self, data, n):
         self.log.info('skipping MATT3 in MPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping MATT3 in MPT\n')
         return len(data)
 
     def _read_matt4(self, data, n):
-        self.log.info('skipping MATT4 in MPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping MATT4 in MPT\n')
-        return len(data)
+        """
+        MATT4(2303,23,237)
+        checked NX-10.1, MSC-2016
+        """
+        s = Struct(b(self._endian + '7i'))
+        ntotal = 28 # 7*4
+        ncards = (len(data) - n) // ntotal
+        for i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  MATT4=%s\n' % str(out))
+            #(mid, tk, tcp, null, th, tmu, thgen) = out
+            mat = MATT4.add_op2_data(out)
+            self._add_material_dependence_object(mat)
+            n += ntotal
+        self._increase_card_count('MATT4', ncards)
+        return n
 
     def _read_matt5(self, data, n):
-        self.log.info('skipping MATT5 in MPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping MATT5 in MPT\n')
-        return len(data)
+        """
+        MATT5(2403,24,238)
+        checked NX-10.1, MSC-2016
+        """
+        s = Struct(b(self._endian + '10i'))
+        ntotal = 40 # 10*4
+        ncards = (len(data) - n) // ntotal
+        for i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  MATT4=%s\n' % str(out))
+            #(mid, tk1, tk2, tk3, tk4, tk5, tk6, tcp, null, thgen) = out
+            mat = MATT5.add_op2_data(out)
+            self._add_material_dependence_object(mat)
+            n += ntotal
+        self._increase_card_count('MATT5', ncards)
+        return n
 
 # MATT8 - unused
+    def _read_matt8(self, data, n):
+        self.log.info('skipping MATT8 in MPT\n')
+        return len(data)
+
     def _read_matt9(self, data, n):
         self.log.info('skipping MATT9 in MPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping MATT9 in MPT\n')
+        return len(data)
+
+    def _read_matt11(self, data, n):
+        self.log.info('skipping MATT11 in MPT\n')
         return len(data)
 
 # MBOLT
 # MBOLTUS
 # MSTACK
 # NLAUTO
-# RADBND
+
+    def _read_radbnd(self, data, n):
+        self.log.info('skipping RADBND in MPT\n')
+        return len(data)
+
 
     def _read_radm(self, data, n):
         """
@@ -392,11 +443,12 @@ class MPT(GeomCommon):
                 mat = RADM.add_op2_data(pack)
                 self._add_thermal_bc_object(mat, mat.radmid)
                 nmaterials += 1
-
         self.card_count['RADM'] = nmaterials
         return n
 
-# RADMT
+    def _read_radmt(self, data, n):
+        self.log.info('skipping RADMT in MPT\n')
+        return len(data)
 
     def _read_nlparm(self, data, n):
         """
@@ -416,9 +468,7 @@ class MPT(GeomCommon):
         return n
 
     def _read_nlpci(self, data, n):
-        self.log.debug('skipping NLPCI in MPT')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping NLPCI in MPT\n')
+        self.log.info('skipping NLPCI in MPT')
         return len(data)
 
     def _read_tstepnl(self, data, n):
@@ -433,7 +483,12 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
-            self._add_tstepnl_object(TSTEPNL.add_op2_data(out))
+            method = out[4]
+            if method in [4]:
+                self.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
+            else:
+                self._add_tstepnl_object(TSTEPNL.add_op2_data(out))
+
             n += ntotal
         self.card_count['TSTEPNL'] = nentries
         return n

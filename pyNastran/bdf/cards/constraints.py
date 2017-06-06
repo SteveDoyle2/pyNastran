@@ -18,7 +18,7 @@ The ConstraintObject contain multiple constraints.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import iteritems, string_types
+from six import string_types
 from six.moves import zip, range
 
 from pyNastran.utils import integer_types
@@ -68,6 +68,16 @@ class SUPORT1(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SUPORT1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')  # really a support id sid
 
         nfields = len(card)
@@ -87,6 +97,16 @@ class SUPORT1(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SUPORT1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         conid = data[0]
         assert (len(data) - 1) % 2 == 0, data
         IDs = []
@@ -122,6 +142,22 @@ class SUPORT1(Constraint):
         """
         msg = ', which is required by SUPORT1'
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SUPORT1=%s' % self.conid
+        for nid in self.IDs:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SUPORT1=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.IDs = nids2
         self.IDs_ref = self.IDs
 
     def uncross_reference(self):
@@ -166,6 +202,16 @@ class SUPORT(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SUPORT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         # TODO: remove fields...
         #fields = card.fields(1)
 
@@ -186,6 +232,16 @@ class SUPORT(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SUPORT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         fields = data
         IDs = []
         Cs = []
@@ -210,6 +266,21 @@ class SUPORT(Constraint):
         """
         msg = ', which is required by SUPORT'
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
+        self.IDs_ref = self.IDs
+
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SUPORT'
+        for nid in self.IDs:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SUPORT' % nid
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.IDs = nids2
         self.IDs_ref = self.IDs
 
     def uncross_reference(self):
@@ -269,6 +340,16 @@ class MPC(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an MPC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         gids = []
         constraints = []
@@ -307,7 +388,17 @@ class MPC(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        msg = '%s has not implemented data parsing' % cls.type
+        """
+        Adds an MPC card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        #msg = 'MPC has not implemented data parsing'
         conid = data[0]
         gids = data[1]
         constraints = data[2]
@@ -337,6 +428,22 @@ class MPC(Constraint):
         """
         msg = ', which is required by MPC=%s' % self.conid
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids_ref = self.gids
+
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SPC=%s' % self.conid
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.gids = nids2
         self.gids_ref = self.gids
 
     def uncross_reference(self):
@@ -434,6 +541,16 @@ class SPC(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an SPC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             gids = [integer(card, 2, 'G1'),]
@@ -453,6 +570,16 @@ class SPC(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPC card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         conid = data[0]
         gids = [data[1]]
         components = data[2]
@@ -461,8 +588,8 @@ class SPC(Constraint):
         assert conid > 0, data
         assert gids[0] > 0, data
         components_str = str(components)
-        assert len(constraint_str) <= 6, data
-        components = [constraint_str]
+        assert len(components_str) <= 6, data
+        components = [components_str]
         #if components[0] == 0:
             #components[0] = 0
         #if components[0] == 16:
@@ -498,6 +625,22 @@ class SPC(Constraint):
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
 
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SPC=%s' % self.conid
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.gids = nids2
+        self.gids_ref = self.gids
+
     def uncross_reference(self):
         self.gids = self.node_ids
         del self.gids_ref
@@ -528,6 +671,16 @@ class GMSPC(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a GMSPC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'sid')
         component = parse_components(card, 2, 'components')
         entity = string(card, 3, 'entity')
@@ -590,6 +743,16 @@ class SPCAX(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPCAX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         rid = integer(card, 2, 'rid')
         hid = integer(card, 3, 'hid')
@@ -650,6 +813,8 @@ class SPC1(Constraint):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
         self.conid = conid
         self.components = components
         self.nodes = expand_thru(nodes)
@@ -661,6 +826,16 @@ class SPC1(Constraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPC1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         components = parse_components(card, 2, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(3)
@@ -668,6 +843,16 @@ class SPC1(Constraint):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPC1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         conid = data[0]
         components = str(data[1])
         nodes = data[2]
@@ -704,12 +889,269 @@ class SPC1(Constraint):
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
 
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SPC1=%s' % self.conid
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.nodes = nids2
+
     def uncross_reference(self):
         self.nodes = self.node_ids
         del self.nodes_ref
 
     def raw_fields(self):
         fields = ['SPC1', self.conid, self.components] + self.node_ids
+        return fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+class SPCOFF(Constraint):
+    type = 'SPCOFF'
+
+    def __init__(self, gids, components, enforced, comment=''):
+        Constraint.__init__(self)
+        if comment:
+            self.comment = comment
+        self.gids = gids
+        self.components = components
+        self.enforced = enforced
+
+    def validate(self):
+        assert isinstance(self.gids, list), self.gids
+        assert isinstance(self.components, list), self.components
+        assert isinstance(self.enforced, list), self.enforced
+        assert len(self.gids) == len(self.components), 'len(self.gids)=%s len(self.components)=%s' % (len(self.gids), len(self.components))
+        assert len(self.gids) == len(self.enforced), 'len(self.gids)=%s len(self.enforced)=%s' % (len(self.gids), len(self.enforced))
+        for nid, comp, enforcedi in zip(self.gids, self.components, self.enforced):
+            assert isinstance(nid, integer_types), self.gids
+            assert isinstance(comp, string_types), self.components
+            assert isinstance(enforcedi, float), self.enforced
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a SPCOFF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        raise NotImplementedError()
+        #if card.field(5) in [None, '']:
+            #gids = [integer(card, 2, 'G1'),]
+            #components = [components_or_blank(card, 3, 'C1', '0')]
+            #enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+        #else:
+            #gids = [
+                #integer(card, 2, 'G1'),
+                #integer_or_blank(card, 5, 'G2'),
+            #]
+            ## :0 if scalar point 1-6 if grid
+            #components = [components_or_blank(card, 3, 'C1', '0'),
+                          #components_or_blank(card, 6, 'C2', '0')]
+            #enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                        #double_or_blank(card, 7, 'D2', 0.0)]
+        #return cls(gids, components, enforced, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SPCOFF card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        gids = [data[0]]
+        components = data[1]
+        assert 0 <= components <= 123456, data
+        enforced = [data[2]]
+        assert gids[0] > 0, data
+        components_str = str(components)
+        assert len(components_str) <= 6, data
+        components = [components_str]
+        #if components[0] == 0:
+            #components[0] = 0
+        #if components[0] == 16:
+            #components[0] = '16'
+        #else:
+            #raise RuntimeError('SPC; components=%s data=%s' % (components, data))
+        #assert 0 < components[0] > 1000, data
+        return cls(gids, components, enforced, comment=comment)
+
+    @property
+    def constraints(self):
+        return self.components
+
+    @constraints.setter
+    def constraints(self, constraints):
+        self.components = constraints
+
+    @property
+    def node_ids(self):
+        msg = ', which is required by SPCOFF'
+        return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by SPCOFF=%s' % (self.conid)
+        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids_ref = self.gids
+
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SPCOFF=%s' % (self.conid)
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SPCOFF=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.gids = nids2
+        self.gids_ref = self.gids
+
+    def uncross_reference(self):
+        self.gids = self.node_ids
+        del self.gids_ref
+
+    def raw_fields(self):
+        fields = ['SPCOFF']
+        for (gid, constraint, enforced) in zip(self.node_ids, self.components,
+                                               self.enforced):
+            fields += [gid, constraint, enforced]
+        return fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+
+class SPCOFF1(Constraint):
+    type = 'SPCOFF1'
+
+    def __init__(self, components, nodes, comment=''):
+        Constraint.__init__(self)
+        if comment:
+            self.comment = comment
+        self.components = components
+        self.nodes = expand_thru(nodes)
+        self.nodes.sort()
+
+    def validate(self):
+        assert isinstance(self.nodes, list), 'nodes=%s\n%s' % (self.nodes, str(self))
+        assert isinstance(self.components, string_types), 'components=%s\n%s' % (self.components, str(self))
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a SPCOFF1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        components = parse_components(card, 1, 'components')  # 246 = y; dx, dz dir
+        nodes = card.fields(2)
+        return cls(components, nodes, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPCOFF1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        components = str(data[0])
+        nodes = data[1]
+        if nodes[-1] == -1:
+            nodes = nodes[:-1]
+        for nid in nodes:
+            assert nid > 0, data
+        return SPCOFF1(components, nodes, comment=comment)
+
+    @property
+    def constraints(self):
+        return self.components
+
+    @constraints.setter
+    def constraints(self, constraints):
+        self.components = constraints
+
+    @property
+    def node_ids(self):
+        msg = ', which is required by SPCOFF1'
+        return self._nodeIDs(self.nodes, allow_empty_nodes=True, msg=msg)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by SPCOFF1; conid=%s' % (self.conid)
+        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes_ref = self.nodes
+
+    def safe_cross_reference(self, model, debug=True):
+        nids2 = []
+        msg = ' which is required by SPCOFF1=%s' % (self.conid)
+        for nid in self.node_ids:
+            try:
+                nid2 = model.Node(nid, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
+                        nid, self.conid)
+                    print(msg)
+                continue
+            nids2.append(nid2)
+        self.nodes = nids2
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        del self.nodes_ref
+
+    def raw_fields(self):
+        fields = ['SPCOFF1', self.components] + self.node_ids
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -745,12 +1187,32 @@ class SPCADD(ConstraintADD):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPCADD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         sets = card.fields(2)
         return SPCADD(conid, sets, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPCADD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         conid = data[0]
         sets = list(data[1:-1])
         return SPCADD(conid, sets, comment=comment)
@@ -777,6 +1239,10 @@ class SPCADD(ConstraintADD):
                 raise TypeError('type=%s; spc=\n%s' % (type(spc), spc))
         return spc_ids
 
+    @property
+    def ids(self):
+        return self.spc_ids
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -789,6 +1255,22 @@ class SPCADD(ConstraintADD):
         msg = ', which is required by SPCADD=%s' % self.conid
         for i, spc in enumerate(self.sets):
             self.sets[i] = model.SPC(spc, msg=msg)
+        self.sets_ref = self.sets
+
+    def safe_cross_reference(self, model, debug=True):
+        spcs = []
+        msg = ' which is required by SPCADD=%s' % self.conid
+        for spc_id in self.sets:
+            try:
+                spc = model.SPC(spc_id, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find SPC=%i, which is required by SPCADD=%s' % (
+                        spc_id, self.conid)
+                    print(msg)
+                continue
+            spcs.append(spc)
+        self.sets = spcs
         self.sets_ref = self.sets
 
     def uncross_reference(self):
@@ -832,6 +1314,16 @@ class MPCADD(ConstraintADD):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MPCADD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         conid = integer(card, 1, 'conid')
         sets = card.fields(2)
         return MPCADD(conid, sets, comment=comment)
@@ -866,12 +1358,25 @@ class MPCADD(ConstraintADD):
             self.sets[i] = model.MPC(mpc, msg=msg)
         self.sets_ref = self.sets
 
+    def safe_cross_reference(self, model, debug=False):
+        msg = ', which is required by MPCADD=%s' % self.conid
+        for i, mpc in enumerate(self.sets):
+            try:
+                self.sets[i] = model.MPC(mpc, msg=msg)
+            except KeyError:
+                pass
+        self.sets_ref = self.sets
+
     def uncross_reference(self):
         self.sets = self.mpc_ids
         del self.sets_ref
 
+    @property
+    def ids(self):
+        return self.mpc_ids
+
     def raw_fields(self):
-        fields = ['MPCADD', self.conid]  +self.mpc_ids
+        fields = ['MPCADD', self.conid] + self.mpc_ids
         return fields
 
     def write_card(self, size=8, is_double=False):

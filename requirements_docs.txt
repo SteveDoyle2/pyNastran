@@ -1,14 +1,14 @@
-pyNastran
-numpy>=1.9.2
-#scipy==0.16.0, <0.18.0
+numpy>=1.10.2
+#scipy==0.16.0
 docopt==0.6.2
 #vtk==5.10.0
 pillow>=2.7.0
 six>=1.9.0
-
+cycler>=0.10
 
 # extra modules for docs
-alabaster
-sphinx
-sphinx_rtd_theme
-numpydoc
+alabaster>=0.7.9
+sphinx>=1.5.0
+sphinx_rtd_theme>=0.1.9
+numpydoc>=0.5.0
+pygments>=2.1.0

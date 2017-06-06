@@ -1,12 +1,34 @@
 elements Package
 ================
 
+:mod:`axisymmetric_shells` Module
+---------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.elements.axisymmetric_shells
+
+.. automodule:: pyNastran.bdf.cards.elements.axisymmetric_shells
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`bars` Module
 ------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.bars
 
 .. automodule:: pyNastran.bdf.cards.elements.bars
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`beam` Module
+------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.elements.beam
+
+.. automodule:: pyNastran.bdf.cards.elements.beam
     :members:
     :private-members:
     :undoc-members:
@@ -62,6 +84,17 @@ elements Package
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.rigid
 
 .. automodule:: pyNastran.bdf.cards.elements.rigid
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`rods` Module
+------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.elements.rods
+
+.. automodule:: pyNastran.bdf.cards.elements.rods
     :members:
     :private-members:
     :undoc-members:

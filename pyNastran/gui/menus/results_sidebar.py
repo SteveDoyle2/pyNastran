@@ -13,17 +13,17 @@ if qt_version == 4:
     from PyQt4 import QtGui
     from PyQt4.QtGui import (
         QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-        QComboBox)
+        QComboBox, QLabel, QHBoxLayout)
 elif qt_version == 5:
     from PyQt5 import QtGui
     from PyQt5.QtWidgets import (
         QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-        QComboBox)
+        QComboBox, QLabel, QHBoxLayout)
 elif qt_version == 'pyside':
     from PySide import QtGui
     from PySide.QtGui import (
         QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-        QComboBox)
+        QComboBox, QLabel, QHBoxLayout)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
@@ -111,14 +111,28 @@ class QTreeView2(QTreeView):
 
 class Sidebar(QWidget):
     """
-    +--------------+
-    | Case/Results |
-    +==============+
-    | - a          |
-    |  - b1        |
-    |  - b2        |
-    |  - b3        |
-    +--------------+
+    +----------------------+
+    |        Results       |
+    +======================+
+    |                      |
+    |  Name = Main         |
+    |                      |
+    |  +----------------+  |
+    |  | ResultsWindow  |  |
+    |  +----------------+  |
+    |  |                |  |
+    |  |  +----------+  |  |
+    |  |  | - a      |  |  |
+    |  |  |  - b1    |  |  |
+    |  |  |  - b2    |  |  |
+    |  |  |  - b3    |  |  |
+    |  |  +----------+  |  |
+    |  |                |  |
+    |  +----------------+  |
+    |                      |
+    |                      |
+    |         Apply        |
+    +----------------------+
 
     For Nastran:
       - a: Subcase 1
@@ -195,10 +209,12 @@ class Sidebar(QWidget):
     +--------------+
     """
     def __init__(self, parent, debug=False):
+        """creates the buttons in the Sidebar, not the actual layout"""
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
 
+        name = 'main'
         data = []
         data = [
             ("Alice", None, [
@@ -235,38 +251,75 @@ class Sidebar(QWidget):
 
         self.apply_button = QPushButton('Apply', self)
         self.apply_button.clicked.connect(self.on_apply)
+
+        self.name = str(name)
+        self.names = [name]
+        self.name_label = QLabel("Name:")
+        self.name_pulldown = QComboBox()
+        self.name_pulldown.addItem(name)
+        self.name_pulldown.setDisabled(True)
+        self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
+
         self.setup_layout()
 
     def setup_layout(self):
-        layout = QVBoxLayout()
-        layout.addWidget(self.result_case_window)
-        layout.addWidget(self.result_data_window)
+        """creates the sidebar visual layout"""
+        vbox = QVBoxLayout()
+        hbox = QHBoxLayout()
+
+        hbox.addWidget(self.name_label)
+        hbox.addWidget(self.name_pulldown)
+        vbox.addLayout(hbox)
+        vbox.addWidget(self.result_case_window)
+        vbox.addWidget(self.result_data_window)
         if self.show_pulldown:
-            layout.addWidget(self.pulldown)
-        layout.addWidget(self.apply_button)
-        self.setLayout(layout)
+            vbox.addWidget(self.pulldown)
+        vbox.addWidget(self.apply_button)
+        self.setLayout(vbox)
 
         self.clear_data()
 
     def update_method(self, method):
-        if isinstance(method, str):
+        if isinstance(method, string_types):
             datai = self.result_data_window.data[0]
             self.result_data_window.data[0] = (method, datai[1], datai[2])
             print('method=%s datai=%s' % (method, datai))
             self.result_data_window.update_data(self.result_data_window.data)
         else:
             return
+             # pragma: no cover
             datai = self.result_data_window.data[0]
-            asdf
 
     def get_form(self):
         return self.result_case_window.data
 
-    def update_results(self, data):
+    def update_results(self, data, name):
+        """
+        Updates the sidebar
+
+        Parameters
+        ----------
+        data : List[tuple]
+            the form data
+        name : str
+            the name that goes at the side
+        """
+        name = str(name)
+        if name in self.names:
+            i = self.names.index(name)
+            self.name_pulldown.setCurrentIndex(i)
+        else:
+            self.name_pulldown.addItem(name)
+            self.names.append(name)
+        if len(self.names) >= 2:
+            self.name_pulldown.setEnabled(True)
+        self.name = name
+
         self.result_case_window.update_data(data)
         self.apply_button.setEnabled(True)
 
     def update_methods(self, data):
+        """the methods is a hidden box"""
         self.result_data_window.update_data(data)
         self.apply_button.setEnabled(True)
 
@@ -278,6 +331,12 @@ class Sidebar(QWidget):
     def on_pulldown(self, event):
         print('pulldown...')
 
+    def on_update_name(self, event):
+        """user clicked the pulldown"""
+        name = str(self.name_pulldown.currentText())
+        data = self.parent._get_sidebar_data(name)
+        #self.result_case_window.update_data(data)
+
     def on_apply(self, event):
         data = self.result_case_window.data
         valid_a, keys_a = self.result_case_window.treeView.get_row()
@@ -285,7 +344,7 @@ class Sidebar(QWidget):
         data = self.result_data_window.data
         valid_b, keys_b = self.result_data_window.treeView.get_row()
         if valid_a and valid_b:
-            if self.debug:
+            if self.debug:  # pragma: no cover
                 print('  rows1 = %s' % self.result_case_window.treeView.old_rows)
                 print('        = %s' % str(keys_a))
                 print('  rows2 = %s' % self.result_data_window.treeView.old_rows)
@@ -294,7 +353,7 @@ class Sidebar(QWidget):
                 self.update_vtk_window(keys_a, keys_b)
 
     def update_vtk_window(self, keys_a, keys_b):
-        if 0:
+        if 0:  # pragma: no cover
             print('keys_a = %s' % str(keys_a))
             for i, key in enumerate(self.parent.case_keys):
                 if key[1] == keys_a[0]:
@@ -311,6 +370,10 @@ class Sidebar(QWidget):
 
 
 class ResultsWindow(QWidget):
+    """
+    A ResultsWindow creates the box where we actually select our
+    results case.  It does not have an apply button.
+    """
     def __init__(self, name, data, choices):
         QWidget.__init__(self)
         self.name = name
@@ -381,8 +444,8 @@ class ResultsWindow(QWidget):
                     #self.treeView.setCurrentItem(self, 0)
                     #item.mousePressEvent(None)
                     redo = True
-                else:
-                    pass
+                #else:
+                    #pass
                     #print('item=%s count_check=%s nelements=%s nchildren=%s' % (
                         #text, count_check, nelements, nchildren))
                 if children:
@@ -405,12 +468,12 @@ class ResultsWindow(QWidget):
         #    ]
         #    self.update_data(data)
 
-def main():
+def main():  # pragma: no cover
     app = QApplication(sys.argv)
     window = Sidebar(app, debug=True)
     window.show()
     sys.exit(app.exec_())
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
 

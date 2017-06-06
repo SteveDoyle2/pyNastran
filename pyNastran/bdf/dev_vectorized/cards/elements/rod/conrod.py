@@ -268,7 +268,7 @@ class CONROD(RodElement):
         rho = self.model.materials.get_density_by_material_id(self.material_id[i])
         #rho = self.get_element_id_by_element_index(self.material_id)
 
-        self.model.log.debug('*L = %' % L)
+        self.model.log.debug('*L = %s' % L)
         self.model.log.debug('*rho = %s' % rho)
         self.model.log.debug('*A = %s' % self.A[i])
         self.model.log.debug('*nsm = %s' % self.nsm[i])

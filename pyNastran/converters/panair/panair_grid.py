@@ -13,7 +13,7 @@ import numpy as np
 from pyNastran.converters.panair.panair_grid_patch import (
     PanairPatch, PanairWakePatch, print_float)
 #from pyNastran.converters.panair.panair_write import PanairWrite
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 from pyNastran.utils import print_bad_path
 
 #from pyNastran.utils import list_print
@@ -88,7 +88,7 @@ class PanairGrid(object):
         self.symmetry_section = ''
 
         self.msg = ''
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def write_plot3d(self, p3dname, is_binary=False, is_iblank=False):
         assert not is_binary, is_binary

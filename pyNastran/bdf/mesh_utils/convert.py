@@ -5,7 +5,6 @@ defines:
 from __future__ import print_function
 from six import iteritems, itervalues
 import numpy as np
-from pyNastran.bdf.bdf import PBEAM, PBEAML, PROD
 
 def convert(model, units_to, units=None):
     """
@@ -145,7 +144,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         elif elem_type in tri_shells:
             # thickness
             elem.zoffset *= xyz_scale
-            if elem.TFlag == 0:
+            if elem.tflag == 0:
                 if elem.T1 is not None:
                     elem.T1 *= xyz_scale
                     elem.T2 *= xyz_scale
@@ -155,13 +154,13 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
 
         elif elem_type in quad_shells:
             # thickness
-            # TFlag=blank/0 - Ti value: Ti is specified thickness
+            # tflag=blank/0 - Ti value: Ti is specified thickness
             #                 Ti blank: Ti is PSHELL value
-            # TFlag=0
-            # TFlag=1 - thicknesses are relative (Ti default=1.0)
+            # tflag=0
+            # tflag=1 - thicknesses are relative (Ti default=1.0)
             #
             elem.zoffset *= xyz_scale
-            if elem.TFlag == 0:
+            if elem.tflag == 0:
                 if elem.T1 is not None:
                     elem.T1 *= xyz_scale
                     elem.T2 *= xyz_scale
@@ -502,7 +501,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 elif dload.Type == 'ACCE':
                     scale = accel_scale
                 else:
-                    raise RuntimeError(load)
+                    raise RuntimeError(dload)
             else:
                 raise NotImplementedError(dload)
 

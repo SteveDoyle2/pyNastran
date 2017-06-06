@@ -1,4 +1,5 @@
 from __future__ import print_function
+from codecs import open
 from numpy import array, unique, hstack, zeros
 
 class OBJ(object):
@@ -71,7 +72,7 @@ class OBJ(object):
         line_fmt = 'l %%%s %%%s\n'  % (int_fmt, int_fmt)
         #print(node_fmt)
 
-        with open(obj_filename, 'wb') as obj_file:
+        with open(obj_filename, 'w') as obj_file:
             for node in self.nodes:
                 obj_file.write(node_fmt % tuple(node))
             for line in self.lines + 1:

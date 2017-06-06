@@ -5,7 +5,12 @@ from numpy.linalg import norm
 
 from pyNastran.converters.shabp.shabp_results import ShabpOut
 #from pyNastran.converters.shabp.parse_trailer import parse_trailer
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
+
+def read_shabp(shabp_filename, log=None, debug=False):
+    model = SHABP(log=None, debug=False)
+    model.read_shabp(shabp_filename)
+    return model
 
 class SHABP(ShabpOut):
     def __init__(self, log=None, debug=False):
@@ -21,7 +26,7 @@ class SHABP(ShabpOut):
         self.component_to_params = {}
         self.component_num_to_name = {}
         self.component_name_to_num = {}
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def write_shabp(self, out_filename):
         pass
@@ -116,11 +121,11 @@ class SHABP(ShabpOut):
             areas[i] = A
         return areas
 
-    def read_shabp(self, infilename):
+    def read_shabp(self, shabp_filename):
         """reads an SHABP.INP / SHABP.mk5 file"""
-        with open(infilename) as shabp_file:
+        with open(shabp_filename) as shabp_file:
             lines = shabp_file.readlines()
-        if infilename.lower().endswith(".geo"):
+        if shabp_filename.lower().endswith(".geo"):
             i = 0
         else:  # this supports standard .inp and .mk5 files
             i = 3
@@ -252,7 +257,7 @@ class SHABP(ShabpOut):
             self.parse_trailer()
         except:
             #raise
-            print('failed parsing trailer')
+            self.log.warning('failed parsing trailer')
 
     def build_patches(self, patches):
         X = []

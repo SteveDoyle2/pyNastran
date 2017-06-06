@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for STL.
+"""
 from __future__ import print_function
 from six import iteritems
 from six.moves import range
@@ -6,7 +9,7 @@ from numpy import arange
 import vtk
 from vtk import vtkTriangle
 
-from pyNastran.converters.stl.stl import STL
+from pyNastran.converters.stl.stl import read_stl
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
@@ -26,9 +29,8 @@ class STL_IO(object):
         if skip_reading:
             return
 
-        model = STL(log=self.log, debug=False)
+        model = read_stl(stl_filename, log=self.log, debug=False)
         #self.model_type = model.model_type
-        model.read_stl(stl_filename)
         nodes = model.nodes
         elements = model.elements
 
@@ -39,19 +41,16 @@ class STL_IO(object):
         self.nElements = elements.shape[0]
 
         self.log.info('nnodes=%s nelements=%s' % (self.nNodes, self.nElements))
-        self.grid.Allocate(self.nElements, 1000)
+        grid = self.grid
+        grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
+        points = self.numpy_to_vtk_points(nodes)
         self.nid_map = {}
-        #elem.SetNumberOfPoints(nNodes)
+        #elem.SetNumberOfPoints(nnodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)
 
@@ -71,30 +70,16 @@ class STL_IO(object):
         self.create_global_axes(dim_max)
 
 
-        nid = 0
-        #print("nnodes=%s" % nnodes)
-        for i in range(nnodes):
-            points.InsertPoint(nid, nodes[i, :])
-            nid += 1
+        etype = 5  # vtkTriangle().GetCellType()
+        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
-        nelements = elements.shape[0]
-        #elements -= 1
-        for eid in range(nelements):
-            elem = vtkTriangle()
-            node_ids = elements[eid, :]
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
-            elem.GetPointIds().SetId(2, node_ids[2])
-            self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
-
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
             self.log_info("updated grid")
 
         # loadSTLResults - regions/loads
-        self.turn_text_on()
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 

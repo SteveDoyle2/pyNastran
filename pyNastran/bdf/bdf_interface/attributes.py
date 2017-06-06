@@ -128,6 +128,9 @@ class BDFAttributes(object):
         self.punch = None
         self._encoding = None
 
+        #: list of Nastran SYSTEM commands
+        self.system_command_lines = []
+
         #: list of execive control deck lines
         self.executive_control_lines = []
 
@@ -244,21 +247,32 @@ class BDFAttributes(object):
         #self.grids = {}
         self.spoints = None
         self.epoints = None
+
         #: stores GRIDSET card
         self.grdset = None
+
+        #: stores SEQGP cards
+        self.seqgp = None
+
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
         self.elements = {}
+
+        #: stores CBARAO, CBEAMAO
+        self.ao_element_flags = {}
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}
         #: stores PLOTELs
         self.plotels = {}
 
-        #: store CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
+        #: stores CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
         self.masses = {}
-        self.properties_mass = {} # PMASS
+        #: stores PMASS
+        self.properties_mass = {}
+        #: stores NSM, NSM1
+        self.nsms = {}
 
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
@@ -299,10 +313,11 @@ class BDFAttributes(object):
 
         # stores DLOAD entries.
         self.dloads = {}
-        # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
+        # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE,
+        #        and QVECT entries.
         self.dload_entries = {}
 
-        #self.gusts  = {} # Case Control GUST = 100
+        #self.gusts = {}  # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
 
         #: stores coordinate systems
@@ -325,10 +340,9 @@ class BDFAttributes(object):
         #self.mpcObject = ConstraintObject()
 
         self.spcs = {}
-        self.spcadds = {}
+        self.spcoffs = {}
 
         self.mpcs = {}
-        self.mpcadds = {}
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
@@ -505,6 +519,8 @@ class BDFAttributes(object):
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points' : ['POINT'],
             'grdset' : ['GRDSET'],
+            'seqgp' : ['SEQGP'],
+            'ao_element_flags' : ['CBARAO'],
             #'POINT', 'POINTAX', 'RINGAX',
 
             # CMASS4 lies in the QRG
@@ -533,6 +549,7 @@ class BDFAttributes(object):
                 # thermal
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
             ],
+            'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1', 'NSMADD'],
             'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE'],
             'plotels' : ['PLOTEL',],
 
@@ -555,7 +572,7 @@ class BDFAttributes(object):
 
             # materials
             'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-                           'MATG'],
+                           'MAT3D', 'MATG'],
             'hyperelastic_materials' : ['MATHE', 'MATHP',],
             'creep_materials' : ['CREEP'],
             'MATT1' : ['MATT1'],
@@ -577,8 +594,7 @@ class BDFAttributes(object):
 
             # spc/mpc constraints - TODO: is this correct?
             'spcs' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD', 'GMSPC'],
-            #'spcadds' : ['SPCADD'],
-            #'mpcadds' : ['MPCADD'],
+            'spcoffs' : ['SPCOFF', 'SPCOFF1'],
             'mpcs' : ['MPC', 'MPCADD'],
             'suport' : ['SUPORT'],
             'suport1' : ['SUPORT1'],
@@ -600,7 +616,8 @@ class BDFAttributes(object):
                 ],
             'dloads' : ['DLOAD', ],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
-            'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
+            'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+                               'QVECT',],
 
             # aero cards
             'aero' : ['AERO'],
@@ -743,16 +760,6 @@ class BDFAttributes(object):
         if self._nastran_format == 'nx':
             return True
         return False
-
-    #@property
-    #def caseControlDeck(self):
-        #self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
-        #return self.case_control_deck
-
-    #@caseControlDeck.setter
-    #def caseControlDeck(self, value):
-        #self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
-        #self.case_control_deck = value
 
     @property
     def sol(self):

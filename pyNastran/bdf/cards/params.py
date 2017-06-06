@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, integer_types
 from six.moves import zip
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -50,15 +50,16 @@ class PARAM(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Creates a PARAM card.
+        Adds a PARAM card from ``BDF.add_card(...)``
 
         Parameters
         ----------
-        card : BDFCard(); default=None
-            BDFCard object
+        card : BDFCard()
+            a BDFCard object
         comment : str; default=''
             a comment for the card
         """
+
         key = string(card, 1, 'key')
 
         n = 1
@@ -184,7 +185,7 @@ class PARAM(BaseCard):
         elif self.key == 'ADJMETH':
             if value1 is None:
                 value1 = 0
-            if not isinstance(value1, int):
+            if not isinstance(value1, integer_types):
                 msg = 'key=%s value1=%r must be an integer.' % (self.key, value1)
                 raise TypeError(msg)
 

@@ -22,11 +22,15 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 class DTI(BaseCard):
     """
     +-----+-------+-----+------+-------+--------+------+-------------+
+    |  1  |   2   |  3  |   4  |   5   |    6   |   7  |       8     |
+    +=====+=======+=====+======+=======+========+======+=============+
     | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME |   STRESS    |
     +-----+-------+-----+------+-------+--------+------+-------------+
     MSC
 
     +-----+-------+-----+------+-------+--------+------+-------------+
+    |  1  |   2   |  3  |   4  |   5   |    6   |   7  |       8     |
+    +=====+=======+=====+======+=======+========+======+=============+
     | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME | TEMPERATURE |
     +-----+-------+-----+------+-------+--------+------+-------------+
     NX
@@ -38,6 +42,16 @@ class DTI(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment):
+        """
+        Adds a DTI card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         if name == 'UNITS':
             integer(card, 2, '1')
@@ -81,6 +95,49 @@ class NastranMatrix(BaseCard):
     """
     def __init__(self, name, ifo, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment=''):
+        """
+        Creates a NastranMatrix
+
+        Parameters
+        ----------
+        name : str
+            the name of the matrix
+        ifo : int
+            matrix shape
+            4=Lower Triangular
+            5=Upper Triangular
+            6=Symmetric
+            8=Identity (m=nRows, n=m)
+        tin : int
+            matrix input precision
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        tout : int
+            matrix output precision
+            0=same as tin
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        polar : int; default=0
+            Input format of Ai, Bi
+            Integer=blank or 0 indicates real, imaginary format
+            Integer > 0 indicates amplitude, phase format
+        ncols : int
+            ???
+        GCj  : List[(node, dof)]???
+            the jnode, jDOFs
+        GCi  : List[(node, dof)]???
+            the inode, iDOFs
+        Real : List[float]???
+            The real values
+        Complex : List[float]???; default=None
+            The complex values (if the matrix is complex)
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         if Complex is None:
@@ -183,23 +240,6 @@ class NastranMatrix(BaseCard):
         else:
             raise NotImplementedError('ifo=%s' % self.ifo)
         return shape
-
-    def write_code_aster(self):
-        """
-        assume set 1 = MAAX1,MAAX2, etc. and 100/n % on each
-        """
-        # for real combination
-        comm = 'K_Mtx_AB=COMB_MATR_ASSE(COMB_R=(\n'
-        comm += '    _F(MATR_ASSE = K_Mtx_A,COEF_R = 1.),\n'
-        comm += '    _F(MATR_ASSE = K_Mtx_B,COEF_R = 1.)));\n'
-
-        # for complex combination
-
-        comm += "K_Mtx_AB=COMB_MATR_ASSE(COMB_C=(\n"
-        comm += "_F(MATR_ASSE=K_Mtx_A,COEF_C=('RI',0.7,0.3,),)\n"
-        comm += "_F(MATR_ASSE=K_Mtx_B,COEF_C=('RI',0.7,0.3,),),),);\n"
-        comm = 'K_Mtx=ASSE_MATRICE(MATR_ELEM=ElMtx_K,NUME_DDL=%s,);'
-        return comm
 
     def _add_column_uaccel(self, comment=''):
         raise NotImplementedError('UACCEL')
@@ -312,22 +352,6 @@ class NastranMatrix(BaseCard):
 
     def rename(self, new_name):
         self.name = new_name
-
-    #def isComplex(self):
-        #self.deprecated('isComplex()', 'is_complex', '0.8')
-        #return self.is_complex
-
-    #def isReal(self):
-        #self.deprecated('isReal()', 'is_real', '0.8')
-        #return self.is_real
-
-    #def isPolar(self):
-        #self.deprecated('isPolar()', 'is_polar', '0.8')
-        #return self.is_polar
-
-    #def getMatrix(self, isSparse=False, applySymmetry=True):
-        #self.deprecated('getMatrix()', 'get_matrix()', '0.8')
-        #return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
 
     @property
     def is_real(self):
@@ -824,6 +848,16 @@ class DMIG_UACCEL(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DMIG,UACCEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tin = integer(card, 4, 'tin')
         ncol = integer_or_blank(card, 8, 'ncol')
         return DMIG_UACCEL(tin, ncol, load_sequences={}, comment=comment)
@@ -1001,6 +1035,16 @@ class DMI(NastranMatrix):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DMI card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         #zero
 

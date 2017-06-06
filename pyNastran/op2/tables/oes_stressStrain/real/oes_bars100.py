@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 
 from itertools import count
 import numpy as np
@@ -82,7 +82,7 @@ class RealBar10NodesArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.ntotal, dtype='int32')
@@ -148,7 +148,7 @@ class RealBar10NodesArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return ['<%s>\n' % self.__class__.__name__,
                     '  ntimes: %i\n' % self.ntimes,
@@ -177,6 +177,7 @@ class RealBar10NodesArray(OES_Object):
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg

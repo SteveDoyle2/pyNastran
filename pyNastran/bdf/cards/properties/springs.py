@@ -75,6 +75,19 @@ class PELAS(SpringProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a PELAS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            the index of the PELAS card that's being parsed
+            must be 0 or 1
+        comment : str; default=''
+            a comment for the card
+        """
         noffset = icard * 4
         pid = integer(card, 1 + noffset, 'pid')
         k = double(card, 2 + noffset, 'k')
@@ -84,6 +97,16 @@ class PELAS(SpringProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PELAS card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         k = data[1]
         ge = data[2]
@@ -172,11 +195,36 @@ class PELAST(SpringProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PELAST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         tkid = integer_or_blank(card, 2, 'tkid', 0)
         tgeid = integer_or_blank(card, 3, 'tgeid', 0)
         tknid = integer_or_blank(card, 4, 'tknid', 0)
         assert len(card) <= 5, 'len(PELAST card) = %i\ncard=%s' % (len(card), card)
+        return PELAST(pid, tkid, tgeid, tknid, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PELAST card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        (pid, tkid, tgeid, tknid) = data
         return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 
     def cross_reference(self, model):

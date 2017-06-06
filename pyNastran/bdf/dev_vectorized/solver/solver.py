@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint#: disable=
+# pylint#: disable=C0103
 """
 http://slideplayer.com/slide/3330177/
 """
@@ -22,8 +22,9 @@ from numpy import (array, zeros, ones, dot, arange,
 from numpy.linalg import solve, norm, eigh, eig
 
 from scipy.sparse import dok_matrix #, coo_matrix
-# pyNastran
 
+# pyNastran
+from pyNastran.bdf.bdf_interface.dev.matrices import make_gpwg
 from pyNastran.bdf.dev_vectorized.solver.utils import (
     triple, reverse_dict, partition_dense_symmetric, partition_dense_vector, remove_dofs)
 #from pyNastran.f06.f06_writer import sorted_bulk_data_header
@@ -35,7 +36,8 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils.log import get_logger2
 
 # Tables
-from pyNastran.op2.tables.opg_appliedLoads.opg_objects import RealAppliedLoadsVectorArray, AppliedLoadsVectorArray
+#from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (
+    #RealAppliedLoadsVectorArray, AppliedLoadsVectorArray)
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
@@ -186,8 +188,6 @@ class Solver(OP2):
         #F06Writer.__init_data__(self)
         OP2.__init__(self, debug=False, log=None, debug_file=None) # make_geom=False,
         debug = fargs['--debug']
-        #print('debug =', debug)
-        #self.log = get_logger(log, 'debug' if debug else 'info')
         self.log = get_logger2(log, debug)
 
         self.page_num = 1
@@ -885,7 +885,7 @@ class Solver(OP2):
                 val, options = case.get_parameter('OLOAD')
             except KeyError:
                 self.log.warning('No OLOAD...')
-                self.log.warning(case)
+                #self.log.warning(case)
                 #raise
         del Fg, Kgg
 
@@ -931,9 +931,11 @@ class Solver(OP2):
                         eids = element_type.element_id
                         self.log.info("eids = %s" % eids)
 
-                        self._store_spring_oes(model, eids, e1, case, element_type.type, Type='strain')
+                        self._store_spring_oes(model, eids, e1, case, element_type.type,
+                                               Type='strain')
                         #if self.is_stress:
-                        self._store_spring_oes(model, eids, o1, case, element_type.type, Type='stress')
+                        self._store_spring_oes(model, eids, o1, case, element_type.type,
+                                               Type='stress')
                         #if self.is_force:
                         self._store_spring_oef(model, eids, f1, case, element_type.type)
                         del e1
@@ -1006,7 +1008,7 @@ class Solver(OP2):
                 e1 = zeros(ncbars, 'float64')
                 f1 = zeros(ncbars, 'float64')
                 for i, eid in enumerate(cbars):
-                    element = elements[eid]
+                    element = cbars[eid]
                     (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID)
                     o1[i] = oxi
                     e1[i] = exi
@@ -1031,7 +1033,7 @@ class Solver(OP2):
                 e1 = zeros(ncbeams, 'float64')
                 f1 = zeros(ncbeams, 'float64')
                 for i, eid in enumerate(cbeams):
-                    element = elements[eid]
+                    element = cbeams[eid]
                     (exi, oxi, fxi) = element.displacement_stress(model, q, self.nidComponentToID)
                     o1[i] = oxi
                     e1[i] = exi
@@ -1073,7 +1075,7 @@ class Solver(OP2):
             if ncquad4s:
                 cquad4s = model.cquad4
                 for i, eid in enumerate(ncquad4s):
-                    element = elements[eid]
+                    element = cquad4s[eid]
                     (stressi, straini, forcei) = element.displacement_stress(
                         model, q, self.nidComponentToID)
                     stress[i0+i, :] = stressi
@@ -1120,28 +1122,28 @@ class Solver(OP2):
 
     def write_op2(self, op2_file, packing=False):
         return
-        results = [self.displacements]
-        header = None
-        page_stamp = None
+        #results = [self.displacements]
+        #header = None
+        #page_stamp = None
 
-        self._op2_header(op2_file, packing=packing)
+        #self._op2_header(op2_file, packing=packing)
 
-        for result in results:
-            for subcase, case in sorted(iteritems(result)):
-                case.write_op2(header, page_stamp, op2_file, is_mag_phase=False, packing=packing)
-                if not packing:
-                    op2_file.write('\n')
-        marker1 = [4, 0, 4]
-        marker2 = [4, 0, 4]
-        marker3 = [4, 0, 4]
-        marker = marker1 + marker2 + marker3
-        if packing:
-            nmarker = len(marker)
-            p = pack('%ii' % nmarker, *marker)
-            op2_file.write(p)
-        else:
-            op2_file.write(str(marker)+'\n')
-        op2_file.close()
+        #for result in results:
+            #for subcase, case in sorted(iteritems(result)):
+                #case.write_op2(header, page_stamp, op2_file, is_mag_phase=False, packing=packing)
+                #if not packing:
+                    #op2_file.write('\n')
+        #marker1 = [4, 0, 4]
+        #marker2 = [4, 0, 4]
+        #marker3 = [4, 0, 4]
+        #marker = marker1 + marker2 + marker3
+        #if packing:
+            #nmarker = len(marker)
+            #p = pack('%ii' % nmarker, *marker)
+            #op2_file.write(p)
+        #else:
+            #op2_file.write(str(marker)+'\n')
+        #op2_file.close()
 
     def _store_beam_oes(self, model, eids, axial, case, element_type='CBEAM', Type='strain'):
         #print('eids =', eids)
@@ -1269,7 +1271,8 @@ class Solver(OP2):
 
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
-            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'device_code': 1, 'sort_code': 0,
+            'tCode' : 1, 'table_code':1,  # are these the same?
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
             'element_name': element_name, 'element_type': element_type,
             'format_code':format_code,
@@ -1325,10 +1328,10 @@ class Solver(OP2):
         self.cshear_stress = {}
         self.cshear_strain = {}
 
-                                     S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )
-      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
-        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
-          328        1.721350E+03   1.570314E+03   7.2E+01
+                    S T R E S S E S   I N   S H E A R   P A N E L S   ( C S H E A R )
+      ELEMENT       MAX            AVG        SAFETY    ELEMENT    MAX      AVG    SAFETY
+        ID.        SHEAR          SHEAR       MARGIN      ID.     SHEAR    SHEAR   MARGIN
+          328   1.721350E+03   1.570314E+03   7.2E+01
         """
         if len(eids) == 0:
             return
@@ -1406,7 +1409,8 @@ class Solver(OP2):
 
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
-            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'device_code': 1, 'sort_code': 0,
+            'tCode' : 1, 'table_code':1,  # are these the same?
             'sort_bits': [0, 0, 0],
             'num_wide': 8, 'table_name': 'OES',
             'element_name': element_name, 'element_type': element_type,
@@ -1541,7 +1545,8 @@ class Solver(OP2):
 
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
-            'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            'device_code': 1, 'sort_code': 0,
+            'tCode' : 1, 'table_code':1,  # are these the same?
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
             'element_name': element_type, 'format_code':format_code,
             's_code': s_code,
@@ -1600,15 +1605,17 @@ class Solver(OP2):
         dt = None
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
-            'device_code': 1, 'table_code': 1, 'sort_code': 0,
-            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
-            'nonlinear_factor': None, 'data_names':['lsdvmn']
+            'device_code': 1, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUGV1',
+            'nonlinear_factor': None, 'data_names':['lsdvmn'],
+            'tCode' : 1, 'table_code':1,  # are these the same?
         }
         ntimes = 1
         nnodes = model.grid.n
         disp = RealDisplacementArray(data_code, is_sort1, isubcase, dt=None)
 
-        disp.build_data(ntimes, nnodes,
+        ntotal = nnodes
+        disp.build_data(ntimes, nnodes, ntotal,
                         ntimes, nnodes, float_fmt='float32')
         #data = []
 
@@ -1682,10 +1689,6 @@ class Solver(OP2):
 
             #xyz_cid0 = self.model.grid.get_xyz(cid=0)
 
-        nnodes = xyz_cid0.shape[0]
-        D = zeros((nnodes*6, 6), dtype='float32')
-
-
         grid_point = 2
         if grid_point in [-1, 0]:
             # -1 is don't compute a mass matrix, but since we're in this function,
@@ -1695,127 +1698,10 @@ class Solver(OP2):
             # find mass/inertia about point G
             ref_point = self.positions[grid_point]
 
-        # we subtract ref point so as to not change xyz_cid0
-        for i, node in enumerate(xyz_cid0 - ref_point):
-            r1, r2, r3 = node
-            j = i * 6
-            Tr = array([[0., r3, -r2],
-                        [-r3, 0., r1],
-                        [r2, -r1, 0.]], dtype='float32')
-            #print('Tr[%i]=\n%s\n' % (i+1, Tr))
-
-            cp = self.model.grid.cp[i]
-            Ti = self.model.coords[cp].beta()
-            if not array_equal(Ti, eye(3)):
-                self.log.info('Ti[%i]=\n%s\n' % (i+1, Ti))
-            TiT = Ti.T
-            d = zeros((6, 6), dtype='float32')
-            d[:3, :3] = TiT
-            d[3:, 3:] = TiT
-            d[:3, 3:] = dot(TiT, Tr)
-            D[j:j+6, :] = d
-
-        Mo = zeros((6, 6), dtype='float32')
-        #print('D=\n%s\n' % D)
-        # translati
-
-        Mo = triple(D, Mgg)
-        self.log.info('Mgg=\n%s\n' % Mgg)
-        self.log.info('Mo=\n%s\n' % Mo)
-
-        # t-translation; r-rotation
-        Mt_bar = Mo[:3, :3]
-        Mtr_bar = Mo[:3, 3:]
-        Mrt_bar = Mo[3:, :3]
-        Mr_bar = Mo[3:, 3:]
-
-        #print('dinner =', diag(Mt_bar))
-        delta = norm(diag(Mt_bar))
-        #print('einner =', Mt_bar - diag(Mt_bar))
-        epsilon = norm([
-            Mt_bar[0, 1],
-            Mt_bar[0, 2],
-            Mt_bar[1, 2],
-        ])
-        if epsilon / delta > 0.001:
-            # user warning 3042
-            pass
-
-        self.log.info('Mt_bar (correct) =\n%s\n' % Mt_bar)
-        self.log.info('delta=%s' % delta)
-        self.log.info('epsilon=%s' % epsilon)
-        self.log.info('e/d=%s\n' % (epsilon/delta))
-
-        # hermitian eigenvectors
-        omega, S = eigh(Mt_bar)
-        self.log.info('omega=%s' % omega)
-        self.log.info('S (right, but not correct order) =\n%s\n' % S)
-
-        Mt = triple(S, Mt_bar)
-        Mtr = triple(S, Mtr_bar)
-        Mr = triple(S, Mr_bar)
-
-        # 4. determine the principal axis & cg in the principal mass axis system
-        # eq G-18
-        Mx = Mt[0, 0]
-        My = Mt[1, 1]
-        Mz = Mt[2, 2]
-        mass = diag(Mt)
-        self.log.info('mass = %s' % mass)
-        #if min(mass) == 0.:
-            #raise RuntimeError('mass = %s' % mass)
-        cg = array([
-            [Mtr[0, 0], -Mtr[0, 2], Mtr[0, 1]],
-            [Mtr[1, 2], Mtr[1, 1], -Mtr[1, 0]],
-            [-Mtr[2, 1], Mtr[2, 0], Mtr[2, 2]],
-        ], dtype='float32')
-        if mass[0] != 0.:
-            cg[0, :] /= Mx
-        if mass[1] != 0.:
-            cg[1, :] /= My
-        if mass[2] != 0.:
-            cg[2, :] /= Mz
-        #cg = nan_to_num(cg)
-
-        self.log.info('cg=\n%s\n' % cg)
-        xx = cg[0, 0]
-        yx = cg[0, 1]
-        zx = cg[0, 2]
-
-        xy = cg[1, 0]
-        yy = cg[1, 1]
-        zy = cg[1, 2]
-
-        xz = cg[2, 0]
-        yz = cg[2, 1]
-        zz = cg[2, 2]
-        I11 = Mr[0, 0] - My * zy ** 2 - Mz * yz ** 2
-        I21 = I12 = -Mr[0, 1] - Mz * xz * yz
-        I13 = I31 = -Mr[0, 2] - My * xy * zy
-        I22 = Mr[1, 1] - Mz * xz ** 2 - Mx * zx ** 2
-        I32 = I23 = -Mr[1, 2] - Mx * yx * zx
-        I33 = Mr[2, 2] - Mx * yx ** 2 - My * xy ** 2
-        II = array([
-            [I11, I12, I13],
-            [I21, I22, I13],
-            [I31, I32, I33],
-            ], dtype='float32')
-        II = nan_to_num(II)
-        self.log.info('I(S)=\n%s\n' % II)
-
-
-        # 6. Reverse the sign of the off diagonal terms
-        fill_diagonal(-II, diag(II))
-        #print('I~=\n%s\n' % II)
-        if nan in II:
-            Q = zeros((3, 3), dtype='float32')
-        else:
-            omegaQ, Q = eig(II)
-        #i = argsort(omegaQ)
-        self.log.info('omegaQ = %s' % omegaQ)
-        self.log.info('Q -> wrong =\n%s\n' % Q)
-        IQ = triple(Q, II)
-        #print('I(Q) -> wrong =\n%s\n' % IQ)
+        grid_cps = self.model.grid.cp
+        coords = self.model.coords
+        Mo, S, mass, cg, II, IQ, Q = make_gpwg(
+            Mgg, ref_point, xyz_cid0, grid_cps, coords, self.log)
 
         self.grid_point_weight.reference_point = grid_point
         self.grid_point_weight.MO = Mo
@@ -1829,19 +1715,20 @@ class Solver(OP2):
 
 
     def _save_applied_load(self, Fg):
-        data_code = {'nonlinear_factor':None,
-                     'sort_bits':[0, 0, 0], 'analysis_code':0,
-                     'is_msc':True,'format_code':0, 'sort_code': 0,
-                     'data_names':['lsdvmn'], 'table_code':1,
-                     'num_wide': 8,'table_name': 'OPG',
+        data_code = {
+            'nonlinear_factor':None,
+            'sort_bits':[0, 0, 0], 'analysis_code':0,
+            'is_msc':True, 'format_code':0, 'sort_code': 0,
+            'data_names':['lsdvmn'],
+            'num_wide': 8, 'table_name': 'OPG',
+            'tCode' : 1, 'table_code':1,  # are these the same?
 
-                     #'log': self.log, 'analysis_code': analysis_code,
-                     #'device_code': 1, 'table_code': 1, 'sort_code': 0,
-                     #'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
-                     #'nonlinear_factor': None, 'data_names':['lsdvmn']
-
-                     }
-        isubcase= self.subcase_id
+            #'log': self.log, 'analysis_code': analysis_code,
+            #'device_code': 1, 'table_code': 1, 'sort_code': 0,
+            #'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
+            #'nonlinear_factor': None, 'data_names':['lsdvmn']
+        }
+        isubcase = self.subcase_id
         dt = None
         is_sort1 = True
         applied_loads = RealLoadVectorArray(
@@ -1854,7 +1741,8 @@ class Solver(OP2):
         nx = ntimes
         ny = nnodes
         float_fmt = 'float32'
-        applied_loads.build_data(ntimes, nnodes, nx, ny, float_fmt)
+        ntotal = nnodes
+        applied_loads.build_data(ntimes, nnodes, ntotal, nx, ny, float_fmt)
         applied_loads.node_gridtype[:, 0] = self.model.grid.node_id
         applied_loads.node_gridtype[:, 1] = 1 # G
         self.load_vectors[self.subcase_id] = applied_loads
@@ -2343,7 +2231,7 @@ class Solver(OP2):
     def write_oload_resultant(self, Fg, xyz_cid0):
         nrows = Fg.size // 6
         Fxyz = Fg.reshape(nrows, 6)
-        Fxyz_sum  = Fxyz.sum(axis=0)
+        Fxyz_sum = Fxyz.sum(axis=0)
         forces = Fxyz[:, :3]
 
         #print('Fxyz =', Fxyz)
@@ -2403,7 +2291,7 @@ class Solver(OP2):
         self.write_oload_resultant(Fg, xyz_cid0=xyz_cid0)
         return Fg
 
-        #self.gravLoad = array([0., 0., 0.])
+        #self.grav_load = array([0., 0., 0.])
         #for load_set in LoadSet:
             #self.log.info("load_set = %r" % str(load_set))
             ##print("type", type(load_set))
@@ -2428,7 +2316,7 @@ class Solver(OP2):
 
             #if gravity_load != []:
                 #self.log.info("gravity_load = %s" % gravity_load)
-                #self.gravLoad += gravity_load
+                #self.grav_load += gravity_load
 
             #for nid in nids:
                 #self.log.info("nid = %s" % nid)
@@ -2453,7 +2341,7 @@ class Solver(OP2):
                     #if abs(moment[2]) > 0.:
                         #Fg[Dofs[(nid, 6)]] += moment[2]
 
-        #if sum(abs(self.gravLoad)) > 0.0:
+        #if sum(abs(self.grav_load)) > 0.0:
             #for (eid, elem) in sorted(iteritems(model.elements)):  # CROD, CONROD
                 #self.log.info("----------------------------")
                 #node_ids, index0s = self.element_dof_start(elem, nids)
@@ -2461,7 +2349,7 @@ class Solver(OP2):
 
                 ## n_ijv is the position of the values of K in the dof
                 #fnorm = 10.
-                #(Fgi, nGrav) = elem.Fg(model, self.gravLoad, fnorm)
+                #(Fgi, nGrav) = elem.Fg(model, self.grav_load, fnorm)
                 #for (fg, dof) in zip(Fgi, nGrav):
                     ##print("dof = ",dof)
                     #if dof in Dofs:
@@ -2646,5 +2534,3 @@ def test_mass():
 if __name__ == '__main__':  # pragma: no cover
     #test_mass()
     main()
-
-

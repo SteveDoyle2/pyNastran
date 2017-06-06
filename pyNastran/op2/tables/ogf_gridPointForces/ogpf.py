@@ -9,7 +9,7 @@ from struct import Struct
 from numpy import fromstring
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
     RealGridPointForcesArray, ComplexGridPointForcesArray)
 
@@ -119,7 +119,7 @@ class OGPF(OP2Common):
                         elem_name = elem_name.strip()
                         if self.is_debug_file:
                             self.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
-                        self.obj.add(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
+                        self.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
                         n += ntotal
             elif self.num_wide == 16:
                 # complex

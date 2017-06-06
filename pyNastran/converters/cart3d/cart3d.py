@@ -28,7 +28,7 @@ from six.moves import zip, range
 import numpy as np
 
 from pyNastran.utils import is_binary_file, _filename, b
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 if PY2:
     string_type = unicode
@@ -101,7 +101,7 @@ class Cart3dIO(object):
     Cart3d IO class
     """
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
         self._endian = b''
         self._encoding = 'latin1'
         self.n = 0
@@ -375,7 +375,7 @@ class Cart3dIO(object):
         size = npoints * 12  # 12=3*4 all the points
         data = self.infile.read(size)
 
-        dtype = self._endian + b'f'
+        dtype = np.dtype(self._endian + b('f4'))
         points = np.fromstring(data, dtype=dtype).reshape((npoints, 3))
 
         self.infile.read(8)  # end of second block, start of third block
@@ -386,7 +386,7 @@ class Cart3dIO(object):
         size = nelements * 12  # 12=3*4 all the elements
         data = self.infile.read(size)
 
-        dtype = self._endian + b'i'
+        dtype = np.dtype(self._endian + b('i4'))
         elements = np.fromstring(data, dtype=dtype).reshape((nelements, 3))
 
         self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
@@ -698,6 +698,11 @@ class Cart3D(Cart3dIO):
         """
         Cart3d must be a closed model with each edge shared by 2 elements
         The free edges indicate the problematic areas.
+
+        Returns
+        -------
+        free edges : (nedges, 2) int ndarray
+            the free edge node ids
         """
         edge_to_eid_map = defaultdict(list)
         for i, element in enumerate(elements):
@@ -712,7 +717,7 @@ class Cart3D(Cart3dIO):
         for edge, eids in sorted(iteritems(edge_to_eid_map)):
             if len(eids) != 2:
                 free_edges.append(edge)
-        return free_edges
+        return np.array(free_edges, dtype='int32')
 
     def read_cart3d(self, infilename, result_names=None):
         """extracts the points, elements, and Cp"""

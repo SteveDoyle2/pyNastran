@@ -23,6 +23,16 @@ for icon_file in icon_files:
     if icon_file.endswith('.png'):
         icon_files2.append(os.path.join(icon_path, icon_file))
 
+exclude_words = [
+    'pyNastran.bdf.dev_vectorized', 'pyNastran.bdf.dev_vectorized.cards',
+    'pyNastran.f06.dev',
+    'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
+    'pyNastran.converters.dev', 'pyNastran.xdb',]
+packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
+for exclude_word in exclude_words:
+    packages = [package for package in packages if exclude_word not in package]
+#print(packages, len(packages)) # 83
+
 setup(
     name='pyNastran',
     version=pyNastran.__version__,
@@ -36,16 +46,16 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords='',
     author=pyNastran.__author__,
     author_email=pyNastran.__email__,
     url=pyNastran.__website__,
     license=pyNastran.__license__,
-    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+    packages=packages,
     include_package_data=True,
     zip_safe=False,
     #{'': ['license.txt']}
@@ -61,12 +71,13 @@ setup(
         'console_scripts': [
             'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
             'test_bdf  = pyNastran.bdf.test.test_bdf:main',
-            'test_abaqus = pyNastran.converters.dev.abaqus.test_abaqus:main',
             'test_op2  = pyNastran.op2.test.test_op2:main',
             'test_op4  = pyNastran.op4.test.test_op4:main',
+            'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
+            'test_pynastrangui = pyNastran.gui.test.test_gui:main',
 
             'format_converter = pyNastran.converters.type_converter:main',
-            'pyNastranGUI = pyNastran.gui.gui:main',
+            'pyNastranGUI = pyNastran.gui.gui:cmd_line',
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 

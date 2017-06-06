@@ -4,6 +4,7 @@ import vtk
 
 from pyNastran.gui.colormaps import colormap_dict
 
+
 class ScalarBar(object):
 
     def set_visibility(self, is_visible):
@@ -32,7 +33,7 @@ class ScalarBar(object):
         self.is_shown = True
         self.is_horizontal = False
 
-        #self.color_function.SetNanColor(1., 1., 1., 0.)
+        self.color_function.SetNanColor(0., 0., 0.)
         #self.color_function.SetColorSpaceToLab()
         #self.color_function.SetColorSpaceToRGB()
         #self.scalar_bar.SetDragable(True)
@@ -121,6 +122,8 @@ class ScalarBar(object):
         else:
             if isinstance(colormap, string_types):
                 colormap = colormap_dict[colormap]
+            else:
+                assert isinstance(colormap[0][0], float), colormap
 
             vals = np.linspace(min_value, max_value, num=len(colormap))
             if is_low_to_high:

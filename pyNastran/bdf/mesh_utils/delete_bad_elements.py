@@ -13,7 +13,7 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     model : BDF ()
         this should be equivalenced
     """
-    xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float32')
+    xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
     nid_map = {}
     for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
         #xyz = node.get_position()

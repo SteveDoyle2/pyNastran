@@ -5,14 +5,20 @@ from six.moves import range, zip
 import numpy as np
 
 
+def read_su2(su2_filename, log=None, debug=False):
+    model = SU2Reader()
+    nodes, elements, regions = su2.read_su2(su2_filename)
+    #su2.to_cart3d()
+    return model, nodes, elements, regions
+
 class SU2Reader(object):
     def __init__(self, log=None, debug=False):
         self.log = log
         self.debug = debug
 
-    def read_2d(self, f, ndim):
+    def read_2d(self, su2_file, ndim):
         # elements
-        nelem = int(f.readline().split('=')[1])
+        nelem = int(su2_file.readline().split('=')[1])
         tris = []
         quads = []
         for ne in range(nelem):
@@ -24,7 +30,7 @@ class SU2Reader(object):
             #Hexahedral     12
             #Wedge          13
             #Pyramid        14
-            data = f.readline().split()[:-1]
+            data = su2_file.readline().split()[:-1]
             Type = data[0]
             nodes = data[1:]
             if Type == '9':
@@ -38,23 +44,23 @@ class SU2Reader(object):
 
         tris = np.asarray(tris, dtype='int32')
         quads = np.asarray(quads, dtype='int32')
-        print('tris =', tris)
-        print('quads =', quads)
+        #print('tris =', tris)
+        #print('quads =', quads)
 
-        nnodes = int(f.readline().split('=')[1])
+        nnodes = int(su2_file.readline().split('=')[1])
         nodes = np.zeros((nelem, 2), dtype='int32')
         for inode in range(nnodes):
-            sline = f.readline().split()
+            sline = su2_file.readline().split()
             assert len(sline) == 3, sline
             x, y, z = sline
             #print(x, y, z)
             nodes[inode, :] = [float(x), float(y)]
 
         # boundary conditions
-        nmark = int(f.readline().split('=')[1])
+        nmark = int(su2_file.readline().split('=')[1])
         for imark in range(nmark):
-            marker = f.readline().split('=')[1].strip()
-            nelements_mark = int(f.readline().split('=')[1])
+            marker = su2_file.readline().split('=')[1].strip()
+            nelements_mark = int(su2_file.readline().split('=')[1])
 
             if ndim == 2:
                 lines = []
@@ -64,7 +70,7 @@ class SU2Reader(object):
                     #Line          (2D)     3
                     #Triangle      (3D)     5
                     #Quadrilateral (3D)     9
-                    sline = f.readline().split()
+                    sline = su2_file.readline().split()
                     Type = int(sline[0])
                     if Type == 3:
                         Type, n1, n2 = sline
@@ -80,14 +86,15 @@ class SU2Reader(object):
         regions = {3 : lines}
         return nodes, elements, regions
 
-    def read_3d(self, f, ndim):
-        nelem = int(f.readline().split('=')[1])
+    def read_3d(self, su2_file, ndim):
+        nelem = int(su2_file.readline().split('=')[1])
         tets = []
         hexs = []
         wedges = []
+        #pents = []
         pyramids = []
         for ne in range(nelem):
-            data = f.readline().split()[1:-1]
+            data = su2_file.readline().split()[1:-1]
             Type = data[0]
             nodes = data[1:]
             if Type == '10':
@@ -101,7 +108,7 @@ class SU2Reader(object):
             else:
                 raise NotImplementedError(Type)
         tets = np.array(tets, dtype='int32')
-        pents = np.array(pents, dtype='int32')
+        #pents = np.array(pents, dtype='int32')
         wedges = np.array(wedges, dtype='int32')
         pyramids = np.array(pyramids, dtype='int32')
         elements = {
@@ -111,20 +118,20 @@ class SU2Reader(object):
             14 : pyramids,
         }
 
-        nnodes = int(f.readline().split('=')[1])
-        nodes = zeros((nelem, 2), dtype='int32')
+        nnodes = int(su2_file.readline().split('=')[1])
+        nodes = np.zeros((nelem, 2), dtype='int32')
         for inode in range(nnodes):
-            x, y, z = f.readline().split()[:-1]
+            x, y, z = su2_file.readline().split()[:-1]
             nodes[inode, :] = [x, y, z]
 
-        nmark = int(f.readline().split('=')[1])
-        for imark in nmark:
-            marker = f.readline().split('=')[1].strip()
-            nelements_mark = int(f.readline().split('=')[1])
+        nmark = int(su2_file.readline().split('=')[1])
+        for imark in range(nmark):
+            marker = su2_file.readline().split('=')[1].strip()
+            nelements_mark = int(su2_file.readline().split('=')[1])
             tris = []
             quads = []
             for ne in range(nelements_mark):
-                data = f.readline().split()[1:-1]
+                data = su2_file.readline().split()[1:-1]
                 Type = data[0]
                 nodes = data[1:]
                 if Type == '9':
@@ -142,60 +149,54 @@ class SU2Reader(object):
 
     def read_su2(self, su2_filename):
         self.su2_filename = su2_filename
-        f = open(su2_filename, 'r')
-        ndim = int(f.readline().split('=')[1])
+        with open(su2_filename, 'r') as su2_file:
+            ndim = int(su2_file.readline().split('=')[1])
 
-        if ndim == 2:
-            nodes, elements, regions = self.read_2d(f, ndim)
-        elif ndim == 3:
-            nodes, elements, regions = self.read_3d(f, ndim)
-        else:
-            raise RuntimeError(ndim)
+            if ndim == 2:
+                nodes, elements, regions = self.read_2d(su2_file, ndim)
+            elif ndim == 3:
+                nodes, elements, regions = self.read_3d(su2_file, ndim)
+            else:
+                raise RuntimeError(ndim)
         return ndim, nodes, elements, regions
 
     def write_su2(self, su2_filename, nodes, elements, regions):
         nnodes, ndim = nodes.shape
         nnodes, ndim = nodes.shape
-        f = open(su2_filename, 'wb')
+        with open(su2_filename, 'wb') as su2_file:
+            su2_file.write('NDIM = %i\n' % ndim)
+            self.Type_nnodes_map = {
+                #Line       3
+                #Triangle   5
+                #Quadrilateral  9
+                #Tetrahedral    10
+                #Hexahedral 12
+                #Wedge      13
+                #Pyramid    14
+                3 : 2,
+                5 : 3,
+                9 : 4,
+                10 : 4,
+                12 : 8,
+                13 : 6,
+                14 : 5,
+            }
+            if ndim == 2:
+                for Type, elementsi in sorted(iteritems(elements)):
+                    n = self.Type_nnodes_map[Type]
+                    fmt = '%%s' + ' %%s' * (n-1) + '\n'
+                    for element in elementsi:
+                        su2_file.write(fmt % element)
 
-        f.write('NDIM = %i\n' % ndim)
-        self.Type_nnodes_map = {
-            #Line       3
-            #Triangle   5
-            #Quadrilateral  9
-            #Tetrahedral    10
-            #Hexahedral 12
-            #Wedge      13
-            #Pyramid    14
-            3 : 2,
-            5 : 3,
-            9 : 4,
-            10 : 4,
-            12 : 8,
-            13 : 6,
-            14 : 5,
-        }
-        if ndim == 2:
-            for Type, elementsi in sorted(iteritems(elements)):
-                n = self.Type_nnodes_map[Type]
-                fmt = '%%s' + ' %%s' * (n-1) + '\n'
-                for element in elementsi:
-                    f.write(fmt % element)
-
-            f.write('NPOINTS = %i\n' % nnodes)
-            for inode, node in enumerate(nodes):
-                f.write('%i %i %i\n' % (node[0], node[1], inode))
-        elif ndim == 3:
-            f.write('NPOINTS = %i\n' % nnodes)
-            for inode, node in enumerate(nodes):
-                f.write('%i %i %i %i\n' % (node[0], node[1], node[2], inode))
+                su2_file.write('NPOINTS = %i\n' % nnodes)
+                for inode, node in enumerate(nodes):
+                    su2_file.write('%i %i %i\n' % (node[0], node[1], inode))
+            elif ndim == 3:
+                su2_file.write('NPOINTS = %i\n' % nnodes)
+                for inode, node in enumerate(nodes):
+                    su2_file.write('%i %i %i %i\n' % (node[0], node[1], node[2], inode))
 
 
-def main(su2_filename):
-    su2 = SU2Reader()
-    su2.read_su2(su2_filename)
-    #su2.to_cart3d()
-
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main('mesh_naca0012_inv.su2')
 

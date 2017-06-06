@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, ravel
@@ -22,6 +22,9 @@ class RealBush1DStressArray(OES_Object):
         #self.ntotal = 0
         self.ielement = 0
         self.nelements = 0  # result specific
+
+    def is_stress(self):
+        return True
 
     def is_real(self):
         return True
@@ -75,7 +78,7 @@ class RealBush1DStressArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.ntotal, dtype='int32')
@@ -99,38 +102,61 @@ class RealBush1DStressArray(OES_Object):
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
         self._eq_header(table)
+
+        i = 0
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
 
-            i = 0
-            if self.is_sort1():
-                for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
-                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
-                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
-                        if not np.allclose(t1, t2):
-                        #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
-                                eid,
-                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
-                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
-                            i += 1
-                        if i > 10:
-                            print(msg)
-                            raise ValueError(msg)
+            if self.table_name_str == 'OESNLXD':
+                if self.is_sort1():
+                    for itime in range(ntimes):
+                        for ieid, eid, in enumerate(self.element):
+                            t1 = self.data[itime, ieid, [0, 1, 2, 5]]  # these are nan
+                            t2 = table.data[itime, ieid, [0, 1, 2, 5]]  # these are nan
+                            (axial_stress1, equiv_stress1, total_strain1, linear_torsional_stress1) = t1
+                            (axial_stress2, equiv_stress2, total_strain2, linear_torsional_stress2) = t2
+                            if not np.allclose(t1, t2):
+                            #if not np.array_equal(t1, t2):
+                                msg += '%s\n  (%s, %s, %s, %s)\n  (%s, %s, %s, %s)\n' % (
+                                    eid,
+                                    axial_stress1, equiv_stress1, total_strain1, linear_torsional_stress1,
+                                    axial_stress2, equiv_stress2, total_strain2, linear_torsional_stress2)
+                                i += 1
+                            if i > 10:
+                                print(msg)
+                                raise ValueError(msg)
+                else:
+                    raise NotImplementedError(self.is_sort2())
             else:
-                raise NotImplementedError(self.is_sort2())
-            if i > 0:
-                print(msg)
-                raise ValueError(msg)
+                if self.is_sort1():
+                    for itime in range(ntimes):
+                        for ieid, eid, in enumerate(self.element):
+                            t1 = self.data[itime, ieid, :]
+                            t2 = table.data[itime, ieid, :]
+                            (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
+                            (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                            if not np.allclose(t1, t2):
+                            #if not np.array_equal(t1, t2):
+                                msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                    eid,
+                                    axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
+                                    axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                                i += 1
+                            if i > 10:
+                                print(msg)
+                                raise ValueError(msg)
+                else:
+                    raise NotImplementedError(self.is_sort2())
+        if i > 0:
+            print(msg)
+            raise ValueError(msg)
         return True
 
     def add_sort1(self, dt, eid, element_force, axial_displacement, axial_velocity,
                   axial_stress, axial_strain, plastic_strain, is_failed):
+        """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, int)
         # pyNastran_examples\move_tpl\ar29scb1.op2
         #print('dt=%s eid=%s force=%s' % (dt, eid, element_force))
@@ -147,7 +173,7 @@ class RealBush1DStressArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return ['<%s>\n' % self.__class__.__name__,
                     '  ntimes: %i\n' % self.ntimes,
@@ -173,6 +199,8 @@ class RealBush1DStressArray(OES_Object):
         n = len(headers)
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
+        msg.append('  is_failed.shape = %s\n' % str(self.is_failed.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()

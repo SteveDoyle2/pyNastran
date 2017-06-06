@@ -1,0 +1,118 @@
+#  $Id: input.cntl,v 1.2 2013/06/17 14:20:42 maftosmi Exp $
+#
+#    +-------------------------------------------------------------+
+#    |       Steering and Control file for "flowCart"              |
+#    |           3D Cut-Cell Cartesian Flow Solver                 |
+#    |                                                             |
+#    | see an interactive on-line example of this file at          |
+#    | http://people.nas.nasa.gov/~aftosmis/cart3d/input_cntl.html |
+#    +-------------------------------------------------------------+
+#
+#      NOTE:  o Start Comments in this file with the "#" character
+#             o Blocks can come in any order
+#             o info within blocks can come in any order
+#
+# powerCube
+#
+
+$__Case_Information:          # ...Specify Free Stream Quantities
+
+Mach     2.0  #  (double)
+alpha    0.0  #  (double) - angle of attach
+beta     0.0  #  (double) - sideslip Angle
+
+$__File_Name_Information:
+
+MeshInfo         Mesh.c3d.Info   # Mesh information file (usually Mesh.c3d.Info)
+MeshFile          Mesh.mg.c3d   # Mesh file
+# --NOTE:        ...surface triangulation specified in 'MeshInfo' file ------
+
+$__Solver_Control_Information:
+
+#   Runge-Kutta Stage Coefficients
+#   stageCoef    GradEval  ->to run 1st order, set GradEval to 0 in all stages
+#    --------    -------
+#RK        0.1918     1  #         van Leer 3-stage 
+#RK        0.4929     0  #         "optimally damped 2nd order scheme"
+#RK        1.0        0  #          AIAA 89-1933-CP (CFLopt = 1.5 1st order)
+RK        0.0695     1  #         van Leer 5-stage 
+RK        0.1602     0  #         "optimally damped 2nd order scheme"
+RK        0.2898     0  #          AIAA 89-1933-CP (CFLopt = 2.5 1st order)
+RK        0.5060     0  #                          (CFLopt = ~1.2 2nd order)
+RK        1.0        0  #
+                         #                          (CFLopt = 0.694)
+                        # NOTE: GradEval = 0 = no new evaluation at this stage, 
+                        #       GradEval = 1 = Yes, re-evaluate at this stage
+#nStage        5    # deprecated 27 Jan 04
+CFL           1.0     # CFL number 
+Limiter       2    # (int) - Limiter Type:       no Limiter = 0
+                  #                                 MINMOD = 1 
+                  #                       Venkat's limiter = 2
+FluxFun       1   # (int) - Flux Function:   0 = van Leer
+                  #                          1 = van Leer Hanel
+                  #                          2 = Colella89
+                  #                          3 = HLLC
+Precon        0   # (int) - Preconditioning: 0 = scalar timestep
+wallBCtype    0   # Cut-Cell Boundary Condition type   0 = Agglomerated Normals
+                  #                                    1 = SubCell Resolution
+nMGlev        1   # (int) - Number of Multi-Grid levels  (1 = single grid)
+MG_cycleType  2   # (int) - MultiGrid cycletype: 1 = "V-cycle", 2 = "W-cycle"
+                  # 'sawtooth' cycle is: nPre = 1, nPost = 0
+MG_nPre       1   # (int) - no of pre-smoothing  passes in multigrid
+MG_nPost      1   # (int) - no of post-smoothing passes in multigrid
+
+    
+$__Boundary_Conditions: # BC types: 0 = FAR FIELD 
+                        #           1 = SYMMETRY
+                        #           2 = INFLOW  (specify all)
+                        #           3 = OUTFLOW (simple extrap)
+Dir_Lo_Hi     0   0 0   # (int) (0/1/2) direction  (int) Low BC   (int) Hi BC
+Dir_Lo_Hi     1   0 0   # (int) (0/1/2) direction  (int) Low BC   (int) Hi BC
+Dir_Lo_Hi     2   0 0   # (int) (0/1/2) direction  (int) Low BC   (int) Hi BC
+#
+# Exit is component ID 2
+SurfBC        2       2.0  3.0 0.0 0.0 5.0 # compID rho xvel yvel zvel press
+# Inlet is component ID 3
+SurfBC        3       1.0  1.5 0.0 0.0 .714285 # compID rho xvel yvel zvel press
+
+
+$__Convergence_History_reporting:
+iForce     1   # (int) - Report residual information every iSkip cycles.
+iHist      1   # (int) - Update 'HistoryFile' every iHist cycles.
+nOrders    8   # (int) - Num of orders of Magnitude reduction in residual.
+    
+$__Partition_Information:  
+nPart   1      # (int) - Number of SubDomains to partition into: 
+type    1      # (int) - Type of partitioning: 1 = SpaceFillingCurve
+
+
+$__Post_Processing:
+#                                   Pretty printed cutting planes
+#Xslices  500. 3000. 4500. 4833. 5000. 
+Yslices -50
+Zslices  50.
+   
+$__Force_Moment_Processing:
+# 
+# ... Axis definitions (with respect to body axis directions (Xb,Yb,Zb)
+#                       w/ usual stability and control orientation)
+#  see:
+#  http://people.nas.nasa.gov/~aftosmis/cart3d/clic/html/clic_doc.html#frames
+#
+#  Note: Reference quantities that exist in this section have priority over any that
+# may exist in "$__Convergence_History_reporting" (above0
+#
+Model_X_axis  -Xb 
+Model_Y_axis  -Zb 
+Model_Z_axis  -Yb 
+
+# ... reference area and length specifications
+
+#$_Reference_Area %f  compNumberList or compNameList
+Reference_Area   70600.  all
+
+#$_Reference_Length %f compNumberList or compNameList
+Reference_Length  176.  all 
+
+# ... Force and Moment Info
+Force        entire

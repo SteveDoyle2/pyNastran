@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import unittest
 from six import iteritems
+import numpy as np
 from numpy import array, allclose, array_equal, set_printoptions
 set_printoptions(suppress=True, precision=3)
 
@@ -15,8 +16,118 @@ test_path = pyNastran.__path__[0]
 
 
 class TestLoads(unittest.TestCase):
+    def test_force(self):
+        """CONROD, FORCE"""
+        model = BDF(debug=False)
+        eid = 1
+        mid = 100
+        nids = [10, 11]
+        A = 3.14
+        model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0,
+                         comment='')
+        model.add_grid(10, xyz=[10., 0., 0.])
+        model.add_grid(11, xyz=[11., 0., 0.])
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        sid = 10000
+        node = 11
+        mag = 42.
+        xyz = [1., 1., 2.]
+        force = model.add_force(sid, node, mag, xyz)
+        force.raw_fields()
+        model.validate()
+        model.pop_parse_errors()
+        assert np.array_equal(force.F()[11], np.array([42., 42., 84.])), force.F()
+        model.cross_reference()
+        force.raw_fields()
+
+    def test_moment(self):
+        """CONROD, MOMENT"""
+        model = BDF(debug=False)
+        eid = 1
+        mid = 100
+        nids = [10, 11]
+        A = 3.14
+        model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0,
+                         comment='')
+        model.add_grid(10, xyz=[10., 0., 0.])
+        model.add_grid(11, xyz=[11., 0., 0.])
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        sid = 10000
+        node = 11
+        mag = 42.
+        xyz = [1., 1., 2.]
+        moment = model.add_moment(sid, node, mag, xyz)
+        moment.raw_fields()
+        model.validate()
+        model.pop_parse_errors()
+        assert np.array_equal(moment.M()[11], np.array([42., 42., 84.])), force.M()
+        model.cross_reference()
+        moment.raw_fields()
+
+    def test_accel1(self):
+        """tests ACCEL1"""
+        model = BDF(debug=False)
+        sid = 42
+        N = [0., 0., 1.]
+        nodes = [10, 11]
+        scale = 3.14
+        accel1 = model.add_accel1(sid, scale, N, nodes, cid=0, comment='accel1')
+        accel1.raw_fields()
+        accel1.write_card(size=8)
+        accel1.write_card(size=16)
+        accel1.write_card(size=16, is_double=True)
+
+        model.add_grid(10, xyz=[10., 0., 0.])
+        model.add_grid(11, xyz=[11., 0., 0.])
+        model.validate()
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        accel1.raw_fields()
+        accel1.write_card(size=8)
+        accel1.write_card(size=16)
+        accel1.write_card(size=16, is_double=True)
+
+    def test_accel(self):
+        """tests ACCEL"""
+        model = BDF(debug=False)
+        sid = 42
+        N = [0., 0., 1.]
+        nodes = [10, 11]
+        scale = 3.14
+        direction = 'Z'
+        locs = [11., 22., 33.]
+        vals = [1., 2., 3.]
+        accel = model.add_accel(sid, N, direction, locs, vals, cid=0,
+                                comment='accel')
+        accel.raw_fields()
+        accel.write_card(size=8)
+        accel.write_card(size=16)
+        accel.write_card(size=16, is_double=True)
+
+        model.add_grid(10, xyz=[10., 0., 0.])
+        model.add_grid(11, xyz=[11., 0., 0.])
+        model.validate()
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        accel.raw_fields()
+        accel.write_card(size=8)
+        accel.write_card(size=16)
+        accel.write_card(size=16, is_double=True)
+
     def test_darea_01(self):
-        #
+        """tests a DAREA"""
         #DAREA SID P1 C1 A1  P2 C2 A2
         #DAREA 3   6   2 8.2 15 1  10.1
         lines = ['DAREA,3,6,2,8.2,15,1,10.1']
@@ -29,6 +140,7 @@ class TestLoads(unittest.TestCase):
         card.raw_fields()
 
     def test_pload4_01(self):
+        """tests a PLOAD4"""
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
@@ -39,6 +151,7 @@ class TestLoads(unittest.TestCase):
         card.raw_fields()
 
     def test_pload4_02(self):
+        """tests a PLOAD4"""
         lines = ['PLOAD4  1       101     1.                              10000   10011']
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
@@ -49,6 +162,7 @@ class TestLoads(unittest.TestCase):
         card.raw_fields()
 
     def test_pload4_cpenta(self):
+        """tests a PLOAD4 with a CPENTA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.op2')
         op2 = OP2(debug=False)
@@ -80,7 +194,7 @@ class TestLoads(unittest.TestCase):
             if load.g34 is None:
                 g34 = None
                 #print(load)
-                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1)
+                face, area, centroid, normal = elem.get_face_area_centroid_normal(g1)
                 assert area == 0.5, area
                 if g1 in [21, 22, 23]:
                     assert face == (2, 1, 0), 'g1=%s face=%s' % (g1, face)
@@ -92,7 +206,7 @@ class TestLoads(unittest.TestCase):
                     assert array_equal(normal, array([0., 0., -1.])), 'aft g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
             else:
                 g34 = load.g34.nid
-                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, g34)
+                face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
                 if (g1, g34) in angles:
                     self.assertAlmostEqual(area, 2 * 2**0.5, msg='g1=%s g34=%s face=%s area=%s' % (g1, g34, face, area))
                 elif (g1, g34) in nx:
@@ -140,6 +254,7 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
 
     def test_pload4_ctria3(self):
+        """tests a PLOAD4 with a CTRIA3"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.op2')
         op2 = OP2(debug=False)
@@ -187,6 +302,7 @@ class TestLoads(unittest.TestCase):
                 print('%-2i Fz f=%s fexpected=%s' % (isubcase, f, fm))
 
     def test_pload4_cquad4(self):
+        """tests a PLOAD4 with a CQUAD4"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.op2')
         op2 = OP2(debug=False)
@@ -233,6 +349,7 @@ class TestLoads(unittest.TestCase):
                 print('%-2i Fz f=%s fexpected=%s' % (isubcase, f, fm))
 
     def test_pload4_ctetra(self):
+        """tests a PLOAD4 with a CTETRA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.op2')
         op2 = OP2(debug=False)
@@ -270,7 +387,7 @@ class TestLoads(unittest.TestCase):
                 # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
             g34 = load.g34.nid
-            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, g34)
+            face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
             msg = '%s%s%s\n' % (
                 elem.nodes[face[0]], elem.nodes[face[1]],
                 elem.nodes[face[2]])
@@ -324,6 +441,7 @@ class TestLoads(unittest.TestCase):
                     isubcase, g1, g34, f, fm, face, normal))
 
     def test_pload4_chexa(self):
+        """tests a PLOAD4 with a CHEXA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.op2')
         op2 = OP2(debug=False)
@@ -376,7 +494,7 @@ class TestLoads(unittest.TestCase):
                 # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
             g34 = load.g34.nid
-            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, g34)
+            face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
             msg = '%s%s%s%s\n' % (
                 elem.nodes[face[0]], elem.nodes[face[1]],
                 elem.nodes[face[2]], elem.nodes[face[3]])
@@ -506,7 +624,7 @@ class TestLoads(unittest.TestCase):
         pa = 200.
         ga = 1
         gb = 2
-        ploadx1 = model.add_ploadx1(sid, eid1, pa, ga, gb, pb=None,
+        ploadx1 = model.add_ploadx1(sid, eid1, pa, [ga, gb], pb=None,
                                     theta=0., comment='ploadx1')
         model.add_grid(1, xyz=[0., 0., 0.])
         model.add_grid(2, xyz=[1., 0., 0.])
@@ -574,7 +692,9 @@ class TestLoads(unittest.TestCase):
         r"""
         tests CONROD, CTRIA3-PSHELL, CQUAD4-PCOMP,
         CTETRA/CPENTA/CPYRAM/CHEXA-PSOLID
-        FORCE, FORCE1, PLOAD4-CHEXA
+        FORCE, FORCE1,
+        PLOAD4 (CHEXA)
+        PLOAD2 (CTRIA3, CQUAD4)
 
         ^ y
         |
@@ -625,13 +745,13 @@ class TestLoads(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu, rho=0.2, a=0.0, tref=0.0, ge=0.0,
-                       St=0.0, Sc=0.0, Ss=0.0, Mcsid=0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
                        comment='')
 
         eid = 3
         pid = 3
         nids = [1, 2, 3]
-        ctria3 = model.add_ctria3(eid, pid, nids, zoffset=0., theta_mcid=0.0, TFlag=0,
+        ctria3 = model.add_ctria3(eid, pid, nids, zoffset=0., theta_mcid=0.0, tflag=0,
                                   T1=1.0, T2=1.0, T3=1.0,
                                   comment='')
 
@@ -646,7 +766,7 @@ class TestLoads(unittest.TestCase):
         pid = 4
         nids = [1, 2, 3, 4]
         cquad4 = model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                                  TFlag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
+                                  tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
         mids = [mid, mid, mid]
         thicknesses = [0.1, 0.2, 0.3]
         model.add_pcomp(pid, mids, thicknesses, thetas=None, souts=None,
@@ -657,6 +777,10 @@ class TestLoads(unittest.TestCase):
                         nsm=0., sb=0., ft=None,
                         tref=0., ge=0., lam=None,
                         z0=None, comment='pcomp')
+
+        sid = 2
+        pressure = 2.0
+        model.add_pload2(sid, pressure, [3, 4], comment='')  # ctria3, cquad4
 
         pid = 5
         global_ply_ids = [5, 6, 7]
@@ -697,7 +821,8 @@ class TestLoads(unittest.TestCase):
         g34 = 8
         pressures = [1., 1., 1., 1.]
         pload4 = model.add_pload4(sid, eids, pressures, g1=1, g34=8,
-                                  cid=0, NVector=None, sorl='SURF', ldir='NORM', comment='pload4')
+                                  cid=0, nvector=None, surf_or_line='SURF',
+                                  line_load_dir='NORM', comment='pload4')
 
 
         conid = 42
@@ -722,16 +847,16 @@ class TestLoads(unittest.TestCase):
         cnb = ''
         cma = ''
         cmb = ''
-        rbar = model.add_rbar(eid, ga, gb, cna, cnb, cma, cmb, alpha=0.,
+        rbar = model.add_rbar(eid, [ga, gb], cna, cnb, cma, cmb, alpha=0.,
                               comment='rbar')
 
         eid = 2
         ga = 10
         gb = 13
-        rrod_a = RROD(eid, ga, gb, cma='42', cmb='33')
+        rrod_a = RROD(eid, [ga, gb], cma='42', cmb='33')
         with self.assertRaises(RuntimeError):
             rrod_a.validate()
-        rrod_b = model.add_rrod(eid, ga, gb, cma='3', cmb=None, alpha=0.0, comment='')
+        rrod_b = model.add_rrod(eid, [ga, gb], cma='3', cmb=None, alpha=0.0, comment='')
 
         conid = 43
         gids = [10, 11]

@@ -193,6 +193,8 @@ Here, we'll determine what all the tables in the OP2 are as well as a summary of
 
 Alternatively, we can call it and get a shorter summary:
 
+.. code-block:: console
+
   >>> test_op2 -ct ISat_Dploy_Sm.op2
 
   ---stats for isat_dploy_sm.op2---

@@ -1,13 +1,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
 from six.moves import range
 
 import numpy as np
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, get_key0, write_float_13e
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 try:
     import pandas as pd
 except ImportError:
@@ -47,7 +46,6 @@ class ComplexPlateArray(OES_Object):
         #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = self.get_nnodes()
@@ -55,6 +53,9 @@ class ComplexPlateArray(OES_Object):
         #self.names = []
         #self.nelements //= nnodes
         self.nelements //= self.ntimes
+        #print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
+            #self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
+
         self.ntotal = self.nelements * nnodes * 2
         #self.ntotal
         self.itime = 0
@@ -153,6 +154,7 @@ class ComplexPlateArray(OES_Object):
         self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
 
     def add_sort1(self, dt, eid, gridC, fdr, oxx, oyy, txy):
+        """unvectorized method for adding SORT1 transient data"""
         self.add_eid_sort1(dt, eid, gridC, fdr, oxx, oyy, txy)
 
     def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
@@ -170,7 +172,7 @@ class ComplexPlateArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -190,12 +192,13 @@ class ComplexPlateArray(OES_Object):
             msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self._get_headers())))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
@@ -207,30 +210,30 @@ class ComplexPlateArray(OES_Object):
             dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
             header[1] = dt_line
             msg = header + msg_temp
-            f.write('\n'.join(msg))
+            f06.write('\n'.join(msg))
 
             if self.element_type == 144: # CQUAD4 bilinear
-                self._write_f06_quad4_bilinear_transient(f, itime, 4, is_mag_phase, 'CEN/4')
+                self._write_f06_quad4_bilinear_transient(f06, itime, 4, is_mag_phase, 'CEN/4')
             elif self.element_type == 33:  # CQUAD4 linear
-                self._write_f06_tri3_transient(f, itime, 4, is_mag_phase, 'CEN/4')
+                self._write_f06_tri3_transient(f06, itime, 4, is_mag_phase, 'CEN/4')
             elif self.element_type == 74: # CTRIA3
-                self._write_f06_tri3_transient(f, itime, 3, is_mag_phase, 'CEN/3')
+                self._write_f06_tri3_transient(f06, itime, 3, is_mag_phase, 'CEN/3')
             elif self.element_type == 64:  #CQUAD8
-                self._write_f06_quad4_bilinear_transient(f, itime, 5, is_mag_phase, 'CEN/8')
+                self._write_f06_quad4_bilinear_transient(f06, itime, 5, is_mag_phase, 'CEN/8')
             elif self.element_type == 82:  # CQUADR
-                self._write_f06_quad4_bilinear_transient(f, itime, 5, is_mag_phase, 'CEN/8')
+                self._write_f06_quad4_bilinear_transient(f06, itime, 5, is_mag_phase, 'CEN/8')
             elif self.element_type == 70:  # CTRIAR
-                self._write_f06_quad4_bilinear_transient(f, itime, 3, is_mag_phase, 'CEN/3')
+                self._write_f06_quad4_bilinear_transient(f06, itime, 3, is_mag_phase, 'CEN/3')
             elif self.element_type == 75:  # CTRIA6
-                self._write_f06_quad4_bilinear_transient(f, itime, 3, is_mag_phase, 'CEN/6')
+                self._write_f06_quad4_bilinear_transient(f06, itime, 3, is_mag_phase, 'CEN/6')
             else:
                 raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
-            f.write(page_stamp % page_num)
+            f06.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
-    def _write_f06_tri3_transient(self, f, itime, n, is_magnitude_phase, cen):
+    def _write_f06_tri3_transient(self, f06, itime, n, is_magnitude_phase, cen):
         """
         CQUAD4 linear
         CTRIA3
@@ -244,19 +247,18 @@ class ComplexPlateArray(OES_Object):
         nodes = self.element_node[:, 1]
 
         ilayer0 = True
-        for eid, node, fdr, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
-            vals = write_float_13e(fdr)
-            fdr = vals[0]
+        for eid, node, fd, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
+            fdr = write_float_13e(fd)
             [oxxr, oyyr, txyr,
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
 
             if ilayer0:    # TODO: assuming 2 layers?
-                f.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             else:
-                f.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % ('', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % ('', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             ilayer0 = not ilayer0
 
-    def _write_f06_quad4_bilinear_transient(self, f, itime, n, is_magnitude_phase, cen):
+    def _write_f06_quad4_bilinear_transient(self, f06, itime, n, is_magnitude_phase, cen):
         """
         CQUAD4 bilinear
         CQUAD8
@@ -278,11 +280,11 @@ class ComplexPlateArray(OES_Object):
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
 
             if node == 0 and ilayer0:
-                f.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             elif ilayer0:    # TODO: assuming 2 layers?
-                f.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % ('', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % ('', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             else:
-                f.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % ('', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % ('', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             ilayer0 = not ilayer0
 
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
@@ -320,19 +322,6 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
     else:
         mag_real = ['                                                          (REAL/IMAGINARY)\n', ' \n']
 
-    #if self.is_fiber_distance():
-        #quadMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -',
-                       #'      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY']
-    #else:
-        #pass
-
-#'0       100    CEN/8  -2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0'
-#'                       2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0'
-
-    #quadMsg  = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'] + formWord + quadMsgTemp
-    #quadrMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )'] + formWord + quadMsgTemp
-    #quad8Msg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'] + formWord + quadMsgTemp
-
     ## TODO: validation on header formatting...
     if self.is_stress():
         cquad4_bilinear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
@@ -367,12 +356,12 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
         is_bilinear = True
 
     elif self.element_type == 74: # CTRIA3
-        msg += ctria3 + fiber_msg_temp
+        msg += ctria3 + mag_real + fiber_msg_temp
     elif self.element_type == 75:  # CTRIA6
-        msg += ctria6 + grid_msg_temp
+        msg += ctria6 + mag_real + grid_msg_temp
         is_bilinear = True
     elif self.element_type == 70:  # CTRIAR
-        msg += ctriar + grid_msg_temp
+        msg += ctriar + mag_real + grid_msg_temp
         is_bilinear = True
     else:
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
@@ -382,14 +371,14 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
 
 def get_nnodes(self):
     if self.element_type in [64, 82, 144]:  # ???, CQUADR, CQUAD4 bilinear
-        nnodes = 4 # + 1 centroid
+        nnodes = 4 + 1 # centroid
     elif self.element_type in [70, 75]:   #???, CTRIA6
-        nnodes = 3 # + 1 centroid
-    elif self.element_type in [74, 33]:  # CTRIA3, CQUAD4 linear
+        nnodes = 3 + 1 # centroid
+    elif self.element_type in [144, 74, 33]:  # CTRIA3, CQUAD4 linear
         nnodes = 1
     else:
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
-    return nnodes + 1  # + 1 centroid
+    return nnodes
 
 class ComplexPlateStressArray(ComplexPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

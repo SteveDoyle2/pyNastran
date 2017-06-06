@@ -9,6 +9,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import numpy as np
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -44,7 +45,27 @@ class PLSOLID(SolidProperty):
     }
 
     def __init__(self, pid, mid, stress_strain='GRID', ge=0., comment=''):
+        """
+        Creates a PLSOLID card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        stress_strain : str
+            Location of stress and strain output
+            valid types = {GRID, GAUSS}
+        ge : float; default=0.
+            damping coefficient
+        comment : str; default=''
+            a comment for the card
+        """
         SolidProperty.__init__(self)
+        if stress_strain == 'GAUS':
+            stress_strain = 'GAUSS'
+
         if comment:
             self.comment = comment
         #: Property ID
@@ -55,12 +76,29 @@ class PLSOLID(SolidProperty):
         self.stress_strain = stress_strain
 
         self.ge = ge
-        assert isinstance(pid, int), type(pid)
-        assert isinstance(mid, int), type(mid)
+        assert isinstance(pid, integer_types), type(pid)
+        assert isinstance(mid, integer_types), type(mid)
         self._validate_input()
+
+    def _validate_input(self):
+        if self.stress_strain not in ['GRID', 'GAUSS']:
+            raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
+                               'output value set; valid=["GRID", "GAUSS"]\n'
+                               % self.stress_strain)
+
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLSOLID card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         stress_strain = string_or_blank(card, 3, 'stress_strain', 'GRID')
@@ -69,19 +107,21 @@ class PLSOLID(SolidProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLSOLID card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         ge = data[2]
         stress_strain = data[3]
         return PLSOLID(pid, mid, stress_strain, ge, comment=comment)
-
-    def _validate_input(self):
-        if self.stress_strain == 'GAUS':
-            self.stress_strain = 'GAUSS'
-        if self.stress_strain not in ['GRID', 'GAUSS']:
-            raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
-                               'output value set; valid=["GRID", "GAUSS"]\n'
-                               % self.stress_strain)
 
     def cross_reference(self, model):
         """
@@ -155,6 +195,16 @@ class PCOMPS(SolidProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCOMPS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         cordm = integer_or_blank(card, 2, 'cordm', 0)
         psdir = integer_or_blank(card, 3, 'psdir', 13)
@@ -227,6 +277,9 @@ class PCOMPS(SolidProperty):
         for mid in self.mids:
             mid_ref = model.Material(mid, msg=msg)
             self.mids_ref.append(mid_ref)
+
+    def uncross_reference(self):
+        del self.mids_ref
 
     def raw_fields(self):
         fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
@@ -341,6 +394,16 @@ class PSOLID(SolidProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PSOLID card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         cordm = integer_or_blank(card, 3, 'cordm', 0)
@@ -354,6 +417,16 @@ class PSOLID(SolidProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PSOLID card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         cordm = data[2]
@@ -388,18 +461,13 @@ class PSOLID(SolidProperty):
     def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
 
         if xref:
             if self.mid_ref.type not in ['MAT1', 'MAT4', 'MAT5', 'MAT9', 'MAT10', 'MAT11']:
                 msg = 'mid=%i self.mid_ref.type=%s' % (mid, self.mid_ref.type)
                 raise TypeError(msg)
-
-    def _write_calculix(self, element_set=999):
-        msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (
-            self.mid, element_set)
-        return msg
 
     def raw_fields(self):
         fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,

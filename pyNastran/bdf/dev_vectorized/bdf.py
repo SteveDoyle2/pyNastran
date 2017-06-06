@@ -412,6 +412,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             self.set_as_msc()
         elif self.is_nx:
             self.set_as_nx()
+        #elif self.is_optistruct:
+            #self.set_as_optistruct()
+        #elif self.is_radioss:
+            #self.set_as_radioss()
         else:
             msg = 'mode=%r is not supported; modes=[msc, nx]' % self._nastran_format
             raise NotImplementedError(msg)
@@ -1089,7 +1093,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 msg += 'There are parsing errors.\n\n'
                 for (card, an_error) in self._stored_parse_errors:
                     msg += '%scard=%s\n' % (an_error[0], card)
-                    msg += 'xref errror: %s\n\n'% an_error[0]
+                    msg += 'xref error: %s\n\n'% an_error[0]
                     is_error = True
 
             if is_error:
@@ -2313,7 +2317,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             nodes[ngrids+nspoints:] = self.epoint.points
         return nodes
 
-    def get_xyz_in_coord(self, cid=0, dtype='float64', sort_ids=True):
+    def get_xyz_in_coord(self, cid=0, fdtype='float64', sort_ids=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -2321,7 +2325,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         ----------
         cid : int; default=0
             the desired coordinate system
-        dtype : str; default='float64'
+        fdtype : str; default='float64'
             the data type of the xyz coordinates
         sort_ids : bool; default=True
             sort the ids
@@ -2540,7 +2544,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'spoints', 'spointi',  # singleton
             'grdset',  # singleton
 
-            'spcs', 'spcadds',
+            'spcs',
 
             'suport', 'se_suport', # suport, suport1 - list
             'doptprm',  # singleton
@@ -2660,7 +2664,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         else:
             return msg
 
-    def get_displacement_index_xyz_cp_cd(self, dtype='float64'):
+    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32'):
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -2668,8 +2672,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         Parameters
         ----------
-        dtype : str
+        fdtype : str
             the type of xyz_cp
+        int32 : str
+            the type of nid_cp_cd
+
         Returns
         -------
         icd_transform : dict{int cd : (n,) int ndarray}
@@ -2684,8 +2691,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             points in the CP coordinate system
         nid_cp_cd : (n, 3) int ndarray
             node id, CP, CD for each node
-        dtype : str
-            the type of xyz_cp
 
         Example
         -------
@@ -2723,8 +2728,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             raise ValueError(msg)
 
         #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype='int32')
+        xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=fdtype)
+        nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype=idtype)
         i = 0
         for nid, node in sorted(iteritems(self.nodes)):
             cd = node.Cd()
@@ -2910,7 +2915,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         [0., 0., 1.]
         """
         self.deprecated('icd_transform, model.get_displacement_index_transforms()',
-                        'icd_transform, beta_transforms = model.get_displacement_index()', '0.9.0')
+                        'icd_transform, beta_transforms = model.get_displacement_index()', '1.1')
         nids_transform = defaultdict(list)
         icd_transform = {}
         beta_transforms = {}
@@ -2965,7 +2970,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         lines = []
         self.log.error('ENCODING - show_bad_file=%r' % self._encoding)
 
-        # rU
         with codec_open(_filename(bdf_filename), 'r', encoding=self._encoding) as bdf_file:
             iline = 0
             nblank = 0

@@ -1,8 +1,8 @@
-s/habp Package
-===============
+shabp Package
+=============
 
 :mod:`shabp` Module
-------------------------
+-------------------
 
 .. inheritance-diagram:: pyNastran.converters.shabp.shabp
 
@@ -12,7 +12,7 @@ s/habp Package
     :show-inheritance:
 
 :mod:`shabp_io` Module
--------------------------------
+----------------------
 
 .. inheritance-diagram:: pyNastran.converters.shabp.shabp_io
 
@@ -22,7 +22,7 @@ s/habp Package
     :show-inheritance:
 
 :mod:`shabp_results` Module
-----------------------------
+---------------------------
 
 .. inheritance-diagram:: pyNastran.converters.shabp.shabp_results
 
@@ -30,4 +30,31 @@ s/habp Package
     :members:
     :undoc-members:
     :show-inheritance:
+
+:mod:`test_shabp_gui` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.converters.shabp.test_shabp_gui
+
+.. automodule:: pyNastran.converters.shabp.test_shabp_gui
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`test_shabp_gui` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.converters.shabp.test_shabp_gui
+
+.. automodule:: pyNastran.converters.shabp.test_shabp_gui
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+   pyNastran.converters.shabp.models
 

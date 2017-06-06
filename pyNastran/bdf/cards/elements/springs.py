@@ -29,6 +29,9 @@ class SpringElement(Element):
         p = (self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position()) / 2.
         return p
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def Mass(self):
         return 0.0
 
@@ -41,7 +44,6 @@ class SpringElement(Element):
 
 class CELAS1(SpringElement):
     type = 'CELAS1'
-    aster_type = 'CELAS1'
     _field_map = {
         1: 'eid', 2:'pid', 4:'c1', 6:'c2',
     }
@@ -84,9 +86,21 @@ class CELAS1(SpringElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CELAS1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
+
+        #: component number
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
         assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
@@ -94,6 +108,16 @@ class CELAS1(SpringElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CELAS1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -103,13 +127,9 @@ class CELAS1(SpringElement):
 
     def _validate_input(self):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         assert len(self.nodes) == 2
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -121,9 +141,9 @@ class CELAS1(SpringElement):
 
     def _verify(self, xref=True):
         eid = self.eid
-        nodeIDs = self.node_ids
-        c1 = self.c2
-        c2 = self.c1
+        node_ids = self.node_ids
+        c1 = self.c1
+        c2 = self.c2
         #ge = self.ge
         #s = self.s
 
@@ -134,9 +154,10 @@ class CELAS1(SpringElement):
         #assert isinstance(s, float), 'ge=%r' % s
         if xref:
             k = self.K()
+            assert self.pid_ref.type in ['PELAS'], self.pid_ref
             assert isinstance(k, float), 'k=%r' % k
-            assert len(nodeIDs) == len(self.nodes)
-            #for nodeID, node in zip(nodeIDs, self.nodes):
+            assert len(node_ids) == len(self.nodes)
+            #for nodeID, node in zip(node_ids, self.nodes):
                 #assert node.node.nid
 
     def _is_same_card(self, elem):
@@ -182,7 +203,6 @@ class CELAS1(SpringElement):
 
 class CELAS2(SpringElement):
     type = 'CELAS2'
-    aster_type = 'CELAS2'
     _field_map = {
         1: 'eid', 2:'k', 4:'c1', 6:'c2',
     }
@@ -234,6 +254,16 @@ class CELAS2(SpringElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CELAS2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
         nids = [integer_or_blank(card, 3, 'g1', 0),
@@ -247,6 +277,16 @@ class CELAS2(SpringElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CELAS2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         k = data[1]
         nids = [data[2], data[3]]
@@ -261,10 +301,6 @@ class CELAS2(SpringElement):
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -321,31 +357,6 @@ class CELAS2(SpringElement):
     def K(self):
         return self.k
 
-    def write_code_aster(self):
-        nodes = self.node_ids
-        msg = ''
-        msg += 'DISCRET=_F( # CELAS2\n'
-        if nodes[0]:
-            msg += "     CARA='K_T_D_N'\n"
-            msg += "     NOEUD=N%i,\n" % nodes[0]
-
-        if nodes[1]:
-            msg += "     CARA='K_T_D_L'\n"
-            msg += "     NOEUD=N%i,\n" % nodes[1]
-            msg += "     AMOR_HYST=%g # ge - damping\n" % self.ge
-        msg += "     )\n"
-        msg += "\n"
-
-        if self.c1 == 1:
-            msg += "VALE=(%g,0.,0.)\n" % self.k
-        elif self.c1 == 2:
-            msg += "VALE=(0.,%g,0.)\n" % self.k
-        elif self.c1 == 2:
-            msg += "VALE=(0.,0.,%g)\n" % self.k
-        else:
-            raise ValueError('unsupported value of c1=%s' % self.c1)
-        return msg
-
     def raw_fields(self):
         nodes = self.node_ids
         list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
@@ -367,7 +378,6 @@ class CELAS2(SpringElement):
 
 class CELAS3(SpringElement):
     type = 'CELAS3'
-    aster_type = 'CELAS3'
     _field_map = {
         1: 'eid', 2:'pid', #4:'s1', 6:'s2',
     }
@@ -398,6 +408,16 @@ class CELAS3(SpringElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CELAS3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
 
@@ -408,6 +428,16 @@ class CELAS3(SpringElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CELAS3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         s1 = data[2]
@@ -449,12 +479,33 @@ class CELAS3(SpringElement):
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
         return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
+    def get_edge_ids(self):
+        return []
+
+    def _verify(self, xref=True):
+        eid = self.eid
+        node_ids = self.node_ids
+        s1 = self.s1
+        s2 = self.s2
+        #ge = self.ge
+        #s = self.s
+
+        assert isinstance(eid, int), 'eid=%r' % eid
+        assert isinstance(s1, int), 's1=%r' % s1
+        assert isinstance(s2, int), 's2=%r' % s2
+        #assert isinstance(ge, float), 'ge=%r' % ge
+        #assert isinstance(s, float), 'ge=%r' % s
+        if xref:
+            k = self.K()
+            assert self.pid_ref.type in ['PELAS'], self.pid_ref
+            assert isinstance(k, float), 'k=%r' % k
+            assert len(node_ids) == len(self.nodes)
+            #for nodeID, node in zip(node_ids, self.nodes):
+                #assert node.node.nid
+
     def raw_fields(self):
         list_fields = ['CELAS3', self.eid, self.Pid()] + self.node_ids
         return list_fields
-
-    def get_edge_ids(self):
-        return []
 
     #def repr_fields(self):
         #s1 = set_blank_if_default(self.s1,0)
@@ -469,7 +520,6 @@ class CELAS3(SpringElement):
 
 class CELAS4(SpringElement):
     type = 'CELAS4'
-    aster_type = 'CELAS4'
     _field_map = {
         1: 'eid', 2:'k', #4:'s1', 6:'s2',
     }
@@ -492,7 +542,6 @@ class CELAS4(SpringElement):
         SpringElement.__init__(self)
         if comment:
             self.comment = comment
-
         self.eid = eid
         #: stiffness of the scalar spring
         self.k = k
@@ -504,6 +553,16 @@ class CELAS4(SpringElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CELAS4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
         s1 = integer_or_blank(card, 3, 's1', 0)
@@ -513,6 +572,16 @@ class CELAS4(SpringElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CELAS4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         k = data[1]
         s1 = data[2]

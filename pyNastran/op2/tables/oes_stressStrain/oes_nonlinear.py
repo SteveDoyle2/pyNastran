@@ -1,13 +1,13 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
-from six.moves import range
-from itertools import cycle
 from math import isnan
+from itertools import cycle
+from six import iteritems, integer_types
+from six.moves import range
 import numpy as np
-from numpy import zeros, array_equal
+from numpy import zeros
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_float_13e
 try:
     import pandas as pd
@@ -15,221 +15,9 @@ except ImportError:
     pass
 
 
-class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
-    """
-    ::
-
-      ELEMENT-ID =     102
-                               N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
-        TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL
-                                             STRESS                             PLASTIC/NLELAST          STRAIN              STRESS
-      2.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
-      3.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
-    """
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        self.nelements = 0  # result specific
-
-    def is_real(self):
-        return True
-
-    def is_complex(self):
-        return False
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
-
-    def _get_msgs(self):
-        raise NotImplementedError()
-
-    def get_headers(self):
-        headers = ['axial_stress', 'equiv_stress', 'total_strain',
-        'effective_plastic_creep_strain', 'effective_creep_strain',
-        'linear_torsional_stress']
-        return headers
-
-    def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_built:
-            return
-
-        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
-        assert self.nelements > 0, 'nelements=%s' % self.nelements
-        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
-        #self.names = []
-        self.nelements //= self.ntimes
-        self.itime = 0
-        self.ielement = 0
-        self.itotal = 0
-        #self.ntimes = 0
-        #self.nelements = 0
-        self.is_built = True
-
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
-
-        #[axial_stress, equiv_stress, total_strain, effective_plastic_creep_strain,
-        # effective_creep_strain, linear_torsional_stress]
-        self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
-
-    def build_dataframe(self):
-        headers = self.get_headers()
-        if self.nonlinear_factor is not None:
-            column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
-        else:
-            df1 = pd.DataFrame(self.element).T
-            df1.columns = ['ElementID']
-            df2 = pd.DataFrame(self.data[0])
-            df2.columns = headers
-            self.data_frame = df1.join([df2])
-        #print(self.data_frame)
-
-    def __eq__(self, table):
-        self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
-        if not np.array_equal(self.data, table.data):
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            ntimes = self.data.shape[0]
-
-            i = 0
-            if self.is_sort1():
-                for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
-                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
-                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
-                        if not np.allclose(t1, t2):
-                        #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
-                                eid,
-                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
-                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
-                            i += 1
-                        if i > 10:
-                            print(msg)
-                            raise ValueError(msg)
-            else:
-                raise NotImplementedError(self.is_sort2())
-            if i > 0:
-                print(msg)
-                raise ValueError(msg)
-        return True
-
-    def add_sort1(self, dt, eid, axial_stress, equiv_stress, total_strain,
-                  effective_plastic_creep_strain, effective_creep_strain, linear_torsional_stress):
-        self._times[self.itime] = dt
-        self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = [
-            axial_stress, equiv_stress, total_strain, effective_plastic_creep_strain,
-            effective_creep_strain, linear_torsional_stress
-        ]
-        self.ielement += 1
-
-    def get_stats(self):
-        if not self.is_built:
-            return [
-                '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
-            ]
-
-        ntimes, nelements, _ = self.data.shape
-        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
-        assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
-
-        msg = []
-        if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-            ntimes_word = 'ntimes'
-        else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
-            ntimes_word = '1'
-        msg.append('  eType\n')
-        headers = self.get_headers()
-        n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n  ' % self.element_name)
-        msg += self.get_data_code()
-        return msg
-
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
-        if header is None:
-            header = []
-        if is_sort1:
-            msg = [
-                '                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
-                ' \n',
-                '    ELEMENT-ID    AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL\n',
-                '                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS\n'
-            ]
-        else:
-            msg = [
-                '                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
-                ' \n',
-                '    TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL\n',
-                '                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS\n'
-            ]
-
-        if self.is_sort1():
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg)
-        else:
-            raise NotImplementedError('RealNonlinearRodArray')
-        return page_num
-
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp):
-        ntimes = self.data.shape[0]
-
-        eids = self.element
-        is_odd = False
-        nwrite = len(eids)
-
-        for itime in range(ntimes):
-            dt = self._times[itime]
-            header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
-
-            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
-            axial = self.data[itime, :, 0]
-            eqs = self.data[itime, :, 1]
-            total = self.data[itime, :, 2]
-            epcs = self.data[itime, :, 3]
-            ecs = self.data[itime, :, 4]
-            lts = self.data[itime, :, 5]
-
-            #print "dt=%s axials=%s eqs=%s ts=%s epcs=%s ecs=%s lts=%s" %(dt,axial,eqs,ts,epcs,ecs,lts)
-            #msgE[eid] = '      ELEMENT-ID = %8i\n' % (eid)
-            #if eid not in msgT:
-                #msgT[eid] = []
-            #msgT[eid].append('  %9.3E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E\n' % (dt, axial, eqs, ts, epcs, ecs, lts))
-
-            for eid, axiali, eqsi, totali, epcsi, ecsi, ltsi in zip(eids, axial, eqs, total, epcs, ecs, lts):
-                ([saxial, seqs, stotal, sepcs, secs, slts]) = write_floats_13e(
-                    [axiali, eqsi, totali, epcsi, ecsi, ltsi])
-
-            f.write('  %8i       %-13s       %-13s       %-13s       %-13s       %-13s       %s\n' % (
-                eid, saxial, seqs, stotal, sepcs, secs, slts))
-            f.write(page_stamp % page_num)
-            page_num += 1
-        return page_num - 1
-
-
 class RealNonlinearPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        #asdfasdfasdf
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -279,8 +67,10 @@ class RealNonlinearPlateArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        #if self.element_type in [33, 74]:
-            #nnodes_per_element = 1
+        if self.element_type == 88:  # Tria3-nonlinear
+            nnodes_per_element = 1
+        elif self.element_type == 90:  # Quad4-nonlinear
+            nnodes_per_element = 1
         #elif self.element_type == 144:
             #nnodes_per_element = 5
         #elif self.element_type == 64:  # CQUAD8
@@ -291,12 +81,19 @@ class RealNonlinearPlateArray(OES_Object):
             #nnodes_per_element = 4
         #elif self.element_type == 75:  # CTRIA6
             #nnodes_per_element = 4
-        #else:
-        #raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
-
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
         nnodes_per_element = 1
         self.nnodes = nnodes_per_element
         #self.nelements //= nnodes_per_element
+
+        if self.nelements % self.ntimes != 0:
+            msg = 'nelements=%s ntimes=%s nelements/ntimes=%s'  % (
+                self.nelements, self.ntimes, self.nelements / float(self.ntimes))
+            #return
+            raise RuntimeError(msg)
+
+        self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -307,10 +104,10 @@ class RealNonlinearPlateArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        self.element = zeros(self.nelements, dtype='int32')
 
         #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
         self.data = zeros((self.ntimes, self.ntotal, 12), dtype='float32')
@@ -318,37 +115,40 @@ class RealNonlinearPlateArray(OES_Object):
     def build_dataframe(self):
         headers = self.get_headers()[1:]
 
-        nelements = self.element_node.shape[0] // 2
+        nelements = self.element.shape[0]
         if self.is_fiber_distance():
             fiber_distance = ['Top', 'Bottom'] * nelements
         else:
             fiber_distance = ['Mean', 'Curvature'] * nelements
         fd = np.array(fiber_distance, dtype='unicode')
-        element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
+        element = np.vstack([self.element, self.element]).T.ravel()
+        element_fd = [element, fd]
 
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=element_fd, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
+            self.data_frame.index.names = ['ElementID', 'Location', 'Item']
         else:
             # option B - nice!
-            df1 = pd.DataFrame(element_node).T
-            df1.columns = ['ElementID', 'NodeID', 'Location']
+            df1 = pd.DataFrame(element_fd).T
+            df1.columns = ['ElementID', 'Location']
             df2 = pd.DataFrame(self.data[0, :, 1:])
             df2.columns = headers
             self.data_frame = df1.join(df2)
-        self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
+        self.data_frame = self.data_frame.reset_index().set_index(['ElementID', 'Location'])
         #print(self.data_frame)
 
-    def add_new_eid(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
-        self.add_sort1(dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy)
+    #def add_new_eid(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        #self.add_sort1(dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy)
 
     def add_new_eid_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        self.element[self.ielement] = eid
+        self.ielement += 1
         self.add_sort1(dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy)
 
     def add_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
-        #print(etype, eid)
+        """unvectorized method for adding SORT1 transient data"""
         if isnan(fd):
             fd = 0.
         if isnan(sz):
@@ -356,10 +156,12 @@ class RealNonlinearPlateArray(OES_Object):
         if isnan(ez):
             ez = 0.
         self._times[self.itime] = dt
-        self.element_node[self.ielement, 0] = eid
+        #if self.ielement == 10:
+            #print(self.element_node[:10, :])
+            #raise RuntimeError()
         #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
-        self.data[self.itime, self.ielement, :] = [fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy]
-        self.ielement += 1
+        assert eid == self.element[self.ielement - 1], 'eid=%s self.element[i-1] = ' % (eid, self.element[self.ielement - 1])
+        self.data[self.itime, self.itotal, :] = [fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy]
         self.itotal += 1
 
     def __eq__(self, table):
@@ -370,8 +172,7 @@ class RealNonlinearPlateArray(OES_Object):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element_node):
-                    (eid, nid) = e
+                for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
 
@@ -382,12 +183,13 @@ class RealNonlinearPlateArray(OES_Object):
 
                     # vm stress can be NaN for some reason...
                     if not np.array_equal(t1, t2):
-                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
-                                     '%s     (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
-                            eid, nid,
-                            fiber_distance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1,
-                            ' ' * (len(str(eid)) + len(str(nid)) + 3),
-                            fiber_distance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2))
+                        msg += (
+                            '%s    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
+                            '%s    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                fiber_distance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1,
+                                ' ' * (len(str(eid)),
+                                fiber_distance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2)))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -397,7 +199,7 @@ class RealNonlinearPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -590,7 +392,7 @@ class NonlinearQuad(StressObject):
             #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         nelements = len(self.eType)
 
         msg = self.get_data_code()
@@ -665,6 +467,7 @@ class NonlinearQuad(StressObject):
         self.ecs[dt][eid] = [ecs]
 
     def add_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        """unvectorized method for adding SORT1 transient data"""
         self.fiberDistance[dt][eid].append(fd)
         if isnan(sz):
             sz = 0.
@@ -733,115 +536,3 @@ class NonlinearQuad(StressObject):
             page_num += 1
         f.write(''.join(msg))
         return page_num - 1
-
-
-class HyperelasticQuad(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        StressObject.__init__(self, data_code, isubcase)
-        self.eType = 'QUAD4FD'
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        self.Type = {}
-        self.IDs = {}
-        self.oxx = {}
-        self.oyy = {}
-        self.txy = {}
-        self.angle = {}
-        self.majorP = {}
-        self.minorP = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            #self.add = self.add_sort2
-            #self.add_new_eid = self.add_new_eid_sort2
-
-    def get_stats(self):
-        nelements = len(self.eType)
-
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.oxx)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  Type, oxx, oyy, txy, angle, majorP, minorP\n')
-        return msg
-
-    def delete_transient(self, dt):
-        del self.fiberDistance[dt]
-        del self.oxx[dt]
-        del self.oyy[dt]
-        del self.txy[dt]
-
-        del self.angle[dt]
-        del self.majorP[dt]
-        del self.minorP[dt]
-
-    def get_transients(self):
-        k = self.oxx.keys()
-        k.sort()
-        return k
-
-    def add_new_transient(self, dt):
-        self.oxx[dt] = {}
-        self.oyy[dt] = {}
-        self.txy[dt] = {}
-        self.angle[dt] = {}
-        self.majorP[dt] = {}
-        self.minorP[dt] = {}
-
-    def add_new_eid_sort1(self, dt, eid, Type, oxx, oyy, txy, angle, majorP, minorP):
-        if dt not in self.oxx:
-            self.add_new_transient(dt)
-        self.Type[eid] = Type
-        self.oxx[dt] = {eid: [oxx]}
-        self.oyy[dt] = {eid: [oyy]}
-        self.txy[dt] = {eid: [txy]}
-        self.angle[dt] = {eid: [angle]}
-        self.majorP[dt] = {eid: [majorP]}
-        self.minorP[dt] = {eid: [minorP]}
-
-    def add_sort1(self, dt, eid, ID, oxx, oyy, txy, angle, majorP, minorP):
-        self.oxx[dt][eid].append(oxx)
-        self.oyy[dt][eid].append(oyy)
-        self.txy[dt][eid].append(txy)
-        self.angle[dt][eid].append(angle)
-        self.majorP[dt][eid].append(majorP)
-        self.minorP[dt][eid].append(minorP)
-
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
-        # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
-        if header is None:
-            header = []
-        msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
-               '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
-               '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n', ]
-               #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
-               #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
-
-        for dt, oxxs in sorted(iteritems(self.oxx)):
-            #header[-1] = '     LOAD STEP = %12.5E' %(dt)
-            msg += header
-            for eid, oxxs in sorted(iteritems(oxxs)):
-                gauss = self.Type[eid]
-                oxx = self.oxx[dt][eid]
-                oyy = self.oyy[dt][eid]
-                txy = self.txy[dt][eid]
-                angle = self.angle[dt][eid]
-                majorP = self.majorP[dt][eid]
-                minorP = self.minorP[dt][eid]
-
-                for i in range(4):  # 1,2,3,4
-                    if i == 0:
-                        msg.append('0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (eid, gauss, i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
-                    else:
-                        msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % ('', '', i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
-        f.write(''.join(msg))
-        return page_num

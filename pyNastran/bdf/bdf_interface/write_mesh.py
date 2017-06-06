@@ -12,7 +12,6 @@ from six import string_types, iteritems, itervalues, PY2, StringIO
 
 #from pyNastran.utils import is_file_obj
 from pyNastran.bdf.utils import print_filename
-from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -33,33 +32,6 @@ class WriteMesh(BDFAttributes):
         self._auto_reject = True
         self.cards_to_read = set([])
 
-    #def echo_bdf(self, infile_name):
-        #"""
-        #This method removes all comment lines from the bdf
-        #A write method is stil required.
-
-        #.. todo:: maybe add the write method
-
-        #.. code-block:: python
-
-          #model = BDF()
-          #model.echo_bdf(bdf_filename)
-        #"""
-        #self.deprecated('self.echo_bdf()', 'removed...', '0.8')
-        #self.cards_to_read = set([])
-        #return self.read_bdf(infile_name)
-
-    #def auto_reject_bdf(self, infile_name):
-        #"""
-        #This method parses supported cards, but does not group them into
-        #nodes, elements, properties, etc.
-
-        #.. todo:: maybe add the write method
-        #"""
-        #self.deprecated('self.auto_reject_bdf()', 'removed...', '0.8')
-        #self._auto_reject = True
-        #return self.read_bdf(infile_name)
-
     def get_encoding(self, encoding=None):
         if encoding is not None:
             pass
@@ -74,6 +46,7 @@ class WriteMesh(BDFAttributes):
         Performs type checking on the write_bdf inputs
         """
         if out_filename is None:
+            from pyNastran.utils.gui_io import save_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
                 "*.bdf;*.dat;*.nas;*.pch|" \
                 "All files (*.*)|*.*"
@@ -247,7 +220,7 @@ class WriteMesh(BDFAttributes):
         """
         if self.punch is None:
             # writing a mesh without using read_bdf
-            if self.executive_control_lines or self.case_control_deck:
+            if self.system_command_lines or self.executive_control_lines or self.case_control_deck:
                 self.punch = False
             else:
                 self.punch = True
@@ -267,8 +240,12 @@ class WriteMesh(BDFAttributes):
         """
         Writes the executive control deck.
         """
+        msg = ''
+        for line in self.system_command_lines:
+            msg += line + '\n'
+
         if self.executive_control_lines:
-            msg = '$EXECUTIVE CONTROL DECK\n'
+            msg += '$EXECUTIVE CONTROL DECK\n'
             if self.sol == 600:
                 new_sol = 'SOL 600,%s' % self.sol_method
             else:
@@ -308,6 +285,26 @@ class WriteMesh(BDFAttributes):
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
                         raise
+        if self.ao_element_flags:
+            for (eid, element) in sorted(iteritems(self.ao_element_flags)):
+                bdf_file.write(element.write_card(size, is_double))
+        self._write_nsm(bdf_file, size, is_double)
+
+    def _write_nsm(self, bdf_file, size=8, is_double=False):
+        """
+        Writes the nsm in a sorted order
+        """
+        if self.nsms:
+            msg = ['$NSM\n']
+            for (key, nsms) in sorted(iteritems(self.nsms)):
+                for nsm in nsms:
+                    try:
+                        msg.append(nsm.write_card(size, is_double))
+                    except:
+                        print('failed printing nsm...type=%s key=%r'
+                              % (nsm.type, key))
+                        raise
+            bdf_file.write(''.join(msg))
 
     def _write_elements_properties(self, bdf_file, size=8, is_double=False):
         """
@@ -368,6 +365,7 @@ class WriteMesh(BDFAttributes):
                 #print("missing_property = ", card
                 msg.append(card)
             bdf_file.write(''.join(msg))
+        self._write_nsm(bdf_file, size, is_double)
 
     def _write_aero(self, bdf_file, size=8, is_double=False):
         """Writes the aero cards"""
@@ -513,29 +511,27 @@ class WriteMesh(BDFAttributes):
                 msg.append(suport.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
-        if self.spcs or self.spcadds:
+        if self.spcs or self.spcoffs:
             #msg = ['$SPCs\n']
             #str_spc = str(self.spcObject) # old
             #if str_spc:
                 #msg.append(str_spc)
             #else:
             msg = ['$SPCs\n']
-            for (unused_id, spcadd) in sorted(iteritems(self.spcadds)):
-                msg.append(str(spcadd))
             for (unused_id, spcs) in sorted(iteritems(self.spcs)):
                 for spc in spcs:
                     msg.append(str(spc))
+            for (unused_id, spcoffs) in sorted(iteritems(self.spcoffs)):
+                for spc in spcoffs:
+                    msg.append(str(spc))
             bdf_file.write(''.join(msg))
 
-        if self.mpcs or self.mpcadds:
+        if self.mpcs:
             msg = ['$MPCs\n']
-            for (unused_id, mpcadd) in sorted(iteritems(self.mpcadds)):
-                msg.append(str(mpcadd))
             for (unused_id, mpcs) in sorted(iteritems(self.mpcs)):
                 for mpc in mpcs:
                     msg.append(mpc.write_card(size, is_double))
             bdf_file.write(''.join(msg))
-
 
     def _write_contact(self, bdf_file, size=8, is_double=False):
         """Writes the contact cards sorted by ID"""
@@ -618,8 +614,9 @@ class WriteMesh(BDFAttributes):
                 msg.append(tstep.write_card(size, is_double))
             for (unused_id, tstepnl) in sorted(iteritems(self.tstepnls)):
                 msg.append(tstepnl.write_card(size, is_double))
-            for (unused_id, freq) in sorted(iteritems(self.frequencies)):
-                msg.append(freq.write_card(size, is_double))
+            for (unused_id, freqs) in sorted(iteritems(self.frequencies)):
+                for freq in freqs:
+                    msg.append(freq.write_card(size, is_double))
             for (unused_id, delay) in sorted(iteritems(self.delays)):
                 msg.append(delay.write_card(size, is_double))
             for (unused_id, rotor) in sorted(iteritems(self.rotors)):
@@ -765,6 +762,9 @@ class WriteMesh(BDFAttributes):
                 for (unused_nid, node) in sorted(iteritems(self.nodes)):
                     msg.append(node.write_card(size, is_double))
             bdf_file.write(''.join(msg))
+        if self.seqgp:
+            bdf_file.write(self.seqgp.write_card(size, is_double))
+
         #if 0:  # not finished
             #self._write_nodes_associated(bdf_file, size, is_double)
 

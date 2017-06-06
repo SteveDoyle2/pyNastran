@@ -1,0 +1,43 @@
+---DONE---
+
+----------------------------------------------------
+---Half Finished---
+
+- missing buttons/pulldowns for:
+ - background image
+
+#-------------------------
+#BUGS
+ - Press OK/Cancel/Close to close window; don't use Escape
+
+VTK
+=======
+1.  Edge display
+  - edges don't work in:
+     - VTK 7.1.0, Python 3.5.2
+     - VTK 7.1.0, Python 2.7.13
+  - edges work in:
+     - VTK 5.10.1, Python 2.7.12
+- 
+Qt
+=======
+- results selector window doesn't update on cycling
+- loading a new geometry over a result doesn't overwrite the old name
+- legend cancel doesn't return to baseline state (should it?)
+- QScintilla doesn't always work (PyQt4)
+  - PySide doesn't have this
+  - PyQt5 probably doesn't have this
+- Python 3 doesn't save/reload the GUI state
+
+----------------------------------------------------
+---NOT DONE---
+ - marker plots (arrows) & scale
+ - usm3d surface/boundary layer/incomplete volume
+ - load file from * with a specific file type
+ - zoom/rotate/snap hotkeys
+ - unbreak hotkeys (p, r, X, Y, Z, ???)
+ - maybe add explcit pulldown for formats
+ - Improved Picking
+   - area picking
+   - polygon picking
+   - pick visible option

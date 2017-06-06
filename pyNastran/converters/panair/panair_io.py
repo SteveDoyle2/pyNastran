@@ -1,3 +1,6 @@
+"""
+Defines the GUI IO file for Panair.
+"""
 from __future__ import print_function
 import os
 
@@ -98,7 +101,6 @@ class PanairIO(object):
             self.grid.Update()
 
         # loadPanairResults - regions/loads
-        self. turn_text_on()
         if plot:
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()

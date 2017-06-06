@@ -1,20 +1,23 @@
+# coding: utf-8
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All dynamic control cards are defined in this file.  This includes:
 
  * FREQ
  * FREQ1
- * FREQ2 (not implemented)
- * FREQ3
+ * FREQ2
+ * FREQ3 (not implemented)
  * FREQ4
  * FREQ5 (not implemented)
  * NLPCI
  * NLPARM
  * TSTEP
+ * TSTEP1
  * TSTEPNL
  * ROTORG
  * ROTORD
  * TIC
+ * TF
 
 All cards are BaseCard objects.
 """
@@ -32,25 +35,50 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string_or_blank, blank, fields, components_or_blank,
     integer_string_or_blank, integer_or_double, parse_components,
+    modal_components,
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
-
 class DELAY(BaseCard):
+    """
+    +-------+-----+-----------+-----+--------+------+-----+--------+-----+
+    |   1   |  2  |     3     |  4  |   5    |  6   |  7  |   8    |  9  |
+    +=======+=====+===========+=====+========+======+=====+========+=====+
+    | DELAY | SID | POINT ID1 | C1  |   T1   | P2   | C2  |   T2   |     |
+    +-------+-----+-----------+-----+--------+------+-----+--------+-----+
+    """
     type = 'DELAY'
 
     def __init__(self, sid, nodes, components, delays, comment=''):
         """
-        +-------+-----+-----------+-----+--------+------+-----+--------+-----+
-        |   1   |  2  |     3     |  4  |   5    |  6   |  7  |   8    |  9  |
-        +=======+=====+===========+=====+========+======+=====+========+=====+
-        | DELAY | SID | POINT ID1 | C1  |   T1   | P2   | C2  |   T2   |     |
-        +-------+-----+-----------+-----+--------+------+-----+--------+-----+
+        Creates a DELAY card
+
+        Parameters
+        ----------
+        sid : int
+            DELAY id that is referenced by a TLOADx, RLOADx or ACSRCE card
+        nodes : List[int]
+            list of nodes that see the delay
+            len(nodes) = 1 or 2
+        components : List[int]
+            the components corresponding to the nodes that see the delay
+            len(nodes) = len(components)
+        delays : List[float]
+            Time delay (tau) for designated point Pi and component Ci
+            len(nodes) = len(delays)
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
 
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        if isinstance(components, integer_types):
+            components = [components]
+        if isinstance(delays, float):
+            delays = [delays]
         #: Identification number of DELAY entry. (Integer > 0)
         self.sid = sid
         #: Grid, extra, or scalar point identification number. (Integer > 0)
@@ -63,6 +91,16 @@ class DELAY(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DELAY card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nodes = [integer(card, 2, 'node')]
         components = [integer(card, 3, 'components')]
@@ -147,18 +185,47 @@ class DELAY(BaseCard):
 
 
 class DPHASE(BaseCard):
+    """
+    Defines the phase lead term θ in the equation of the dynamic
+    loading function.
+
+    +--------+-----+-----------+-----+------+------+-----+-----+-----+
+    |   1    |  2  |     3     |  4  |  5   |  6   |  7  |  8  |  9  |
+    +========+=====+===========+=====+======+======+=====+=====+=====+
+    | DPHASE | SID | POINT ID1 | C1  | TH1  |  P2  | C2  | TH2 |     |
+    +--------+-----+-----------+-----+------+------+-----+-----+-----+
+    """
     type = 'DPHASE'
 
     def __init__(self, sid, nodes, components, phase_leads, comment=''):
         """
-        +--------+-----+-----------+-----+------+------+-----+-----+-----+
-        |   1    |  2  |     3     |  4  |  5   |  6   |  7  |  8  |  9  |
-        +========+=====+===========+=====+======+======+=====+=====+=====+
-        | DPHASE | SID | POINT ID1 | C1  | TH1  |  P2  | C2  | TH2 |     |
-        +--------+-----+-----------+-----+------+------+-----+-----+-----+
+        Creates a DPHASE card
+
+        Parameters
+        ----------
+        sid : int
+            DPHASE id that is referenced by a RLOADx or ACSRCE card
+        nodes : List[int]
+            list of nodes that see the delay
+            len(nodes) = 1 or 2
+        components : List[int]
+            the components corresponding to the nodes that see the delay
+            len(nodes) = len(components)
+        phase_leads : List[float]
+            Phase lead θ in degrees.
+            len(nodes) = len(delays)
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        if isinstance(components, integer_types):
+            components = [components]
+        if isinstance(phase_leads, float):
+            phase_leads = [phase_leads]
+
         self.sid = sid
         self.nodes = nodes
         self.components = components
@@ -166,6 +233,16 @@ class DPHASE(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DPHASE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nodes = [integer(card, 2, 'node')]
         components = [integer(card, 3, 'components')]
@@ -267,6 +344,18 @@ class FREQ(BaseCard):
     type = 'FREQ'
 
     def __init__(self, sid, freqs, comment=''):
+        """
+        Creates a FREQ card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        freqs : List[float]
+            the frequencies for a FREQx object
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -274,6 +363,16 @@ class FREQ(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         freqs = fields(double, card, 'freq', i=2, j=len(card))
         return FREQ(sid, freqs, comment=comment)
@@ -331,7 +430,23 @@ class FREQ1(FREQ):
     """
     type = 'FREQ1'
 
-    def __init__(self, sid, f1, df, ndf, comment=''):
+    def __init__(self, sid, f1, df, ndf=1, comment=''):
+        """
+        Creates a FREQ1 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float
+            first frequency
+        df : float
+            frequency increment
+        ndf : int
+            number of frequency increments
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -346,6 +461,16 @@ class FREQ1(FREQ):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         f1 = double_or_blank(card, 2, 'f1', 0.0)
         df = double(card, 3, 'df')
@@ -369,35 +494,61 @@ class FREQ2(FREQ):
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     |   1   |  2  | 3   |  4  |  5  |  6  |  7  |  8  |  9  |
     +=======+=====+=====+=====+=====+=====+=====+=====+=====+
-    | FREQ2 | SID |  F1 | F2  | NDF |     |     |     |     |
+    | FREQ2 | SID |  F1 | F2  | NF  |     |     |     |     |
     +-------+-----+-----+-----+-----+-----+-----+-----+-----+
 
     .. note:: this card rewrites as a FREQ card
     """
     type = 'FREQ2'
 
-    def __init__(self, sid, f1, f2, ndf=1, comment=''):
+    def __init__(self, sid, f1, f2, nf=1, comment=''):
+        """
+        Creates a FREQ2 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float
+            first frequency
+        f1 : float
+            last frequency
+        nf : int; default=1
+            number of logorithmic intervals
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
         self.f1 = f1
         self.f2 = f2
-        self.ndf = ndf
+        self.nf = nf
 
-        d = 1. / ndf * log(f2 / f1)
+        d = 1. / nf * log(f2 / f1)
         freqs = []
-        for i in range(ndf):
+        for i in range(nf):
             freqs.append(f1 * exp(i * d))  # 0 based index
         self.freqs = np.unique(freqs)
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         f1 = double(card, 2, 'f1')  # default=0.0 ?
         f2 = double(card, 3, 'f2')
-        ndf = integer_or_blank(card, 4, 'nf', 1)
+        nf = integer_or_blank(card, 4, 'nf', 1)
         assert len(card) <= 5, 'len(FREQ2 card) = %i\ncard=%s' % (len(card), card)
-        return FREQ2(sid, f1, f2, ndf, comment=comment)
+        return FREQ2(sid, f1, f2, nf, comment=comment)
         #return FREQ(sid, freqs, comment=comment)
 
 
@@ -434,7 +585,7 @@ class FREQ4(FREQ):
     """
     type = 'FREQ4'
 
-    def __init__(self, sid, f1, f2, fspread, nfm, comment=''):
+    def __init__(self, sid, f1, f2, fspread=0.1, nfm=3, comment=''):
         if comment:
             self.comment = comment
         self.sid = sid
@@ -445,6 +596,16 @@ class FREQ4(FREQ):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         f1 = double_or_blank(card, 2, 'f1', 0.0)
         f2 = double_or_blank(card, 3, 'f2', 1.e20)
@@ -538,6 +699,16 @@ class NLPARM(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a NLPARM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nlparm_id = integer(card, 1, 'nlparm_id')
         ninc = integer_or_blank(card, 2, 'ninc', 10)
         dt = double_or_blank(card, 3, 'dt', 0.0)
@@ -575,6 +746,16 @@ class NLPARM(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a NLPARM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv, int_out, eps_u, eps_p,
          eps_w, max_div, max_qn, max_ls, fstress, ls_tol, max_bisect, max_r,
          rtol_b) = data
@@ -680,6 +861,16 @@ class NLPCI(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a NLPCI card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nlpci_id = integer(card, 1, 'nlpci_id')
         Type = string_or_blank(card, 2, 'Type', 'CRIS')
         minalr = double_or_blank(card, 3, 'minalr', 0.25)
@@ -752,10 +943,71 @@ class ROTORD(BaseCard):
                  etype=1, eorder=1.0, threshold=0.02, maxiter=10,
                  comment=''):
         """
-        rspeeds : List[int/float, ..., int/float]
+        Parameters
+        ----------
+        sid : int
+            Set identifier for all rotors. Must be selected in the case
+            control deck by RMETHOD = SID.
+        rstart : float
+            Starting value of reference rotor speed.
+        rstart : float
+            Step-size of reference rotor speed. See Remark 3. (Real ≠ 0.0)
+        numstep : int
+            Number of steps for reference rotor speed including RSTART.
 
+        Parameter Lists
+        ---------------
+        rids : List[int]
+            Identification number of rotor i.
+            (Integer > 0 with RID(i+1) > RIDi; Default = i)
+        rsets : List[int]
+            Refers to the RSETID value on the ROTORG, ROTORB, and
+            ROTSE bulk entries for rotor RIDi. (Integer > 0 or blank if
+            only one rotor)
+        rspeeds : List[int/float, ..., int/float]
             float : rotor speeds
             int : TABLEDi
+        rcords : List[int]
+            ???
+        w3s : List[float]
+            ???
+        w4s : List[float]
+            ???
+        rforces : List[int]
+            ???
+        brgsets : List[int]
+            ???
+
+        Optional
+        --------
+        refsys : str; default='ROT'
+            Reference system
+                'FIX' analysis is performed in the fixed reference system.
+                'ROT' analysis is performed in the rotational reference system.
+        cmout : float; default=0.0
+            ???
+        runit : str; default=='RPM'
+            ???
+        funit : str; default=='RPM',
+            ???
+        zstein : str; default=='NO'
+            ???
+        orbeps : float; default=1.e-6
+            ???
+        roprt : int; default=0
+            ???
+        sync : int; default=1
+            ???
+        etype : int; default=1
+            ???
+        eorder : float; default=1.0
+            ???
+        threshold : float; default=0.02
+            ???
+        maxiter : int; default=10
+            ???
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -810,6 +1062,16 @@ class ROTORD(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ROTORD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         rstart = double(card, 2, 'rstart')
         rstep = double(card, 3, 'rstep')
@@ -843,7 +1105,7 @@ class ROTORD(BaseCard):
         brgsets = []
         for irow in range(nrows):
             j = irow * 8 + 17
-            rid = integer(card, j, 'rid_%i' % (irow + 1))
+            rid = integer_or_blank(card, j, 'rid_%i' % (irow + 1), irow + 1)
             rset = integer_or_blank(card, j+1, 'rset_%i' % (irow + 1))
             rspeed = integer_or_double(card, j+2, 'rspeed_%i' % (irow + 1))
             rcord = integer_or_blank(card, j+3, 'rcord_%i' % (irow + 1), 0)
@@ -924,6 +1186,16 @@ class ROTORG(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ROTORG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nid1 = integer(card, 2, 'nid1')
         nid2 = integer_string_or_blank(card, 3, 'nid2')
@@ -1063,6 +1335,16 @@ class TF(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nid0 = integer(card, 2, 'nid0')
         # component 0 means an SPOINT/EPOINT
@@ -1134,6 +1416,22 @@ class TSTEP(BaseCard):
     type = 'TSTEP'
 
     def __init__(self, sid, N, DT, NO, comment=''):
+        """
+        Creates a TSTEP card
+
+        Parameters
+        ----------
+        sid : int
+            the time step id
+        N : List[int/None]
+            ???
+        DT : List[float/None]
+            ???
+        NO : List[int/None]
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -1150,6 +1448,16 @@ class TSTEP(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TSTEP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         N = []
         DT = []
@@ -1211,6 +1519,24 @@ class TSTEP1(BaseCard):
     type = 'TSTEP1'
 
     def __init__(self, sid, tend, ninc, nout, comment=''):
+        """
+        Creates a TSTEP1 card
+
+        Parameters
+        ----------
+        sid : int
+            the time step id
+        tend : List[float/None]
+            ???
+        ninc : List[int/None]
+            ???
+        nout : List[int/str/None]
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment = comment
         self.sid = sid
         self.tend = tend
         self.ninc = ninc
@@ -1218,6 +1544,16 @@ class TSTEP1(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TSTEP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         tend = []
         ninc = []
@@ -1280,14 +1616,29 @@ class TSTEPNL(BaseCard):
                  rb=0.6, max_r=32., utol=0.1, rtol_b=20.,
                  min_iter=None, comment=''):
         """
+        Creates a TSTEPNL card
+
+        Parameters
+        ----------
         sid : int
+            the time step id
+        ndt : int
             ???
-        ndt : ???
+        dt : float
             ???
-        dt : ???
+        no : int
             ???
-        no : ???
+        method : str
+           ???
+           MSC = {AUTO, ITER, ADAPT, SEMI, FNT, PFNT}
+           NX  = {None, TSTEP}
+        kstep : ???; default=None
             ???
+        max_iter : int; default=10
+            ???
+        conv : str; default='PW'
+            ???
+            PW, W, U
         eps_u : float; default=1.e-2
             ???
         eps_p : float; default=1.e-3
@@ -1318,6 +1669,8 @@ class TSTEPNL(BaseCard):
             ???
         min_iter : int; default=None
             not listed in all QRGs
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -1349,7 +1702,7 @@ class TSTEPNL(BaseCard):
         self.utol = utol
         self.rtol_b = rtol_b
         self.min_iter = min_iter
-        assert self.ndt >= 3
+        assert self.ndt >= 3, self
         assert self.dt > 0.
 
     def validate(self):
@@ -1360,6 +1713,16 @@ class TSTEPNL(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TSTEPNL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         ndt = integer(card, 2, 'ndt')
         dt = double(card, 3, 'dt')
@@ -1410,21 +1773,37 @@ class TSTEPNL(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TSTEPNL card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (sid, ndt, dt, no, method, kstep, max_iter, conv, eps_u, eps_p, eps_w,
          max_div, max_qn, max_ls, fstress, max_bisect,
          adjust, mstep, rb, max_r, utol, rtol_b) = data
 
         if method == 1:
             method = 'AUTO'
+        elif method == 2:
+            method = 'TSTEP'
         elif method == 3:
             method = 'ADAPT'
         else:
             raise NotImplementedError('tstepnl=%s method=%r data=%s' % (sid, method, data))
 
-        if conv == 3:
+        if conv == 1:
+            conv = 'W'
+        elif conv == 3:
             conv = 'PW'
         elif conv == 4:
             conv = 'U'
+        elif conv == 7:
+            conv = 'UPW'
         #elif conv == 3:
             #conv = 'ADAPT'
         else:
@@ -1517,15 +1896,34 @@ class TSTEPNL(BaseCard):
 
 
 class TIC(BaseCard):
-    """Transient Initial Condition"""
+    """
+    Transient Initial Condition
+
+    Defines values for the initial conditions of variables used in
+    structural transient analysis. Both displacement and velocity
+    values may be specified at independent degrees-of-freedom. This
+    entry may not be used for heat transfer analysis.
+    """
     type = 'TIC'
 
-    def __init__(self, sid, nodes, components, u0, v0, comment=''):
+    def __init__(self, sid, nodes, components, u0=0., v0=0., comment=''):
         """
-        Defines values for the initial conditions of variables used in
-        structural transient analysis. Both displacement and velocity
-        values may be specified at independent degrees-of-freedom. This
-        entry may not be used for heat transfer analysis.
+        Creates a TIC card
+
+        Parameters
+        ----------
+        sid : int
+            ???
+        nodes : int / List[int]
+            the nodes to which apply the initial conditions
+        components : int / List[int]
+            the DOFs to which apply the initial conditions
+        u0 : float / List[float]
+            ???
+        v0 : float / List[float]
+            ???
+        comment : str; default=''
+            a comment for the card
         """
         BaseCard.__init__(self)
         if comment:
@@ -1551,15 +1949,35 @@ class TIC(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TIC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         nid = integer(card, 2, 'G')
-        comp = parse_components(card, 3, 'C')
+        comp = modal_components(card, 3, 'C')
         u0 = double_or_blank(card, 4, 'U0', 0.)
         v0 = double_or_blank(card, 5, 'V0', 0.)
-        return TIC(sid, nid, comp, u0, v0, comment=comment)
+        return TIC(sid, nid, comp, u0=u0, v0=v0, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TIC card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         nid = data[1]
         comp = data[2]

@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from struct import Struct, pack
-from six import b
+from six import b, integer_types
 from six.moves import zip, range
 
 import numpy as np
@@ -68,7 +68,7 @@ class RealSolidArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
 
@@ -195,7 +195,7 @@ class RealSolidArray(OES_Object):
             raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
         return nnodes
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -226,6 +226,8 @@ class RealSolidArray(OES_Object):
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  element_cid.shape = %s\n' % str(self.element_cid.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -374,8 +376,8 @@ class RealSolidArray(OES_Object):
         assert n == 584, n
         data = [584] + table3 + [584]
         fmt = 'i' + ftable3 + 'i'
-        print(fmt)
-        print(data)
+        #print(fmt)
+        #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2.write(pack(fmt, *data))

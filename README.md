@@ -1,9 +1,10 @@
 
 |  Version	| Download  | Docs  | Status |
 | :-------:	| :--- 	  | :--- 	  | :--- 	  |
-|  v0.7.2 	| [Download] (https://github.com/SteveDoyle2/pyNastran/releases) |  [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.7.2)](http://pynastran-git.readthedocs.io/en/v0.7.2/?badge=v0.7.2) | 
-|  v0.8.0 	| [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v0.8.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v0.8.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v0.8) | 
-|   Master	|        | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master) | 
+|  v0.7.2 	| [Download] (https://github.com/SteveDoyle2/pyNastran/releases) |  [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.7.2)](http://pynastran-git.readthedocs.io/en/v0.7.2/?badge=v0.7.2) |
+|  v0.8.0 	| [Download] (https://github.com/SteveDoyle2/pyNastran/releases) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v0.8.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v0.8.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v0.8) |
+|  v1.0.0 	| [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v1.0)](http://pynastran-git.readthedocs.io/en/v1.0.0/?badge=v1.0.0) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.0.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.0.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.0) |
+|   Master	|        | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master) |
 
 <!---
 
@@ -16,11 +17,11 @@
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 --->
 
-### v0.8.0
+### v1.0.0
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2017/5/25)
 
-<!--- 
+<!---
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
 --->
 
@@ -40,7 +41,7 @@ pyNastran is an interface library to the various Nastran file formats (BDF, OP2,
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.  While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a commercial program.
 
-![GUI](https://github.com/SteveDoyle2/pynastran/blob/v0.8/pyNastran/gui/images/caero.png)
+![GUI](https://github.com/SteveDoyle2/pynastran/blob/master/pyNastran/gui/images/caero.png)
 
 
 <!--- Ripped off meshio  --->
@@ -52,11 +53,27 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 # News
 
-### pyNastran v0.9 progress (12/1/2016)
+### pyNastran v1.0.0 has been released (5/25/2017)
+This is a major release.  The focus this time has been on robustness and testing.
+Hopefully, it shows.  The software has also been relicensed to be **BSD-3**, which
+is a more permissive license and is the same one that numpy, scipy, and
+matplotlib use.
+
+Unfortunately, the GUI is more complicated.
+ - For open source projects : LGPL 2/3
+ - For companies that pay a license to Riverbank : LGPL 2/3
+ - For companies that don't pay a license fee : GPL 2/3
+However, you may distribute an unmodified binary.
+
+ - Programmatics:
+   - Dropping Python 3.3 support
+   - Adding Python 3.6 support
+
  - [OP2](http://pynastran-git.readthedocs.io/en/latest/quick_start/op2_demo.html)
    - preliminary random results (ATO/CRM/PSD/RMS/NO)
    - improved geometry support
    - MONPNT1/MONPNT3 reading
+   - MATPOOL matrices
 
  - F06 scripts
    - added a preliminary flutter (SOL 145) parser
@@ -66,8 +83,17 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      - input/output units
      - mode switching not fixed yet
 
+ - [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html):
+   - complex displacement support
+   - animation support
+   - vector results (real/complex)
+      - SPC Forces, MPC Forces, Load Vector, Applied Load
+        - minimal control presently
+      - No Grid Point Forces (e.g., freebody loads, interface loads)
+   - signficant speedups
+
  - [BDF](http://pynastran-git.readthedocs.io/en/latest/quick_start/bdf_demo.html)
-   - 297 cards supported
+   - 312 cards supported
    - faster node transforms using:
 
      ```python
@@ -75,7 +101,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      >>> xyz_cid0 = transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0, in_place=False)
      ```
 
-   - simplified card adding (**card defaults are still a work in progress**)
+   - simplified card adding
      ```python
      >>> model.add_grid(nid, xyz=[4.,5.,6.], comment='nid, cp, x, y, z')
      ```
@@ -90,11 +116,11 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
      $grid,nid,cp,x,y,z
      GRID,10,,4.0,5.0,6.0
      ```
-   
+
    - unit conversion
 
 - [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html)
-   - buttons for picking, rotation center
+   - buttons for picking, rotation center, distance
    - PyQt5 support
    - QScintilla & pygments support for scripting code editor
 

@@ -6,22 +6,29 @@ try:
 except ImportError:
     try:
         from PySide import QtCore, QtGui
+        from PySide.QtGui import QWidget, QApplication, QFileDialog
         _gui_mode = 1
     except ImportError:
         try:
             from PyQt4 import QtCore, QtGui
+            from PyQt4.QtGui import QWidget, QApplication, QFileDialog
             _gui_mode = 2
         except ImportError:
-            _gui_mode = None
+            try:
+                from PyQt5 import QtCore, QtGui
+                from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog
+                _gui_mode = 2
+            except ImportError:
+                _gui_mode = None
 
 if _gui_mode == 0:
     pass
 elif _gui_mode in [1, 2]:
-    class QtDialog(QtGui.QWidget):
+    class QtDialog(QWidget):
         """Dummy GUI Object"""
         def __init__(self):
             # super(DialogDemo, self).__init__()
-            QtGui.QWidget.__init__(self)
+            QWidget.__init__(self)
 
             # set the position and size of the window
             # make it really small, so we don't see this dummy window
@@ -68,14 +75,14 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
 
     elif _gui_mode in [1, 2]:  # PySide, PyQt4
         # checks if QApplication already exists
-        app = QtGui.QApplication.instance()
+        app = QApplication.instance()
         if not app: # create QApplication if it doesnt exist
-            app = QtGui.QApplication([])
+            app = QApplication([])
         form = QtDialog()
         form.show()
 
-        fname = QtGui.QFileDialog.getSaveFileName(form, Title,
-                                                  dirname, qt_wildcard)
+        fname = QFileDialog.getSaveFileName(form, Title,
+                                            dirname, qt_wildcard)
         app.exit()
         #print("fname =", fname)
     else:
@@ -108,13 +115,13 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
 
     elif _gui_mode in [1, 2]:  # PySide, PyQt4
         # checks if QApplication already exists
-        app = QtGui.QApplication.instance()
+        app = QApplication.instance()
         if not app: # create QApplication if it doesnt exist
-            app = QtGui.QApplication([])
+            app = QApplication([])
         form = QtDialog()
         form.show()
 
-        output = QtGui.QFileDialog.getOpenFileName(form, Title,
+        output = QFileDialog.getOpenFileName(form, Title,
             dirname, qt_wildcard)
         if len(output) == 1:
             fname, wildcard_level = output
@@ -128,7 +135,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     return fname, wildcard_level
 
 
-def _main():  # pragma: no cover
+def main():  # pragma: no cover
     """helps to test the functions"""
     wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
         "All files (*.*)|*.*"
@@ -139,4 +146,4 @@ def _main():  # pragma: no cover
 
 
 if __name__ == '__main__':  # pragma: no cover
-    _main()
+    main()

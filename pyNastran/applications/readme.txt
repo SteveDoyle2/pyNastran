@@ -23,6 +23,7 @@ They are described in order of how current/stable they are:
        - creates figures
      - no numpy array option, but it should be simple to support that
     - created during v0.7 development
+    - enhanced during v0.9; added tests
 
  2. hyper
     - don't really remember how to run it, but it does work
@@ -39,6 +40,7 @@ They are described in order of how current/stable they are:
     - Iterates to convergence
     - needs a public example problem
     - created around v0.1 (updated since)
+    - updated load mapping part to be far more general
 
  4. margin_checker
     - Recommended that you don't use this; created around v0.2

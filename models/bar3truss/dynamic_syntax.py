@@ -58,22 +58,21 @@ def main():
         model2 = None
 
     #========================================
-    model3 = OP2()
-    model3.read_op2(out_op2, vectorized=False)
     model4 = OP2()
-    model4.read_op2(out_op2, vectorized=True)
+    model4.read_op2(out_op2)
 
     eids = [2, 3]
     #========================================
-    for form, modeli, exists in [('f06', model2, is_f06), ('op2', model3, is_op2)]:
+    for form, modeli, exists in [('f06', model2, is_f06), ('op2', model4, is_op2)]:
         if exists:
             print("---%s---" % form)
             subcase1 = modeli.crod_stress[1]
             for eid in eids:
                 eid = 2
-                print('axial   stress[%s] = %s' % (eid, subcase1.axial[eid]))
-                print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
-                print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid])))
+                ieid = np.searchsorted(subcase1.elements, eid)
+                print('axial   stress[%s] = %s' % (eid, subcase1.axial[ieid]))
+                print('torsion stress[%s] = %s' % (eid, subcase1.torsion[ieid]))
+                print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[ieid], subcase1.torsion[ieid])))
     #========================================
     subcase1 = model4.crod_stress[1]
     combined_stress = calculate_stress(subcase1.data[0, :, 0], subcase1.data[0, :, 1])

@@ -153,8 +153,11 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
     for k in dir(obj):
         if k in keys_to_skip:
             continue
-        if check(k) and attr_type(getattr(obj, k)):
-            out.append(k)
+        try:
+            if check(k) and attr_type(getattr(obj, k)):
+                out.append(k)
+        except:
+            pass
     out.sort()
     return out
     #return sorted([k for k in dir(obj) if (check(k) and
@@ -281,3 +284,13 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
     #if debug:
         #print('%r' % msg)
     #return msg
+
+def remove_files(*filenames):
+    """delete a list of files"""
+    failed_list = []
+    for filename in filenames:
+        try:
+            os.remove(filename)
+        except OSError:  # OSError is the general version of WindowsError
+            failed_list.append(filename)
+    return failed_list

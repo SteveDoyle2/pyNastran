@@ -14,7 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six.moves import zip, range
-from numpy import array, unique, argsort, mean, allclose
+from numpy import array, unique, argsort, mean, allclose, ndarray
 
 from pyNastran.bdf.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -23,7 +23,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string, string_or_blank, double_string_or_blank)
-from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
+from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -301,6 +301,16 @@ class PBEAM(IntegratedLineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBEAM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'property_id')
         mid = integer(card, 2, 'material_id')
 
@@ -577,6 +587,16 @@ class PBEAM(IntegratedLineProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PBEAM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pid, mid, nsegs, ccf, x) = data[:5]
 
         rows = data[5:]
@@ -637,10 +657,12 @@ class PBEAM(IntegratedLineProperty):
         (k1, k2, s1, s2, nsia, nsib, cwa, cwb,
          m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = data[-1]
         return PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                     c1, c2, d1, d2, e1, e2,
-                     f1, f2, k1, k2, s1, s2,
-                     nsia, nsib, cwa, cwb, m1a, m2a, m1b,
-                     m2b, n1a, n2a, n1b, n2b, comment=comment)
+                     c1, c2, d1, d2, e1, e2, f1, f2,
+                     k1=k1, k2=k2, s1=s1, s2=s2,
+                     nsia=nsia, nsib=nsib, cwa=cwa, cwb=None,
+                     m1a=m1a, m2a=m2a, m1b=m1b, m2b=m2b,
+                     n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b,
+                     comment=comment)
 
     def set_optimization_value(self, name_str, value):
         if name_str == 'I1(A)':
@@ -693,7 +715,7 @@ class PBEAM(IntegratedLineProperty):
         mass_per_lengths = []
         for (area, nsm) in zip(self.A, self.nsm):
             mass_per_lengths.append(area * rho + nsm)
-        mass_per_length = integrate_positive_line(self.xxb, mass_per_lengths)
+        mass_per_length = integrate_positive_unit_line(self.xxb, mass_per_lengths)
         return mass_per_length
 
     def cross_reference(self, model):
@@ -736,31 +758,6 @@ class PBEAM(IntegratedLineProperty):
             assert self.mid_ref.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid_ref.type=%s' % (
                 self.type, self.mid_ref.type)
             #self.MassPerLength()
-
-    def _write_code_aster(self):  # PBEAM
-        a = self.Area()
-        iy = self.I11()
-        iz = self.I22()
-        j = self.J()
-        msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='P%s', # PBEAM\n" % (self.pid)
-        msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A','IY','IZ','JX'), # area, moments of inertia\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g),\n" % (a, iy, iz, j)
-
-        msg += "              ORIENTATION=_F( \n"
-        ## .. todo:: is this correct
-        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"
-        msg += "                  VALE=(1.0,0.0,0.0,)"
-
-        if [self.n1a, self.n1b] != [0., 0.]:
-            msg += "              \n),\n"
-            msg += "              CARA=('AX','AY'), # shear centers\n"
-            msg += "              VALE=(%g, %g),\n" % (self.n1a, self.n1b)
-            msg += "             ),\n"
-        else:
-            msg += " )),\n"
-        return msg
 
     def raw_fields(self):
         list_fields = ['PBEAM', self.pid, self.Mid()]
@@ -909,6 +906,7 @@ class PBEAML(IntegratedLineProperty):
     valid_types = {
         "ROD": 1,
         "TUBE": 2,
+        "TUBE2": 2,
         "L": 4,
         "I": 6,
         "CHAN": 4,
@@ -930,7 +928,34 @@ class PBEAML(IntegratedLineProperty):
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, pid, mid, group, Type, xxb, so, dims, nsm, comment=''):
+    def __init__(self, pid, mid, Type, xxb, dims, so=None, nsm=None,
+                 group='MSCBML0', comment=''):
+        """
+        Creates a PBEAML card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        xxb : List[float]
+            The percentage locations along the beam [0., ..., 1.]
+        dims : List[dim]
+            dim : List[float]
+                The dimensions for each section
+        group : str; default='MSCBML0'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
+        so : List[str]; default=None
+            YES, YESA, NO
+            None : [0.] * len(xxb)
+        nsm : List[float]; default=None
+            nonstructural mass per unit length
+            None : [0.] * len(xxb)
+        comment : str; default=''
+            a comment for the card
+        """
         IntegratedLineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -943,16 +968,36 @@ class PBEAML(IntegratedLineProperty):
         self.Type = Type
         ndim = self.valid_types[self.Type]
 
+        nxxb = len(xxb)
+        if nsm is None:
+            nsm = [0.] * nxxb
+        if so is None:
+            so = ['YES'] * nxxb
+
         self.dim = dims
         for xxbi, dim in zip(xxb, dims):
+            if not isinstance(dim, (list, ndarray)):
+                msg = 'dims = List[dim]; dim=List[floats]; type(dim)=%s' % (type(dim))
+                raise TypeError(msg)
             assert len(dim) == ndim, 'Type=%s ndim=%s len(dim)=%s xxb=%s dim=%s' % (
                 Type, ndim, len(dim), xxbi, dim)
         self.xxb = xxb
         self.so = so
         self.nsm = nsm
+        A = self.Area()
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBEAML card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', 'MSCBML0')
@@ -986,7 +1031,7 @@ class PBEAML(IntegratedLineProperty):
 
             dim = []
             for ii in range(ndim):
-                dimi = double(card, i, 'dim_n=%i_ii=%i' % (n, ii))
+                dimi = double(card, i, 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1))
                 dim.append(dimi)
                 i += 1
             dims.append(dim)
@@ -995,24 +1040,86 @@ class PBEAML(IntegratedLineProperty):
             nsm.append(nsmi)
             n += 1
             i += 1
-        return PBEAML(pid, mid, group, Type, xxb, so, dims, nsm, comment=comment)
-
-    #def add_op2_data(self, data, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError(data)
+        return PBEAML(pid, mid, Type, xxb, dims, group=group,
+                      so=so, nsm=nsm, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        rho = self.Rho()
         nsm = self.Nsm()
         area = self.Area()
-        mass_per_length = self.MassPerLength()
         assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
-        assert isinstance(rho, float), 'rho=%r\n%s' % (rho, str(self))
         assert isinstance(nsm, float), 'nsm=%r\n%s' % (nsm, str(self))
         assert isinstance(area, float), 'area=%r\n%s' % (area, str(self))
-        assert isinstance(mass_per_length, float), 'mass/L=%r\n%s' % (mass_per_length, str(self))
+        if xref:
+            rho = self.Rho()
+            mass_per_length = self.MassPerLength()
+            assert isinstance(rho, float), 'rho=%r\n%s' % (rho, str(self))
+            assert isinstance(mass_per_length, float), 'mass/L=%r\n%s' % (mass_per_length, str(self))
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PBEAML card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        TODO: this doesn't work right for the calculation of area
+              the card is all messed up
+        """
+        (pid, mid, group, Type, fvalues) = data
+        group = group.strip()
+        Type = Type.strip()
+        ndim = cls.valid_types[Type]
+        nfvalues = len(fvalues)
+        nsections = nfvalues // (3+ndim)
+        sections = fvalues.reshape(nsections, ndim+3)
+
+        xxb = []
+        so = []
+        dims = []
+        nsm = []
+        for i, section in enumerate(sections):
+            xxbi = section[0]
+            if i > 0 and allclose(xxbi, 0.0):
+                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
+                continue
+
+
+            sof = section[1]
+            if sof == 0.:
+                sos = 'YES'
+            elif sof == 1.:
+                sos = 'NO'
+            else:
+                raise NotImplementedError(sof)
+
+            dim = list(section[2:-1])
+            nsmi = section[-1]
+            #print(dim, section)
+            xxb.append(xxbi)
+            so.append(sos)
+            dims.append(dim)
+            nsm.append(nsmi)
+        return PBEAML(pid, mid, Type, xxb, dims, group=group,
+                      so=so, nsm=nsm, comment=comment)
+
+    def get_mass_per_lengths(self):
+        """helper method for MassPerLength"""
+        rho = self.Rho()
+        mass_per_lengths = []
+        for (dim, nsm) in zip(self.dim, self.nsm):
+            a = _bar_areaL('PBEAML', self.Type, dim, self)
+            try:
+                mass_per_lengths.append(a * rho + nsm)
+            except:
+                msg = "PBEAML a*rho+nsm a=%s rho=%s nsm=%s" % (a, rho, nsm)
+                raise RuntimeError(msg)
+        return mass_per_lengths
 
     def MassPerLength(self):
         r"""
@@ -1022,17 +1129,9 @@ class PBEAML(IntegratedLineProperty):
 
         .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) dx
         """
-        rho = self.Rho()
-        massPerLs = []
-        for (dim, nsm) in zip(self.dim, self.nsm):
-            a = _bar_areaL('PBEAML', self.Type, dim)
-            try:
-                massPerLs.append(a * rho + nsm)
-            except:
-                msg = "PBEAML a*rho+nsm a=%s rho=%s nsm=%s" % (a, rho, nsm)
-                raise RuntimeError(msg)
-        massPerL = integrate_positive_line(self.xxb, massPerLs)
-        return massPerL
+        mass_per_lengths = self.get_mass_per_lengths()
+        mass_per_length = integrate_positive_unit_line(self.xxb, mass_per_lengths)
+        return mass_per_length
 
     def Area(self):
         r"""
@@ -1044,9 +1143,9 @@ class PBEAML(IntegratedLineProperty):
         """
         areas = []
         for dim in self.dim:
-            areas.append(_bar_areaL('PBEAML', self.Type, dim))
+            areas.append(_bar_areaL('PBEAML', self.Type, dim, self))
         try:
-            A = integrate_line(self.xxb, areas)
+            A = integrate_unit_line(self.xxb, areas)
         except ValueError:
             print('PBEAML integration error; pid=%s x/xb=%s areas=%s' % (self.pid, self.xxb, areas))
             A = mean(areas)
@@ -1095,47 +1194,30 @@ class PBEAML(IntegratedLineProperty):
     def J(self):
         #raise NotImplementedError()
         #Js = self._J()
-        #j = integrate_positive_line(self.xxb, Js)
+        #j = integrate_positive_unit_line(self.xxb, Js)
         j = None
         return j
 
     def I11(self):
-        #i1 = integrate_positive_line(self.xxb,self.i1)
+        #i1 = integrate_positive_unit_line(self.xxb,self.i1)
         i1 = None
         return i1
 
     def I22(self):
-        #i2 = integrate_positive_line(self.xxb,self.i2)
+        #i2 = integrate_positive_unit_line(self.xxb,self.i2)
         i2 = None
         return i2
 
     def I12(self):
-        #i12 = integrate_line(self.xxb,self.i12)
+        #i12 = integrate_unit_line(self.xxb,self.i12)
         i12 = None
         return i12
-
-    def _write_code_aster(self, icut=0, iface=0, istart=0):  # PBEAML
-        msg = ''
-        msg2 = 'Cut_%s = geompy.MakeCut(' % (icut + 1)
-        for xxb, dim, nsm in zip(self.xxb, self.dim, self.nsm):
-            msg += self.CA_Section(iface, istart, self.dim)
-            msg2 += 'Face_%i, ' % (iface + 1)
-            iface += 1
-            istart += len(self.dim)
-        msg2 = msg2[-2:]
-        msg2 += ')\n'
-
-        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
-            icut + 1, icut + 1)
-        icut += 1
-        return (msg + msg2, icut, iface, istart)
 
     def raw_fields(self):
         list_fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type,
                        None, None, None, None]
-        #print("self.nsm = ",self.nsm)
-        #print("xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,
-        #                                     self.dim,self.nsm))
+        #print("xxb=%s so=%s dim=%s nsm=%s" % (
+            #self.xxb,self.so, self.dim,self.nsm))
         for (i, xxb, so, dim, nsm) in zip(count(), self.xxb, self.so,
                                           self.dim, self.nsm):
             if i == 0:
@@ -1146,9 +1228,9 @@ class PBEAML(IntegratedLineProperty):
         return list_fields
 
     def repr_fields(self):
-        #group = set_blank_if_default(self.group, 'MSCBMLO')
+        group = set_blank_if_default(self.group, 'MSCBML0')
         list_fields = self.raw_fields()
-        #list_fields[3] = group
+        list_fields[3] = group
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1226,6 +1308,16 @@ class PBMSECT(LineProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBMSECT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : List[str]
+            this card is special and is not a ``BDFCard`` like other cards
+        comment : str; default=''
+            a comment for the card
+        """
         line0 = card[0]
         if '\t' in line0:
             line0 = line0.expandtabs()
@@ -1389,12 +1481,66 @@ class PBMSECT(LineProperty):
 
 
 class PBCOMP(LineProperty):
+    """
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |   1    |   2  |  3  |  4  |   5  |  6 |  7  |   8    |  9  |
+    +========+======+=====+=====+======+====+=====+========+=====+
+    | PBCOMP | PID  | MID | A   |  I1  | I2 | I12 |   J    | NSM |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |        |  K1  | K2  | M1  |  M2  | N1 | N2  | SYMOPT |     |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |        |  Y1  | Z1  | C1  | MID1 |    |     |        |     |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |        |  Y2  | Z2  | C2  | MID2 |    |     |        |     |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    |        | ...  | ... | ... |      |    |     |        |     |
+    +--------+------+-----+-----+------+----+-----+--------+-----+
+    """
     type = 'PBCOMP'
 
     def __init__(self, pid, mid, y, z, c, mids,
                  area=0.0, i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
                  k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
                  symopt=0, comment=''):
+        """
+        Creates a PBCOMP card
+
+        Parameters
+        ---------
+        pid : int
+            Property ID
+        mid : int
+            Material ID
+        mids : List[int]
+            Material ID for the i-th integration point
+        y / z : List[float]
+            The (y,z) coordinates of the lumped areas in the element
+            coordinate system
+        c : List[float]; default=0.0
+            Fraction of the total area for the i-th lumped area
+            default not supported...
+        area : float
+            Area of beam cross section
+        i1 / i2 : float; default=0.0
+            Area moment of inertia about plane 1/2 about the neutral axis
+        i12 : float; default=0.0
+           area product of inertia
+        j : float; default=0.0
+            Torsional moment of interia
+        nsm : float; default=0.0
+            Nonstructural mass per unit length
+        k1 / k2 : float; default=1.0
+            Shear stiffness factor K in K*A*G for plane 1/2
+        m1 / m2 : float; default=0.0
+            The (y,z) coordinates of center of gravity of nonstructural mass
+        n1 / n2 : float; default=0.0
+            The (y,z) coordinates of neutral axis
+        symopt : int; default=0
+            Symmetry option to input lumped areas for the beam cross section
+            0 < Integer < 5
+        comment : str; default=''
+            a comment for the card
+        """
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -1424,8 +1570,29 @@ class PBCOMP(LineProperty):
         self.mids = mids
         assert 0 <= self.symopt <= 5, 'symopt=%i is invalid; ' % self.symopt
 
+    def validate(self):
+        assert isinstance(self.mids, list), 'mids=%r type=%s' % (self.mids, type(self.mids))
+        assert isinstance(self.y, list), 'y=%r type=%s' % (self.y, type(self.y))
+        assert isinstance(self.z, list), 'z=%r type=%s' % (self.z, type(self.z))
+        assert isinstance(self.c, list), 'c=%r type=%s' % (self.c, type(self.c))
+
+        assert len(self.mids) == len(self.y), 'len(mids)=%s len(y)=%s' % (len(self.mids), len(self.y))
+        assert len(self.mids) == len(self.z), 'len(mids)=%s len(z)=%s' % (len(self.mids), len(self.z))
+        assert len(self.mids) == len(self.c), 'len(mids)=%s len(c)=%s' % (len(self.mids), len(self.c))
+        assert self.symopt in [0, 1, 2, 3, 4, 5], 'symopt=%r' % self.symopt
+
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBCOMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         area = double_or_blank(card, 3, 'Area', 0.0)
@@ -1466,8 +1633,26 @@ class PBCOMP(LineProperty):
                       k1, k2, m1, m2, n1, n2,
                       symopt, comment=comment)
 
-    #def add_op2_data(self, data, comment=''):
-        #raise NotImplementedError()
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        data1, data2 = data
+        (pid, mid, area, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, nsections) = data1
+        y = []
+        z = []
+        c = []
+        mids = []
+
+        symopt = 5
+        for yi, zi, ci, midi in data2:
+            y.append(yi)
+            z.append(zi)
+            c.append(ci)
+            mids.append(midi)
+        #raise NotImplementedError(data)
+        return PBCOMP(pid, mid, y, z, c, mids,
+                      area, i1, i2, i12, j, nsm,
+                      k1, k2, m1, m2, n1, n2,
+                      symopt, comment=comment)
 
     def _verify(self, xref=True):
         pid = self.Pid()

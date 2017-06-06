@@ -13,20 +13,15 @@ class TestLog(unittest.TestCase):
 
     @staticmethod
     def test_log_01():
-        print('---------------------------------------------------------------')
         model = BDF(debug=True)
         model.read_bdf(bdf_filename)
 
-        print('---------------------------------------------------------------')
         model2 = BDF(debug=False)
         model2.read_bdf(bdf_filename)
 
-        print('---------------------------------------------------------------')
         model3 = BDF(debug=None)
         model3.read_bdf(bdf_filename)
-        print('---------------------------------------------------------------')
 
 if __name__ == "__main__":
-    import unittest
     unittest.main()
 

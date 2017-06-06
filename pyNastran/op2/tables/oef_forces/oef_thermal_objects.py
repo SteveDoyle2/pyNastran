@@ -1,7 +1,7 @@
 #pylint disable=C0103,C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import integer_types
 from numpy import zeros, empty, array_equal
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import get_key0, write_float_13e, write_floats_13e, _eigenvalue_header
@@ -64,7 +64,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -126,17 +126,15 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux):
-        self.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
-
     def add_sort1(self, dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_data_type[self.ielement] = etype
         self.data[self.itime, self.ielement, :] = [xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -246,7 +244,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_parent = zeros((self.nelements, 2), dtype='int32')
@@ -315,6 +313,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         return True
 
     def add_sort1(self, dt, eid, parent, grad_fluxes):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         #icord,
         #print([eid, parent])
@@ -326,7 +325,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -413,7 +412,7 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
@@ -433,7 +432,6 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
     def add(self, dt, eid, parent, grad_fluxes):
         self.parent[eid] = parent
         #self.eType[eid]    = eType
-
         self.grad[eid] = {}
         self.flux[eid] = {}
         for grad_flux in grad_fluxes:
@@ -442,6 +440,7 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             self.flux[eid][nid] = [xflux, yflux, zflux]
 
     def add_sort1(self, dt, eid, parent, grad_fluxes):
+        """unvectorized method for adding SORT1 transient data"""
         if dt not in self.grad:
             self.add_new_transient(dt)
         self.parent[eid] = parent
@@ -513,7 +512,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_parent_coord_icord = zeros((self.nelements, 4), dtype='int32')
@@ -582,6 +581,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         return True
 
     def add_sort1(self, dt, eid, parent, coord, icord, theta, grad_fluxes):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         #icord,
         #print([eid, parent, coord, theta])
@@ -592,7 +592,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -681,7 +681,7 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
@@ -712,6 +712,7 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.flux[eid][nid] = [xflux, yflux, zflux]
 
     def add_sort1(self, nnodes, dt, eid, parent, coord, icord, theta, grad_fluxes):
+        """unvectorized method for adding SORT1 transient data"""
         if dt not in self.grad:
             self.add_new_transient(dt)
         self.parent[eid] = parent
@@ -790,7 +791,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_parent_coord = zeros((self.nelements, 3), dtype='int32')
@@ -873,8 +874,8 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         return True
 
     def add_sort1(self, dt, eid, parent, coord, icord, grad_fluxes):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
-        #icord
         self.element_parent_coord[self.ielement, :] = [eid, parent, coord]
         for grad_flux in grad_fluxes:
             self.vugrid[self.itime, self.itotal, :] = grad_flux[0]
@@ -882,7 +883,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
             self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -975,7 +976,7 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         nelements = len(self. parent)
         if self.nonlinear_factor is not None:  # transient
@@ -1007,6 +1008,7 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
             self.flux[eid][nid] = [xflux, yflux, zflux]
 
     def add_sort1(self, nnodes, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         [eid, parent, coord, icord, grad_fluxes] = data
         if dt not in self.grad:
             self.add_new_transient(dt)
@@ -1126,7 +1128,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.nelements, 2), dtype='int32')
@@ -1183,16 +1185,14 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, cntl_node, free_conv, free_conv_k):
-        self.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
-
     def add_sort1(self, dt, eid, cntl_node, free_conv, free_conv_k):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element_node[self.ielement, :] = [eid, cntl_node]
         self.data[self.itime, self.ielement, :] = [free_conv, free_conv_k]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1305,7 +1305,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -1358,17 +1358,15 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                     raise ValueError(msg)
         return True
 
-    def add(self, dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal):
-        self.add_sort1(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
-
     def add_sort1(self, dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_type[self.ielement] = etype
         self.data[self.itime, self.ielement, :] = [fapplied, free_conv, force_conv, frad, ftotal]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

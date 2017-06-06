@@ -147,7 +147,7 @@ class TestUtils(unittest.TestCase):
         b = B1(7)
         attributes = object_attributes(b, "all")
         version_info = sys.version_info
-        if sys.version_info < (3, 0):
+        if version_info < (3, 0):
             self.assertEqual(attributes, [
                 '__class__', '__delattr__', '__dict__',
                 '__doc__', '__format__', '__getattribute__', '__hash__',
@@ -162,8 +162,12 @@ class TestUtils(unittest.TestCase):
                 '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__',
                 '__setattr__', '__sizeof__', '__str__', '__subclasshook__',
                 '__weakref__', '_a', '_b', 'a', 'b', 'c']
-            if sys.version_info > (3, 3):
+            if version_info > (3, 3): # inclusive
                 expected.append('__dir__')
+            if version_info > (3, 6):
+                expected.append('__init_subclass__')
+                #print('\nactual   = %s' % ','.join(list(sorted(attributes))))
+                #print('expected = %s' % ','.join(list(sorted(expected))))
             self.assertEqual(sorted(attributes), sorted(expected))
 
     def test_write_class(self):

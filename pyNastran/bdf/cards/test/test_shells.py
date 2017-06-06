@@ -1,10 +1,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import range
 import unittest
+from six.moves import range
 from numpy import array
 
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestShells(unittest.TestCase):
     def _make_cquad4(self, model, rho, nu, G, E, t, nsm):
@@ -272,7 +274,7 @@ class TestShells(unittest.TestCase):
         eids = [10, 11]
         nids = model.get_node_ids_with_elements(eids)
         assert nids == set([1, 2, 3, 4, 5, 6]), nids
-
+        save_load_deck(model)
 
 
     def test_pcomp_01(self):
@@ -349,7 +351,7 @@ class TestShells(unittest.TestCase):
         #self.St = data[8]
         #self.Sc = data[9]
         #self.Ss = data[10]
-        #self.Mcsid = data[11]
+        #self.mcsid = data[11]
         mid = 1
         E = None
         G = None
@@ -359,13 +361,13 @@ class TestShells(unittest.TestCase):
         St = None
         Sc = None
         Ss = None
-        Mcsid = None
-        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mcsid = None
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         with self.assertRaises(ValueError):
             m = MAT1.add_op2_data(mat1)
 
         G = 42.
-        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         m = MAT1.add_op2_data(mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
@@ -491,13 +493,13 @@ class TestShells(unittest.TestCase):
         St = None
         Sc = None
         Ss = None
-        Mcsid = None
-        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mcsid = None
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         with self.assertRaises(ValueError):
             m = MAT1.add_op2_data(mat1)
 
         G = 42.
-        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         m = MAT1.add_op2_data(mat1)
 
         for iply in range(len(p.plies)):
@@ -558,12 +560,14 @@ class TestShells(unittest.TestCase):
         nids = [1, 2, 3, 4]
 
         cshear = model.add_cshear(eid, pid, nids, comment='cshear')
-        pshear = model.add_pshear(pid, t, mid, nsm=0., f1=0., f2=0., comment='')
+        pshear = model.add_pshear(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
 
         E = 30.e7
         G = None
         nu = 0.3
         mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
+        model.pop_parse_errors()
+        model.validate()
 
         cshear.raw_fields()
         cshear.write_card(size=8)
@@ -577,9 +581,11 @@ class TestShells(unittest.TestCase):
         model._verify_bdf(xref=False)
         model.cross_reference()
         model._verify_bdf(xref=True)
+        model.mass_properties()
 
         cshear.write_card(size=8)
         pshear.write_card(size=8)
+        #save_load_deck(model)
 
     def test_shells(self):
         """tests a CTRIA3/CQUAD4/PSHELL and CTRIA6/CQUAD8/CQUAD/PCOMP"""
@@ -740,6 +746,129 @@ class TestShells(unittest.TestCase):
         #pcomp.write_card(size=8)
         #pcomp.write_card(size=16)
         #pcomp.write_card(size=16, is_double=True)
+
+    def test_ctriar_cquadr(self):
+        """tests a CTRIAR/PSHELL/MAT8"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        eid = 6
+        pid = 13
+        nids = [1, 2, 3]
+        ctriar = model.add_ctriar(eid, pid, nids, comment='ctriar')
+        ctriar.raw_fields()
+        ctriar.write_card(size=8, is_double=False)
+        ctriar.write_card(size=16, is_double=False)
+        ctriar.flipNormal()
+
+        eid = 8
+        nids = [1, 2, 3, 4]
+        cquadr = model.add_cquadr(eid, pid, nids, comment='cquadr')
+        cquadr.raw_fields()
+        cquadr.write_card(size=8, is_double=False)
+        cquadr.write_card(size=16, is_double=False)
+        cquadr.flipNormal()
+
+        mid = 42
+        pshell = model.add_pshell(pid, mid1=mid, t=0.2)
+        e11 = 1e7
+        e22 = 1e6
+        nu12 = 0.3
+        mat8 = model.add_mat8(mid, e11, e22, nu12)
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(model)
+
+    def test_cplstn34(self):
+        """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        pid = 4
+        eid = 3
+        nids = [1, 2, 3, 4]
+        cplstn4 = model.add_cplstn4(eid, pid, nids, comment='cplstn4')
+
+        eid = 5
+        nids = [1, 2, 3]
+        mid = 10
+        cplstn3 = model.add_cplstn3(eid, pid, nids, comment='cplstn3')
+        pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
+                                  formulation_option=0, comment='pplane')
+        E = 1e7
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        cplstn3.raw_fields()
+        cplstn4.raw_fields()
+        pplane.raw_fields()
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        cplstn3.write_card(size=8)
+        cplstn4.write_card(size=8)
+        pplane.write_card(size=8)
+        model.cross_reference()
+        model.pop_xref_errors()
+        #cplstn3.write_card(size=8)
+        #cplstn4.write_card(size=8)
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+
+    def test_cplstn68(self):
+        """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(5, xyz=[.5, 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(6, xyz=[1., .5, 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(7, xyz=[.5, 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(8, xyz=[0., .5, 0.])
+        pid = 4
+        eid = 3
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        cplstn8 = model.add_cplstn8(eid, pid, nids, comment='cplstn8')
+
+        eid = 5
+        nids = [1, 2, 3, 4, 5, 6]
+        mid = 10
+        cplstn6 = model.add_cplstn6(eid, pid, nids, comment='cplstn6')
+        pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
+                                  formulation_option=0, comment='pplane')
+        E = 1e7
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        cplstn6.raw_fields()
+        cplstn8.raw_fields()
+        pplane.raw_fields()
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        cplstn6.write_card(size=8)
+        cplstn8.write_card(size=8)
+        pplane.write_card(size=8)
+        model.cross_reference()
+        model.pop_xref_errors()
+        #cplstn3.write_card(size=8)
+        #cplstn4.write_card(size=8)
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

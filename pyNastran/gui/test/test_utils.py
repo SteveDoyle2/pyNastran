@@ -3,7 +3,7 @@ import os
 import unittest
 
 import pyNastran
-from pyNastran.gui.utils import load_csv, load_deflection_csv, load_user_geom
+from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
 
 pkg_path = pyNastran.__path__[0]
 

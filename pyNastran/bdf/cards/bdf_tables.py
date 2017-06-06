@@ -60,13 +60,6 @@ class Table(BaseCard):
     def __init__(self):
         pass
 
-    def _map_axis(self, axis):
-        if axis == 0:
-            axis_type = 'LINEAR'
-        else:
-            raise ValueError('axis=%r' % axis)
-        return axis_type
-
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
 
@@ -107,14 +100,24 @@ class DTABLE(BaseCard):
         if comment:
             self.comment = comment
         self.default_values = default_values
-        print('default_values = %s' % default_values)
+        #print('default_values = %s' % default_values)
         #for key, value in iteritems(self.default_values):
             #print(key, type(key))
         assert len(self.default_values) > 0, self.default_values
-        print(self)
+        #print(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a DTABLE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         nfields = len(card) - 1
         assert nfields % 2 == 0, nfields
 
@@ -141,7 +144,7 @@ class DTABLE(BaseCard):
 
     def raw_fields(self):
         list_fields = ['DTABLE']
-        print('***default_values = %s' % self.default_values)
+        #print('***default_values = %s' % self.default_values)
         assert len(self.default_values) > 0, self.default_values
         for label, value in sorted(iteritems(self.default_values)):
             list_fields += [label, value]
@@ -176,6 +179,16 @@ class TABLED1(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
@@ -201,11 +214,11 @@ class TABLED1(Table):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         tid = data[0]
-        xaxis = cls._map_axis(data[1])
-        yaxis = cls._map_axis(data[2])
+        xaxis = _map_axis(data[1])
+        yaxis = _map_axis(data[2])
         xy = data[3:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
@@ -281,6 +294,16 @@ class TABLED2(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
 
@@ -308,7 +331,7 @@ class TABLED2(Table):
         x1 = data[1]
         xy = data[2:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED2(tid, x1, x, y, comment=comment)
@@ -340,6 +363,16 @@ class TABLED3(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
@@ -403,6 +436,16 @@ class TABLED4(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
@@ -468,7 +511,7 @@ class TABLED4(Table):
 
 class TABDMP1(Table):
     type = 'TABDMP1'
-    def __init__(self, tid, Type, x, y, comment=''):
+    def __init__(self, tid, x, y, Type='G', comment=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -480,6 +523,16 @@ class TABDMP1(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABDMP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         Type = string_or_blank(card, 2, 'Type', 'G')
 
@@ -500,7 +553,7 @@ class TABDMP1(Table):
         string(card, nfields, 'ENDT')
 
         x, y = make_xy(tid, 'TABDMP1', xy)
-        return TABDMP1(tid, Type, x, y, comment=comment)
+        return TABDMP1(tid, x, y, Type=Type, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -537,6 +590,16 @@ class TABLEM1(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEM1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
 
         nfields = len(card) - 1
@@ -562,7 +625,7 @@ class TABLEM1(Table):
         tid = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM1(tid, x, y, comment=comment)
@@ -590,6 +653,16 @@ class TABLEM2(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
 
@@ -617,7 +690,7 @@ class TABLEM2(Table):
         x1 = data[1]
         xy = data[2:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM2(tid, x1, x, y, comment=comment)
@@ -649,6 +722,16 @@ class TABLEM3(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEM3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
@@ -678,7 +761,7 @@ class TABLEM3(Table):
         x2 = data[2]
         xy = data[3:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEM3(tid, x1, x2, x, y, comment=comment)
@@ -712,6 +795,16 @@ class TABLEM4(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEM4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
@@ -734,6 +827,16 @@ class TABLEM4(Table):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABLEM4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         tid = data[0]
         x1 = data[1]
         x2 = data[2]
@@ -754,7 +857,23 @@ class TABLEM4(Table):
 class TABLES1(Table):
     type = 'TABLES1'
 
-    def __init__(self, tid, Type, x, y, comment=''):
+    def __init__(self, tid, x, y, Type=1, comment=''):
+        """
+        Adds a TABLES1 card, which defines a stress dependent material
+
+        Parameters
+        ----------
+        tid : int
+            Table ID
+        Type : int; default=1
+            Type of stress-strain curve (1 or 2)
+            1 - Cauchy (true) stress vs. total true strain
+            2 - Cauchy (true) stress vs. plastic true strain (MSC only)
+        x, y : List[float]
+            table values
+        comment : str; default=''
+            a comment for the card
+        """
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -766,6 +885,16 @@ class TABLES1(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLES1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         Type = integer_or_blank(card, 2, 'Type', 1)
 
@@ -785,18 +914,27 @@ class TABLES1(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
         x, y = make_xy(tid, 'TABLES1', xy)
-        return TABLES1(tid, Type, x, y, comment=comment)
+        return TABLES1(tid, x, y, Type=Type, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABLES1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         tid = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        #return TABLES1(tid, Type, x, y, comment=comment)
-        raise NotImplementedError(data)
+        return TABLES1(tid, x, y, Type=1, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -823,6 +961,16 @@ class TABLEST(Table):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABLEST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
 
         nfields = len(card) - 1
@@ -845,10 +993,20 @@ class TABLEST(Table):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABLEST card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         tid = data[0]
         xy = data[1:]
         xy = np.array(xy, dtype='float64')
-        xy.reshape(xy.size // 2, 2)
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEST(tid, x, y, comment=comment)
@@ -890,6 +1048,16 @@ class TABRND1(RandomTable):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABRND1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
@@ -914,9 +1082,19 @@ class TABRND1(RandomTable):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a TABRND1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         tid = data[0]
-        xaxis = cls._map_axis(data[1])
-        yaxis = cls._map_axis(data[2])
+        xaxis = _map_axis(data[1])
+        yaxis = _map_axis(data[2])
         xy = data[3:]
         xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
@@ -925,13 +1103,6 @@ class TABRND1(RandomTable):
 
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
-
-    def _map_axis(self, axis):
-        if axis == 0:
-            axis_type = 'LINEAR'
-        else:
-            raise ValueError('axis=%r' % (axis))
-        return axis_type
 
     def raw_fields(self):
         xy = []
@@ -962,6 +1133,24 @@ class TABRNDG(RandomTable):
     type = 'TABRNDG'
 
     def __init__(self, tid, Type, LU, WG, comment=''):
+        """
+        Creates a TABRNDG card
+
+        Parameters
+        ----------
+        tid : int
+            table id
+        Type : int
+           PSD type
+           1 : von Karman
+           2 : Dryden
+        LU : float
+            Scale of turbulence divided by velocity (units of time)
+        WG : float
+            Root-mean-square gust velocity
+        comment : str; default=''
+            a comment for the card
+        """
         RandomTable.__init__(self)
         if comment:
             self.comment = comment
@@ -978,6 +1167,16 @@ class TABRNDG(RandomTable):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a TABRNDG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         tid = integer(card, 1, 'tid')
         Type = integer(card, 2, 'Type')
         LU = double(card, 3, 'LU')
@@ -990,3 +1189,11 @@ class TABRNDG(RandomTable):
 
     def repr_fields(self):
         return self.raw_fields()
+
+
+def _map_axis(axis):
+    if axis == 0:
+        axis_type = 'LINEAR'
+    else:
+        raise ValueError('axis=%r' % axis)
+    return axis_type

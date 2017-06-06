@@ -249,13 +249,6 @@ class GetMethods(BDFAttributes):
             raise KeyError('sid=%s not found%s.  Allowed SETx=%s'
                            % (sid, msg, np.unique(list(self.sets.keys()))))
 
-    def SetSuper(self, seid, msg=''):
-        try:
-            return self.setsSuper[seid]
-        except KeyError:
-            raise KeyError('seid=%s not found%s.  Allowed SETx=%s'
-                           % (seid, msg, np.unique(list(self.setsSuper.keys()))))
-
     #--------------------
     # METHOD CARDS
     def Method(self, sid, msg=''):

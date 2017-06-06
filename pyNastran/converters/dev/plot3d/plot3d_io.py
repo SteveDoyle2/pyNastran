@@ -1,16 +1,17 @@
-raise NotImplementedError()
-
+from __future__ import print_function
 from six import iteritems
 from six.moves import range
 import vtk
 from vtk import vtkQuad
-from pyNastran.converters.dev.plot3d.plot3d import Plot3d
 
 from numpy import zeros, array, cross, dot
 from numpy.linalg import det, norm
 
+from pyNastran.converters.dev.plot3d.plot3d import Plot3d
 
-class Plot3d_io(object):
+raise NotImplementedError()
+
+class Plot3d_io(object):  # pragma: no cover
     def __init__(self):
         pass
 
@@ -40,7 +41,8 @@ class Plot3d_io(object):
         for iblock, shape in sorted(iteritems(model.block_shapes)):
             npoints += shape[0] * shape[1] * shape[2]
             nelements += (shape[0] - 1)  * (shape[1] - 1) * (shape[2] - 1)
-        nblocks = iblock
+
+        nblocks = len(model.block_shapes)
         self.nNodes = npoints
         self.nElements = nelements
 
@@ -75,9 +77,8 @@ class Plot3d_io(object):
             for k in range(nk):
                 for j in range(nj):
                     for i in range(ni):
-                        points.InsertPoint(nid, x[i, j, 0],
-                                                y[i, j, 0],
-                                                z[i, j, 0])
+                        points.InsertPoint(
+                            nid, x[i, j, 0], y[i, j, 0], z[i, j, 0])
                         nid += 1
 
             for j in range(nj - 1):
@@ -114,8 +115,7 @@ class Plot3d_io(object):
 
         #return
 
-        # loadCart3dResults - regions/loads
-        self. turn_text_on()
+        # loadPlot3dResults - regions/loads
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
@@ -155,7 +155,7 @@ class Plot3d_io(object):
         Yn = zeros(len(nodes), 'float64')
         Zn = zeros(len(nodes), 'float64')
 
-        for i,element in enumerate(elements):
+        for i, element in enumerate(elements):
             p1, p2, p3, p4 = element
             P1 = array(nodes[p1])
             P2 = array(nodes[p2])
@@ -192,18 +192,6 @@ class Plot3d_io(object):
                 #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
 
-    def load_panair_results(self, panairFileName, dirname):
-        #self.result_cases = {}
-        pass
-
-if __name__ == '__main__':  # pragma: no cover
-    print('')
-
-    def removeOldGeometry(self):
-        pass
-
-    test = PanairIO()
-    test.removeOldGeometry = removeOldGeometry
-
-    #test.load_panair_geometry('SWB.INP','',True,True)
-    test.load_panair_geometry('models/NAC6.INP', '', True, True)
+    #def load_panair_results(self, panairFileName, dirname):
+        ##self.result_cases = {}
+        #pass

@@ -21,7 +21,8 @@ np.seterr(all='raise')
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path, integer_types
-from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
+from pyNastran.bdf.errors import (
+    CrossReferenceError, CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
 from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
@@ -47,7 +48,7 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None, nastran='', encoding=None,
                       size=None, is_double=None, post=None, sum_load=True, dev=True,
-                      crash_cards=None):
+                      crash_cards=None, pickle_obj=True):
     """
     Runs multiple BDFs
 
@@ -86,6 +87,9 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         False : doesn't crash; useful for running many tests
     crash_cards : List[str, str, ...]
         list of cards that are invalid and automatically crash the run
+    pickle_obj : bool; default=True
+        tests pickling
+
     Usage
     -----
     All control lists must be the same length.
@@ -150,7 +154,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                                                   nastran=nastran, size=size, is_double=is_double,
                                                   nerrors=0,
                                                   post=post, sum_load=sum_load, dev=dev,
-                                                  crash_cards=crash_cards)
+                                                  crash_cards=crash_cards,
+                                                  run_extract_bodies=False, pickle_obj=pickle_obj)
                 del fem1
                 del fem2
             diff_cards += diff_cards
@@ -206,10 +211,10 @@ def memory_usage_psutil():
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
-            encoding=None, sum_load=False, size=8, is_double=False,
+            encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False, nerrors=0, dev=False,
-            crash_cards=None):
+            quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
+            nerrors=0, dev=False, crash_cards=None, pickle_obj=False):
     """
     Runs a single BDF
 
@@ -238,7 +243,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         attach the test path and the folder to the bdf_filename
     print_stats : bool, optional
         get a nicely formatted message of all the cards in the model
-    sum_load : bool, optional
+    sum_load : bool; default=True
         Sum the static loads (doesn't work for frequency-based loads)
     size : int, optional, {8, 16}
         The field width of the model
@@ -260,9 +265,13 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         writes pyNastran_dump.bdf
     dictsort : bool; default=False
         writes pyNastran_dict.bdf
+    run_extract_bodies : bool; default=False
+        isolate the fem bodies; typically 1 body; code is still buggy
     dev : bool; default=False
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
+    pickle_obj : bool; default=True
+        tests pickling
     """
     if not quiet:
         print('debug = %s' % debug)
@@ -277,7 +286,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         print("bdf_model = %s" % bdf_model)
     if is_folder:
         bdf_model = os.path.join(test_path, folder, bdf_filename)
-    out_model = bdf_model + '_out'
+
+    model, ext = os.path.splitext(bdf_model)
+    out_model = '%s.test_bdf%s' % (model, ext)
 
     fem1, fem2, diff_cards = run_and_compare_fems(
         bdf_model, out_model, debug=debug, xref=xref, check=check,
@@ -287,17 +298,20 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         stop=stop, nastran=nastran, post=post,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
-        nerrors=nerrors, dev=dev, crash_cards=crash_cards)
+        nerrors=nerrors, dev=dev, crash_cards=crash_cards,
+        run_extract_bodies=run_extract_bodies, pickle_obj=pickle_obj,
+    )
     return fem1, fem2, diff_cards
 
 def run_and_compare_fems(
         bdf_model, out_model, debug=False, xref=True, check=True,
         punch=False, cid=None, mesh_form='combined',
         print_stats=False, encoding=None,
-        sum_load=False, size=8, is_double=False,
+        sum_load=True, size=8, is_double=False,
         stop=False, nastran='', post=-1, dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
+        run_extract_bodies=False, pickle_obj=False,
     ):
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
@@ -322,7 +336,8 @@ def run_and_compare_fems(
 
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
                         size, is_double, cid,
-                        encoding=encoding, crash_cards=crash_cards)
+                        run_extract_bodies=run_extract_bodies,
+                        encoding=encoding, crash_cards=crash_cards, pickle_obj=pickle_obj)
         if stop:
             if not quiet:
                 print('card_count:')
@@ -331,7 +346,7 @@ def run_and_compare_fems(
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
-                        encoding=encoding, debug=debug, log=None, quiet=quiet)
+                        encoding=encoding, debug=debug, quiet=quiet)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -350,6 +365,10 @@ def run_and_compare_fems(
         if not dev:
             raise
         print('failed test because CardParseSyntaxError...ignoring')
+    except MissingDeckSections:
+        if not dev:
+            raise
+        print('failed test because MissingDeckSections...ignoring')
     except DuplicateIDsError as e:
         # only temporarily uncomment this when running lots of tests
         if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
@@ -382,8 +401,14 @@ def run_and_compare_fems(
             print(e)
         else:
             raise
-    #except KeyError:  # only temporarily uncomment this when running lots of tests
-        #pass
+    except KeyError as e:  # only temporarily uncomment this when running lots of tests
+        if not dev:
+            raise
+        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
+            print(e)
+        else:
+            raise
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
         #pass
     except SystemExit:
@@ -456,7 +481,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
-             encoding=None, crash_cards=None):
+             run_extract_bodies=False, encoding=None, crash_cards=None, pickle_obj=False):
     """
     Reads/writes the BDF
 
@@ -483,6 +508,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         double flag
     cid : int / None
         cid flag
+    run_extract_bodies : bool; default=False
+        isolate the fem bodies; typically 1 body; code is still buggy
     encoding : str; default=None
         the file encoding
     crash_cards : ???
@@ -503,19 +530,20 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
             skin_filename = 'skin_file.bdf'
             fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
             if os.path.exists(skin_filename):
-                model = read_bdf(skin_filename)
+                model = read_bdf(skin_filename, log=fem1.log)
                 os.remove(skin_filename)
             if xref:
-                extract_bodies(fem1)
+                if run_extract_bodies:
+                    extract_bodies(fem1)
 
                 #fem1.uncross_reference()
-                #fem1.cross_reference()
-                fem1.safe_cross_reference()
+                fem1.cross_reference()
+                #fem1.safe_cross_reference()
                 fem1._xref = True
                 spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding,
                                      debug=fem1.debug, log=fem1.log)
 
-                remake = False
+                remake = pickle_obj
                 if remake:
                     #log = fem1.log
                     fem1.save('model.obj')
@@ -562,15 +590,21 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     units_from = ['m', 'kg', 's']
     #convert(fem1, units_to, units=units_from)
     if xref:
-        fem1.get_area_breakdown()
-        fem1.get_volume_breakdown()
-        fem1.get_mass_breakdown()
+        try:
+            if len(fem1.elements) + len(fem1.masses) > 0:
+                fem1.get_area_breakdown()
+                fem1.get_volume_breakdown()
+                fem1.get_mass_breakdown()
+            else:
+                fem1.log.warning('no elements found')
+        except RuntimeError:
+            fem1.log.warning('there are elements, but none with mass?')
     return fem1
 
 
 def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double, mesh_form,
-             encoding=None, debug=False, log=None, quiet=False):
+             encoding=None, debug=False, quiet=False):
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -623,8 +657,8 @@ def run_fem2(bdf_model, out_model, xref, punch,
         sol_200_map = fem2.case_control_deck.sol_200_map
         sol_base = fem2.sol
         is_restart = False
-        for line in fem2.executive_control_lines:
-            if 'RESTART' in line:
+        for line in fem2.system_command_lines:
+            if line.strip().upper().startswith('RESTART'):
                 is_restart = True
         if not is_restart:
             validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map)
@@ -714,7 +748,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 105: # buckling
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert 'LOAD' in subcase or 'METHOD' in subcase, subcase
+        assert True in subcase.has_parameter('LOAD', 'METHOD'), subcase
         if 0:
             if 'METHOD' not in subcase:
                 subcases = fem2.subcases
@@ -738,7 +772,6 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
-        #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
         if not any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
             subcases = fem2.subcases
             subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
@@ -758,7 +791,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert subcase.has_parameter('LOAD', 'STATSUB'), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 111:  # modal frequency
         assert subcase.has_parameter('FREQUENCY'), 'sol=%s\n%s' % (sol, subcase)
-        assert any(subcase.has_parameter('METHOD')), 'sol=%s\n%s' % (sol, subcase)
+        assert any(subcase.has_parameter('METHOD', 'RMETHOD')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 112:  # modal transient
         assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 114:
@@ -784,14 +817,16 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert any(subcase.has_parameter('TRIM', 'DIVERG')), subcase
         assert fem2.aeros is not None, 'An AEROS card is required for STATIC AERO - SOL %i' % sol
     elif sol == 145:
-        assert fem2.aero is not None, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
+        if fem2.aero is None:
+            msg = 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
+            raise RuntimeError(msg)
 
         assert 'METHOD'in subcase, subcase  # EIGRL
         assert 'FMETHOD' in subcase, subcase  # FLUTTER
     elif sol == 146:
         assert 'METHOD'in subcase, subcase
         assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
-        assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
+        assert any(subcase.has_parameter('GUST', 'LOAD', 'DLOAD')), subcase
         assert fem2.aero is not None, 'An AERO card is required for GUST - SOL %i' % sol
     elif sol == 153: # heat?
         if 'SPC' not in subcase:
@@ -880,8 +915,10 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         else:
             msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
             raise NotImplementedError(msg)
-
-    elif sol in [1, 5, 21, 61, 68, 76, 100, 187, 401, 601]:
+    elif sol in [114, 115, 116, 118]:
+        # cyclic statics, modes, buckling, frequency
+        pass
+    elif sol in [1, 5, 21, 61, 68, 76, 88, 100, 128, 187, 190, 400, 401, 601, 700, 701]:
         pass
     else:
         msg = 'SOL = %s\n' % (sol)
@@ -945,7 +982,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
-        assert sol in [110], 'sol=%s CMETHOD\n%s' % (sol, subcase)
+        assert sol in [110, 111, 145], 'sol=%s CMETHOD\n%s' % (sol, subcase)
 
     if 'RMETHOD' in subcase:
         rmethod_id = subcase.get_parameter('RMETHOD')[0]
@@ -957,7 +994,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             #method_ids = list(fem2.methods.keys())
             #raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
-        assert sol in [111], 'sol=%s RMETHOD\n%s' % (sol, subcase)
+        assert sol in [110, 111], 'sol=%s RMETHOD\n%s' % (sol, subcase)
 
     if 'FMETHOD' in subcase:
         method_id = subcase.get_parameter('FMETHOD')[0]
@@ -974,7 +1011,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
-                       108, 109, 110, 112, 144, 145, 153, 400, 601
+                       108, 109, 110, 111, 112, 144, 145, 153, 400, 601,
                       ], 'sol=%s LOAD\n%s' % (sol, subcase)
     else:
         # print('is_load =', subcase.has_parameter('LOAD'))
@@ -1011,9 +1048,30 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         #if 'LOADSET' in subcase:
             #raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
         if 'IC' in subcase:
-            value = subcase.get_parameter('IC')[0]
-            if value != 0:
-                raise NotImplementedError('IC & DLOAD -> TIC\n%s' % subcase)
+            ic_val = subcase.get_parameter('IC')[0]
+            if ic_val != 0:
+                # TIC - SOL 109, 129, 601, 701 (structural/physical)
+                #
+                # TEMP/TEMPD - SOL 159
+                #
+                # TIC - SET for modal
+                #
+                # STATSUB - IC=subcase_id (SOL 109, 112)
+                # For the PHYSICAL option, n is the set identification number
+                # of TIC bulk entries for structural analysis (SOLs 109, 129,
+                # 601, and 701) or TEMP and TEMPD bulk entries for heat
+                # transfer analysis (SOL 159). For the MODAL option, n is
+                # the set identification number of TIC bulk entries for modal
+                # transient analysis (SOL 112). For the STATSUB option, n is
+                # the ID of a static analysis subcase (SOL 109 and 112). For
+                # the TZERO option, n is not used by the software, although a
+                # dummy value must be defined. (Integer>0)
+                if sol in [109, 129, 601, 701]:
+                    raise NotImplementedError('IC & DLOAD; sol=%s -> TIC\n%s' % (sol, subcase))
+                elif sol == 159:
+                    fem2.loads[ic_val]
+                else:
+                    raise NotImplementedError('IC & DLOAD; sol=%s -> TIC\n%s' % (sol, subcase))
 
         # DLOAD (case)   -> dynamic loads -> DLOAD, RLOAD1, RLOAD2, TLOAD1, TLOAD2, ACSRCE
         # LOADSET (case) -> static load sequence - > LSEQ
@@ -1059,9 +1117,11 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         if sol in [108, 111]:  # direct frequency, modal frequency
             for load2, scale_factor in zip(loads2, scale_factors2):
                 freq_id = subcase.get_parameter('FREQ')[0]
-                freq = fem2.frequencies[freq_id]
-                fmax = freq.freqs[-1]
-                force = load2.get_load_at_freq(fmax) * scale_factor
+                freqs = fem2.frequencies[freq_id]
+                for freq in freqs:
+                    if freq.type in ['FREQ', 'FREQ1', 'FREQ2']:
+                        fmax = freq.freqs[-1]
+                        force = load2.get_load_at_freq(fmax) * scale_factor
         elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
             for load2, scale_factor in zip(loads2, scale_factors2):
                 force = load2.get_load_at_time(0.) * scale_factor
@@ -1255,8 +1315,10 @@ def get_element_stats(fem1, fem2, quiet=False):
 
     fem1._verify_bdf()
 
+    if fem1.elements:
+        fem1.get_elements_nodes_by_property_type()
     mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
-    #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
+    mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
     if not quiet:
         print("mass = %s" % mass)
         print("cg   = %s" % cg)
@@ -1366,11 +1428,11 @@ def main():
     encoding = sys.getdefaultencoding()
     from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L]      [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-d] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-l] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p]                [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s]           [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L]      [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-d] [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-l] [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p]                [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s]           [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -1405,6 +1467,7 @@ def main():
     msg += '                   (pyNastran_dict.bdf)\n'
     msg += '  -f, --profile    Profiles the code (default=False)\n'
     msg += '  -s, --stop       Stop after first read/write (default=False)\n'
+    msg += '  -k, --pickle     Pickles the data objects (default=False)\n'
     msg += "\n"
     msg += "Info:\n"
     msg += '  -h, --help     show this help message and exit\n'
@@ -1473,6 +1536,8 @@ def main():
             nerrors=data['--nerrors'],
             encoding=data['--encoding'],
             crash_cards=crash_cards,
+            run_extract_bodies=False,
+            pickle_obj=data['--pickle'],
         )
         prof.dump_stats('bdf.profile')
 
@@ -1512,6 +1577,8 @@ def main():
             nerrors=data['--nerrors'],
             encoding=data['--encoding'],
             crash_cards=crash_cards,
+            run_extract_bodies=False,
+            pickle_obj=data['--pickle'],
         )
     print("total time:  %.2f sec" % (time.time() - time0))
 

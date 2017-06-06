@@ -1,14 +1,14 @@
-from six import iteritems
 from collections import defaultdict
+from six import iteritems
 
-import numpy as np
+#import numpy as np
 from numpy import array
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 #from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank, components_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, components_or_blank)
 
 
 def get_spc_constraint(card, i):
@@ -53,14 +53,14 @@ class SPC(object):
 
     def allocate(self, card_count):
         return
-        ncards = card_count['SPC']
-        if ncards:
-            self.n = ncards
+        #ncards = card_count['SPC']
+        #if ncards:
+            #self.n = ncards
             #print('ngrid=%s' % self.n)
-            float_fmt = self.model.float_fmt
-            self.node_id = zeros(ncards, 'int32')
-            self.components = zeros(ncards, 'int32')
-            self.enforced_motion = zeros(ncards, float_fmt)
+            #float_fmt = self.model.float_fmt
+            #self.node_id = zeros(ncards, 'int32')
+            #self.components = zeros(ncards, 'int32')
+            #self.enforced_motion = zeros(ncards, float_fmt)
 
     def add(self, constraint_id, node_id, dofs, enforced_motion, comment):
         assert enforced_motion == 0.0

@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
@@ -75,7 +76,7 @@ class RealCompositePlateArray(OES_Object):
         self.is_built = True
 
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
 
@@ -170,12 +171,13 @@ class RealCompositePlateArray(OES_Object):
 
     def add_sort1(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                   major, minor, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         assert eid is not None
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             msg = [
                 '<%s>\n' % self.__class__.__name__,
@@ -202,6 +204,7 @@ class RealCompositePlateArray(OES_Object):
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element_layer.shape = %s\n' % str(self.element_layer.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()

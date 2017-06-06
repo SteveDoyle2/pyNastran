@@ -183,6 +183,8 @@ class SuperABCQSet(Set):
     Defines degrees-of-freedom in the analysis set (A-set)
 
     +--------+------+-----+----+-----+------+-----+-----+-----+
+    |   1    |  2   |  3  | 4  |  5  |  6   |  7  |  8  |  9  |
+    +========+======+=====+====+=====+======+=====+=====+=====+
     | SEBSET | SEID | ID1 | C1 | ID2 |  C2  | ID3 | C3  |     |
     +--------+------+-----+----+-----+------+-----+-----+-----+
     | SEBSET | 100  | 16  |  2 |  23 | 3516 |  1  | 4   |     |
@@ -253,6 +255,8 @@ class ASET(ABCQSet):
     Defines degrees-of-freedom in the analysis set (A-set).
 
     +------+-----+----+-----+------+-----+----+-----+----+
+    |  1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
+    +======+=====+====+=====+======+=====+====+=====+====+
     | ASET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
     +------+-----+----+-----+------+-----+----+-----+----+
     | ASET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
@@ -269,6 +273,8 @@ class BSET(ABCQSet):
     generalized dynamic reduction or component mode synthesis calculations.
 
     +------+-----+----+-----+------+-----+----+-----+----+
+    |  1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
+    +======+=====+====+=====+======+=====+====+=====+====+
     | BSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
     +------+-----+----+-----+------+-----+----+-----+----+
     | BSET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
@@ -286,6 +292,8 @@ class CSET(ABCQSet):
     generalized dynamic reduction or component mode synthesis calculations.
 
     +------+-----+----+-----+------+-----+----+-----+----+
+    |  1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
+    +======+=====+====+=====+======+=====+====+=====+====+
     | CSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
     +------+-----+----+-----+------+-----+----+-----+----+
     | CSET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
@@ -303,6 +311,8 @@ class QSET(ABCQSet):
     reduction or component mode synthesis.
 
     +------+-----+----+-----+------+-----+----+-----+----+
+    |  1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
+    +======+=====+====+=====+======+=====+====+=====+====+
     | QSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
     +------+-----+----+-----+------+-----+----+-----+----+
     | QSET | 16  | 2  | 23  | 3516 |  1  |  4 |     |    |
@@ -320,13 +330,15 @@ class ABQSet1(Set):
 
     Defines degrees-of-freedom in the analysis set (a-set).
 
-    +-------+-----+-----+------+------+-----+-----+-----+-----+
-    | ASET1 |  C  | ID1 | ID2  | ID3  | ID4 | ID5 | ID6 | ID7 |
-    +-------+-----+-----+------+------+-----+-----+-----+-----+
-    |       | ID8 | ID9 |      |      |     |     |     |     |
-    +-------+-----+-----+------+------+-----+-----+-----+-----+
-    | ASET1 |  C  | ID1 | THRU | ID2  |     |     |     |     |
-    +-------+-----+-----+------+------+-----+-----+-----+-----+
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+======+=====+=====+=====+=====+=====+
+    | xSET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |       | ID8 | ID9 |      |     |     |     |     |     |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    | xSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
     """
     type = 'ABQSet1'
     def __init__(self, components, ids, comment=''):
@@ -359,13 +371,16 @@ class ABQSet1(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        components = data[0]
+        components = str(data[0])
         thru_flag = data[1]
         if thru_flag == 0:
             ids = data[2:]
-        else:
+        elif thru_flag == 1:
             assert len(data) == 4, data
-            ids = [data[2], 'THRU', data[3]]
+            #ids = [data[2], 'THRU', data[3]]
+            ids = list(range(data[2], data[3]+1))
+        else:
+            raise NotImplementedError('thru_flag=%s data=%s' % (thru_flag, data))
         return cls(components, ids, comment=comment)
 
     def cross_reference(self, model):
@@ -411,6 +426,8 @@ class SuperABQSet1(Set):
     Defines degrees-of-freedom in the analysis set (a-set).
 
     +----------+------+-----+------+------+-----+-----+-----+-----+
+    |    1     |  2   |  3  |   4  |   5  |  6  |  7  |  8  |  9  |
+    +==========+======+=====+======+======+=====+=====+=====+=====+
     | SEBSET1  | SEID |  C  | ID1  | ID2  | ID3 | ID4 | ID5 | ID6 |
     +----------+------+-----+------+------+-----+-----+-----+-----+
     |          | ID7  | ID9 |      |      |     |     |     |     |
@@ -432,6 +449,8 @@ class SuperABQSet1(Set):
 
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
+        #print('ids =', self.ids)
+        assert None not in self.ids
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -451,15 +470,12 @@ class SuperABQSet1(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        seid = data[0]
-        components = data[1]
-        thru_flag = data[2]
-        if thru_flag == 0:
-            ids = data[3:]
-        else:
-            assert len(data) == 5, data
-            ids = [data[3], 'THRU', data[4]]
-        return cls(seid, components, ids, comment=comment)
+        seid, components, nids = data
+        #assert None not in components, 'Type=%s components=%s' % (self.type, components)
+        assert None not in nids, 'Type=%s nids=%s' % (self.type, nids)
+        assert -1 not in nids, 'nids=%s' % (nids.tolist())
+        assert 0 not in nids, 'nids=%s' % (nids.tolist())
+        return cls(seid, components, nids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -498,6 +514,8 @@ class ASET1(ABQSet1):
     Defines degrees-of-freedom in the analysis set (a-set)
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+==================+=====+=====+=====+
     | ASET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |       | ID8 | ID9 |      |     |     |     |     |     |
@@ -524,6 +542,8 @@ class CSET1(Set):
     generalized dynamic reduction or component mode synthesis calculations.
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+==================+=====+=====+=====+
     | CSET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |       | ID8 | ID9 |      |     |     |     |     |     |
@@ -545,6 +565,16 @@ class CSET1(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CSET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         if integer_string_or_blank(card, 2, 'C') == 'ALL':
             components = '123456'
         else:
@@ -608,7 +638,7 @@ class SET1(Set):
 
     +------+--------+--------+-----+------+-----+-----+------+-----+
     |  1   |    2   |    3   |  4  |   5  |  6  |  7  |   8  |  9  |
-    +======+========+========+=====+======+=====+=====+======+======
+    +======+========+========+=====+======+=====+=====+======+=====+
     | SET1 |  SID   |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     |      |  ID8   | -etc.- |     |      |     |     |      |     |
@@ -642,6 +672,16 @@ class SET1(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
 
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
@@ -653,9 +693,7 @@ class SET1(Set):
                 is_skin = True
                 i += 1
         else:
-            #print(card)
             assert len(card) > 2, card
-            #pass
         return SET1(sid, ids[i:], is_skin=is_skin, comment=comment)
 
     #def __eq__(self, set1):
@@ -674,9 +712,6 @@ class SET1(Set):
     def add_set(self, set1):
         self.ids += set1.get_ids()
         self.clean_ids()
-
-    #def IsSkin(self):
-        #return self.is_skin
 
     def raw_fields(self):
         skin = []
@@ -852,6 +887,16 @@ class SET3(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SET3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         desc = string(card, 2, 'desc')
         ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
@@ -895,7 +940,7 @@ class SET3(Set):
         if collapse:
             return collapse_thru(self.ids, nthru=1)
         else:
-            return self.IDs
+            return self.ids
 
     def raw_fields(self):
         """Gets the "raw" card without any processing as a list for printing"""
@@ -948,6 +993,16 @@ class SESET(SetSuper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SESET card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         seid = integer_or_blank(card, 1, 'seid', 0)
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
         return SESET(seid, ids, comment=comment)
@@ -957,7 +1012,8 @@ class SESET(SetSuper):
         self.clean_ids()
 
     def raw_fields(self):
-        return ['SESET', self.seid] + collapse_thru(self.ids)
+        list_fields = ['SESET', self.seid] + collapse_thru(self.ids)
+        return list_fields
 
     def __repr__(self):
         thru_fields = collapse_thru(self.ids)
@@ -1058,6 +1114,16 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SEQSEP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         ssid = integer(card, 1, 'ssid')
         psid = integer(card, 2, 'psid')
         ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
@@ -1096,6 +1162,16 @@ class RADSET(Set):  # not integrated
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a RADSET card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         seid = integer(card, 1, 'seid')
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
         return RADSET(seid, ids, comment=comment)
@@ -1115,6 +1191,8 @@ class USET(Set):
     Defines a degrees-of-freedom set.
 
     +------+-------+-----+------+-----+----+-----+----+
+    |  1   |   2   |  3  |   4  |  5  |  6  |  7 | 8  |
+    +======+=======+=====+======+=====+====+=====+====+
     | USET | SNAME | ID1 |  C1  | ID2 | C2 | ID3 | C3 |
     +------+-------+-----+------+-----+----+-----+----+
     | USET |  JUNK | ID1 | THRU | ID2 |    |     |    |
@@ -1132,6 +1210,16 @@ class USET(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a USET card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         components = []
         ids = []
@@ -1144,6 +1232,29 @@ class USET(Set):
             components.append(component)
             ids.append(idi)
         return USET(name, components, ids, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        tested by gspc1.op2
+
+        for some reason, the setname is an integer and has bizarre rules
+        that I don't understand like:
+          - the setname is 1-4 characters, except if it's 'ZERO%i' % sid
+            ummm...odd
+        """
+        sid = data[0]
+        nid = data[1]
+        if sid < 0:
+            name = 'ZERO'
+        else:
+            comment = 'sid=%s (???)' % sid
+            name = 'U%i' % nid
+        assert nid > 0, nid
+        component = str(data[2])
+        for componenti in component:
+            assert componenti in '0123456', component
+        return USET(name, [component], [nid], comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1181,6 +1292,8 @@ class USET1(ABQSet1):
     Defines degrees-of-freedom in the analysis set (a-set)
 
     +-------+-------+-----+------+------+-----+-----+-----+-----+
+    |   1   |   2   |  3  |  4   |  5   |  6  |  7  |  8  |  9  |
+    +=======+=======+=====+======+======+=====+=====+=====+=====+
     | USET1 | SNAME |  C  |  ID2 | ID3  | ID4 | ID5 | ID6 | ID7 |
     +-------+-------+-----+------+------+-----+-----+-----+-----+
     |       | ID9   |     |      |      |     |     |     |     |
@@ -1206,6 +1319,16 @@ class USET1(ABQSet1):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a USET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         name = string(card, 1, 'name')
         components = fcomponents_or_blank(card, 2, 'components', 0)
 
@@ -1243,7 +1366,7 @@ class USET1(ABQSet1):
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = [self.type, self.name, self.components] + collapse_thru(self.node_ids)
+        list_fields = ['USET1', self.name, self.components] + collapse_thru(self.node_ids)
         return list_fields
 
     def __repr__(self):

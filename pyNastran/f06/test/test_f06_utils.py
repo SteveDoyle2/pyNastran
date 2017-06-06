@@ -13,5 +13,5 @@ class TestF06Utils(unittest.TestCase):
         f06_filename = os.path.join(pkg_path, '..', 'models', 'aero', 'bah_plane', 'bah_plane.f06')
         plot_flutter_f06(f06_filename, show=False)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

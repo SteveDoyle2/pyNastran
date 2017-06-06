@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from six import iteritems
+from six import iteritems, StringIO
 from numpy import array, allclose, cross
 import numpy as np
 
@@ -13,7 +13,8 @@ model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 log = None
 class TestLoadSum(unittest.TestCase):
     def test_loads_sum_01(self):
-        model = BDF(log=log)
+        """tests FORCE"""
+        model = BDF(log=log, debug=False)
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
         model.read_bdf(bdf_filename)
         loadcase_id = 1
@@ -33,7 +34,8 @@ class TestLoadSum(unittest.TestCase):
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 
     def test_loads_sum_02(self):
-        model = BDF(log=log)
+        """tests FORCE"""
+        model = BDF(log=log, debug=False)
         bdf_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         model.read_bdf(bdf_filename)
         loadcase_id = 10000
@@ -65,8 +67,9 @@ class TestLoadSum(unittest.TestCase):
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 
     def test_loads_sum_03(self):
-        if 0:
-            model = BDF(log=log)
+        """tests N/A"""
+        if 0:  # pragma: no cover
+            model = BDF(log=log, debug=False)
             bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Launch_Sm_4pt.dat')
             model.read_bdf(bdf_filename)
             loadcase_id = 1
@@ -86,10 +89,21 @@ class TestLoadSum(unittest.TestCase):
             self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 
     def test_loads_sum_04(self):
+        """
+        tests:
+          - 1=FORCE
+          - 2=LOAD/FORCE
+          - 3=LOAD/PLOAD4
+          - 4=LOAD/PLOAD4
+          - 5=LOAD/PLOAD4
+          - 6=LOAD/PLOAD4
+          - 10=PLOAD4
+          - 11=PLOAD4
+        """
         p0 = array([0., 0., 0.])
-        model = BDF(log=log)
+        model = BDF(log=log, debug=False)
         bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
-        print(bdf_filename)
+        #print(bdf_filename)
         model.read_bdf(bdf_filename)
         #print("keys4", model.loads.keys())
 
@@ -206,7 +220,17 @@ class TestLoadSum(unittest.TestCase):
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 
     def test_loads_sum_05(self):
-        model = BDF(log=log)
+        """
+        tests:
+         - 1=LOAD/PLOAD4
+         - 2=LOAD/PLOAD4/FORCE
+         - 5=PLOAD4
+         - 6=PLOAD4
+         - 1001=PLOAD4
+         - 1002=1002
+         - 1003=PLOAD
+        """
+        model = BDF(log=log, debug=False)
         bdf_filename = os.path.join(model_path, 'real', 'loads', 'loads.bdf')
         model.read_bdf(bdf_filename)
 
@@ -261,7 +285,7 @@ class TestLoadSum(unittest.TestCase):
 
         F7_expected = 7. * 11. * F6_expected
         M7_expected = 7. * 11. * M6_expected
-        if 0:
+        if 0:  # pragma: no cover
             loadcase_id = 6
             F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
@@ -278,6 +302,35 @@ class TestLoadSum(unittest.TestCase):
             self.assertTrue(allclose(F7_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F7_expected, F))
             self.assertTrue(allclose(M7_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M7_expected, M))
 
+        loadcase_id = 5
+        p = 2.
+        A = 1.
+        n = array([0., 1., 1.]) / np.sqrt(2.)
+        F5_expected = p * A * n
+        r = array([0.5, 0.5, 0.])
+        M5_expected = cross(r, F5_expected)
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
+        assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
+        self.assertTrue(allclose(F5_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F5_expected, F))
+        self.assertTrue(allclose(M5_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M5_expected, M))
+        #print('loadcase_id=%s F=%s M=%s' % (loadcase_id, F, M))
+
+        loadcase_id = 6
+        p = 2.
+        A = 1.
+        n = array([0., 0., 0.5]) / 0.5
+        F6_expected = p * A * n
+        r = array([0.5, 0.5, 0.])
+        M6_expected = cross(r, F6_expected)
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
+        assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
+        self.assertTrue(allclose(F6_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F6_expected, F))
+        self.assertTrue(allclose(M6_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M6_expected, M))
+        #print('loadcase_id=%s F=%s M=%s' % (loadcase_id, F, M))
 
         loadcase_id = 1003
         p = 9.
@@ -296,7 +349,7 @@ class TestLoadSum(unittest.TestCase):
         loadcase_id = 8
         F8_expected = 2. * (3. * F7_expected + 2. * F1003_expected)
         M8_expected = 2. * (3. * M7_expected + 2. * M1003_expected)
-        if 0:
+        if 0:  # pragma: no cover
             F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
@@ -311,7 +364,7 @@ class TestLoadSum(unittest.TestCase):
         F800_expected = p * A * n
         r = array([3.5, 1.5, 0.])
         M800_expected = cross(r, F800_expected)
-        if 0:
+        if 0:  # pragma: no cover
             F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
@@ -322,7 +375,7 @@ class TestLoadSum(unittest.TestCase):
         loadcase_id = 801
         F801_expected = F800_expected
         M801_expected = M800_expected
-        if 0:
+        if 0:  # pragma: no cover
             F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
@@ -339,16 +392,20 @@ class TestLoadSum(unittest.TestCase):
         ry = (1. + 1. + 2.) / 3.
         r = array([rx, ry, 0.])
         M802_expected = cross(r, F802_expected)
-        if 0:
+        if 0:  # pragma: no cover
             F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
             self.assertTrue(allclose(F802_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F802_expected, F))
             self.assertTrue(allclose(M802_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M802_expected, M))
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file, close=False)
+        bdf_file.seek(0)
+        model.write_bdf(bdf_file, size=16)
 
     def _test_loads_sum_06(self):
-        model = BDF(log=log)
+        model = BDF(log=log, debug=False)
         bdf_filename = os.path.join(model_path, 'real', 'loads', 'bars.bdf')
         model.read_bdf(bdf_filename)
         p0 = array([0., 0., 0.])
@@ -358,7 +415,7 @@ class TestLoadSum(unittest.TestCase):
         F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
-        if 0:
+        if 0:  # pragma: no cover
             r = array([0., 0., 0.])
             F1_expected = array([0., 0., 1.])
             M1_expected = cross(r, F1_expected)

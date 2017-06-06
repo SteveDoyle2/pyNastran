@@ -45,6 +45,7 @@ class WriteMesh(object):
         Performs type checking on the write_bdf inputs
         """
         if out_filename is None:
+            from pyNastran.utils.gui_io import save_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
                 "*.bdf;*.dat;*.nas;*.pch|" \
                 "All files (*.*)|*.*"
@@ -614,8 +615,7 @@ class WriteMesh(object):
 
     def _write_sets(self, bdf_file, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        sets = (self.sets or self.setsSuper or self.asets or self.bsets or
-                self.csets or self.qsets)
+        sets = (self.sets or self.asets or self.bsets or self.csets or self.qsets)
         if sets:
             msg = ['$SETS\n']
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
@@ -627,8 +627,6 @@ class WriteMesh(object):
             for set_obj in self.csets:  # list
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.qsets:  # list
-                msg.append(set_obj.write_card(size, is_double))
-            for (set_id, set_obj) in sorted(iteritems(self.setsSuper)):  # dict
                 msg.append(set_obj.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 

@@ -2,7 +2,7 @@
 # pylint: disable=C0111
 from __future__ import print_function, unicode_literals
 from copy import deepcopy
-from six import iteritems, itervalues, iterkeys
+from six import iteritems, itervalues, iterkeys, string_types
 
 import numpy as np
 from numpy import full, issubdtype
@@ -53,8 +53,25 @@ class GuiCommon(GuiAttributes):
                 axes.SetTotalLength(dim, dim, dim)
 
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
-        self.text_actors[0].SetInput('Max:  %g' % max_value)  # max
-        self.text_actors[1].SetInput('Min:  %g' % min_value)  # min
+        """
+        Updates the text actors in the lower left
+
+        Max:  1242.3
+        Min:  0.
+        Subcase: 1 Subtitle:
+        Label: SUBCASE 1; Static
+        """
+        if isinstance(max_value, integer_types):
+            max_msg = 'Max:  %i' % max_value
+            min_msg = 'Min:  %i' % min_value
+        elif isinstance(max_value, string_types):
+            max_msg = 'Max:  %s' % str(max_value)
+            min_msg = 'Min:  %s' % str(min_value)
+        else:
+            max_msg = 'Max:  %g' % max_value
+            min_msg = 'Min:  %g' % min_value
+        self.text_actors[0].SetInput(max_msg)
+        self.text_actors[1].SetInput(min_msg)
         self.text_actors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))  # info
 
         if label:
@@ -62,6 +79,13 @@ class GuiCommon(GuiAttributes):
             self.text_actors[3].VisibilityOn()
         else:
             self.text_actors[3].VisibilityOff()
+
+    def on_rcycle_results(self, case=None):
+        """the reverse of on_cycle_results"""
+        icase = self.icase - 1
+        if icase == -1:
+            icase = self.ncases - 1
+        self.cycle_results(icase)
 
     def on_cycle_results(self, case=None):
         """the gui method for calling cycle_results"""
@@ -113,8 +137,53 @@ class GuiCommon(GuiAttributes):
         case = obj.get_result(i, name)
         return name, case
 
-    def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
-                  min_value=None, max_value=None, is_legend_shown=None):
+    def _get_sidebar_data(self, name):
+        """
+        gets the form for the selected name
+
+        Parameters
+        ----------
+        name : str
+            the name that was selected
+
+        Returns
+        -------
+        form : List[tuple]
+            the form data
+        """
+        return []
+
+    def _set_case(self, result_name, icase, explicit=False, cycle=False,
+                  skip_click_check=False, min_value=None, max_value=None,
+                  is_legend_shown=None):
+        """
+        Internal method for doing results updating
+
+        result_name : str
+            the name of the case for debugging purposes
+        icase : int
+            the case id
+        explicit : bool; default=False
+            show the command when we're doing in the log
+        cycle : bool; default=False
+            ???
+        skip_click_check : bool; default=False
+            There is no reason to update if the case didn't change on the
+            Results Sidebar
+            True  : Legend Menu
+            False : Results Sidebar
+        min_value : float; default=None
+            the min value
+            None : use the default
+        max_value  : float; default=None
+            the max value
+            None : use the default
+        is_legend_shown : bool; default=None
+            is the scalar bar shown
+            None : stick with the current value
+            True : show the legend
+            False : hide the legend
+        """
         if not skip_click_check:
             if not cycle and icase == self.icase:
                 # don't click the button twice
@@ -142,12 +211,14 @@ class GuiCommon(GuiAttributes):
         scale = obj.get_scale(i, name)
         phase = obj.get_phase(i, name)
         label2 = obj.get_header(i, name)
-        nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        nlabels, labelsize, ncolors, colormap = out
         #default_max, default_min = obj.get_default_min_max(i, name)
         if min_value is None and max_value is None:
             min_value, max_value = obj.get_min_max(i, name)
 
         #if 0:
+            # my poor attempts at supporting NaN colors
             #if min_value is None and max_value is None:
                 #max_value = case.max()
                 #min_value = case.min()
@@ -164,6 +235,19 @@ class GuiCommon(GuiAttributes):
               % (subcase_id, result_type, subtitle, label))
 
         #================================================
+        is_low_to_high = True
+        if case is None:
+            return self.set_normal_result(
+                icase, name, result_type, subcase_id,
+                subtitle, label,
+                data_format, nlabels, labelsize, ncolors, colormap,
+                is_legend_shown, is_low_to_high)
+
+        elif self._is_normals and self.legend_shown:
+            # we hacked the scalar bar to turn off for Normals
+            # so we turn it back on if we need to
+            self._is_normals = False
+            self.show_legend()
 
         if len(case.shape) == 1:
             normi = case
@@ -201,7 +285,6 @@ class GuiCommon(GuiAttributes):
                                name_vector, grid_result_vector,
                                key, subtitle, label)
 
-        is_low_to_high = True
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
@@ -211,6 +294,7 @@ class GuiCommon(GuiAttributes):
                                is_low_to_high=is_low_to_high,
                                is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
+
         self.update_legend(icase,
                            result_type, min_value, max_value, data_format, scale, phase,
                            nlabels, labelsize, ncolors, colormap,
@@ -233,6 +317,68 @@ class GuiCommon(GuiAttributes):
         assert self.icase is not False, self.icase
         return self.icase
 
+    def set_normal_result(self, icase, name, result_type, subcase_id,
+                          subtitle, label,
+                          data_format, nlabels, labelsize, ncolors, colormap,
+                          is_legend_shown, is_low_to_high):
+        """plots a NormalResult"""
+        name_str = self._names_storage.get_name_string(name)
+        prop = self.geom_actor.GetProperty()
+
+        min_value = -1.
+        max_value = 1.
+        norm_value = 2.
+        BLUE = (0., 0., 1.)
+        RED = (1., 0., 0.)
+        prop.SetColor(RED)
+
+        # the backface property is null
+        #back_prop = self.geom_actor.GetBackfaceProperty()
+        back_prop = vtk.vtkProperty()
+        back_prop.SetColor(BLUE)
+        self.geom_actor.SetBackfaceProperty(back_prop)
+
+        grid = self.grid
+        if self._is_displaced:
+            self._is_displaced = False
+            self._update_grid(self._xyz_nominal)
+
+        if self._is_forces:
+            self.arrow_actor.SetVisibility(False)
+
+        cell_data = grid.GetCellData()
+        cell_data.SetActiveScalars(None)
+
+        point_data = grid.GetPointData()
+        point_data.SetActiveScalars(None)
+
+        #if is_legend_shown is None:
+            #is_legend_shown = self.scalar_bar.is_shown
+        #self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+                               #data_format,
+                               #nlabels=nlabels, labelsize=labelsize,
+                               #ncolors=ncolors, colormap=colormap,
+                               #is_low_to_high=is_low_to_high,
+                               #is_horizontal=self.is_horizontal_scalar_bar,
+                               #is_shown=is_legend_shown)
+        scale = 0.0
+        phase = None
+
+        min_value = -1.
+        max_value = 1.
+        self.update_legend(icase,
+                           result_type, min_value, max_value, data_format, scale, phase,
+                           nlabels, labelsize, ncolors, colormap,
+                           is_low_to_high, self.is_horizontal_scalar_bar)
+        self.hide_legend()
+        self._is_normals = True
+        #min_value = 'Front Face'
+        #max_value = 'Back Face'
+        #self.update_text_actors(subcase_id, subtitle,
+                                #min_value, max_value, label)
+        self.vtk_interactor.Render()
+
+
     def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
                         is_low_to_high=True):
         """
@@ -240,7 +386,7 @@ class GuiCommon(GuiAttributes):
         """
         if self._names_storage.has_exact_name(name):
             return
-        #print('name, case =', name, case)
+        #print('name=%r case=%r' % (name, case))
 
         if not hasattr(case, 'dtype'):
             raise RuntimeError('name=%s case=%s' % (name, case))
@@ -262,9 +408,9 @@ class GuiCommon(GuiAttributes):
                 #case[50] = np.int32(1) / np.int32(0)
 
         if vector_size == 1:
+            nvalues = len(case)
             if is_low_to_high:
                 if norm_value == 0:
-                    nvalues = len(case)
                     case2 = full((nvalues), 1.0 - min_value, dtype='float32')
                 else:
                     case2 = 1.0 - (case - min_value) / norm_value
@@ -298,6 +444,38 @@ class GuiCommon(GuiAttributes):
             )
         return grid_result
 
+    def update_grid_by_icase_scale_phase(self, icase, scale, phase=0.0):
+        """
+        Updates to the deflection state defined by the cases
+
+        Parameters
+        ----------
+        icase : int
+            result number in self.result_cases
+        scale : float
+            deflection scale factor
+        phase : float; default=0.0
+            phase angle (degrees); unused for real results
+
+        Returns
+        -------
+        xyz : (nnodes, 3) float ndarray
+            the nominal state
+        deflected_xyz : (nnodes, 3) float ndarray
+            the deflected state
+        """
+        (obj, (i, res_name)) = self.result_cases[icase]
+        xyz_nominal, vector_data = obj.get_vector_result_by_scale_phase(
+            i, res_name, scale, phase)
+
+        #grid_result1 = self.set_grid_values(name, case, 1,
+            #min_value, max_value, norm_value)
+        #point_data.AddArray(grid_result1)
+
+        self._is_displaced = True
+        self._xyz_nominal = xyz_nominal
+        self._update_grid(vector_data)
+
     def final_grid_update(self, name, grid_result,
                           name_vector, grid_result_vector,
                           key, subtitle, label):
@@ -325,6 +503,13 @@ class GuiCommon(GuiAttributes):
                            revert_displaced=True):
         if name is None:
             return
+
+        # the result type being currently shown
+        # for a Nastran NodeID/displacement, this is 'node'
+        # for a Nastran ElementID/PropertyID, this is 'element'
+        self.result_location = location
+
+        grid = self.grid
         name_str = self._names_storage.get_name_string(name)
         if not self._names_storage.has_exact_name(name):
             grid_result.SetName(name_str)
@@ -334,8 +519,11 @@ class GuiCommon(GuiAttributes):
                 self._is_displaced = False
                 self._update_grid(self._xyz_nominal)
 
+            if self._is_forces:
+                self.arrow_actor.SetVisibility(False)
+
             if location == 'centroid':
-                cell_data = self.grid.GetCellData()
+                cell_data = grid.GetCellData()
                 if self._names_storage.has_close_name(name):
                     cell_data.RemoveArray(name_str)
                     self._names_storage.remove(name)
@@ -345,7 +533,7 @@ class GuiCommon(GuiAttributes):
                               'result_type=%s subtitle=%s label=%s'
                               % (vector_size, subcase_id, result_type, subtitle, label))
             elif location == 'node':
-                point_data = self.grid.GetPointData()
+                point_data = grid.GetPointData()
                 if self._names_storage.has_close_name(name):
                     point_data.RemoveArray(name_str)
                     self._names_storage.remove(name)
@@ -357,15 +545,24 @@ class GuiCommon(GuiAttributes):
                     point_data.AddArray(grid_result)
                 elif vector_size == 3:
                     #print('vector_size3; get, update')
+
                     xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                    if obj.deflects(i, res_name):
+                        #grid_result1 = self.set_grid_values(name, case, 1,
+                                                            #min_value, max_value, norm_value)
+                        #point_data.AddArray(grid_result1)
 
-                    #grid_result1 = self.set_grid_values(name, case, 1,
-                                                        #min_value, max_value, norm_value)
-                    #point_data.AddArray(grid_result1)
+                        self._is_displaced = True
+                        self._is_forces = False
+                        self._xyz_nominal = xyz_nominal
+                        self._update_grid(vector_data)
+                    else:
+                        self._is_displaced = False
+                        self._is_forces = True
+                        scale = obj.get_scale(i, res_name)
+                        xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                        self._update_forces(vector_data, scale)
 
-                    self._is_displaced = True
-                    self._xyz_nominal = xyz_nominal
-                    self._update_grid(vector_data)
                     self.log_info('node plotting vector=%s - subcase_id=%s '
                                   'result_type=%s subtitle=%s label=%s'
                                   % (vector_size, subcase_id, result_type, subtitle, label))
@@ -377,27 +574,33 @@ class GuiCommon(GuiAttributes):
                 raise RuntimeError(location)
 
         if location == 'centroid':
-            cell_data = self.grid.GetCellData()
+            cell_data = grid.GetCellData()
             cell_data.SetActiveScalars(name_str)
 
-            point_data = self.grid.GetPointData()
+            point_data = grid.GetPointData()
             point_data.SetActiveScalars(None)
+            if vector_size == 1:
+                #point_data.SetActiveVectors(None)   # I don't think I need this
+                pass
+            else:
+                raise RuntimeError(vector_size)
         elif location == 'node':
-            cell_data = self.grid.GetCellData()
+            cell_data = grid.GetCellData()
             cell_data.SetActiveScalars(None)
 
-            point_data = self.grid.GetPointData()
+            point_data = grid.GetPointData()
             if vector_size == 1:
-                point_data.SetActiveScalars(name_str)
+                point_data.SetActiveScalars(name_str)  # TODO: None???
             elif vector_size == 3:
-                point_data.SetActiveVectors(name_str)
+                pass
+                #point_data.SetActiveVectors(name_str)
             else:
                 raise RuntimeError(vector_size)
             #print('name_str=%r' % name_str)
         else:
             raise RuntimeError(location)
 
-        self.grid.Modified()
+        grid.Modified()
         self.grid_selected.Modified()
         #self.update_all()
         #self.update_all()
@@ -406,26 +609,51 @@ class GuiCommon(GuiAttributes):
         self.vtk_interactor.Render()
 
         self.hide_labels(show_msg=False)
-        self.show_labels(result_names=[result_type], show_msg=False)
+        self.show_labels(case_keys=[self.icase], show_msg=False)
 
-    def _update_grid(self, vector_data):
-        """deflects the geometry"""
-        nnodes = vector_data.shape[0]
-        points = self.grid.GetPoints()
-        for j in range(nnodes):
-            points.SetPoint(j, *vector_data[j, :])
-        self.grid.Modified()
+    def _update_forces(self, forces_array, scale=None):
+        """changes the glyphs"""
+        grid = self.grid
+        if scale is not None:
+            self.glyphs.SetScaleFactor(self.glyph_scale_factor * scale)
+        mag = np.linalg.norm(forces_array, axis=1)
+        #assert len(forces_array) == len(mag)
+
+        mag_max = mag.max()
+        new_forces = np.copy(forces_array / mag_max)
+        #mag /= mag_max
+
+        #inonzero = np.where(mag > 0)[0]
+        #print('new_forces_max =', new_forces.max())
+        #print('new_forces =', new_forces[inonzero])
+        #print('mag =', mag[inonzero])
+
+        vtk_vectors = numpy_to_vtk(new_forces, deep=1)
+        vtk_mag = numpy_to_vtk(mag, deep=1)
+
+        grid.GetPointData().SetVectors(vtk_vectors)
+        grid.GetPointData().SetScalars(vtk_mag)
+        self.arrow_actor.SetVisibility(True)
+        grid.Modified()
         self.grid_selected.Modified()
-        self._update_follower_grids(vector_data)
 
-    def _update_follower_grids(self, vector_data):
+    def _update_grid(self, nodes):
+        """deflects the geometry"""
+        grid = self.grid
+        points = grid.GetPoints()
+        self.numpy_to_vtk_points(nodes, points=points, dtype='<f')
+        grid.Modified()
+        self.grid_selected.Modified()
+        self._update_follower_grids(nodes)
+
+    def _update_follower_grids(self, nodes):
         """updates grids that use the same ids as the parent model"""
         for name, nids in iteritems(self.follower_nodes):
             grid = self.alt_grids[name]
             points = grid.GetPoints()
             for j, nid in enumerate(nids):
                 i = self.nid_map[nid]
-                points.SetPoint(j, *vector_data[i, :])
+                points.SetPoint(j, *nodes[i, :])
             grid.Modified()
 
     def _get_icase(self, result_name):
@@ -446,7 +674,7 @@ class GuiCommon(GuiAttributes):
     def increment_cycle(self, icase=None):
         #print('1-icase=%r self.icase=%s ncases=%r' % (icase, self.icase, self.ncases))
         #print(type(icase))
-        if isinstance(icase, int):
+        if isinstance(icase, integer_types):
             self.icase = icase
             if self.icase >= self.ncases:
                 self.icase = 0
@@ -476,11 +704,7 @@ class GuiCommon(GuiAttributes):
         else:
             # key = self.case_keys[self.icase]
             # location = self.get_case_location(key)
-            location = 'N/A'
-            #result_type = 'centroidal' if location == 'centroid' else 'nodal'
-            result_type = '???'
-            self.log_error('No Results found.  Many results are not supported in the GUI.\n'
-                           'Try using %s results.' % result_type)
+            self.log_error('No results found.')
             self.scalarBar.SetVisibility(False)
             found_cases = False
         #print("next icase=%s key=%s" % (self.icase, key))

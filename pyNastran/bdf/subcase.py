@@ -1,4 +1,3 @@
-# pylint: disable=C0103
 """
 Subcase creation/extraction class
 """
@@ -8,10 +7,10 @@ from numpy import ndarray
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import deprecated
-from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
-from pyNastran.bdf.bdf_interface.assign_type import interpret_value
+from pyNastran.bdf.bdf_interface.subcase_utils import (
+    write_stress_type, write_set, expand_thru_case_control)
 
-int_cards = (
+INT_CARDS = (
     # these are cards that look like:
     #    LOAD = 6
     'SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
@@ -29,7 +28,7 @@ int_cards = (
     'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
 )
 
-plottable_types = (
+PLOTTABLE_TYPES = (
     # these are types that look like:
     #    STRESS(PLOT,PRINT,PUNCH,SORT1) = ALL
     # they all support PLOT
@@ -47,6 +46,10 @@ class Subcase(object):
     """
     Subcase creation/extraction class
     """
+    allowed_param_types = [
+        'SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type', 'STRING-type',
+        'OBJ-type',
+    ]
     solCodeMap = {
         1: 101,
         21: 101,
@@ -138,7 +141,7 @@ class Subcase(object):
                 elif thermal == 1:
                     self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
                 else:
-                    _write_op2_error_msg(log, self.log, msg, data_code)
+                    self._write_op2_error_msg(log, self.log, msg, data_code)
             elif table_code == 7:
                 self.add('VECTOR', 'ALL', options, 'STRESS-type')
             elif table_code == 10:
@@ -146,7 +149,14 @@ class Subcase(object):
             elif table_code == 11:
                 self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name == 'OAG1':
+            if table_code == 11:
+                thermal = data_code['thermal']
+                assert thermal == 0, data_code
+                self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # OAG-random
         elif table_name in ['OAGPSD1', 'OAGPSD2']:
@@ -167,18 +177,18 @@ class Subcase(object):
             if thermal == 1:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['ROUGV1', 'ROUGV2']:
             thermal = data_code['thermal']
             if thermal == 0:
                 self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'BOPHIG':
             if table_code == 7:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'OUPV1':
             if table_code == 1:
                 self.add('SDISPLACEMENT', 'ALL', options, 'STRESS-type')
@@ -187,18 +197,18 @@ class Subcase(object):
             elif table_code == 11:
                 self.add('SACCELERATION', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
 
         elif table_name in ['OQG1', 'OQG2']:
             if table_code == 3:
                 self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OEF1X', 'OEF1']:
             if table_code in [4]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
 
         elif table_name in ['OEFATO1', 'OEFATO2']:
             options.append('PSDF')
@@ -220,33 +230,33 @@ class Subcase(object):
             if table_code in [25]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'OQMG1':
             if table_code in [3, 39]:
                 self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OGPFB1']:
             if table_code == 19:
                 self.add('GPFORCE', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # stress
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
                             'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
-                            'OESVM1', 'OESVM1C']:
+                            'OESVM1', 'OESVM1C', 'OESNL1X']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OESRT']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 25:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # strain
         elif table_name in ['OSTR1X', 'OSTR1C']:
@@ -254,13 +264,13 @@ class Subcase(object):
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OSTRVM1', 'OSTRVM1C']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
             else:
-                _write_op2_error_msg(log, self.log, msg, data_code)
+                self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # special tables
         elif table_name in ['RADCONS', 'RADEFFM', 'RADEATC', 'RAPEATC', 'RAQEATC', 'RADCONS',
@@ -650,7 +660,8 @@ class Subcase(object):
           if any(subcase1.has_parameter('LOAD', 'TEMPERATURE(LOAD)')):
               print('found LOAD for subcase 1')
         """
-        exists = [True if param_name.upper() in self.params else False for param_name in param_names]
+        exists = [True if param_name.upper() in self.params else False
+                  for param_name in param_names]
         return exists
 
     def __getitem__(self, param_name):
@@ -697,9 +708,9 @@ class Subcase(object):
         """
         for key, param in iteritems(self.params):
             value, options, param_type = param
-            if key in int_cards or key in ('SUBTITLE', 'LABEL', 'TITLE', 'ECHO'):
+            if key in INT_CARDS or key in ('SUBTITLE', 'LABEL', 'TITLE', 'ECHO'):
                 pass
-            elif key in plottable_types:
+            elif key in PLOTTABLE_TYPES:
                 if suppress_to not in options:
                     param[1].append(suppress_to)
                 if 'PRINT' in options:
@@ -707,7 +718,7 @@ class Subcase(object):
             else:
                 raise NotImplementedError(key)
 
-    def get_parameter(self, param_name, msg=''):  # possibly deprecate...
+    def get_parameter(self, param_name, msg='', obj=False):
         """
         Gets the [value, options] for a subcase.
 
@@ -715,6 +726,8 @@ class Subcase(object):
         ----------
         param_name : str
             the case control parameters to get
+        obj : bool; default=False
+            should the object be returned
 
         Returns
         -------
@@ -738,38 +751,40 @@ class Subcase(object):
             raise KeyError('%s doesnt exist in subcase=%s in the case '
                            'control deck%s.' % (param_name, self.id, msg))
         value, options, param_type = self.params[param_name]
-        #print('param_name=%r value=%s options=%s param_type=%r' % (param_name, value, options, param_type))
-        return value, options  #, param_type
-
-    #def update_parameter_in_subcase(self, key, value, options, param_type):
-        #self.deprecated('update_parameter_in_subcase', 'update', '0.8')
-        #self.update(key, value, options, param_type)
-
-    #def add_parameter_to_subcase(self, key, value, options, param_type):
-        #self.deprecated('add_parameter_to_subcase', 'add', '0.8')
-        #self.add(key, value, options, param_type)
+        #print('param_name=%r value=%s options=%s param_type=%r' % (
+            #param_name, value, options, param_type))
+        if param_type == 'OBJ-type' and not obj:
+            return value.value, options
+        return value, options
 
     def add(self, key, value, options, param_type):
-        assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type', 'STRING-type'], param_type
+        if param_type not in self.allowed_param_types:
+            msg = 'param_type=%r allowed_types=%s' % (param_type, ''.join(self.allowed_param_types))
+            raise TypeError(param_type)
         self._add_data(key, value, options, param_type)
 
     def update(self, key, value, options, param_type):
-        assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type', 'STRING-type'], param_type
+        if param_type not in self.allowed_param_types:
+            msg = 'param_type=%r allowed_types=%s' % (param_type, ''.join(self.allowed_param_types))
+            raise TypeError(param_type)
         assert key in self.params, 'key=%r is not in isubcase=%s' % (key, self.id)
         self._add_data(key, value, options, param_type)
 
     def _add_data(self, key, value, options, param_type):
         key = update_param_name(key)
         if key == 'ANALYSIS' and value == 'FLUT':
-                value = 'FLUTTER'
+            value = 'FLUTTER'
 
         #print("adding isubcase=%s key=%r value=%r options=%r "
-        #      "param_type=%r" %(self.id, key, value, options, param_type))
+              #"param_type=%r" %(self.id, key, value, options, param_type))
         if isinstance(value, string_types) and value.isdigit():
             value = int(value)
 
-        (key, value, options) = self._simplify_data(key, value, options, param_type)
-        self.params[key] = [value, options, param_type]
+        if param_type == 'OBJ-type':
+            self.params[key] = value
+        else:
+            (key, value, options) = self._simplify_data(key, value, options, param_type)
+            self.params[key] = [value, options, param_type]
 
     def _simplify_data(self, key, value, options, param_type):
         if param_type == 'SET-type':
@@ -788,12 +803,17 @@ class Subcase(object):
             #      "param_type=%s" %(self.id, key, value, options, param_type))
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
+        #elif param_type == 'OBJ-type':
+            ##self.params[value.type] = value
+            #return value.type,
+        elif param_type == 'OBJ-type':
+            raise RuntimeError('this function should never be called with an OBJ-type...')
         else:
-            if 0:
-                a = 'key=%r' % key
-                b = 'value=%r' % value
-                c = 'options=%r' % options
-                d = 'param_type=%r' % param_type
+            #if 0:
+                #a = 'key=%r' % key
+                #b = 'value=%r' % value
+                #c = 'options=%r' % options
+                #d = 'param_type=%r' % param_type
                 #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
             if isinstance(value, integer_types) or value is None:
                 pass
@@ -808,10 +828,11 @@ class Subcase(object):
     def get_op2_data(self, sol, solmap_to_value):
         self.sol = sol
         label = 'SUBCASE %s' % (self.id)
-        op2Params = {'isubcase': None, 'tables': [], 'analysisCodes': [],
-                     'device_codes': [], 'sortCodes': [], 'tableCodes': [],
-                     'label': label, 'subtitle': None, 'title': None,
-                     'formatCodes': [], 'stressCodes': [], 'thermal': None}
+        op2_params = {
+            'isubcase': None, 'tables': [], 'analysis_codes': [],
+            'device_codes': [], 'sort_codes': [], 'table_codes': [],
+            'label': label, 'subtitle': None, 'title': None,
+            'format_codes': [], 'stress_codes': [], 'thermal': None}
 
         results = ['DISPLACEMENT', 'EKE', 'EDE', 'ELSDCON', 'ENTHALPY',
                    'EQUILIBRIUM', 'ESE', 'FLUX', 'FORCE', 'GPFORCE', 'GPKE',
@@ -850,7 +871,7 @@ class Subcase(object):
             #print(msg)
             #msg += self.printParam(key, param)
             if param_type == 'SUBCASE-type':
-                op2Params['isubcase'].append(value)
+                op2_params['isubcase'].append(value)
             elif key in ['BEGIN', 'ECHO', 'ANALYSIS'] or 'SET' in key:
                 pass
             elif key == 'TEMPERATURE':
@@ -860,26 +881,26 @@ class Subcase(object):
                 device_code = self.get_device_code(options, value)
 
                 if key in ['STRESS', 'STRAIN']:
-                    stressCode = self.get_stress_code(key, options, value)
-                    op2Params['stressCodes'].append(stressCode)
+                    stress_code = self.get_stress_code(key, options, value)
+                    op2_params['stress_codes'].append(stress_code)
                 else:
-                    op2Params['stressCodes'].append(0)
+                    op2_params['stress_codes'].append(0)
 
                 format_code = self.get_format_code(options, value)
                 table_code = self.get_table_code(sol, key, options)
                 analysis_code = self.get_analysis_code(sol)
 
                 approach_code = analysis_code * 10 + device_code
-                tCode = table_code * 1000 + sort_code
-                op2Params['tables'].append(key)
+                tcode = table_code * 1000 + sort_code
+                op2_params['tables'].append(key)
 
-                op2Params['analysisCodes'].append(analysis_code)
-                op2Params['approachCodes'].append(approach_code)
-                op2Params['device_codes'].append(device_code)
-                op2Params['formatCodes'].append(format_code)
-                op2Params['sortCodes'].append(sort_code)
-                op2Params['tableCodes'].append(table_code)
-                op2Params['tCodes'].append(tCode)
+                op2_params['analysis_codes'].append(analysis_code)
+                op2_params['approach_codes'].append(approach_code)
+                op2_params['device_codes'].append(device_code)
+                op2_params['format_codes'].append(format_code)
+                op2_params['sort_codes'].append(sort_code)
+                op2_params['table_codes'].append(table_code)
+                op2_params['tcodes'].append(tcode)
                 #analysisMethod = value
 
             #elif key in ['ADACT', 'ADAPT', 'AERCONFIG', 'TITLE', 'SUBTITLE',
@@ -887,15 +908,15 @@ class Subcase(object):
             #            'TSTEPNL', 'NLPARM', 'TRIM', 'GUST', 'METHOD',
             #            'DESOBJ', 'DESSUB', 'FMETHOD', 'SEALL']:
             else:
-                op2Params[key.lower()] = value
+                op2_params[key.lower()] = value
 
             #else:
             #    raise NotImplementedErrror('unsupported entry...\n%s' %(msg))
 
-        op2Params['thermal'] = thermal
+        op2_params['thermal'] = thermal
 
         #print("\nThe estimated results...")
-        #for (key, value) in sorted(iteritems(op2Params)):
+        #for (key, value) in sorted(iteritems(op2_params)):
             #if value is not None:
                 #print("   key=%r value=%r" % (key, value))
 
@@ -943,46 +964,13 @@ class Subcase(object):
             assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
             msg += msgi
         elif param_type == 'STRESS-type':
-            str_options = ','.join(options)
-            #print("str_options = %r" % (str_options))
-            #print("STRESSTYPE key=%s value=%s options=%s"
-            #    % (key, value, options))
-            if value is None:
-                val = ''
-            else:
-                val = ' = %s' % value
-            if len(str_options) > 0:
-                msgi = '%s(%s)%s\n' % (key, str_options, val)
-                if len(msgi) > 64:
-                    msgi = '%s(' % key
-                    msg_done = ''
-                    i = 0
-                    while i < len(options):
-                        option = options[i]
-                        new_msgi = '%s,' % options[i]
-                        if (len(msgi) + len(new_msgi)) < 64:
-                            msgi += new_msgi
-                        else:
-                            msg_done += msgi + '\n'
-                            msgi = spaces + new_msgi
-                        i += 1
-                    msg_done += msgi
-                    msgi = ''
-                    msg_done = msg_done.rstrip(' ,\n') + ')%s\n' % val
-                    assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
-                    msg += msg_done
-                else:
-                    assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
-                    msg += msgi
-            else:
-                msgi = '%s%s\n' % (key, val)
-                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
-                msg += msgi
-            msg = spaces + msg
+            msg += write_stress_type(key, options, value, spaces)
 
         elif param_type == 'SET-type':
             #: .. todo:: collapse data...not written yet
             msg += write_set(value, options, spaces)
+        elif param_type == 'OBJ-type':
+            msg += value.write(spaces)
         else:
             # SET-type is not supported yet...
             msg = ('\nkey=%r param=%r\n'
@@ -1024,13 +1012,13 @@ class Subcase(object):
         #if 'SUPORT' in self.params:
             #pass
         #if 'MPC' in self.params:
-            ##mpcID = self.params['MPC'][0]
-            ##mpcObj = model.mpcs[mpcID]
-            ##mpcObj.cross_reference(model)
+            ##mpc_id = self.params['MPC'][0]
+            ##mpc_obj = model.mpcs[mpc_id]
+            ##mpc_obj.cross_reference(model)
             #pass
         #if 'SPC' in self.params:
             ##spcID = self.params['SPC'][0]
-            ##print "SPC ID = ",spcID
+            ##print "SPC ID = %r" % spcID
             ##spcObj = model.spcObject
             ##spcObj.cross_reference(spcID, model)
             #pass
@@ -1087,8 +1075,8 @@ class Subcase(object):
                 else:
                     #print("key=%s param=%s" %(key, param))
                     (value, options, param_type) = param
-                    #print("  *key=%r value=|%s| options=%s "
-                          #"param_type=|%s|" % (key, value, options, param_type))
+                    #print("  *key=%r value=%r options=%s "
+                          #"param_type=%r" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
                     #print ""
@@ -1096,8 +1084,8 @@ class Subcase(object):
                 for (key, param) in self.subcase_sorted(self.params.items()):
                     #print("key=%s param=%s" %(key, param))
                     (value, options, param_type) = param
-                    #print("  *key=%r value=|%s| options=%s "
-                          #"param_type=|%s|" % (key, value, options, param_type))
+                    #print("  *key=%r value=%r options=%s "
+                          #"param_type=%r" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
                 assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
@@ -1196,7 +1184,8 @@ def update_param_name(param_name):
 
     .. todo:: not a complete list
     """
-    if   param_name.startswith('ACCE'):
+    param_name = param_name.strip().upper()
+    if param_name.startswith('ACCE'):
         param_name = 'ACCELERATION'
     elif param_name.startswith('DESO'):
         param_name = 'DESOBJ'
@@ -1289,171 +1278,3 @@ def update_param_name(param_name):
     #print '*param_name = ',param_name
     return param_name
 
-def expand_thru_case_control(set_value):
-    set_value2 = set([])
-    add_mode = True
-    imin = 0
-    imax = 0
-    #print('set_value = %r' % set_value)
-    for ivalue in set_value:
-        if isinstance(ivalue, integer_types):
-            assert add_mode is True, add_mode
-            set_value2.add(ivalue)
-            continue
-        ivalue = ivalue.strip()
-        #print('  ivalue=%r; type=%s' % (ivalue, type(ivalue)))
-        if '/' in ivalue:
-            set_value2.add(ivalue)
-        else:
-
-            #if 'ALL' in ivalue:
-                #msg = ('ALL is not supported on CaseControlDeck '
-                       #'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
-                #raise RuntimeError(msg)
-            #elif 'EXCEPT' in ivalue:
-                #msg = ('EXCEPT is not supported on CaseControlDeck '
-                       #'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
-                #raise RuntimeError(msg)
-
-            ivalue = interpret_value(ivalue, card=str(set_value))
-            if isinstance(ivalue, integer_types):
-                #print('  isdigit')
-                #ivalue = int(ivalue)
-                if not imin < ivalue < imax:
-                    add_mode = True
-                    #print('  break...\n')
-                if add_mode:
-                    #print('  adding %s' % ivalue)
-                    set_value2.add(ivalue)
-                else:
-                    #print('  removing %s' % ivalue)
-                    set_value2.remove(ivalue)
-                    imin = ivalue
-            elif isinstance(ivalue, float):
-                assert add_mode is True, add_mode
-                set_value2.add(ivalue)
-            elif isinstance(ivalue, string_types):
-                #print('  not digit=%r' % set_value)
-                if set_value is 'EXCLUDE':
-                    msg = ('EXCLUDE is not supported on CaseControlDeck '
-                           'SET card\n')
-                    raise RuntimeError(msg)
-                elif 'THRU' in ivalue:
-                    svalues = ivalue.split()
-                    #print('  svalues=%s' % svalues)
-                    if len(svalues) == 3:
-                        assert add_mode is True, add_mode
-                        imin, thru, imax = svalues
-                        assert thru == 'THRU', thru
-                        imin = int(imin)
-                        imax = int(imax)
-                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                        for jthru in range(imin, imax + 1):
-                            set_value2.add(jthru)
-
-                    elif len(svalues) == 4:
-                        imin, thru, imax, by_except = svalues
-                        imin = int(imin)
-                        imax = int(imax)
-                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                        assert by_except == 'EXCEPT', by_except
-
-                        for jthru in range(imin, imax + 1):
-                            set_value2.add(jthru)
-                        add_mode = False
-
-                    elif len(svalues) == 5:
-                        imin, thru, imax, by_except, increment_except = svalues
-                        imin = int(imin)
-                        imax = int(imax)
-                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                        increment_except = int(increment_except)
-                        if by_except == 'BY':
-                            for jthru in range(imin, imax + 1, by_except):
-                                set_value2.add(jthru)
-                            add_mode = True
-                        elif by_except == 'EXCEPT':
-                            for jthru in range(imin, imax + 1):
-                                if jthru == increment_except:
-                                    continue
-                                set_value2.add(jthru)
-                            add_mode = False
-                        else:
-                            raise RuntimeError(ivalue)
-                    else:
-                        raise RuntimeError('expected data of the form: 10 THRU 20 or 10 THRU 20 BY 5; actual=\n%r' % ivalue)
-                else:
-                    assert add_mode is True, add_mode
-                    set_value2.add(ivalue)
-
-    list_values = list(set_value2)
-    try:
-        list_values.sort()
-    except TypeError:
-        msg = 'sort error: list_values=%s'  % (list_values)
-        raise TypeError(msg)
-
-    #print('end of expansion', list_values)
-    return list_values
-
-
-def write_set(value, options, spaces=''):
-    """
-    writes
-    SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,
-         4572, 4573, 3323 THRU 3462, 3464 THRU 3603, 3605 THRU 3683,
-         3910 THRU 3921, 4125 THRU 4136, 4340 THRU 4351
-
-    Parameters
-    ----------
-    value : int
-        the Set ID
-    options : List[int]
-        the Set values
-    spaces : str; default=''
-        indentation
-
-    Returns
-    -------
-    msg : str
-       the string of the set
-
-    Example
-    -------
-    value = 80
-    options = [1, 2, 3, 4, 5, 7]
-    set = write_set(value, options, spaces='')
-    print(set)
-    >>> SET 80 = 1 THRU 5, 7
-    """
-    value.sort()
-    starter = 'SET %s = ' % (options)
-    msg2 = spaces + starter
-
-    msg = ''
-    nchars = len(msg2)
-    is_valid = True
-    for valuei in value:
-        if not isinstance(valuei, integer_types):
-            is_valid = False
-            break
-
-    if is_valid:
-        singles, doubles = collapse_thru_packs(value)
-
-        out_value = singles
-        for double in doubles:
-            assert len(double) == 3, double
-            sdouble = '%i THRU %i' % (double[0], double[2])
-            out_value.append(sdouble)
-    else:
-        out_value = value
-
-    for i, out_valuei in enumerate(out_value):
-        new_string = '%s, ' % out_valuei
-        if len(msg2 + new_string) > 70:
-            msg += msg2 + '\n'
-            msg2 = ' ' * nchars + new_string
-        else:
-            msg2 += new_string
-    return msg + msg2.rstrip(' \n,') + '\n'

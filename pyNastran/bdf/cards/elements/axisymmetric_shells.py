@@ -20,12 +20,12 @@ from numpy import cross
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
-from pyNastran.bdf.cards.base_card import Element
+from pyNastran.bdf.field_writer_8 import (
+    set_blank_if_default, set_default_if_blank,
+    print_card_8, print_field_8)
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank)
-from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.elements.shell import TriShell, QuadShell, _triangle_area_centroid_normal, _normal
 from pyNastran.bdf.cards.base_card import Element
@@ -61,12 +61,12 @@ class AxisymmetricTri(AxisymmetricElement):
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        n1, n2, n3 = self.get_node_positions()[:3, :]
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
     def Mass(self):
-        n1, n2, n3 = self.get_node_positions()[:3, :]
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
         return 0.
 
 class CTRAX3(AxisymmetricTri):
@@ -97,6 +97,16 @@ class CTRAX3(AxisymmetricTri):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRAX3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -142,7 +152,7 @@ class CTRAX3(AxisymmetricTri):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3) = self.get_node_positions()
+        n1, n2, n3 = self.get_node_positions()
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -229,6 +239,16 @@ class CTRAX6(AxisymmetricTri):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRAX6 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -274,7 +294,7 @@ class CTRAX6(AxisymmetricTri):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -282,7 +302,7 @@ class CTRAX6(AxisymmetricTri):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert"""
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -344,7 +364,6 @@ class CTRIAX(TriShell):
     Theta/Mcid is MSC only!
     """
     type = 'CTRIAX'
-    calculix_type = 'CAX6'
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         TriShell.__init__(self)
         if comment:
@@ -362,6 +381,16 @@ class CTRIAX(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRIAX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -412,7 +441,7 @@ class CTRIAX(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -420,7 +449,7 @@ class CTRIAX(TriShell):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert"""
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -481,7 +510,8 @@ class CTRIAX6(TriShell):
     |         | THETA |       |    |    |    |    |    |     |
     +---------+-------+-------+----+----+----+----+----+-----+
 
-    Nodes are defined in a non-standard way::
+
+    NX/MSC : Nodes are defined in a non-standard way::
 
            5
           / \
@@ -490,7 +520,7 @@ class CTRIAX6(TriShell):
       1----2----3
     """
     type = 'CTRIAX6'
-    #calculix_type = 'CAX6'
+    pid = -53 # uses element type from OP2
     def __init__(self, eid, mid, nids, theta=0., comment=''):
         TriShell.__init__(self)
         if comment:
@@ -506,6 +536,16 @@ class CTRIAX6(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CTRIAX6 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         mid = integer(card, 2, 'mid')
 
@@ -552,7 +592,7 @@ class CTRIAX6(TriShell):
         nids = self.node_ids
         edges = self.get_edge_ids()
 
-        assert self.pid == 0, 'pid = %s' % self.pid
+        assert self.pid == -53, 'pid = %s' % self.pid
         assert isinstance(eid, integer_types)
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
@@ -566,15 +606,16 @@ class CTRIAX6(TriShell):
                 assert isinstance(n[i], float)
 
     def Pid(self):
-        raise AttributeError("CTRIAX6 doesn't have a Property")
+        #raise AttributeError("CTRIAX6 doesn't have a Property")
+        return self.pid
 
     def AreaCentroidNormal(self):
         """
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n0, n1, n2, n3, n4, n5) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n2, n4], self)
+        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        return _triangle_area_centroid_normal([n1, n3, n5], self)
 
     def Area(self):
         r"""
@@ -587,6 +628,17 @@ class CTRIAX6(TriShell):
         area = 0.5 * norm(cross(a, b))
         return area
 
+    def Centroid(self):
+        r"""
+        Get the centroid.
+
+        .. math::
+          CG = \frac{1}{3} (n_0+n_1+n_2)
+        """
+        n1, n2, n3, n4, n5, n6 = self.get_node_positions()
+        centroid = (n1 + n3 + n5) / 3.
+        return centroid
+
     def Nsm(self):
         raise AttributeError('CTRIAX6 does not have a non-structural mass')
 
@@ -594,7 +646,8 @@ class CTRIAX6(TriShell):
         raise AttributeError('CTRIAX6 does not have a MassPerArea')
 
     def Mass(self):
-        raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
+        #raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
+        return 0.
 
     def Mid(self):
         if isinstance(self.mid, integer_types):
@@ -613,10 +666,6 @@ class CTRIAX6(TriShell):
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n6, n5, n4, n3, n2]
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -677,8 +726,6 @@ class CQUADX(QuadShell):
     Theta/Mcid is MSC only!
     """
     type = 'CQUADX'
-    calculix_type = 'CAX8'
-
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
         QuadShell.__init__(self)
         if comment:
@@ -693,6 +740,16 @@ class CQUADX(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUADX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -794,7 +851,7 @@ class CQUADX4(QuadShell):
     | CQUADX4 |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA |
     +---------+-------+-------+----+----+----+----+-------+
 
-    CQUADX8 is an NX card only!
+    CQUADX4 is an NX card only!
     """
     type = 'CQUADX4'
 
@@ -812,6 +869,16 @@ class CQUADX4(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUADX4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -915,6 +982,16 @@ class CQUADX8(QuadShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CQUADX8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -982,6 +1059,9 @@ class CQUADX8(QuadShell):
             has this model been cross referenced
         """
         pass
+
+    def Mass(self):
+        return 0.0
 
     def raw_fields(self):
         list_fields = ['CQUADX8', self.eid, self.Pid()] + self.node_ids + [self.theta]

@@ -88,7 +88,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Is the laminate symmetrical?
 
-        :returns; True or False
+        Returns
+        -------
+        is_symmetrical : bool
+            is the SYM flag active?
         """
         if self.lam == 'SYM':
             return True
@@ -178,7 +181,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     @property
     def nplies(self):
         r"""
-            Gets the number of plies including the core.
+        Gets the number of plies including the core.
 
             ::
 
@@ -439,7 +442,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
                 return 2. * mass_per_area + self.nsm
             return mass_per_area + self.nsm
         else:
-            assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
+            assert isinstance(iply, integer_types), 'iply must be an integer; iply=%r' % iply
             #rho = self.get_density(iply)
             rho = rhos[iply]
             t = self.thicknesses[iply]
@@ -626,6 +629,16 @@ class PCOMP(CompositeShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCOMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
 
         # z0 is field 2 and is calculated at the end because we need the
@@ -699,6 +712,16 @@ class PCOMP(CompositeShellProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PCOMP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         #data_in = [
             #pid, z0, nsm, sb, ft, tref, ge,
             #is_symmetrical, Mid, T, Theta, Sout]
@@ -779,9 +802,9 @@ class PCOMP(CompositeShellProperty):
         nsm = self.Nsm()
         mids = self.Mids()
 
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(is_sym, bool), 'is_sym=%r' % is_sym
-        assert isinstance(nplies, int), 'nplies=%r' % nplies
+        assert isinstance(nplies, integer_types), 'nplies=%r' % nplies
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         assert isinstance(mids, list), 'mids=%r' % mids
 
@@ -874,6 +897,45 @@ class PCOMPG(CompositeShellProperty):
 
     def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
                  nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
+        """
+        Creates a PCOMPG card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        global_ply_ids : List[int]
+            the ply id
+        mids : List[int, ..., int]
+            material ids for each ply
+        thicknesses : List[float, ..., float]
+            thicknesses for each ply
+        thetas : List[float, ..., float]; default=None
+            ply angle
+            None : [0.] * nplies
+        souts : List[str, ..., str]; default=None
+            should the stress? be printed; {YES, NO}
+            None : [NO] * nplies
+        nsm : float; default=0.
+            nonstructural mass per unit area
+        sb : float; default=0.
+            Allowable shear stress of the bonding material.
+            Used by the failure theory
+        ft : str; default=None
+            failure theory; {HILL, HOFF, TSAI, STRN, None}
+        tref : float; default=0.
+            reference temperature
+        ge : float; default=0.
+            structural damping
+        lam : str; default=None
+            symmetric flag; {SYM, MEM, BEND, SMEAR, SMCORE, None}
+            None : not symmmetric
+        z0 : float; default=None
+            Distance from the reference plane to the bottom surface
+            None : -1/2 * total_thickness
+        comment : str; default=''
+            a comment for the card
+        """
         CompositeShellProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -929,6 +991,16 @@ class PCOMPG(CompositeShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PCOMPG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         # z0 will be calculated later
         nsm = double_or_blank(card, 3, 'nsm', 0.0)
@@ -971,7 +1043,7 @@ class PCOMPG(CompositeShellProperty):
 
             assert mid is not None
             assert thickness is not None
-            assert isinstance(mid, int), 'mid=%s' % mid
+            assert isinstance(mid, integer_types), 'mid=%s' % mid
             assert isinstance(thickness, float), 'thickness=%s' % thickness
             mid_last = mid
             thick_last = thickness
@@ -990,9 +1062,9 @@ class PCOMPG(CompositeShellProperty):
         nsm = self.Nsm()
         mids = self.Mids()
 
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(is_sym, bool), 'is_sym=%r' % is_sym
-        assert isinstance(nplies, int), 'nplies=%r' % nplies
+        assert isinstance(nplies, integer_types), 'nplies=%r' % nplies
         assert isinstance(nsm, float), 'nsm=%r' % nsm
         assert isinstance(mids, list), 'mids=%r' % mids
 
@@ -1007,7 +1079,7 @@ class PCOMPG(CompositeShellProperty):
             mid2 = self.Mid(iply)
             assert mids[iply] == mid2
             t = self.Thickness(iply)
-            assert isinstance(glply, int), 'global_ply_id=%r' % glply
+            assert isinstance(glply, integer_types), 'global_ply_id=%r' % glply
             assert isinstance(t, float), 'thickness=%r' % t
             if xref:
                 rho = self.Rho(iply)
@@ -1073,10 +1145,18 @@ class PLPLANE(ShellProperty):
     (i.e., large strain and large rotation)
     hyperelastic plane strain or axisymmetric element.
 
-    PLPLANE PID MID CID STR
+    +---------+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |
+    +=========+=====+=====+=====+=====+
+    | PLPLANE | PID | MID | CID | STR |
+    +---------+-----+-----+-----+-----+
     MSC
 
-    PLPLANE PID MID CID STR T
+    +---------+-----+-----+-----+-----+---+
+    |    1    |  2  |  3  |  4  |  5  | 6 |
+    +=========+=====+=====+=====+=====+===+
+    | PLPLANE | PID | MID | CID | STR | T |
+    +---------+-----+-----+-----+-----+---+
     NX
 
     Referenced by:
@@ -1088,6 +1168,24 @@ class PLPLANE(ShellProperty):
     _field_map = {1: 'pid', 2:'mid', 6:'cid', 7:'str'}
 
     def __init__(self, pid, mid, cid=0, stress_strain_output_location='GRID', comment=''):
+        """
+        Creates a PLPLANE card, which defines the properties of a fully
+        nonlinear (i.e., large strain and large rotation) hyperelastic
+        plane strain or axisymmetric element.
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id; MATHP / MATHE
+        cid : int; default=0
+            ???
+        stress_strain_output_location : str; default='GRID'
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         ShellProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -1099,6 +1197,16 @@ class PLPLANE(ShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLPLANE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -1122,6 +1230,11 @@ class PLPLANE(ShellProperty):
         self.mid_ref = self.mid
         self.cid_ref = self.cid
 
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        self.cid = self.Cid()
+        del self.mid_ref, self.cid_ref
+
     def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
@@ -1134,7 +1247,10 @@ class PLPLANE(ShellProperty):
         #return self.pid
 
     #def Thickness(self):
-        #return self.t
+        #return 0.
+
+    #def MassPerArea(self):
+        #return 0.
 
     def Mid(self):
         if isinstance(self.mid, integer_types):
@@ -1179,6 +1295,16 @@ class PPLANE(ShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PPLANE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
         t = double_or_blank(card, 3, 'cid', 0.)
@@ -1229,19 +1355,38 @@ class PPLANE(ShellProperty):
 
 
 class PSHEAR(ShellProperty):
+    """
+    Defines the properties of a shear panel (CSHEAR entry).
+
+    +--------+-----+-----+---+-----+----+----+
+    |   1    |  2  |  3  | 4 |  5  |  6 |  7 |
+    +========+=====+=====+===+=====+====+====+
+    | PSHEAR | PID | MID | T | NSM | F1 | F2 |
+    +--------+-----+-----+---+-----+----+----+
+    """
     type = 'PSHEAR'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'f1', 6:'f2'}
 
-    def __init__(self, pid, t, mid, nsm=0., f1=0., f2=0., comment=''):
+    def __init__(self, pid, mid, t, nsm=0., f1=0., f2=0., comment=''):
         """
-        Defines the properties of a shear panel (CSHEAR entry).
+        Creates a PSHEAR card
 
-
-        +--------+-----+-----+---+-----+----+----+
-        |   1    |  2  |  3  | 4 |  5  |  6 |  7 |
-        +========+=====+=====+===+=====+====+====+
-        | PSHEAR | PID | MID | T | NSM | F1 | F2 |
-        +--------+-----+-----+---+-----+----+----+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        t : float
+            shear panel thickness
+        nsm : float; default=0.
+            nonstructural mass per unit length
+        f1 : float; default=0.0
+            Effectiveness factor for extensional stiffness along edges 1-2 and 3-4
+        f2 : float; default=0.0
+            Effectiveness factor for extensional stiffness along edges 2-3 and 1-4
+        comment : str; default=''
+            a comment for the card
         """
         ShellProperty.__init__(self)
         if comment:
@@ -1260,6 +1405,16 @@ class PSHEAR(ShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PSHEAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         t = double(card, 3, 't')
@@ -1267,10 +1422,20 @@ class PSHEAR(ShellProperty):
         f1 = double_or_blank(card, 5, 'f1', 0.0)
         f2 = double_or_blank(card, 6, 'f2', 0.0)
         assert len(card) <= 7, 'len(PSHEAR card) = %i\ncard=%s' % (len(card), card)
-        return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
+        return PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PSHEAR card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid = data[1]
         t = data[2]
@@ -1278,7 +1443,7 @@ class PSHEAR(ShellProperty):
         f1 = data[4]
         f2 = data[5]
         assert isinstance(mid, integer_types), data
-        return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
+        return PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
 
     def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:
@@ -1448,6 +1613,16 @@ class PSHELL(ShellProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PSHELL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         mid1 = integer_or_blank(card, 2, 'mid1')
         t = double_or_blank(card, 3, 't')
@@ -1483,6 +1658,16 @@ class PSHELL(ShellProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PSHELL card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         pid = data[0]
         mid1 = data[1]
         t = data[2]
@@ -1690,35 +1875,6 @@ class PSHELL(ShellProperty):
         self.mid2 = self.Mid2()
         self.mid3 = self.Mid3()
         self.mid4 = self.Mid4()
-
-    def _write_calculix(self, marker='markerDummyProp',
-                        element_set='ELsetDummyProp'):
-        msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' % (
-            marker, self.mid, element_set, self.z1)
-        msg += '** THICKNESS\n'
-        msg += '%s\n\n' % (self.t)
-        return msg
-
-    def write_code_aster(self):
-        """
-        * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
-        * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
-
-        The angle_rep is a direction angle, use either angle(a,b) or
-        vecteur(x,y,z)
-        coque_ncou is the number of gauss nodes along the thickness, for
-        linear analysis one node is sufficient.
-        """
-        msg = ''
-        msg += "    COQUE=_F(GROUP_MA='P%s', # COQUE=PSHELL\n" % self.pid
-        msg += "              EPAIS=%g, # EPAIS=thickness\n" % self.t
-        msg += "              ANGL_REP=(0.,90.),  # ???\n"  #: .. todo:: what is this?
-        #msg += "              VECTEUR=(1.0,0.0,0.0,)  #  local coordinate system\n"
-        msg += "              EXCENTREMENT=%g,  # offset-Z1\n" % self.z1
-        msg += "              COQUE_NCOU=1,  # Number of Integration Layers\n"
-        msg += "              CARA=('NSM'), # ???\n"  #: .. todo:: check
-        msg += "              VALE=(%g),),\n" % self.nsm
-        return msg
 
     def raw_fields(self):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),

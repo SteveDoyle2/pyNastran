@@ -79,6 +79,16 @@ class EIGB(Method):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an EIGB card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         method = string_or_blank(card, 2, 'method')
 
@@ -202,6 +212,16 @@ class EIGC(Method):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an EIGC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         method = string(card, 2, 'method')
         assert method in ['ARNO', 'INV', 'HESS', 'CLAN', 'ISRR', 'IRAM'], (
@@ -459,6 +479,16 @@ class EIGP(Method):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an EIGPX card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
 
         alpha1 = double(card, 2, 'alpha1')
@@ -539,6 +569,10 @@ class EIGR(Method):
         Method.__init__(self)
         if comment:
             self.comment = comment
+        if G == 0:
+            G = None
+        if C == 0:
+            C = None
 
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
@@ -578,6 +612,16 @@ class EIGR(Method):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an EIGR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         method = string_or_blank(card, 2, 'method', 'LAN')
 
@@ -729,6 +773,16 @@ class EIGRL(Method):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds an EIGRL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         v1 = double_or_blank(card, 2, 'v1')
         v2 = double_or_blank(card, 3, 'v2')

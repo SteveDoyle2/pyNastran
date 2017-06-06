@@ -41,6 +41,22 @@ class LOAD(LoadCombination):
     type = 'LOAD'
 
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
+        """
+        Creates a LOAD card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            overall scale factor
+        scale_factors : List[float]
+            individual scale factors (corresponds to load_ids)
+        load_ids : List[int]
+            individual load_ids (corresponds to scale_factors)
+        comment : str; default=''
+            a comment for the card
+        """
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
 
@@ -68,7 +84,6 @@ class LOAD(LoadCombination):
                     raise NotImplementedError(msg)
 
         load_ids = list(set(load_ids))
-        #print("load_ids = ", load_ids)
         return load_ids
 
     def get_load_types(self):
@@ -83,7 +98,7 @@ class LOAD(LoadCombination):
                     if isinstance(lid, list):
                         load_types += load.type
                     else:  # int
-                        load_types += [load.type] + load.getLoadTypes()
+                        load_types += [load.type] + load.get_load_types()
                 elif isinstance(load, (Force, Moment, PLOAD4, GRAV)):
                     load_types += [load.type]
                 else:
@@ -93,82 +108,21 @@ class LOAD(LoadCombination):
         #print("load_types = ", load_types)
         return load_types
 
-    def write_calculix_grav(self, gx, gy, gz):
-        msg = '*DLOAD\n'
-        msg += 'AllElements,GRAV,%s,%s,%s\n' % (gx, gy, gz)
-        return msg
-
-    def write_code_aster_load(self, model, grid_word='node'):
-        load_ids = self.get_load_ids()
-        load_types = self.get_load_types()
-
-        #msg = '# Loads\n'
-        msg = ''
-        (types_found, force_loads, moment_loads,
-         force_constraints, moment_constraints,
-         gravity_loads) = self.organize_loads(model)
-
-        nids = []
-        for nid in force_loads:
-            nids.append(nid)
-        for nid in moment_loads:
-            nids.append(nid)
-
-        if nids:
-            msg += '# types_found = %s\n' % (list(types_found))
-            msg += '# load_ids    = %s\n' % (load_ids)
-            msg += "load_bc = AFFE_CHAR_MECA(MODELE=modmod,\n"
-            #msg += "                        DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
-            msg += "                         FORCE_NODALE=(\n"
-
-        #CHAR=AFFE_CHAR_MECA(MODELE=MODE,
-        #             FORCE_NODALE=(
-        #                     _F(NOEUD='N1',
-        #                        FZ=-500.0),)
-
-        spaces = "                           "
-        for nid in sorted(nids):  # ,load in sorted(iteritems(force_loads))
-            msg += spaces + "_F(NOEUD='%s%s'," % (grid_word, nid)
-
-            if nid in force_loads:
-                force = force_loads[nid]
-                if abs(force[0]) > 0.:
-                    msg += " FX=%s," % force[0]
-                if abs(force[1]) > 0.:
-                    msg += " FY=%s," % force[1]
-                if abs(force[2]) > 0.:
-                    msg += " FZ=%s," % force[2]
-
-            if nid in moment_loads:
-                moment = moment_loads[nid]
-                if abs(moment[0]) > 0.:
-                    msg += " MX=%s," % moment[0]
-                if abs(moment[1]) > 0.:
-                    msg += " MY=%s," % moment[1]
-                if abs(moment[2]) > 0.:
-                    msg += " MZ=%s," % moment[2]
-            #msg = msg[:-2]
-            msg += '),\n'
-            # finish the load
-
-            #if moment in
-            #msg += "                                   DX=0.0,\n"
-            #msg += "                                   DY=0.0,\n"
-            #msg += "                                   DZ=0.0,),\n"
-            #msg += "                                _F(GROUP_MA='Lright',\n"
-            #msg += "                                   DZ=0.0,),),\n"
-        msg = msg[:-2]
-        msg += ');\n'
-
-        for gravity_load in gravity_loads:
-            msg += 'CA_GRAVITY(%s);\n' % str(gravity_load)
-        return msg, load_ids, load_types
-
-    def get_reduced_loads(self):
+    def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         """
         Get all load objects in a simplified form, which means all
         scale factors are already applied and only base objects
         (no LOAD cards) will be returned.
+
+        Parameters
+        ----------
+        resolve_load_card : bool; default=False
+            Nastran requires that LOAD cards do not reference other load cards
+            This feature can be enabled.
+        filter_zero_scale_factors : bool; default=False
+            Nastran does not filter loads with a 0.0 scale factor.  So, if you
+            have a 0.0 load, but are missing load ids, Nastran will throw a
+            fatal error.
 
         .. todo:: lots more object types to support
         """
@@ -184,13 +138,22 @@ class LOAD(LoadCombination):
             scale = i_scale * load_scale # actual scale = global * local
             if isinstance(loads_pack, integer_types):
                 raise RuntimeError('the load have not been cross-referenced')
+            if scale == 0.0 and filter_zero_scale_factors:
+                continue
 
             for load in loads_pack:
                 if simple_loads:
                     loads.append(load)
                     scale_factors.append(scale) # local
                 elif isinstance(load, LOAD):
-                    load_data = load.get_reduced_loads()
+                    if not resolve_load_card:
+                        msg = 'A LOAD card cannot reference another LOAD card\n'
+                        msg += 'current:\n%s\n' % str(self)
+                        msg += 'new:\n%s' % str(load)
+                        raise RuntimeError(msg)
+                    load_data = load.get_reduced_loads(
+                        resolve_load_card=True,
+                        filter_zero_scale_factors=filter_zero_scale_factors)
                     (reduced_scale_factors, reduced_loads) = load_data
 
                     loads += reduced_loads
@@ -200,67 +163,7 @@ class LOAD(LoadCombination):
                     msg = ('%s isnt supported in get_reduced_loads method'
                            % load.__class__.__name__)
                     raise NotImplementedError(msg)
-
         return (scale_factors, loads)
-
-    def organize_loads(self, model):
-        """
-        Figures out magnitudes of the loads to be applied to the various nodes.
-        This includes figuring out scale factors.
-        """
-        force_loads = {}  # spc enforced displacement (e.g. FORCE=0)
-        moment_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_loads = []
-
-        types_found = set()
-        (scale_factors, loads) = self.get_reduced_loads()
-
-        for (scale_factor, load) in zip(scale_factors, loads):
-            out = load.transform_load()
-            types_found.add(load.__class__.__name__)
-            if isinstance(load, Force):
-                (is_load, node, vector) = out
-                if is_load:  # load
-                    if node not in force_loads:
-                        force_loads[node] = vector * scale_factor
-                    else:
-                        force_loads[node] += vector * scale_factor
-                else:  # constraint
-                    if node not in force_loads:
-                        force_constraints[node] = vector * scale_factor
-                    else:
-                        force_constraints[node] += vector * scale_factor
-
-            elif isinstance(load, Moment):
-                (is_load, node, vector) = out
-                if is_load:  # load
-                    if node not in moment_loads:
-                        moment_loads[node] = vector * scale_factor
-                    else:
-                        moment_loads[node] += vector * scale_factor
-                else:  # constraint
-                    if node not in moment_loads:
-                        moment_constraints[node] = vector * scale_factor
-                    else:
-                        moment_constraints[node] += vector * scale_factor
-
-            elif isinstance(load, PLOAD4):
-                (is_load, nodes, vectors) = out
-                for (nid, vector) in zip(nodes, vectors):
-                    # not the same vector for all nodes
-                    force_loads[nid] = vector * scale_factor
-
-            elif isinstance(load, GRAV):
-                #(grav) = out
-                gravity_loads.append(out * scale_factor)  # grav
-            else:
-                msg = '%s not supported' % (load.__class__.__name__)
-                raise NotImplementedError(msg)
-
-        return (types_found, force_loads, moment_loads, force_constraints,
-                moment_constraints, gravity_loads)
 
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
@@ -303,6 +206,24 @@ class GRAV(BaseCard):
     type = 'GRAV'
 
     def __init__(self, sid, scale, N, cid=0, mb=0, comment=''):
+        """
+        Creates an GRAV card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        cid : int; default=0
+            the coordinate system for the load
+        mb : int; default=0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
 
@@ -316,7 +237,7 @@ class GRAV(BaseCard):
         self.scale = scale
 
         #: Acceleration vector components measured in coordinate system CID
-        self.N = N
+        self.N = np.asarray(N)
 
         #: Indicates whether the CID coordinate system is defined in the
         #: main Bulk Data Section (MB = -1) or the partitioned superelement
@@ -329,8 +250,23 @@ class GRAV(BaseCard):
         assert not allclose(max(abs(self.N)), 0.), ('GRAV N is a zero vector, '
                                                     'N=%s' % str(self.N))
 
+    def validate(self):
+        if not isinstance(self.scale, float):
+            msg = 'scale=%s type=%s' % (self.scale, type(self.scale))
+            raise TypeError(msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a GRAV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         scale = double(card, 3, 'scale')
@@ -343,6 +279,16 @@ class GRAV(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a GRAV card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         cid = data[1]
         a = data[2]
@@ -354,17 +300,6 @@ class GRAV(BaseCard):
 
     def get_loads(self):
         return [self]
-
-    def organize_loads(self, model):
-        types_found = [self.type]
-        force_loads = {}
-        moment_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_load = self.transform_load()
-        return (types_found, force_loads, moment_loads,
-                force_constraints, moment_constraints,
-                gravity_load)
 
     def transform_load(self):
         g = self.GravityVector()
@@ -444,7 +379,28 @@ class ACCEL(BaseCard):
     """
     type = 'ACCEL'
 
-    def __init__(self, sid, cid, N, direction, locs, vals, comment=''):
+    def __init__(self, sid, N, direction, locs, vals, cid=0, comment=''):
+        """
+        Creates an ACCEL card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        direction : str
+            Component direction of acceleration variation
+            {X, Y, Z}
+        locs : ???
+            ???
+        vals : ???
+            ???
+        cid : int; default=0
+            the coordinate system for the load
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Load set identification number (Integer>0)
@@ -454,23 +410,34 @@ class ACCEL(BaseCard):
 
         #: Components of the acceleration vector measured in coordinate system
         #: CID. (Real; at least one Ni != 0)
-        self.N = N
+        self.N = np.asarray(N, dtype='float64')
 
         #: Component direction of acceleration variation. (Character; one of X,Y or Z)
         self.direction = direction
         self.locs = array(locs, dtype='float64')
         self.vals = array(vals, dtype='float64')
 
+    def validate(self):
         assert max(abs(self.N)) > 0.
         assert self.direction in ['X', 'Y', 'Z'], 'dir=%r' % self.direction
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ACCEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
-        N = array([double_or_blank(card, 3, 'N1', 0.0),
-                   double_or_blank(card, 4, 'N2', 0.0),
-                   double_or_blank(card, 5, 'N3', 0.0)])
+        N = [double_or_blank(card, 3, 'N1', 0.0),
+             double_or_blank(card, 4, 'N2', 0.0),
+             double_or_blank(card, 5, 'N3', 0.0)]
         direction = string(card, 6, 'dir')
 
         i = 9
@@ -487,7 +454,7 @@ class ACCEL(BaseCard):
             vals.append(val)
             j += 1
             i += 2
-        return ACCEL(sid, cid, N, direction, locs, vals, comment=comment)
+        return ACCEL(sid, N, direction, locs, vals, cid=cid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -547,7 +514,28 @@ class ACCEL1(BaseCard):
     """
     type = 'ACCEL1'
 
-    def __init__(self, sid, cid, scale, N, nodes, comment=''):
+    def __init__(self, sid, scale, N, nodes, cid=0, comment=''):
+        """
+        Creates an ACCEL1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        direction : str
+            Component direction of acceleration variation
+            {X, Y, Z}
+        nodes : List[int]
+            the nodes to apply acceleration to
+        cid : int; default=0
+            the coordinate system for the load
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Load set identification number (Integer>0)
@@ -561,24 +549,40 @@ class ACCEL1(BaseCard):
 
         #: Components of the acceleration vector measured in coordinate system
         #: CID. (Real; at least one Ni != 0)
-        self.N = N
+        self.N = np.asarray(N)
 
         #: nodes to apply the acceleration to
         self.nodes = expand_thru_by(nodes)
 
         assert max(abs(self.N)) > 0.
 
+    def validate(self):
+        assert len(self.N) == 3, 'N=%r' % self.N
+        assert isinstance(self.cid, integer_types), 'cid=%r' % self.cid
+        assert isinstance(self.scale, float), 'cid=%r' % self.scale
+        assert isinstance(self.nodes, list), 'nodes=%r' % self.nodes
+
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a ACCEL1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         scale = double(card, 3, 'scale')
-        N = array([double_or_blank(card, 4, 'N1', 0.0),
-                   double_or_blank(card, 5, 'N2', 0.0),
-                   double_or_blank(card, 6, 'N3', 0.0)])
+        N = [double_or_blank(card, 4, 'N1', 0.0),
+             double_or_blank(card, 5, 'N2', 0.0),
+             double_or_blank(card, 6, 'N3', 0.0)]
 
         nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
-        return ACCEL1(sid, cid, scale, N, nodes, comment=comment)
+        return ACCEL1(sid, scale, N, nodes, cid=cid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -597,6 +601,11 @@ class ACCEL1(BaseCard):
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
+
+    def uncross_reference(self):
+        self.cid = self.Cid()
+        self.nodes = self.node_ids
+        del self.nodes_ref, self.cid_ref
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -651,8 +660,8 @@ class Force(Load):
         adjust the vector to a unit length
         scale up the magnitude of the vector
         """
-        assert self.mag > 0, self.mag
-        if self.mag != 0.0:  # enforced displacement
+        assert abs(self.mag) > 0, 'mag=%s\n%s' % (self.mag, self)
+        if abs(self.mag) != 0.0:  # enforced displacement
             norm_xyz = norm(self.xyz)
             if norm_xyz == 0.0:
                 raise RuntimeError('xyz=%s norm_xyz=%s' % (self.xyz, norm_xyz))
@@ -679,22 +688,10 @@ class Force(Load):
     def F(self):
         return self.xyz * self.mag
 
-    def get_reduced_loads(self):
+    def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         scale_factors = [1.]
         loads = self.F()
         return(scale_factors, loads)
-
-    def organize_loads(self, model):
-        (scale_factors, force_loads) = self.get_reduced_loads()
-
-        types_found = [self.type]
-        moment_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_loads = []
-        return (types_found, force_loads, moment_loads,
-                force_constraints, moment_constraints,
-                gravity_loads)
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
@@ -734,27 +731,15 @@ class Moment(Load):
     def get_loads(self):
         return [self]
 
-    def get_reduced_loads(self):
+    def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         scale_factors = [1.]
         loads = {
             self.node: self.M()
         }
         return(scale_factors, loads)
 
-    def organize_loads(self, model):
-        (scale_factors, moment_loads) = self.get_reduced_loads()
-
-        types_found = [self.type]
-        force_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_loads = []
-        return (types_found, force_loads, moment_loads,
-                force_constraints, moment_constraints,
-                gravity_loads)
-
     def M(self):
-        return self.xyz * self.mag
+        return {self.node_id : self.xyz * self.mag}
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
@@ -816,6 +801,16 @@ class FORCE(Force):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FORCE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -828,6 +823,16 @@ class FORCE(Force):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a FORCE card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         cid = data[2]
@@ -922,6 +927,23 @@ class FORCE1(Force):
     type = 'FORCE1'
 
     def __init__(self, sid, node, mag, g1, g2, comment=''):
+        """
+        Creates a FORCE1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        n1 / n2 : int / int
+            defines the load direction
+            n = n2 - n1
+        comment : str; default=''
+            a comment for the card
+        """
         Force.__init__(self)
         if comment:
             self.comment = comment
@@ -933,6 +955,16 @@ class FORCE1(Force):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FORCE1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -943,6 +975,16 @@ class FORCE1(Force):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a FORCE1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1033,16 +1075,32 @@ class FORCE2(Force):
     """
     Defines a static concentrated force at a grid point by specification of a
     magnitude and four grid points that determine the direction.
+
+    +--------+-----+---+---+----+----+----+----+
+    |   1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
+    +========+=====+===+===+====+====+====+====+
+    | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
+    +--------+-----+---+---+----+----+----+----+
     """
     type = 'FORCE2'
 
     def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         """
-        +--------+-----+---+---+----+----+----+----+
-        |   1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
-        +========+=====+===+===+====+====+====+====+
-        | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
-        +--------+-----+---+---+----+----+----+----+
+        Creates a FORCE2 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        g1 / g2 / g3 / g4 : int / int / int / int
+            defines the load direction
+            n = (g2 - g1) x (g4 - g3)
+        comment : str; default=''
+            a comment for the card
         """
         Force.__init__(self)
         if comment:
@@ -1066,6 +1124,16 @@ class FORCE2(Force):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FORCE2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1078,6 +1146,16 @@ class FORCE2(Force):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a FORCE2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1280,6 +1358,16 @@ class MOMENT(Moment):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MOMENT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -1293,6 +1381,16 @@ class MOMENT(Moment):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MOMENT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         cid = data[2]
@@ -1381,18 +1479,35 @@ class MOMENT(Moment):
 
 
 class MOMENT1(Moment):
+    """
+    Defines a static concentrated moment at a grid point by specifying a
+    magnitude and two grid points that determine the direction.::
+
+    +---------+-----+---+---+----+----+
+    |    1    |  2  | 3 | 4 | 5  | 6  |
+    +=========+=====+===+===+====+====+
+    | MOMENT1 | SID | G | M | G1 | G2 |
+    +---------+-----+---+---+----+----+
+    """
     type = 'MOMENT1'
 
     def __init__(self, sid, node, mag, g1, g2, comment=''):
         """
-        Defines a static concentrated moment at a grid point by specifying a
-        magnitude and two grid points that determine the direction.::
+        Creates a MOMENT1 card
 
-        +---------+-----+---+---+----+----+
-        |    1    |  2  | 3 | 4 | 5  | 6  |
-        +=========+=====+===+===+====+====+
-        | MOMENT1 | SID | G | M | G1 | G2 |
-        +---------+-----+---+---+----+----+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        n1 / n2 : int / int
+            defines the load direction
+            n = n2 - n1
+        comment : str; default=''
+            a comment for the card
         """
         Moment.__init__(self)
         if comment:
@@ -1406,6 +1521,16 @@ class MOMENT1(Moment):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MOMENT1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1416,6 +1541,16 @@ class MOMENT1(Moment):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MOMENT1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1504,18 +1639,35 @@ class MOMENT1(Moment):
 
 
 class MOMENT2(Moment):
+    """
+    Defines a static concentrated moment at a grid point by specification
+    of a magnitude and four grid points that determine the direction.::
+
+    +---------+-----+---+---+----+----+----+----+
+    |    1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
+    +=========+=====+===+===+====+====+====+====+
+    | MOMENT2 | SID | G | M | G1 | G2 | G3 | G4 |
+    +---------+-----+---+---+----+----+----+----+
+    """
     type = 'MOMENT2'
 
     def __init__(self, sid, node, mag, g1, g2, g3, g4, xyz=None, comment=''):
         """
-        Defines a static concentrated moment at a grid point by specification
-        of a magnitude and four grid points that determine the direction.::
+        Creates a MOMENT2 card
 
-        +---------+-----+---+---+----+----+----+----+
-        |    1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
-        +=========+=====+===+===+====+====+====+====+
-        | MOMENT2 | SID | G | M | G1 | G2 | G3 | G4 |
-        +---------+-----+---+---+----+----+----+----+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        g1 / g2 / g3 / g4 : int / int / int / int
+            defines the load direction
+            n = (g2 - g1) x (g4 - g3)
+        comment : str; default=''
+            a comment for the card
         """
         Moment.__init__(self)
         if comment:
@@ -1540,6 +1692,16 @@ class MOMENT2(Moment):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MOMENT2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1553,6 +1715,16 @@ class MOMENT2(Moment):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MOMENT2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1696,6 +1868,16 @@ class GMLOAD(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a GMLOAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         normal = array([
@@ -1765,10 +1947,6 @@ class GMLOAD(Load):
             #return self.node
         #return self.node_ref.nid
 
-    #def getLoads(self):
-        #self.deprecated('getLoads()', 'get_loads()', '0.8')
-        #return self.get_loads()
-
     def get_loads(self):
         return [self]
 
@@ -1792,18 +1970,45 @@ class GMLOAD(Load):
 class PLOAD(Load):
     type = 'PLOAD'
 
-    def __init__(self, sid, p, nodes, comment=''):
+    def __init__(self, sid, pressure, nodes, comment=''):
+        """
+        Creates a PLOAD card, which defines a uniform pressure load on a
+        shell/solid face or arbitrarily defined quad/tri face
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply
+        nodes : List[int]
+            The nodes that are used to define the normal are defined
+            using the same method as the CTRIA3/CQUAD4 normal.
+            n = 3 or 4
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
-        self.p = p
+        self.pressure = pressure
         self.nodes = nodes
         assert len(self.nodes) in [3, 4], 'nodes=%s' % self.nodes
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
-        p = double(card, 2, 'p')
+        pressure = double(card, 2, 'pressure')
         nodes = [integer(card, 3, 'n1'),
                  integer(card, 4, 'n2'),
                  integer(card, 5, 'n3')]
@@ -1811,14 +2016,24 @@ class PLOAD(Load):
         if n4:
             nodes.append(n4)
         assert len(card) <= 7, 'len(PLOAD card) = %i\ncard=%s' % (len(card), card)
-        return PLOAD(sid, p, nodes, comment=comment)
+        return PLOAD(sid, pressure, nodes, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOAD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
-        p = data[1]
+        pressure = data[1]
         nodes = data[2:]
-        return PLOAD(sid, p, nodes, comment=comment)
+        return PLOAD(sid, pressure, nodes, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1841,7 +2056,7 @@ class PLOAD(Load):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['PLOAD', self.sid, self.p] + self.node_ids
+        list_fields = ['PLOAD', self.sid, self.pressure] + self.node_ids
         return list_fields
 
     def repr_fields(self):
@@ -1862,9 +2077,40 @@ class PLOAD1(Load):
                    'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
     valid_scales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
 
-    def __init__(self, sid, eid, Type, scale, x1, p1, x2, p2, comment=''):
+    def __init__(self, sid, eid, Type, scale, x1, p1, x2=None, p2=None, comment=''):
+        """
+        Creates a PLOAD1 card, which may be applied to a CBAR/CBEAM
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            element to apply the load to
+        Type : str
+            type of load that's applied
+            valid_types = {FX, FY, FZ, FXE, FYE, FZE,
+                           MX, MY, MZ, MXE, MYE, MZE}
+        scale : float
+            local pressure scaling factor
+        x1 / x2 : float / float
+            the starting/end position for the load application
+            the default for x2 is x1
+        p1 / p2 : float / float
+            the magnitude of the load at x1 and x2
+            the default for p2 is p1
+        comment : str; default=''
+            a comment for the card
+
+        Point Load       : x1 == x2
+        Distributed Load : x1 != x2
+        """
         if comment:
             self.comment = comment
+        if x2 is None:
+            x2 = x1
+        if p2 is None:
+            p2 = p1
         self.sid = sid
         self.eid = eid
         self.Type = Type
@@ -1877,6 +2123,16 @@ class PLOAD1(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOAD1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         Type = string(card, 3, 'Type ("%s")' % '",  "'.join(cls.valid_types))
@@ -1890,6 +2146,16 @@ class PLOAD1(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOAD1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         eid = data[1]
         Type = data[2]
@@ -1944,21 +2210,18 @@ class PLOAD1(Load):
 
         g0 = self.eid_ref.g0_vector
         #if not isinstance(g0, ndarray):
-        #    g0 = g0.get_position()
+            #g0 = g0.get_position()
 
         x = p2 - p1
         y = p1 - g0
         z = cross(x, y)
         A = [x, y, z]
-        #print("x =", x)
-        #print("y =", y)
-        #print("z =", z)
         #g = self.GravityVector()
         return A
         #(g2, matrix) = self.cid.transformToGlobal(A)
         #return (g2)
 
-    def get_reduced_loads(self):
+    def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         """
         Get all load objects in a simplified form, which means all
         scale factors are already applied and only base objects
@@ -1969,118 +2232,6 @@ class PLOAD1(Load):
         scale_factors = [1.0]
         loads = [self]
         return scale_factors, loads
-
-    def organize_loads(self, model):
-        """
-        Figures out magnitudes of the loads to be applied to the various nodes.
-        This includes figuring out scale factors.
-        """
-        force_loads = {}  # spc enforced displacement (e.g. FORCE=0)
-        moment_loads = {}
-        force_constraints = {}
-        moment_constraints = {}
-        gravity_loads = []
-
-        types_found = set()
-        (scale_factors, loads) = self.get_reduced_loads()
-
-        for scale_factor, load in zip(scale_factors, loads):
-            out = load.transformLoad()
-            types_found.add(load.__class__.__name__)
-
-            if isinstance(load, PLOAD1): # CBAR/CBEAM
-                element = load.eid
-                (ga, gb) = element.node_ids
-                load_type = load.Type
-
-                scale = load.scale
-                eType = element.type
-
-                if load_type in ['FX', 'FY', 'FZ']:
-                    p1 = element.ga_ref.get_position()
-                    p2 = element.gb_ref.get_position()
-                    r = p2 - p1
-
-                if load_type == 'FX':
-                    Fv = array([1., 0., 0.])
-                elif load_type == 'FY':
-                    Fv = array([0., 0., 1.])
-                elif load_type == 'FZ':
-                    Fv = array([0., 0., 1.])
-
-                elif load_type == 'MX':
-                    Fv = array([0., 0., 0.])
-                    Mv = array([1., 0., 0.])
-                elif load_type == 'MY':
-                    Fv = array([0., 0., 0.])
-                    Mv = array([0., 1., 0.])
-                elif load_type == 'MZ':
-                    Fv = array([0., 0., 0.])
-                    Mv = array([0., 0., 1.])
-                # FXE, FYE, FZE, MXE, MYE, MZE
-                else:
-                    raise NotImplementedError(load_type)
-
-                p1 = load.p1
-                p2 = load.p2
-                if scale == 'FR':
-                    x1 = load.x1
-                    x2 = load.x2
-                elif scale == 'LE':
-                    L = element.Length()
-                    x1 = load.x1 / L
-                    x2 = load.x2 / L
-                else:
-                    raise NotImplementedError('scale=%s is not supported.  Use "FR", "LE".')
-
-                assert x1 <= x2, '---load---\n%sx1=%r must be less than x2=%r' % (repr(self), self.x1, self.x2)
-                if  x1 == x2:
-                    msg = ('Point loads are not supported on...\n%s'
-                           'Try setting x1=%r very close to x2=%r and\n'
-                           'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").'
-                           % (repr(self), self.x1, self.x2, self.p1, self.p2))
-                    raise NotImplementedError(msg)
-                    if p1 != p2:
-                        msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  % (
-                            self.p1, self.p2, self.x1)
-                        raise RuntimeError(msg)
-
-                dx = x2 - x1
-                m = (p2 - p1) / dx
-                #dx * (x2 + x1) = (x2^2-x1^2)
-                dx2 = x2**2 - x1**2
-                dx3 = x2**3 - x1**3
-                dx4 = x2**4 - x1**4
-                #F = (p1 - m * x1) * dx + m * dx2 / 2.
-                F = p1 * dx + m * (dx2 / 2. - x1 * dx)
-
-                F /= 2.
-
-                if eType in ['CBAR', 'CBEAM']:
-                    if load_type in ['FX', 'FY', 'FZ']:
-                        M = p1 * dx3 / 6. + m * (dx4 / 12. - x1 * dx3 / 6.)
-                        Mv = M * cross(r, Fv) / 2. # divide by 2 for 2 nodes
-
-                        Fv *= F
-                        #Mv = M
-                        force_loads[ga] = Fv
-                        force_loads[gb] = Fv
-                        moment_loads[ga] = Mv
-                        moment_loads[gb] = Mv
-                    elif load_type in ['MX', 'MY', 'MZ']:
-                        # these are really moments
-                        Mv *= F
-                        moment_loads[ga] = Mv
-                        moment_loads[gb] = Mv
-                    else:
-                        raise NotImplementedError(load_type)
-                else:
-                    raise NotImplementedError(eType)
-            else:
-                msg = '%s not supported' % (load.__class__.__name__)
-                raise NotImplementedError(msg)
-        return (types_found, force_loads, moment_loads, force_constraints,
-                moment_constraints, gravity_loads)
 
     def get_loads(self):
         return [self]
@@ -2108,17 +2259,55 @@ class PLOAD1(Load):
 
 
 class PLOAD2(Load):
+    """
+    +--------+-----+------+------+------+------+------+------+------+
+    |    1   |   2 |  3   |  4   |   5  |   6  |   7  |   8  |   9  |
+    +========+=====+======+======+======+=============+======+======+
+    | PLOAD2 | SID |  P   | EID1 | EID2 | EID3 | EID4 | EID5 | EID6 |
+    +--------+-----+------+------+------+------+------+------+------+
+    | PLOAD2 | 21  | -3.6 |  4   |  16  |  2   |      |      |      |
+    +--------+-----+------+------+------+------+------+------+------+
+    | PLOAD2 | SID |  P   | EID1 | THRU | EID2 |      |      |      |
+    +--------+-----+------+------+------+------+------+------+------+
+    """
     type = 'PLOAD2'
 
     def __init__(self, sid, pressure, eids, comment=''):
+        """
+        Creates a PLOAD2 card, which defines an applied load normal to the quad/tri face
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply to the elements
+        eids : List[int]
+            the elements to apply pressure to
+            n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
+        if isinstance(eids, integer_types):
+            self.eids = [eids]
         self.sid = sid
         self.pressure = pressure
         self.eids = eids
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOAD2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'p')
 
@@ -2133,6 +2322,16 @@ class PLOAD2(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOAD2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         pressure = data[1]
         eids = list(data[2:])
@@ -2160,7 +2359,7 @@ class PLOAD2(Load):
 
     @property
     def element_ids(self):
-        if isinstance(self.eids[0], int):
+        if isinstance(self.eids[0], integer_types):
             eids = self.eids
         else:
             eids = [elem.eid for elem in self.eids]
@@ -2199,18 +2398,38 @@ class PLOAD2(Load):
 
 class PLOAD4(Load):
     """
-    +--------+-----+-----+----+----+------+------+----+-------+
-    |   1    |  2  |  3  |  4 |  5 |  6   |   7  |  8 |   9   |
-    +========+=====+=====+====+====+======+======+====+=======+
-    | PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  | G1 | G3/G4 |
-    +--------+-----+-----+----+----+------+------+----+-------+
-    |        | CID | N1  | N2 | N3 | SORL | LDIR |    |       |
-    +--------+-----+-----+----+----+------+------+----+-------+
+    Standard Format
+    ===============
+    Defines a pressure load on a face of a CHEXA, CPENTA, CTETRA,
+    CTRIA3, CTRIA6, CTRIAR, CQUAD4, CQUAD8, or CQUADR element.
+
+    +--------+-----+-----+----+----+------+------+------+-------+
+    |   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
+    +========+=====+=====+====+====+======+======+======+=======+
+    | PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  |  G1  | G3/G4 |
+    +--------+-----+-----+----+----+------+------+------+-------+
+    |        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
+    +--------+-----+-----+----+----+------+------+------+-------+
+
+    Alternate Format
+    ================
+    Defines a pressure load on a face of a CTRIA3, CTRIA6, CTRIAR,
+    CQUAD4, CQUAD8, or CQUADR element.
+    +--------+-----+-----+----+----+------+------+------+-------+
+    |   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
+    +========+=====+=====+====+====+======+======+======+=======+
+    | PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  | THRU | EID2  |
+    +--------+-----+-----+----+----+------+------+------+-------+
+    |        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
+    +--------+-----+-----+----+----+------+------+------+-------+
+
+    .. warning:: NX does not support SORL and LDIR, MSC does
     """
     type = 'PLOAD4'
 
     def __init__(self, sid, eids, pressures,
-                 g1=None, g34=None, cid=0, NVector=None, sorl='SURF', ldir='NORM', comment=''):
+                 g1=None, g34=None, cid=0, nvector=None, surf_or_line='SURF',
+                 line_load_dir='NORM', comment=''):
         """
         Creates a PLOAD4 card
 
@@ -2230,25 +2449,25 @@ class PLOAD4(Load):
             only used for solid elements
         cid : int; default=0
             the coordinate system for ???
-        NVector : (3, ) float ndarray
+        nvector : (3, ) float ndarray
            blank : load acts normal to the face
-           the local pressure vector (not supported)
-        sorl : str; default='SURF'
+           the local pressure vector
+        surf_or_line : str; default='SURF'
            SURF : surface load
-           LINE : line load (only defined for QUADR, TRIAR)
+           LINE : line load    (only defined for QUADR, TRIAR)
            not supported
-        ldir : str; default='NORM'
-           direction of the line load (see sorl); {X, Y, Z, TANG, NORM}
+        line_load_dir : str; default='NORM'
+           direction of the line load (see surf_or_line); {X, Y, Z, TANG, NORM}
            not supported
         comment : str; default=''
             a comment for the card
 
         TODO: fix the way "pressures" works
         """
-        if NVector is None:
-            NVector = np.zeros(3, dtype='float64')
+        if nvector is None:
+            nvector = np.zeros(3, dtype='float64')
         else:
-            NVector = np.asarray(NVector, dtype='float64')
+            nvector = np.asarray(nvector, dtype='float64')
 
         if comment:
             self.comment = comment
@@ -2256,7 +2475,7 @@ class PLOAD4(Load):
 
         # these can be greater than 1 if it's a shell (not a solid)
         self.eids = eids
-        self.pressures = pressures
+        self.pressures = np.asarray(pressures)
 
         #: used for solid element only
         self.g1 = g1
@@ -2266,20 +2485,43 @@ class PLOAD4(Load):
         #: Coordinate system identification number. See Remark 2.
         #: (Integer >= 0;Default=0)
         self.cid = cid
-        self.NVector = NVector
-        self.sorl = sorl
-        self.ldir = ldir
+        self.nvector = nvector
+
+        # flag with values of SURF/LINE
+        self.surf_or_line = surf_or_line
+
+        # Line load direction
+        #
+        #   1. X, Y, Z : line load in x/y/z in the element coordinate
+        #                system
+        #   2. TANG    : line load is tangent to the edge pointing
+        #                from G1 to G2
+        #   3. NORM    : line load is in the mean plane, normal to the
+        #                edge and pointing outwards from the element
+        #
+        #   if cid=N123 = 0: line_load_dir_default=NORM
+        self.line_load_dir = line_load_dir
 
     def validate(self):
-        if self.sorl not in ['SURF', 'LINE']:
-            raise RuntimeError(self.sorl)
-        if self.ldir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
-            raise RuntimeError(self.ldir)
+        if self.surf_or_line not in ['SURF', 'LINE']:
+            raise RuntimeError(self.surf_or_line)
+        if self.line_load_dir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
+            raise RuntimeError(self.line_load_dir)
         assert self.g1 != 0, str(self)
         assert self.g34 != 0, str(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOAD4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         p1 = double_or_blank(card, 3, 'p1', 0.0)
@@ -2290,8 +2532,9 @@ class PLOAD4(Load):
             double_or_blank(card, 6, 'p4', p1)]
 
         eids = [eid]
-        if (integer_string_or_blank(card, 7, 'g1/THRU') == 'THRU' and
-            integer_or_blank(card, 8, 'eid2')):
+        g1_thru = integer_string_or_blank(card, 7, 'g1/THRU')
+        if g1_thru == 'THRU' and integer_or_blank(card, 8, 'eid2'):
+            # alternate form
             eid2 = integer(card, 8, 'eid2')
             if eid2:
                 eids = list(unique(
@@ -2300,21 +2543,33 @@ class PLOAD4(Load):
             g1 = None
             g34 = None
         else:
+            # standard form
             eids = [eid]
             g1 = integer_or_blank(card, 7, 'g1')
             g34 = integer_or_blank(card, 8, 'g34')
 
         cid = integer_or_blank(card, 9, 'cid', 0)
-        NVector = array([double_or_blank(card, 10, 'N1', 0.0),
+        nvector = array([double_or_blank(card, 10, 'N1', 0.0),
                          double_or_blank(card, 11, 'N2', 0.0),
                          double_or_blank(card, 12, 'N3', 0.0)])
-        sorl = string_or_blank(card, 13, 'sorl', 'SURF')
-        ldir = string_or_blank(card, 14, 'ldir', 'NORM')
+        surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
+        line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
         assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
-        return PLOAD4(sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=comment)
+        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
+                      surf_or_line, line_load_dir, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOAD4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid = data[0]
         eid = data[1]
         pressures = data[2]
@@ -2326,30 +2581,33 @@ class PLOAD4(Load):
         if g34 == 0:
             g34 = None
         cid = data[5]
-        NVector = data[6]
+        nvector = data[6]
 
-        sorl = data[7]
-        #self.ldir = data[8]
+        surf_or_line = data[7]
+        #self.line_load_dir = data[8]
         #assert len(data)==8
 
         eids = [eid]
-        sorl = 'SURF'
-        ldir = 'NORM'
-        return PLOAD4(sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=comment)
+        surf_or_line = 'SURF'
+        line_load_dir = 'NORM'
+        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
+                      surf_or_line, line_load_dir, comment=comment)
 
     def get_loads(self):
         return [self]
 
     def transform_load(self):
         """
-        .. warning:: sorl=SURF is supported (not LINE)
-        .. warning:: ldir=NORM is supported (not X,Y,Z)
+        Considers single elememnts
+
+        .. warning:: surf_or_line=SURF is supported (not LINE)
+        .. warning:: line_load_dir=NORM is supported (not X,Y,Z)
         """
-        if  self.sorl != 'SURF':
-            msg = 'Only surface loads are supported.  required_sorl=SURF.  actual=%r' % self.sorl
+        if self.surf_or_line != 'SURF':
+            msg = 'Only surface loads are supported.  required_surf_or_line=SURF.  actual=%r' % self.surf_or_line
             raise RuntimeError(msg)
-        if self.ldir != 'NORM':
-            msg = 'Only normal loads are supported.   required_ldir=NORM.  actual=%r' % self.ldir
+        if self.line_load_dir != 'NORM':
+            msg = 'Only normal loads are supported.   required_line_load_dir=NORM.  actual=%r' % self.line_load_dir
             raise RuntimeError(msg)
         if len(self.eids) != 1:
             msg = 'Only one load may be defined on each PLOAD4.  nLoads=%s\n%s' % (
@@ -2366,17 +2624,26 @@ class PLOAD4(Load):
             area = elem.Area()
         n = len(face_node_ids)
 
-        elem = self.eids_ref[0]
-        vector = array(elem.Normal())
+        if  self.surf_or_line != 'SURF':
+            if norm(self.nvector) != 0.0 or self.cid != 0:
+                vector = self.nvector / np.linalg.norm(self.nvector)
+                assert self.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (self.Cid(), str(self))
+            else:
+                # normal pressure
+                assert len(self.eids_ref) == 1, 'only 1 element is supported by transform_load on PLOAD4\n%s' % (str(self))
+                elem = self.eids_ref[0]
+                vector = array(elem.Normal())
+        else:
+            raise NotImplementedError('surf_or_line=%r on PLOAD4 is not supported\n%s' % (self.surf_or_line, str(self)))
+
         vectors = []
         for (nid, p) in zip(face_node_ids, self.pressures):
-            #: .. warning:: only supports normal pressures
             vectors.append(vector * p * area / n)  # Force_i
-
         is_load = None
         return (is_load, face_node_ids, vectors)
 
     def Cid(self):
+        """gets the coordinate system object"""
         if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid_ref.cid
@@ -2408,18 +2675,33 @@ class PLOAD4(Load):
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
-        self.cid = model.Coord(self.cid, msg=msg)
+        try:
+            self.cid = model.Coord(self.cid, msg=msg)
+            self.cid_ref = self.cid
+        except KeyError:
+            model.log.warning('Could not find cid=%s%s' % (self.cid, msg))
+
         #self.eid_ref = self.eid
-        self.cid_ref = self.cid
         if self.g1 is not None:
-            self.g1 = model.Node(self.g1, msg=msg)
-            self.g1_ref = self.g1
+            try:
+                self.g1 = model.Node(self.g1, msg=msg)
+                self.g1_ref = self.g1
+            except KeyError:
+                model.log.warning('Could not find g1=%s%s' % (self.g1, msg))
+
         if self.g34 is not None:
-            self.g34 = model.Node(self.g34, msg=msg)
-            self.g34_ref = self.g34
+            try:
+                self.g34 = model.Node(self.g34, msg=msg)
+                self.g34_ref = self.g34
+            except KeyError:
+                model.log.warning('Could not find g34=%s%s' % (self.g34, msg))
+
         #if self.eids:
-        self.eids = model.Elements(self.eids, msg=msg)
+        msgia = 'Could not find element=%%s, %s\n' % msg
+        self.eids, msgi = model.safe_get_elements(self.eids, msg=msgia)
         self.eids_ref = self.eids
+        if msgi:
+            model.log.warning(msgi.rstrip())
 
     def uncross_reference(self):
         #self.eid = self.Eid(self.eid)
@@ -2434,17 +2716,17 @@ class PLOAD4(Load):
         del self.cid_ref, self.eids_ref
 
     def G1(self):
-        if isinstance(self.g1, (integer_types)):
+        if isinstance(self.g1, integer_types):
             return self.g1
         return self.g1_ref.nid
 
     def G34(self):
-        if isinstance(self.g34, (integer_types)):
+        if isinstance(self.g34, integer_types):
             return self.g34
         return self.g34_ref.nid
 
     def Eid(self, eid):
-        if isinstance(eid, (integer_types)):
+        if isinstance(eid, integer_types):
             return eid
         return eid.eid
 
@@ -2465,12 +2747,10 @@ class PLOAD4(Load):
     def get_element_ids(self, eid=None):
         if eid:
             eidi = self.Eid(eid)
-            #assert len(str(eidi)) < 20, eidi
             return eidi
         eids = []
         for element in self.eids:
             eidi = self.Eid(element)
-            #assert len(str(eidi)) < 20, eidi
             eids.append(eidi)
         return eids
 
@@ -2478,31 +2758,25 @@ class PLOAD4(Load):
     def element_ids(self):
         return self.get_element_ids()
 
-    def raw_fields(self):
+    def repr_fields(self):
         eids = self.element_ids
-        #print('eids = ', eids)
         eid = eids[0]
-        #print('eid = ', eid)
-        cid = set_blank_if_default(self.Cid(), 0)
-        sorl = set_blank_if_default(self.sorl, 'SURF')
-        ldir = set_blank_if_default(self.ldir, 'NORM')
         p1 = self.pressures[0]
         p2 = set_blank_if_default(self.pressures[1], p1)
         p3 = set_blank_if_default(self.pressures[2], p1)
         p4 = set_blank_if_default(self.pressures[3], p1)
         list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
 
-        if self.g1 is not None:  # is it a SOLID element
+        if self.g1 is not None:
+            # is it a SOLID element
             node_ids = self.node_ids
             #node_ids = self.node_ids([self.g1, self.g34])
             list_fields += node_ids
         else:
             if len(eids) > 1:
-                #print("self.eids = %s" %(self.eids))
                 try:
                     list_fields.append('THRU')
                     eidi = eids[-1]
-                    #print('eidi = ', eidi)
                 except:
                     print("g1  = %s" % self.g1)
                     print("g34 = %s" % self.g34)
@@ -2511,21 +2785,72 @@ class PLOAD4(Load):
                 list_fields.append(eidi)
             else:
                 list_fields += [None, None]
-        list_fields.append(cid)
 
-        n1 = set_blank_if_default(self.NVector[0], 0.0)
-        n2 = set_blank_if_default(self.NVector[1], 0.0)
-        n3 = set_blank_if_default(self.NVector[2], 0.0)
-        list_fields += [n1, n2, n3]
-        list_fields.append(sorl)
-        list_fields.append(ldir)
+        cid = self.Cid()
+        if cid or norm(self.nvector) > 0.0:
+            n1 = self.nvector[0]
+            n2 = self.nvector[1]
+            n3 = self.nvector[2]
+            list_fields.append(cid)
+            list_fields += [n1, n2, n3]
+            surf_or_line = self.surf_or_line
+            line_load_dir = self.line_load_dir
+        else:
+            list_fields += [None, None, None, None]
+            surf_or_line = set_blank_if_default(self.surf_or_line, 'SURF')
+            line_load_dir = set_blank_if_default(self.line_load_dir, 'NORM')
+        list_fields.append(surf_or_line)
+        if surf_or_line == 'LINE':
+            list_fields.append(line_load_dir)
         return list_fields
 
-    def repr_fields(self):
-        return self.raw_fields()
+    def raw_fields(self):
+        eids = self.element_ids
+        eid = eids[0]
+        p1 = self.pressures[0]
+        p2 = self.pressures[1]
+        p3 = self.pressures[2]
+        p4 = self.pressures[3]
+        list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
+
+        if self.g1 is not None:
+            # is it a SOLID element
+            node_ids = self.node_ids
+            #node_ids = self.node_ids([self.g1, self.g34])
+            list_fields += node_ids
+        else:
+            if len(eids) > 1:
+                try:
+                    list_fields.append('THRU')
+                    eidi = eids[-1]
+                except:
+                    print("g1  = %s" % self.g1)
+                    print("g34 = %s" % self.g34)
+                    print("self.eids = %s" % self.eids)
+                    raise
+                list_fields.append(eidi)
+            else:
+                list_fields += [None, None]
+
+        cid = self.Cid()
+        if cid or norm(self.nvector) > 0.0:
+            n1 = self.nvector[0]
+            n2 = self.nvector[1]
+            n3 = self.nvector[2]
+            list_fields.append(cid)
+            list_fields += [n1, n2, n3]
+        else:
+            list_fields += [None, None, None, None]
+
+        surf_or_line = self.surf_or_line
+        line_load_dir = self.line_load_dir
+        list_fields.append(surf_or_line)
+        if surf_or_line == 'LINE':
+            list_fields.append(line_load_dir)
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
-        card = self.raw_fields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
@@ -2533,6 +2858,10 @@ class PLOAD4(Load):
 
 class PLOADX1(Load):
     """
+    Pressure Load on Axisymmetric Element
+
+    Defines surface traction to be used with the CQUADX, CTRIAX, and CTRIAX6
+    axisymmetric element.
     +---------+-----+-----+----+----+----+----+-------+
     |    1    |  2  |  3  |  4 |  5 |  6 |  7 |   8   |
     +=========+=====+=====+====+====+====+====+=======+
@@ -2541,7 +2870,29 @@ class PLOADX1(Load):
     """
     type = 'PLOADX1'
 
-    def __init__(self, sid, eid, pa, ga, gb, pb=None, theta=0., comment=''):
+    def __init__(self, sid, eid, pa, nids, pb=None, theta=0., comment=''):
+        """
+        Creates a PLOADX1 card, which defines surface traction for
+        axisymmetric elements.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            element id (CQUADX, CTRIAX, or CTRIAX6)
+        nids : List[int, int]
+            Corner grid points.
+            GA and GB are any two adjacent corner grid points of the element
+        pa / pb : float / None
+            Surface traction at grid point GA or GB
+            pb : default is None -> pa
+        theta : float; default=0.0
+            Angle between surface traction and inward normal to the line
+            segment.
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         if pb is None:
@@ -2550,8 +2901,8 @@ class PLOADX1(Load):
         self.eid = eid
         self.pa = pa
         self.pb = pb
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.theta = theta
 
     def validate(self):
@@ -2562,6 +2913,16 @@ class PLOADX1(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PLOADX1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         pa = double(card, 3, 'pa')
@@ -2574,6 +2935,16 @@ class PLOADX1(Load):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PLOADX1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         sid, eid, pa, pb, ga, gb, theta = data
         return PLOADX1(sid, eid, pa, ga, gb, pb, theta, comment=comment)
 

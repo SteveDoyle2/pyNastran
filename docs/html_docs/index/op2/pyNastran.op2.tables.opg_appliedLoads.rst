@@ -11,32 +11,32 @@ opg_appliedLoads Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`opg_loadVector` Module
-----------------------------
+:mod:`opg_load_vector` Module
+-----------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opg_loadVector
+.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opg_load_vector
 
-.. automodule:: pyNastran.op2.tables.opg_appliedLoads.opg_loadVector
+.. automodule:: pyNastran.op2.tables.opg_appliedLoads.opg_load_vector
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`opg_Objects` Module
+:mod:`opg_objects` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opg_Objects
+.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opg_objects
 
-.. automodule:: pyNastran.op2.tables.opg_appliedLoads.opg_Objects
+.. automodule:: pyNastran.op2.tables.opg_appliedLoads.opg_objects
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`opnl_forceVector` Module
-------------------------------
+:mod:`opnl_force_vector` Module
+-------------------------------
 
-.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector
+.. inheritance-diagram:: pyNastran.op2.tables.opg_appliedLoads.opnl_force_vector
 
-.. automodule:: pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector
+.. automodule:: pyNastran.op2.tables.opg_appliedLoads.opnl_force_vector
     :members:
     :undoc-members:
     :show-inheritance:

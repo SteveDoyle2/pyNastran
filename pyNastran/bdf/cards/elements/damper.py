@@ -62,7 +62,23 @@ class CDAMP1(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, c1, c2, comment=''):
+    def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):
+        """
+        Creates a CDAMP1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PDAMP)
+        nids : List[int, int]
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         LineDamper.__init__(self)
         if comment:
             self.comment = comment
@@ -75,8 +91,18 @@ class CDAMP1(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CDAMP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
-        pid = integer(card, 2, 'pid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'g1', 0),
                 integer_or_blank(card, 5, 'g2', 0)]
 
@@ -88,40 +114,50 @@ class CDAMP1(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid, pid, g1, g2, c1, c2 = data
         nids = [g1, g2]
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     def _validate_input(self):
-        assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
+        assert len(self.nodes) == 2
 
     def _verify(self, xref=True):
         eid = self.eid
         pid = self.Pid()
-        b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
-        assert isinstance(b, float)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, integer_types), 'nid%i is not an None/integer; nid=%s' %(i, nid)
         if xref:
-            assert self.pid_ref.type in ['PDAMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
-
-    def get_edge_ids(self):
-        return [tuple(sorted(self.node_ids))]
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
+            if self.pid_ref.type in 'PDAMP':
+                b = self.B()
+                assert isinstance(b, float)
+            elif self.pid_ref.type in 'PDAMPT':
+                pass
+            else:
+                raise NotImplementedError('pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type))
 
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
+
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
@@ -191,14 +227,30 @@ class CDAMP2(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, b, nids, c1, c2, comment=''):
+    def __init__(self, eid, b, nids, c1=0, c2=0, comment=''):
+        """
+        Creates a CDAMP2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        b : float
+            damping
+        nids : List[int, int]
+            SPOINT ids
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         LineDamper.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
         #: Value of the scalar damper (Real)
         self.b = b
-
         #: component number
         self.c1 = c1
         self.c2 = c2
@@ -209,11 +261,20 @@ class CDAMP2(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CDAMP2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         b = double(card, 2, 'b')
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 5, 'n2', 0)]
-
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
         assert len(card) <= 7, 'len(CDAMP2 card) = %i\ncard=%s' % (len(card), card)
@@ -221,6 +282,16 @@ class CDAMP2(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         b = data[1]
         nids = [data[2], data[3]]
@@ -234,15 +305,15 @@ class CDAMP2(LineDamper):
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
 
-    def _verify(self, xref=True):
-        eid = self.eid
-        b = self.B()
-        nids = self.node_ids
+    @property
+    def node_ids(self):
+        return self._nodeIDs(allow_empty_nodes=True)
 
-        assert isinstance(eid, int)
-        assert isinstance(b, float)
-        for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' %(i, nid)
+    def get_edge_ids(self):
+        node_ids = self._nodeIDs(allow_empty_nodes=True)
+        if isinstance(node_ids[0], integer_types) and isinstance(node_ids[1], integer_types):
+            return [tuple(sorted(node_ids))]
+        return []
 
     def B(self):
         return self.b
@@ -264,19 +335,15 @@ class CDAMP2(LineDamper):
         self.nodes = self.node_ids
         del self.nodes_ref
 
-    def get_edge_ids(self):
-        node_ids = self._nodeIDs(allow_empty_nodes=True)
-        if isinstance(node_ids[0], integer_types) and isinstance(node_ids[1], integer_types):
-            return [tuple(sorted(node_ids))]
-        return []
+    def _verify(self, xref=True):
+        eid = self.eid
+        b = self.B()
+        nids = self.node_ids
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
-    @property
-    def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        assert isinstance(eid, integer_types)
+        assert isinstance(b, float)
+        for i, nid in enumerate(nids):
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -303,6 +370,20 @@ class CDAMP3(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CDAMP3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PDAMP)
+        nids : List[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         LineDamper.__init__(self)
@@ -313,6 +394,16 @@ class CDAMP3(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CDAMP3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 's1', 0),
@@ -322,6 +413,16 @@ class CDAMP3(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -333,11 +434,11 @@ class CDAMP3(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid_ref.type in ['PDAMP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
@@ -364,13 +465,10 @@ class CDAMP3(LineDamper):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        msg = ', which is required by CDAMP3 eid=%s' % (self.eid)
+        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         list_fields = ['CDAMP3', self.eid, self.Pid()] + self.node_ids
@@ -395,6 +493,20 @@ class CDAMP4(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, b, nids, comment=''):
+        """
+        Creates a CDAMP4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        b : float
+            damping
+        nids : List[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         LineDamper.__init__(self)
         if comment:
             self.comment = comment
@@ -419,6 +531,16 @@ class CDAMP4(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         b = data[1]
         nids = [data[2], data[3]]
@@ -429,10 +551,15 @@ class CDAMP4(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
+        assert isinstance(eid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+
+    @property
+    def node_ids(self):
+        msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
+        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
 
     def B(self):
         return self.b
@@ -449,14 +576,6 @@ class CDAMP4(LineDamper):
         msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
-    @property
-    def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CDAMP4', self.eid, self.b] + self.node_ids
@@ -493,6 +612,16 @@ class CDAMP5(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CDAMP5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1', 0),
@@ -502,6 +631,16 @@ class CDAMP5(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CDAMP5 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -510,16 +649,16 @@ class CDAMP5(LineDamper):
     def _verify(self, xref=True):
         eid = self.eid
         pid = self.Pid()
-        b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
-        assert isinstance(b, float)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid_ref.type in ['PDAMP5'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            b = self.B()
+            assert isinstance(b, float)
 
     def cross_reference(self, model):
         """
@@ -543,10 +682,6 @@ class CDAMP5(LineDamper):
 
     def B(self):
         return self.pid_ref.b
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -586,6 +721,16 @@ class CVISC(LineDamper):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CVISC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1', 0),
@@ -595,6 +740,16 @@ class CVISC(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CVISC card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -606,11 +761,11 @@ class CVISC(LineDamper):
         b = self.B()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         assert isinstance(b, float)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/None; nid=%s' % (i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer/None; nid=%s' % (i, nid)
         if xref:
             assert self.pid_ref.type in ['PVISC'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
@@ -619,10 +774,6 @@ class CVISC(LineDamper):
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):

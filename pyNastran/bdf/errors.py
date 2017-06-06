@@ -9,6 +9,8 @@ class CardParseSyntaxError(SyntaxError):
     """
     pass
 
-
 class DuplicateIDsError(RuntimeError):
+    pass
+
+class MissingDeckSections(RuntimeError):
     pass

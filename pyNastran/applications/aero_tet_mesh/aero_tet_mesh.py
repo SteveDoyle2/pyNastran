@@ -1,9 +1,9 @@
 from six import iteritems
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 log = None
 debug = True
-log = get_logger(log, 'debug' if debug else 'info')
+log = get_logger2(log, debug=debug)
 
 def run_arg_parse():
     msg  = 'This program creates a CFD tet mesh from a nastran surface..\n'

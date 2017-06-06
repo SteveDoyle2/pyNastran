@@ -7,7 +7,7 @@ from numpy.linalg import norm
 
 import vtk
 #VTK_TRIANGLE = 5
-from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
+from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron)
 
@@ -171,105 +171,58 @@ class OpenFoamIO(object):
         dim_max = (mmax - mmin).max()
         self.update_axes_length(dim_max)
 
-        f = open('points.bdf', 'wb')
-        f.write('CEND\n')
-        f.write('BEGIN BULK\n')
+        with open('points.bdf', 'w') as bdf_file:
+            bdf_file.write('CEND\n')
+            bdf_file.write('BEGIN BULK\n')
 
-        unames = unique(names)
-        for pid in unames:
-            f.write('PSHELL,%i,1,0.1\n' % pid)
-        f.write('MAT1,1,1.0e7,,0.3\n')
+            unames = unique(names)
+            for pid in unames:
+                bdf_file.write('PSHELL,%i,1,0.1\n' % pid)
+            bdf_file.write('MAT1,1,1.0e7,,0.3\n')
 
-        if is_face_mesh:
-            unodes = unique(quads)
-            unodes.sort()
-            # should stop plotting duplicate nodes
-            for inode, node in enumerate(nodes):
-                if inode in unodes:
-                    f.write('GRID,%i,,%s,%s,%s\n' % (inode + 1, node[0], node[1], node[2], ))
-                points.InsertPoint(inode, node)
-        else:
-            #print(nodes)
-            for inode, node in enumerate(nodes):
-                points.InsertPoint(inode, node)
+            if is_face_mesh:
+                unodes = unique(quads)
+                unodes.sort()
+                # should stop plotting duplicate nodes
+                for inode, node in enumerate(nodes):
+                    if inode in unodes:
+                        bdf_file.write('GRID,%i,,%s,%s,%s\n' % (
+                            inode + 1, node[0], node[1], node[2], ))
+                    points.InsertPoint(inode, node)
+            else:
+                #print(nodes)
+                for inode, node in enumerate(nodes):
+                    points.InsertPoint(inode, node)
 
-        #elements -= 1
-        normals = None
-        if is_3d_blockmesh:
-            nelements, three = hexas.shape
-            for eid, element in enumerate(hexas):
-                #print(element)
-                elem = vtkHexahedron()
-                elem.GetPointIds().SetId(0, element[0])
-                elem.GetPointIds().SetId(1, element[1])
-                elem.GetPointIds().SetId(2, element[2])
-                elem.GetPointIds().SetId(3, element[3])
-                elem.GetPointIds().SetId(4, element[4])
-                elem.GetPointIds().SetId(5, element[5])
-                elem.GetPointIds().SetId(6, element[6])
-                elem.GetPointIds().SetId(7, element[7])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
-
-                #elem = vtkTriangle()
-                #node_ids = elements[eid, :]
-                #elem.GetPointIds().SetId(0, node_ids[0])
-                #elem.GetPointIds().SetId(1, node_ids[1])
-                #elem.GetPointIds().SetId(2, node_ids[2])
-
-                #elem.GetCellType() = 5  # vtkTriangle
-                #self.grid.InsertNextCell(5, elem.GetPointIds())
-        elif is_surface_blockmesh:
-            nelements, four = quads.shape
-            for eid, element in enumerate(quads):
-                elem = vtkQuad()
-                elem.GetPointIds().SetId(0, element[0])
-                elem.GetPointIds().SetId(1, element[1])
-                elem.GetPointIds().SetId(2, element[2])
-                elem.GetPointIds().SetId(3, element[3])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
-        elif is_face_mesh:
-            elems = quads
-            nelements = quads.shape[0]
-            nnames = len(names)
-            normals = zeros((nelements, 3), dtype='float32')
-            if nnames != nelements:
-                msg = 'nnames=%s nelements=%s names.max=%s names.min=%s' % (
-                    nnames, nelements, names.max(), names.min())
-                raise RuntimeError(msg)
-            for eid, element in enumerate(elems):
-                #print('element = %s' % element)
-                ineg = where(element == -1)[0]
-
-                nnodes = 4
-                if ineg:
-                    nnodes = ineg.max()
-
-                #pid = 1
-                pid = names[eid]
-                if nnodes == 3: # triangle!
-                    f.write('CTRIA3,%i,%i,%i,%i,%i\n' % (
-                        eid+1, pid, element[0]+1, element[1]+1, element[2]+1))
-                    elem = vtkTriangle()
-                    a = nodes[element[1], :] - nodes[element[0], :]
-                    b = nodes[element[2], :] - nodes[element[0], :]
-                    n = cross(a, b)
-                    normals[eid, :] = n / norm(n)
-
+            #elements -= 1
+            normals = None
+            if is_3d_blockmesh:
+                nelements, three = hexas.shape
+                for eid, element in enumerate(hexas):
+                    #print(element)
+                    elem = vtkHexahedron()
                     elem.GetPointIds().SetId(0, element[0])
                     elem.GetPointIds().SetId(1, element[1])
                     elem.GetPointIds().SetId(2, element[2])
+                    elem.GetPointIds().SetId(3, element[3])
+                    elem.GetPointIds().SetId(4, element[4])
+                    elem.GetPointIds().SetId(5, element[5])
+                    elem.GetPointIds().SetId(6, element[6])
+                    elem.GetPointIds().SetId(7, element[7])
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
-                elif nnodes == 4:
-                    f.write('CQUAD4,%i,%i,%i,%i,%i,%i\n' % (
-                        eid+1, pid, element[0]+1, element[1]+1, element[2]+1, element[3]+1))
-                    a = nodes[element[2], :] - nodes[element[0], :]
-                    b = nodes[element[3], :] - nodes[element[1], :]
-                    n = cross(a, b)
-                    normals[eid, :] = n / norm(n)
 
+                    #elem = vtkTriangle()
+                    #node_ids = elements[eid, :]
+                    #elem.GetPointIds().SetId(0, node_ids[0])
+                    #elem.GetPointIds().SetId(1, node_ids[1])
+                    #elem.GetPointIds().SetId(2, node_ids[2])
+
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    #self.grid.InsertNextCell(5, elem.GetPointIds())
+            elif is_surface_blockmesh:
+                nelements, four = quads.shape
+                for eid, element in enumerate(quads):
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, element[0])
                     elem.GetPointIds().SetId(1, element[1])
@@ -277,12 +230,61 @@ class OpenFoamIO(object):
                     elem.GetPointIds().SetId(3, element[3])
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
-                else:
-                    raise RuntimeError('nnodes=%s' % nnodes)
-        else:
-            msg = 'is_surface_blockmesh=%s is_face_mesh=%s; pick one' % (
-                is_surface_blockmesh, is_face_mesh)
-            raise RuntimeError(msg)
+            elif is_face_mesh:
+                elems = quads
+                nelements = quads.shape[0]
+                nnames = len(names)
+                normals = zeros((nelements, 3), dtype='float32')
+                if nnames != nelements:
+                    msg = 'nnames=%s nelements=%s names.max=%s names.min=%s' % (
+                        nnames, nelements, names.max(), names.min())
+                    raise RuntimeError(msg)
+                for eid, element in enumerate(elems):
+                    #print('element = %s' % element)
+                    ineg = where(element == -1)[0]
+
+                    nnodes = 4
+                    if ineg:
+                        nnodes = ineg.max()
+
+                    #pid = 1
+                    pid = names[eid]
+                    if nnodes == 3: # triangle!
+                        bdf_file.write('CTRIA3,%i,%i,%i,%i,%i\n' % (
+                            eid+1, pid, element[0]+1, element[1]+1, element[2]+1))
+                        elem = vtkTriangle()
+                        a = nodes[element[1], :] - nodes[element[0], :]
+                        b = nodes[element[2], :] - nodes[element[0], :]
+                        n = cross(a, b)
+                        normals[eid, :] = n / norm(n)
+
+                        elem.GetPointIds().SetId(0, element[0])
+                        elem.GetPointIds().SetId(1, element[1])
+                        elem.GetPointIds().SetId(2, element[2])
+                        self.grid.InsertNextCell(elem.GetCellType(),
+                                                 elem.GetPointIds())
+                    elif nnodes == 4:
+                        bdf_file.write('CQUAD4,%i,%i,%i,%i,%i,%i\n' % (
+                            eid+1, pid, element[0]+1, element[1]+1, element[2]+1, element[3]+1))
+                        a = nodes[element[2], :] - nodes[element[0], :]
+                        b = nodes[element[3], :] - nodes[element[1], :]
+                        n = cross(a, b)
+                        normals[eid, :] = n / norm(n)
+
+                        elem = vtkQuad()
+                        elem.GetPointIds().SetId(0, element[0])
+                        elem.GetPointIds().SetId(1, element[1])
+                        elem.GetPointIds().SetId(2, element[2])
+                        elem.GetPointIds().SetId(3, element[3])
+                        self.grid.InsertNextCell(elem.GetCellType(),
+                                                 elem.GetPointIds())
+                    else:
+                        raise RuntimeError('nnodes=%s' % nnodes)
+            else:
+                msg = 'is_surface_blockmesh=%s is_face_mesh=%s; pick one' % (
+                    is_surface_blockmesh, is_face_mesh)
+                raise RuntimeError(msg)
+            bdf_file.write('ENDDATA\n')
 
         self.nElements = nelements
         self.grid.SetPoints(points)
@@ -314,13 +316,12 @@ class OpenFoamIO(object):
         ID = 1
 
         #print("nElements = ",nElements)
-        f.write('ENDDATA\n')
-        f.close()
-
         if mesh_3d == 'hex':
-            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements, patches, names, normals, is_surface_blockmesh)
+            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements,
+                                                   patches, names, normals, is_surface_blockmesh)
         elif mesh_3d == 'shell':
-            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements, patches, names, normals, is_surface_blockmesh)
+            form, cases = self._fill_openfoam_case(cases, ID, nodes, nelements,
+                                                   patches, names, normals, is_surface_blockmesh)
         elif mesh_3d == 'faces':
             if len(names) == nelements:
                 is_surface_blockmesh = True
@@ -369,19 +370,19 @@ class OpenFoamIO(object):
                 patch_res = GuiResult(0, header='Patch', title='Patch',
                                       location='centroid', scalar=patches)
                 cases[icase] = (patch_res, (0, 'Patch'))
-                gf = ('PatchType', icase, [])
-                geometry_form.append(gf)
+                formi = ('PatchType', icase, [])
+                geometry_form.append(formi)
                 icase += 1
 
             if names is not None:
                 name_res = GuiResult(0, header='Name', title='Name',
                                      location='centroid', scalar=names)
                 cases[icase] = (name_res, (0, 'Name'))
-                gf = ('Names', icase, [])
-                geometry_form.append(gf)
+                formi = ('Names', icase, [])
+                geometry_form.append(formi)
                 icase += 1
             else:
-                asdf
+                raise RuntimeError('names is None...')
 
         if normals is not None:
             nx_res = GuiResult(0, header='NormalX', title='NormalX',

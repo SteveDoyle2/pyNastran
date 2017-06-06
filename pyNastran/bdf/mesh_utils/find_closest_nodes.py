@@ -4,12 +4,13 @@ defines:
     * ieq = find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol)
 """
 from __future__ import print_function
+from itertools import count
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.bdf_equivalence import (
     _get_tree)
 
-def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None):
+def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None, msg=''):
     """
     Finds the closest nodes to an arbitrary set of xyz points
 
@@ -22,9 +23,12 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None):
     xyz_compare : (Ncompare, 3) float ndarray
         the xyz points to compare to
     tol : float; default=None
-        the max spherical tolerance; the whole model
+        the max spherical tolerance
+        None : the whole model
     neq_max : int; default=1.0
         the number of "close" points
+    msg : str; default=''
+        custom message used for errors
 
     Returns
     -------
@@ -32,22 +36,36 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None):
         the close node ids
     """
     if not isinstance(neq_max, int):
-        raise TypeError('neq_max=%r must be an int; type=%s' % (neq_max, type(neq_max)))
+        msgi = 'neq_max=%r must be an int; type=%s\n%s' % (
+            neq_max, type(neq_max), msg)
+        raise TypeError(msgi)
     #ieq = find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol)
     if tol is None:
-        xyz_max = nodes_xyz.amax(axis=0)
-        xyz_min = nodes_xyz.amin(axis=0)
+        xyz_max = nodes_xyz.max(axis=0)
+        xyz_min = nodes_xyz.min(axis=0)
         assert len(xyz_max) == 3, xyz_max
-        dxyz = np.linalg.norm(xyz_max - xyz_max)
+        dxyz = np.linalg.norm(xyz_max - xyz_min)
         tol = 2. * dxyz
 
     ieq = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
-                                      neq_max=neq_max)[1]
-    #assert len(ieq) == len(nids), 'increase the tolerance so you '
-    return nids[ieq]
+                                      neq_max=neq_max, msg=msg)[1]
+    ncompare = xyz_compare.shape[0]
+    assert len(ieq) == ncompare, 'increase the tolerance so you can find nodes; tol=%r' % tol
+    try:
+        nids_out = nids[ieq]
+    except IndexError:
+        nnids = len(nids)
+        msgi = 'Cannot find:\n'
+        for i, ieqi, nid in zip(count(), ieq, nids):
+            if ieqi == nnids:
+                xyz = xyz_compare[i, :]
+                msgi += '  nid=%s xyz=%s\n' % (nid, xyz)
+        msgi += msg
+        raise IndexError(msgi)
+    return nids_out
 
 
-def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol):
+def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol, msg=''):
     """
     Finds the closest nodes to an arbitrary set of xyz points
 
@@ -61,6 +79,8 @@ def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol):
         the number of "close" points (default=4)
     tol : float
         the max spherical tolerance
+    msg : str; default=''
+        error message
 
     Returns
     -------
@@ -71,11 +91,11 @@ def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol):
         #bdf_filename, tol, renumber_nodes=renumber_nodes,
         #xref=xref, node_set=node_set, debug=debug)
     ieq, slots = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
-                                             neq_max=neq_max)[1:3]
+                                             neq_max=neq_max, msg=msg)[1:3]
     return ieq
 
 
-def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4):
+def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4, msg=''):
     """
     helper function for `bdf_equivalence_nodes`
 
@@ -89,6 +109,8 @@ def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4):
         the max spherical tolerance
     neq_max : int; default=4
         the number of close nodes
+    msg : str; default=''
+        error message
 
     Returns
     -------
@@ -106,14 +128,15 @@ def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4):
             (N, ) int ndarray
         neq_max > 1:
             (N, N) int ndarray
+    msg : str; default=''
+        error message
     """
     assert isinstance(xyz_compare, np.ndarray), type(xyz_compare)
     if nodes_xyz.shape[1] != xyz_compare.shape[1]:
-        msg = 'nodes_xyz.shape=%s xyz_compare.shape=%s' % (
-            str(nodes_xyz.shape), str(xyz_compare.shape))
-        raise RuntimeError(msg)
-
-    kdt = _get_tree(nodes_xyz)
+        msgi = 'nodes_xyz.shape=%s xyz_compare.shape=%s%s' % (
+            str(nodes_xyz.shape), str(xyz_compare.shape), msg)
+        raise RuntimeError(msgi)
+    kdt = _get_tree(nodes_xyz, msg=msg)
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(xyz_compare, k=neq_max, distance_upper_bound=tol)
     #print(deq)

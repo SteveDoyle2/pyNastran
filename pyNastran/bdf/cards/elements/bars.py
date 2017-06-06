@@ -1,3 +1,11 @@
+"""
+defines:
+ - CBAR
+ - CBARAO
+ - CBAROR
+ - CBEAM3
+ - CBEND
+"""
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -8,10 +16,10 @@ from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Element
+from pyNastran.bdf.cards.base_card import BaseCard, Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
-    integer_string_or_blank, string_or_blank)
+    integer_string_or_blank, string_or_blank, string, integer_or_double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -140,7 +148,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_Ref
+        del self.nodes_ref, self.pid_ref
 
     def Length(self):
         r"""
@@ -164,7 +172,7 @@ class CBAROR(object):
     def __init__(self):
         self.n = 0
 
-    def add(self, card=None, data=None, comment=''):
+    def add_card(self, card, comment=''):
         if self.n == 1:
             raise RuntimeError('only one CBAROR is allowed')
         self.n = 1
@@ -190,6 +198,109 @@ class CBAROR(object):
         assert len(card) <= 9, 'len(CBAROR card) = %i\ncard=%s' % (len(card), card)
 
 
+class CBARAO(BaseCard):
+    type = 'CBARAO'
+    """
+    Per MSC 2016.1
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    |   1    |  2   |   3   |  4   |  5  |    6   |  7  | 8  |  9 |
+    +========+======+=======+======+=====+========+=====+====+====+
+    | CBARAO | EID  | SCALE |  X1  | X2  |  X3    | X4  | X5 | X6 |
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    | CBARAO | 1065 |  FR   | 0.2  | 0.4 |  0.6   | 0.8 |    |    |
+    +--------+------+-------+------+-----+--------+-----+----+----+
+
+    Alternate form (not supported):
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    |   1    |  2   |   3   |  4   |  5  |    6   |  7  | 8  |  9 |
+    +========+======+=======+======+=====+========+=====+====+====+
+    | CBARAO | EID  | SCALE | NPTS | X1  | DELTAX |     |    |    |
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    | CBARAO | 1065 |  FR   |  4   | 0.2 |  0.2   |     |    |    |
+    +--------+------+-------+------+-----+--------+-----+----+----+
+    """
+    def __init__(self, eid, scale, x, comment=''):
+        """
+        Creates a CBARAO card, which defines additional output locations
+        for the CBAR card.
+
+        It also changes the OP2 element type from a CBAR-34 to a CBAR-100.
+        However, it is ignored if there are no PLOAD1s in the model.
+        Furthermore, the type is changed for the whole deck, regardless of
+        whether there are PLOAD1s in the other load cases.
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        scale : str
+            defines what x means
+            LE : x is in absolute coordinates along the bar
+            FR : x is in fractional
+        x : List[float]
+            the additional output locations (doesn't include the end points)
+            len(x) <= 6
+        comment : str; default=''
+            a comment for the card
+
+        MSC only
+        """
+        if comment:
+            self.comment = comment
+        self.eid = eid
+        self.scale = scale
+        self.x = np.unique(x).tolist()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a CBARAO card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = integer(card, 1, 'eid')
+        scale = string(card, 2, 'scale')
+        x1_npoints = integer_or_double(card, 3, 'x1/npoints')
+        if isinstance(x1_npoints, integer_types):
+            npoints = x1_npoints
+            x1 = double_or_blank(card, 4, 'x1')
+            delta_x = double_or_blank(card, 4, 'delta_x')
+            x = np.arange(x1, npoints, delta_x)
+            raise NotImplementedError('card=%s x=%s' % (card, x))
+
+        else:
+            x = [
+                x1_npoints,
+                double_or_blank(card, 4, 'x2'),
+                double_or_blank(card, 5, 'x3'),
+                double_or_blank(card, 6, 'x4'),
+                double_or_blank(card, 7, 'x5'),
+                double_or_blank(card, 8, 'x6'),
+            ]
+        assert len(card) <= 9, 'len(CBARAO card) = %i\ncard=%s' % (len(card), card)
+        return CBARAO(eid, scale, x, comment=comment)
+
+    def _verify(self, xref=False):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['CBARAO', self.eid, self.scale] + self.x
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
 class CBAR(LineElement):
     """
     +-------+-----+-----+-----+-----+-----+-----+-----+------+
@@ -213,13 +324,12 @@ class CBAR(LineElement):
     +-------+-------+-----+-------+-------+--------+-------+-------+-------+
     |   1   |   2   |  3  |   4   |   5   |    6   |   7   |   8   |   9   |
     +=======+=======+=====+=======+=======+========+=======+=======+=======+
-    |  CBAR | 2     |  39 | 7     | 6     |  105   |       |       |  GGG  |
+    |  CBAR |   2   |  39 |   7   |   6   |  105   |       |       |  GGG  |
     +-------+-------+-----+-------+-------+--------+-------+-------+-------+
-    |       |       | 513 | 0.0+0 | 0.0+0 |    -9. | 0.0+0 | 0.0+0 |   -9. |
+    |       |       | 513 |  0.0  |  0.0  |    -9. |  0.0  |  0.0  |   -9. |
     +-------+-------+-----+-------+-------+--------+-------+-------+-------+
     """
     type = 'CBAR'
-    aster_type = 'CBAR'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
         8:'offt', 9:'pa', 10:'pb',
@@ -254,7 +364,7 @@ class CBAR(LineElement):
                 else:
                     raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, ga, gb,
+    def __init__(self, eid, pid, nids,
                  x, g0, offt='GGG',
                  pa=0, pb=0, wa=None, wb=None, comment=''):
         """
@@ -266,8 +376,8 @@ class CBAR(LineElement):
             property id
         mid : int
             material id
-        ga / gb : int
-            grid point at End A/B
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
         x : List[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
@@ -301,8 +411,8 @@ class CBAR(LineElement):
         self.pid = pid
         self.x = x
         self.g0 = g0
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.offt = offt
         self.pa = pa
         self.pb = pb
@@ -330,6 +440,16 @@ class CBAR(LineElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -351,7 +471,7 @@ class CBAR(LineElement):
                        double_or_blank(card, 15, 'w2b', 0.0),
                        double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
         assert len(card) <= 17, 'len(CBAR card) = %i\ncard=%s' % (len(card), card)
-        return CBAR(eid, pid, ga, gb, x, g0,
+        return CBAR(eid, pid, [ga, gb], x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
     @classmethod
@@ -382,22 +502,23 @@ class CBAR(LineElement):
 
         wa = np.array([main[6], main[7], main[8]], dtype='float64')
         wb = np.array([main[9], main[10], main[11]], dtype='float64')
-        return CBAR(eid, pid, ga, gb, x, g0,
+        return CBAR(eid, pid, [ga, gb], x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
     def _verify(self, xref=False):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
-        mid = self.Mid()
-        nsm = self.Nsm()
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
         if xref:  # True
+            assert self.pid_ref.type in ['PBAR', 'PBARL'], '%s%s' % (self, self.pid_ref)
+            mid = self.Mid()
             A = self.Area()
+            nsm = self.Nsm()
             mpl = self.MassPerLength()
             L = self.Length()
             mass = self.Mass()
+            assert isinstance(mid, int), 'mid=%r' % mid
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(A, float), 'eid=%s A=%r' % (eid, A)
             assert isinstance(L, float), 'eid=%s L=%r' % (eid, L)
             assert isinstance(mpl, float), 'eid=%s mass_per_length=%r' % (eid, mpl)
@@ -451,6 +572,9 @@ class CBAR(LineElement):
 
     def Centroid(self):
         return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     @classmethod
     def _init_x_g0(cls, card, eid):
@@ -515,7 +639,17 @@ class CBAR(LineElement):
         else:
             return self.gb_ref.nid
 
-    def getX_G0_defaults(self):
+    def get_x_g0_defaults(self):
+        """
+        X and G0 compete for the same fields, so the method exists to
+        make it easier to write the card
+
+        Returns
+        -------
+        x_g0 : varies
+            g0 : List[int, None, None]
+            x : List[float, float, float]
+        """
         if self.g0 is not None:
             return (self.g0, None, None)
         else:
@@ -527,16 +661,23 @@ class CBAR(LineElement):
             return list(self.x)
 
     def get_orientation_vector(self, xyz):
+        """
+        Element offsets are defined in a Cartesian system located at the
+        connecting grid point. The components of the offsets are always
+        defined in units of translation, even if the displacement
+        coordinate system is cylindrical or spherical.
+
+        For example, in Figure 11-11, the grid point displacement
+        coordinate system is cylindrical, and the offset vector is
+        defined using Cartesian coordinates u1, u2, and u3 in units of
+        translation.
+        """
         if self.g0:
             v = xyz[self.g0] - xyz[self.Ga()]
         else:
             v = self.x
         assert self.offt == 'GGG', self.offt
         return v
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -556,15 +697,21 @@ class CBAR(LineElement):
 
     def raw_fields(self):
         """
-        .. todo:: not perfectly accurate b/c ???
+        Gets the fields of the card in their full form
         """
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
+
+        # offt doesn't exist in NX nastran
         offt = set_blank_if_default(self.offt, 'GGG')
+
         list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
                        x3, offt, self.pa, self.pb] + list(self.wa) + list(self.wb)
         return list_fields
 
     def repr_fields(self):
+        """
+        Gets the fields of the card in their reduced form
+        """
         pa = set_blank_if_default(self.pa, 0)
         pb = set_blank_if_default(self.pb, 0)
 
@@ -575,7 +722,7 @@ class CBAR(LineElement):
         w1b = set_blank_if_default(self.wb[0], 0.0)
         w2b = set_blank_if_default(self.wb[1], 0.0)
         w3b = set_blank_if_default(self.wb[2], 0.0)
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
 
         # offt doesn't exist in NX nastran
         offt = set_blank_if_default(self.offt, 'GGG')
@@ -601,16 +748,16 @@ class CBEAM3(LineElement):  # was CBAR
     """
     type = 'CBEAM3'
 
-    def __init__(self, eid, pid, ga, gb, gc, x, g0,
+    def __init__(self, eid, pid, nids, x, g0,
                  wa, wb, wc, tw, s, comment=''):
         LineElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
-        self.gc = gc
+        self.ga = nids[0]
+        self.gb = nids[1]
+        self.gc = nids[2]
         self.x = x
         self.g0 = g0
         self.wa = wa
@@ -621,6 +768,16 @@ class CBEAM3(LineElement):  # was CBAR
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBEAM3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -647,9 +804,9 @@ class CBEAM3(LineElement):  # was CBAR
 
         s = np.array([integer_or_blank(card, 21, 'sa'),
                       integer_or_blank(card, 22, 'sb'),
-                      integer_or_blank(card, 23, 'sc')], dtype='float64')
+                      integer_or_blank(card, 23, 'sc')], dtype='int32')
         assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
-        return CBEAM3(eid, pid, ga, gb, gc, x, g0,
+        return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
                       wa, wb, wc, tw, s, comment='')
 
     def cross_reference(self, model):
@@ -726,7 +883,7 @@ class CBEAM3(LineElement):  # was CBAR
         return [self.Ga(), self.Gb(), self.Gc()]
 
     def raw_fields(self):
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         (ga, gb, gc) = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
                   list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
@@ -747,7 +904,7 @@ class CBEAM3(LineElement):  # was CBAR
         twb = set_blank_if_default(self.tw[1], 0.0)
         twc = set_blank_if_default(self.tw[2], 0.0)
 
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         (ga, gb, gc) = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
                        w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
@@ -762,6 +919,7 @@ class CBEAM3(LineElement):  # was CBAR
 
     def _verify(self, xref=False):
         edges = self.get_edge_ids()
+
 
 class CBEND(LineElement):
     type = 'CBEND'
@@ -785,14 +943,34 @@ class CBEND(LineElement):
             else:
                 raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, ga, gb, g0, x, geom, comment=''):
+    def __init__(self, eid, pid, nids, g0, x, geom, comment=''):
+        """
+        Creates a CEND card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PBEND)
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
+        g0 : int
+            ???
+        x : List[float, float, float]
+            ???
+        geom : ???
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         LineElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.g0 = g0
         self.x = x
         self.geom = geom
@@ -801,6 +979,16 @@ class CBEND(LineElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBEND card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -824,9 +1012,9 @@ class CBEND(LineElement):
         geom = integer(card, 8, 'geom')
 
         assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
-        return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
+        return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
 
-    def getX_G0_defaults(self):
+    def get_x_g0_defaults(self):
         if self.g0 is not None:
             return (self.g0, None, None)
         else:
@@ -836,11 +1024,6 @@ class CBEND(LineElement):
             #x2 = set_blank_if_default(self.x[1], 0.0)
             #x3 = set_blank_if_default(self.x[2], 0.0)
             return list(self.x)
-
-    #def add_op2_data(self, data, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError(data)
 
     def Length(self):
         # TODO: consider w1a and w1b in the length formulation
@@ -880,7 +1063,7 @@ class CBEND(LineElement):
             # center of curvature.
             pass
         else:
-            raise RuntimeError('geom=%r is not supported on the CBEND' % geom)
+            raise RuntimeError('geom=%r is not supported on the CBEND' % self.geom)
         return L
 
     def _validate_input(self):
@@ -943,7 +1126,7 @@ class CBEND(LineElement):
         del self.ga_ref, self.gb_ref, self.pid_ref
 
     def raw_fields(self):
-        (x1, x2, x3) = self.getX_G0_defaults()
+        (x1, x2, x3) = self.get_x_g0_defaults()
         list_fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
                        x1, x2, x3, self.geom]
         return list_fields

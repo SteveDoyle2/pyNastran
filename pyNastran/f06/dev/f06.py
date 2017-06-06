@@ -7,25 +7,25 @@ from codecs import open
 
 from pyNastran import is_release
 from pyNastran.utils import print_bad_path
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 #strainEnergyDensity,TemperatureGradientObject
-from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 
 from pyNastran.f06.tables.oes import OES
 from pyNastran.f06.tables.oug import OUG
 from pyNastran.f06.tables.oqg import OQG
 from pyNastran.f06.tables.oef import OEF
 from pyNastran.f06.tables.lama import LAMA
-from pyNastran.f06.tables.max_min import MAX_MIN
+from pyNastran.f06.tables.max_min import MaxMin
 from pyNastran.f06.f06_writer import F06Writer
-from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointForces
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
 from pyNastran.utils import is_binary_file
 from pyNastran.f06.errors import FatalError
 
 
-class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
+class F06(OES, OEF, OUG, OQG, LAMA, MaxMin, F06Writer):
     def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = stop
 
@@ -42,9 +42,12 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Initializes the F06 object
 
-        :param makeGeom:    reads the BDF tables (default=False)
-        :param debug:       prints data about how the F06 was parsed (default=False)
-        :param log:         a logging object to write debug messages to
+        Parameters
+        ----------
+        debug : bool; default=False
+            prints data about how the F06 was parsed
+        log : Log(); default=None
+            a logging object to write debug messages to
 
         .. seealso:: import logging
         """
@@ -53,7 +56,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         OQG.__init__(self)
         OUG.__init__(self)
         LAMA.__init__(self)
-        MAX_MIN.__init__(self)
+        MaxMin.__init__(self)
         F06Writer.__init__(self)
 
         self.f06_filename = None
@@ -570,7 +573,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         :log:   a python logging object
         :debug: adds debug messages (True/False)
         """
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug)
 
     def _get_grid_point_singularities(self):  # .. todo:: not done
         """
@@ -931,8 +934,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             if isubcase in self.iSubcases:
                 self.strain_energy[isubcase].readF06Data(data, transient)
             else:
-                sed = RealStrainEnergy(data, transient)
-                sed.readF06Data(data, transient)
+                sed = RealStrainEnergyArray(data, transient)
+                sed.read_f06_data(data, transient)
                 self.strain_energy[isubcase] = sed
 
     def _grid_point_force_balance(self):
@@ -999,7 +1002,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                 }
         is_sort1 = True
         if isubcase not in self.grid_point_forces:
-            self.grid_point_forces[isubcase] = RealGridPointForces(data_code, is_sort1, isubcase, dt)
+            self.grid_point_forces[isubcase] = RealGridPointForcesArray(
+                data_code, is_sort1, isubcase, dt)
         self.grid_point_forces[isubcase].add_f06_data(dt, data)
         self.iSubcases.append(isubcase)
 
@@ -1009,7 +1013,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
         :param Format: list of types [int,str,float,float,float] that maps to sline
 
-        .. seealso:: self.parseLine
+        .. seealso:: self.parse_line
         """
         sline = True
         data = []
@@ -1022,7 +1026,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             if 'PAGE' in sline:
                 #self.stored_lines = [line]  ## changed...
                 return data
-            sline = self.parseLine(sline, Format)
+            sline = self.parse_line(sline, Format)
             if sline is None or len(sline) == 0:
                 return data
             data.append(sline)
@@ -1041,10 +1045,16 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             data.append(sline)
         return data
 
-    def parseLine(self, sline, formats):
+    def parse_line(self, sline, formats):
         """
-        :param sline:   list of strings (split line)
-        :param formats: list of types [int,str,float,float,float] that maps to sline
+        Parses a line
+
+        Parameters
+        ----------
+        sline : List[str]
+            split line
+        formats : List[int,str,float,float,float]
+            list of types that maps to sline
         """
         out = []
         for entry, iformat in zip(sline, formats):
@@ -1078,7 +1088,9 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Reads the F06 file
 
-        :f06_filename: the file to be parsed (None -> GUI)
+        Parameters
+        f06_filename : str
+            the file to be parsed (None -> GUI)
         """
         self.is_vectorized = vectorized
         if f06_filename is None:

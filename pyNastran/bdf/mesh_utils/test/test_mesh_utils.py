@@ -3,7 +3,7 @@ import os
 import unittest
 from codecs import open as codec_open
 
-from six import iteritems
+from six import StringIO, iteritems
 import numpy as np
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF
@@ -16,6 +16,9 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
+from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
+from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
+from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
@@ -64,7 +67,7 @@ class TestMeshUtils(unittest.TestCase):
             bdf_file.write(msg)
 
         model = read_bdf(bdf_filename, log=log, xref=True)
-        xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float32')
+        xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
         nid_map = {}
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
             #xyz = node.get_position()
@@ -442,6 +445,160 @@ class TestMeshUtils(unittest.TestCase):
         read_bdf(bdf_filename_out1, log=log)
         read_bdf(bdf_filename_out2, log=log)
         read_bdf(bdf_filename_out3, log=log)
+
+    def test_export_mcids(self):
+        """creates material coordinate systems"""
+        bdf_filename = os.path.abspath(os.path.join(
+            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+        csv_filename = os.path.abspath(os.path.join(
+            pkg_path, '..', 'models', 'bwb', 'mcids.csv'))
+        export_mcids(bdf_filename, csv_filename,
+                     export_xaxis=True, export_yaxis=True,
+                     iply=9)
+
+        model = read_bdf(bdf_filename, xref=False)
+        model.safe_cross_reference()
+
+        eids = [1204, 1211]
+        export_mcids(model, csv_filename=None, eids=eids,
+                     export_xaxis=True, export_yaxis=True,
+                     iply=9)
+        export_mcids(model, csv_filename=None, eids=eids,
+                     export_xaxis=True, export_yaxis=False,
+                     iply=9)
+        export_mcids(model, csv_filename=None, eids=eids,
+                     export_xaxis=False, export_yaxis=True,
+                     iply=9)
+        with self.assertRaises(AssertionError):
+            export_mcids(model, csv_filename=None, eids=eids,
+                         export_xaxis=False, export_yaxis=False,
+                         iply=9)
+
+        with self.assertRaises(RuntimeError):
+            export_mcids(model, csv_filename, eids=eids,
+                         export_xaxis=True, export_yaxis=True,
+                         iply=10)
+
+    def test_split_cbars_by_pin_flag_1(self):
+        """null pin flag test"""
+        bdf_filename = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.bdf'))
+        split_cbars_by_pin_flag(bdf_filename, pin_flags_filename='pin_flags.csv',
+                                bdf_filename_out='pin_flags.bdf', debug=False)
+        os.remove('pin_flags.csv')
+        os.remove('pin_flags.bdf')
+
+    def test_split_cbars_by_pin_flag_2(self):
+        """real pin flag test"""
+        lines = [
+            'SOL 101\n',
+            'CEND\n',
+            'SUBCASE 10\n',
+            '    LOAD = 10\n',
+            '    SPC = 123456\n',
+            '    DISP(PLOT) = ALL\n',
+            '    STRESS(PLOT) = ALL\n',
+            'BEGIN BULK\n',
+            'ENDDATA',
+        ]
+        model = BDF(debug=False)
+        with self.assertRaises(NotImplementedError):
+            model.read_bdf(bdf_filename=lines, validate=True, xref=True,
+                          punch=False, read_includes=True,
+                          encoding=None)
+
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[2., 0., 0.])
+        model.add_grid(4, xyz=[3., 0., 0.])
+
+        pid = 1000
+        mid = 1000
+        Type = 'BAR'
+        dim = [1., 2.]
+        model.add_pbarl(pid, mid, Type, dim)
+        E = 3.0e7
+        G = 3.0e6
+        nu = None
+        model.add_mat1(mid, E, G, nu)
+
+        x = [0., 1., 0.]
+        g0 = None
+        model.add_cbar(1, pid, [1, 2], x, g0, offt='GGG', pa=0, pb=0,
+                       wa=None, wb=None, comment='reaction')
+        model.add_cbar(2, pid, [2, 3], x, g0, offt='GGG', pa=0, pb=456,
+                       wa=None, wb=None, comment='End B')
+        model.add_cbar(3, pid, [3, 4], x, g0, offt='GGG', pa=456, pb=0,
+                       wa=None, wb=None, comment='End A')
+        sid = 10
+        node = 4
+        mag = 1.
+        xyz = [1., 1., 0.]
+        model.add_force(sid, node, mag, xyz)
+        model.add_spc1(123456, '123456', 1)
+        model.validate()
+
+        bdf_file = StringIO()
+        bdf_file.writelines(lines)
+        bdf_file.seek(0)
+        model.read_bdf(bdf_filename=bdf_file, validate=True, xref=False,
+                       punch=False, read_includes=True,
+                       encoding=None)
+        #model.write_bdf('spike.bdf')
+
+        split_cbars_by_pin_flag(model, pin_flags_filename='pin_flags.csv',
+                                bdf_filename_out='pin_flags.bdf', debug=False)
+        os.remove('pin_flags.csv')
+        os.remove('pin_flags.bdf')
+
+
+    def test_split_line_elements(self):
+        """tests split_line_elements"""
+        model = BDF()
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+
+        pid = 1000
+        mid = 1000
+        Type = 'BAR'
+        dim = [1., 2.]
+        model.add_pbarl(pid, mid, Type, dim)
+        E = 3.0e7
+        G = 3.0e6
+        nu = None
+        model.add_mat1(mid, E, G, nu)
+
+        x = [0., 1., 0.]
+        g0 = None
+        #model.add_cbar(1, pid, 1, 2, x, g0, offt='GGG', pa=0, pb=0,
+                       #wa=None, wb=None, comment='reaction')
+        #model.add_cbar(2, pid, 2, 3, x, g0, offt='GGG', pa=0, pb=456,
+                       #wa=None, wb=None, comment='End B')
+        #model.add_cbar(3, pid, 3, 4, x, g0, offt='GGG', pa=456, pb=0,
+                       #wa=None, wb=None, comment='End A')
+        #eids = [1, 2, 3]
+
+        nids = [1, 2]
+        model.add_cbar(1, pid, nids, x, g0, offt='GGG', pa=456, pb=5,
+                       wa=None, wb=None, comment='End A')
+        model.add_cbeam(2, 2000, nids, x, g0, offt='GGG', bit=None, pa=456,
+                       pb=5, wa=None, wb=None, sa=0,
+                       sb=0, comment='')
+        A = 42.
+        model.add_conrod(3, mid, nids, A)
+        model.add_prod(4000, mid, A)
+        model.add_crod(4, 4000, nids)
+
+        Type = 'ROD'
+        xxb = [0.]
+        dims = [[1.]]
+        model.add_pbeaml(2000, mid, Type, xxb, dims)
+        eids = [1, 2, 3, 4]
+        split_line_elements(model, eids, neids=10,
+                            eid_start=101, nid_start=101)
+        f = StringIO()
+        model.write_bdf(f, close=False)
+        #print(f.getvalue())
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

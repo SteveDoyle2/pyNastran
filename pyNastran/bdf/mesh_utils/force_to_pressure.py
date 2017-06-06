@@ -80,8 +80,8 @@ def force_to_pressure(bdf_filename, bdf_filename_out=None):
             area = elem.Area()
             pressures = [pressure, pressure, pressure, pressure]
             pload4 = PLOAD4(sid, eids, pressures,
-                            g1=None, g34=None, cid=0, NVector=None,
-                            sorl='SURF', ldir='NORM', comment='')
+                            g1=None, g34=None, cid=0, nvector=None,
+                            surf_or_line='SURF', line_load_dir='NORM', comment='')
             #pressure_file.write(pload4.write_card(size=8, is_double=False))
             model._add_load_object(pload4)
 

@@ -12,8 +12,8 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`baseCard` Module
-----------------------
+:mod:`base_card` Module
+-----------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.base_card
 
@@ -45,6 +45,17 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`collpase_card` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.collpase_card
+
+.. automodule:: pyNastran.bdf.cards.collpase_card
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`constraints` Module
 -------------------------
 
@@ -67,12 +78,23 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`coordinateSystems` Module
--------------------------------
+:mod:`coordinate_systems` Module
+--------------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.cards.coordinate_systems
 
 .. automodule:: pyNastran.bdf.cards.coordinate_systems
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`deqatn` Module
+--------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.deqatn
+
+.. automodule:: pyNastran.bdf.cards.deqatn
     :members:
     :private-members:
     :undoc-members:
@@ -133,6 +155,17 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`msgmesh` Module
+---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.msgmesh
+
+.. automodule:: pyNastran.bdf.cards.msgmesh
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`nodes` Module
 -------------------
 
@@ -177,12 +210,13 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+Subpackages
+-----------
 
 .. toctree::
 
-    pyNastran.bdf.cards.elements
-    pyNastran.bdf.cards.loads
-    pyNastran.bdf.cards.properties
-    pyNastran.bdf.cards.thermal
-    pyNastran.bdf.cards.test
+   pyNastran.bdf.cards.elements
+   pyNastran.bdf.cards.loads
+   pyNastran.bdf.cards.properties
+   pyNastran.bdf.cards.thermal
 

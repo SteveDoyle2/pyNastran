@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PELAS, read_bdf, get_logger2
+from pyNastran.bdf.bdf import BDF, BDFCard, PELAS, read_bdf
 
 class TestSprings(unittest.TestCase):
     def test_pelas_01(self):
@@ -71,6 +71,7 @@ class TestSprings(unittest.TestCase):
         os.remove('spring.bdf')
 
     def test_springs_04(self):
+        """tests SPOINT, CELAS3, PELAS, CELAS4"""
         model = BDF(debug=False)
         eid = 1
         pid = 2
@@ -80,14 +81,22 @@ class TestSprings(unittest.TestCase):
         celas3.raw_fields()
         celas3.write_card(size=8, is_double=False)
 
+        eid = 2
         k = 1.0e7
+        nids = [10, 21]
+        celas4 = model.add_celas4(eid, k, nids, comment='celas4')
+        celas4.raw_fields()
+        celas4.write_card(size=8, is_double=False)
+
         ge = 0.0
         s = 0.
         pelas = model.add_pelas(pid, k, ge, s, comment='pelas')
-        spoints = model.add_spoint([3, 4], comment='spoints')
+        spoints = model.add_spoint([3, 21, 4, 10], comment='spoints')
         spoints.raw_fields()
         spoints.write_card()
 
+        #from pyNastran.bdf.cards.test.test_mass_elements import read_write
+        #read_write(model)
         model.write_bdf('spring2.bdf')
         model2 = read_bdf('spring2.bdf', debug=False)
         os.remove('spring2.bdf')

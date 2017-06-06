@@ -57,11 +57,11 @@ def check_length(fem1, fem2, name):
 
 def compare_card_content(fem1, fem2):
     check_obj_names = [
-        'params', 'nodes', 'elements', 'rigid_elements',
+        'params', 'nodes', 'elements', 'rigid_elements', 'nsms',
         'properties', 'materials', 'creep_materials',
         'loads', 'coords',
-        'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas', 'dphases',
-        'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies',
+        'spcs', 'spcoffs', 'mpcs', 'dareas', 'dphases',
+        'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations',
         'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
         'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
         'tables', 'tables_d', 'tables_m', 'random_tables', 'methods', 'cMethods']
@@ -109,6 +109,14 @@ def compare_card_content(fem1, fem2):
         for (card1, card2) in zip(loads1, loads2):
             assert_fields(card1, card2)
 
+    for key in fem1.frequencies:
+        freqs1 = fem1.frequencies[key]
+        freqs2 = fem2.frequencies[key]
+        assert isinstance(freqs1, list), freqs1
+        assert isinstance(freqs2, list), freqs2
+        for (card1, card2) in zip(freqs1, freqs2):
+            assert_fields(card1, card2)
+
     for key in fem1.coords:
         card1 = fem1.coords[key]
         card2 = fem2.coords[key]
@@ -117,26 +125,14 @@ def compare_card_content(fem1, fem2):
     for spc_id in fem1.spcs:
         fem1.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
         fem1.get_SPCx_node_ids_c1(spc_id, exclude_spcadd=False)
-
         #card1 = fem1.spcs[key]
         #card2 = fem2.spcs[key]
         #assert_fields(card1, card2)
 
-    #for key in fem1.spcadds:
-        #card1 = fem1.spcadds[key]
-        #card2 = fem2.spcadds[key]
-        #assert_fields(card1, card2)
-
     for mpc_id in fem1.mpcs:
         fem1.get_MPCx_node_ids_c1(mpc_id, exclude_mpcadd=False)
-
         #card1 = fem1.mpcs[key]
         #card2 = fem2.mpcs[key]
-        #assert_fields(card1, card2)
-
-    #for key in fem1.mpcadds:
-        #card1 = fem1.mpcadds[key]
-        #card2 = fem2.mpcadds[key]
         #assert_fields(card1, card2)
 
     for key in fem1.dareas:
@@ -179,11 +175,6 @@ def compare_card_content(fem1, fem2):
     if fem1.dtable:
         card1 = fem1.dtable
         card2 = fem2.dtable
-        assert_fields(card1, card2)
-
-    for key in fem1.frequencies:
-        card1 = fem1.frequencies[key]
-        card2 = fem2.frequencies[key]
         assert_fields(card1, card2)
 
     for key in fem1.sets:

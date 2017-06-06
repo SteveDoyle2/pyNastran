@@ -5,11 +5,7 @@ defines some methods for cleaning up a model
  - remove_unused_materials(...)
 """
 from __future__ import print_function
-from six import iteritems, itervalues
-#from six.moves import zip, range
-
-
-import numpy as np
+from six import iteritems, itervalues, integer_types
 
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -17,6 +13,8 @@ from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                   remove_pids=True, remove_mids=True):
     """
+    Takes an uncross-referenced bdf and removes unused data
+
     removes unused:
      - nodes
      - properties
@@ -61,6 +59,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'DMIG', 'DMI', 'DMIJ', 'DMIK', 'DMIJI',
         'POINT', 'EPOINT',
         'DELAY', 'DPHASE',
+        'CBARAO',
 
 
         # properties
@@ -178,7 +177,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 elem = model.elements[eid]
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
-                if isinstance(elem.theta_mcid, int):
+                if isinstance(elem.theta_mcid, integer_types):
                     cids_used.add(elem.theta_mcid)
         elif card_type in ['CTRIAX6']:
             for eid in ids:
@@ -366,7 +365,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
                 if elem.g0 is not None:
-                    assert isinstance(elem.g0, int), elem.g0
+                    assert isinstance(elem.g0, integer_types), elem.g0
                     nids_used.add(elem.g0)
         elif card_type == 'CFAST':
             for eid in ids:
@@ -379,7 +378,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
                 if elem.g0 is not None:
-                    assert isinstance(elem.G0(), int), elem.G0()
+                    assert isinstance(elem.G0(), integer_types), elem.G0()
                     nids_used.add(elem.G0())
         elif card_type in ['CBUSH1D', 'CBUSH2D']:
             for eid in ids:
@@ -403,7 +402,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
                 if elem.g0 is not None:
-                    assert isinstance(elem.g0, int), elem.g0
+                    assert isinstance(elem.g0, integer_types), elem.g0
                     nids_used.add(elem.g0)
                 # TODO: cid
 
@@ -444,8 +443,11 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                         #eids_used.update(dresp.atti_values())
                         pass
                     else:
-                        msg = str(dresp) + 'region=%r property_type=%r response_type=%r, atta=%r attb=%s atti=%s' % (
-                            dresp.region, dresp.property_type, dresp.response_type, dresp.atta, dresp.attb, dresp.atti)
+                        msg = (
+                            str(dresp) + 'region=%r property_type=%r response_type=%r, '
+                            'atta=%r attb=%s atti=%s' % (
+                                dresp.region, dresp.property_type, dresp.response_type,
+                                dresp.atta, dresp.attb, dresp.atti))
                         raise NotImplementedError(msg)
 
                 #elif dresp.property_type == 'STRESS':
@@ -464,12 +466,18 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                         # flutter_id / trim_id
                         pass
                     else:
-                        msg = str(dresp) + 'region=%r property_type=%r response_type=%r atta=%r attb=%s atti=%s' % (
-                            dresp.region, dresp.property_type, dresp.response_type, dresp.atta, dresp.attb, dresp.atti)
+                        msg = (
+                            str(dresp) + 'region=%r property_type=%r response_type=%r '
+                            'atta=%r attb=%s atti=%s' % (
+                                dresp.region, dresp.property_type, dresp.response_type,
+                                dresp.atta, dresp.attb, dresp.atti))
                         raise NotImplementedError(msg)
                 else:
-                    msg = str(dresp) + 'region=%r property_type=%r response_type=%r atta=%r attb=%s atti=%s' % (
-                        dresp.region, dresp.property_type, dresp.response_type, dresp.atta, dresp.attb, dresp.atti)
+                    msg = (
+                        str(dresp) + 'region=%r property_type=%r response_type=%r '
+                        'atta=%r attb=%s atti=%s' % (
+                            dresp.region, dresp.property_type, dresp.response_type,
+                            dresp.atta, dresp.attb, dresp.atti))
                     raise NotImplementedError(msg)
         elif card_type == 'DRESP2':
             pass
@@ -532,8 +540,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type == 'TF':
             for tf_id in ids:
                 tfs = model.transfer_functions[tf_id]
-                for tf in tfs:
-                    nids_used.update(tf.nids)
+                for transfer_function in tfs:
+                    nids_used.update(transfer_function.nids)
         else:
             raise NotImplementedError(card_type)
 
@@ -592,3 +600,4 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         for mid in mids_to_remove:
             del model.materials[mid]
         model.log.debug('removing materials %s' % mids_to_remove)
+    return model

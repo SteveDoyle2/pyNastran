@@ -173,11 +173,6 @@ class BaseCard(object):
             value = self._get_field_helper(n)
         return value
 
-    def write_code_aster(self):
-        """default method for Code Aster"""
-        return ('# skipping %s because write_code_aster is not implemented\n'
-                % self.type)
-
     def _verify(self, xref):
         """
         Verifies all methods for this object work
@@ -246,6 +241,9 @@ class BaseCard(object):
                 print("list_fields = ", list_fields)
                 raise
 
+    def rstrip(self):
+        return str(self).rstrip()
+
     def write_card(self, size=8, is_double=False):
         """
         Writes the card with the specified width and precision
@@ -293,8 +291,7 @@ class Property(BaseCard):
         """
         if isinstance(self.mid, integer_types):
             return self.mid
-        else:
-            return self.mid_ref.mid
+        return self.mid_ref.mid
 
     def cross_reference(self, model):
         """dummy cross reference method for a Property"""
@@ -357,10 +354,6 @@ class Element(BaseCard):
         #: the list of node IDs for an element (default=None)
         #self.nodes = None
 
-    #def nodePositions(self, nodes=None):
-        #self.deprecated('nodePositions(nodes)', 'get_node_positions(nodes)', '0.8')
-        #return self.get_node_positions(nodes=nodes)
-
     def verify_unique_node_ids(self):
         node_ids = self.node_ids
         self._verify_unique_node_ids(node_ids)
@@ -395,10 +388,10 @@ class Element(BaseCard):
 
     def get_node_positions(self, nodes=None):
         """returns the positions of multiple node objects"""
-        if not nodes:
+        if nodes is None:
             nodes = self.nodes_ref
 
-        nnodes = len(self.nodes_ref)
+        nnodes = len(nodes)
         positions = empty((nnodes, 3), dtype='float64')
         positions.fill(nan)
         for i, node in enumerate(nodes):
@@ -480,7 +473,7 @@ class Element(BaseCard):
 
         Example
         =======
-        >>> print element.faces
+        >>> print(element.faces)
         """
         faces = {}
         try:

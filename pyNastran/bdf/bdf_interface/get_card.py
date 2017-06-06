@@ -2,40 +2,66 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
-from six import string_types, iteritems, iterkeys
+from six import string_types, iteritems, iterkeys, itervalues
 
 import numpy as np
+
+from pyNastran.bdf.bdf_interface.get_methods import GetMethods
+#from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils import integer_types
-from pyNastran.bdf.deprecated import GetMethodsDeprecated
-from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
-from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 
-class GetMethods(GetMethodsDeprecated, BDFAttributes):
+class GetCard(GetMethods):
     def __init__(self):
         self._type_to_slot_map = {}
-        BDFAttributes.__init__(self)
+        GetMethods.__init__(self)
 
     def get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
-                                   stop_on_missing_card=False):
+                                   stop_on_missing_card=False, combine=False):
         """
         Parameters
         ----------
-        card_types : List[str]
+        card_types : str / List[str] / default=None
             the list of keys to consider (list of strings; string)
+            None : all cards
         reset_type_to_slot_map : bool
             should the mapping dictionary be rebuilt (default=False);
             set to True if you added cards
         stop_on_missing_card : bool
             crashes if you request a card and it doesn't exist
+        combine : bool; default=False
+            change out_dict into out_list
+            combine the list of cards
 
         Returns
         -------
         out_dict: dict[str]=List[ids]
             the key=card_type, value=the ID of the card object
+        out_list: List[ids]
+            value=the ID of the card object
+            useful
+
+        Example 1
+        ---------
+        out_dict = model.get_card_ids_by_card_types(
+            card_types=['GRID', 'CTRIA3', 'CQUAD4'], combine=False)
+        out_dict = {
+            'GRID' : [1, 2, 10, 42, 1000],
+            'CTRIA3' : [1, 2, 3, 5],
+            'CQUAD4' : [4],
+        }
+
+        Example 2 - Shell Elements
+        --------------------------
+        out_dict = model.get_card_ids_by_card_types(
+            card_types=['CTRIA3', 'CQUAD4'], combine=True)
+        out_dict = {
+            [1, 2, 3, 4, 5],
+        }
         """
         if card_types is None:
             card_types = list(self.cards_to_read)
+
         if isinstance(card_types, string_types):
             card_types = [card_types]
         elif not isinstance(card_types, (list, tuple)):
@@ -45,20 +71,25 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             #self._type_to_slot_map = rslot_map
         if reset_type_to_slot_map:
             self._reset_type_to_slot_map()
-        #out = {
+        #out_dict = {
             #(key) : (self._type_to_id_map[key] if key in self.card_count else [])
             #for key in card_types
         #}
-        out = {}
+        out_dict = {}
         for key in card_types:
             if key in self.card_count:
-                out[key] = sorted(self._type_to_id_map[key])
+                out_dict[key] = sorted(self._type_to_id_map[key])
             else:
                 if stop_on_missing_card:
                     raise RuntimeError('%r is not in the card_count; keys=%s' %
                                        str(sorted(self.card_count.keys())))
-                out[key] = []
-        return out
+                out_dict[key] = []
+        if combine:
+            out_list = []
+            for key, value in sorted(iteritems(out_dict)):
+                out_list += value
+            return out_list
+        return out_dict
 
     def _reset_type_to_slot_map(self):
         rslot_map = defaultdict(list)
@@ -147,9 +178,10 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
             #print('card_type=%r' % card_type)
             try:
-                key = rslot_map[card_type]  # update attributes.py ~line 500
+                key = rslot_map[card_type]  # update attributes.py ~line 520
             except:
-                self.log.error("card_type=%r' hasn't been added to self._slot_to_type_map...check for typos")
+                self.log.error("card_type=%r' hasn't been added to "
+                               "self._slot_to_type_map...check for typos")
                 raise
             slot = getattr(self, key)
             ids = self._type_to_id_map[card_type]
@@ -179,7 +211,6 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     #print('%s' % str(card).split('\n')[0])
             out[card_type] = cards
         return out
-
 
     def get_SPCx_node_ids(self, spc_id, exclude_spcadd=False, stop_on_failure=True):
         """
@@ -266,6 +297,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                                                          stop_on_failure=stop_on_failure)
                     for nid, c1 in iteritems(nids_c1i):
                         node_ids_c1[nid] += c1
+            elif card.type in ['GMSPC', 'SPCAX']:
+                self.log.warning('get_SPCx_node_ids doesnt supprt %r' % card.type)
             else:
                 msg = 'get_SPCx_node_ids_c1 doesnt supprt %r' % card.type
                 if stop_on_failure:
@@ -287,6 +320,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             MPCs in the model.  For example, apply all the MPCs when
             there is no MPC=N in the case control deck, but you don't
             need to apply MPCADD=N twice.
+            TODO: not used
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -295,9 +329,13 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         I---D---I
         """
         lines = []
+        if not isinstance(mpc_id, integer_types):
+            msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
+            raise TypeError(msg)
+
         try:
             mpcs = self.mpcs[mpc_id]
-        except:
+        except KeyError:
             self.log.warning('mpc_id=%s not found' % mpc_id)
             return []
 
@@ -314,7 +352,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                         lines.append([nid0, nid])
             elif card.type == 'MPCADD':
                 nids = []
-                for new_mpc_id in card.sets:
+                for new_mpc_id in card.mpc_ids:
                     linesi = self.get_MPCx_node_ids_c1(new_mpc_id, exclude_mpcadd=False)
                     lines += linesi
             else:
@@ -325,7 +363,651 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     self.log.warning(msg)
         return lines
 
+    def get_load_arrays(self, subcase_id, nid_map, eid_map, node_ids, normals):
+        """
+        Gets the following load arrays for the GUI
+
+        Loads include:
+         - Temperature
+         - Pressure (Centroidal)
+         - Forces
+         - SPCD
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        subcase_id : int
+            the subcase id
+
+        Returns
+        -------
+        found_load : bool
+            a flag that indicates if load data was found
+        found_temperature : bool
+            a flag that indicates if temperature data was found
+        temperature_data : tuple(temperature_key, temperatures)
+            temperature_key : str
+                One of the following:
+                  TEMPERATURE(MATERIAL)
+                  TEMPERATURE(INITIAL)
+                  TEMPERATURE(LOAD)
+                  TEMPERATURE(BOTH)
+            temperatures : (nnodes, 1) float ndarray
+                the temperatures
+        load_data : tuple(centroidal_pressures, forces, spcd)
+            centroidal_pressures : (nelements, 1) float ndarray
+                the pressure
+            forces : (nnodes, 3) float ndarray
+                the pressure
+            spcd : (nnodes, 3) float ndarray
+                the SPCD load application
+        """
+        subcase = self.subcases[subcase_id]
+        is_loads = False
+        is_temperatures = False
+
+        load_keys = (
+            'LOAD', 'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)',
+            'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)')
+        temperature_keys = (
+            'TEMPERATURE(MATERIAL)', 'TEMPERATURE(INITIAL)',
+            'TEMPERATURE(LOAD)', 'TEMPERATURE(BOTH)')
+
+        centroidal_pressures = None
+        forces = None
+        spcd = None
+        temperature_key = None
+        temperatures = None
+        for key in load_keys:
+            try:
+                load_case_id = subcase.get_parameter(key)[0]
+            except KeyError:
+                # print('no %s for isubcase=%s' % (key, subcase_id))
+                continue
+            try:
+                load_case = self.loads[load_case_id]
+            except KeyError:
+                self.log.warning('LOAD=%s not found' % load_case_id)
+                continue
+
+            if key == 'LOAD':
+                p0 = np.array([0., 0., 0.], dtype='float32')
+                centroidal_pressures, forces, spcd = self._get_forces_moments_array(
+                    p0, load_case_id,
+                    nid_map=nid_map,
+                    eid_map=eid_map,
+                    node_ids=node_ids,
+                    normals=normals,
+                    dependents_nodes=self.node_ids,
+                    include_grav=False)
+                if centroidal_pressures is not None: # or any of the others
+                    is_loads = True
+            elif key in temperature_keys:
+                is_temperatures, temperatures = self._get_temperatures_array(load_case_id)
+                temperature_key = key
+            else:
+                raise NotImplementedError(key)
+        temperature_data = (temperature_key, temperatures)
+        load_data = (centroidal_pressures, forces, spcd)
+        return is_loads, is_temperatures, temperature_data, load_data
+
+    def _get_dvprel_ndarrays(self, nelements, pids):
+        """creates arrays for dvprel results"""
+        dvprel_t_init = np.zeros(nelements, dtype='float32')
+        dvprel_t_min = np.zeros(nelements, dtype='float32')
+        dvprel_t_max = np.zeros(nelements, dtype='float32')
+        design_region = np.zeros(nelements, dtype='int32')
+
+        for key, dvprel in iteritems(self.dvprels):
+            if dvprel.type == 'DVPREL1':
+                prop_type = dvprel.prop_type
+                desvars = dvprel.dvids
+                coeffs = dvprel.coeffs
+                if hasattr(dvprel, 'pid_ref'):
+                    pid = dvprel.pid_ref.pid
+                else:
+                    pid = dvprel.pid
+                var_to_change = dvprel.pname_fid
+                assert len(desvars) == 1, len(desvars)
+
+                if prop_type == 'PSHELL':
+                    i = np.where(pids == pid)
+                    design_region[i] = dvprel.oid
+                    assert len(i) > 0, i
+                    if var_to_change == 'T':
+                        #value = 0.
+                        lower_bound = 0.
+                        upper_bound = 0.
+                        for desvar, coeff in zip(desvars, coeffs):
+                            if isinstance(desvar, integer_types):
+                                desvar_ref = self.desvars[desvar]
+                            else:
+                                desvar_ref = desvar.desvar_ref
+                            xiniti = desvar_ref.xinit
+                            if desvar_ref.xlb != -1e20:
+                                xiniti = max(xiniti, desvar_ref.xlb)
+                                lower_bound = desvar_ref.xlb
+                            if desvar_ref.xub != 1e20:
+                                xiniti = min(xiniti, desvar_ref.xub)
+                                upper_bound = desvar_ref.xub
+
+                            # code validation
+                            if desvar_ref.delx is not None and desvar_ref.delx != 1e20:
+                                pass
+
+                            # TODO: haven't quite decided what to do
+                            if desvar_ref.ddval is not None:
+                                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
+                            assert desvar_ref.ddval is None, desvar_ref
+                            xinit = coeff * xiniti
+                        dvprel_t_init[i] = xinit
+                        dvprel_t_min[i] = lower_bound
+                        dvprel_t_max[i] = upper_bound
+                    else:
+                        msg = 'var_to_change=%r; dvprel=\n%s' % (var_to_change, str(dvprel))
+                        raise NotImplementedError(msg)
+                else:
+                    msg = 'prop_type=%r; dvprel=\n%s' % (prop_type, str(dvprel))
+                    raise NotImplementedError(msg)
+            else:
+                msg = 'dvprel.type=%r; dvprel=\n%s' % (dvprel.type, str(dvprel))
+                raise NotImplementedError(msg)
+
+            # TODO: haven't quite decided what to do
+            if dvprel.p_max != 1e20:
+                dvprel.p_max
+
+            # TODO: haven't quite decided what to do
+            if dvprel.p_min is not None:
+                dvprel.p_min
+        return dvprel_t_init, dvprel_t_min, dvprel_t_max, design_region
+
+    def _get_forces_moments_array(self, p0, load_case_id,
+                                  nid_map, eid_map, node_ids, normals, dependents_nodes,
+                                  include_grav=False):
+        """
+        Gets the forces/moments on the nodes
+
+        Parameters
+        ----------
+        p0 : (3, ) float ndarray
+            the reference location
+        load_case_id : int
+            the load id
+        nidmap : ???
+            ???
+        eidmap : ???
+            ???
+        node_ids : ???
+            ???
+        normals : (nelements, 3) float ndarray
+            the normal vectors for the shells
+        dependents_nodes : ???
+            ???
+        include_grav : bool; default=False
+            is the mass of the elements considered; unused
+
+        Returns
+        -------
+        temperature_data : tuple(temperature_key, temperatures)
+            temperature_key : str
+                One of the following:
+                  TEMPERATURE(MATERIAL)
+                  TEMPERATURE(INITIAL)
+                  TEMPERATURE(LOAD)
+                  TEMPERATURE(BOTH)
+            temperatures : (nnodes, 1) float ndarray
+                the temperatures
+        load_data : tuple(centroidal_pressures, forces, spcd)
+            centroidal_pressures : (nelements, 1) float ndarray
+                the pressure
+            forces : (nnodes, 3) float ndarray
+                the pressure
+            spcd : (nnodes, 3) float ndarray
+                the SPCD load application
+
+        Considers
+        ---------
+        FORCE
+        PLOAD2 - CTRIA3, CQUAD4, CSHEAR
+        PLOAD4 - CTRIA3, CTRIA6, CTRIAR
+                 CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR
+                 CTETRA, CPENTA, CHEXA
+        SPCD
+        """
+        if not any(['FORCE' in self.card_count, 'PLOAD2' in self.card_count,
+                    'PLOAD4' in self.card_count, 'SPCD' in self.card_count]):
+            return None, None, None
+        nids = sorted(self.nodes.keys())
+        nnodes = len(nids)
+
+        load_case = self.loads[load_case_id]
+        loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
+
+        #eids = sorted(self.elements.keys())
+        centroidal_pressures = np.zeros(len(self.elements), dtype='float32')
+        nodal_pressures = np.zeros(len(self.node_ids), dtype='float32')
+
+        forces = np.zeros((nnodes, 3), dtype='float32')
+        spcd = np.zeros((nnodes, 3), dtype='float32')
+        # loop thru scaled loads and plot the pressure
+        cards_ignored = {}
+
+        assert normals is not None
+        fail_nids = set()
+        fail_count = 0
+        fail_count_max = 3
+        for load, scale in zip(loads2, scale_factors2):
+            if load.type == 'FORCE':
+                scale2 = load.mag * scale  # does this need a magnitude?
+                nid = load.node
+                if nid in dependents_nodes:
+                    fail_nids.add(nid)
+                    fail_count += 1
+                    if fail_count < fail_count_max:
+                        print('    nid=%s is a dependent node and has a FORCE applied\n%s' % (
+                            nid, str(load)))
+                forces[nid_map[nid]] += load.xyz * scale2
+
+            elif load.type == 'PLOAD2':
+                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                for eid in load.eids:
+                    elem = self.elements[eid]
+                    if elem.type in ['CTRIA3',
+                                     'CQUAD4', 'CSHEAR']:
+                        node_ids = elem.node_ids
+                        nnodes = len(node_ids)
+                        ie = eid_map[eid]
+                        normal = normals[ie, :]
+
+                        area = elem.Area()
+                        forcei = pressure * normal * area / nnodes
+                        # r = elem.Centroid() - p0
+                        # m = cross(r, f)
+                        for nid in node_ids:
+                            if nid in dependents_nodes:
+                                fail_nids.add(nid)
+                                fail_count += 1
+                                if fail_count < fail_count_max:
+                                    print('    nid=%s is a dependent node and has a PLOAD2 applied\n'
+                                          '%s' % (nid, str(load)))
+                            forces[nid_map[nid]] += forcei
+                        forces += forcei
+                        # F += f
+                        # M += m
+                    else:
+                        self.log.debug('    case=%s etype=%r loadtype=%r not supported' % (
+                            load_case_id, elem.type, load.type))
+
+            elif load.type == 'PLOAD4':
+                # single element per PLOAD
+                #eid = elem.eid
+                #pressures[eids.index(eid)] = p
+                #pressure = load.pressures[0] * scale
+
+                # multiple elements
+                for elem in load.eids:
+                    ie = eid_map[elem.eid]
+                    normal = normals[ie, :]
+                    # pressures[eids.index(elem.eid)] += p
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR']:
+                        area = elem.get_area()
+                        elem_node_ids = elem.node_ids
+                        nface = len(elem_node_ids)
+
+                        if load.surf_or_line == 'SURF':
+                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
+                                normal = load.nvector / np.linalg.norm(load.nvector)
+                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                        else:
+                            msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
+                                load.surf_or_line, str(load))
+                            self.log.debug(msg)
+                            continue
+
+                        pressures = load.pressures[:nface]
+                        if min(pressures) != max(pressures):
+                            pressure = np.mean(pressures)
+                        else:
+                            pressure = pressures[0]
+
+                        forcei = pressure * area * normal / nface
+                        for nid in elem_node_ids:
+                            if nid in dependents_nodes:
+                                fail_nids.add(nid)
+                                fail_count += 1
+                                if fail_count < fail_count_max:
+                                    print('    nid=%s is a dependent node and has a'
+                                          ' PLOAD4 applied\n%s' % (nid, str(load)))
+                            #forces[nids.index(nid)] += F
+                            i = nid_map[nid]
+                            try:
+                                forces[i, :] += forcei
+                            except IndexError:
+                                print('i = %s' % i)
+                                print('normals.shape = %s' %  str(normals.shape))
+                                print('forces.shape = %s' % str(forces.shape))
+                                print('normal = ', normal)
+                                print('forces[i, :] = ', forces[i, :])
+                                raise
+                        #nface = 3
+                    elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        area = elem.get_area()
+                        elem_node_ids = elem.node_ids
+                        nface = len(elem_node_ids)
+
+                        if load.surf_or_line == 'SURF':
+                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
+                                normal = load.nvector / np.linalg.norm(load.nvector)
+                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                        else:
+                            msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
+                                load.surf_or_line, str(load))
+                            self.log.debug(msg)
+                            continue
+
+                        pressures = load.pressures[:nface]
+                        if min(pressures) != max(pressures):
+                            pressure = np.mean(pressures)
+                        else:
+                            pressure = pressures[0]
+
+                        forcei = pressure * area * normal / nface
+
+                        for nid in elem_node_ids:
+                            if nid in dependents_nodes:
+                                fail_nids.add(nid)
+                                fail_count += 1
+                                if fail_count < fail_count_max:
+                                    print('    nid=%s is a dependent node and has a'
+                                          ' PLOAD4 applied\n%s' % (nid, str(load)))
+                            #forces[nids.index(nid)] += F
+                            i = nid_map[nid]
+                            try:
+                                forces[i, :] += forcei
+                            except IndexError:
+                                print('i = %s' % i)
+                                print('normals.shape = %s' %  str(normals.shape))
+                                print('forces.shape = %s' % str(forces.shape))
+                                print('normal = ', normal)
+                                print('forces[i, :] = ', forces[i, :])
+                                raise
+                            nface = 4
+                    else:
+                        elem_node_ids = elem.node_ids
+                        if elem.type == 'CTETRA':
+                            #face1 = elem.get_face(load.g1.nid, load.g34.nid)
+                            face, area, centroid, normal = elem.get_face_area_centroid_normal(
+                                load.g1.nid, load.g34.nid)
+                            #assert face == face1
+                            nface = 3
+                        elif elem.type == 'CHEXA':
+                            #face1 = elem.get_face(load.g34.nid, load.g1.nid)
+                            face, area, centroid, normal = elem.get_face_area_centroid_normal(
+                                load.g34.nid, load.g1.nid)
+                            #assert face == face1
+                            nface = 4
+                        elif elem.type == 'CPENTA':
+                            g1 = load.g1.nid
+                            if load.g34 is None:
+                                #face1 = elem.get_face(g1)
+                                face, area, centroid, normal = elem.get_face_area_centroid_normal(g1)
+                                nface = 3
+                            else:
+                                #face1 = elem.get_face(g1, load.g34.nid)
+                                face, area, centroid, normal = elem.get_face_area_centroid_normal(
+                                    g1, load.g34.nid)
+                                nface = 4
+                            #assert face == face1
+                        else:
+                            msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
+                                   % (load_case_id, eid, elem.type, load.type))
+                            self.log.debug(msg)
+                            continue
+
+                        pressures = load.pressures[:nface]
+                        assert len(pressures) == nface
+                        if min(pressures) != max(pressures):
+                            pressure = np.mean(pressures)
+                            #msg = ('%s%s\npressure.min=%s != pressure.max=%s using average'
+                                   #' of %%s; load=%s eid=%%s'  % (
+                                       #str(load), str(elem), min(pressures), max(pressures),
+                                       #load.sid)
+                            #print(msg % (pressure, eid))
+                        else:
+                            pressure = pressures[0]
+                        #centroidal_pressures
+
+                        if  load.surf_or_line == 'SURF':
+                            if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
+                                normal = load.nvector / np.linalg.norm(load.nvector)
+                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                        else:
+                            msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
+                                load.surf_or_line, str(load))
+                            self.log.debug(msg)
+                            continue
+
+                        f = pressure * area * normal * scale
+                        for inid in face:
+                            inidi = nid_map[elem_node_ids[inid]]
+                            nodal_pressures[inid] += pressure * scale / nface
+                            forces[inidi, :] += f / nface
+                        centroidal_pressures[ie] += pressure
+
+                        #r = centroid - p
+                        #load.cid.transformToGlobal()
+                        #m = cross(r, f)
+                        #M += m
+
+            #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+            elif load.type == 'SPCD':
+                #self.gids = [integer(card, 2, 'G1'),]
+                #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+                for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
+                    if nid in dependents_nodes:
+                        fail_nids.add(nid)
+                        fail_count += 1
+                        if fail_count < fail_count_max:
+                            self.log.warning('    nid=%s is a dependent node and has an'
+                                             ' SPCD applied\n%s' % (nid, str(load)))
+                    c1 = int(c1)
+                    assert c1 in [1, 2, 3, 4, 5, 6], c1
+                    if c1 < 4:
+                        spcd[nid_map[nid], c1 - 1] = d1
+            elif load.type in ['FORCE1', 'MOMENT1']:
+                pass
+            else:
+                print(load)
+                if load.type not in cards_ignored:
+                    cards_ignored[load.type] = True
+                    self.log.warning('  _get_forces_moments_array - unsupported '
+                                     'load.type = %s' % load.type)
+        if fail_count:
+            fail_nids_list = list(fail_nids)
+            fail_nids_list.sort()
+            self.log.warning('fail_nids = %s' % np.array(fail_nids_list))
+        return centroidal_pressures, forces, spcd
+
+    def get_pressure_array(self, load_case, eids, normals):
+        """
+        Gets the pressures for a load case
+
+        Parameters
+        ----------
+        load_case : ???
+        eids : ???
+        normals : (nelements, 3) float ndarray
+            the element normals
+
+        Returns
+        -------
+        is_pressure : bool
+            the pressure data
+        pressures : (nelements, 1) float ndarray
+            the centroidal pressures
+        """
+        if 'PLOAD4' not in self.card_count:
+            return False, None
+
+        # account for scale factors
+        loads2 = []
+        scale_factors2 = []
+        for load in load_case:
+            if load.type == 'LOAD':
+                scale_factors, loads = load.get_reduced_loads()
+                scale_factors2 += scale_factors
+                loads2 += loads
+            else:
+                scale_factors2.append(1.)
+                loads2.append(load)
+
+        pressures = np.zeros(len(self.elements), dtype='float32')
+
+        iload = 0
+        nloads = len(loads2)
+        show_nloads = nloads > 5000
+        # loop thru scaled loads and plot the pressure
+        for load, scale in zip(loads2, scale_factors2):
+            if show_nloads and iload % 5000 == 0:
+                self.log.debug('  NastranIOv iload=%s/%s' % (iload, nloads))
+            if load.type == 'PLOAD4':
+                #print(load.object_attributes())
+                for elem in load.eids:
+                    #elem = self.elements[eid]
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        pressure = load.pressures[0] * scale
+
+                        # single element per PLOAD
+                        #eid = elem.eid
+                        #pressures[eids.index(eid)] = pressure
+
+                        # multiple elements
+                        #for elem in load.eids:
+                        ie = np.searchsorted(eids, elem.eid)
+                        #pressures[ie] += p  # correct; we can't assume model orientation
+                        normal = normals[ie, 2]  # considers normal of shell
+                        pressures[ie] += pressure * normal
+
+                    #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        #A, centroid, normal = elem.get_face_area_centroid_normal(
+                            #load.g34.nid, load.g1.nid)
+                        #r = centroid - p
+            iload += 1
+        return True, pressures
+
+    def _get_temperatures_array(self, load_case_id, dtype='float32'):
+        """
+        Builds the temperature array based on thermal cards.
+        Used by the GUI.
+
+        Parameters
+        ----------
+        load_case_id : int
+            the load id
+        dtype : str; default='float32'
+            the type of the temperature array
+
+        Returns
+        -------
+        is_temperatures : bool
+            is there temperature data
+        temperatures : (nnodes, ) float ndarray
+            the temperatures
+        """
+        if 'TEMP' not in self.card_count:
+            return False, None
+        is_temperatures = True
+        nids = sorted(self.nodes.keys())
+
+        load_case = self.loads[load_case_id]
+        loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
+        tempd = self.tempds[load_case_id].temperature if load_case_id in self.tempds else 0.
+        temperatures = np.ones(len(self.nodes), dtype=dtype) * tempd
+        for load, scale in zip(loads2, scale_factors2):
+            if load.type == 'TEMP':
+                temps_dict = load.temperatures
+                for nid, val in iteritems(temps_dict):
+                    nidi = nids.index(nid)
+                    temperatures[nidi] = val
+            else:
+                self.log.debug(load.type)
+        return is_temperatures, temperatures
+
+    def _get_rigid(self):
+        """
+        GUI helper function
+
+        dependent = (lines[:, 0])
+        independent = np.unique(lines[:, 1])
+        """
+        lines_rigid = []
+        for eid, elem in iteritems(self.rigid_elements):
+            if elem.type == 'RBE3':
+                if elem.Gmi != []:
+                    msg = 'UM is not supported; RBE3 eid=%s Gmi=%s' % (elem.eid, elem.Gmi)
+                    raise RuntimeError(msg)
+                #list_fields = ['RBE3', elem.eid, None, elem.ref_grid_id, elem.refc]
+                n1 = elem.ref_grid_id
+                assert isinstance(n1, integer_types), 'RBE3 eid=%s ref_grid_id=%s' % (elem.eid, n1)
+                for (_weight, ci, Gij) in elem.WtCG_groups:
+                    Giji = elem._nodeIDs(nodes=Gij, allow_empty_nodes=True)
+                    # list_fields += [wt, ci] + Giji
+                    for n2 in Giji:
+                        assert isinstance(n2, integer_types), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)
+                        lines_rigid.append([n1, n2])
+            elif elem.type == 'RBE2':
+                #list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm
+                               #] + elem.Gmi_node_ids + [elem.alpha]
+                n2 = elem.Gn() # independent
+                nids1 = elem.Gmi_node_ids # dependent
+                for n1 in nids1:
+                    lines_rigid.append([n1, n2])
+            elif elem.type in ['RBAR', 'RBAR1', 'RROD']: ## TODO: these aren't quite right
+                dependent = elem.Ga()
+                independent = elem.Gb()
+                lines_rigid.append([dependent, independent])
+            else:
+                print(str(elem))
+        return lines_rigid
+
+    def _get_loads_and_scale_factors(self, load_case):
+        """account for scale factors"""
+        loads2 = []
+        scale_factors2 = []
+        for load in load_case:
+            if load.type == 'LOAD':
+                scale_factors, loads = load.get_reduced_loads()
+                for scale_factor, loadi in zip(scale_factors, loads):
+                    if scale_factor == 0.0:
+                        continue
+                    scale_factors2.append(scale_factor)
+                    loads2.append(loadi)
+                #else:
+                    #scale_factors2 += scale_factors
+                    #loads2 += loads
+            else:
+                scale_factors2.append(1.)
+                loads2.append(load)
+        return loads2, scale_factors2
+
     def get_rigid_elements_with_node_ids(self, node_ids):
+        """
+        Gets the series of rigid elements that use specific nodes
+
+        Parameters
+        ----------
+        node_ids : List[int]
+            the node ids to check
+
+        Returns
+        -------
+        rbes : List[int]
+            the set of self.rigid_elements
+        """
         try:
             nids = set(node_ids)
         except TypeError:
@@ -351,6 +1033,14 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         ----------
         mpc_id : int; default=None -> no MPCs are checked
             TODO: add
+
+        Returns
+        -------
+        dependent_nid_to_components : dict[node_id] : components
+            node_id : int
+                the node_id
+            components : str
+                the DOFs that are linked
 
         Nastran can either define a load/motion at a given node.
         SPCs define constraints that may not have loads/motions.
@@ -386,8 +1076,9 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components
 
-    def get_node_ids_with_element(self, eid, msg=''):
-        return self.get_node_ids_with_elements([eid], msg=msg)
+    #def get_node_ids_with_element(self, eid, msg=''):
+        #self.deprecated('get_node_ids_with_element(eid)', 'get_node_ids_with_elements(eid)', '0.9')
+        #return self.get_node_ids_with_elements(eid, msg=msg)
 
     def _get_maps(self, eids=None, map_names=None,
                   consider_0d=True, consider_0d_rigid=True,
@@ -408,7 +1099,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         consider_2d : bool; default=True
             considers CQUAD4, CQUAD8, CQUADR, CQUAD,
             CTRIA3, CTRIA6, CTRIAX, CTRIAX6, CSHEAR elements
-        consider_2d : bool; default=True
+        consider_3d : bool; default=True
             considers CTETRA, CPENTA, CPYRAM, CHEXA elements
 
         .. todo:: map_names support
@@ -426,7 +1117,9 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         ]
 
         for name in map_names:
-            assert name in allowed_maps, 'name=%s; allowed=%s' % (name, sorted(allowed_maps.keys()))
+            if name not in allowed_maps:
+                msg = 'name=%s; allowed=%s' % (name, sorted(allowed_maps.keys()))
+                raise RuntimeError(msg)
 
         eid_to_edge_map = {}
         eid_to_nid_map = {}
@@ -467,7 +1160,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             for nid in node_ids:
                 nid_to_eid_map[nid].append(eid)
             for edge in edges:
-                assert not isinstance(edge, int), 'edge=%s elem=\n%s' % (edge, elem)
+                assert not isinstance(edge, integer_types), 'edge=%s elem=\n%s' % (edge, elem)
                 assert edge[0] < edge[1], 'edge=%s elem=\n%s' % (edge, elem)
                 try:
                     edge_to_eid_map[edge].add(eid)
@@ -507,6 +1200,9 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
           >>> msg = ' which are required for pid=1'
           >>> node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
         """
+        if isinstance(eids, integer_types):
+            eids = [eids]
+
         nids2 = set([])
         for eid in eids:
             element = self.Element(eid, msg=msg)
@@ -515,51 +1211,188 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             nids2.update(nids)
         return nids2
 
-    def Node(self, nid, allow_empty_nodes=False, msg=''):
-        if (nid == 0 or nid is None) and allow_empty_nodes:
-            return None
-        elif nid in self.nodes:
-            return self.nodes[nid]
-        elif self.spoints and nid in self.spoints.points:
-            return SPOINT(nid)
-        elif self.epoints and nid in self.epoints.points:
-            return EPOINT(nid)
+    def get_elements_nodes_by_property_type(self, dtype='int32',
+                                            save_element_types=False):
+        """
+        Gets a dictionary of (etype, pid) to [eids, node_ids]
+
+        Parameters
+        ----------
+        dtype : str; default='int32'
+            the type of the integers
+        save_element_types : bool; default=False
+            adds the etypes output
+
+        Returns
+        -------
+        etype_pid_to_eids_nids : dict[(etype, pid)] : [eids, nids]
+            etype : str
+                the element type
+            pid : int
+                the property id
+                CONRODS have a pid of 0
+            eids : (neids, ) int ndarray
+                the elements with the property id of pid
+            nids : (neids, nnodes/element) int ndarray
+                the nodes corresponding to the element
+        etype_to_eids_pids_nids : dict[etype] : [eids, pids, nids]
+            Enabled by save_element_types; default=None
+            etype : str
+                the element type
+            eids : (neids, ) int ndarray
+                the elements with the property id of pid
+            pids : (neids, ) int ndarray
+                the property ids
+                CONRODS have a pid of 0
+            nids : (neids, nnodes/element) int ndarray
+                the nodes corresponding to the element
+        """
+        etypes = self.get_element_nodes_by_element_type(dtype=dtype)
+        output = {}
+        for etype, (eids, pids, nids) in iteritems(etypes):
+            upids = np.unique(pids)
+            for upid in upids:
+                ipid = np.where(pids == upid)[0]
+                output[(etype, upid)] = [eids[ipid], nids[ipid, :]]
+        if save_element_types:
+            return output, None
         else:
-            assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-            nid_list = np.unique(list(self.nodes.keys()))
-            msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
-            msg += 'nids=%s\n' % nid_list
-            if self.spoints:
-                msg += 'spoints=%s\n' % list(self.spoints.points)
-            if self.epoints:
-                msg += 'epoints=%s\n' % list(self.epoints.points)
-            raise RuntimeError(msg)
+            return output, etypes
 
-    def Nodes(self, nids, allow_empty_nodes=False, msg=''):
+    def get_element_nodes_by_element_type(self, dtype='int32', solids=None):
         """
-        Returns a series of node objects given a list of IDs
-        """
-        nodes = []
-        for nid in nids:
-            nodes.append(self.Node(nid, allow_empty_nodes=allow_empty_nodes, msg=msg))
-        return nodes
+        Gets a dictionary of element type to [eids, pids, node_ids]
 
-    def Point(self, nid, msg=''):
-        if nid in self.points:
-            return self.points[nid]
-        else:
-            assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-            nid_list = np.unique(list(self.points.keys()))
-            raise RuntimeError('nid=%s is not a POINT%s\n%s' % (nid, msg, nid_list))
+        Parameters
+        ----------
+        dtype : str; default='int32'
+            the type of the integers
 
-    def Points(self, nids, msg=''):
+        Returns
+        -------
+        etype_to_eids_pids_nids : dict[etype] : [eids, pids, nids]
+            etype : str
+                the element type
+            eids : (neids, ) int ndarray
+                the elements with the property id of pid
+            pids : (neids, ) int ndarray
+                the property ids
+                CONRODS have a pid of 0
+            nids : (neids, nnodes/element) int ndarray
+                the nodes corresponding to the element
+        solids : dict[etype] : value
+            etype : str
+                the element type
+                should only be CTETRA, CHEXA, CPENTA, CPYRAM
+            value : varies
+                (nnodes_min, nnodes_max) : Tuple(int, int)
+                    the min/max number of nodes for the element
+                (nnodes, ) : Tuple(int, )
+                    the number of nodes
+                    useful if you only have CTETRA4s or only want CTETRA10s
+                    fails if you're wrong
         """
-        Returns a series of POINT objects given a list of IDs
-        """
-        points = []
-        for nid in nids:
-            points.append(self.Point(nid, msg=msg))
-        return points
+        etypes = [
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+            'CROD', 'CONROD', 'CTUBE',
+            'CBAR', 'CBEAM', 'CBEND', 'CBEAM3',
+            'CSHEAR', 'CVISC',
+            'CTRIA3', 'CTRIA6', 'CTRIAR',
+            'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
+            'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
+            #'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
+            'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
+            'CQUADX', 'CQUADX4', 'CQUADX8',
+            'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+            'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CFAST', 'CGAP',
+        ]
+        output = {}
+
+        if solids is None:
+            solids = {
+                'CTETRA' : (4, 10),
+                #'CTETRA' : (10, ),
+                'CHEXA' : (8, 20),
+                'CPENTA' : (6, 15),
+                'CPYRAM' : (5, 13),
+            }
+        for etype in etypes:
+            if etype not in self._type_to_id_map:
+                continue
+            eids = np.array(self._type_to_id_map[etype], dtype=dtype)
+            neids = len(eids)
+            eid0 = eids[0]
+
+            elem0 = self.elements[eid0]
+            nnodes = len(elem0.nodes)
+
+            if etype not in solids or len(solids[etype]) == 1:
+                pids = np.zeros(neids, dtype=dtype)
+                nids = np.zeros((neids, nnodes), dtype=dtype)
+                for i, eid in enumerate(eids):
+                    elem = self.elements[eid]
+                    pid = elem.Pid()
+                    assert pid is not None, elem
+                    nidsi = elem.node_ids
+                    #self.log.info(str(elem))
+                    try:
+                        nids[i, :] = nidsi
+                    except TypeError:
+                        #print(elem)
+                        #print('nidsi =', nidsi)
+                        nidsi2 = [nid  if nid is not None else 0
+                                 for nid in nidsi]
+                        try:
+                            nids[i, :] = nidsi2
+                        except:
+                            print(elem)
+                            print(nidsi)
+                            print(nidsi2)
+                            raise
+                pids[i] = pid
+                output[etype] = [eids, pids, nids]
+            else:
+                # SOLID elements can be variable length
+                nnodes_min = min(solids[etype])
+                nnodes_max = max(solids[etype])
+                pids = np.zeros(neids, dtype='int32')
+                nids = np.zeros((neids, nnodes_max), dtype=dtype)
+                ieids_max = []
+                ieids_min = []
+                for i, eid in enumerate(eids):
+                    elem = self.elements[eid]
+                    pid = elem.Pid()
+                    assert pid is not None, elem
+                    nidsi = elem.node_ids
+                    nnodesi = len(nidsi)
+                    if nnodesi == nnodes_max:
+                        ieids_max.append(i)
+                    else:
+                        ieids_min.append(i)
+                    #self.log.info(str(elem))
+                    try:
+                        nids[i, :nnodesi] = nidsi
+                    except TypeError:
+                        #print(elem)
+                        #print('nidsi =', nidsi)
+                        nidsi2 = [nid  if nid is not None else 0
+                                 for nid in nidsi]
+                        try:
+                            nids[i, :] = nidsi2
+                        except:
+                            raise
+                pids[i] = pid
+                if len(ieids_max):
+                    etype_max = elem.type + str(nnodes_max)
+                    ieids_max = np.array(ieids_max, dtype=dtype)
+                    output[etype_max] = [eids[ieids_max], pids[ieids_max], nids[ieids_max, :]]
+                if len(ieids_min):
+                    etype_min = elem.type + str(nnodes_min)
+                    ieids_min = np.array(ieids_min, dtype=dtype)
+                    output[etype_min] = [eids[ieids_min], pids[ieids_min], nids[ieids_min, :nnodes_min]]
+        assert len(output), 'output is empty...'
+        return output
 
     #--------------------
     # ELEMENT CARDS
@@ -589,7 +1422,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         """
         if pids is None:
             pids = iterkeys(self.properties)
-        elif isinstance(pids, int):
+        elif isinstance(pids, integer_types):
             pids = [int]
         assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
         eids2 = []
@@ -599,7 +1432,68 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 eids2.append(eid)
         return eids2
 
-    def get_element_ids_dict_with_pids(self, pids=None):
+    def get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None):
+        """
+        a work in progress
+
+        Parameters
+        ----------
+        pids : List[int]
+            list of property ID
+        etypes : List[str]
+            element types to consider
+
+        Returns
+        -------
+        pid_to_eids_ieids_map : dict[(pid, etype)] = eid_ieid
+            eid_ieid : (Nelements, 2) int ndarray
+                eid is the element id
+                ieid is the index in the node_ids array
+        node_ids : (nelements, nnodes)
+            nelements : int
+                the number of elements in the property type
+            nnodes : int
+                varies based on the element type
+        """
+        if pids is None:
+            pids = list(self.properties)
+        elif isinstance(pids, integer_types):
+            pids = [int]
+
+        assert isinstance(pids, (list, tuple, np.ndarray)), 'pids=%s type=%s' % (pids, type(pids))
+        pid_to_eids_map = {}
+        for pid in pids:
+            pid_to_eids_map[pid] = []
+
+        skip_elements = ['CONROD']
+        etypes_ = self._slot_to_type_map['elements']
+        etype_to_nids_map = {}
+        pid_to_eids_ieids_map = {}
+        if etypes is None:
+            etypes = etypes_
+        for etype in etypes_:
+            if etype not in etypes_:
+                continue
+            if etype in skip_elements:
+                self.log.warning('skipping etype=%s' % etype)
+                continue
+            eids = self._type_to_id_map[etype]
+            element0 = self.elements[eids[0]]
+            nnodes = len(element0.node_ids)
+            neids = len(eids)
+            node_ids = np.zeros((neids, nnodes), dtype='int32')
+            for ieid, eid in enumerate(eids):
+                element = self.elements[eid]
+                node_ids[ieid, :] = element.node_ids
+                pid = element.Pid()
+                #nids_to_pids_map[]
+                pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
+            etype_to_nids_map[etype] = node_ids
+        for key, value in iteritems(pid_to_eids_ieids_map):
+            pid_to_eids_ieids_map[key] = np.array(value, dtype='int32')
+        return pid_to_eids_ieids_map
+
+    def get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True):
         """
         Gets all the element IDs with a specific property ID.
 
@@ -607,11 +1501,18 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         ----------
         pids : List[int]
             list of property ID
+        stop_if_no_eids : bool; default=True
+            prevents crashing if there are no elements
+            setting this to False really doesn't make sense for non-DMIG models
 
         Returns
         -------
-        element_ids : dict[int] = List[int]
-            as a dictionary of lists by property
+        element_ids : dict[pid] = List[eid]
+            dictionary of lists by property
+            pid : int
+                property id
+            eid : int
+                element id
 
         For example, we want all the elements with ``pids=[4, 5, 6]``,
         but we want them in separate groups
@@ -631,24 +1532,32 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         What happens with CONRODs?
         """
         if pids is None:
-            pids = iterkeys(self.properties)
-        elif isinstance(pids, int):
+            pids = list(self.properties)
+        elif isinstance(pids, integer_types):
             pids = [int]
-            assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
-        eids2 = {}
+
+        assert isinstance(pids, (list, tuple, np.ndarray)), 'pids=%s type=%s' % (pids, type(pids))
+        pid_to_eids_map = {}
         for pid in pids:
-            eids2[pid] = []
+            pid_to_eids_map[pid] = []
+
         for eid, element in iteritems(self.elements):
             try:
                 pid = element.Pid()
                 #if element.type == 'CONROD':
                     #raise RuntimeError('CONROD pid=%r' % pid)
                 if pid in pids:
-                    eids2[pid].append(eid)
+                    pid_to_eids_map[pid].append(eid)
             except AttributeError:
                 #eids2[0].append(eid)
                 pass
-        return eids2
+
+        if stop_if_no_eids:
+            for eids in itervalues(pid_to_eids_map):
+                if len(eids):
+                    return pid_to_eids_map
+            raise RuntimeError('no elements found')
+        return pid_to_eids_map
 
     def get_node_id_to_element_ids_map(self):
         """
@@ -789,218 +1698,23 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     raise KeyError('mid=%s is invalid for card=\n%s' % (mid, str(prop)))
         return mid_to_pids_map
 
-    def Element(self, eid, msg=''):
-        """
-        Gets an element
-
-        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE)
-        or mass (CMASS1, CONM2))
-        """
-        try:
-            return self.elements[eid]
-        except KeyError:
-            raise KeyError('eid=%s not found%s.  Allowed elements=%s'
-                           % (eid, msg, np.unique(list(self.elements.keys()))))
-
-    def Elements(self, eids, msg=''):
-        elements = []
-        for eid in eids:
-            elements.append(self.Element(eid, msg))
-        return elements
-
-    def Mass(self, eid, msg=''):
-        """gets a mass element (CMASS1, CONM2)"""
-        try:
-            return self.masses[eid]
-        except KeyError:
-            raise KeyError('eid=%s not found%s.  Allowed masses=%s'
-                           % (eid, msg, np.unique(list(self.masses.keys()))))
-
-    def RigidElement(self, eid, msg=''):
-        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE)"""
-        try:
-            return self.rigid_elements[eid]
-        except KeyError:
-            raise KeyError('eid=%s not found%s.  Allowed rigid_elements=%s'
-                           % (eid, msg, np.unique(list(self.rigid_elements.keys()))))
-
-    #--------------------
-    # PROPERTY CARDS
-
-    def Property(self, pid, msg=''):
-        """
-        gets an elemental property (e.g. PSOLID, PLSOLID, PCOMP, PSHELL, PSHEAR);
-        not mass property (PMASS)
-        """
-        try:
-            return self.properties[pid]
-        except KeyError:
-            raise KeyError('pid=%s not found%s.  Allowed Pids=%s'
-                           % (pid, msg, self.property_ids))
-
-    def Properties(self, pids, msg=''):
-        properties = []
-        for pid in pids:
-            properties.append(self.Property(pid, msg))
-        return properties
-
-    def PropertyMass(self, pid, msg=''):
-        """
-        gets a mass property (PMASS)
-        """
-        try:
-            return self.properties_mass[pid]
-        except KeyError:
-            raise KeyError('pid=%s not found%s.  Allowed Mass Pids=%s'
-                           % (pid, msg, np.unique(list(self.mass_property.keys()))))
-
-    def Phbdy(self, pid, msg=''):
-        """gets a PHBDY"""
-        try:
-            return self.phbdys[pid]
-        except KeyError:
-            raise KeyError('pid=%s not found%s.  Allowed PHBDY Pids=%s'
-                           % (pid, msg, np.unique(list(self.phbdys.keys()))))
-
-    #--------------------
-    # MATERIAL CARDS
-
-    def get_structural_material_ids(self):
-        return self.materials.keys()
-
-    def get_material_ids(self):
-        return (self.materials.keys() + self.thermal_materials.keys() +
-                self.hyperelastic_materials.keys())
-
-    def get_thermal_material_ids(self):
-        return self.thermal_materials.keys()
-
-    def Material(self, mid, msg=''):
-        if mid in self.materials:
-            return self.materials[mid]
-        elif mid in self.thermal_materials:
-            return self.thermal_materials[mid]
-        else:
-            msg = '\n' + msg
-            raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
-
-    def StructuralMaterial(self, mid, msg=''):
-        try:
-            mat = self.materials[mid]
-        except KeyError:
-            msg = '\n' + msg
-            raise KeyError('Invalid Structural Material ID:  mid=%s%s' % (mid, msg))
-        return mat
-
-    def ThermalMaterial(self, mid, msg=''):
-        try:
-            mat = self.thermal_materials[mid]
-        except KeyError:
-            msg = '\n' + msg
-            raise KeyError('Invalid Thermal Material ID:  mid=%s%s' % (mid, msg))
-        return mat
-
-    def HyperelasticMaterial(self, mid, msg=''):
-        try:
-            mat = self.hyperelastic_materials[mid]
-        except KeyError:
-            msg = '\n' + msg
-            raise KeyError('Invalid Hyperelastic Material ID:  mid=%s%s' % (mid, msg))
-        return mat
-
-    def Materials(self, mids, msg=''):
-        materials = []
-        for mid in mids:
-            materials.append(self.Material(mid, msg))
-        return materials
-
-    #--------------------
-    # LOADS
-
-    def Load(self, sid, msg=''):
-        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
-        if sid in self.loads:
-            load = self.loads[sid]
-        else:
-            raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (
-                sid, msg, np.unique(list(self.loads.keys()))))
-        return load
-
-    def DLoad(self, sid, msg=''):
-        """gets a DLOAD"""
-        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
-        if sid in self.dloads:
-            load = self.dloads[sid]
-        else:
-            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (
-                sid, msg, np.unique(list(self.dloads.keys()))))
-        return load
-
-    def get_dload_entries(self, sid, msg=''):
-        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
-        if sid in self.dload_entries:
-            load = self.dload_entries[sid]
-        else:
-            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (
-                sid, msg, np.unique(list(self.dload_entries.keys()))))
-        return load
-
-    def DELAY(self, delay_id, msg=''):
-        assert isinstance(delay_id, integer_types), delay_id
-        """gets a DELAY"""
-        try:
-            return self.delays[delay_id]
-        except KeyError:
-            raise KeyError('delay_id=%s not found%s.  Allowed DELAY=%s'
-                           % (delay_id, msg, list(self.delays.keys())))
-
-    def DPHASE(self, dphase_id, msg=''):
-        """gets a DPHASE"""
-        assert isinstance(dphase_id, integer_types), dphase_id
-        try:
-            return self.dphases[dphase_id]
-        except KeyError:
-            raise KeyError('dphase_id=%s not found%s.  Allowed DPHASE=%s'
-                           % (dphase_id, msg, list(self.dphases.keys())))
-
-    #--------------------
-    def MPC(self, mpc_id, msg=''):
-        """gets an MPC"""
-        assert isinstance(mpc_id, integer_types), 'mpc_id=%s is not an integer\n' % mpc_id
-        if mpc_id in self.mpcs:
-            constraint = self.mpcs[mpc_id]
-        else:
-            raise KeyError('cannot find MPC ID=%r%s.\nAllowed MPCs=%s' % (
-                mpc_id, msg, np.unique(list(self.mpcs.keys()))))
-        return constraint
-
-    def SPC(self, spc_id, msg=''):
-        """gets an SPC"""
-        assert isinstance(spc_id, integer_types), 'spc_id=%s is not an integer\n' % spc_id
-        if spc_id in self.spcs:
-            constraint = self.spcs[spc_id]
-        else:
-            raise KeyError('cannot find SPC ID=%r%s.\nAllowed SPCs=%s' % (
-                spc_id, msg, np.unique(list(self.spcs.keys()))))
-        return constraint
-
     def get_reduced_mpcs(self, mpc_id):
         """get all MPCs that are part of a set"""
         mpcs = self.MPC(mpc_id)
         mpcs2 = []
         for mpc in mpcs:
             if mpc.type == 'MPCADD':
-                for mpci in mpc.sets:
+                for mpci in mpc.mpc_ids:
                     if isinstance(mpci, list):
                         for mpcii in mpci:
-                            if isinstance(mpcii, int):
+                            if isinstance(mpcii, integer_types):
                                 mpciii = mpcii
                             else:
                                 mpciii = mpcii.conid
                             mpcs2i = self.get_reduced_mpcs(mpciii)
                             mpcs2 += mpcs2i
                     else:
-                        assert isinstance(mpci, int), mpci
+                        assert isinstance(mpci, integer_types), mpci
                         mpcs2i = self.get_reduced_mpcs(mpci)
                         mpcs2 += mpcs2i
             else:
@@ -1016,7 +1730,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 for spci in spc.sets:
                     if isinstance(spci, list):
                         for spcii in spci:
-                            if isinstance(spcii, int):
+                            if isinstance(spcii, integer_types):
                                 spciii = spcii
                             else:
                                 spciii = spcii.conid
@@ -1025,7 +1739,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     else:
                         # print('spci =', spci)
                         # print(spci.object_attributes())
-                        assert isinstance(spci, int), spci
+                        assert isinstance(spci, integer_types), spci
                         spcs2i = self.get_reduced_spcs(spci)
                         spcs2 += spcs2i
             else:
@@ -1116,333 +1830,3 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 self.log.warning('not considering:\n%s' % str(mpc))
                 #raise NotImplementedError(mpc.type)
         return nids, comps
-
-    #--------------------
-    # Sets
-    def SET1(self, set_id, msg=''):
-        """gets a SET1"""
-        assert isinstance(set_id, integer_types), 'set_id=%s is not an integer\n' % set_id
-        if set_id in self.sets:
-            set1 = self.sets[set_id]
-        else:
-            raise KeyError('cannot find SET1 ID=%r.\n%s' % (set_id, msg))
-        return set1
-
-    #--------------------
-    # COORDINATES CARDS
-    def Coord(self, cid, msg=''):
-        """gets an COORDx"""
-        try:
-            return self.coords[cid]
-        except KeyError:
-            raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
-                           % (cid, msg, self.coord_ids))
-
-    #--------------------
-    # AERO CARDS
-
-    def AEList(self, aelist, msg=''):
-        """gets an AELIST"""
-        try:
-            return self.aelists[aelist]
-        except KeyError:
-            raise KeyError('aelist=%s not found%s.  Allowed AELIST=%s'
-                           % (aelist, msg, np.unique(list(self.aelists.keys()))))
-
-    def AEFact(self, aefact, msg=''):
-        """gets an AEFACT"""
-        try:
-            return self.aefacts[aefact]
-        except KeyError:
-            raise KeyError('aefact=%s not found%s.  Allowed AEFACT=%s'
-                           % (aefact, msg, np.unique(list(self.aefacts.keys()))))
-
-    def AESurf(self, aesurf_id, msg=''):
-        """gets an AESURF"""
-        try:
-            return self.aesurf[aesurf_id]
-        except KeyError:
-            raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
-                           % (aesurf_id, msg, np.unique(list(self.aesurf.keys()))))
-
-    def Acsid(self, msg=''):
-        """gets the aerodynamic system coordinate"""
-        if self.aero is not None:
-            acsid_aero = self.aero.Acsid()
-        if self.aeros is not None:
-            acsid_aeros = self.aeros.Acsid()
-
-        if self.aero is not None:
-            if self.aeros is not None:
-                assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
-                                                                                     acsid_aeros)
-            cid = self.Coord(acsid_aero, msg=msg)
-        elif self.aeros is not None:
-            cid = self.Coord(acsid_aeros, msg=msg)
-        else:
-            msg = 'neither AERO nor AEROS cards exist.'
-            raise RuntimeError(msg)
-        return cid
-
-    def Aero(self, msg=''):
-        """gets the AERO"""
-        if self.aero is not None:
-            return self.aero
-        else:
-            raise RuntimeError('no AERO card found%s.' % (msg))
-
-    def Aeros(self, msg=''):
-        """gets the AEROS"""
-        if self.aeros is not None:
-            return self.aeros
-        else:
-            raise RuntimeError('no AEROS card found%s.' % (msg))
-
-    def Spline(self, eid, msg=''):
-        """gets a SPLINEx"""
-        try:
-            return self.splines[eid]
-        except KeyError:
-            raise KeyError('eid=%s not found%s.  Allowed SPLINEx=%s'
-                           % (eid, msg, np.unique(list(self.splines.keys()))))
-
-    def CAero(self, eid, msg=''):
-        """gets an CAEROx"""
-        try:
-            return self.caeros[eid]
-        except KeyError:
-            raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
-                           % (eid, msg, np.unique(list(self.caero_ids))))
-
-    def PAero(self, pid, msg=''):
-        """gets a PAEROx"""
-        try:
-            return self.paeros[pid]
-        except KeyError:
-            raise KeyError('pid=%s not found%s.  Allowed PAEROx=%s'
-                           % (pid, msg, np.unique(list(self.paeros.keys()))))
-
-    def Gust(self, sid, msg=''):
-        """gets a GUST"""
-        try:
-            return self.gusts[sid]
-        except KeyError:
-            raise KeyError('sid=%s not found%s.  Allowed GUSTs=%s'
-                           % (sid, msg, np.unique(list(self.gusts.keys()))))
-
-    #--------------------
-    # AERO CONTROL SURFACE CARDS
-    def AEStat(self, aid, msg=''):
-        """gets an AESTAT"""
-        try:
-            return self.aestats[aid]
-        except KeyError:
-            raise KeyError('aid=%s not found%s.  Allowed AESTATs=%s'
-                           % (aid, msg, np.unique(list(self.aestats.keys()))))
-
-    def AELIST(self, aid, msg=''):
-        """gets an AELIST"""
-        try:
-            return self.aelists[aid]
-        except KeyError:
-            raise KeyError('id=%s not found%s.  Allowed AELISTs=%s'
-                           % (aid, msg, np.unique(list(self.aelists.keys()))))
-
-    def AELink(self, link_id, msg=''):
-        """gets an AELINK"""
-        try:
-            return self.aelinks[link_id]
-        except KeyError:
-            raise KeyError('link_id=%s not found%s.  Allowed AELINKs=%s'
-                           % (link_id, msg, np.unique(list(self.aelinks.keys()))))
-
-    def AEParam(self, aid, msg=''):
-        """gets an AEPARM"""
-        try:
-            return self.aeparams[aid]
-        except KeyError:
-            raise KeyError('aid=%s not found%s.  Allowed AEPARMs=%s'
-                           % (aid, msg, np.unique(list(self.aeparams.keys()))))
-
-    #--------------------
-    # FLUTTER CARDS
-
-    def FLFACT(self, sid, msg=''):
-        """gets an FLFACT"""
-        try:
-            return self.flfacts[sid]
-        except KeyError:
-            raise KeyError('sid=%s not found%s.  Allowed FLFACTs=%s'
-                           % (sid, msg, np.unique(list(self.flfacts.keys()))))
-
-    def Flutter(self, fid, msg=''):
-        """gets a FLUTTER"""
-        try:
-            return self.flutters[fid]
-        except KeyError:
-            raise KeyError('fid=%s not found%s.  Allowed FLUTTERs=%s'
-                           % (fid, msg, np.unique(list(self.flutters.keys()))))
-
-    #--------------------
-    # OPTIMIZATION CARDS
-
-    def DConstr(self, oid, msg=''):
-        """gets a DCONSTR"""
-        try:
-            return self.dconstrs[oid]
-        except KeyError:
-            raise KeyError('oid=%s not found%s.  Allowed DCONSTRs=%s'
-                           % (oid, msg, np.unique(list(self.dconstrs.keys()))))
-
-    def DResp(self, dresp_id, msg=''):
-        """gets a DRESPx"""
-        try:
-            return self.dresps[dresp_id]
-        except KeyError:
-            raise KeyError('dresp_id=%s not found%s.  Allowed DRESPx=%s'
-                           % (dresp_id, msg, np.unique(list(self.dresps.keys()))))
-
-    def Desvar(self, desvar_id, msg=''):
-        """gets a DESVAR"""
-        try:
-            return self.desvars[desvar_id]
-        except KeyError:
-            raise KeyError('desvar_id=%s not found%s.  Allowed DESVARs=%s'
-                           % (desvar_id, msg, np.unique(list(self.desvars.keys()))))
-
-    def DDVal(self, oid, msg=''):
-        """gets a DDVAL"""
-        try:
-            return self.ddvals[oid]
-        except KeyError:
-            raise KeyError('oid=%s not found%s.  Allowed DDVALs=%s'
-                           % (oid, msg, np.unique(list(self.ddvals.keys()))))
-
-    def DVcrel(self, dv_id, msg=''):
-        """gets a DVCREL1/DVCREL2"""
-        try:
-            return self.dvcrels[dv_id]
-        except KeyError:
-            raise KeyError('dv_id=%s not found%s.  Allowed DVCRELx=%s'
-                           % (dv_id, msg, np.unique(list(self.dvcrels.keys()))))
-
-    def DVmrel(self, dv_id, msg=''):
-        """gets a DVMREL1/DVMREL2"""
-        try:
-            return self.dvmrels[dv_id]
-        except KeyError:
-            raise KeyError('dv_id=%s not found%s.  Allowed DVMRELx=%s'
-                           % (dv_id, msg, np.unique(list(self.dvmrels.keys()))))
-
-    def DVprel(self, dv_id, msg=''):
-        """gets a DVPREL1/DVPREL2"""
-        try:
-            return self.dvprels[dv_id]
-        except KeyError:
-            raise KeyError('dv_id=%s not found%s.  Allowed DVPRELx=%s'
-                           % (dv_id, msg, np.unique(list(self.dvprels.keys()))))
-
-    #--------------------
-    # SET CARDS
-
-    def Set(self, sid, msg=''):
-        try:
-            return self.sets[sid]
-        except KeyError:
-            raise KeyError('sid=%s not found%s.  Allowed SETx=%s'
-                           % (sid, msg, np.unique(list(self.sets.keys()))))
-
-    def SetSuper(self, seid, msg=''):
-        try:
-            return self.setsSuper[seid]
-        except KeyError:
-            raise KeyError('seid=%s not found%s.  Allowed SETx=%s'
-                           % (seid, msg, np.unique(list(self.setsSuper.keys()))))
-
-    #--------------------
-    # METHOD CARDS
-    def Method(self, sid, msg=''):
-        """gets a METHOD (EIGR, EIGRL)"""
-        try:
-            return self.methods[sid]
-        except KeyError:
-            raise KeyError('sid=%s not found%s.  Allowed METHODs=%s'
-                           % (sid, msg, np.unique(list(self.methods.keys()))))
-
-    def CMethod(self, sid, msg=''):
-        """gets a METHOD (EIGC)"""
-        try:
-            return self.cmethods[sid]
-        except KeyError:
-            raise KeyError('sid=%s not found%s.  Allowed CMETHODs=%s'
-                           % (sid, msg, np.unique(list(self.cmethods.keys()))))
-
-    #--------------------
-    # TABLE CARDS
-    def Table(self, tid, msg=''):
-        """gets a TABLES1, TABLEST, ???"""
-        try:
-            return self.tables[tid]
-        except KeyError:
-            table_keys = np.unique(list(self.tables.keys()))
-            raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
-                           % (tid, msg, table_keys))
-
-    def TableD(self, tid, msg=''):
-        """gets a TABLEDx (TABLED1, TABLED2, TABLED3, TABLED4)"""
-        try:
-            return self.tables_d[tid]
-        except KeyError:
-            table_keys = np.unique(list(self.tables.keys()))
-            tabled_keys = np.unique(list(self.tables_d.keys()))
-            tablem_keys = np.unique(list(self.tables_m.keys()))
-            raise KeyError('tid=%s not found%s.  Allowed TABLEDs=%s; TABLEs=%s; TABLEMs=%s'
-                           % (tid, msg, tabled_keys, table_keys, tablem_keys))
-
-    def TableM(self, tid, msg=''):
-        """gets a TABLEx (TABLEM1, TABLEM2, TABLEM3, TABLEM4)"""
-        try:
-            return self.tables_m[tid]
-        except KeyError:
-            table_keys = np.unique(list(self.tables.keys()))
-            tabled_keys = np.unique(list(self.tables_d.keys()))
-            tablem_keys = np.unique(list(self.tables_m.keys()))
-            raise KeyError('tid=%s not found%s.  Allowed TABLEMs=%s; TABLEs=%s; TABLEDs=%s'
-                           % (tid, msg, tablem_keys, table_keys, tabled_keys))
-
-    def RandomTable(self, tid, msg=''):
-        try:
-            return self.random_tables[tid]
-        except KeyError:
-            raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
-                           % (tid, msg, np.unique(list(self.random_tables.keys()))))
-
-    #--------------------
-    # NONLINEAR CARDS
-
-    def NLParm(self, nid, msg=''):
-        """gets an NLPARM"""
-        try:
-            return self.nlparms[nid]
-        except KeyError:
-            raise KeyError('nid=%s not found%s.  Allowed NLPARMs=%s'
-                           % (nid, msg, np.unique(list(self.nlparms.keys()))))
-
-    #--------------------
-    # MATRIX ENTRY CARDS
-    def DMIG(self, dname, msg=''):
-        """gets a DMIG"""
-        try:
-            return self.dmig[dname]
-        except KeyError:
-            raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
-                           % (dname, msg, np.unique(list(self.dmig.keys()))))
-
-    def DEQATN(self, equation_id, msg=''):
-        """gets a DEQATN"""
-        try:
-            return self.dequations[equation_id]
-        except KeyError:
-            raise KeyError('equation_id=%s not found%s.  Allowed DMIGs=%s'
-                           % (equation_id, msg, np.unique(list(self.dequations.keys()))))
-

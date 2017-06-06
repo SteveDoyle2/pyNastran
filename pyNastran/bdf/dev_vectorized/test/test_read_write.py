@@ -22,10 +22,11 @@ def read_write_compare(bdf_filename, bdf_filename_out):
         bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
         punch=False, cid=None, mesh_form=None,
         print_stats=False, encoding=None,
-        sum_load=False, size=8, is_double=False,
+        sum_load=True, size=8, is_double=False,
         stop=False, nastran='', post=-1, dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
+        run_extract_bodies=False,
     )
 
 class TestReadWriteVectorized(unittest.TestCase):

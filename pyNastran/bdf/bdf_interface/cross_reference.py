@@ -91,7 +91,9 @@ class XrefMesh(BDFAttributes):
         # for elem in model.elements:
             # elem.check_unique_nodes()
 
-    def cross_reference(self, xref=True,
+    def cross_reference(self,
+                        xref=True,
+                        xref_nodes=True,
                         xref_elements=True,
                         xref_nodes_with_elements=True,
                         xref_properties=True,
@@ -107,24 +109,26 @@ class XrefMesh(BDFAttributes):
 
         Parameters
         ----------
-        xref : bool
-           cross references the model (default=True)
-        xref_element : bool
-           set cross referencing of elements (default=True)
-        xref_properties : bool
-           set cross referencing of properties (default=True)
-        xref_masses : bool
-           set cross referencing of CMASS/PMASS (default=True)
-        xref_materials : bool
-           set cross referencing of materials (default=True)
-        xref_loads : bool
-            set cross referencing of loads (default=True)
-        xref_constraints : bool
-            set cross referencing of constraints (default=True)
-        xref_aero : bool
-            set cross referencing of CAERO/SPLINEs (default=True)
-        xref_sets : bool
-            set cross referencing of SETx (default=True)
+        xref : bool; default=True
+           cross references the model
+        xref_nodes : bool; default=True
+           set cross referencing of nodes/coords
+        xref_element : bool; default=True
+           set cross referencing of elements
+        xref_properties : bool; default=True
+           set cross referencing of properties
+        xref_masses : bool; default=True
+           set cross referencing of CMASS/PMASS
+        xref_materials : bool; default=True
+           set cross referencing of materials
+        xref_loads : bool; default=True
+            set cross referencing of loads
+        xref_constraints : bool; default=True
+            set cross referencing of constraints
+        xref_aero : bool; default=True
+            set cross referencing of CAERO/SPLINEs
+        xref_sets : bool; default=True
+            set cross referencing of SETx
 
         To only cross-reference nodes:
 
@@ -142,8 +146,9 @@ class XrefMesh(BDFAttributes):
         if not xref:
             return
         self.log.debug("Cross Referencing...")
-        self._cross_reference_nodes()
-        self._cross_reference_coordinates()
+        if xref_nodes:
+            self._cross_reference_nodes()
+            self._cross_reference_coordinates()
 
         if xref_elements:
             self._cross_reference_elements()
@@ -173,22 +178,15 @@ class XrefMesh(BDFAttributes):
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
-        for spcadd in itervalues(self.spcadds):
-            self.spcObject.Add(spcadd)
-            spcadd.cross_reference(self)
-
         for spcs in itervalues(self.spcs):
             for spc in spcs:
-                #self.spcObject.append(spc)
                 spc.cross_reference(self)
-
-        for mpcadd in itervalues(self.mpcadds):
-            #self.mpcObject.Add(mpcadd)
-            mpcadd.cross_reference(self)
+        for spcoffs in itervalues(self.spcoffs):
+            for spcoff in spcoffs:
+                spcoff.cross_reference(self)
 
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:
-                #self.mpcObject.append(mpc)
                 mpc.cross_reference(self)
 
         for suport in self.suport:
@@ -223,6 +221,8 @@ class XrefMesh(BDFAttributes):
             paero.cross_reference(self)
         for trim in itervalues(self.trims):
             trim.cross_reference(self)
+        for csschd in itervalues(self.csschds):
+            csschd.cross_reference(self)
 
         for spline in itervalues(self.splines):
             spline.cross_reference(self)
@@ -275,67 +275,6 @@ class XrefMesh(BDFAttributes):
             #'AEPARAM',  ## aeparams
             #'AESTAT',   ## aestats
             #'AESURF',  ## aesurfs
-
-    def _safe_cross_reference_aero(self):
-        """
-        Links up all the aero cards
-          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
-        """
-        return self._cross_reference_aero()
-        for caero in itervalues(self.caeros):
-            caero.safe_cross_reference(self)
-        for paero in itervalues(self.paeros):
-            paero.safe_cross_reference(self)
-        for trim in itervalues(self.trims):
-            trim.safe_cross_reference(self)
-
-        for spline in itervalues(self.splines):
-            spline.safe_cross_reference(self)
-        for aecomp in itervalues(self.aecomps):
-            aecomp.safe_cross_reference(self)
-        for aelist in itervalues(self.aelists):
-            aelist.safe_cross_reference(self)
-        for aeparam in itervalues(self.aeparams):
-            aeparam.safe_cross_reference(self)
-        #for aestat in itervalues(self.aestats):
-            #aestat.safe_cross_reference(self)
-        for aesurf in itervalues(self.aesurf):
-            aesurf.safe_cross_reference(self)
-        for aesurfs in itervalues(self.aesurfs):
-            aesurfs.safe_cross_reference(self)
-        for flutter in itervalues(self.flutters):
-            flutter.safe_cross_reference(self)
-
-        if 0:  # only support CAERO1
-            ncaeros = len(self.caeros)
-            if ncaeros > 1:
-                # we don't need to check the ncaeros=1 case
-                i = 0
-                min_maxs = zeros((ncaeros, 2), dtype='int32')
-                for eid, caero in sorted(iteritems(self.caeros)):
-                    min_maxs[i, :] = caero.min_max_eid
-                    i += 1
-                isort = argsort(min_maxs.ravel())
-                expected = arange(ncaeros * 2, dtype='int32')
-                if not array_equal(isort, expected):
-                    msg = 'CAERO element ids are inconsistent\n'
-                    msg += 'isort = %s' % str(isort)
-                    raise RuntimeError(msg)
-
-            #'AERO',     ## aero
-            #'AEROS',    ## aeros
-            #'GUST',     ## gusts
-            #'FLUTTER',  ## flutters
-            #'FLFACT',   ## flfacts
-            #'MKAERO1', 'MKAERO2',  ## mkaeros
-            #'AECOMP',   ## aecomps
-            #'AEFACT',   ## aefacts
-            #'AELINK',   ## aelinks
-            #'AELIST',   ## aelists
-            #'AEPARAM',  ## aeparams
-            #'AESTAT',   ## aestats
-            #'AESURF',  ## aesurfs
-
 
     def _cross_reference_nodes(self):
         """

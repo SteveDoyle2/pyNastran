@@ -1,10 +1,10 @@
 pyNastran has the following requirements for full operation:
  - Python>=2.7.7 (Python 2)
- - Python>=3.3   (Python 3)
+ - Python>=3.4   (Python 3)
  
 The following third party packages are used:
- - numpy>=1.9.2
- - scipy>=0.16.0
+ - numpy>=1.11.0
+ - scipy>=0.17.0
  - docopt==0.6.2
  - PyQt4>=4.11
  - vtk==5.10.1    required for GUI

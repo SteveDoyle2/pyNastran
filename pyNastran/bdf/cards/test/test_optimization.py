@@ -1,3 +1,6 @@
+"""
+defines optimization tests
+"""
 # coding: utf-8
 from __future__ import print_function
 import os
@@ -134,17 +137,16 @@ class TestOpt(unittest.TestCase):
         dvids = desvar_id
         labels = None
         dvprel2 = model.add_dvprel2(oid+1, Type, pid, pname_fid, deqation,
-                                   dvids, labels, p_min=None, p_max=1e20,
-                                   validate=True, comment='')
+                                    dvids, labels, p_min=None, p_max=1e20,
+                                    validate=True, comment='')
         equation_id = 100
-        name = 'fstress'
         eqs = ['fstress(x) = x + 10.']
-        deqatn = model.add_deqatn(name, equation_id, eqs, comment='deqatn')
+        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
         #print(deqatn.object_attributes())
         #print(deqatn.func_str)
         #print(deqatn)
 
-        dresp_id = 42
+        dresp1_id = 42
         label = 'STRESS1'
         response_type = 'STRESS'
         property_type = 'PSHELL'
@@ -152,11 +154,25 @@ class TestOpt(unittest.TestCase):
         atta = 9
         attb = None
         atti = pid
-        dresp1 = model.add_dresp1(dresp_id, label, response_type,
-                                 property_type, region,
-                                 atta, attb, atti, validate=True, comment='dresp1')
-        dconstr = model.add_dconstr(oid, dresp_id, lid=-1.e20, uid=1.e20,
+        dresp1 = model.add_dresp1(dresp1_id, label, response_type,
+                                  property_type, region,
+                                  atta, attb, atti, validate=True, comment='dresp1')
+        dconstr = model.add_dconstr(oid, dresp1_id, lid=-1.e20, uid=1.e20,
                                    lowfq=0., highfq=1.e20, comment='dconstr')
+
+
+        params = {
+            (0, 'DRESP1') : [42],
+            (1, 'DESVAR') : [12],
+        }
+        dresp2_id = 43
+        dequation = equation_id
+        label = 'dresp2'
+        region = None
+        dresp2 = model.add_dresp2(dresp2_id, label, dequation, region, params,
+                                  method='MIN', c1=100., c2=0.005, c3=None,
+                                  comment='dresp2')
+
         desvar.write_card(size=8)
         desvar.write_card(size=16)
         dvprel1.write_card(size=8)
@@ -166,6 +182,9 @@ class TestOpt(unittest.TestCase):
         dresp1.write_card(size=8)
         dresp1.write_card(size=16)
         dresp1.write_card(size=16, is_double=True)
+        dresp2.write_card(size=8)
+        dresp2.write_card(size=16)
+        dresp2.write_card(size=16, is_double=True)
 
         model.validate()
         #model._verify_bdf(xref=False)
@@ -183,6 +202,9 @@ class TestOpt(unittest.TestCase):
         dresp1.write_card(size=8)
         dresp1.write_card(size=16)
         dresp1.raw_fields()
+        dresp2.write_card(size=8)
+        dresp2.write_card(size=16)
+        dresp2.write_card(size=16, is_double=True)
 
         stringio = StringIO()
         model.write_bdf(stringio, close=False)
@@ -200,21 +222,30 @@ class TestOpt(unittest.TestCase):
         mp_max = 1e7
         dvids = 11
         coeffs = 1.0
-        dvmrel_1 = model.add_dvmrel1(oid, 'MAT1', mid1, 'E', dvids, coeffs,
-                                     mp_min=mp_min, mp_max=mp_max, c0=0., validate=True,
-                                     comment='dmvrel')
+        dvmrel1_1 = model.add_dvmrel1(oid, 'MAT1', mid1, 'E', dvids, coeffs,
+                                      mp_min=mp_min, mp_max=mp_max, c0=0., validate=True,
+                                      comment='dmvrel')
 
         oid = 11
         mid8 = 8
-        dvmrel_8 = model.add_dvmrel1(oid, 'MAT8', mid8, 'NU12', dvids, coeffs,
-                                     mp_min=0.25, mp_max=0.3, c0=0., validate=True,
-                                     comment='dmvrel')
+        dvmrel1_8 = model.add_dvmrel1(oid, 'MAT8', mid8, 'NU12', dvids, coeffs,
+                                      mp_min=0.25, mp_max=0.3, c0=0., validate=True,
+                                      comment='dmvrel')
         oid = 12
         mid10 = 10
-        dvmrel_10 = model.add_dvmrel1(oid, 'MAT10', mid10, 'RHO', dvids, coeffs,
-                                      mp_min=0.1, mp_max=0.2, c0=0., validate=True,
-                                      comment='dmvrel')
+        dvmrel1_10 = model.add_dvmrel1(oid, 'MAT10', mid10, 'RHO', dvids, coeffs,
+                                       mp_min=0.1, mp_max=0.2, c0=0., validate=True,
+                                       comment='dmvrel')
 
+        oid = 21
+        deqation = 42
+        mp_name = 'E'
+        mat_type = 'MAT1'
+        labels = []
+        dvmrel2_1 = model.add_dvmrel2(oid, mat_type, mid1, mp_name, deqation,
+                                      dvids, labels, mp_min=None, mp_max=1e20,
+                                      validate=True,
+                                      comment='')
         E = 30.e7
         G = None
         nu = 0.3
@@ -231,17 +262,26 @@ class TestOpt(unittest.TestCase):
         c = 4000.
         mat10 = model.add_mat10(mid10, bulk, rho, c, ge=0.0, comment='mat10')
 
-        dvmrel_1.raw_fields()
-        dvmrel_1.write_card(size=8)
-        dvmrel_1.write_card(size=16)
+        equation_id = 42
+        eqs = ['fstress(x) = x + 10.']
+        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
 
-        dvmrel_8.raw_fields()
-        dvmrel_8.write_card(size=8)
-        dvmrel_8.write_card(size=16)
 
-        dvmrel_10.raw_fields()
-        dvmrel_10.write_card(size=8)
-        dvmrel_10.write_card(size=16)
+        dvmrel1_1.raw_fields()
+        dvmrel1_1.write_card(size=8)
+        dvmrel1_1.write_card(size=16)
+
+        dvmrel1_8.raw_fields()
+        dvmrel1_8.write_card(size=8)
+        dvmrel1_8.write_card(size=16)
+
+        dvmrel1_10.raw_fields()
+        dvmrel1_10.write_card(size=8)
+        dvmrel1_10.write_card(size=16)
+
+        dvmrel2_1.raw_fields()
+        dvmrel2_1.write_card(size=8)
+        dvmrel2_1.write_card(size=16)
 
         mat8.raw_fields()
         mat8.write_card(size=8)
@@ -254,9 +294,10 @@ class TestOpt(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-        dvmrel_1.raw_fields()
-        dvmrel_8.raw_fields()
-        dvmrel_10.raw_fields()
+        dvmrel1_1.raw_fields()
+        dvmrel1_8.raw_fields()
+        dvmrel1_10.raw_fields()
+        dvmrel2_1.raw_fields()
         mat8.raw_fields()
         mat10.raw_fields()
 
@@ -291,7 +332,7 @@ class TestOpt(unittest.TestCase):
         pid = 102
         x = [1., 0., 0.]
         g0 = None
-        cbar = model.add_cbar(eid, pid, nid1, nid2, x, g0, offt='GGG', pa=0, pb=0,
+        cbar = model.add_cbar(eid, pid, [nid1, nid2], x, g0, offt='GGG', pa=0, pb=0,
                               wa=None, wb=None, comment='cbar')
 
         oid = 11
@@ -309,9 +350,8 @@ class TestOpt(unittest.TestCase):
         nu = 0.3
         mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
 
-        name = 'fx2'
         eqs = ['fx2(x) = x + 10.']
-        deqatn = model.add_deqatn(name, equation_id, eqs, comment='deqatn')
+        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
 
         dvcrel1.raw_fields()
         dvcrel2.raw_fields()

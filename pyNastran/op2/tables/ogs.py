@@ -1,7 +1,11 @@
+from __future__ import print_function
+from struct import Struct
 from six import b
 from six.moves import range
-from struct import Struct
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_common import OP2Common
+#from pyNastran.op2.tables.ogf_gridPointForces.ogs_surface_stresses import (
+    #GridPointStresses, GridPointStressesVolume)
+
 
 class OGS(OP2Common):
     def __init__(self):
@@ -59,10 +63,10 @@ class OGS(OP2Common):
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
             self.mode_cycle = 0.0
             self.update_mode_cycle('mode_cycle')
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
         #elif self.analysis_code == 4: # differential stiffness
         #elif self.analysis_code == 5: # frequency
@@ -114,7 +118,8 @@ class OGS(OP2Common):
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table35(data, ndata)
         else:
-            raise NotImplementedError('table_code=%s table_name=%s' % (self.table_code, self.table_name))
+            msg = 'table_code=%s table_name=%s' % (self.table_code, self.table_name)
+            raise NotImplementedError(msg)
         return n
 
     def _read_ogs1_table28(self, data, ndata):
@@ -127,7 +132,7 @@ class OGS(OP2Common):
     def _read_ogs1_table26(self, data, ndata):
         result_name = 'grid_point_stresses'
         if self.num_wide == 11:  # real/random
-            #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
+            #self.create_transient_object(self.gridPointStresses, GridPointStresses)
             n = self._read_ogs1_table26_numwide11(data, ndata)
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
@@ -158,7 +163,7 @@ class OGS(OP2Common):
         #is_sort1 = self.is_sort1()
         if self.num_wide == 9:  # real/random
             result_name = 'grid_point_volume_stresses'
-            #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolumeObject)
+            #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolume)
             n = self._read_ogs1_table27_numwide9(data, ndata)
         else:
             msg = 'only num_wide=9 is allowed  num_wide=%s' % self.num_wide
@@ -185,7 +190,7 @@ class OGS(OP2Common):
         """grid point stress discontinuities (plane stress/strain)"""
         result_name = 'grid_point_stresses'
         if self.num_wide == 6:
-            #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
+            #self.create_transient_object(self.gridPointStresses, GridPointStresses)
             n = self._read_ogs1_table35_numwide6(data, ndata)
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide

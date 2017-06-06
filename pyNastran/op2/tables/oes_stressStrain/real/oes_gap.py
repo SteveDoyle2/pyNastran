@@ -1,15 +1,16 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
+from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
     import pandas as pd
 except ImportError:
     pass
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
 class NonlinearGapStressArray(OES_Object):
@@ -63,25 +64,28 @@ class NonlinearGapStressArray(OES_Object):
         self.is_built = True
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+            #self.element_name, self.element_type, nnodes_per_element,
+            #self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.ntotal, dtype='int32')
 
-        # [compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW]
+        # [comp_x, shear_y, shear_z, axial_u, shear_v, shear_w, slip_v, slip_w]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
     def build_dataframe(self):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -118,20 +122,24 @@ class NonlinearGapStressArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW, form1, form2):
+    def add_sort1(self, dt, eid, comp_xi, shear_yi, shear_zi, axial_ui,
+                  shear_vi, shear_wi, slip_vi, slip_wi, form1, form2):
+        """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, int)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
-        self.data[self.itime, self.itotal, :] = [compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW]
+        self.data[self.itime, self.itotal, :] = [comp_xi, shear_yi, shear_zi, axial_ui,
+                                                 shear_vi, shear_wi, slip_vi, slip_wi]
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.ntotal
         ntimes = self.ntimes
@@ -152,6 +160,7 @@ class NonlinearGapStressArray(OES_Object):
         n = len(headers)
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -177,24 +186,24 @@ class NonlinearGapStressArray(OES_Object):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg))
 
-            compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW
-            compX = self.data[itime, :, 0]
-            shearY = self.data[itime, :, 1]
-            shearZ = self.data[itime, :, 2]
-            axialU = self.data[itime, :, 3]
-            shearV = self.data[itime, :, 4]
-            shearW = self.data[itime, :, 5]
-            slipV = self.data[itime, :, 6]
-            slipW = self.data[itime, :, 7]
+            #comp_x, shear_y, shear_z, axial_u, shear_v, shear_w, slip_v, slip_w
+            comp_x = self.data[itime, :, 0]
+            shear_y = self.data[itime, :, 1]
+            shear_z = self.data[itime, :, 2]
+            axial_u = self.data[itime, :, 3]
+            shear_v = self.data[itime, :, 4]
+            shear_w = self.data[itime, :, 5]
+            slip_v = self.data[itime, :, 6]
+            slip_w = self.data[itime, :, 7]
+            for (i, eid, comp_xi, shear_yi, shear_zi, axial_ui, shear_vi, shear_wi, slip_vi, slip_wi) in zip(
+                count(), eids, comp_x, shear_y, shear_z, axial_u, shear_v, shear_w, slip_v, slip_w):
 
-            for (i, eid, compXi, shearYi, shearZi, axialUi, shearVi, shearWi, slipVi, slipWi) in zip(
-                count(), eids, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW):
-
-                vals = [compXi, shearYi, shearZi, axialUi, shearVi, shearWi, slipVi, slipWi]
+                vals = [comp_xi, shear_yi, shear_zi, axial_ui, shear_vi, shear_wi, slip_vi, slip_wi]
                 vals2 = write_floats_13e(vals)
-                [compXi, shearYi, shearZi, axialUi, shearVi, shearWi, slipVi, slipWi] = vals2
+                [comp_xi, shear_yi, shear_zi, axial_ui, shear_vi, shear_wi, slip_vi, slip_wi] = vals2
                 f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
-                    % (eid, compXi, shearYi, shearZi, axialUi, shearVi, shearWi, slipVi, slipWi))
+                        % (eid, comp_xi, shear_yi, shear_zi, axial_ui,
+                           shear_vi, shear_wi, slip_vi, slip_wi))
             f.write(page_stamp % page_num)
             page_num += 1
         if self.nonlinear_factor is None:

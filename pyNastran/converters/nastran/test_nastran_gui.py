@@ -1,19 +1,19 @@
 import os
-
-from pyNastran.gui.testing_methods import GUIMethods
+import unittest
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastranIOv import NastranIO
 import pyNastran
-from pyNastran.utils.log import get_logger2
+#from pyNastran.utils.log import get_logger2
 
-class NastranGUI(NastranIO, GUIMethods):
+class NastranGUI(NastranIO, FakeGUIMethods):
     def __init__(self, inputs=None):
-        GUIMethods.__init__(self, inputs=inputs)
+        FakeGUIMethods.__init__(self, inputs=inputs)
         NastranIO.__init__(self)
 
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, '..', 'models')
 
-import unittest
+
 
 class TestNastranGUI(unittest.TestCase):
 
@@ -65,6 +65,36 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, None)
         test.load_nastran_results(op2_filename, None)
 
+    def test_beam_modes_03(self):
+        dirname = os.path.join(model_path, 'beam_modes')
+        bdf_filename = os.path.join(dirname, 'beam_modes.dat')
+        op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+        #test.load_nastran_results(op2_filename, None)
+
+        test.load_nastran_geometry(bdf_filename, dirname)
+        #test.load_nastran_results(op2_filename, dirname)
+
+        test.load_nastran_geometry(bdf_filename, '')
+        test.load_nastran_results(op2_filename, dirname)
+
+    def test_beam_modes_04(self):
+        dirname = os.path.join(model_path, 'beam_modes')
+        bdf_filename = os.path.join(dirname, 'beam_modes.dat')
+        op2_filename = os.path.join(dirname, 'beam_modes_m2.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_results(op2_filename, None)
+
+        test.load_nastran_geometry(bdf_filename, dirname)
+        test.load_nastran_results(op2_filename, dirname)
+
+        test.load_nastran_geometry(bdf_filename, '')
+
+
     @unittest.expectedFailure
     def test_contact(self):
         """this test fails because of a misparsed card"""
@@ -83,35 +113,6 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, None)
         test.load_nastran_results(op2_filename, None)
 
-    def test_beam_modes_01(self):
-        dirname = os.path.join(model_path, 'beam_modes')
-        bdf_filename = os.path.join(dirname, 'beam_modes.dat')
-        op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
-
-        test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        #test.load_nastran_results(op2_filename, None)
-
-        test.load_nastran_geometry(bdf_filename, dirname)
-        #test.load_nastran_results(op2_filename, dirname)
-
-        test.load_nastran_geometry(bdf_filename, '')
-        test.load_nastran_results(op2_filename, dirname)
-
-    def test_beam_modes_02(self):
-        dirname = os.path.join(model_path, 'beam_modes')
-        bdf_filename = os.path.join(dirname, 'beam_modes.dat')
-        op2_filename = os.path.join(dirname, 'beam_modes_m2.op2')
-
-        test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
-
-        test.load_nastran_geometry(bdf_filename, dirname)
-        test.load_nastran_results(op2_filename, dirname)
-
-        test.load_nastran_geometry(bdf_filename, '')
-
     def test_thermal_01(self):
         dirname = os.path.join(model_path, 'thermal')
         bdf_filename = os.path.join(dirname, 'thermal_test_153.bdf')
@@ -120,14 +121,6 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename, None)
         test.load_nastran_results(op2_filename, None)
-
-    def test_blade_01(self):
-        dirname = os.path.join(model_path, 'blade_2dv')
-        bdf_filename = os.path.join(dirname, 'blade_2dv.bdf')
-        #op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
-
-        test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
 
     def test_bwb_gui(self):
         bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
@@ -138,7 +131,7 @@ class TestNastranGUI(unittest.TestCase):
     def test_femap_rougv1_01(self):
         """tests the exhaust manifold and it's funny eigenvectors"""
         dirname = os.path.join(model_path, 'femap_exhaust')
-        bdf_filename = os.path.join(dirname, 'modal_example.bdf')
+        #bdf_filename = os.path.join(dirname, 'modal_example.bdf')
         op2_filename = os.path.join(dirname, 'modal_example.op2')
 
         test = NastranGUI()

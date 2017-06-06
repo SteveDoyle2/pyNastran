@@ -2,18 +2,18 @@ from six import iteritems
 from numpy import zeros
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_10e, write_floats_8p4f, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_12e, write_floats_10e, write_floats_8p4f, get_key0
 
 
 class GridPointStressesArray(ScalarObject):
     """
-        msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
-                        '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
-                        '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
-                        '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
-              #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
-              #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
-              #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+    '                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
+    '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
+    '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
+    '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
+    '0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+    '      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+    '      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
     """
     def __init__(self, data_code, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
@@ -38,11 +38,12 @@ class GridPointStressesArray(ScalarObject):
         self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
 
     def add_sort1(self, dt, ekey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         self.times[self.itime] = dt
         self.grid_element[self.ntotal, :] = [ekey, eid]
         self.data[self.itime, self.ntotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
@@ -50,13 +51,91 @@ class GridPointStressesArray(ScalarObject):
             nelements = len(self. nx[times0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
         else:
             nelements = len(self. nx)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  nx, ny, txy, angle, majorP, minorP, tmax, ovm\n')
+            ntimes_word = '1'
+
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
+                                                                 ', '.join(headers)))
+        msg.append('  grid_element.shape=%s\n' % str(self.grid_element.shape).replace('L', ''))
+        msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
         return msg
 
+    def get_headers(self):
+        headers = ['nx', 'ny', 'txy', 'angle', 'majorP', 'minorP', 'tmax', 'ovm']
+        return headers
+
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
+        msg = header + [
+            '                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
+            '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
+            '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
+            '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
+           #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+           #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+           #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+
+        ntimes = self.data.shape[0]
+
+        nid_eids = self.grid_element
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            nx = self.data[itime, :, 0]
+            ny = self.data[itime, :, 1]
+            txy = self.data[itime, :, 2]
+            angle = self.data[itime, :, 3]
+            majorp = self.data[itime, :, 4]
+            minorp = self.data[itime, :, 5]
+            tmax = self.data[itime, :, 6]
+            ovm = self.data[itime, :, 7]
+            for (eid, nxi, nyi, txyi, anglei, majorpi, minorpi, tmaxi, ovmi) in zip(
+                eids, nx, ny, txy, angle, majorp, minorp, tmax, ovm):
+                [eid, nxi, nyi, txyi, anglei, majorpi, minorpi, tmaxi, ovmi] = write_floats_12e([
+                    eid, nxi, nyi, txyi, anglei, majorpi, minorpi, tmaxi, ovmi])
+                f.write('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (
+                    zero, ekey2, eid, elem_name, nxi, nyi, txyi, anglei, majorpi, minorpi, tmaxi, ovmi))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+        #for ekey, nxs in sorted(iteritems(self.nx)):
+            #ekey2 = ekey
+            #zero = '0'
+            #for iLoad, nx in enumerate(nxs):
+                #ny = self.ny[ekey][iLoad]
+                #txy = self.txy[ekey][iLoad]
+                #angle = self.angle[ekey][iLoad]
+                #majorP = self.majorP[ekey][iLoad]
+                #minorP = self.minorP[ekey][iLoad]
+                #tmax = self.tmax[ekey][iLoad]
+                #ovm = self.ovm[ekey][iLoad]
+
+                #elem_name = self.elemName[ekey][iLoad]
+                #eid = self.eids[ekey][iLoad]
+                #vals = [nx, ny, txy, majorP, minorP, tmax, ovm]
+                #vals2 = write_floats_10e(vals)
+                #[nx, ny, txy, majorP, minorP, tmax, ovm] = vals2
+                #if eid == 0:
+                    #eid = zero
+                #angle = write_floats_8p4f([angle])
+                #anglei = angle[0]
+                #msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (
+                    #zero, ekey2, eid, elem_name, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
+                #zero = ' '
+                #ekey2 = ' '
+        #msg.append(page_stamp % page_num)
+        #f.write(''.join(msg))
+        #return page_num
 
 class GridPointStresses(ScalarObject):
 
@@ -82,7 +161,7 @@ class GridPointStresses(ScalarObject):
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
@@ -136,6 +215,7 @@ class GridPointStresses(ScalarObject):
         self.eids[ekey].append(eid)
 
     def add_sort1(self, dt, ekey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         if dt not in self.nx:
             self.add_new_transient(dt)
 
@@ -189,13 +269,14 @@ class GridPointStresses(ScalarObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-        msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
-                        '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
-                        '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
-                        '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
-              #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
-              #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
-              #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        msg = header + [
+            '                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
+            '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
+            '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
+            '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
+           #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+           #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+           #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         for ekey, nxs in sorted(iteritems(self.nx)):
             ekey2 = ekey
             zero = '0'
@@ -208,7 +289,7 @@ class GridPointStresses(ScalarObject):
                 tmax = self.tmax[ekey][iLoad]
                 ovm = self.ovm[ekey][iLoad]
 
-                (elemName) = self.elemName[ekey][iLoad]
+                elem_name = self.elemName[ekey][iLoad]
                 eid = self.eids[ekey][iLoad]
                 vals = [nx, ny, txy, majorP, minorP, tmax, ovm]
                 vals2 = write_floats_10e(vals)
@@ -217,7 +298,8 @@ class GridPointStresses(ScalarObject):
                     eid = zero
                 angle = write_floats_8p4f([angle])
                 anglei = angle[0]
-                msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (zero, ekey2, eid, elemName, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
+                msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (
+                    zero, ekey2, eid, elem_name, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
                 zero = ' '
                 ekey2 = ' '
         msg.append(page_stamp % page_num)
@@ -228,35 +310,36 @@ class GridPointStresses(ScalarObject):
         f.write('GridPointStressesObject write_f06 is not implemented...\n')
         return page_num
         #raise NotImplementedError()
-        msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
-                        '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
-                        '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
-                        '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
-              #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
-              #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
-              #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt, Forces in sorted(iteritems(self.forces)):
-            for ekey, force in sorted(iteritems(Forces)):
-                zero = '0'
-                for iLoad, f in enumerate(force):
-                    (f1, f2, f3) = f
-                    (m1, m2, m3) = self.moments[dt][ekey][iLoad]
-                    (elemName) = self.elemName[ekey][iLoad]
-                    eid = self.eids[ekey][iLoad]
+        #msg = header + [
+            #'                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
+            #'0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
+            #'     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
+            #'     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
+           ##'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+           ##'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+           ##'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        #for dt, forces in sorted(iteritems(self.forces)):
+            #for ekey, force in sorted(iteritems(forces)):
+                #zero = '0'
+                #for iLoad, f in enumerate(force):
+                    #(f1, f2, f3) = f
+                    #(m1, m2, m3) = self.moments[dt][ekey][iLoad]
+                    #elem_name = self.elemName[ekey][iLoad]
+                    #eid = self.eids[ekey][iLoad]
 
-                    vals = [f1, f2, f3, m1, m2, m3]
-                    vals2 = write_floats_13e(vals)
-                    [f1, f2, f3, m1, m2, m3] = vals2
-                    if eid == 0:
-                        eid = ''
-                    msg.append('%s  %8s    %10s    %8s      %10s  %10s  %10s  %10s  %10s  %s\n' % (zero, ekey, eid, elemName, f1, f2, f3, m1, m2, m3))
-                    zero = ' '
+                    #vals = [f1, f2, f3, m1, m2, m3]
+                    #vals2 = write_floats_13e(vals)
+                    #[f1, f2, f3, m1, m2, m3] = vals2
+                    #if eid == 0:
+                        #eid = ''
+                    #msg.append('%s  %8s    %10s    %8s      %10s  %10s  %10s  %10s  %10s  %s\n' % (zero, ekey, eid, elemName, f1, f2, f3, m1, m2, m3))
+                    #zero = ' '
 
-            msg.append(page_stamp % page_num)
-            f.write(''.join(msg))
-            msg = ['']
-            page_num += 1
-        return page_num - 1
+            #msg.append(page_stamp % page_num)
+            #f.write(''.join(msg))
+            #msg = ['']
+            #page_num += 1
+        #return page_num - 1
 
 
 class GridPointStressesVolume(ScalarObject):
@@ -282,7 +365,7 @@ class GridPointStressesVolume(ScalarObject):
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
@@ -336,6 +419,7 @@ class GridPointStressesVolume(ScalarObject):
         #self.eids[ekey].append(eid)
 
     def add_sort1(self, dt, ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm):
+        """unvectorized method for adding SORT1 transient data"""
         if dt not in self.nx:
             self.add_new_transient(dt)
 
@@ -386,7 +470,7 @@ class GridPointStressesVolume(ScalarObject):
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        f.write('GridPointStressesVolumeObject write_f06 is not implemented...\n')
+        f.write('GridPointStressesVolume write_f06 is not implemented...\n')
         return page_num
 
         #raise NotImplementedError()
@@ -442,7 +526,7 @@ class GridPointStressesVolume(ScalarObject):
                 for iLoad, f in enumerate(force):
                     (f1, f2, f3) = f
                     (m1, m2, m3) = self.moments[dt][ekey][iLoad]
-                    (elemName) = self.elemName[ekey][iLoad]
+                    elem_name = self.elemName[ekey][iLoad]
                     eid = self.eids[ekey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
@@ -451,7 +535,7 @@ class GridPointStressesVolume(ScalarObject):
                     if eid == 0:
                         eid = ''
 
-                    msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, ekey, eid, elemName, f1, f2, f3, m1, m2, m3))
+                    msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, ekey, eid, elem_name, f1, f2, f3, m1, m2, m3))
                     zero = ' '
 
             msg.append(page_stamp % page_num)

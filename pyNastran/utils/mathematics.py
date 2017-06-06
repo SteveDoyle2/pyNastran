@@ -7,6 +7,7 @@ from six.moves import range
 
 from numpy import (float32, float64, complex64, complex128, array, cross,
                    allclose, zeros, matrix, insert, diag, eye, argmax, argmin, arange)
+import numpy as np
 from numpy.linalg import norm
 
 from scipy.linalg import solve_banded
@@ -106,7 +107,7 @@ def get_min_index(data, axis=1):
     return data[i[:], k], i
 
 
-def integrate_line(x, y):
+def integrate_unit_line(x, y):
     """
     Integrates a line of length 1.0
 
@@ -164,7 +165,7 @@ def build_spline(x, y):
         return splrep(x, y)
 
 
-def integrate_positive_line(x, y, minValue=0.):
+def integrate_positive_unit_line(x, y, min_value=0.):
     """
     Integrates a line of length 1.0
 
@@ -174,8 +175,13 @@ def integrate_positive_line(x, y, minValue=0.):
         the independent variable
     y : List[float]
         the dependent variable
+    min_value : float; default=0.0
+        ???
 
-    :returns integrated_value: the area under the curve
+    Returns
+    -------
+    integrated_value : float
+        the area under the curve
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -183,7 +189,7 @@ def integrate_positive_line(x, y, minValue=0.):
         assert len(x) == len(y), 'x=%s y=%s' % (x, y)
         # now integrate the area
         eval_posit_spline = lambda x, spl, min_val: max(splev([x], spl), min_val)
-        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), minValue))
+        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), min_value))
     except:
         raise RuntimeError('spline Error x=%s y=%s' % (x, y))
     return out[0]
@@ -414,3 +420,30 @@ def gauss(n):
 
     raise NotImplementedError('The current implementation only supports up to '
                               '5 quadrature points')
+
+def unique2d(a):
+    """
+    Gets the unique pairs in a 2D vector where the pairs are defined:
+    (column 0, column 1).
+
+    Parameters
+    ----------
+    a : (n,2) ndarray
+        the input data
+
+    Returns
+    -------
+    u : (m,2)
+        the unique values in a
+
+    .. note:: this is intended to be used to find unique rows of
+              element-id/property-id or property-id/material-id pairs
+    .. note:: it works by finding the unique complex numbers and doesn't
+              extend well to a 3 column pair
+    """
+    print(a)
+    x, y = a.T
+    b = x + y*1.0j
+    print(b)
+    idx = np.unique(b, return_index=True)[1]
+    return a[idx]

@@ -1,9 +1,11 @@
 from __future__ import print_function
 import unittest
+from six import iteritems
 import numpy as np
 
 from pyNastran.bdf.utils import (
-    parse_patran_syntax, parse_patran_syntax_dict, write_patran_syntax_dict)
+    parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
+    write_patran_syntax_dict)
 
 class TestBdfUtils(unittest.TestCase):
     def test_bdf_utils_01(self):
@@ -86,6 +88,30 @@ class TestBdfUtils(unittest.TestCase):
 
         out = parse_patran_syntax_dict('')
         assert len(out) == 0, 'out=%s' % out
+
+    def test_bdf_utils_03(self):
+        node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
+        type_map = {
+            'n' : 'Node',
+            'Node' : 'Node',
+            'e' : 'Element',
+            'Elm' : 'Element',
+            'Element' : 'Element',
+        }
+
+        data = parse_patran_syntax_dict(node_sets, type_map)
+        data_expected = {
+            'Element' : np.array([1, 2, 3]),
+            'Node' : np.array([2, 4, 6, 10, 11, 12, 13, 15]),
+        }
+
+        data = parse_patran_syntax_dict_map(node_sets, type_map, msg='')
+        assert len(data.keys()) == len(data_expected.keys()), 'data.keys=%s data_expected.keys=%s' % (data.keys(), data_expected.keys())
+        for key, value in sorted(iteritems(data)):
+            assert key in data_expected, 'cant find key=%r' % key
+            value_expected = data_expected[key]
+            assert np.array_equal(value, value_expected), 'key=%r\nvalue=%r\nexpected=%r' % (key, value, value_expected)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

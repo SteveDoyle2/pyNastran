@@ -1,0 +1,2 @@
+class NoGeometry(RuntimeError):
+    pass

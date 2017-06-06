@@ -1,17 +1,19 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function, unicode_literals
+import copy
+from itertools import count
+from struct import pack
 from six import text_type, binary_type, iteritems, PY3, string_types
 from six.moves import range
-import copy
-from struct import pack
 import numpy as np
 
 from pyNastran import is_release
-from pyNastran.op2.op2_codes import Op2Codes
 from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import list_print
-from pyNastran.op2.write_utils import write_table_header
+from pyNastran.op2.op2_interface.op2_codes import Op2Codes
+from pyNastran.op2.op2_interface.write_utils import write_table_header
+
 
 class BaseScalarObject(Op2Codes):
     def __init__(self):
@@ -92,8 +94,8 @@ class BaseScalarObject(Op2Codes):
                     self.element_node.shape, table.element_node.shape)
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
-                for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                    msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, eid2)
+                for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):
+                    msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
                 print(msg)
                 raise ValueError(msg)
 
@@ -163,14 +165,18 @@ class BaseScalarObject(Op2Codes):
 
                 # Convert eigenvalues to frequencies
                 # TODO: add damping header
-            elif name in ['eigr']:
-                column_names.append('EigenvalueReal')
+            elif name in ['eign']:
+                column_names.append('Eigenvalue')
                 column_values.append(times)
-                abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                abs_freqs = np.sqrt(np.abs(self.eigns)) / (2 * np.pi)
                 column_names.append('Freq')
                 column_values.append(abs_freqs)
                 column_names.append('Radians')
                 column_values.append(abs_freqs * 2 * np.pi)
+
+            elif name in ['eigr']:
+                column_names.append('EigenvalueReal')
+                column_values.append(times)
 
             elif name in ['eigi']:
                 column_names.append('EigenvalueImag')
@@ -239,7 +245,7 @@ class BaseScalarObject(Op2Codes):
     def __repr__(self):
         return ''.join(self.get_stats())
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = 'get_stats is not implemented in %s\n' % self.__class__.__name__
         if not is_release:
             raise NotImplementedError(msg)

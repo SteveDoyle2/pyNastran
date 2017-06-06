@@ -14,6 +14,7 @@ All nodes are defined in this file.  This includes:
  * POINT
  * Ring
    * RINGAX
+ * SEQGP
 
 All ungrouped elements are Node objects.
 
@@ -23,12 +24,9 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import numpy as np
+from itertools import count
 from six import string_types, PY2
-if PY2:
-    u = unicode
-else:
-    u = str
+import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
@@ -38,10 +36,16 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string)
+    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
+    integer_or_double)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
+
+if PY2:
+    u = unicode
+else:
+    u = str
 
 
 class RINGAX(BaseCard):
@@ -59,7 +63,7 @@ class RINGAX(BaseCard):
     #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
 
-    def __init__(self, card=None, data=None, comment=''):  # this card has missing fields
+    def __init__(self, nid, R, z, ps=None, comment=''):  # this card has missing fields
         """
         Creates the RINGAX card
         """
@@ -80,6 +84,8 @@ class RINGAX(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a RINGAX card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
@@ -102,21 +108,21 @@ class RINGAX(BaseCard):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         """
-        TODO: hasnt been verified
+        Adds a RINGAX card from the OP2
 
         Parameters
         ----------
-        data : List[int/float]; default=None
-            a list with the GRID fields defined in OP2 format
+        data : List[varies]
+            a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
         """
-        self.nid = data[0]
-        self.R = data[1]
-        self.z = data[2]
-        self.ps = data[3]
+        nid = data[0]
+        R = data[1]
+        z = data[2]
+        ps = data[3]
         assert len(data) == 4, data
-        return RINGAX(nid, R, z, ps)
+        return RINGAX(nid, R, z, ps, comment=comment)
 
     def raw_fields(self):
         """
@@ -144,6 +150,119 @@ class RINGAX(BaseCard):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+class SEQGP(BaseCard):
+    """defines the SEQGP class"""
+    type = 'SEQGP'
+
+    def __init__(self, nids, seqids, comment=''):
+        """
+        Creates the SEQGP card
+
+        Parameters
+        ----------
+        nid : int
+           the node id
+        seqid : int/float
+           the superelement id
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment = comment
+        if isinstance(nids, integer_types):
+            nids = [nids]
+        if isinstance(seqids, integer_types):
+            seqids = [seqids]
+
+        self.nids = nids
+        self.seqids = seqids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a SEQGP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        ncard = len(card) - 1
+        n = ncard // 2
+        assert ncard % 2 == 0, card
+        nids = []
+        seqids = []
+        for ifield in range(1, ncard, 2):
+            nid = integer(card, ifield, 'nid')
+            seqid = integer_or_double(card, ifield+1, 'seqid')
+            nids.append(nid)
+            seqids.append(seqid)
+        return SEQGP(nids, seqids, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
+    def append(self, seqgp):
+        self.nids += seqgp.nids
+        self.seqids += seqgp.seqids
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SEQGP card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        nids, seqids = data
+        return SEQGP(nids, seqids, comment=comment)
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
+        """
+        list_fields = ['SEQGP']
+        for nid, seqid in zip(self.nids, self.seqids):
+            list_fields.append(nid)
+            list_fields.append(seqid)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        """
+        The writer method used by BDF.write_card
+
+        Parameters
+        ----------
+        size : int; default=8
+            unused
+        is_double : bool; default=False
+            unused
+        """
+        msg = self.comment
+        list_fields = ['SEQGP']
+        for i, nid, seqid in zip(count(), self.nids, self.seqids):
+            if i % 4 == 0 and i > 0:
+                msg += print_card_8(list_fields)
+                list_fields = ['SEQGP']
+            list_fields.append(nid)
+            list_fields.append(seqid)
+        if len(list_fields) > 1:
+            msg += print_card_8(list_fields)
+        return msg
+
 
 class XPoint(BaseCard):
     """common class for EPOINT/SPOINT"""
@@ -302,6 +421,16 @@ class XPoints(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a SPOINT/EPOINT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         points = []
         for i in range(1, len(card)):
             field = integer_or_string(card, i, 'ID%i' % i)
@@ -310,9 +439,19 @@ class XPoints(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a SPOINT/EPOINT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         points = data
         assert isinstance(points, list), points
-        assert isinstance(points[0], int), points
+        assert isinstance(points[0], integer_types), points
         return cls(points, comment=comment)
 
     def __len__(self):
@@ -467,6 +606,21 @@ class GRDSET(BaseCard):
     def __init__(self, cp, cd, ps, seid, comment=''):
         """
         Creates the GRDSET card
+
+        Parameters
+        ----------
+        cp : int; default=0
+            the xyz coordinate frame
+        cd : int; default=0
+            the analysis coordinate frame
+        ps : str; default=''
+            Additional SPCs in the analysis coordinate frame (e.g. '123').
+            This corresponds to DOF set ``SG``.
+        seid : int; default=0
+            superelement id
+            TODO: how is this used by Nastran???
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -486,12 +640,14 @@ class GRDSET(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a GRDSET card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
-           a BDFCard object
-        comment : str
-           a comment for the card
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
         """
         #: Grid point coordinate system
         blank(card, 1, 'blank')
@@ -593,10 +749,10 @@ class GRDSET(BaseCard):
         seid = self.SEid()
         cd = self.Cd()
         ps = self.Ps()
-        assert isinstance(cp, int), 'cp=%r' % cp
-        assert isinstance(cd, int), 'cd=%r' % cd
+        assert isinstance(cp, integer_types), 'cp=%r' % cp
+        assert isinstance(cd, integer_types), 'cd=%r' % cd
         assert isinstance(ps, string_types), 'ps=%r' % ps
-        assert isinstance(seid, int), 'seid=%r' % seid
+        assert isinstance(seid, integer_types), 'seid=%r' % seid
 
     def raw_fields(self):
         """
@@ -627,7 +783,7 @@ class GRDSET(BaseCard):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_card(self, f, size, is_double):
+    def write_card(self, f, size=8, is_double=False):
         """
         The writer method used by BDF.write_card
 
@@ -673,12 +829,14 @@ class GRIDB(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a GRIDB card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
-           the BDFCard object
-        comment : str
-          a comment for the card
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
         """
         nid = integer(card, 1, 'nid')
         phi = double(card, 4, 'phi')
@@ -690,10 +848,14 @@ class GRIDB(BaseCard):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         """
+        Adds a GRIDB card from the OP2
+
         Parameters
         ----------
         data : List[varies]
-            a list with the GRIDB fields defined in OP2 format
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
         """
         nid = data[0]
         phi = data[1]
@@ -838,7 +1000,7 @@ class GRID(BaseCard):
 
     def __init__(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0, comment=''):
         """
-        Creates the GRID card in a functional way
+        Creates the GRID card
 
         Parameters
         ----------
@@ -875,9 +1037,19 @@ class GRID(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a GRID card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         nid = data[0]
         cp = data[1]
-        xyz = np.array(data[2:5])
+        xyz = data[2:5]
         cd = data[5]
         ps = data[6]
         seid = data[7]
@@ -888,16 +1060,14 @@ class GRID(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Creates the GRID card
+        Adds a GRID card from ``BDF.add_card(...)``
 
         Parameters
         ----------
         card : BDFCard()
             a BDFCard object
-        data : List[int/float]; default=None
-            a list with the GRID fields defined in OP2 format
         comment : str; default=''
-          a comment for the card
+            a comment for the card
         """
         nfields = len(card)
         #: Node ID
@@ -907,10 +1077,10 @@ class GRID(BaseCard):
         cp = integer_or_blank(card, 2, 'cp', 0)
 
         #: node location in local frame
-        xyz = np.array([
+        xyz = [
             double_or_blank(card, 3, 'x1', 0.),
             double_or_blank(card, 4, 'x2', 0.),
-            double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
+            double_or_blank(card, 5, 'x3', 0.)]
 
         if nfields > 6:
             #: Analysis coordinate system
@@ -929,25 +1099,12 @@ class GRID(BaseCard):
         return GRID(nid, cp, xyz, cd, ps, seid, comment=comment)
 
     def _validate_input(self):
+        assert isinstance(self.cp, integer_types), 'cp=%s' % (self.cp)
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
         assert self.cd >= -1, 'cd=%s' % (self.cd)
         assert self.seid >= 0, 'seid=%s' % (self.seid)
         assert len(self.xyz) == 3
-
-    #def Position(self, debug=False):
-        #self.deprecated('Position()', 'get_position()', '0.8')
-        #return self.get_position()
-
-    #def PositionWRT(self, model, cid):
-        #self.deprecated('PositionWRT(self, model, cid)',
-                        #'get_position_wrt(model, cid)', '0.8')
-        #return self.get_position_wrt(model, cid)
-
-    #def UpdatePosition(self, model, xyz, cid=0):
-        #self.deprecated('UpdatePosition(self, model, xyz, cid',
-                        #'set_position(self, model, xyz, cid=cid)', '0.8')
-        #return self.set_position(model, xyz, cid=cid)
 
     def Nid(self):
         """
@@ -982,8 +1139,7 @@ class GRID(BaseCard):
         """
         if isinstance(self.cd, integer_types):
             return self.cd
-        else:
-            return self.cd.cid
+        return self.cd_ref.cid
 
     def Cp(self):
         """
@@ -996,8 +1152,7 @@ class GRID(BaseCard):
         """
         if isinstance(self.cp, integer_types):
             return self.cp
-        else:
-            return self.cp.cid
+        return self.cp_ref.cid
 
     def SEid(self):
         """
@@ -1010,8 +1165,7 @@ class GRID(BaseCard):
         """
         if isinstance(self.seid, integer_types):
             return self.seid
-        else:
-            return self.seid.seid
+        return self.seid.seid
 
     def _verify(self, xref):
         """
@@ -1028,11 +1182,11 @@ class GRID(BaseCard):
         xyz = self.xyz
         ps = self.Ps()
         seid = self.SEid()
-        assert isinstance(nid, int), 'nid=%r' % nid
-        assert isinstance(cp, int), 'cp=%r' % cp
-        assert isinstance(cd, int), 'cd=%r' % cd
+        assert isinstance(nid, integer_types), 'nid=%r' % nid
+        assert isinstance(cp, integer_types), 'cp=%r' % cp
+        assert isinstance(cd, integer_types), 'cd=%r' % cd
         assert isinstance(ps, string_types), 'ps=%r' % ps
-        assert isinstance(seid, int), 'seid=%r' % seid
+        assert isinstance(seid, integer_types), 'seid=%r' % seid
         if xref:
             pos_xyz = self.get_position()
 
@@ -1065,7 +1219,7 @@ class GRID(BaseCard):
     def get_position_no_xref(self, model):
         if self.cp == 0:
             return self.xyz
-        assert isinstance(self.cp, int), self.cp
+        assert isinstance(self.cp, integer_types), self.cp
         coord = model.Coord(self.cp)
         xyz = coord.transform_node_to_global_no_xref(self.xyz, model)
         return xyz
@@ -1189,7 +1343,9 @@ class GRID(BaseCard):
     def uncross_reference(self):
         self.cp = self.Cp()
         self.cd = self.Cd()
-        del self.cp_ref, self.cd_ref
+        if self.cd != -1:
+            del self.cd_ref
+        del self.cp_ref
         if hasattr(self, 'elements'):
             del self.elements
 
@@ -1413,12 +1569,14 @@ class POINT(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
+        Adds a POINT card from ``BDF.add_card(...)``
+
         Parameters
         ----------
         card : BDFCard()
-           the BDFCard object
-        comment : str
-          a comment for the card
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
         """
         nid = integer(card, 1, 'nid')
         cp = integer_or_blank(card, 2, 'cp', 0)
@@ -1433,26 +1591,20 @@ class POINT(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a POINT card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         nid = data[0]
         cp = data[1]
         xyz = np.array(data[2:5])
-        ps = ''
-        seid = 0
-        cd = 0
-        return POINT(nid, cp, xyz, cd, ps, seid, comment=comment)
-
-    #def Position(self):
-        #self.deprecated('Position()', 'get_position()', '0.8')
-        #return self.get_position()
-
-    #def PositionWRT(self, model, cid):
-        #self.deprecated('Position()', 'get_position_wrt()', '0.8')
-        #return self.get_position_wrt(model, cid)
-
-    #def UpdatePosition(self, model, xyz, cid=0):
-        #self.deprecated('UpdatePosition(self, model, xyz, cid)',
-                        #'set_position(model, xyz, cid)', '0.8')
-        #return self.set_position(model, xyz, cid=cid)
+        return POINT(nid, cp, xyz, comment=comment)
 
     def set_position(self, model, xyz, cid=0):
         """

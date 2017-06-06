@@ -94,6 +94,16 @@ class MATS1(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATS1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         tid = integer_or_blank(card, 2, 'tid')
         Type = string(card, 3, 'Type')
@@ -128,6 +138,16 @@ class MATS1(MaterialDependence):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATS1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (mid, tid, Type, h, yf, hr, limit1, limit2) = data
         if Type == 1:
             Type = 'NLELAST'
@@ -150,8 +170,15 @@ class MATS1(MaterialDependence):
         """
         Gets E (Young's Modulus) for a given strain.
 
-        :param strain: the strain (None -> linear E value)
-        :returns E:    Young's Modulus
+        Parameters
+        ----------
+        strain : float / None
+            the strain (None -> linear E value)
+
+        Returns
+        -------
+        E : float
+            Young's Modulus
         """
         msg = "E (Young's Modulus) not implemented for MATS1"
         raise NotImplementedError(msg)
@@ -177,8 +204,10 @@ class MATS1(MaterialDependence):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        self.tid = self.Tid()
-        del self.mid_ref, self.tid_ref
+        if self.tid:
+            self.tid = self.Tid()
+            del self.tid_ref
+        del self.mid_ref
 
     def Tid(self):
         if isinstance(self.tid, Table):
@@ -252,6 +281,16 @@ class MATT1(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         E_table = integer_or_blank(card, 2, 'T(E)')
         G_table = integer_or_blank(card, 3, 'T(G)')
@@ -265,8 +304,28 @@ class MATT1(MaterialDependence):
 
         assert len(card) <= 12, 'len(MATT1 card) = %i\ncard=%s' % (len(card), card)
         return MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
-                     ge_table, st_table, sc_table,
-                     ss_table, comment=comment)
+                     ge_table, st_table, sc_table, ss_table, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATT1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        (mid, E_table, G_table, nu_table, rho_table, A_table, dunno_a, ge_table,
+         st_table, sc_table, ss_table, dunno_b) = data
+
+        mat = MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
+                    ge_table, st_table, sc_table, ss_table, comment=comment)
+        assert dunno_a == 0, '%s; dunno_a=%s\n%s' % (data, dunno_a, str(mat))
+        assert dunno_b == 0, '%s; dunno_b=%s\n%s' % (data, dunno_b, str(mat))
+        return mat
 
     def E(self, temperature):
         """
@@ -314,6 +373,16 @@ class MATT1(MaterialDependence):
     def uncross_reference(self):
         self.mid = self.Mid()
         ## TODO: remove refs
+
+        self._E_table = self.E_table()
+        self._G_table = self.G_table()
+        self._nu_table = self.nu_table()
+        self._rho_table = self.rho_table()
+        self._A_table = self.A_table()
+        self._ge_table = self.ge_table()
+        self._st_table = self.st_table()
+        self._sc_table = self.sc_table()
+        self._ss_table = self.ss_table()
         del self.mid_ref
 
     def _xref_table(self, model, key, msg):
@@ -405,6 +474,16 @@ class MATT2(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         G11_table = integer_or_blank(card, 2, 'T(G11)')
         G12_table = integer_or_blank(card, 3, 'T(G12)')
@@ -459,7 +538,20 @@ class MATT2(MaterialDependence):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        ## TODO: remove refs
+        self._G11_table = self.G11_table()
+        self._G12_table = self.G12_table()
+        self._G13_table = self.G13_table()
+        self._G22_table = self.G22_table()
+        self._G23_table = self.G23_table()
+        self._G33_table = self.G33_table()
+        self._rho_table = self.rho_table()
+        self._A1_table = self.A1_table()
+        self._A2_table = self.A2_table()
+        self._A3_table = self.A3_table()
+        self._ge_table = self.ge_table()
+        self._st_table = self.st_table()
+        self._sc_table = self.sc_table()
+        self._ss_table = self.ss_table()
         del self.mid_ref
 
     def _xref_table(self, model, key, msg):
@@ -543,8 +635,8 @@ class MATT4(MaterialDependence):
     """
     type = 'MATT4'
 
-    def __init__(self, mid, k_table=None, cp_table=None, H_table=None,
-                 mu_table=None, Hgen_table=None, comment=''):
+    def __init__(self, mid, k_table=None, cp_table=None, h_table=None,
+                 mu_table=None, hgen_table=None, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment
@@ -552,32 +644,59 @@ class MATT4(MaterialDependence):
             k_table = None
         if cp_table == 0:
             cp_table = None
-        if H_table == 0:
-            H_table = None
+        if h_table == 0:
+            h_table = None
         if mu_table == 0:
             mu_table = None
-        if Hgen_table == 0:
-            Hgen_table = None
+        if hgen_table == 0:
+            hgen_table = None
 
         self.mid = mid
         self._k_table = k_table
         self._cp_table = cp_table
-        self._H_table = H_table
+        self._h_table = h_table
         self._mu_table = mu_table
-        self._Hgen_table = Hgen_table
+        self._hgen_table = hgen_table
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         k_table = integer_or_blank(card, 2, 'T(K)')
         cp_table = integer_or_blank(card, 3, 'T(CP)')
-        H_table = integer_or_blank(card, 5, 'T(H)')
+        h_table = integer_or_blank(card, 5, 'T(H)')
         mu_table = integer_or_blank(card, 6, 'T(mu)')
-        Hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
+        hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
 
         assert len(card) <= 8, 'len(MATT4 card) = %i\ncard=%s' % (len(card), card)
-        return MATT4(mid, k_table, cp_table, H_table, mu_table,
-                     Hgen_table, comment=comment)
+        return MATT4(mid, k_table, cp_table, h_table, mu_table,
+                     hgen_table, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATT4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        (mid, k_table, cp_table, null, h_table, mu_table, hgen_table) = data
+        assert null == 0, data
+        return MATT4(mid, k_table, cp_table, h_table, mu_table,
+                     hgen_table, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -595,11 +714,20 @@ class MATT4(MaterialDependence):
         ## TODO: add refs
         self._xref_table(model, '_k_table', msg=msg)
         self._xref_table(model, '_cp_table', msg=msg)
-        self._xref_table(model, '_H_table', msg=msg)
+        self._xref_table(model, '_h_table', msg=msg)
         self._xref_table(model, '_mu_table', msg=msg)
-        self._xref_table(model, '_Hgen_table', msg=msg)
+        self._xref_table(model, '_hgen_table', msg=msg)
 
         self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        self._k_table = self.K_table()
+        self._cp_table = self.Cp_table()
+        self._h_table = self.H_table()
+        self._mu_table = self.mu_table()
+        self._hgen_table = self.Hgen_table()
+        del self.mid_ref
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
@@ -613,13 +741,13 @@ class MATT4(MaterialDependence):
         return self._get_table('_cp_table')
 
     def H_table(self):
-        return self._get_table('_H_table')
+        return self._get_table('_h_table')
 
     def mu_table(self):
         return self._get_table('_mu_table')
 
     def Hgen_table(self):
-        return self._get_table('_Hgen_table')
+        return self._get_table('_hgen_table')
 
     def raw_fields(self):
         list_fields = [
@@ -637,6 +765,7 @@ class MATT4(MaterialDependence):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
 
 class MATT5(MaterialDependence):
     """
@@ -671,6 +800,16 @@ class MATT5(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         kxx_table = integer_or_blank(card, 2, 'T(Kxx)')
         kxy_table = integer_or_blank(card, 3, 'T(Kxy)')
@@ -682,6 +821,25 @@ class MATT5(MaterialDependence):
         hgen_table = integer_or_blank(card, 11, 'T(HGEN)')
 
         assert len(card) <= 12, 'len(MATT5 card) = %i\ncard=%s' % (len(card), card)
+        return MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
+                     kyz_table, kzz_table, cp_table, hgen_table,
+                     comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a MATT5 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        (mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
+         cp_table, null, hgen_table) = data
+        assert null == 0, data
         return MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
                      kyz_table, kzz_table, cp_table, hgen_table,
                      comment=comment)
@@ -711,7 +869,14 @@ class MATT5(MaterialDependence):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        ## TODO: remove refs
+        self._kxx_table = self.Kxx_table()
+        self._kxy_table = self.Kxy_table()
+        self._kxz_table = self.Kxz_table()
+        self._kyy_table = self.Kyy_table()
+        self._kyz_table = self.Kyz_table()
+        self._kzz_table = self.Kzz_table()
+        self._cp_table = self.Cp_table()
+        self._hgen_table = self.Hgen_table()
         del self.mid_ref
 
     def _xref_table(self, model, key, msg):
@@ -809,6 +974,16 @@ class MATT8(MaterialDependence):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a MATT8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         mid = integer(card, 1, 'mid')
         E1_table = integer_or_blank(card, 2, 'T(E1)')
         E2_table = integer_or_blank(card, 3, 'T(E2)')

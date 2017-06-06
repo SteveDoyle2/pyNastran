@@ -122,7 +122,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         try:
             (fem1, fem2, diff_cards) = run_bdf(folder, filename, debug=debug,
                                                xref=xref, check=check, punch=punch,
-                                               cid=cid, isFolder=True, dynamic_vars={})
+                                               cid=cid, isFolder=True, dynamic_vars={},
+                                               run_extract_bodies=False)
             del fem1
             del fem2
             diff_cards += diff_cards

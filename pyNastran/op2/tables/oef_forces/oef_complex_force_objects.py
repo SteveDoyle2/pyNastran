@@ -1,14 +1,17 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_imag_floats_13e, get_key0, write_float_12e
-from pyNastran.f06.f06_formatting import _eigenvalue_header
+from itertools import cycle
+from six import integer_types
 import numpy as np
-from numpy import zeros, array_equal, searchsorted, allclose
+from numpy import zeros, searchsorted, allclose
 try:
     import pandas as pd
 except ImportError:
     pass
+
+from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_12e # get_key0,
+from pyNastran.f06.f06_formatting import _eigenvalue_header
 
 class ComplexRodForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -63,7 +66,7 @@ class ComplexRodForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -74,7 +77,8 @@ class ComplexRodForceArray(ScalarObject):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -86,15 +90,15 @@ class ComplexRodForceArray(ScalarObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element):
+                for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
                     (axial1, torque1) = t1
                     (axial2, torque2) = t2
 
                     if not allclose(t1, t2):
-                        msg += '(%s, %s)    (%s, %s)  (%s, %s)\n' % (
-                            eid, nid,
+                        msg += '(%s)    (%s, %s)  (%s, %s)\n' % (
+                            eid,
                             axial1, torque1,
                             axial2, torque2)
                         i += 1
@@ -107,12 +111,13 @@ class ComplexRodForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, axial, torque):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -136,7 +141,8 @@ class ComplexRodForceArray(ScalarObject):
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
@@ -184,7 +190,7 @@ class ComplexRodForceArray(ScalarObject):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -194,30 +200,31 @@ class ComplexRodForceArray(ScalarObject):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
+        #is_odd = False
         nwrite = len(eids)
         if len(eids) % 2 == 1:
             nwrite -= 1
-            is_odd = True
+            #is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
             torsion = self.data[itime, :, 1]
 
             for eid, axiali, torsioni in zip(eids, axial, torsion):
-                [raxial, rtorsion, iaxial, itorsion] = write_imag_floats_13e([axiali, torsioni], is_mag_phase)
+                out = write_imag_floats_13e([axiali, torsioni], is_mag_phase)
+                [raxial, rtorsion, iaxial, itorsion] = out
                 #ELEMENT                             AXIAL                                       TORSIONAL
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0
 
-                f.write('      %8i   %-13s / %-13s   %-13s / %s\n' % (eid, raxial, iaxial, rtorsion, itorsion))
-            f.write(page_stamp % page_num)
+                f06_file.write('      %8i   %-13s / %-13s   %-13s / %s\n' % (eid, raxial, iaxial, rtorsion, itorsion))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -273,7 +280,7 @@ class ComplexCShearForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -286,7 +293,8 @@ class ComplexCShearForceArray(ScalarObject):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -301,16 +309,26 @@ class ComplexCShearForceArray(ScalarObject):
                 for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
-                    (force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a, kick_force1a, kick_force2a, kick_force3a, kick_force4a, shear12a, shear23a, shear34a, shear41a) = t1
-                    (force41b, force14b, force21b, force12b, force32b, force23b, force43b, force34b, kick_force1b, kick_force2b, kick_force3b, kick_force4b, shear12b, shear23b, shear34b, shear41b) = t2
+                    (force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a,
+                     kick_force1a, kick_force2a, kick_force3a, kick_force4a,
+                     shear12a, shear23a, shear34a, shear41a) = t1
+
+                    (force41b, force14b, force21b, force12b, force32b, force23b, force43b, force34b,
+                     kick_force1b, kick_force2b, kick_force3b, kick_force4b,
+                     shear12b, shear23b, shear34b, shear41b) = t2
 
                     if not allclose(t1, t2):
                         msg += (
                             '%s   (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
                             '     (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
-                                force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a, kick_force1a, kick_force2a, kick_force3a, kick_force4a, shear12a, shear23a, shear34a, shear41a,
-                                force41b, force14b, force21b, force12b, force32b, force23b, force43b, force34b, kick_force1b, kick_force2b, kick_force3b, kick_force4b, shear12b, shear23b, shear34b, shear41b
+                                force41a, force14a, force21a, force12a, force32a, force23a,
+                                force43a, force34a, kick_force1a, kick_force2a, kick_force3a,
+                                kick_force4a, shear12a, shear23a, shear34a, shear41a,
+
+                                force41b, force14b, force21b, force12b, force32b, force23b,
+                                force43b, force34b, kick_force1b, kick_force2b, kick_force3b,
+                                kick_force4b, shear12b, shear23b, shear34b, shear41b
                             ))
                         i += 1
                         if i > 10:
@@ -325,6 +343,7 @@ class ComplexCShearForceArray(ScalarObject):
                   force41, force14, force21, force12, force32, force23, force43, force34,
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -333,7 +352,7 @@ class ComplexCShearForceArray(ScalarObject):
             shear12, shear23, shear34, shear41]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -357,7 +376,8 @@ class ComplexCShearForceArray(ScalarObject):
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
@@ -426,9 +446,9 @@ class ComplexCShearForceArray(ScalarObject):
                      shear12, shear23, shear34, shear41):
 
                 vals2 = write_imag_floats_13e([
-                     iforce41, force14i, iforce21, iforce12, iforce32, iforce23, iforce43, iforce34,
-                     ikick_force1, ikick_force2, ikick_force3, ikick_force4,
-                     ishear12, ishear23, ishear34, ishear41], is_mag_phase)
+                    iforce41, force14i, iforce21, iforce12, iforce32, iforce23, iforce43, iforce34,
+                    ikick_force1, ikick_force2, ikick_force3, ikick_force4,
+                    ishear12, ishear23, ishear34, ishear41], is_mag_phase)
 
                 [
                     force41r, force14r, force21i, force12r, force32r, force23r, force43r, force34r,
@@ -451,15 +471,15 @@ class ComplexCShearForceArray(ScalarObject):
                         '               %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
                         '                      %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
                         '                      %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'% (
-                    eid,
-                    force41r, force14r, force21i, force12r, force32r, force23r, force43r, force34r,
-                    kick_force1r, kick_force2r, kick_force3r, kick_force4r,
-                    shear12r, shear23r, shear34r, shear41r,
+                            eid,
+                            force41r, force14r, force21i, force12r, force32r, force23r, force43r, force34r,
+                            kick_force1r, kick_force2r, kick_force3r, kick_force4r,
+                            shear12r, shear23r, shear34r, shear41r,
 
-                    force41i, force14i, force21i, force12i, force32i, force23i, force43i, force34i,
-                    kick_force1i, kick_force2i, kick_force3i, kick_force4i,
-                    shear12i, shear23i, shear34i, shear41i
-                    ))
+                            force41i, force14i, force21i, force12i, force32i, force23i, force43i, force34i,
+                            kick_force1i, kick_force2i, kick_force3i, kick_force4i,
+                            shear12i, shear23i, shear34i, shear41i
+                        ))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -512,7 +532,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -523,7 +543,8 @@ class ComplexSpringDamperForceArray(ScalarObject):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -554,12 +575,13 @@ class ComplexSpringDamperForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, force):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, 0] = force
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -636,7 +658,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         ##ind.sort()
         #return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -646,17 +668,17 @@ class ComplexSpringDamperForceArray(ScalarObject):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
+        #is_odd = False
         nwrite = len(eids)
         if len(eids) % 2 == 1:
             nwrite -= 1
-            is_odd = True
+            #is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             spring_force = self.data[itime, :, 0]
@@ -667,9 +689,8 @@ class ComplexSpringDamperForceArray(ScalarObject):
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0
 
-
-                f.write('      %8i   %-13s / %-13s\n' % (eid, rspring, ispring))
-            f.write(page_stamp % page_num)
+                f06_file.write('      %8i   %-13s / %-13s\n' % (eid, rspring, ispring))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -729,7 +750,7 @@ class ComplexViscForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -752,8 +773,8 @@ class ComplexViscForceArray(ScalarObject):
                     (axial2, torque2) = t2
 
                     if not allclose(t1, t2):
-                        msg += '(%s, %s)    (%s, %s)  (%s, %s)\n' % (
-                            eid, nid,
+                        msg += '(%s)    (%s, %s)  (%s, %s)\n' % (
+                            eid,
                             axial1, torque1,
                             axial2, torque2)
                         i += 1
@@ -766,12 +787,13 @@ class ComplexViscForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, axial, torque):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -854,7 +876,7 @@ class ComplexViscForceArray(ScalarObject):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
+        #is_odd = False
         nwrite = len(eids)
         if len(eids) % 2 == 1:
             nwrite -= 1
@@ -871,7 +893,8 @@ class ComplexViscForceArray(ScalarObject):
             torsion = self.data[itime, :, 1]
 
             for eid, axiali, torsioni in zip(eids, axial, torsion):
-                [raxial, rtorsion, iaxial, itorsion] = write_imag_floats_13e([axiali, torsioni], is_mag_phase)
+                out = write_imag_floats_13e([axiali, torsioni], is_mag_phase)
+                [raxial, rtorsion, iaxial, itorsion] = out
                 #ELEMENT                             AXIAL                                       TORSIONAL
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0
@@ -924,7 +947,7 @@ class ComplexPlateForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -935,7 +958,8 @@ class ComplexPlateForceArray(ScalarObject):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -957,12 +981,14 @@ class ComplexPlateForceArray(ScalarObject):
                     #if not np.array_equal(t1.real, t2.real):
                         msg += ('%-8s (%s, %s, %s, %s, %s, %s, %s, %s)\n'
                                 '%-8s (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
-                            eid,
-                            #mx1.real, my1.real, mxy1.real, bmx1.real, bmy1.real, bmxy1.real, tx1.real, ty1.real,
-                            mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1,
-                            '',
-                            mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2,
-                            #mx2.real, my2.real, mxy2.real, bmx2.real, bmy2.real, bmxy2.real, tx2.real, ty2.real,
+                                    eid,
+                                    #mx1.real, my1.real, mxy1.real, bmx1.real, bmy1.real,
+                                    #bmxy1.real, tx1.real, ty1.real,
+                                    mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1,
+                                    '',
+                                    mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2,
+                                    #mx2.real, my2.real, mxy2.real, bmx2.real, bmy2.real,
+                                    #bmxy2.real, tx2.real, ty2.real,
                         ))
                         i += 1
                         if i > 10:
@@ -974,13 +1000,14 @@ class ComplexPlateForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1027,7 +1054,7 @@ class ComplexPlateForceArray(ScalarObject):
         ctria6 = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
         ctriar = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
 
-        is_bilinear = False
+        #is_bilinear = False
         if self.element_type == 144: # CQUAD4
             msg = cquad4_linear + mag_real + loads
         elif self.element_type == 33: # CQUAD4
@@ -1084,9 +1111,9 @@ class ComplexPlateForceArray(ScalarObject):
             ty = self.data[itime, :, 7]
 
             for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                out = write_imag_floats_13e([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_mag_phase)
                 [smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
-                 smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi] = write_imag_floats_13e(
-                      [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_mag_phase)
+                 smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi] = out
                 #"""
                     #ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -
                       #ID              FX            FY            FXY             MX            MY            MXY             QX            QY
@@ -1146,7 +1173,7 @@ class ComplexPlate2ForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
 
@@ -1164,10 +1191,12 @@ class ComplexPlate2ForceArray(ScalarObject):
         assert 0 not in self.element_node[:, 0]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data,
+                                       major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
@@ -1189,11 +1218,13 @@ class ComplexPlate2ForceArray(ScalarObject):
                     if not allclose(t1, t2):
                         base1 = '(%s, %s)   ' % (eid, nid)
                         base2 = ' ' * len(base1)
-                        msg += '%s (%s, %s, %s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
-                            base1,
-                            mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1,
-                            base2,
-                            mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2)
+                        msg += (
+                            '%s (%s, %s, %s, %s, %s, %s, %s, %s)\n'
+                            '%s(%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                base1,
+                                mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1,
+                                base2,
+                                mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -1211,13 +1242,14 @@ class ComplexPlate2ForceArray(ScalarObject):
         self.ielement += 1
 
     def add_sort1(self, dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         #assert self.element[self.ielement - 1] == eid, eid
         self.element_node[self.itotal, :] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1241,7 +1273,8 @@ class ComplexPlate2ForceArray(ScalarObject):
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
@@ -1249,8 +1282,9 @@ class ComplexPlate2ForceArray(ScalarObject):
         return msg
 
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
-        loads = ['    ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -\n'
-                 '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n',]
+        loads = [
+            '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -\n'
+            '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n',]
         if is_mag_phase:
             mag_real = ['                                                         (MAGNITUDE/PHASE)\n \n']
         else:
@@ -1264,7 +1298,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         ctria6 = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
         ctriar = ['                     C O M P L E X   F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
 
-        is_bilinear = False
+        #is_bilinear = False
         if self.element_type == 144: # CQUAD4
             msg = cquad4_linear + mag_real + loads
         elif self.element_type == 33: # CQUAD4
@@ -1321,9 +1355,9 @@ class ComplexPlate2ForceArray(ScalarObject):
             ty = self.data[itime, :, 7]
 
             for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                out = write_imag_floats_13e([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_mag_phase)
                 [smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
-                 smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi] = write_imag_floats_13e(
-                      [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_mag_phase)
+                 smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi] = out
                 #"""
                     #ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -
                       #ID              FX            FY            FXY             MX            MY            MXY             QX            QY
@@ -1333,8 +1367,8 @@ class ComplexPlate2ForceArray(ScalarObject):
                 #                fx     fy     fxy     mx     my     mxy    qx      qy
                 f.write('0  %8i   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n'
                         '   %8s   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % (
-                        eid, smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
-                        '', smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi))
+                            eid, smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
+                            '', smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -1379,7 +1413,8 @@ class ComplexCBarForceArray(ScalarObject):
         return True
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = 1
@@ -1401,10 +1436,8 @@ class ComplexCBarForceArray(ScalarObject):
         # the number is messed up because of the offset for the element's properties
 
         if not self.nelements * nnodes == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
         #[bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         self.data = zeros((self.ntimes, self.ntotal, 8), 'complex64')
@@ -1413,7 +1446,8 @@ class ComplexCBarForceArray(ScalarObject):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -1437,7 +1471,7 @@ class ComplexCBarForceArray(ScalarObject):
                         if not allclose([s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s2a1.real, s2b1.real, s2c1.real, s2d1.real],
                                         [s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s2a2.real, s2b2.real, s2c2.real, s2d2.real], atol=0.0001):
                         #if not np.array_equal(t1, t2):
-                            msg += '%-4s  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n      (%s, %s, %s, %s, %s, %s, %s, %s, %s)\m' % (
+                            msg += '%-4s  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n      (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
                                 s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s2a1.real, s2b1.real, s2c1.real, s2d1.real,
                                 s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s2a2.real, s2b2.real, s2c2.real, s2d2.real,
@@ -1454,12 +1488,13 @@ class ComplexCBarForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1528,7 +1563,7 @@ class ComplexCBarForceArray(ScalarObject):
             assert self.is_sort1() == True, str(self)
         return page_num - 1
 
-    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+    def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
         eids = self.element
         times = self._times
         ntimes = self.data.shape[0]
@@ -1537,7 +1572,7 @@ class ComplexCBarForceArray(ScalarObject):
             dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
             header[1] = dt_line
             msg = header + msg_temp
-            f.write(''.join(msg))
+            f06_file.write(''.join(msg))
 
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
             assert self.is_sort1() == True, str(self)
@@ -1556,23 +1591,23 @@ class ComplexCBarForceArray(ScalarObject):
                 (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
                  bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
 
-                f.write('0%16i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        ' %14s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            eid, bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
-                            '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
-            f.write(page_stamp % page_num)
+                f06_file.write('0%16i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               ' %14s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   eid, bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                                   '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def _write_sort1_as_sort2(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+    def _write_sort1_as_sort2(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
         eids = self.element
         times = self._times
-        ntimes = self.data.shape[0]
+        #ntimes = self.data.shape[0]
         for ieid, eid in enumerate(eids):
             eid_line = ' ELEMENT-ID = %s' % (eid)
             header[1] = eid_line
             msg = header + msg_temp
-            f.write(''.join(msg))
+            f06_file.write(''.join(msg))
 
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
             bm1a = self.data[:, ieid, 0]
@@ -1590,12 +1625,12 @@ class ComplexCBarForceArray(ScalarObject):
                 (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
                  bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
 
-                f.write('0%16s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        ' %15s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            write_float_12e(dt),
-                            bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
-                            '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
-            f.write(page_stamp % page_num)
+                f06_file.write('0%16s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               ' %15s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   write_float_12e(dt),
+                                   bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
+                                   '', bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
@@ -1633,7 +1668,8 @@ class ComplexCBeamForceArray(ScalarObject):
         return True
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = 11
@@ -1656,10 +1692,8 @@ class ComplexCBeamForceArray(ScalarObject):
         # the number is messed up because of the offset for the element's properties
 
         if not self.nelements * nnodes == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.data = zeros((self.ntimes, self.ntotal, 8), 'complex64')
@@ -1681,7 +1715,8 @@ class ComplexCBeamForceArray(ScalarObject):
             self.element_node[:, 0],
             self.data[0, :, 0].real,
         ]
-        self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=element_location, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
+                                   major_axis=element_location, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Location', 'Item']
         #print(self.data_frame)
@@ -1700,17 +1735,34 @@ class ComplexCBeamForceArray(ScalarObject):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (tx1, ty1, tz1, rx1, ry1, rz1) = t1
-                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        #print(t1)
+                        #'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
+                        #'axial_force', 'total_torque', 'warping_torque', ]
+
+                        (sd1, bm11, bm21, shear11, shear21, axial1, total_torque1, warp_torque1) = t1
+                        (sd2, bm12, bm22, shear12, shear22, axial2, total_torque2, warp_torque2) = t2
                         d = t1 - t2
-                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
-                                        [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        if not allclose(
+                            [bm11.real, bm11.imag, bm21.real, bm21.imag,
+                             shear11.real, shear11.imag, shear21.real, shear21.imag,
+                             axial1.real, axial1.imag,],
+
+                            [bm12.real, bm12.imag, bm22.real, bm22.imag,
+                             shear12.real, shear12.imag, shear22.real, shear22.imag,
+                             axial2.real, axial2.imag,], atol=0.0001):
                         #if not np.array_equal(t1, t2):
-                            msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
-                                eid,
-                                tx1.real, tx1.imag, ty1.real, ty1.imag,
-                                tx2.real, tx2.imag, ty2.real, ty2.imag,
-                                d[0].real, d[0].imag, d[1].real, d[1].imag,)
+                            msg += ('%-4s  (%s, %sj, %s, %sj, %s,%sj, %s,  %sj, %s, %sj)\n'
+                                    '      (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
+                                    '  dt12=(%s, %sj, %s, %sj)\n' % (
+                                        eid,
+                                        bm11.real, bm11.imag, bm21.real, bm21.imag,
+                                        shear11.real, shear11.imag, shear21.real, shear21.imag,
+                                        axial1.real, axial1.imag,
+
+                                        bm12.real, bm12.imag, bm22.real, bm22.imag,
+                                        shear12.real, shear12.imag, shear22.real, shear22.imag,
+                                        axial2.real, axial2.imag,
+                                        d[0].real, d[0].imag, d[1].real, d[1].imag,))
                             i += 1
                         if i > 10:
                             print(msg)
@@ -1726,13 +1778,14 @@ class ComplexCBeamForceArray(ScalarObject):
         #return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
         self.element_node[self.itotal, :] = [eid, nid]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1783,16 +1836,15 @@ class ComplexCBeamForceArray(ScalarObject):
             mag_phase = '                                                          (REAL/IMAGINARY)\n \n'
 
 
-        #name = self.data_code['name']
-        #if name == 'freq':
-            #name = 'FREQUENCY'
-        #else: # mode
-            #raise RuntimeError(name)
-
         if is_sort1:
             line1 = '0    ELEMENT         BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
             line2 = '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n'
         else:
+            name = self.data_code['name']
+            if name == 'freq':
+                name = 'FREQUENCY'
+            else: # mode
+                raise RuntimeError(name)
             line1 = '                    BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
             line2 = '   %16s       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n' % name
 
@@ -1846,7 +1898,7 @@ class ComplexCBeamForceArray(ScalarObject):
                 f.write('0%16i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         ' %14s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                             eid, sdir, bm1ir, bm2ir, ts1ir, ts2ir, afir, ttrqir, wtrqir,
-                            '',  sdii, bm1ii, bm2ii, ts1ii, ts2ii, afii, ttrqii, wtrqii))
+                            '', sdii, bm1ii, bm2ii, ts1ii, ts2ii, afii, ttrqii, wtrqii))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num
@@ -1898,10 +1950,10 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_nodes = zeros((self.nelements, 3), dtype='int32')
+        self.element_node = zeros((self.nelements, 3), dtype='int32')
 
         #[bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
         # bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
@@ -1910,19 +1962,20 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        element = self.element_nodes[:, 0]
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element, minor_axis=headers).to_frame()
+        element = self.element_node[:, 0]
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        if not np.array_equal(self.element_nodes, table.element_nodes):
-            assert self.element_nodes.shape == table.element_nodes.shape, 'element_nodes shape=%s table.shape=%s' % (self.element_nodes.shape, table.element_nodes.shape)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_nodes.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid, Nid_A, Nid_B\n'
-            for (eid1, nida1, nidb1), (eid2, nida2, nidb2) in zip(self.element_nodes, table.element_nodes):
+            for (eid1, nida1, nidb1), (eid2, nida2, nidb2) in zip(self.element_node, table.element_node):
                 msg += '(%s, %s, %s), (%s, %s, %s)\n' % (eid1, nida1, nidb1, eid2, nida2, nidb2)
             print(msg)
             raise ValueError(msg)
@@ -1930,7 +1983,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
-            eids = self.element_nodes[:, 0]
+            eids = self.element_node[:, 0]
             for itime in range(self.ntimes):
                 for ie, eid in enumerate(eids):
                     t1 = self.data[itime, ie, :]
@@ -1973,11 +2026,12 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
     def add_sort1(self, dt, eid,
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
+        """unvectorized method for adding SORT1 transient data"""
         bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
         bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
 
         self._times[self.itime] = dt
-        self.element_nodes[self.ielement] = [eid, nid_a, nid_b]
+        self.element_node[self.ielement] = [eid, nid_a, nid_b]
         self.data[self.itime, self.ielement, :] = [
             bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
             bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
@@ -1986,7 +2040,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2010,7 +2064,8 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
@@ -2051,9 +2106,9 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         #(ntimes, ntotal, two) = self.data.shape
         ntimes = self.data.shape[0]
 
-        eids = self.element_nodes[:, 0]
-        nid_a = self.element_nodes[:, 1]
-        nid_b = self.element_nodes[:, 2]
+        eids = self.element_node[:, 0]
+        nid_a = self.element_node[:, 1]
+        nid_b = self.element_node[:, 2]
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
@@ -2092,12 +2147,12 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
                     '0  %8s%8s      B    %13s %13s  %13s %13s  %13s  %s\n'
                     '                              %13s %13s  %13s %13s  %13s  %s\n'
                     % (
-                    eid, nid_ai,
-                    bending_moment_1ari, bending_moment_2ari, shear_1ari, shear_2ari, axial_ari, torque_ari,
-                    bending_moment_1aii, bending_moment_2aii, shear_1aii, shear_2aii, axial_aii, torque_aii,
-                    '', nid_bi,
-                    bending_moment_1bri, bending_moment_2bri, shear_1bri, shear_2bri, axial_bri, torque_bri,
-                    bending_moment_1bii, bending_moment_2bii, shear_1bii, shear_2bii, axial_bii, torque_bii,))
+                        eid, nid_ai,
+                        bending_moment_1ari, bending_moment_2ari, shear_1ari, shear_2ari, axial_ari, torque_ari,
+                        bending_moment_1aii, bending_moment_2aii, shear_1aii, shear_2aii, axial_aii, torque_aii,
+                        '', nid_bi,
+                        bending_moment_1bri, bending_moment_2bri, shear_1bri, shear_2bri, axial_bri, torque_bri,
+                        bending_moment_1bii, bending_moment_2bii, shear_1bii, shear_2bii, axial_bii, torque_bii,))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -2150,7 +2205,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
@@ -2161,7 +2216,8 @@ class ComplexSolidPressureForceArray(ScalarObject):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -2196,12 +2252,13 @@ class ComplexSolidPressureForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, ename, ax, ay, az, vx, vy, vz, pressure):
+        """unvectorized method for adding SORT1 transient data"""
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2225,7 +2282,8 @@ class ComplexSolidPressureForceArray(ScalarObject):
         msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n  ' % self.element_name)
@@ -2307,8 +2365,9 @@ class ComplexSolidPressureForceArray(ScalarObject):
             pressure = self.data[itime, :, 0]
 
             for eid, axi, ayi, azi, vxi, vyi, vzi, pressurei in zip(eids, ax, ay, az, vx, vy, vz, pressure):
+                out = write_imag_floats_13e([axi, ayi, azi, vxi, vyi, vzi, pressurei], is_mag_phase)
                 [saxr, sayr, sazr, svxr, svyr, svzr, spressurer,
-                 saxi, sayi, sazi, svxi, svyi, svzi, spressurei] = write_imag_floats_13e([axi, ayi, azi, vxi, vyi, vzi, pressurei], is_mag_phase)
+                 saxi, sayi, sazi, svxi, svyi, svzi, spressurei] = out
                 #'       1000    HEXPR      1.582050E-08    5.505425E+06    2.598164E-09    -8.884337E-10  -4.806934E+04   1.046571E-10   9.968034E+01'
                 #'                         -1.116439E-08   -6.040572E+05    1.315160E-09    -1.258955E-09  -4.381078E+05  -2.067553E-10'
 
@@ -2343,7 +2402,8 @@ class ComplexCBushForceArray(ScalarObject):
         self.ielement = 0
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = 1
@@ -2364,11 +2424,9 @@ class ComplexCBushForceArray(ScalarObject):
 
         # the number is messed up because of the offset for the element's properties
 
-        if not self.nelements * nnodes == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
+        if self.nelements * nnodes != self.ntotal:
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
         #[fx, fy, fz, mx, my, mz]
         self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
@@ -2376,7 +2434,8 @@ class ComplexCBushForceArray(ScalarObject):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -2417,13 +2476,14 @@ class ComplexCBushForceArray(ScalarObject):
         return True
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
+        """unvectorized method for adding SORT1 transient data"""
         #[fx, fy, fz, mx, my, mz]
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [fx, fy, fz, mx, my, mz]
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2492,7 +2552,7 @@ class ComplexCBushForceArray(ScalarObject):
             assert self.is_sort1() == True, str(self)
         return page_num - 1
 
-    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+    def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
         ntimes = self.data.shape[0]
         eids = self.element
         for itime in range(ntimes):
@@ -2500,7 +2560,7 @@ class ComplexCBushForceArray(ScalarObject):
             dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
             header[1] = dt_line
             msg = header + msg_temp
-            f.write(''.join(msg))
+            f06_file.write(''.join(msg))
 
             #fx, fy, fz, mx, my, mz
             if self.is_sort1():
@@ -2524,22 +2584,22 @@ class ComplexCBushForceArray(ScalarObject):
                 (fxir, fyir, fzir, mxir, myir, mzir,
                  fxii, fyii, fzii, mxii, myii, mzii) = vals2
 
-                f.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            eid, fxir, fyir, fzir, mxir, myir, mzir,
-                            '', fxii, fyii, fzii, mxii, myii, mzii))
-            f.write(page_stamp % page_num)
+                f06_file.write('0%26i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   eid, fxir, fyir, fzir, mxir, myir, mzir,
+                                   '', fxii, fyii, fzii, mxii, myii, mzii))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def _write_sort1_as_sort2(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+    def _write_sort1_as_sort2(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
         eids = self.element
         times = self._times
         for ieid, eid in enumerate(eids):
             eid_line = ' ELEMENT-ID = %s' % (eid)
             header[1] = eid_line
             msg = header + msg_temp
-            f.write(''.join(msg))
+            f06_file.write(''.join(msg))
 
             if self.is_sort1():
                 fx = self.data[:, ieid, 0]
@@ -2557,133 +2617,332 @@ class ComplexCBushForceArray(ScalarObject):
                 (fxir, fyir, fzir, mxir, myir, mzir,
                  fxii, fyii, fzii, mxii, myii, mzii) = vals2
 
-                f.write('0%26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            write_float_12e(dt),
-                            fxir, fyir, fzir, mxir, myir, mzir,
-                            '', fxii, fyii, fzii, mxii, myii, mzii))
-            f.write(page_stamp % page_num)
+                f06_file.write('0%26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   write_float_12e(dt),
+                                   fxir, fyir, fzir, mxir, myir, mzir,
+                                   '', fxii, fyii, fzii, mxii, myii, mzii))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
+class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
+    """
+    ELTYPE = 191 Beam view element (VUBEAM)
+    ---------------------------------------
+    2 PARENT I     Parent p-element identification number
+    3 COORD  I     CID coordinate system identification number
+    4 ICORD  CHAR4 ICORD flat/curved and so on TCODE,7 =0 Real
+    5 VUGRID I     VU grid ID for output grid
+    6 POSIT  RS    x/L position of VU grid identification number
+    7 POS(3) RS    Y, Z, W coordinate of output point
+    10 NX    RS    Normal x
+    11 TXY   RS    Shear xy
+    12 TZX   RS    Shear zx
 
-class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
+    ELTYPE = 191 Beam view element (VUBEAM)
+    ---------------------------------------
+    TCODE,7 = 1 Real/imaginary or magnitude/phase
+    5 VUGRID   I  VU grid identification number for output grid
+    6 POSIT    RS x/L position of VU grid identification number
+
+    7 FORCEXR  RS Force x real/mag.
+    8 SHEARYR  RS Shear force y real/mag.
+    9 SHEARZR  RS Shear force z real/mag.
+    10 TORSINR RS Torsional moment x real/mag.
+    11 BENDYR  RS Bending moment y real/mag.
+    12 BENDZR  RS Bending moment z real/mag.
+
+    13 FORCEXI RS Force x imag./phase
+    14 SHEARYI RS Shear force y imag./phase
+    15 SHEARZI RS Shear force z imag./phase
+    16 TORSINI RS Torsional moment x imag./phase
+    17 BENDYI  RS Bending moment y imag./phase
+    18 BENDZI  RS Bending moment z imag./phase
+    Words 5 through max repeat 2 times
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.parent = {}
-        self.coord = {}
-        self.icord = {}
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
 
-        self.forceX = {}
-        self.shearY = {}
-        self.shearZ = {}
-        self.torsion = {}
-        self.bendingY = {}
-        self.bendingZ = {}
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.ielement = 0
+        self.nelements = 0  # result specific
+        self.nnodes = None
 
-        # TODO if dt=None, handle SORT1 case
-        self.dt = dt
         if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
+            pass
         else:
-            assert dt is not None
-            self.add = self.add_sort2
+            raise NotImplementedError('SORT2')
 
-    def get_stats(self):
-        msg = ['  '] + self.get_data_code()
-        nelements = len(self.coord)
-        if self.dt is not None:  # transient
-            ntimes = len(self.forceX)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+    def is_real(self):
+        return False
+
+    def is_complex(self):
+        return True
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        return ['xxb', 'force_x', 'shear_y', 'shear_z', 'torsion', 'bending_y', 'bending_z']
+
+    def build(self):
+        #print("self.ielement = %s" % self.ielement)
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+
+        if self.element_type in [191]:  # VUBEAM
+            nnodes_per_element = 2
         else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  parent, coord, icord, forceX, shearY, shearZ, torsion, '
-                   'bendingY, bendingZ\n')
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+
+        #print('nnodes_per_element[%s, %s] = %s' % (self.isubcase, self.element_type, nnodes_per_element))
+        self.nnodes = nnodes_per_element
+        #self.nelements //= nnodes_per_element
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
+            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, integer_types):
+            dtype = 'int32'
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
+        self.parent_coord = np.zeros((self.ntotal, 2), dtype='int32')
+
+        #[xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z]
+        self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype='complex64')
+
+    #def build_dataframe(self):
+        #headers = self.get_headers()
+
+        #nelements = self.element_node.shape[0] // 2
+        #if self.is_fiber_distance():
+            #fiber_distance = ['Top', 'Bottom'] * nelements
+        #else:
+            #fiber_distance = ['Mean', 'Curvature'] * nelements
+        #fd = np.array(fiber_distance, dtype='unicode')
+        #element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
+
+        #if self.nonlinear_factor is not None:
+            #column_names, column_values = self._build_dataframe_transient_header()
+            #self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = column_names
+            #self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
+        #else:
+            ## option B - nice!
+            #df1 = pd.DataFrame(element_node).T
+            #df1.columns = ['ElementID', 'NodeID', 'Location']
+            #df2 = pd.DataFrame(self.data[0])
+            #df2.columns = headers
+            #self.data_frame = df1.join(df2)
+        #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
+        #print(self.data_frame)
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, element_nodei in enumerate(self.element_node):
+                    (eid, nid) = element_nodei
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (xxb1, fx1, fy1, fz1, mx1, my1, mz1) = t1
+                    (xxb2, fx2, fy2, fz2, mx2, my2, mz2) = t2
+
+                    if not np.array_equal(t1, t2):
+                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid, nid,
+                            xxb1, fx1, fy1, fz1, mx1, my1, mz1,
+                            xxb2, fx2, fy2, fz2, mx2, my2, mz2))
+                        i += 1
+                        if i > 10:
+                            #print(msg.replace('+0j,', '0,'))
+                            raise ValueError(msg.replace('0j,', '0,').replace('+0j)', ')'))
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg.replace('0j,', '0,').replace('+0j)', ')'))
+        return True
+
+    def _add_sort1(self, dt, eid, parent, coord, icord,
+                   node_id, xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z):
+        assert eid is not None, eid
+        assert isinstance(node_id, int), node_id
+        self.element_node[self.itotal, :] = [eid, node_id]
+        self.parent_coord[self.itotal, :] = [parent, coord]
+        # TODO: save ICORD
+        #print('parent=%r, coord=%r, icord=%r' % (parent, coord, icord))
+        self.data[self.itime, self.itotal, :] = [xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z]
+        self.itotal += 1
+
+    def get_stats(self, short=False):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        nnodes = self.nnodes
+        ntotal = self.ntotal
+        nlayers = 2
+        nelements = self.ntotal // self.nnodes // 2
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
+                self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
+            ntimes_word = 'ntimes'
+        else:
+            msgi = '  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
+                self.__class__.__name__, nelements, nnodes, nlayers, ntotal)
+            ntimes_word = '1'
+        msg.append(msgi)
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
+                                                                 str(', '.join(headers))))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n' % self.element_name)
+        msg += self.get_data_code()
         return msg
 
-    def add_new_transient(self, dt):
-        self.dt = dt
-        self.forceX[dt] = {}
-        self.shearY[dt] = {}
-        self.shearZ[dt] = {}
-        self.torsion[dt] = {}
-        self.bendingY[dt] = {}
-        self.bendingZ[dt] = {}
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
+        return itot
 
-    def add(self, nnodes, dt, data):
-        [eid, parent, coord, icord, forces] = data
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
+    def eid_to_element_node_index(self, eids):
+        ind = np.ravel([np.searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
 
-        self.forceX[eid] = {}
-        self.shearY[eid] = {}
-        self.shearZ[eid] = {}
-        self.torsion[eid] = {}
-        self.bendingY[eid] = {}
-        self.bendingZ[eid] = {}
 
-        for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion,
-                bendingY, bendingZ] = force
-            self.forceX[eid][nid] = forceX
-            self.shearY[eid][nid] = shearY
-            self.shearZ[eid][nid] = shearZ
-            self.torsion[eid][nid] = torsion
-            self.bendingY[eid][nid] = bendingY
-            self.bendingZ[eid][nid] = bendingZ
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        """
+                 C O M P L E X   F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                                                                (REAL/IMAGINARY)
+                         VU-ELEMENT ID=  100001001, P-ELEMENT ID =       1, OUTPUT COORD. ID=       0, P OF EDGES =  3
 
-    def add_sort1(self, nnodes, dt, data):
-        [eid, parent, coord, icord, forces] = data
-        if dt not in self.forceX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
+           VUGRID VUGRID DIST/    - BENDING MOMENTS -            -WEB  SHEARS -             AXIAL         TOTAL
+             ID.     LENGTH      PLANE 1       PLANE 2        PLANE 1       PLANE 2          FORCE         TORQUE
+        111001001     0.000    0.000000E+00 -1.598690E+05   0.000000E+00 -1.040952E+06   0.000000E+00   0.000000E+00
+                               0.000000E+00  0.000000E+00   0.000000E+00  0.000000E+00   0.000000E+00   0.000000E+00
+        111001002     0.333    0.000000E+00  5.328967E+04   0.000000E+00  1.872484E+05   0.000000E+00   0.000000E+00
+                               0.000000E+00  0.000000E+00   0.000000E+00  0.000000E+00   0.000000E+00   0.000000E+00
 
-        self.forceX[dt][eid] = {}
-        self.shearY[dt][eid] = {}
-        self.shearZ[dt][eid] = {}
-        self.torsion[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingZ[dt][eid] = {}
+                       C O M P L E X    S T R A I N S    I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
+                                                                 (REAL/IMAGINARY)
+                          VU-ELEMENT ID=  100001003, P-ELEMENT ID =       1, OUTPUT COORD. ID=       0, P OF EDGES =  3
 
-        for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion,
-                bendingY, bendingZ] = force
-            self.forceX[dt][eid][nid] = forceX
-            self.shearY[dt][eid][nid] = shearY
-            self.shearZ[dt][eid][nid] = shearZ
-            self.torsion[dt][eid][nid] = torsion
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingZ[dt][eid][nid] = bendingZ
+            VUGRID VUGRID DIST/     LOCATION         LOCATION         LOCATION         LOCATION
+              ID.     LENGTH           C                D  E                F
+         111001003     0.667    -2.557904E+00    -2.557904E+00     2.557904E+00     2.557904E+00
+                                 0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00
+         111001004     1.000     7.673713E+00     7.673713E+00    -7.673713E+00    -7.673713E+00
+                                 0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00
+        """
 
-    def add_sort2(self, nnodes, eid, data):
-        [dt, parent, coord, icord, forces] = data
-        if dt not in self.forceX:
-            self.add_new_transient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
+        msg = [
+            '                   C O M P L E X   F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )\n'
+            '                                                           (REAL/IMAGINARY)\n'
+            '                    VU-ELEMENT ID=  %9i, P-ELEMENT ID =%8i, OUTPUT COORD. ID=%8i, P OF EDGES =  3\n'
+            '\n'
+            '      VUGRID VUGRID DIST/     - BENDING MOMENTS -              -WEB  SHEARS -               AXIAL           TOTAL                    \n'
+            '        ID.     LENGTH       PLANE 1       PLANE 2          PLANE 1       PLANE 2            FORCE           TORQUE   \n'
+            #'   111001003     0.667     0.000000E+00  5.328967E+04     0.000000E+00 -1.872484E+05     0.000000E+00     0.000000E+00'
+            #'                           0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     0.000000E+00     0.000000E+00'
+            #'   111001004     1.000     0.000000E+00 -1.598690E+05     0.000000E+00  1.040952E+06     0.000000E+00     0.000000E+00'
+            #'                           0.000000E+00  0.000000E+00     0.000000E+00  0.000000E+00     0.000000E+00     0.000000E+00'
 
-        self.forceX[dt][eid] = {}
-        self.shearY[dt][eid] = {}
-        self.shearZ[dt][eid] = {}
-        self.torsion[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingZ[dt][eid] = {}
-        for force in forces:
-            [nid, posit, forceX, shearY, shearZ, torsion,
-                bendingY, bendingZ] = force
-            self.forceX[dt][eid][nid] = forceX
-            self.shearY[dt][eid][nid] = shearY
-            self.shearZ[dt][eid][nid] = shearZ
-            self.torsion[dt][eid][nid] = torsion
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingZ[dt][eid][nid] = bendingZ
+            #'                 C O M P L E X    S T R A I N S    I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )\n'
+            #'                                                           (REAL/IMAGINARY)\n'
+            #'                    VU-ELEMENT ID=  %9i, P-ELEMENT ID =       1, OUTPUT COORD. ID=       0, P OF EDGES =  3\n'
+            #'\n'
+            #'      VUGRID VUGRID DIST/     LOCATION         LOCATION         LOCATION         LOCATION                                            \n'
+            #'        ID.     LENGTH           C                D  E                F                                                              \n'
+            #'   111001003     0.667    -2.557904E+00    -2.557904E+00     2.557904E+00     2.557904E+00'
+            #'                           0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00'
+            #'   111001004     1.000     7.673713E+00     7.673713E+00    -7.673713E+00    -7.673713E+00'
+            #'                           0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00'
+        ]
+        if header is None:
+            header = []
+        #msg, nnodes, cen = _get_plate_msg(self)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        parent = self.parent_coord[:, 0]
+        coord = self.parent_coord[:, 1]
+
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+
+            #[xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z]
+            xxb = self.data[itime, :, 0]
+            fx = self.data[itime, :, 1]
+            fy = self.data[itime, :, 2]
+            fz = self.data[itime, :, 3]
+            mx = self.data[itime, :, 4]
+            my = self.data[itime, :, 5]
+            mz = self.data[itime, :, 6]
+
+            for (i, eid, parenti, coordi, nid, xxbi, fxi, fyi, fzi, mxi, myi, mzi) in zip(
+                 cycle(range(2)), eids, parent, coord, nids, xxb, fx, fy, fz, mx, my, mz):
+                if i == 0:
+                    f.write(''.join(header + msg) % (eid, parenti, coordi))
+
+                out = write_imag_floats_13e([fxi, fyi, fzi, mxi, myi, mzi], is_mag_phase=is_mag_phase)
+                [fxri, fyri, fzri, mxri, myri, mzri,
+                 fxii, fyii, fzii, mxii, myii, mzii] = out
+
+                        #   nid   xxb
+                f.write('   %9i     %.3f    %13.6E %13.6E    %13.6E %13.6E    %13.6E    %13.6E\n'
+                        '                          %13.6E %13.6E    %13.6E %13.6E    %13.6E    %13.6E\n' % (
+                    nid, xxbi.real,
+                    myi.real, mzi.real, fyi.real, fzi.real, fxi.real, mxi.real,
+                    myi.imag, mzi.imag, fyi.imag, fzi.imag, fxi.imag, mxi.imag,
+                ))
+
+                # stress/strain
+                #f.write('   %9i     %.3s      %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n'
+                #'                          %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n' % (
+                #nid, xxbi.real,
+                #fxi.real, fyi.real, fzi.real, mxi.real, myi.real, mzi.real,
+                #fxi.imag, fyi.imag, fzi.imag, mxi.imag, myi.imag, mzi.imag,
+                #))
+
+                if i == 1:
+                    f.write(page_stamp % page_num + '\n')
+                    page_num += 1
+        return page_num - 1
 
 
 class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
@@ -2712,7 +2971,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             assert dt is not None
             self.add = self.add_sort2
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
@@ -2766,6 +3025,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             self.shearXZ[eid][nid] = shearXZ
 
     def add_sort1(self, nnodes, dt, data):
+        """unvectorized method for adding SORT1 transient data"""
         [eid, parent, coord, icord, theta, forces] = data
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 

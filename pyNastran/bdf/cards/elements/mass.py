@@ -56,6 +56,8 @@ class CMASS1(PointMassElement):
     Defines a scalar mass element.
 
     +--------+-----+-----+----+----+----+----+
+    |   1    |  2  |  3  |  4 |  5 |  6 |  7 |
+    +========+=====+=====+====+====+====+====+
     | CMASS1 | EID | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
@@ -64,7 +66,26 @@ class CMASS1(PointMassElement):
         1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
     }
 
-    def __init__(self, eid, pid, g1, c1, g2, c2, comment=''):
+    def __init__(self, eid, pid, g1, c1=None, g2=None, c2=None, comment=''):
+    #def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):  CELAS1
+        """
+        Creates a CMASS1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PMASS)
+        g1 : int
+            node id
+        g2 : int; default=None
+            node id
+        c1 / c2 : int; default=None
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         PointMassElement.__init__(self)
         if comment:
             self.comment = comment
@@ -77,6 +98,16 @@ class CMASS1(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CMASS1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         g1 = integer(card, 3, 'g1')
@@ -88,6 +119,16 @@ class CMASS1(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CMASS1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         g1 = data[2]
@@ -136,7 +177,9 @@ class CMASS1(PointMassElement):
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.pid = self.Pid()
-        del self.g1_ref, self.g2_ref, self.pid_ref
+        if isinstance(self.g2, integer_types):
+            del self.g2_ref
+        del self.g1_ref, self.pid_ref
 
     def G1(self):
         if isinstance(self.g1, integer_types):
@@ -168,6 +211,9 @@ class CMASS1(PointMassElement):
             f += 1.
         c = (p1 + p2) / f
         return c
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     @property
     def node_ids(self):
@@ -215,6 +261,24 @@ class CMASS2(PointMassElement):
     }
 
     def __init__(self, eid, mass, g1, c1, g2, c2, comment=''):
+        """
+        Creates a CMASS2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mass : float
+            mass
+        g1 : int
+            node id
+        g2 : int; default=None
+            node id
+        c1 / c2 : int; default=None
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         PointMassElement.__init__(self)
         if comment:
             self.comment = comment
@@ -227,6 +291,16 @@ class CMASS2(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CMASS2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         mass = double_or_blank(card, 2, 'mass', 0.)
         g1 = integer_or_blank(card, 3, 'g1')
@@ -238,6 +312,16 @@ class CMASS2(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CMASS2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         mass = data[1]
         g1 = data[2]
@@ -262,11 +346,15 @@ class CMASS2(PointMassElement):
         c2 = self.c2
         #self.nodes
 
-        assert isinstance(eid, int), 'eid=%r' % eid
-        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(eid, integer_types), 'eid=%r' % eid
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
         assert isinstance(mass, float), 'mass=%r' % mass
-        assert c1 is None or isinstance(c1, int), 'c1=%r' % c1
-        assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
+        assert c1 is None or isinstance(c1, integer_types), 'c1=%r' % c1
+        assert c2 is None or isinstance(c2, integer_types), 'c2=%r' % c2
+
+    @property
+    def nodes(self):
+        return [self.g1, self.g2]
 
     @property
     def node_ids(self):
@@ -299,6 +387,9 @@ class CMASS2(PointMassElement):
         assert f > 0., str(self)
         c = (p1 + p2) / f
         return c
+
+    def center_of_mass(self):
+        return self.Centroid()
 
     def cross_reference(self, model):
         """
@@ -364,6 +455,8 @@ class CMASS3(PointMassElement):
     Defines a scalar mass element that is connected only to scalar points.
 
     +--------+-----+-----+----+----+
+    |   1    |  2  |   3 |  4 |  5 |
+    +========+=====+=====+====+====+
     | CMASS3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
     """
@@ -373,6 +466,22 @@ class CMASS3(PointMassElement):
     }
 
     def __init__(self, eid, pid, s1, s2, comment=''):
+        """
+        Creates a CMASS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PMASS)
+        s1 : int
+            SPOINT id
+        s2 : int
+            SPOINT id
+        comment : str; default=''
+            a comment for the card
+        """
         PointMassElement.__init__(self)
         if comment:
             self.comment = comment
@@ -384,6 +493,16 @@ class CMASS3(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CMASS3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         s1 = integer_or_blank(card, 3, 's1')
@@ -393,6 +512,16 @@ class CMASS3(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CMASS3 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         pid = data[1]
         s1 = data[2]
@@ -451,6 +580,8 @@ class CMASS4(PointMassElement):
     without reference to a property entry
 
     +--------+-----+-----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |
+    +========+=====+=====+====+====+
     | CMASS4 | EID |  M  | S1 | S2 |
     +--------+-----+-----+----+----+
     """
@@ -460,6 +591,22 @@ class CMASS4(PointMassElement):
     }
 
     def __init__(self, eid, mass, s1, s2=0, comment=''):
+        """
+        Creates a CMASS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mass : float
+            SPOINT mass
+        s1 : int
+            SPOINT id
+        s2 : int; default=0
+            SPOINT id
+        comment : str; default=''
+            a comment for the card
+        """
         PointMassElement.__init__(self)
         if comment:
             self.comment = comment
@@ -481,6 +628,16 @@ class CMASS4(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CMASS4 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         mass = data[1]
         s1 = data[2]
@@ -635,6 +792,16 @@ class CONM1(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CONM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         m = np.zeros((6, 6))
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
@@ -666,6 +833,16 @@ class CONM1(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CONM1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         m = np.zeros((6, 6))
         (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
          m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = data
@@ -699,12 +876,13 @@ class CONM1(PointMassElement):
         eid = self.eid
         assert isinstance(eid, integer_types), 'eid=%r' % eid
 
-    def Mass(self):
+    @staticmethod
+    def Mass():
         return 0.0
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
+    @staticmethod
+    def Centroid():
+        return np.zeros(3, dtype='float64')
 
     @property
     def node_ids(self):
@@ -869,7 +1047,7 @@ class CONM2(PointMassElement):
         self.I = np.asarray(I)
 
     def validate(self):
-        assert isinstance(self.cid, int), self.cid
+        assert isinstance(self.cid, integer_types), self.cid
         assert isinstance(self.mass, float), self.mass
         assert self.mass >= 0., 'mass=%s' % self.mass
 
@@ -893,6 +1071,16 @@ class CONM2(PointMassElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CONM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -917,6 +1105,16 @@ class CONM2(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CONM2 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         eid = data[0]
         nid = data[1]
         cid = data[2]
@@ -932,9 +1130,9 @@ class CONM2(PointMassElement):
         mass = self.Mass()
         c = self.Centroid()
 
-        assert isinstance(eid, int), 'eid=%r' % eid
-        assert isinstance(nid, int), 'nid=%r' % nid
-        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(eid, integer_types), 'eid=%r' % eid
+        assert isinstance(nid, integer_types), 'nid=%r' % nid
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
         assert isinstance(mass, float), 'mass=%r' % mass
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
@@ -997,6 +1195,9 @@ class CONM2(PointMassElement):
             X2 = self.nid.get_position() + dx
         return X2
 
+    def center_of_mass(self):
+        return self.Centroid()
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -1024,10 +1225,6 @@ class CONM2(PointMassElement):
     def node_ids(self):
         return [self.Nid()]
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     def Nid(self):
         if isinstance(self.nid, integer_types):
             return self.nid
@@ -1037,14 +1234,6 @@ class CONM2(PointMassElement):
         if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid_ref.cid
-
-    def write_code_aster(self):
-        msg = ''
-        msg += "    DISCRET=_F(\n"
-        msg += "             'CARA='M_T_D_N'\n"
-        msg += "              NOEUD=N%s\n" % self.Nid()
-        msg += "              VALE=%g),\n" % self.mass
-        return msg
 
     def raw_fields(self):
         list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +

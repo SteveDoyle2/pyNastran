@@ -1,7 +1,9 @@
 from __future__ import print_function
+import os
+import copy
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, CPENTA #, GRID, CTETRA, CPENTA, CHEXA
+from pyNastran.bdf.bdf import read_bdf, BDF, BDFCard
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA4, CHEXA8, CPENTA6,
     #CTETRA10, CHEXA20,
@@ -32,7 +34,7 @@ class TestSolids(unittest.TestCase):
                             209, 210, 217, None, None, None, 213, 214, 218], node_ids
         nids = [201, 202, 203, 205, 206, 207,
                 209, 210, 217, None, None, None, 213, 214, 218]
-        CPENTA.add_card(card, comment='spike')
+        CPENTA15.add_card(card, comment='spike')
         eid = 85
         pid = 22
         bdf.add_cpenta(eid, pid, nids, comment='spike')
@@ -256,15 +258,33 @@ class TestSolids(unittest.TestCase):
         model.add_grid(11, xyz=[0., 0., 0.])
         model.add_grid(12, xyz=[1., 0., 0.])
         model.add_grid(13, xyz=[1., 1., 0.])
-        model.add_grid(15, xyz=[0., 2., 0.])
+        model.add_grid(15, xyz=[0., 0., 2.])
         model.add_psolid(pid, mid)
-        model.add_mat1(mid, E, G, nu)
+        mat1 = model.add_mat1(mid, E, G, nu, rho=0.1)
+        nids = [11, 12, 13, 15]
+        ctetra = model.add_ctetra(eid, pid, nids, comment='ctetra')
+        end_checks(model)
+
+    def test_solids_ctetra4_mat9(self):
+        """tests a CTETRA4"""
+        eid = 10
+        pid = 20
+        mid = 30
+        E = 3.e7
+        G = None
+        nu = 0.3
+        model = BDF(debug=False)
+        model.add_grid(11, xyz=[0., 0., 0.])
+        model.add_grid(12, xyz=[1., 0., 0.])
+        model.add_grid(13, xyz=[1., 1., 0.])
+        model.add_grid(15, xyz=[0., 0., 2.])
+        model.add_psolid(pid, mid)
+        mat9 = model.add_mat9(mid, G11=1000., rho=0.2)
+        mat9.raw_fields()
+
         nids = [11, 12, 13, 15]
         model.add_ctetra(eid, pid, nids, comment='ctetra')
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+        end_checks(model)
 
     def test_solids_ctetra10(self):
         """tests a CTETRA10"""
@@ -278,7 +298,7 @@ class TestSolids(unittest.TestCase):
         g110 = model.add_grid(110, xyz=[0., 0., 0.])
         g120 = model.add_grid(120, xyz=[1., 0., 0.])
         g130 = model.add_grid(130, xyz=[1., 1., 0.])
-        g140 = model.add_grid(140, xyz=[0., 2., 0.])
+        g140 = model.add_grid(140, xyz=[0., 0., 2.])
 
         model.add_grid(111, xyz=g110.xyz+g120.xyz)
         model.add_grid(112, xyz=g120.xyz+g130.xyz)
@@ -289,17 +309,14 @@ class TestSolids(unittest.TestCase):
         model.add_grid(123, xyz=g130.xyz+g140.xyz)
 
         model.add_psolid(pid, mid)
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, E, G, nu, rho=1.0)
         nids = [
             110, 120, 130, 140,
             111, 112, 113,
             121, 122, 123
         ]
-        model.add_ctetra(eid, pid, nids, comment='ctetra')
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+        model.add_ctetra(eid, pid, nids, comment='ctetra10')
+        end_checks(model)
 
     def test_solids_cpyram5(self):
         """tests a CPYRAM5"""
@@ -316,13 +333,19 @@ class TestSolids(unittest.TestCase):
         model.add_grid(40, xyz=[0., 0., 2.])
         model.add_grid(50, xyz=[1., 1., 2.])
         model.add_psolid(pid, mid)
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, E, G, nu, rho=1.0)
         nids = [10, 20, 30, 40, 50]
-        model.add_cpyram(eid, pid, nids, comment='cpenta')
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+        model.add_cpyram(eid, pid, nids, comment='cpyram')
+
+        nids2 = copy.deepcopy(nids)
+        nids2.append(None)
+        eid += 1
+        elem2 = model.add_cpyram(eid, pid, nids2, comment='cpyram13')
+        elem2.write_card(size=8)
+        elem2.write_card(size=16)
+        elem2.write_card_16(is_double=False)
+
+        end_checks(model)
 
     def test_solids_cpenta(self):
         """tests a CPENTA6"""
@@ -340,13 +363,18 @@ class TestSolids(unittest.TestCase):
         model.add_grid(25, xyz=[1., 0., 2.])
         model.add_grid(26, xyz=[1., 1., 2.])
         model.add_psolid(pid, mid)
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, E, G, nu, rho=1.0)
         nids = [21, 22, 23, 24, 25, 26]
         model.add_cpenta(eid, pid, nids, comment='cpenta')
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+
+        nids2 = copy.deepcopy(nids)
+        nids2.append(None)
+        eid += 1
+        elem2 = model.add_cpenta(eid, pid, nids2, comment='cpenta15')
+        elem2.write_card(size=8)
+        elem2.write_card(size=16)
+        elem2.write_card_16(is_double=False)
+        end_checks(model)
 
     def test_solids_chexa(self):
         """tests a CHEXA8"""
@@ -367,16 +395,24 @@ class TestSolids(unittest.TestCase):
         model.add_grid(17, xyz=[1., 1., 2.])
         model.add_grid(18, xyz=[0., 1., 2.])
         model.add_psolid(pid, mid)
-        model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, E, G, nu, rho=1.0)
         nids = [11, 12, 13, 14, 15, 16, 17, 18]
         elem = model.add_chexa(eid, pid, nids, comment='chexa')
         elem.write_card(size=8)
         elem.write_card(size=16)
+        elem.write_card_16(is_double=False)
 
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-        model._verify_bdf(xref=True)
+        nids2 = copy.deepcopy(nids)
+        nids2.append(None)
+        eid += 1
+        elem2 = model.add_chexa(eid, pid, nids2, comment='chexa16')
+        elem2.write_card(size=8)
+        elem2.write_card(size=16)
+        elem2.write_card_16(is_double=False)
+
+        end_checks(model)
+        elem = model.elements[eid]
+        assert elem.Mass() > 0, elem.Mass()
 
     def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, V):
         """checks that various solid methods work"""
@@ -393,6 +429,23 @@ class TestSolids(unittest.TestCase):
         self.assertEqual(element.Volume(), V)
         self.assertEqual(element.Mass(), mass)
 
+
+def end_checks(model):
+    """various checks"""
+    model.validate()
+    model._verify_bdf(xref=False)
+    model.cross_reference()
+    model._verify_bdf(xref=True)
+    model.uncross_reference()
+    model.cross_reference()
+    model.pop_xref_errors()
+    mass, cg, inertia = model.mass_properties()
+    assert mass > 0, 'mass=%s, cg=%s, inertia=%s' % (mass, cg, inertia)
+
+    bdf_filename = 'solid_test.bdf'
+    model.write_bdf(bdf_filename)
+    model2 = read_bdf(bdf_filename, debug=False)
+    os.remove(bdf_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

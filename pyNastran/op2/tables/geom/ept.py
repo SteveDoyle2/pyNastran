@@ -1,3 +1,6 @@
+"""
+defines readers for BDF objects in the OP2 EPT/EPTS table
+"""
 #pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -5,17 +8,18 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.cards.properties.mass import PMASS, NSM
+import numpy as np
 
+from pyNastran.bdf.cards.properties.mass import PMASS, NSM
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
-from pyNastran.bdf.cards.properties.beam import PBEAM
+from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.properties.bush import PBUSH
 from pyNastran.bdf.cards.properties.damper import PDAMP, PVISC
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.shell import PSHEAR, PSHELL, PCOMP
 from pyNastran.bdf.cards.properties.solid import PSOLID
-from pyNastran.bdf.cards.properties.springs import PELAS
+from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
@@ -30,7 +34,7 @@ class EPT(GeomCommon):
 
     def __init__(self):
         GeomCommon.__init__(self)
-        self.bigProperties = {}
+        self.big_properties = {}
         self._ept_map = {
             (3201, 32, 55): ['NSM', self._read_nsm],          # record 2  - needs an object holder (e.g. self.elements/self.properties)
             (52, 20, 181): ['PBAR', self._read_pbar],         # record 11 - buggy
@@ -61,9 +65,9 @@ class EPT(GeomCommon):
             (3201, 32, 991) : ['NSM', self._read_fake],  # record
             (3301, 33, 992) : ['NSM1', self._read_fake],  # record
             (3701, 37, 995) : ['NSML1', self._read_fake],    # record
-            (15006, 150, 604): ['PCOMPG', self._read_fake],  # record
+            (15006, 150, 604): ['PCOMPG', self._read_pcompg],  # record
 
-            (702, 7, 38): ['PBUSHT', self._read_fake],  # record 1
+            (702, 7, 38): ['PBUSHT', self._read_pbusht],  # record 1
             (3301, 33, 56): ['NSM1', self._read_fake],  # record 3
             (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
             (3501, 35, 58): ['NSML', self._read_fake],  # record 6
@@ -71,18 +75,18 @@ class EPT(GeomCommon):
             (1502, 15, 36): ['PAABSF', self._read_fake],  # record 8
             (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
             (8500, 85, 384): ['PACBAR', self._read_fake],  # record 10
-            (5403, 55, 349): ['PBCOMP', self._read_fake],  # record 13
+            (5403, 55, 349): ['PBCOMP', self._read_pbcomp],  # record 13
             (13301, 133, 509): ['PBMSECT', self._read_fake],  # record 17
-            (2902, 29, 420): ['PCONVM', self._read_fake],  # record 26
-            (1202, 12, 33): ['PDAMPT', self._read_fake],  # record 28
-            (8702, 87, 412): ['PDAMP5', self._read_fake],  # record 29
+            (2902, 29, 420): ['PCONVM', self._read_pconvm],  # record 26
+            (1202, 12, 33): ['PDAMPT', self._read_pdampt],  # record 28
+            (8702, 87, 412): ['PDAMP5', self._read_pdamp5],  # record 29
             (6802, 68, 164): ['PDUM8', self._read_fake],  # record 37
             (6902, 69, 165): ['PDUM9', self._read_fake],  # record 38
-            (1302, 13, 34): ['PELAST', self._read_fake],  # record 41
+            (1302, 13, 34): ['PELAST', self._read_pelast],  # record 41
             (12001, 120, 480): ['PINTC', self._read_fake],  # record 44
             (12101, 121, 484): ['PINTS', self._read_fake],  # record 45
-            (4606, 46, 375): ['PLPLANE', self._read_fake],  # record 46
-            (4706, 47, 376): ['PLSOLID', self._read_fake],  # record 47
+            (4606, 46, 375): ['PLPLANE', self._read_plplane],  # record 46
+            (4706, 47, 376): ['PLSOLID', self._read_plsolid],  # record 47
             (10301, 103, 399): ['PSET', self._read_fake],  # record 57
             (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
 
@@ -94,13 +98,13 @@ class EPT(GeomCommon):
 
     def _add_op2_property(self, prop):
         if prop.pid > 100000000:
-            raise RuntimeError('bad parsing...%s' % str(prop))
+            raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         self._add_property_object(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
     def _add_pconv(self, prop):
         if prop.pconid > 100000000:
-            raise RuntimeError('bad parsing...%s' % str(prop))
+            raise RuntimeError('bad parsing pconid > 100000000...%s' % str(prop))
         self._add_convection_property_object(prop)
 
 # HGSUPPR
@@ -131,6 +135,7 @@ class EPT(GeomCommon):
 # PAABSF
 # PACABS
 # PACBAR
+
     def _read_pbar(self, data, n):
         """
         PBAR(52,20,181) - the marker for Record 11
@@ -193,12 +198,12 @@ class EPT(GeomCommon):
             Type = Type.strip().decode('latin1')
             group = group.strip().decode('latin1')
             data_in = [pid, mid, group, Type, value]
-            #print("pid=%s mid=%s group=%r Type=%r value=%s" % (
+            #self.log.debug("  pid=%s mid=%s group=%r Type=%r value=%s" % (
                 #pid, mid, group, Type, value))
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
             expected_length = valid_types[Type]
-            iformat = b'%if' % expected_length
+            iformat = b('%if' % expected_length)
 
             ndelta = expected_length * 4
             data_in += list(unpack(iformat, data[n:n+ndelta]))
@@ -218,7 +223,53 @@ class EPT(GeomCommon):
         #assert len(data) == n
         return n
 
-# PBCOMP
+    def _read_pbcomp(self, data, n):
+        struct1 = Struct(b(self._endian + '2i 12f i'))
+        struct2 = Struct(b(self._endian + '3f 2i'))
+        nproperties = 0
+        ndata = len(data)
+        while n < ndata:
+            edata = data[n:n+60]  # 4*15
+            n += 60
+            data1 = struct1.unpack(edata)
+            nsections = data1[-1]
+            if self.is_debug_file:
+                (pid, mid, a, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, nsections) = data1
+                self.log.info('PBCOMP pid=%s mid=%s nsections\n' % (pid, mid, nsections))
+
+            data2 = []
+            if nsections in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]:
+                # 16 Y   RS    Lumped area location along element's y-axis
+                # 17 Z   RS    Lumped area location along element's z-axis
+                # 18 C   RS    Fraction of the total area for the lumped area
+                # 19 MID I     Material identification number
+                # 20     UNDEF None
+                # Words 16 through 20 repeat NSECT times
+                for i in range(nsections):
+                    datai = data[n:n+20]
+                    xi, yi, ci, mid, null = struct2.unpack(datai)
+                    data2.append((xi, yi, ci, mid))
+                    n += 20
+            else:
+                raise NotImplementedError('PBCOMP nsections=%r' % nsections)
+
+            if self.is_debug_file:
+                self.binary_debug.write('     %s\n' % str(pack))
+                msg = (
+                    '    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
+                    'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))
+                )
+                self.log.debug(msg)
+            self.log.debug(data1)
+            self.log.debug(data2)
+
+            data_in = [data1, data2]
+            prop = PBCOMP.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            nproperties += 1
+        assert nproperties > 0, 'PBCOMP nproperties=%s' % (nproperties)
+        self.card_count['PBCOMP'] = nproperties
+        return n
 
     def _read_pbeam(self, data, n):
         """
@@ -232,19 +283,25 @@ class EPT(GeomCommon):
         nproperties = (len(data) - n) // ntotal
         #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
         ndata = len(data)
+        #self.show_data(data[12:], 'if')
+        #assert ndata % ntotal == 0, 'ndata-n=%s n=%s ndata%%ntotal=%s' % (len(data)-n, n, ndata % ntotal)
         while n < ndata:
         #while 1: #for i in range(nproperties):
             edata = data[n:n+20]
             n += 20
             data_in = list(struct1.unpack(edata))
-            if self.is_debug_file:
-                self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
+            #if self.is_debug_file:
+                #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
             (pid, mid, nsegments, ccf, x) = data_in
             #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
 
             # Constant cross-section flag: 1=yes and 0=no
             # what is 2?
-            assert ccf in [0, 1, 2], '  PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in)
+            if ccf not in [0, 1, 2]:
+                msg = ('  PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s; '
+                       'ccf must be in [0, 1, 2]\n' % tuple(data_in))
+                raise ValueError(msg)
+
             for i in range(11):
                 edata = data[n:n+64]
                 if len(edata) != 64:
@@ -260,15 +317,24 @@ class EPT(GeomCommon):
                 elif soi == 1.0:
                     so_str = 'YES'
                 else:
-                    raise NotImplementedError('PBEAM pid=%s i=%s x/xb=%s soi=%s' % (pid, i, xxb, soi))
+                    so_str = str(soi)
+                    #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; soi not in 0.0 or 1.0' % (pid, i, xxb, soi)
+                    #raise NotImplementedError(msg)
+
+                #if xxb != 0.0:
+                    #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; xxb not in 0.0 or 1.0' % (pid, i, xxb, soi)
+                    #raise NotImplementedError(msg)
 
                 pack2 = (so_str, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                          d1, d2, e1, e2, f1, f2)
                 data_in.append(pack2)
                 if self.is_debug_file:
                     self.binary_debug.write('     %s\n' % str(pack))
-                    self.log.info('    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
-                                  'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2)))
+                    msg = (
+                        '    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
+                        'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))
+                    )
+                    self.log.debug(msg)
             edata = data[n:n+64]
             if len(edata) != 64:
                 endpack = []
@@ -281,8 +347,9 @@ class EPT(GeomCommon):
             assert len(endpack) == 16, endpack
             (k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
              m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
-            self.log.debug('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
-                           'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
+            if self.is_debug_file:
+                self.log.debug('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
+                               'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
             data_in.append(endpack)
 
             prop = PBEAM.add_op2_data(data_in)
@@ -291,15 +358,35 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbeaml(self, data, n):
-        self.log.info('skipping PBEAML in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBEAML in EPT\n')
+        #strs = numpy.core.defchararray.reshapesplit(data, sep=",")
+        ints = np.fromstring(data[n:], self._endian + 'i')
+        floats = np.fromstring(data[n:], self._endian + 'f')
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+
+        struct1 = Struct(self._endian + '2i8s8s')
+        for i, (istarti, iendi) in enumerate(zip(istart, iend)):
+            idata = data[n+istarti*4 : n+(istarti+6)*4]
+            #print('len(idata)=', len(idata))
+            pid, mid, group, Type = struct1.unpack(idata)
+            group = group.decode('latin1')
+            Type = Type.decode('latin1')
+            fvalues = floats[istarti+6: iendi]
+            if self.is_debug_file:
+                self.binary_debug.write('     %s\n' % str(fvalues))
+                self.log.debug('pid=%i mid=%i group=%r Type=%r' % (pid, mid, group, Type))
+                self.log.debug(fvalues)
+            data_in = [pid, mid, group, Type, fvalues]
+            prop = PBEAML.add_op2_data(data_in)
+            self._add_op2_property(prop)
+        nproperties = len(istart)
+        self.card_count['PBEAML'] = nproperties
         return len(data)
 
     def _read_pbend(self, data, n):
         self.log.info('skipping PBEND in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBEND in EPT\n')
         return len(data)
 
 # PBMSECT
@@ -368,14 +455,10 @@ class EPT(GeomCommon):
 
     def _read_pbush1d(self, data, n):
         self.log.info('skipping PBUSH1D in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBUSH1D in EPT\n')
         return len(data)
 
     def _read_pbusht(self, data, n):
         self.log.info('skipping PBUSHT in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBUSHT in EPT\n')
         return len(data)
 
     def _read_pcomp(self, data, n):
@@ -412,7 +495,7 @@ class EPT(GeomCommon):
 
             if self.is_debug_file:
                 self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
-                pid, nlayers, z0, nsm, sb, ft, Tref, ge))
+                    pid, nlayers, z0, nsm, sb, ft, Tref, ge))
             for ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+16])
                 mids.append(mid)
@@ -433,14 +516,17 @@ class EPT(GeomCommon):
         self.card_count['PCOMP'] = nproperties
         return n
 
+    def _read_pcompg(self, data, n):
+        self.log.info('skipping PCOMPG in EPT\n')
+        return len(data)
+
 # PCOMPA
+
     def _read_pconeax(self, data, n):
         """
         (152,19,147) - Record 24
         """
         self.log.info('skipping PCONEAX in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PCONEAX\n')
         return len(data)
 
     def _read_pconv(self, data, n):
@@ -493,8 +579,6 @@ class EPT(GeomCommon):
 
     def _read_pconvm(self, data, n):  # 26
         self.log.info('skipping PCONVM in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PCONVM\n')
         return len(data)
 
     def _read_pdamp(self, data, n):
@@ -513,8 +597,14 @@ class EPT(GeomCommon):
         self.card_count['PDAMP'] = nentries
         return n
 
-# PDAMPT
-# PDAMP5
+    def _read_pdampt(self, data, n):  # 26
+        self.log.info('skipping PDAMPT in EPT\n')
+        return len(data)
+
+    def _read_pdamp5(self, data, n):  # 26
+        self.log.info('skipping PDAMP5 in EPT\n')
+        return len(data)
+
 # PDUM1
 # PDUM2
 # PDUM3
@@ -533,7 +623,7 @@ class EPT(GeomCommon):
         for i in range(nproperties):
             edata = data[n:n+16]
             out = s.unpack(edata)
-            #(pid,k,ge,s) = out
+            #(pid, k, ge, s) = out
             if self.is_debug_file:
                 self.binary_debug.write('  PELAS=%s\n' % str(out))
             prop = PELAS.add_op2_data(out)
@@ -587,7 +677,31 @@ class EPT(GeomCommon):
             n += ntotal
         self.card_count['PFAST'] = nproperties
         return n
-# PELAST
+
+    def _read_pelast(self, data, n):
+        """
+        Record 41 -- PELAST(1302,13,34)
+
+        1 PID   I Property identification number
+        2 TKID  I TABLEDi entry identification number for stiffness
+        3 TGEID I TABLEDi entry identification number for structural
+                  damping
+        4 TKNID I TABLEDi entry
+        """
+        ntotal = 16
+        s = Struct(b(self._endian + '4i'))
+        nproperties = (len(data) - n) // ntotal
+        for i in range(nproperties):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PELAST=%s\n' % str(out))
+            #(pid, tkid, tgeid, tknid) = out
+            prop = PELAST.add_op2_data(out)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PELAST'] = nproperties
+        return n
 
     def _read_pgap(self, data, n):
         """
@@ -635,24 +749,82 @@ class EPT(GeomCommon):
         return len(data)
 
     def _read_plplane(self, data, n):
-        self.log.info('skipping PLPLANE in EPT\n')
-        return len(data)
+        """
+        PLPLANE(4606,46,375)
+
+        NX 10
+        1 PID     I Property identification number
+        2 MID     I Material identification number
+        3 CID     I Coordinate system identification number
+        4 STR CHAR4 Location of stress and strain output
+        5 T      RS Default membrane thickness for Ti on the connection entry
+        6 CSOPT  I  Reserved for coordinate system definition of plane
+        7 UNDEF(5) None
+
+        MSC 2016
+        PID       I Property identification number
+        2 MID     I Material identification number
+        3 CID     I Coordinate system identification number
+        4 STR CHAR4 Location of stress and strain output
+        5 UNDEF(7 ) none Not used
+
+        .. warning:: CSOPT ad T are not supported
+        """
+        ntotal = 44  # 4*11
+        s = Struct(b(self._endian + '3i 4s f 6i'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n+ntotal])
+            pid, mid, cid, location, t, csopt = out[:6]
+            location = location.decode('latin1')
+            #self.show_data(data[n:n+ntotal], 'ifs')
+            plplane = self.add_plplane(pid, mid, cid=cid, stress_strain_output_location=location)
+            #print(plplane)
+            n += ntotal
+        self.card_count['PLPLANE'] = nentries
+        return n
 
     def _read_plsolid(self, data, n):
-        self.log.info('skipping PLSOLID in EPT\n')
-        return len(data)
+        """
+        MSC 2016
+        1 PID I Property identification number
+        2 MID I Material identification number
+        3 STR CHAR4 Location of stress and strain output
+        4 UNDEF(4 ) none Not used
+
+        NX 10
+        1 PID I Property identification number
+        2 MID I Material identification number
+        3 STR CHAR4 Location of stress and strain output
+        4 CSOPT I Reserved for coordinate system definition of plane
+        5 UNDEF(3) None
+
+        .. warning:: CSOPT is not supported
+        """
+        ntotal = 28  # 4*7
+        s = Struct(b(self._endian + '2i 4s 4i'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n+ntotal])
+            pid, mid, location, csopt, null_a, null_b, null_c = out
+            location = location.decode('latin1')
+            #self.show_data(data[n:n+ntotal], 'ifs')
+            plsolid = self.add_plsolid(pid, mid, stress_strain=location, ge=0.)
+            n += ntotal
+        self.card_count['PLSOLID'] = nentries
+        return n
 
     def _read_pmass(self, data, n):
         """
         PMASS(402,4,44) - the marker for Record 48
         """
         n = 0
-        s = self.struct_2i
+        s = Struct(b(self._endian + 'if'))
         nentries = (len(data) - n) // 8  # 2*4
         for i in range(nentries):
             edata = data[n:n + 8]
             out = s.unpack(edata)
-            #out = (pid,mass)
+            #out = (pid, mass)
             if self.is_debug_file:
                 self.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS.add_op2_data(out)
@@ -714,7 +886,7 @@ class EPT(GeomCommon):
 
             if max(pid, mid1, mid2, mid3, mid4) > 1e8:
                 #print("PSHELL = ",out)
-                self.bigProperties[pid] = prop
+                self.big_properties[pid] = prop
             else:
                 self._add_op2_property(prop)
             n += ntotal
@@ -749,8 +921,12 @@ class EPT(GeomCommon):
     def _read_ptube(self, data, n):
         """
         PTUBE(1602,16,30) - the marker for Record 56
-        .. todo:: OD2 only exists for heat transfer...how do i know if there's heat transfer at this point...
-        .. todo:: I could store all the tubes and add them later, but what about themal/non-thermal subcases
+
+        .. todo:: OD2 only exists for heat transfer...
+                  how do i know if there's heat transfer at this point?
+                  I could store all the tubes and add them later,
+                  but what about themal/non-thermal subcases?
+
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
         s = Struct(b(self._endian + '2i3f'))
@@ -785,7 +961,7 @@ class EPT(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PVISC=%s\n' % str(out))
-            #(pid,ce,cr) = out
+            #(pid, ce, cr) = out
             prop = PVISC.add_op2_data(out)
             self._add_op2_property(prop)
             n += 12

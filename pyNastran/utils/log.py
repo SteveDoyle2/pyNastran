@@ -1,3 +1,6 @@
+"""
+defines a colorama log
+"""
 # coding: utf-8
 from __future__ import print_function, unicode_literals
 import sys
@@ -5,18 +8,27 @@ import platform
 import os
 from six import PY2, string_types
 
+IS_TERMINAL = False
 if sys.stdout.isatty():
-    # You're running in a real terminal
-    try:
-        from colorama import init as colorinit, Fore, Style
-        colorinit(autoreset=True)
-        is_terminal = True
-    except ImportError:
-        is_terminal = False
-else:
-    # You're being piped or redirected
-    is_terminal = False
-#is_terminal = False
+    IS_TERMINAL = True
+# You're running in a real terminal
+
+try:
+    from colorama import init as colorinit, Fore #, Style
+    colorinit(autoreset=True)
+    IS_COLORAMA = True
+    IS_TERMINAL = True
+except ImportError:
+    IS_COLORAMA = False
+USE_COLORAMA = IS_COLORAMA and IS_TERMINAL
+
+#else:
+    #from colorama import init as colorinit, Fore
+    #colorinit(autoreset=True)
+
+    ## You're being piped or redirected
+    #IS_TERMINAL = False
+#IS_TERMINAL = False
 
 
 def make_log(display=False):
@@ -68,7 +80,7 @@ class SimpleLogger(object):
         ----------
         level : str
             level of logging: 'info' or 'debug'
-        encoding : str
+        encoding : str; default='utf-8'
             the unicode encoding method
         log_func : log
           funtion that will be used to print log. It should take one argument:
@@ -76,7 +88,7 @@ class SimpleLogger(object):
           stderr using @see stderr_logging function.
         """
         if log_func is None:
-            log_func = self.stderr_logging
+            log_func = self.stdout_logging
         assert level in ('info', 'debug', 'warning', 'error'), 'logging level=%r' % level
         #assert encoding in ['utf-8', 'latin-1', 'ascii'], encoding
         self.level = level
@@ -84,9 +96,9 @@ class SimpleLogger(object):
         self.encoding = encoding
         assert isinstance(encoding, string_types), type(encoding)
 
-    def stderr_logging(self, typ, msg):
+    def stdout_logging(self, typ, msg):
         """
-        Default logging function. Takes a text and outputs to stderr.
+        Default logging function. Takes a text and outputs to stdout.
 
         Parameters
         ----------
@@ -97,38 +109,19 @@ class SimpleLogger(object):
 
         Message will have format 'typ: msg'
         """
-        # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
+        # max length of 'INFO', 'DEBUG', 'WARNING', etc.
         name = '%-8s' % (typ + ':')
-        if not is_terminal or not typ:
+        #if not IS_TERMINAL or not typ:
+        if not USE_COLORAMA:
             # if we're writing to a file
             #out = name + msg
             if PY2:
-                sys.stdout.write((name + msg).encode(self.encoding) if typ else msg.encode(self.encoding))
+                sys.stdout.write((name + msg).encode(self.encoding)
+                                 if typ else msg.encode(self.encoding))
             else:
                 sys.stdout.write((name + msg) if typ else msg)
-            #try:
-                #sys.stdout.write((name + msg).encode(self.encoding))# if typ else msg.encode(self.encoding))
-            #except TypeError:
-                #print(msg, type(msg))
-                #raise
         else:
-            # write to the screen
-            #
-            # Python 3 requires str, not bytes
-            # Python 2 seems to be able to use either
-            if typ == 'INFO':
-                #'\033[ 1 m; 34 m'
-                # only works for Python 2
-                #out = (Fore.GREEN + name + msg).encode(self.encoding)
-                # seems to work with both
-                sys.stdout.write(Fore.GREEN + name + msg)  # bright blue
-            elif typ == 'DEBUG':
-                sys.stdout.write(Fore.YELLOW + name + msg)
-            elif typ == 'WARNING':
-                # no ORANGE?
-                sys.stdout.write(Fore.RED + name + msg)
-            else: # error / other
-                sys.stdout.write(Fore.RED + name + msg)
+            _write_screen(typ, name + msg)
         sys.stdout.flush()
 
     def msg_typ(self, typ, msg):
@@ -142,8 +135,10 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
-        n, fn = properties()
-        self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
+        n, filename = properties()
+        filename_n = '%s:%s' % (filename, n)
+        self.log_func(typ, ' %-28s %s\n' % (filename_n, msg))
+        #self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
 
     def simple_msg(self, msg, typ=None):
         """
@@ -234,10 +229,27 @@ class SimpleLogger(object):
         assert msg is not None, msg
         self.msg_typ('CRITICAL', msg)
 
-def properties():
-    """Return tuple: line number and filename"""
+def properties(nframe=3):
+    """
+    Gets frame information
+
+    Parameters
+    ----------
+    nframe : int; default=3
+        the number of frames to jump back
+        0 = current
+        2 = calling from an embedded function (e.g., log_msg)
+        3 = calling from an embedded class (e.g., SimpleLogger)
+
+    Returns
+    -------
+    line number : int
+        the line number of the nth frame
+    filename : str
+        the filen ame of the nth frame
+    """
     # jump to get out of the logger code
-    frame = sys._getframe(3)
+    frame = sys._getframe(nframe)
     active_file = os.path.basename(frame.f_globals['__file__'])
     if active_file.endswith('.pyc'):
         return frame.f_lineno, active_file[:-1]
@@ -289,11 +301,106 @@ def get_logger2(log=None, debug=True, encoding='utf-8'):
         log = SimpleLogger(level, encoding=encoding)
     return log
 
+def log_msg(typ, msg, encoding='utf-8'):
+    """
+    Functional based logging function equivalent to SimpleLogger.
+    Takes a text and outputs to stderr.
+
+    Parameters
+    ----------
+    typ : str
+        messeage type - ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+    msg : str
+        message to be displayed
+    encoding : str; default='utf-8'
+        the unicode encoding method
+
+    Message will have format 'typ: msg'
+    """
+    n, filename = properties(nframe=2)
+    filename_n = '%s:%s' % (filename, n)
+    _log_msg(typ, '%-8s: %-28s %s\n' % (typ, filename_n, msg), encoding=encoding)
+
+def _log_msg(typ, msg, encoding='utf-8'):
+    """
+    Helper function for log_msg
+
+    Parameters
+    ----------
+    typ : str
+        messeage type - ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+    msg : str
+        message to be displayed
+    encoding : str; default='utf-8'
+        the unicode encoding method
+    """
+    # max length of 'INFO', 'DEBUG', 'WARNING', etc.
+
+    #name = '%-8s' % (typ + ':')
+    #if not IS_TERMINAL or not typ:
+    if not IS_TERMINAL:
+        # if we're writing to a file
+        _write_suppressed(typ, msg, encoding)
+    else:
+        _write_screen(typ, msg)
+    sys.stdout.flush()
+
+def _write_suppressed(typ, msg, encoding):
+    """
+    Writes to a piped file
+
+    Parameters
+    ----------
+    typ : str
+        messeage type - ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+    msg : str
+        message to be displayed
+    encoding : str; default='utf-8'
+        the unicode encoding method
+    """
+    # if we're writing to a file
+    #out = name + msg
+    if PY2:
+        sys.stdout.write((msg).encode(encoding) if typ else msg.encode(encoding))
+    else:
+        sys.stdout.write((msg) if typ else msg)
+    if IS_COLORAMA and typ == 'ERROR':
+        sys.stderr.write(Fore.RED + msg)
+
+def _write_screen(typ, msg):
+    """
+    Writes to the screen
+
+    Parameters
+    ----------
+    typ : str
+        messeage type - ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+    msg : str
+        message to be displayed
+    """
+    # write to the screen
+    #
+    # Python 3 requires str, not bytes
+    # Python 2 seems to be able to use either
+    if typ == 'INFO':
+        #'\033[ 1 m; 34 m'
+        # only works for Python 2
+        #out = (Fore.GREEN + msg).encode(encoding)
+        # seems to work with both
+        sys.stdout.write(Fore.GREEN + msg)
+    elif typ == 'DEBUG':
+        sys.stdout.write(Fore.CYAN + msg)
+    elif typ == 'WARNING':
+        # no ORANGE?
+        sys.stdout.write(Fore.YELLOW + msg)
+    else: # error / other
+        sys.stdout.write(Fore.RED + msg)
+
 if __name__ == '__main__':  # pragma: no cover
     # how to use a simple logger
     for nam in ['debug', 'info']:
         #print('--- %s logger ---' % nam)
-        test_log = SimpleLogger(nam, encoding=encoding)
+        test_log = SimpleLogger(nam, encoding='utf-8')
         test_log.debug('debug message')
         test_log.warning('warning')
         test_log.error('errors')

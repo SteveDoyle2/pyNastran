@@ -1,7 +1,11 @@
+"""
+Defines:
+ - FortranFormat
+"""
 from __future__ import print_function
 import sys
 from copy import deepcopy
-from struct import unpack, Struct
+from struct import unpack
 from six import iteritems, b
 from six.moves import range
 
@@ -14,9 +18,11 @@ from pyNastran.utils import object_attributes
     #imajor, minor1, minor2 = sys.version_info[:3]
     ## makes sure we don't get the following bug:
     ##   Issue #19099: The struct module now supports Unicode format strings.
-    #raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (imajor, minor1, minor2))
+    #raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (
+        #imajor, minor1, minor2))
 
 class FortranFormat(object):
+    """defines basic methods for reading Fortran formatted data files"""
     def __init__(self):
         self.n = 0
         self.f = None
@@ -30,7 +36,7 @@ class FortranFormat(object):
         self._table_mapper = {}
 
         #: stores if the user entered [] for iSubcases
-        self.isAllSubcases = True
+        self.is_all_subcases = True
         self.valid_subcases = []
 
     def show(self, n, types='ifs', endian=None):
@@ -56,10 +62,10 @@ class FortranFormat(object):
             i - int
             f - float
             s - string
-            d - double (float; 8 bytes)
+            d - double (float64; 8 bytes)
+            q - long long (int64; 8 bytes)
 
             l - long (int; 4 bytes)
-            q - long long (int; int; 8 bytes)
             I - unsigned int (int; 4 bytes)
             L - unsigned long (int; 4 bytes)
             Q - unsigned long long (int; 8 bytes)
@@ -82,10 +88,10 @@ class FortranFormat(object):
             i - int
             f - float
             s - string
-            d - double (float; 8 bytes)
+            d - double (float64; 8 bytes)
+            q - long long (int64; 8 bytes)
 
             l - long (int; 4 bytes)
-            q - long long (int; int; 8 bytes)
             I - unsigned int (int; 4 bytes)
             L - unsigned long (int; 4 bytes)
             Q - unsigned long long (int; 8 bytes)
@@ -104,6 +110,9 @@ class FortranFormat(object):
             endian = self._endian
             assert endian is not None, endian
 
+        for typei in types:
+            assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
+
         if 's' in types:
             strings = unpack(b('%s%is' % (endian, n)), data)
             f.write("strings = %s\n" % str(strings))
@@ -115,7 +124,7 @@ class FortranFormat(object):
             f.write("floats  = %s\n" % str(floats))
         if 'd' in types:
             doubles = unpack(b('%s%id' % (endian, ndoubles)), data[:ndoubles*8])
-            f.write("doubles  = %s\n" % str(doubles))
+            f.write("doubles (float64) = %s\n" % str(doubles))
 
         if 'l' in types:
             longs = unpack(b('%s%il' % (endian, nints)), data)
@@ -128,7 +137,7 @@ class FortranFormat(object):
             f.write("unsigned long = %s\n" % str(longs2))
         if 'q' in types:
             longs = unpack(b('%s%iq' % (endian, ndoubles)), data[:ndoubles*8])
-            f.write("long long = %s\n" % str(longs))
+            f.write("long long (int64) = %s\n" % str(longs))
         return strings, ints, floats
 
     def show_ndata(self, n, types='ifs'):
@@ -149,8 +158,10 @@ class FortranFormat(object):
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
 
-        :retval data: since data can never be None, a None value
-                      indicates something bad happened.
+        Returns
+        -------
+        data :  since data can never be None, a None value
+                indicates something bad happened.
         """
         return self._skip_block_ndata()[0]
 
@@ -159,8 +170,10 @@ class FortranFormat(object):
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
 
-        :retval data: since data can never be None, a None value
-                      indicates something bad happened.
+        Returns
+        -------
+        data :  since data can never be None, a None value
+                indicates something bad happened.
         """
         data = self.f.read(4)
         ndata, = self.struct_i.unpack(data)
@@ -195,6 +208,8 @@ class FortranFormat(object):
         -------
         data : bytes
             the data in binary
+        ndata : int
+            len(data)
         """
         data = self.f.read(4)
         ndata, = self.struct_i.unpack(data)
@@ -221,7 +236,8 @@ class FortranFormat(object):
             data = self.read_block()
             imarker, = self.struct_i.unpack(data)
             if marker != imarker:
-                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (marker, imarker, markers, i, self.table_name)
+                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (
+                    marker, imarker, markers, i, self.table_name)
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
@@ -252,12 +268,14 @@ class FortranFormat(object):
             self.n = ni
             self.f.seek(self.n)
             #for i in range(n):
-                #self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (i, macro_rewind or rewind))
+                #self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (
+                    #i, macro_rewind or rewind))
         else:
             #if not macro_rewind:
             if self.is_debug_file:
                 for i in range(n):
-                    self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (i, macro_rewind or rewind))
+                    self.binary_debug.write('get_nmarkers- [4, %i, 4]; macro_rewind=%s\n' % (
+                        i, macro_rewind or rewind))
         return markers
 
     def get_marker1(self, rewind=True, macro_rewind=False):
@@ -269,6 +287,8 @@ class FortranFormat(object):
         ----------
         rewind : bool
             should the file be returned to the starting point
+        macro_rewind : bool
+            ???
 
         Returns
         -------
@@ -284,7 +304,9 @@ class FortranFormat(object):
             self.f.seek(self.n)
         else:
             if self.is_debug_file:
-                self.binary_debug.write('get_marker - [4, %i, 4]; macro_rewind=%s\n' % (marker, macro_rewind or rewind))
+                msg = 'get_marker - [4, %i, 4]; macro_rewind=%s\n' % (
+                    marker, macro_rewind or rewind)
+                self.binary_debug.write(msg)
         return marker
 
     def _skip_subtables(self):
@@ -316,6 +338,7 @@ class FortranFormat(object):
         raise NotImplementedError('this should be overwritten')
 
     def _read_subtables(self):
+        """reads a series of subtables"""
         # this parameters is used for numpy streaming
         self._table4_count = 0
         self.is_table_1 = True
@@ -380,6 +403,27 @@ class FortranFormat(object):
         raise NotImplementedError('overwrite this')
 
     def _read_subtable_3_4(self, table3_parser, table4_parser, passer):
+        """
+        Reads a series of subtable 3/4
+
+        Parameters
+        ----------
+        table3_parser : bool / function
+            None : just to break the code if we're on the array sizing step
+            function : the table 3 reading function
+        table4_parser :bool / function
+            None : just to break the code if we're on the array sizing step
+            function : the table 4 reading function
+        passer : bool
+            flag to see if we're skipping tables
+
+        Returns
+        -------
+        flag : bool
+            True : ???
+            False : failed???
+            None : passed???
+        """
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         if self.is_debug_file:
@@ -433,6 +477,11 @@ class FortranFormat(object):
             the parser function for table 4
         record_len : int
             the length of the record block
+
+        Returns
+        -------
+        n : int
+            the number of bytes that have been read
         """
         datai = b''
         n = 0
@@ -554,12 +603,15 @@ class FortranFormat(object):
                     self.obj.ntimes += 1
                     ntotal = record_len // (self.num_wide * 4) * self._data_factor
 
-                    # this has a problem with XYPLOT data if there is a result request in the same format
-                    #    e.g. OESNLXD/OES1X1 tables if they both have the same element ID
+                    # this has a problem with XYPLOT data if there is a result
+                    #    request in the same format (e.g. OESNLXD/OES1X1 tables
+                    #    if they both have the same element ID)
+                    #
                     #class_name = self.obj.__class__.__name__
                     #if class_name == 'RealBush1DStressArray':
                         #print('%s.ntotal = %s' % (class_name, ntotal))
-                        #print('num_wide=%s factor=%s len=%s ntotal=%s' % (self.num_wide, self._data_factor, record_len, ntotal))
+                        #print('num_wide=%s factor=%s len=%s ntotal=%s' % (
+                            #self.num_wide, self._data_factor, record_len, ntotal))
                     self.obj.ntotal = ntotal
                     self.obj._ntotals.append(ntotal)
 
@@ -568,6 +620,11 @@ class FortranFormat(object):
                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         else:
             raise RuntimeError(self.read_mode)
+        self._cleanup_data_members()
+        return n
+
+    def _cleanup_data_members(self):
+        """deletes variables from previous tables"""
         del_words = [
             'words',
             #'Title',
@@ -603,7 +660,6 @@ class FortranFormat(object):
         if msg:
             print(object_attributes(self))
             print(msg)
-        return n
 
     def is_valid_subcase(self):
         """
@@ -614,7 +670,7 @@ class FortranFormat(object):
         is_valid : bool
             should this subcase defined by self.isubcase be read?
         """
-        if not self.isAllSubcases:
+        if not self.is_all_subcases:
             if hasattr(self, 'isubcase') and self.isubcase in self.valid_subcases:
                 return True
             return False
@@ -637,6 +693,11 @@ class FortranFormat(object):
         The record length helps us figure out data block size, which is used
         to quickly size the arrays.  We just need a bit of meta data and can
         jump around quickly.
+
+        Returns
+        -------
+        record_length : int
+            the length of the data block
         """
         if self.is_debug_file:
             self.binary_debug.write('_get_record_length\n')
@@ -666,6 +727,14 @@ class FortranFormat(object):
         return len_record
 
     def _skip_record(self):
+        """
+        the skip version of ``_read_record``
+
+        Returns
+        -------
+        record : None
+            a record of None indicates a skipped block
+        """
         markers0 = self.get_nmarkers(1, rewind=False)
         record = self._skip_block()
 
@@ -676,7 +745,6 @@ class FortranFormat(object):
             record = self._skip_block()
             markers1 = self.get_nmarkers(1, rewind=True)
         return record
-        # return None #  TODO: which one do I use?
 
     def _stream_record(self, debug=True):
         """
@@ -688,10 +756,11 @@ class FortranFormat(object):
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
         record, nrecord = self._read_block_ndata()
         if self.is_debug_file and debug:
-            self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
+            self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (
+                nrecord, nrecord))
         if(markers0[0]*4) != len(record):
-            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (markers0[0]*4, len(record), self.table_name)
-            raise FortranMarkerError(msg)
+            raise FortranMarkerError('markers0=%s*4 len(record)=%s; table_name=%r' % (
+                markers0[0]*4, len(record), self.table_name))
         yield record
         self.istream += 1
 
@@ -708,27 +777,30 @@ class FortranFormat(object):
             record, nrecordi = self._read_block_ndata()
             yield record
             self.istream += 1
-
             markers1 = self.get_nmarkers(1, rewind=True)
             #nloop += 1
 
     def _read_record(self, stream=False, debug=True, macro_rewind=False):
+        """reads a record"""
         return self._read_record_ndata(stream, debug, macro_rewind)[0]
 
     def _read_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+        """reads a record and the length of the record"""
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))
+            self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
+                markers0[0], macro_rewind))
         record, nrecord = self._read_block_ndata()
 
         if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
+            msg = 'read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (
+                nrecord, nrecord, macro_rewind)
+            self.binary_debug.write(msg)
         if markers0[0]*4 != len(record):
-            msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (markers0[0]*4, len(record), self.table_name)
-            raise FortranMarkerError(msg)
+            raise FortranMarkerError('markers0=%s*4 len(record)=%s; table_name=%r' % (
+                markers0[0]*4, len(record), self.table_name))
 
         markers1 = self.get_nmarkers(1, rewind=True)
-
         if markers1[0] > 0:
             nloop = 0
             records = [record]
@@ -754,6 +826,7 @@ class FortranFormat(object):
         return record, nrecord
 
     def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
+        """the skip version of ``_read_record_ndata``"""
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
@@ -761,8 +834,8 @@ class FortranFormat(object):
         record, nrecord = self._skip_block_ndata()
 
         if self.is_debug_file and debug:
-            self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (
-                nrecord, nrecord, macro_rewind))
+            self.binary_debug.write('read_record - record = [%i, recordi, %i]; '
+                                    'macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
         if markers0[0]*4 != nrecord:
             msg = 'markers0=%s*4 len(record)=%s; table_name=%r' % (
                 markers0[0]*4, nrecord, self.table_name)

@@ -278,7 +278,7 @@ class OP2(object):
             self._intstru = self._endian + '%dq'
             self._ibytes = 8
             self._Str = struct.Struct(self._endian + 'q')
-        # print('bit64 = ', self._bit64)
+        #print('bit64 = ', self._bit64)
 
         self._rowsCutoff = 3000
         self._int32str = self._endian + 'i4'
@@ -310,8 +310,8 @@ class OP2(object):
 
         self._fileh.read(4)  # reclen
         frm = self._intstru % key
-        bytes = self._ibytes*key
-        self._date = struct.unpack(frm, self._fileh.read(bytes))
+        kbytes = self._ibytes * key
+        self._date = struct.unpack(frm, self._fileh.read(kbytes))
         # self._date = np.fromfile(self._fileh, self._intstr, key)
         self._fileh.read(4)  # endrec
         self._get_key()
@@ -322,8 +322,7 @@ class OP2(object):
         self._get_key()
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
-        self._label = self._fileh.read(reclen).decode().\
-            strip().replace(' ', '')
+        self._label = self._fileh.read(reclen).decode().strip().replace(' ', '')
         self._fileh.read(4)  # endrec
         self._skip_key(2)
 
@@ -375,7 +374,7 @@ class OP2(object):
         """
         eot, key = self._read_op2_end_of_table()
         if key == 0:
-            # print('return None, None, None')
+            #print('return None, None, None')
             return None, None, None
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
@@ -615,10 +614,10 @@ class OP2(object):
         """
         key = self._get_key()
         if self._ibytes == 4:
-            header_Str = struct.Struct(self._endian + 'iii')
+            header_str = struct.Struct(self._endian + 'iii')
             hbytes = 12
         else:
-            header_Str = struct.Struct(self._endian + 'qqq')
+            header_str = struct.Struct(self._endian + 'qqq')
             hbytes = 24
 
         eot = 0
@@ -627,7 +626,7 @@ class OP2(object):
         while not eot:
             while key > 0:
                 self._fileh.read(4)  # reclen
-                header = header_Str.unpack(self._fileh.read(hbytes))
+                header = header_str.unpack(self._fileh.read(hbytes))
                 if header == (7107, 71, 138):
                     if key < self._rowsCutoff:
                         bytes = (key-3)*self._ibytes
@@ -917,7 +916,7 @@ class OP2(object):
         Can currently only read a real eigenvalue table (ACODE,4 = 2,
         TCODE,1 = 1, TCODE,2 = 7, and TCODE,7 in [0, 2]).
         """
-        float2_Str = struct.Struct(self._endian + 'ff')
+        float2_str = struct.Struct(self._endian + 'ff')
         iif6_int = np.dtype(self._endian+'i4')
         iif6_bytes = 32
         if self._ibytes == 4:
@@ -965,7 +964,7 @@ class OP2(object):
                 self.skip_op2_table()
                 return
             self._fileh.read(self._ibytes)  # mode bytes
-            lam[J] = float2_Str.unpack(self._fileh.read(8))[0]
+            lam[J] = float2_str.unpack(self._fileh.read(8))[0]
             # ttl bytes = reclen + 4 + 3*(4+ibytes+4)
             #           = reclen + 28 - 3*ibytes
             # read bytes = 4*ibytes + ibytes + 8 = 8 + 5*ibytes
@@ -1091,12 +1090,12 @@ class OP2(object):
         """
         if self._ibytes == 4:
             Str = struct.Struct(self._endian + 'iiiiiiddd')
-            Sbytes = 24 + 24
+            sbytes = 24 + 24
             wpg = 12  # words per grid
             wpd = 2   # words per double
         else:
             Str = struct.Struct(self._endian + 'qqqqqqddd')
-            Sbytes = 48 + 24
+            sbytes = 48 + 24
             wpg = 9   # words per grid
             wpd = 1   # words per double
         rfrm = self._endian + '%dd'
@@ -1134,7 +1133,7 @@ class OP2(object):
 
             Av = A + v
             for i in range(grids):
-                datarec[Av + i*9] = Str.unpack(self._fileh.read(Sbytes))
+                datarec[Av + i*9] = Str.unpack(self._fileh.read(sbytes))
 
             # read in remainder of record if any
             ileft = 0
@@ -1183,8 +1182,8 @@ class OP2(object):
 
         The x, y, z values are the grid location in basic.
         """
-        Str = struct.Struct(self._endian + 'ifff')
-        Sbytes = 16
+        struc = struct.Struct(self._endian + 'ifff')
+        sbytes = 16
         wpg = 4  # words per grid
         wpd = 1  # words per single
         rfrm = self._endian + '%df'
@@ -1221,7 +1220,7 @@ class OP2(object):
 
             Av = A + v
             for i in range(grids):
-                datarec[Av + i*4] = Str.unpack(self._fileh.read(Sbytes))
+                datarec[Av + i*4] = struc.unpack(self._fileh.read(sbytes))
 
             # read in remainder of record if any
             ileft = 0
@@ -1292,7 +1291,7 @@ class OP2(object):
         system.
         """
         Str = struct.Struct(self._endian + 'ii' + 'f'*12)
-        Sbytes = 4*14
+        sbytes = 4 *14
         wpg = 14   # words per grid
         wpd = 1    # words per single
         key = self._get_key()
@@ -1330,7 +1329,7 @@ class OP2(object):
 
             Av = A + v
             for i in range(grids):
-                datarec[Av + i*14] = Str.unpack(self._fileh.read(Sbytes))
+                datarec[Av + i*14] = Str.unpack(self._fileh.read(sbytes))
 
             # read in remainder of record if any
             ileft = 0
@@ -1622,19 +1621,22 @@ class OP2(object):
 
         This routine is beta -- check output carefully.
         """
-        def getStr(iprev, elemtype, ir_Str, ir_bytes):
+        def get_str(iprev, elemtype, ir_str, ir_bytes):
+            """
+            ir_str : ???
+            """
             if np.any(elemtype == np.array([4, 5])):
                 ints_rec2 = 1
             else:
                 ints_rec2 = 2
             if ints_rec2 != iprev:
                 if self._bit64:
-                    ir_Str = struct.Struct(self._endian + 'q'*ints_rec2)
+                    ir_str = struct.Struct(self._endian + 'q'*ints_rec2)
                     ir_bytes = 8*ints_rec2
                 else:
-                    ir_Str = struct.Struct(self._endian + 'i'*ints_rec2)
+                    ir_str = struct.Struct(self._endian + 'i'*ints_rec2)
                     ir_bytes = 4*ints_rec2
-            return ir_Str, ir_bytes, ints_rec2
+            return ir_str, ir_bytes, ints_rec2
 
         if self._bit64:
             rfrm = self._endian + 'f8'
@@ -1647,7 +1649,7 @@ class OP2(object):
         u1 = self.read_op2_record()
         elemtype = u1[1]
         elemid = u1[2]
-        ir_Str, ir_bytes, ints_rec2 = getStr(0, elemtype, None, None)
+        ir_str, ir_bytes, ints_rec2 = get_str(0, elemtype, None, None)
         nwords = u1[9]
         key = self._get_key()
         block = 7*4+3*self._ibytes
@@ -1665,7 +1667,7 @@ class OP2(object):
         while key >= nwords:
             L = nwords - ints_rec2
             fp.read(4)   # reclen
-            dataint = ir_Str.unpack(fp.read(ir_bytes))
+            dataint = ir_str.unpack(fp.read(ir_bytes))
             id_cur = dataint[0] // 10
             if id1 == -1:
                 id1 = id_cur
@@ -1683,7 +1685,7 @@ class OP2(object):
 
             # read rest of record:
             for i in range(1, key // nwords):
-                dataint = ir_Str.unpack(fp.read(ir_bytes))
+                dataint = ir_str.unpack(fp.read(ir_bytes))
                 id_cur = dataint[0] // 10
                 if drmrow+L >= drmrows:
                     iddof = np.vstack((iddof,
@@ -1706,9 +1708,9 @@ class OP2(object):
                     raise RuntimeError('u1[1] != elemtype')
                 # above check precludes next two lines:
                 # elemtype = u1[1]
-                # ir_Str, ir_bytes, ints_rec2 = getStr(ints_rec2,
-                #                                      elemtype,
-                #                                      ir_Str, ir_bytes)
+                # ir_str, ir_bytes, ints_rec2 = get_str(ints_rec2,
+                #                                       elemtype,
+                #                                       ir_str, ir_bytes)
                 # if u1[2] != elemid:
                 #     raise RuntimeError('u1[2] != elemid ... should it?')
                 elemid = u1[2]

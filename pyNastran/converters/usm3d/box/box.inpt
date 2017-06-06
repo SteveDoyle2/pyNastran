@@ -1,0 +1,15 @@
+USM3D (v. 5.2) - ONERA M6 wing -  OM6_KE FULL VISCOUS GRID
+      Mach     alpha      beta  ReUe,mil   Tinf,dR    itwall    Tw/Tinf ipwall
+   0.84470   5.06000   0.00000 21.191770     460.0         0       -1.0     0
+      sref      cref      bref       xmc       ymc       zmc
+   0.52550   0.66700   1.00000   0.00000   0.00000   0.00000
+      impl   dt/cfl1     iramp      cfl2    cflmin    GS_tol
+         1    -20.00        40      150.      10.0     0.000
+     irest    mstage   iresmth     dgmax   p_break     p_min    limiter
+         0         3         1      0.25      0.01     0.001         1.
+   nupdate    nwrest    ipltqn  idiagnos   nodeypl
+        20       200         2         3         0
+    iorder  lapl-avg   high-bc      ifds     ivisc    EV_lim
+         0         2         1         1         2       0.1
+      ncyc  nengines   compF&M     cldes  
+      1500         0         0        0. 

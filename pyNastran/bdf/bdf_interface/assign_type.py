@@ -23,6 +23,11 @@ def parse_components(card, ifield, fieldname):
         field number
     fieldname : str
         name of field
+
+    Returns
+    -------
+    components : str
+        a string of the dofs '0' or '123456' (not all are required)
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
@@ -213,6 +218,25 @@ def fields(f, card, fieldname, i, j=None):
     #for ii, default in enumerate(defaults):
         #fs.append(f(card, ii + i, fieldname + str(ii), default))
     #return fs
+
+def modal_components(card, ifield, fieldname):
+    """
+    Used by TIC
+
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+    """
+    value = integer(card, ifield, fieldname)
+    if not(-1 <= value <= 6):
+        raise SyntaxError('%s=%s (field #%s) on card must be an integer (-1 <= val <= 6).\n'
+                          'card=%s' % (fieldname, value, ifield, card))
+    return value
 
 def integer(card, ifield, fieldname):
     """
@@ -714,7 +738,15 @@ def _get_dtype(value):
     """
     Get the type of the input value in a form that is clear.
 
-    :param value: the value to get the type of
+    Parameters
+    ----------
+    value : int/float/str/None
+        the value to get the type of
+
+    Returns
+    -------
+    dtype : str
+        the type of the value
     """
     try:
         value = interpret_value(value)
@@ -745,6 +777,11 @@ def integer_double_or_string(card, ifield, fieldname):
         field number
     fieldname : str
         name of field
+
+    Returns
+    -------
+    value : varies
+        the value of the field
     """
     #assert isinstance(card, BDFCard), type(card)
     #assert isinstance(ifield, integer_types), type(ifield)
@@ -792,6 +829,11 @@ def string(card, ifield, fieldname):
         field number
     fieldname : str
         name of field
+
+    Returns
+    -------
+    value : str
+        the value of the field
     """
     #assert isinstance(card, BDFCard), type(card)
     #assert isinstance(ifield, integer_types), type(ifield)
@@ -834,6 +876,11 @@ def string_or_blank(card, ifield, fieldname, default=None):
         name of field
     default : str, None
         the default value for the field (default=None)
+
+    Returns
+    -------
+    value : varies
+        the value of the field
     """
     #assert isinstance(card, BDFCard), type(card)
     #assert isinstance(ifield, integer_types), type(ifield)

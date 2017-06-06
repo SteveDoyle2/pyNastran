@@ -59,7 +59,7 @@ class CBUSH(BushElement):
                 if n == 5:
                     self.g0 = value
                 else:
-                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+                    raise KeyError('Field %r=%r is an invalid CBUSH entry.' % (n, value))
             else:
                 if n == 5:
                     self.x[0] = value
@@ -68,16 +68,56 @@ class CBUSH(BushElement):
                 elif n == 7:
                     self.x[2] = value
                 else:
-                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+                    raise KeyError('Field %r=%r is an invalid CBUSH entry.' % (n, value))
 
-    def __init__(self, eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=''):
+    def __init__(self, eid, pid, nids, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment=''):
+        """
+        Creates a CBUSH card
+
+        Parameters
+        ----------
+        eid : int
+            Element id
+        pid : int
+            Property id (PBUSH)
+        nids : List[int, int]
+            node ids; connected grid points at ends A and B
+            The nodes may be coincident, but then cid is required.
+        x : List[float, float, float]; None
+            List : the directional vector used to define the stiffnesses
+                   or damping from the PBUSH card
+            None : use g0
+        g0 : int/None
+            int : the directional vector used to define the stiffnesses
+                  or damping from the PBUSH card
+            None : use x
+        cid : int; default=None
+            Element coordinate system identification. A 0 means the basic
+            coordinate system. If CID is blank, then the element coordinate
+            system is determined from GO or Xi.
+        s: float; default=0.5
+            Location of spring damper (0 <= s <= 1.0)
+        ocid : int; default=-1
+            Coordinate system identification of spring-damper offset.
+            (Integer > -1; Default = -1, which means the offset
+            point lies on the line between GA and GB)
+        si : List[float, float, float]; default=None
+            Components of spring-damper offset in the OCID coordinate system
+            if OCID > 0.
+            None : [None, None, None]
+        comment : str; default=''
+            a comment for the card
+        """
         BushElement.__init__(self)
         if comment:
             self.comment = comment
+            #: if OCID > 0.
+        if si is None:
+            si = [None, None, None]
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.x = x
         self.g0 = g0
         self.cid = cid
@@ -87,6 +127,16 @@ class CBUSH(BushElement):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBUSH card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -126,16 +176,22 @@ class CBUSH(BushElement):
               double_or_blank(card, 12, 's2'),
               double_or_blank(card, 13, 's3')]
         assert len(card) <= 14, 'len(CBUSH card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
+        return CBUSH(eid, pid, [ga, gb], x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, f, comment=''):
-        ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
-        return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
+        """
+        Adds a CBUSH card from the OP2
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
+        return CBUSH(eid, pid, [ga, gb], x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
     @property
     def nodes(self):
@@ -205,12 +261,14 @@ class CBUSH(BushElement):
 
     def uncross_reference(self):
         self.ga = self.Ga()
-        self.gb = self.Gb()
         self.pid = self.Pid()
         self.cid = self.Cid()
+        self.gb = self.Gb()
         if self.cid is not None:
             del self.cid_ref
-        del self.ga_ref, self.gb_ref, self.pid_ref
+        if self.gb is not None:
+            del self.gb_ref
+        del self.ga_ref, self.pid_ref
 
     def raw_fields(self):
         if self.g0 is not None:
@@ -244,25 +302,35 @@ class CBUSH1D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid',
     }
 
-    def __init__(self, eid, pid, ga, gb, cid, comment=''):
+    def __init__(self, eid, pid, nids, cid, comment=''):
         if comment:
             self.comment = comment
         BushElement.__init__(self)
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.cid = cid
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBUSH1D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer_or_blank(card, 4, 'gb')
         cid = integer_or_blank(card, 5, 'cid')
         assert len(card) <= 6, 'len(CBUSH1D card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+        return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
@@ -271,7 +339,7 @@ class CBUSH1D(BushElement):
         #ga = data[2]
         #gb = data[3]
         #raise NotImplementedError(data)
-        #return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+        #return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -299,7 +367,11 @@ class CBUSH1D(BushElement):
         self.gb = self.Gb()
         self.cid = self.Cid()
         self.pid = self.Pid()
-        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
+        if self.gb:
+            del self.gb_ref
+        if self.cid is not None:
+            del self.cid_ref
+        del self.ga_ref, self.pid_ref
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -329,10 +401,6 @@ class CBUSH1D(BushElement):
     def nodes(self):
         return [self.ga, self.gb]
 
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
-
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
@@ -357,24 +425,34 @@ class CBUSH2D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
     }
 
-    def __init__(self, eid, pid, ga, gb, cid, plane, sptid, comment=''):
+    def __init__(self, eid, pid, nids, cid, plane, sptid, comment=''):
         BushElement.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.ga = ga
-        self.gb = gb
+        self.ga = nids[0]
+        self.gb = nids[1]
         self.cid = cid
         self.plane = plane
         self.sptid = sptid
         if self.plane not in ['XY', 'YZ', 'ZX']:
-            msg = ("plane not in required list, plane=|%s|\n"
+            msg = ("plane not in required list, plane=%r\n"
                    "expected planes = ['XY','YZ','ZX']" % self.plane)
             raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a CBUSH2D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid')
         ga = integer(card, 3, 'ga')
@@ -383,7 +461,7 @@ class CBUSH2D(BushElement):
         plane = string_or_blank(card, 6, 'plane', 'XY')
         sptid = integer_or_blank(card, 7, 'sptid')
         assert len(card) <= 8, 'len(CBUSH2D card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+        return CBUSH2D(eid, pid, [ga, gb], cid, plane, sptid, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
@@ -392,7 +470,7 @@ class CBUSH2D(BushElement):
         #ga = data[2]
         #gb = data[3]
         #raise NotImplementedError(data)
-        #return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+        #return CBUSH2D(eid, pid, [ga, gb], cid, plane, sptid, comment=comment)
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -419,10 +497,6 @@ class CBUSH2D(BushElement):
     @property
     def nodes(self):
         return [self.ga, self.gb]
-
-    #def nodeIDs(self):
-        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -455,7 +529,9 @@ class CBUSH2D(BushElement):
         self.gb = self.Gb()
         self.cid = self.Cid()
         self.pid = self.Pid()
-        del self.ga_ref, self.gb_ref, self.cid_ref, self.pid_ref
+        if self.cid is not None:
+            del self.cid_ref
+        del self.ga_ref, self.gb_ref, self.pid_ref
 
     def raw_fields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),

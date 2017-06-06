@@ -66,6 +66,7 @@ class ApplicationLogWidget(QDockWidget):
 
 
 if is_scintilla:
+    print('using scintilla')
     class SimplePythonEditorWidget(Qsci.QsciScintilla):
         ARROW_MARKER_NUM = 8
 
@@ -173,16 +174,9 @@ class PythonConsoleWidget(QDockWidget):
         self.setWidget(vbox_widget)
 
     def setup_connections(self):
-        if qt_version == 4:
-            self.connect(self.execute_python_button, QtCore.SIGNAL('clicked()'),
-                         self.on_execute_python_button)
-            self.connect(self.execute_and_clear_python_button, QtCore.SIGNAL('clicked()'),
-                         self.on_execute_and_clear_python_button)
-
-        else:
-            self.execute_python_button.clicked.connect(self.on_execute_python_button)
-            self.execute_and_clear_python_button.clicked.connect(
-                self.on_execute_and_clear_python_button)
+        self.execute_python_button.clicked.connect(self.on_execute_python_button)
+        self.execute_and_clear_python_button.clicked.connect(
+            self.on_execute_and_clear_python_button)
         #self.on_rig
 
         # TODO: enables the right click menu
@@ -216,9 +210,9 @@ class PythonConsoleWidget(QDockWidget):
         TDOO: not done...
         """
         return
-        parentPosition = self.mapToGlobal(QtCore.QPoint(0, 0))
-        self.listMenu.move(parentPosition + QPos)
-        self.listMenu.show()
+        #parentPosition = self.mapToGlobal(QtCore.QPoint(0, 0))
+        #self.listMenu.move(parentPosition + QPos)
+        #self.listMenu.show()
 
     def menuItemClicked_1(self):
         print(1)

@@ -1,15 +1,9 @@
 from __future__ import print_function
-#from collections import defaultdict
-#from functools import reduce
-
 from six import iteritems, string_types, PY2
-#from six.moves import zip, range
-
 
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
-
 from numpy.linalg import norm
 import scipy
 
@@ -306,10 +300,17 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         #skip_nodes.append(nid2)
     return
 
-def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max=4):
-    """helper function for `bdf_equivalence_nodes`"""
+def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max=4, msg=''):
+    """
+    helper function for `bdf_equivalence_nodes`
+
+    Parameters
+    ----------
+    msg : str; default=''
+        custom message used for errors
+    """
     assert isinstance(tol, float), 'tol=%r' % tol
-    kdt = _get_tree(nodes_xyz)
+    kdt = _get_tree(nodes_xyz, msg=msg)
 
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
@@ -323,9 +324,10 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max
     return kdt, ieq, slots
 
 
-def _get_tree(nodes_xyz):
+def _get_tree(nodes_xyz, msg=''):
     """gets the kdtree"""
     assert isinstance(nodes_xyz, np.ndarray), type(nodes_xyz)
+    assert nodes_xyz.shape[0] > 0, 'nnodes=0%s' % msg
 
     # build the kdtree
     if scipy.__version__ < '0.18.1':

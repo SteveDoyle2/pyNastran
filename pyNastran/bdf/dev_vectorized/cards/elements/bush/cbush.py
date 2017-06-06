@@ -9,7 +9,6 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank)
-from pyNastran.bdf.cards.elements.bars import CBAROR
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
 
@@ -90,7 +89,7 @@ class CBUSH(Element):
                        double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
             self.x[i, :] = x
             if norm(x) == 0.0:
-                msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
+                msg = 'G0 vector defining plane 1 is not defined on CBUSH eid=%s.\n' % eid
                 msg += 'G0 = %s\n' % field5
                 msg += 'X  = %s\n' % x
                 msg += '%s' % card

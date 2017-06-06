@@ -51,7 +51,6 @@ class AddCard(BDFAttributes):
             self.params[key] = param
             self._type_to_id_map[param.type].append(key)
 
-        pass
     def _add_plotel_object(self, elem, allow_overwrites=False):
         """adds an PLOTEL object"""
         key = elem.eid
@@ -67,6 +66,7 @@ class AddCard(BDFAttributes):
                     assert elem.eid not in self.plotels, 'eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, self.plotels[elem.eid], elem)
         self.plotels[key] = elem
         self._type_to_id_map[elem.type].append(key)
+
     def _add_doptprm_object(self, doptprm, comment=''):
         """adds a DOPTPRM"""
         self.doptprm = doptprm

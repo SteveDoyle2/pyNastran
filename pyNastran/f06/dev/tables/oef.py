@@ -1,5 +1,6 @@
 from six.moves import zip
-#from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForce, RealRodForce # RealPlateForce
+from pyNastran.op2.tables.oef_forces.oef_force_objects import (
+    RealPlateBilinearForceArray, RealRodForceArray) # RealPlateForceArray
 
 class OEF(object):
     def __init__(self):
@@ -25,7 +26,10 @@ class OEF(object):
             self.i += 1
             if 'PAGE' in line:
                 return data
-            sline = [line[0:15], line[15:24].strip(), line[24:44], line[44:61], line[61:78], line[78:95], line[95:112], line[112:129]]
+            sline = [
+                line[0:15], line[15:24].strip(), line[24:44], line[44:61],
+                line[61:78], line[78:95], line[95:112], line[112:129],
+            ]
             sline = self._parse_line_gradients_fluxes(sline, Format)
             data.append(sline)
         return data
@@ -121,7 +125,7 @@ class OEF(object):
         #print('isubcase =', isubcase)
         if isubcase not in slot:
             assert 'nonlinear_factor' in data_code
-            slot[isubcase] = RealRodForce(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealRodForceArray(data_code, is_sort1, isubcase, transient)
         slot[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -159,7 +163,9 @@ class OEF(object):
 
         data = []
         for line in lines:
-            eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy = line[1:15], line[15:20], line[20:35], line[35:49], line[49:63], line[63:77], line[77:91], line[91:105], line[105:119], line[119:140]
+            eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy = (
+                line[1:15], line[15:20], line[20:35], line[35:49], line[49:63], line[63:77],
+                line[77:91], line[91:105], line[105:119], line[119:140])
             eid = eid.strip()
             grid = grid.strip()
             if eid:
@@ -176,21 +182,22 @@ class OEF(object):
             qy = float(qy)
             data.append([eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy])
 
-        data_code = {'analysis_code': analysis_code,
-                    'device_code': 1,
-                    'sort_code': 0,
-                    'sort_bits': [0, 0, 0],
+        data_code = {
+            'analysis_code': analysis_code,
+            'device_code': 1,
+            'sort_code': 0,
+            'sort_bits': [0, 0, 0],
 
-                    'table_name': 'OEF1X', # probably wrong
-                    'table_code': 5, # wrong
-                    'num_wide': 10,
+            'table_name': 'OEF1X', # probably wrong
+            'table_code': 5, # wrong
+            'num_wide': 10,
 
-                    'format_code': 1,
-                    'element_name': element_name, 'element_type': element_type,
-                    'nonlinear_factor': dt,
-                    'data_names':['lsdvmn'],
-                    'lsdvmn': 1,
-                    }
+            'format_code': 1,
+            'element_name': element_name, 'element_type': element_type,
+            'nonlinear_factor': dt,
+            'data_names':['lsdvmn'],
+            'lsdvmn': 1,
+        }
 
         is_sort1 = True
         ngrids = 4
@@ -202,7 +209,7 @@ class OEF(object):
 
         if isubcase not in slot:
             assert 'nonlinear_factor' in data_code
-            slot[isubcase] = RealPlateBilinearForce(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealPlateBilinearForceArray(data_code, is_sort1, isubcase, transient)
         slot[isubcase].add_f06_data(transient, data, element_name, ngrids)
         self.iSubcases.append(isubcase)
 

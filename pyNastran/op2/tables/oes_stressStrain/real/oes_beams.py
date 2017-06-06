@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import range, zip
 from itertools import count
 import numpy as np
@@ -85,7 +85,7 @@ class RealBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
@@ -166,10 +166,8 @@ class RealBeamArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add(self, dt, eid, out):
-        self.add_sort1(dt, eid, out)
-
     def add_sort1(self, dt, eid, out):
+        """unvectorized method for adding SORT1 transient data"""
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
         self.element_node[self.itotal, :] = [eid, grid]
@@ -178,7 +176,7 @@ class RealBeamArray(OES_Object):
                                                  smax, smin, mst, msc]
         self.itotal += 1
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -207,6 +205,8 @@ class RealBeamArray(OES_Object):
         n = len(headers)
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  xxb.shape = %s\n' % str(self.xxb.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -336,7 +336,7 @@ class RealNonlinearBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
-        if isinstance(self.nonlinear_factor, int):
+        if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 3), dtype='int32')
@@ -352,7 +352,7 @@ class RealNonlinearBeamArray(OES_Object):
         #self.xxb = zeros(self.ntotal, dtype='float32')
         self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

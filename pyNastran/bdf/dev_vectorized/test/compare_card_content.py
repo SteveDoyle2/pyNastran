@@ -52,8 +52,8 @@ def compare_card_content(fem1, fem2):
         'properties', 'materials', 'creep_materials',
         #'loads',
         'coords',
-        'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas',
-        'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies', 'sets', 'setsSuper',
+        'spcs', 'spcoffs', 'mpcs', 'dareas',
+        'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies', 'sets',
         'tables', 'random_tables', 'methods', 'cMethods']
     for name in check_obj_names:
         check_length(fem1, fem2, name)
@@ -159,11 +159,6 @@ def compare_card_content(fem1, fem2):
     for key in fem1.sets:
         card1 = fem1.sets[key]
         card2 = fem2.sets[key]
-        assert_fields(card1, card2)
-
-    for key in fem1.setsSuper:
-        card1 = fem1.setsSuper[key]
-        card2 = fem2.setsSuper[key]
         assert_fields(card1, card2)
 
     for key in fem1.tables:

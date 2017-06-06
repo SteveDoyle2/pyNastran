@@ -4,13 +4,30 @@ Matlab
 
  * pyNastran also supports Matlab through the Matlab/Python interface.  [Information about setting up Matlab with Python can be found here.](http://www.mathworks.com/help/matlab/matlab-engine-for-python.html?s_tid=gn_loc_drop)
 
+Note about Speed
+================
+There are two ways to pull large data from Python to Nastran.
+
+   1.  Use the Matlab-Python Interface
+   2.  Do an Matlab call to Python, dump your OP2 results matrices using to hdf5
+       (using h5py) and load them into and load them Matlab.  It's recommended
+       that you don't use scipy's MAT reader as it seems to be buggy, not to
+       mention that hdf5 has replaced the MAT format in Matlab.
+
+Intuitively, it seems to that Option #1 should be faster, but for large problems,
+that doesn't seem to be the case.  Then again, Option #1, would be probably be
+better for any geometry related operation.  In other words, test it.
+
+
 Working around Matlab's oddities
 ================================
 Replace the base redirectstdout.m file (that for my installation is located in the following folder):
 
     C:\Program Files\MATLAB\MATLAB Production Server\R2015a\toolbox\matlab\external\interfaces\python\+python\+internal\redirectstdout.m
 
-with this file: https://github.com/SteveDoyle2/pyNastran/tree/master/docs/pyNastran_in_MATLAB_example/redirectstdout/redirectstdout.m
+with this file:
+
+    https://github.com/SteveDoyle2/pyNastran/tree/master/docs/pyNastran_in_MATLAB_example/redirectstdout/redirectstdout.m
 
 Also, instead of imports like:
 

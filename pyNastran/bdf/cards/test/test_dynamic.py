@@ -1,10 +1,7 @@
 import unittest
 
-import os
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, TSTEP
-
-from numpy import zeros, array_equal
+from pyNastran.bdf.bdf import BDF
 
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -23,8 +20,8 @@ class TestDynamic(unittest.TestCase):
         dt1 = dt2 = 0.1
         no1 = no2 = 3
         card = ['TSTEP', sid,
-         n1, dt1, no1, None, None, None, None, None,
-         n2, dt2, no2]
+                n1, dt1, no1, None, None, None, None, None,
+                n2, dt2, no2]
         model.add_card(card, card[0], comment='tstep comment')
         model.validate()
         tstep = model.tsteps[42]

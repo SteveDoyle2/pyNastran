@@ -1403,10 +1403,10 @@ class OP4(object):
 
         .. todo::  This method is not even close to being done
         """
-        if not precision in ('single', 'double', 'default'):
+        if precision not in ('single', 'double', 'default'):
             msg = "precision=%r and must be 'single', 'double', or 'default'" % precision
             raise ValueError(msg)
-        if not is_binary in (True, False):
+        if is_binary not in (True, False):
             raise ValueError('is_binary=%r and must be True or False' % is_binary)
         #if nR == nC: op4_form = 1   # square
         #else:        op4_form = 2   # rectangular

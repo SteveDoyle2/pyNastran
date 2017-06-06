@@ -39,6 +39,32 @@ class PBUSH(BushingProperty):
     }
 
     def __init__(self, pid, k, b, ge, rcv, mass_fields=None, comment=''):
+        """
+        Creates a PBUSH card, which defines a property for a CBUSH
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        k : List[float]
+            Nominal stiffness values in directions 1 through 6.
+            len(k) = 6
+        b : List[float]
+            Nominal damping coefficients in direction 1 through 6 in units of
+            force per unit velocity
+            len(b) = 6
+        ge : List[float]
+            Nominal structural damping constant in directions 1 through 6.
+            len(ge) = 6
+        rcv : List[float]
+            [sa, st, ea, et] = rcv
+            length(mass_fields) = 4
+        mass_fields : List[float]; default=None
+            length(mass_fields) = 1
+            This is an MSC only parameter.
+        comment : str; default=''
+            a comment for the card
+        """
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -77,6 +103,16 @@ class PBUSH(BushingProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBUSH card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         k_fields = []
         b_fields = []
         ge_fields = []
@@ -108,6 +144,16 @@ class PBUSH(BushingProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PBUSH card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
         (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
          g1, g2, g3, g4, g5, g6, sa, st, ea, et) = data
         k_fields = [k1, k2, k3, k4, k5, k6]
@@ -308,6 +354,16 @@ class PBUSH1D(BushingProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBUSH1D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1, 'pid')
         k = double_or_blank(card, 2, 'k', 0.0)
         c = double_or_blank(card, 3, 'c', 0.0)
@@ -528,15 +584,11 @@ class PBUSH1D(BushingProperty):
 class PBUSH2D(BushingProperty):
     type = 'PBUSH2D'
 
-    def __init__(self, card=None, data=None, comment=''):
-        BushingProperty.__init__(self, card, data)
+    def __init__(self, card=None, comment=''):
+        BushingProperty.__init__(self, card)
         if comment:
             self.comment = comment
-        if card:
-            raise NotImplementedError()
-        else:
-            raise NotImplementedError()
-
+        raise NotImplementedError()
     def write_card(self, size=8, is_double=False):
         """
         Writes the card with the specified width and precision
@@ -575,6 +627,16 @@ class PBUSHT(BushingProperty):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a PBUSHT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         k_tables = []
         b_tables = []
         ge_tables = []

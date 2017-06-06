@@ -32,7 +32,7 @@ class RealEigenvalues(BaseScalarObject):
     def __eq__(self, table):
         return True
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         msg = []
         neigenvalues = len(self.extraction_order)
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
@@ -151,7 +151,7 @@ class ComplexEigenvalues(BaseScalarObject):
     def __eq__(self, table):
         return True
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         neigenvalues = len(self.extraction_order)
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
@@ -256,7 +256,7 @@ class BucklingEigenvalues(BaseScalarObject):
     def __eq__(self, table):
         return True
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         neigenvalues = len(self.extraction_order)
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))

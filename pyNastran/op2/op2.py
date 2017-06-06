@@ -115,18 +115,19 @@ import sys
 
 import numpy as np
 
-from pyNastran.utils import object_attributes, object_methods, integer_types
-from pyNastran.op2.op2_scalar import OP2_Scalar
+from pyNastran.utils import (
+    object_attributes, object_methods, integer_types, ipython_info)
 from pyNastran.op2.tables.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
-#from pyNastran.op2.op2_writer import OP2Writer
-from pyNastran.op2.op2_f06_common import Op2F06Attributes
-from pyNastran.utils import ipython_info
+#from pyNastran.op2.op2_interface.op2_writer import OP2Writer
+from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
+from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
+             exclude_results=None, include_results=None,
              log=None, debug=True, debug_file=None, build_dataframe=None,
              skip_undefined_matrices=True, mode='msc', encoding=None):
     """
@@ -142,7 +143,9 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
                 will be used for superelements regardless of the option
     subcases : List[int, ...] / int; default=None->all subcases
         list of [subcase1_ID,subcase2_ID]
-
+    exclude_results / include_results : List[str] / str; default=None
+        a list of result types to exclude/include
+        one of these must be None
     build_dataframe : bool (default=None -> True if in iPython, False otherwise)
         builds a pandas DataFrame for op2 objects
     skip_undefined_matrices : bool; default=False
@@ -151,7 +154,10 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
         enables the debug log and sets the debug in the logger
     log : Log()
         a logging object to write debug messages to
-     (.. seealso:: import logging)
+        (.. seealso:: import logging)
+    mode : str; default='msc'
+        the version of the Nastran you're using
+        {nx, msc, optistruct}
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
     encoding : str
@@ -169,10 +175,19 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
+    if exclude_results and include_results:
+        msg = 'exclude_results or include_results must be None\n'
+        msg += 'exclude_results=%r\n' % exclude_results
+        msg += 'include_results=%r\n' % include_results
+        raise RuntimeError(msg)
+    elif exclude_results:
+        model.remove_results(exclude_results)
+    elif include_results:
+        model.set_results(include_results)
+
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
                    encoding=encoding)
-
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
     ## doesn't support F06 writer
@@ -183,18 +198,6 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
         #setattr(obj, attr_name, attr)
     #obj.get_op2_stats()
     return model
-
-
-#import sys
-#class CrashObject(object):
-    #def __init__(self):
-        #pass
-    #def write(self, msg):
-        #if 'DEBUG' not in msg and 'INFO' not in msg:
-            #raise RuntimeError(msg)
-    #def flush(self):
-        #pass
-#sys.stdout = CrashObject()
 
 
 #class OP2(OP2_Scalar, OP2Writer):
@@ -245,16 +248,18 @@ class OP2(OP2_Scalar):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model):
+        """diffs the current op2 model vs. another op2 model"""
         if not self.read_mode == op2_model.read_mode:
-            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (self.read_mode, op2_model.read_mode))
+            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
+                self.read_mode, op2_model.read_mode))
             return True
         table_types = self.get_table_types()
         for table_type in table_types:
             adict = getattr(self, table_type)
             bdict = getattr(op2_model, table_type)
-            # print('table_type=%s' % table_type)
             if len(adict) != len(bdict):
-                print('len(self.%s)=%s len(op2_model.%s)=%s' % (table_type, len(adict), table_type, len(bdict)))
+                print('len(self.%s)=%s len(op2_model.%s)=%s' % (
+                    table_type, len(adict), table_type, len(bdict)))
                 return False
             for key, avalue in iteritems(adict):
                 bvalue = bdict[key]
@@ -267,13 +272,16 @@ class OP2(OP2_Scalar):
                     msg = '%s is not an Array ... assume equal' % aname
                     print(msg)
                     raise NotImplementedError('%s __eq__' % aname)
-                    continue
+                    #continue
                 if avalue != bvalue:
                     print('key=%s table_type=%r is different; class_name=%r' % (key, table_type, aname))
                     return False
         return True
 
     def set_mode(self, mode):
+        """
+        Sets the mode as 'msc' or 'nx'
+        """
         if mode.lower() == 'msc':
             self.set_as_msc()
         elif mode.lower() == 'nx':
@@ -289,7 +297,11 @@ class OP2(OP2_Scalar):
         a result does not support vectorization.
 
         Vectorization is always True here.
-        :param ask:  Do you want to see a GUI of result types.
+
+        Parameters
+        ----------
+        ask: bool
+            Do you want to see a GUI of result types.
 
         +--------+---------------+---------+------------+
         | Case # | Vectorization |  Ask    | Read Modes |
@@ -397,6 +409,11 @@ class OP2(OP2_Scalar):
         self.log.debug('finished reading op2')
 
     def create_objects_from_matrices(self):
+        """
+        creates the following objects:
+          - sonitor3 : MONPNT3 object from the MP3F matrix
+          - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
+          """
         if 'MP3F' in self.matrices:
             self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
 
@@ -415,6 +432,7 @@ class OP2(OP2_Scalar):
             for obj in itervalues(result):
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
+        self.del_structs()
 
     def build_dataframe(self):
         """
@@ -467,7 +485,6 @@ class OP2(OP2_Scalar):
                     raise
                 #if i >= nbreak:
                     #return
-
 
     def combine_results(self, combine=True):
         """
@@ -624,7 +641,7 @@ class OP2(OP2_Scalar):
                         if case_key not in subcase_key2[subcasei]:
                             subcase_key2[isubcase].append(case_key)
         self.subcase_key = subcase_key2
-        #print('subcase_key =', self.subcase_key)
+        #print('subcase_key = %s' % self.subcase_key)
 
     def print_subcase_key(self):
         self.log.info('---self.subcase_key---')
@@ -664,6 +681,11 @@ class OP2(OP2_Scalar):
             the nodes in the global frame
             Don't use this if CD is only rectangular
             Use this if CD is not rectangular
+        debug : bool; default=False
+            developer debug
+
+        .. warning:: only works if all nodes are included...
+                     ``test_pynastrangui isat_tran.dat isat_tran.op2 -f nastran``
         """
         #output = {}
         disp_like_dicts = [
@@ -716,12 +738,23 @@ class OP2(OP2_Scalar):
                     if debug:
                         self.log.debug('coord\n%s' % coord)
                         self.log.debug(cid_transform)
-                        self.log.debug('inode = %s' % inode)
+                        self.log.debug('inode = %s' % [str(val).rstrip('L') for val in inode.tolist()])
+                        self.log.debug('data.shape = %s' % str(data.shape))
+                        self.log.debug('len(inode) = %s' % len(inode))
+                        assert np.array_equal(inode, np.unique(inode))
                     if coord_type in ['CORD2R', 'CORD1R']:
                         if is_global_cid:
                             self.log.debug('is_global_cid')
                             continue
                         self.log.debug('rectangular')
+
+
+                        # isat_tran.op2
+                        #  - nspoint = 4
+                        #  - ngrid = 5379
+                        #
+                        #  - ntotal = 5383
+                        #  data.shape = (101, 8, 6)
                         translation = data[:, inode, :3]
                         rotation = data[:, inode, 3:]
                         data[:, inode, :3] = translation.dot(cid_transform)

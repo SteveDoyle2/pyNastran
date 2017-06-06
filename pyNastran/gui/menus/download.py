@@ -102,12 +102,12 @@ class DownloadWindow(QDialog):
     def set_connections(self):
         if qt_version == 4:
             self.connect(self.link, QtCore.SIGNAL('clicked()'), self.on_download)
-            self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
         else:
             self.link.clicked.connect(self.on_download)
-            self.close_button.clicked.connect(self.on_cancel)
-            # ????
+
+        #self.link.linkActivated.connect(self.on_download)
+        self.close_button.clicked.connect(self.on_cancel)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -139,7 +139,7 @@ def main():
     import pyNastran
     app = QApplication(sys.argv)
     url = pyNastran.__website__
-    version = '0.8.0'
+    version = '1.0.0'
     main_window = DownloadWindow(url, version)
     main_window.show()
     app.exec_()
