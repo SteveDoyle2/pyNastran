@@ -631,7 +631,7 @@ class LegendPropertiesWindow(PyDialog):
         grid2.addWidget(self.show_radio, 1, 2)
         grid2.addWidget(self.hide_radio, 2, 2)
 
-        #grid2.addWidget(self.animate_button, 3, 1)
+        grid2.addWidget(self.animate_button, 3, 1)
 
 
         #grid2.setSpacing(0)
