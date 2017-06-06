@@ -204,19 +204,81 @@ class NSM(PointProperty):
         return self.comment + print_card_16(card)
 
 class NSML(NSM):
+    """
+    Defines a set of lumped non structural mass.
+
+    +------+-----+------+----+-------+----+-------+----+-------+
+    |  1   |  2  |  3   |  4 |   5   | 6  |   7   | 8  |   9   |
+    +======+=====+======+====+=======+====+=======+====+=======+
+    | NSML | SID | TYPE | ID | VALUE | ID | VALUE | ID | VALUE |
+    +------+-----+------+----+-------+----+-------+----+-------+
+    """
     type = 'NSML'
     def __init__(self, sid, Type, id, value, comment=''):
+        """
+        Creates an NSML card, which defines lumped non-structural mass
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        id : int
+            property id or element id depending on Type
+        value : float
+            the non-structural pass per unit length/area
+        comment : str; default=''
+            a comment for the card
+        """
         NSM.__init__(self, sid, Type, id, value, comment=comment)
 
 class NSML1(NSM1):
+    """
+    Defines lumped non structural mass entries by VALUE,ID list.
+
+    +-------+-----+------+-------+-----+----+----+----+----+
+    |   1   |  2  |  3   |   4   |  5  | 6  | 7  | 8  | 9  |
+    +=======+=====+======+=======+=====+====+====+====+====+
+    | NSML1 | SID | TYPE | VALUE | ID  | ID | ID | ID | ID |
+    +-------+-----+------+-------+-----+----+----+----+----+
+    |       |  ID |  ID  |  ID   | etc |    |    |    |    |
+    +-------+-----+------+-------+-----+----+----+----+----+
+    """
     type = 'NSML1'
     def __init__(self, sid, Type, ids, value, comment=''):
+        """
+        Creates an NSML card, which defines lumped non-structural mass
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        id : int
+            property id or element id depending on Type
+        value : float
+            the non-structural pass per unit length/area
+        comment : str; default=''
+            a comment for the card
+        """
         NSM1.__init__(self, sid, Type, value, ids, comment=comment)
+
 
 class NSMADD(BaseCard):
     """
-    Defines a single-point constraint set as a union of single-point constraint
-    sets defined on SPC or SPC1 entries.
+    Defines non structural mass as the sum of the sets listed.
 
     +--------+----+----+-----+
     |    1   | 2  |  3 |  4  |
@@ -224,9 +286,21 @@ class NSMADD(BaseCard):
     | NSMADD | 2  |  1 |  3  |
     +--------+----+----+-----+
     """
-    type = 'SPCADD'
+    type = 'NSMADD'
 
     def __init__(self, sid, sets, comment=''):
+        """
+        Creates an NSMADD card, which sum NSM sets
+
+        Parameters
+        ----------
+        sid : int
+            the NSM Case Control value
+        sets : List[int]
+            the NSM, NSM1, NSML, NSML1 values
+        comment : str; default=''
+            a comment for the card
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
