@@ -479,6 +479,13 @@ class TestCoords(unittest.TestCase):
         card.write_card(size, 'dummy')
         card.raw_fields()
 
+        model = BDF()
+        cid = 2
+        g1, g2, g3 = 1, 4, 3
+        coord = model.add_cord1c(cid, g1, g2, g3, comment='cord1c')
+        coord.comment = ''
+        assert coord == card, 'card:\n%r\ncoord:\n%r' % (str(coord), str(card))
+
     def test_cord1s_01(self):
         lines = ['cord1s,2,1,4,3']
         card = bdf.process_card(lines)
@@ -490,6 +497,13 @@ class TestCoords(unittest.TestCase):
         self.assertEqual(card.Rid(), 0)
         card.write_card(size, 'dummy')
         card.raw_fields()
+
+        model = BDF()
+        cid = 2
+        g1, g2, g3 = 1, 4, 3
+        coord = model.add_cord1s(cid, g1, g2, g3, comment='cord1c')
+        coord.comment = ''
+        assert coord == card, 'card:\n%r\ncoord:\n%r' % (str(coord), str(card))
 
     def test_cord2r_02(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
