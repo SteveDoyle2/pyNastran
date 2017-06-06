@@ -67,8 +67,8 @@ class Cart3dIO(object):
         if skip_reading:
             return
 
-        self.eid_map = {}
-        self.nid_map = {}
+        self.eid_maps[name] = {}
+        self.nid_maps[name] = {}
         model = read_cart3d(cart3d_filename, log=self.log, debug=False)
         self.model_type = 'cart3d'
         nodes = model.nodes
@@ -82,7 +82,6 @@ class Cart3dIO(object):
         grid = self.grid
         grid.Allocate(self.nElements, 1000)
 
-        self.nid_map = {}
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):

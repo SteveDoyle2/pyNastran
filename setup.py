@@ -28,15 +28,15 @@ py2_packages = []
 py3_gui_scripts = []
 py3_packages = []
 
-if sys.version_info <= (3,):
-    try:
-        import vtk
-        vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
-        if vtk_version < '5.10.1':
-            print("vtk.VTK_VERSION = %r < '5.10.1'" % vtk.VTK_VERSION)
-            py2_packages.append('vtk >= 5.10.1')
-    except ImportError:
+
+try:
+    import vtk
+    vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
+    if vtk_version < '5.10.1':
+        print("vtk.VTK_VERSION = %r < '5.10.1'" % vtk.VTK_VERSION)
         py2_packages.append('vtk >= 5.10.1')
+except ImportError:
+    py2_packages.append('vtk >= 5.10.1')
 
     #try:
         #import PIL
@@ -113,7 +113,7 @@ try:
         print("matplotlib.__version__ = %r < '1.5.1'" % six.__version__)
         py_packages.append('matplotlib >= 1.5.1, <2')
 except ImportError:
-    py_packages.append('matplotlib >= 1.5.1, <2')
+    py_packages.append('matplotlib >= 1.5.1')
 
 try:
     import docopt

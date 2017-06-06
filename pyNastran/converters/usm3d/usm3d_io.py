@@ -95,6 +95,8 @@ class Usm3dIO(object):
         if skip_reading:
             return
 
+        self.eid_maps[name] = {}
+        self.nid_maps[name] = {}
         model = Usm3d(log=self.log, debug=False)
 
         base_filename, ext = os.path.splitext(cogsg_filename)
