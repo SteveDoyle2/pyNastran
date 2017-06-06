@@ -42,36 +42,38 @@ sys.path.append(os.path.join(pkg_path, 'f06'))
 #sys.path.insert(0, os.path.abspath('.'))
 
 # ---3rd party modules don't work, so we hack them in --------------------------
-MOCK_MODULES = [#'numpy', 'numpy.linalg','numpy.__version__',
-                #'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.weave',
-                #'scipy.integrate', 'scipy.interpolate',
-                'pandas',
-                'numpydoc',
-                'numpy.distutils.core',
-                'numpy.distutils',
-                'matplotlib',
-                #'vtk', 'wx', 'PyQt4', 'PySide',
-                'docopt',
-                #'numpydoc',
-                #'openmdao',
-                #'openmdao.main.api',
-                #'openmdao.util',
-                #'openmdao.util.doctools',
-                #'openmdao.lib.datatypes.api',
-                #'openmdao.lib.components',
-                #'openmdao.lib.drivers.api',
-                #'openmdao.lib.components.nastran.nastran',
-                #'openmdao.examples.bar3simulation.bar3',
-                #'openmdao.examples.bar3simulation.bar3_wrap_f',
-                #'nastranwrapper.nastran',
-                #'nastranwrapper',
-                #'nastranwrapper.test.nastranwrapper_test_utils',
-                ]
+MOCK_MODULES = [
+    #'numpy', 'numpy.linalg','numpy.__version__',
+    #'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.weave',
+    #'scipy.integrate', 'scipy.interpolate',
+    'pandas',
+    'numpydoc',
+    'numpy.distutils.core',
+    'numpy.distutils',
+    'matplotlib',
+    #'vtk', 'wx', 'PyQt4', 'PySide',
+    'docopt',
+    #'numpydoc',
+    #'openmdao',
+    #'openmdao.main.api',
+    #'openmdao.util',
+    #'openmdao.util.doctools',
+    #'openmdao.lib.datatypes.api',
+    #'openmdao.lib.components',
+    #'openmdao.lib.drivers.api',
+    #'openmdao.lib.components.nastran.nastran',
+    #'openmdao.examples.bar3simulation.bar3',
+    #'openmdao.examples.bar3simulation.bar3_wrap_f',
+    #'nastranwrapper.nastran',
+    #'nastranwrapper',
+    #'nastranwrapper.test.nastranwrapper_test_utils',
+    ]
 #MOCK_MODULES += ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas']
 
-# requires the mock module in Python 2.x
+## requires the mock module in Python 2.x
 # pip install mock
-load_mock = False
+# conda install mock
+load_mock = True
 if load_mock:
     from six import PY2
     if PY2:
@@ -84,8 +86,8 @@ if load_mock:
         def __getattr__(cls, name):
                 if name in ['__path__', 'pi', '_string', '__get__', '__set__']:
                     return Mock()
-                print('MOCK cls=%r name=%r' % (cls, name))
-                return Mock()
+                #print('MOCK cls=%r name=%r' % (cls, name))
+                return MagicMock()
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 if 0:
