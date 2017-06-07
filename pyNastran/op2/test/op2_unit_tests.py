@@ -135,6 +135,20 @@ class TestOP2(Tester):
         op2_1.write_f06(f06_filename)
         os.remove(f06_filename)
 
+    def test_bdf_op2_elements_01(self):
+        """tests a large number of elements and results in SOL 101"""
+        bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
+        f06_filename = os.path.join(model_path, 'elements', 'static_elements.test_op2.f06')
+        op2_filename = os.path.join(model_path, 'elements', 'static_elements.op2')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        op2 = read_op2_geom(op2_filename, debug=False)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
+
     def test_set_results(self):
         op2_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
         f06_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.test_op2.f06')
