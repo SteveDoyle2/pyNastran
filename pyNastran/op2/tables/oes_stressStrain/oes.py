@@ -470,6 +470,7 @@ class OES(OP2Common):
             (3, 1, 5, b'OES1X1') : ('ctube_stress', RealRodStressArray),
             (3, 1, 5, b'OES1X') : ('ctube_stress', RealRodStressArray),
             (3, 2, 5, b'OES1X') : ('ctube_stress', ComplexRodStressArray),
+            (3, 2, 5, b'OESVM1') : ('ctube_stress', ComplexRodStressArray),  # freq nx
             #(3, 3, 5) : ('ctube_stress', ComplexRodStressArray),
 
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
@@ -789,9 +790,11 @@ class OES(OP2Common):
             # 232-QUADRLC
             (232, 1, 11, b'OES1C') : ('cquadr', 'NA'),
             (232, 1, 11, b'OESCP') : ('cquadr', 'NA'),
+            (232, 2, 13, b'OESVM1C') : ('cquadr', 'NA'),  # freq nx
             #(234, 1, 11) : ('cquadr', 'NA'), # bad?
             # 233-TRIARLC
             (233, 1, 11, b'OES1C') : ('ctriar', 'NA'),
+            (233, 2, 13, b'OESVM1C') : ('ctriar', 'NA'),  # freq nx
             # 235-CQUADR
             (235, 1, 17, b'OES1X1') : ('NA', 'NA'),
             (235, 2, 15, b'OES1X') : ('NA', 'NA'),
