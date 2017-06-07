@@ -17,7 +17,6 @@ except ImportError:
 class RealSpringArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        #self.eType = {}
 
         self.nelements = 0  # result specific
         if is_sort1:
