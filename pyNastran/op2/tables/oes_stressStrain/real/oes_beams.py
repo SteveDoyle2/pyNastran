@@ -5,6 +5,7 @@ from six.moves import range, zip
 from itertools import count
 import numpy as np
 from numpy import zeros
+ints = (int, np.int32)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
@@ -156,7 +157,7 @@ class RealBeamArray(OES_Object):
 
     def add_new_eid_sort1(self, dt, eid, out):
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        assert isinstance(eid, int), eid
+        assert isinstance(eid, ints), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
         self.element_node[self.itotal] = [eid, grid]
@@ -387,7 +388,7 @@ class RealNonlinearBeamArray(OES_Object):
         return msg
 
     def add_new_eid_sort1(self, dt, eid, out):
-        assert isinstance(eid, int), eid
+        assert isinstance(eid, ints), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
         (gridA, CA, long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA,

@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 import numpy as np
 from numpy import zeros #, array_equal
+ints = (int, np.int32)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -121,7 +122,7 @@ class RealBushArray(OES_Object):
 
     def add_sort1(self, dt, eid, tx, ty, tz, rx, ry, rz):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int)
+        assert isinstance(eid, ints)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [tx, ty, tz, rx, ry, rz]

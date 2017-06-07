@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import get_key0, write_imag_floats_13e
 import numpy as np
+ints = (int, np.int32)
 try:
     import pandas as pd
 except ImportError:
@@ -195,7 +196,7 @@ class ComplexShearArray(OES_Object):
                     assert len(eids) == len(max_shear)
                     assert len(max_shear) > 0, max_shear
                     for eid, max_sheari, avg_sheari in zip(eids, max_shear, avg_shear):
-                        assert isinstance(eid, int), 'eid=%s type=%s' % (eid, type(eid))
+                        assert isinstance(eid, ints), 'eid=%s type=%s' % (eid, type(eid))
                         [rmax_shear, imax_shear, ravg_shear, iavg_shear
                          ,] = write_imag_floats_13e([max_sheari, avg_sheari], is_mag_phase)
 

@@ -4,6 +4,7 @@ from itertools import count
 from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, ravel
+ints = (int, np.int32)
 
 try:
     import pandas as pd
@@ -125,7 +126,7 @@ class NonlinearGapStressArray(OES_Object):
     def add_sort1(self, dt, eid, comp_xi, shear_yi, shear_zi, axial_ui,
                   shear_vi, shear_wi, slip_vi, slip_wi, form1, form2):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int)
+        assert isinstance(eid, ints)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [comp_xi, shear_yi, shear_zi, axial_ui,

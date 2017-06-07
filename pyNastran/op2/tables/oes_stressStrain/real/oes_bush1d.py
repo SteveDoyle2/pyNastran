@@ -4,6 +4,7 @@ from six import iteritems, integer_types
 from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, ravel
+ints = (int, np.int32)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -157,7 +158,7 @@ class RealBush1DStressArray(OES_Object):
     def add_sort1(self, dt, eid, element_force, axial_displacement, axial_velocity,
                   axial_stress, axial_strain, plastic_strain, is_failed):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int)
+        assert isinstance(eid, ints)
         # pyNastran_examples\move_tpl\ar29scb1.op2
         #print('dt=%s eid=%s force=%s' % (dt, eid, element_force))
         #print('element.shape=%s' % self.element.shape)

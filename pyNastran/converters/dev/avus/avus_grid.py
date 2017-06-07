@@ -11,6 +11,10 @@ def convert_to_float(line):
     sline = line.strip().split()
     return [float(spot) for spot in sline]
 
+def read_avus(avus_filename, log=None, debug=False):
+    model = AvusGrid(log=None, debug=False)
+    model.read_avus_grid(avus_filename)
+    return model
 
 class AvusGrid(object):
     def __init__(self, log=None, debug=False):
@@ -30,12 +34,20 @@ class AvusGrid(object):
         self.hexa_elements = empty(shape=0)
 
     def _read_points(self, infile, zones, npoints):
+        """
+        npoints
+        x1 y1 z1
+        x2 y2 z2
+        ...
+        """
+        assert npoints > 0, npoints
         npoints_total = sum(npoints)
         points = zeros((npoints_total, 3), dtype='float32')
         for i in range(npoints_total):
             line = infile.readline()
             xyz = line.split()
             points[i, :] = xyz
+        print(points)
         return points
 
     def _read_faces(self, infile, nfaces):
@@ -57,7 +69,7 @@ class AvusGrid(object):
                 # read cell
                 # negative - outer boundary element
                 # zero     - inner boundary element
-                # positve  - physical interface between cells
+                # positive - physical interface between cells
                 ilow = sline[ipointi + 1]
                 ihigh = sline[ipointi + 2]
                 icell = [ilow, ihigh]

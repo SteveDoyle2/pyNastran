@@ -6,7 +6,7 @@ from itertools import count
 from six import integer_types
 from six.moves import zip, range
 import numpy as np
-
+ints = (int, np.int32)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header#, get_key0
 try:
@@ -162,8 +162,8 @@ class RealPlateArray(OES_Object):
         self._add_new_eid_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def _add_new_eid_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        assert isinstance(eid, int), eid
-        assert isinstance(node_id, int), node_id
+        assert isinstance(eid, ints), eid
+        assert isinstance(node_id, ints), node_id
         self._times[self.itime] = dt
         #assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, node_id]
@@ -172,11 +172,11 @@ class RealPlateArray(OES_Object):
         self.ielement += 1
 
     def _add_new_node(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        assert isinstance(node_id, int), node_id
+        assert isinstance(node_id, ints), node_id
         self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def _add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        assert isinstance(node_id, int), node_id
+        assert isinstance(node_id, ints), node_id
         self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def _add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
@@ -184,7 +184,7 @@ class RealPlateArray(OES_Object):
 
     def _add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert eid is not None, eid
-        assert isinstance(node_id, int), node_id
+        assert isinstance(node_id, ints), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.itotal += 1
