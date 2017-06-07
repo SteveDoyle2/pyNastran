@@ -120,6 +120,41 @@ class TestMassElements(unittest.TestCase):
         pmass.write_card(size=8)
         read_write(model)
 
+    def test_nsm(self):
+        """tests the NSM card"""
+        model = BDF()
+        sid = 1
+        nsmi = 0.1
+        pid = 10
+        mid = 100
+        model.add_nsm(sid, 'PSHELL', pid, nsmi, comment='nsm')
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_ctria3(1, pid, [1, 2, 3]) # A=0.5
+        model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
+        model.add_pshell(pid, mid, t=0.1)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
+
+    def test_nsm1(self):
+        """tests the NSM1 card"""
+        model = BDF()
+        sid = 1
+        Type = 'PSHELL'
+        nsmi = 0.1
+        pid = 10
+        mid = 100
+        model.add_nsm1(sid, 'PSHELL', nsmi, [pid])
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_ctria3(1, pid, [1, 2, 3]) # A=0.5
+        model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
+        model.add_pshell(pid, mid, t=0.1)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
+
 def read_write(model):
     """tests the add_card methods"""
     bdf_file = StringIO()

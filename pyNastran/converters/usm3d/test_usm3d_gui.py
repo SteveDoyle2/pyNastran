@@ -23,7 +23,7 @@ class Usm3dGUI(Usm3dIO, FakeGUIMethods):
 
 class TestUsm3dGUI(unittest.TestCase):
 
-    def test_cart3d_geometry_01(self):
+    def test_usm3d_geometry_01(self):
         """tests the ascii three plugs model"""
         #log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(model_path, 'box.cogsg')

@@ -480,26 +480,122 @@ class AddCards(AddMethods):
         return mass
 
     def add_nsm(self, sid, Type, id, value, comment=''):
+        """
+        Creates an NSM card
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        id : int
+            property id or element id depending on Type
+        value : float
+            the non-structural pass per unit length/area
+        comment : str; default=''
+            a comment for the card
+        """
         nsm = NSM(sid, Type, id, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
     def add_nsm1(self, sid, Type, value, ids, comment=''):
+        """
+        Creates an NSM1 card
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        value : float
+            the non-structural pass per unit length/area
+        ids : List[int]
+            property ids or element ids depending on Type
+        comment : str; default=''
+            a comment for the card
+        """
         nsm = NSM1(sid, Type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
     def add_nsml(self, sid, Type, id, value, comment=''):
+        """
+        Creates an NSML card, which defines lumped non-structural mass
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        id : int
+            property id or element id depending on Type
+        value : float
+            the non-structural pass per unit length/area
+        comment : str; default=''
+            a comment for the card
+        """
         nsm = NSML(sid, Type, id, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
     def add_nsml1(self, sid, Type, value, ids, comment=''):
+        """
+        Creates an NSM1 card, which defines lumped non-structural mass
+
+        Parameters
+        ----------
+        sid : int
+            Case control NSM id
+        Type : str
+            Type of card the NSM is applied to
+            valid_properties = {
+                PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
+                PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
+                ELEMENT
+            }
+        value : float
+            the non-structural pass per unit length/area
+        ids : List[int]
+            property ids or element ids depending on Type
+        comment : str; default=''
+            a comment for the card
+        """
         nsm = NSML1(sid, Type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
     def add_nsmadd(self, sid, sets, comment=''):
+        """
+        Creates an NSMADD card, which sum NSM sets
+
+        Parameters
+        ----------
+        sid : int
+            the NSM Case Control value
+        sets : List[int]
+            the NSM, NSM1, NSML, NSML1 values
+        comment : str; default=''
+            a comment for the card
+        """
         nsmadd = NSMADD(sid, sets, comment=comment)
         self._add_nsm_object(nsmadd)
         return nsmadd
@@ -717,6 +813,20 @@ class AddCards(AddMethods):
         return elem
 
     def add_cdamp5(self, eid, pid, nids, comment=''):
+        """
+        Creates a CDAMP5 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PDAMP5)
+        nids : List[int, int]
+            GRID/SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CDAMP5(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem
@@ -737,6 +847,20 @@ class AddCards(AddMethods):
         return prop
 
     def add_cvisc(self, eid, pid, nids, comment=''):
+        """
+        Creates a CVISC card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PVISC)
+        nids : List[int, int]
+            GRID ids
+        comment : str; default=''
+            a comment for the card
+        """
         elem = CVISC(eid, pid, nids, comment=comment)
         self._add_element_object(elem)
         return elem

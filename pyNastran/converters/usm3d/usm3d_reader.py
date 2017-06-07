@@ -273,136 +273,135 @@ class Usm3d(object):
         tet_elements : ???
            ???
         """
-        cogsg_file = open(cogsg_filename, 'rb')
+        with open(cogsg_filename, 'rb') as cogsg_file:
+            # nelements * 4 * 4 + 32 ???
+            dummy = cogsg_file.read(4)  # 1022848
+            dummy_int, = unpack('>i', dummy)
+            #assert dummy_int == 1022848, 'dummy_int = %s' % dummy_int
 
-        # nelements * 4 * 4 + 32 ???
-        dummy = cogsg_file.read(4)  # 1022848
-        dummy_int, = unpack('>i', dummy)
-        #assert dummy_int == 1022848, 'dummy_int = %s' % dummy_int
+            # file header
+            if self.precision == 'single':
+                Format = '>6if'
+                nbytes = 6 * 4 + 4
+            elif self.precision == 'double':
+                Format = '>6id'
+                nbytes = 6 * 4 + 8
+            else:
+                raise RuntimeError('invalid precision format')
+            data = cogsg_file.read(nbytes)
 
-        # file header
-        if self.precision == 'single':
-            Format = '>6if'
-            nbytes = 6 * 4 + 4
-        elif self.precision == 'double':
-            Format = '>6id'
-            nbytes = 6 * 4 + 8
-        else:
-            raise RuntimeError('invalid precision format')
-        data = cogsg_file.read(nbytes)
+            (inew, ne, np, nb, npv, nev, tc) = unpack(Format, data)
+            self.header = {
+                'dummy'    : dummy_int,
+                'inew'     : inew, # dummy int
+                'nElements': ne,  # nc;  number of tets
+                'nPoints'  : np,  # npo; number of grid points including nbn
+                'nBoundPts': nb,  # nbn; number of boundary points including nbc
+                'nViscPts' : npv, # npv; number of viscous points (=0 for Euler)
+                'nViscElem': nev, # ncv; number of viscous cells (=0 for Euler)
+                'tc'       : tc,  # dummy double
+                                  # nbc
+            }
+            if stop_after_header:
+                return self.header
+            self.log.info(self.header)
 
-        (inew, ne, np, nb, npv, nev, tc) = unpack(Format, data)
-        self.header = {
-            'dummy'    : dummy_int,
-            'inew'     : inew, # dummy int
-            'nElements': ne,  # nc;  number of tets
-            'nPoints'  : np,  # npo; number of grid points including nbn
-            'nBoundPts': nb,  # nbn; number of boundary points including nbc
-            'nViscPts' : npv, # npv; number of viscous points (=0 for Euler)
-            'nViscElem': nev, # ncv; number of viscous cells (=0 for Euler)
-            'tc'       : tc,  # dummy double
-                              # nbc
-        }
-        if stop_after_header:
-            return self.header
-        self.log.info(self.header)
+            # nbn nodes
+            #
+            #del ne, np
 
-        # nbn nodes
-        #
-        #del ne, np
+            if 1:
+                nodes, tets = self._read_cogsg_volume(cogsg_file)
+                return nodes, tets
+            #else:
+            #----------------------------------------------------------------------
+            # elements
+            # face elements
+            nnodes_per_face = 3
+            nfaces = ne
 
-        if 1:
-            nodes, tets = self._read_cogsg_volume(cogsg_file)
-            return nodes, tets
-        #else:
-        #----------------------------------------------------------------------
-        # elements
-        # face elements
-        nnodes_per_face = 3
-        nfaces = ne
+            if nfaces > 0:
+                data_length = nnodes_per_face * nfaces
+                Format = '>' + 'i' * data_length
+                data = cogsg_file.read(4 * data_length)
 
-        if nfaces > 0:
-            data_length = nnodes_per_face * nfaces
-            Format = '>' + 'i' * data_length
-            data = cogsg_file.read(4 * data_length)
+                faces = unpack(Format, data)
+                faces = array(faces)
+                faces = faces.reshape((nfaces, 3))
+            else:
+                faces = None
+            #----------------------------------------------------------------------
+            # nodes
+            nbound_pts = nb
+            nnodes = nbound_pts
 
-            faces = unpack(Format, data)
-            faces = array(faces)
-            faces = faces.reshape((nfaces, 3))
-        else:
-            faces = None
-        #----------------------------------------------------------------------
-        # nodes
-        nbound_pts = nb
-        nnodes = nbound_pts
-
-        #data_length = nnodes
-        if self.precision == 'double':
-            data_length = 8 * nnodes
-        elif self.precision == 'single':
-            data_length = 4 * nnodes
-        else:
-            raise RuntimeError('precision = %r' % self.precision)
-
-        skip_nodes = False
-        if skip_nodes:
-            t = cogsg_file.tell()
-            cogsg_file._goto(t + data_length * 3)
-            nodes = None
-        else:
+            #data_length = nnodes
             if self.precision == 'double':
-                Format = '>%sd' % nnodes
-                node_array_format = 'float64'
+                data_length = 8 * nnodes
             elif self.precision == 'single':
-                Format = '>%sd' % nnodes
-                node_array_format = 'float32'
+                data_length = 4 * nnodes
             else:
                 raise RuntimeError('precision = %r' % self.precision)
 
-            if 0:
-                data = cogsg_file.read(data_length)
-                X = unpack(Format, data)
-                data = cogsg_file.read(data_length)
-                Y = unpack(Format, data)
-                data = cogsg_file.read(data_length)
-                Z = unpack(Format, data)
-                nodes = np.array([X, Y, Z])
-
-                nodes = np.zeros((nnodes, 3), node_array_format)
-                nodes[:, 0] = X
-                nodes[:, 1] = Y
-                nodes[:, 2] = Z
-                del X, Y, Z
+            skip_nodes = False
+            if skip_nodes:
+                t = cogsg_file.tell()
+                cogsg_file._goto(t + data_length * 3)
+                nodes = None
             else:
-                data = cogsg_file.read(3 * data_length)
-                assert self.precision == 'single', self.precision
-                nodes = np.fromstring(data, '>4f').reshape(3, nnodes).T
-                #nodes = np.fromstring(data, '>4f').reshape(nnodes, 3)
+                if self.precision == 'double':
+                    Format = '>%sd' % nnodes
+                    node_array_format = 'float64'
+                elif self.precision == 'single':
+                    Format = '>%sd' % nnodes
+                    node_array_format = 'float32'
+                else:
+                    raise RuntimeError('precision = %r' % self.precision)
+
+                if 0:
+                    data = cogsg_file.read(data_length)
+                    X = unpack(Format, data)
+                    data = cogsg_file.read(data_length)
+                    Y = unpack(Format, data)
+                    data = cogsg_file.read(data_length)
+                    Z = unpack(Format, data)
+                    nodes = np.array([X, Y, Z])
+
+                    nodes = np.zeros((nnodes, 3), node_array_format)
+                    nodes[:, 0] = X
+                    nodes[:, 1] = Y
+                    nodes[:, 2] = Z
+                    del X, Y, Z
+                else:
+                    data = cogsg_file.read(3 * data_length)
+                    assert self.precision == 'single', self.precision
+                    nodes = np.fromstring(data, '>4f').reshape(3, nnodes).T
+                    #nodes = np.fromstring(data, '>4f').reshape(nnodes, 3)
 
 
-        cogsg_file.read(nnodes * 3 * 8)  # 3 -> xyz, 8 -> double precision ???
+            cogsg_file.read(nnodes * 3 * 8)  # 3 -> xyz, 8 -> double precision ???
 
-        #----------------------------------------------------------------------
-        # elements
-        # boundary layer elements
-        nnodes_per_tet = 4
-        ntets = nev
+            #----------------------------------------------------------------------
+            # elements
+            # boundary layer elements
+            nnodes_per_tet = 4
+            ntets = nev
 
-        if ntets:
-            data_length = nnodes_per_tet * ntets
-            Format = '>' + 'i' * data_length
-            data = cogsg_file.read(4 * data_length)
+            if ntets:
+                data_length = nnodes_per_tet * ntets
+                Format = '>' + 'i' * data_length
+                data = cogsg_file.read(4 * data_length)
 
-            tets = unpack(Format, data)
-            tets = np.array(tets)
-            tets = tets.reshape((tets, 4))
+                tets = unpack(Format, data)
+                tets = np.array(tets)
+                tets = tets.reshape((tets, 4))
 
-        #----------------------------------------------------------------------
-        # volume points
-        nnodes = npv
+            #----------------------------------------------------------------------
+            # volume points
+            nnodes = npv
 
-        Format = '>%si' % nnodes
-        data = cogsg_file.read(4 * nnodes)
+            Format = '>%si' % nnodes
+            data = cogsg_file.read(4 * nnodes)
 
         nodes_vol = unpack(Format, data)
         nodes_vol = np.array(nodes_vol)

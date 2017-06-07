@@ -35,8 +35,8 @@ class AbaqusIO(object):
         if skip_reading:
             return
 
-        self.eid_map = {}
-        self.nid_map = {}
+        self.eid_maps[name] = {}
+        self.nid_maps[name] = {}
         model = Abaqus(log=self.log, debug=False)
         self.model_type = 'abaqus'
         #self.model_type = model.model_type

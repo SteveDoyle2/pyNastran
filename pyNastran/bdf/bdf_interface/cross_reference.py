@@ -335,7 +335,7 @@ class XrefMesh(BDFAttributes):
         """
         Links the nodes to all connected elements
         """
-        nodes = defaultdict(set)
+        nodes = defaultdict(list)
         for element in itervalues(self.elements):
             #if element.type in ['CONM2']:
             #    pass
@@ -344,7 +344,7 @@ class XrefMesh(BDFAttributes):
                     for nid in element.node_ids:
                         if nid is None:
                             continue
-                        nodes[nid].add(element)
+                        nodes[nid].append(element)
                         #except AttributeError:
                             #print(element)
                             #print('node = %s' % str(node))
