@@ -14,6 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
 from numpy import array
+import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
@@ -974,6 +975,12 @@ class PCOMPG(CompositeShellProperty):
 
     def validate(self):
         assert isinstance(self.global_ply_ids, list), self.global_ply_ids
+        sorted_global_ply_ids = sorted(self.global_ply_ids)
+        if not np.array_equal(sorted_global_ply_ids, np.unique(self.global_ply_ids)):
+            msg = 'PCOMPG pid=%s; global_ply_ids=%s must be unique' % (
+                self.pid, self.global_ply_ids)
+            raise ValueError(msg)
+
         #assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft # PCOMP
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None], 'ft=%r' % self.ft
 
