@@ -169,10 +169,11 @@ class RealBarArray(OES_Object):
 
     def get_stats(self, short=False):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.ntotal
         ntimes = self.ntimes

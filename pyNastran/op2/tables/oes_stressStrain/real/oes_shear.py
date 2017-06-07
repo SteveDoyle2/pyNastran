@@ -3,10 +3,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from six.moves import zip, range
 import numpy as np
-from numpy import zeros, searchsorted, array_equal, allclose
+from numpy import zeros, allclose
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import _eigenvalue_header, get_key0
+from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
 try:
     import pandas as pd
 except ImportError:
@@ -16,7 +16,7 @@ except ImportError:
 class RealShearArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
+        #self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
         self.nelements = 0  # result specific
 
@@ -126,10 +126,11 @@ class RealShearArray(OES_Object):
 
     def get_stats(self, short=False):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.nelements
         ntimes = self.ntimes
@@ -212,8 +213,8 @@ class RealShearStressArray(RealShearArray, StressObject):
             '                                     S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
             '      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY\n'
             '        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN\n'
-           #'          328        1.721350E+03   1.570314E+03   7.2E+01'
-            ]
+            #'          328        1.721350E+03   1.570314E+03   7.2E+01'
+        ]
         return msg
 
 
@@ -231,6 +232,6 @@ class RealShearStrainArray(RealShearArray, StrainObject):
             '                                     S T R A I N S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
             '      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY\n'
             '        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN\n'
-           #'          328        1.721350E+03   1.570314E+03   7.2E+01'
-            ]
+            #'          328        1.721350E+03   1.570314E+03   7.2E+01'
+        ]
         return msg

@@ -1,9 +1,8 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#from itertools import count
 from six import integer_types
 import numpy as np
-from numpy import zeros #, array_equal
+from numpy import zeros
 ints = (int, np.int32)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -17,7 +16,6 @@ except ImportError:
 class RealBushArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0

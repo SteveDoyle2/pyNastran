@@ -1,10 +1,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
 from six import iteritems, integer_types
 from six.moves import zip
 import numpy as np
 from numpy import zeros, array_equal
-from itertools import count
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_13e, _eigenvalue_header
@@ -94,14 +94,14 @@ class RealSpringArray(OES_Object):
             i = 0
             if self.is_sort1():
                 for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
                         (force1, stress1) = t1
                         (force2, stress2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                            msg += '%s\n  (%s, %s)\n  (%s, %s)\n' % (
                                 eid,
                                 force1, stress1,
                                 force2, stress2)
@@ -160,12 +160,12 @@ class RealSpringArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = np.searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
         #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
-        ind = searchsorted(eids, self.element)
+        ind = np.searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
@@ -276,68 +276,6 @@ class RealSpringStrainArray(RealSpringArray, StrainObject):
         return msg
 
 
-def _write_f06_springs_transient(f, stress, header, words, name):
-    raise RuntimeError('is this used?')
-    for dt, datai in sorted(iteritems(data)):
-        header[1] = ' %s = %10.4E\n' % (name, dt)
-        msg += header + words
-        f.write(''.join(msg))
-
-        eids = []
-        stresses = []
-        for eid, stress in sorted(iteritems(datai)):
-            eids.append(eid)
-            stresses.append(stress)
-            if len(stresses) == 4:
-                stresses = write_floats_13e(stresses)
-                f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
-                    eids[0], stresses[0],
-                    eids[1], stresses[1],
-                    eids[2], stresses[2],
-                    eids[3], stresses[3]))
-                eids = []
-                stresses = []
-
-        if stresses:
-            line = '    '
-            stresses = write_floats_13e(stresses)
-            for eid, stress in zip(eids, stresses):
-                line += '%10i  %13s    ' % (eid, stress)
-            f.write(line.rstrip() + '\n')
-
-            msg.append(page_stamp % page_num)
-            f.write(''.join(msg))
-            msg = ['']
-        page_num += 1
-
-    return page_num - 1
-
-
-def _write_f06_springs(f, data):
-    raise RuntimeError('is this used?')
-    eids = []
-    stresses = []
-    for eid, stress in sorted(iteritems(data)):
-        eids.append(eid)
-        stresses.append(stress)
-        if len(stresses) == 4:
-            stresses = write_floats_13e(stresses)
-            f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
-                eids[0], stresses[0],
-                eids[1], stresses[1],
-                eids[2], stresses[2],
-                eids[3], stresses[3]))
-            eids = []
-            stresses = []
-
-    if stresses:
-        line = '    '
-        stresses = write_floats_13e(stresses)
-        for eid, stress in zip(eids, stresses):
-            line += '%10i  %13s    ' % (eid, stress)
-        f.write(line.rstrip() + '\n')
-
-
 class RealNonlinearSpringStressArray(OES_Object):
     """
     ::
@@ -419,13 +357,13 @@ class RealNonlinearSpringStressArray(OES_Object):
             if self.is_sort1():
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
                         (force1, stress1) = t1
                         (force2, stress2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                            msg += '%s\n  (%s, %s)\n  (%s, %s)\n' % (
                                 eid,
                                 force1, stress1,
                                 force2, stress2)
@@ -491,7 +429,7 @@ class RealNonlinearSpringStressArray(OES_Object):
             msg = [
                 '          N O N L I N E A R   F O R C E S  A N D  S T R E S S E S  I N   S C A L A R   S P R I N G S    ( C E L A S %i )\n'
                 ' \n'
-                 '         ELEMENT-ID          FORCE         STRESS                    ELEMENT-ID          FORCE         STRESS\n' % nspring
+                '         ELEMENT-ID          FORCE         STRESS                    ELEMENT-ID          FORCE         STRESS\n' % nspring
                 #'         5.000000E-02     2.000000E+01   1.000000E+01                1.000000E-01     4.000000E+01   2.000000E+01'
             ]
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg)

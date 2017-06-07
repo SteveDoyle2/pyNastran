@@ -17,7 +17,6 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 class NonlinearGapStressArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
@@ -101,17 +100,30 @@ class NonlinearGapStressArray(OES_Object):
             i = 0
             if self.is_sort1():
                 for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
-                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
-                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+
+                        (axial_stress1, equiv_stress1, total_strain1,
+                         effective_plastic_creep_strain1, effective_creep_strain1,
+                         linear_torsional_stress1) = t1
+
+                        (axial_stress2, equiv_stress2, total_strain2,
+                         effective_plastic_creep_strain2, effective_creep_strain2,
+                         linear_torsional_stress2) = t2
+
                         if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
-                                eid,
-                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
-                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                            msg += ('%s\n  (%s, %s, %s, %s, %s, %s)\n  '
+                                    '(%s, %s, %s, %s, %s, %s)\n' % (
+                                        eid,
+                                        axial_stress1, equiv_stress1, total_strain1,
+                                        effective_plastic_creep_strain1, effective_creep_strain1,
+                                        linear_torsional_stress1,
+
+                                        axial_stress2, equiv_stress2, total_strain2,
+                                        effective_plastic_creep_strain2, effective_creep_strain2,
+                                        linear_torsional_stress2))
                             i += 1
                         if i > 10:
                             print(msg)
@@ -176,7 +188,8 @@ class NonlinearGapStressArray(OES_Object):
         ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1,
+                  is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = self._get_msgs()
@@ -201,7 +214,8 @@ class NonlinearGapStressArray(OES_Object):
 
                 vals = [comp_xi, shear_yi, shear_zi, axial_ui, shear_vi, shear_wi, slip_vi, slip_wi]
                 vals2 = write_floats_13e(vals)
-                [comp_xi, shear_yi, shear_zi, axial_ui, shear_vi, shear_wi, slip_vi, slip_wi] = vals2
+                [comp_xi, shear_yi, shear_zi, axial_ui,
+                 shear_vi, shear_wi, slip_vi, slip_wi] = vals2
                 f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
                         % (eid, comp_xi, shear_yi, shear_zi, axial_ui,
                            shear_vi, shear_wi, slip_vi, slip_wi))

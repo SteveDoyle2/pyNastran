@@ -22,7 +22,6 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 class RealSolidArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -109,8 +108,6 @@ class RealSolidArray(OES_Object):
 
         #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
         self._times[self.itime] = dt
-
-        self.eType[self.ielement] = eType
         self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
 
         omax_mid_min = [o1, o2, o3]
@@ -139,10 +136,10 @@ class RealSolidArray(OES_Object):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element_node):
-                    (eid, nid) = e
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ieid, eid_nid in enumerate(self.element_node):
+                    (eid, nid) = eid_nid
+                    t1 = self.data[itime, ieid, :]
+                    t2 = table.data[itime, ieid, :]
                     (oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1) = t1
                     (oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2) = t2
 
@@ -287,7 +284,7 @@ class RealSolidArray(OES_Object):
                 A = [[doxx, dtxy, dtxz],
                      [dtxy, doyy, dtyz],
                      [dtxz, dtyz, dozz]]
-                (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+                (_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
                 # o1-max
                 # o2-mid
@@ -470,7 +467,7 @@ class RealSolidArray(OES_Object):
                 A = [[doxx, dtxy, dtxz],
                      [dtxy, doyy, dtyz],
                      [dtxz, dtyz, dozz]]
-                (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+                (_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
                 #node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
                     #'', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
@@ -576,5 +573,6 @@ def _get_f06_header_nnodes(self, is_mag_phase=True):
         msg = penta_msg
         nnodes = 6
     else:
-        raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+        msg = 'element_name=%s self.element_type=%s' % (self.element_name, self.element_type)
+        raise NotImplementedError(msg)
     return nnodes, msg
