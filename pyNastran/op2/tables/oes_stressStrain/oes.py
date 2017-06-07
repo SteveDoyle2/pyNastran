@@ -466,6 +466,7 @@ class OES(OP2Common):
             (1, 1, 5, b'OES1X1') : ('crod_stress', RealRodStressArray), # real
             (1, 2, 5, b'OES1X') : ('crod_stress', ComplexRodStressArray), # real/imag
             (1, 3, 5, b'OES1X') : ('crod_stress', ComplexRodStressArray), # mag/phase
+            (1, 2, 5, b'OESVM1') : ('crod_stress', ComplexRodStressArray), # real/imag
 
             (3, 1, 5, b'OES1X1') : ('ctube_stress', RealRodStressArray),
             (3, 1, 5, b'OES1X') : ('ctube_stress', RealRodStressArray),
@@ -476,6 +477,7 @@ class OES(OP2Common):
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X1') : ('conrod_stress', RealRodStressArray),
+            (10, 2, 5, b'OESVM1') : ('conrod_stress', ComplexRodStressArray),
             #(10, 2, 5) : ('conrod_stress', ComplexRodStressArray),
             #(10, 3, 5) : ('conrod_stress', ComplexRodStressArray),
 
@@ -487,19 +489,22 @@ class OES(OP2Common):
             (2, 3, 111, b'OES1X') : ('cbeam_stress', 'ComplexBeamStressArray'),
 
             (4, 1, 4, b'OES1X1') : ('cshear_stress', RealShearStressArray),
-            (4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
-            (4, 3, 5) : ('cshear_stress', ComplexShearStressArray),
+            #(4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
+            #(4, 3, 5) : ('cshear_stress', ComplexShearStressArray),
+            (4, 2, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 3) : ('cshear_stress', RandomShearStressArray),
 
             (11, 1, 2, b'OES1X1') : ('celas1_stress', RealSpringStressArray), # real
             (11, 2, 3, b'OES1X') : ('celas1_stress', ComplexSpringStressArray), # real/imag
             (11, 3, 3, b'OES1X') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
+            (11, 2, 3, b'OESVM1') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
 
             (12, 1, 2, b'OES1X1') : ('celas2_stress', RealSpringStressArray),
             (12, 1, 2, b'OES1X') : ('celas2_stress', RealSpringStressArray),
             (12, 1, 2, b'OES1') : ('celas2_stress', RealSpringStressArray),
             (12, 2, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
             (12, 3, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
+            (12, 2, 3, b'OESVM1') : ('celas2_stress', ComplexSpringStressArray),
 
             (13, 1, 2, b'OES1X1') : ('celas3_stress', RealSpringStressArray),
             #(13, 2, 3) : ('celas3_stress', ComplexSpringStressArray),
@@ -533,6 +538,7 @@ class OES(OP2Common):
             (68, 1, 151, b'OES1') : ('cpenta_stress', RealSolidStressArray),
 
             (39, 2, 69, b'OES1X') : ('ctetra_stress', ComplexSolidStressArray), # real/imag
+            (39, 2, 74, b'OESVM1') : ('ctetra_stress', 'NA'), # real/imag
             #(39, 3, 69) : ('ctetra_stress', ComplexSolidStressArray), # mag/phase
 
             (67, 2, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
@@ -553,6 +559,7 @@ class OES(OP2Common):
             (74, 1, 17, b'OES1') : ('ctria3_stress', RealPlateStrainArray),
             (74, 2, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
             (74, 3, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 2, 17, b'OESVM1') :  ('cquad4_stress', 'NA'),
             #(74, 1, 9) : ('ctria3_stress', RandomPlateStressArray),
 
             (82, 1, 87, b'OES1X1') : ('cquadr_stress', RealPlateStressArray),
