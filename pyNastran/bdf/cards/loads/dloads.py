@@ -12,7 +12,7 @@ All dynamic loads are defined in this file.  This includes:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
-from six.moves import zip, range
+from six.moves import zip
 import numpy as np
 
 from pyNastran.utils import integer_types, integer_float_types
@@ -335,17 +335,6 @@ class RLOAD1(TabularLoad):
         if comment:
             self.comment = comment
 
-        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            Type = 'LOAD'
-        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            Type = 'DISP'
-        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            Type = 'VELO'
-        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            Type = 'ACCE'
-        else:
-            msg += 'invalid RLOAD1 type  Type=%r\n' % Type
-            raise ValueError(msg)
         self.sid = sid
         self.excite_id = excite_id
         self.delay = delay
@@ -571,17 +560,6 @@ class RLOAD2(TabularLoad):
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
-        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            Type = 'LOAD'
-        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            Type = 'DISP'
-        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            Type = 'VELO'
-        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            Type = 'ACCE'
-        else:
-            msg = 'invalid RLOAD2 type  Type=%r' % Type
-            raise RuntimeError(msg)
 
         self.sid = sid
         self.excite_id = excite_id
@@ -863,19 +841,6 @@ class TLOAD1(TabularLoad):
 
         if comment:
             self.comment = comment
-        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            Type = 'LOAD'
-        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            Type = 'DISP'
-        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            Type = 'VELO'
-        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            Type = 'ACCE'
-        elif Type in [4, 5, 6, 7, 12, 13]:  # MSC-only
-            pass
-        else:
-            msg = 'invalid TLOAD1 type  Type=%r' % Type
-            raise RuntimeError(msg)
 
         #: load ID
         self.sid = sid
@@ -904,6 +869,21 @@ class TLOAD1(TabularLoad):
         #: Factor for initial velocities of the enforced degrees-of-freedom.
         #: (Real; Default = 0.0)
         self.vs0 = vs0
+
+    def validate(self):
+        if Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+            Type = 'LOAD'
+        elif Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+            Type = 'DISP'
+        elif Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+            Type = 'VELO'
+        elif Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+            Type = 'ACCE'
+        elif Type in [4, 5, 6, 7, 12, 13]:  # MSC-only
+            pass
+        else:
+            msg = 'invalid TLOAD1 type  Type=%r' % Type
+            raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1004,7 +984,7 @@ class TLOAD1(TabularLoad):
             resp[0] = self.us0
         if self.Type == 'ACCE' and is_spcd:
             resp[0] = self.vs0
-        return resp
+        return resp * scale
 
     def raw_fields(self):
         list_fields = ['TLOAD1', self.sid, self.excite_id, self.delay_id, self.Type,
@@ -1220,7 +1200,7 @@ class TLOAD2(TabularLoad):
         f[i] = scale * time[i] ** self.b * np.exp(self.c * time[i]) * np.cos(2 * np.pi * f * time[i] + p)
 
         is_spcd = False
-        resp = f
+        #resp = f
         if self.Type == 'VELO' and is_spcd:
             f[0] = self.us0
         if self.Type == 'ACCE' and is_spcd:

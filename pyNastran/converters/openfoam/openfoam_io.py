@@ -1,15 +1,11 @@
 from __future__ import print_function
 import os
-from six import iteritems
-from six.moves import range
-from numpy import zeros, arange, mean, amax, amin, array, where, unique, cross
+from numpy import zeros, arange, amax, amin, where, unique, cross
 from numpy.linalg import norm
 
 import vtk
 #VTK_TRIANGLE = 5
-from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkHexahedron,
-                 vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
-                 vtkQuadraticWedge, vtkQuadraticHexahedron)
+from vtk import vtkTriangle, vtkQuad, vtkHexahedron # vtkTetra,
 
 from pyNastran.converters.openfoam.block_mesh import BlockMesh, Boundary
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -60,7 +56,6 @@ class OpenFoamIO(object):
                 del self.iSubcaseNameMap
             except:
                 print("cant delete geo")
-                pass
             skip_reading = False
         self.scalarBar.Modified()
         return skip_reading
@@ -149,17 +144,6 @@ class OpenFoamIO(object):
         #vectorReselt.SetNumberOfComponents(3)
         self.nidMap = {}
         #elem.SetNumberOfPoints(nNodes)
-        if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
-                self.gridResult.InsertNextValue(nid * fraction)
-                #print(str(element))
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -197,7 +181,7 @@ class OpenFoamIO(object):
             #elements -= 1
             normals = None
             if is_3d_blockmesh:
-                nelements, three = hexas.shape
+                nelements = hexas.shape[0]
                 for eid, element in enumerate(hexas):
                     #print(element)
                     elem = vtkHexahedron()
@@ -221,7 +205,7 @@ class OpenFoamIO(object):
                     #elem.GetCellType() = 5  # vtkTriangle
                     #self.grid.InsertNextCell(5, elem.GetPointIds())
             elif is_surface_blockmesh:
-                nelements, four = quads.shape
+                nelements = quads.shape[0]
                 for eid, element in enumerate(quads):
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, element[0])
@@ -343,10 +327,10 @@ class OpenFoamIO(object):
                             is_surface_blockmesh):
         #result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                         #'rhoU', 'rhoV', 'rhoW', 'rhoE']
-        #nelements, three = elements.shape
-        nnodes, three = nodes.shape
+        #nelements = elements.shape[0]
+        nnodes = nodes.shape[0]
 
-        new = False
+        #new = False
         results_form = []
         geometry_form = [
             #('Region', 0, []),

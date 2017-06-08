@@ -395,15 +395,15 @@ class OES(OP2Common):
                 raise
             except:
                 raise
-                print("----------")
-                print(self.obj)
-                print(self.data_code)
-                if self.obj is not None:
-                    #from pyNastran.utils import object_attributes
-                    #print object_attributes(self.obj)
-                    print(self.obj.data_code)
-                print("----------")
-                raise
+                #print("----------")
+                #print(self.obj)
+                #print(self.data_code)
+                #if self.obj is not None:
+                    ##from pyNastran.utils import object_attributes
+                    ##print object_attributes(self.obj)
+                    #print(self.obj.data_code)
+                #print("----------")
+                #raise
             return n
         return new_func
 

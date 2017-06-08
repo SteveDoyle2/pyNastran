@@ -3063,11 +3063,11 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             self.shearXZ[dt][eid][nid] = shearXZ
 
 
-'                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'
-'                                                          (REAL/IMAGINARY)'
-' '
-'    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -'
-'      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY'
-'0       100    CEN/8  0.0           0.0           0.0           0.0           0.0           0.0          -3.492460E-10 -1.368206E-09'
-'                      0.0           0.0           0.0           0.0           0.0           0.0           2.910383E-11  5.088840E-10'
-''
+#'                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'
+#'                                                          (REAL/IMAGINARY)'
+#' '
+#'    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -'
+#'      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY'
+#'0       100    CEN/8  0.0           0.0           0.0           0.0           0.0           0.0          -3.492460E-10 -1.368206E-09'
+#'                      0.0           0.0           0.0           0.0           0.0           0.0           2.910383E-11  5.088840E-10'
+#''

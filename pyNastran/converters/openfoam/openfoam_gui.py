@@ -1,24 +1,24 @@
 import os
 import sys
-import traceback
-from PyQt4 import QtCore, QtGui
+
+# kills the program when you hit Cntl+C from the command line
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+from PyQt4 import QtGui
 
 import pyNastran
 from pyNastran.gui.gui_common import GuiCommon2
 from pyNastran.gui.arg_handling import get_inputs
-from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
+#from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 #from pyNastran.converters.nastran.nastranIOv import NastranIO
 from pyNastran.converters.stl.stl_io import STL_IO
 
 
 from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
-from pyNastran.converters.ugrid.surf_io import SurfIO
-from pyNastran.converters.ugrid.ugrid_io import UGRID_IO
-from pyNastran.converters.aflr2.bedge_io import BEdge_IO
-
-# kills the program when you hit Cntl+C from the command line
-import signal
-signal.signal(signal.SIGINT, signal.SIG_DFL)
+from pyNastran.converters.aflr.surf.surf_io import SurfIO
+from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
+from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 
 try:
     pkg_path = sys._MEIPASS #@UndefinedVariable
@@ -103,7 +103,7 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
 
 
     def on_reload(self):
-        Title = self.Title
+        title = self.Title
         if 1:  # load the next file in the folder
             absdirname = os.path.abspath(os.path.dirname(self.infile_name))
             basename = os.path.basename(self.infile_name)
@@ -131,8 +131,8 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
         self.log_command('on_reload()')
         #self.cycleResults(Title)
         for i in range(10):  #  limit on number of cycles
-            if self.Title != Title:
-                self.cycleResults(Title)
+            if self.Title != title:
+                self.cycleResults(title)
             else:
                 break
 

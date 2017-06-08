@@ -1,6 +1,6 @@
 from six.moves import zip
 
-from numpy import array, arange, zeros, searchsorted
+from numpy import array, zeros, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -29,16 +29,16 @@ class PELAS(Property):
         self.n = 1
         #if comment:
             # self.comment = comment
-        nOffset = nPELAS * 5
+        noffset = nPELAS * 5
         # 2 PELAS properties can be defined on 1 PELAS card
         # these are split into 2 separate cards
 
-        pid = integer_or_blank(card, 1 + nOffset, 'pid')
+        pid = integer_or_blank(card, 1 + noffset, 'pid')
         if pid is not None:
             self._property_id.append(pid)
-            self._K.append(double(card, 2 + nOffset, 'k'))
-            self._ge.append(double_or_blank(card, 3 + nOffset, 'ge', 0.))
-            self._s.append(double_or_blank(card, 4 + nOffset, 's', 0.))
+            self._K.append(double(card, 2 + noffset, 'k'))
+            self._ge.append(double_or_blank(card, 3 + noffset, 'ge', 0.))
+            self._s.append(double_or_blank(card, 4 + noffset, 's', 0.))
 
     def allocate(self, card_count):
         ncards = card_count[self.type]

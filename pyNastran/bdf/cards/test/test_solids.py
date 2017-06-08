@@ -1,3 +1,4 @@
+"""various solid element tests"""
 from __future__ import print_function
 import os
 import copy
@@ -12,7 +13,7 @@ from pyNastran.bdf.cards.elements.solid import (
 
 
 class TestSolids(unittest.TestCase):
-
+    """various solid element tests"""
     def test_cpenta_01(self):
         """tests a cpenta15"""
         lines = [
@@ -39,8 +40,8 @@ class TestSolids(unittest.TestCase):
         pid = 22
         bdf.add_cpenta(eid, pid, nids, comment='spike')
 
-    def test_cpenta_01b(self):
-        pass
+    #def test_cpenta_01b(self):
+        #pass
           # ..todo:: this is wrong...
         #lines = [  # this will fail!
         #    'CPENTA,85,22,201,202,203,205,206,207,+PN2',
@@ -108,6 +109,7 @@ class TestSolids(unittest.TestCase):
         self.check_solid(model, eid, 'CHEXA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
 
     def test_solid_02(self):
+        """tests CHEXA, CTETRA, CPENTA, PLSOLID, MATHP"""
         mid = 2
         pid = 4
         rho = 0.1
@@ -260,9 +262,9 @@ class TestSolids(unittest.TestCase):
         model.add_grid(13, xyz=[1., 1., 0.])
         model.add_grid(15, xyz=[0., 0., 2.])
         model.add_psolid(pid, mid)
-        mat1 = model.add_mat1(mid, E, G, nu, rho=0.1)
+        model.add_mat1(mid, E, G, nu, rho=0.1)
         nids = [11, 12, 13, 15]
-        ctetra = model.add_ctetra(eid, pid, nids, comment='ctetra')
+        model.add_ctetra(eid, pid, nids, comment='ctetra')
         end_checks(model)
 
     def test_solids_ctetra4_mat9(self):
@@ -270,9 +272,9 @@ class TestSolids(unittest.TestCase):
         eid = 10
         pid = 20
         mid = 30
-        E = 3.e7
-        G = None
-        nu = 0.3
+        #E = 3.e7
+        #G = None
+        #nu = 0.3
         model = BDF(debug=False)
         model.add_grid(11, xyz=[0., 0., 0.])
         model.add_grid(12, xyz=[1., 0., 0.])
@@ -418,7 +420,7 @@ class TestSolids(unittest.TestCase):
         """checks that various solid methods work"""
         mass = rho * V
         element = model.elements[eid]
-        element.node_ids
+        assert max(element.node_ids) > 0
         assert pid in model.properties, 'pid is missing for\n%s' % str(element)
         self.assertEqual(element.type, etype)
         self.assertEqual(element.eid, eid)
@@ -444,7 +446,7 @@ def end_checks(model):
 
     bdf_filename = 'solid_test.bdf'
     model.write_bdf(bdf_filename)
-    model2 = read_bdf(bdf_filename, debug=False)
+    read_bdf(bdf_filename, debug=False)
     os.remove(bdf_filename)
 
 if __name__ == '__main__':  # pragma: no cover

@@ -1864,7 +1864,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'CTRIA6' : (CTRIA6, self._add_element_object),
             'CTRIAR' : (CTRIAR, self._add_element_object),
             'CTRAX3' : (CTRAX3, self._add_element_object),
-            #'CTRAX6' : (CTRAX6, self._add_element_object),
+            'CTRAX6' : (CTRAX6, self._add_element_object),
             'CTRIAX' : (CTRIAX, self._add_element_object),
             'CTRIAX6' : (CTRIAX6, self._add_element_object),
             'PCOMP' : (PCOMP, self._add_property_object),
