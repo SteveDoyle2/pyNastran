@@ -487,6 +487,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             cid_map[cidi] = cid
             cid += 1
 
+    if 'freq_id' in starting_id_dict and freq_id is not None:
+        # frequencies
+        for freqi, freqs in sorted(iteritems(model.frequencies)):
+            freq_map[freqi] = freq_id
+            for freq in freqs:
+                freq.sid = freqi
+            freq_id += 1
+
     nlparm_map = {}
     nlpci_map = {}
     table_sdamping_map = {}
@@ -503,7 +511,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         (model.cMethods, 'sid', cmethod_map),
         (model.flfacts, 'sid', flfact_map),
         (model.flutters, 'sid', flutter_map),
-        (model.frequencies, 'sid', freq_map),
         (model.tsteps, 'sid', tstep_map),
         (model.tstepnls, 'sid', tstepnl_map),
         (model.splines, 'eid', None),
