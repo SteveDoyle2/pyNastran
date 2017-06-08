@@ -3,6 +3,8 @@ import pyNastran
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.gui import QApplication, MainWindow
 from PyQt4.QtCore import QCoreApplication
+
+
 def main(argv=None):
     if argv is None:
         argv = []

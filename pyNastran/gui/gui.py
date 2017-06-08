@@ -11,13 +11,11 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import sys
 
 
+# yes we're intentionally putting this here to validate the imports
+# before doing lots of work
 from pyNastran.gui.arg_handling import get_inputs
-if __name__ == '__main__':
-    # yes we're intentionally putting this here to validate the imports
-    # before doing lots of work
-    #
-    # it needs to be here to avoid screwing up jupyter_gui
-    get_inputs()
+get_inputs()
+
 
 import pyNastran
 from pyNastran.gui.main_window import QApplication, MainWindow
@@ -34,5 +32,5 @@ def cmd_line():
     MainWindow(inputs)
     sys.exit(app.exec_())
 
-if '__name__' == '__main__' and 'jupyter not' in sys.argv[0]:
+if '__name__' == '__main__':
     cmd_line()

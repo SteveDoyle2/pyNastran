@@ -111,7 +111,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
 
             # no results
             'lawgs', 'stl', 'fast',
-            'bedge', 'su2', 'tetgen',
+            'bedge', 'su2', 'tetgen', 'avus',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
