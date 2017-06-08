@@ -7,7 +7,6 @@ import os
 from struct import Struct, unpack
 import sys
 from codecs import open
-from six import PY2
 
 import numpy as np
 from numpy import zeros, unique, array
@@ -644,7 +643,7 @@ class UGRID(object):
             # quads.sort(axis=0)
             # quads = unique_rows(tris)
         raise NotImplementedError()
-        return tris, quads
+        #return tris, quads
 
 
 def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename=None):

@@ -3,7 +3,6 @@ Defines how the GUI reads Abaqus files
 """
 from __future__ import print_function
 from six import iteritems
-from six.moves import range
 
 import os
 import numpy as np

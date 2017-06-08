@@ -9,7 +9,6 @@ from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 #from pyNastran.converters.nastran.nastranIOv import NastranIO
 from pyNastran.converters.stl.stl_io import STL_IO
-from pyNastran.utils import print_bad_path
 
 
 from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO

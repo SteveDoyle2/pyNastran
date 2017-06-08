@@ -4,7 +4,7 @@ from pyNastran.gui.qt_version import qt_version, is_pygments
 if qt_version == 4:
     from PyQt4 import QtCore
     from PyQt4.QtGui import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
+        QPushButton, QTextEdit, QDockWidget,
         QVBoxLayout, QHBoxLayout, QWidget, QFont, qApp, QMenu, QFontMetrics, QColor)
     try:
         import PyQt4.Qsci as Qsci
@@ -19,7 +19,7 @@ elif qt_version == 5:
     #from PyQt5.QtCore import QSci
     #import QScintilla
     from PyQt5.QtWidgets import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
+        QPushButton, QTextEdit, QDockWidget,
         QVBoxLayout, QHBoxLayout, QWidget, qApp, QMenu)
 
     try:
@@ -31,7 +31,7 @@ elif qt_version == 5:
 elif qt_version == 'pyside':
     from PySide import QtCore
     from PySide.QtGui import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
+        QPushButton, QTextEdit, QDockWidget,
         QVBoxLayout, QHBoxLayout, QWidget, QFont, qApp, QMenu, QFontMetrics, QColor)
     is_scintilla = False
 else:

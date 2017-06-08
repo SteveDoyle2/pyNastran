@@ -11,9 +11,9 @@ from numpy import allclose
 from pyNastran.applications.cart3d_nastran_fsi.map_loads import run_map_loads
 from pyNastran.applications.cart3d_nastran_fsi.run_spline import run_map_deflections
 
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 debug = True
-log = get_logger2(None, debug=debug)
+log = get_logger2(log=None, debug=debug)
 
 
 def validate_inputs(inputs):

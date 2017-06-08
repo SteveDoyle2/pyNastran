@@ -162,7 +162,7 @@ class Cart3dIO(object):
                 xvel = zeros(nelements, dtype='float32')
                 yvel = zeros(nelements, dtype='float32')
                 zvel = zeros(nelements, dtype='float32')
-                vel = zeros(nelements, dtype='float32')
+                #vel = zeros(nelements, dtype='float32')
                 pressure = zeros(nelements, dtype='float32')
 
                 uregions = set(unique(regions))
@@ -332,7 +332,7 @@ class Cart3dIO(object):
 
             alt_grid = self.alt_grids['free_edges']
             etype = 3  # vtk.vtkLine().GetCellType()
-            elements2 = np.arange(0, nfree_edges * 2, dtype='int32').reshape(nfree_edges, 2)
+            elements2 = np.arange(0, npoints, dtype='int32').reshape(nfree_edges, 2)
             self.create_vtk_cells_of_constant_element_type(alt_grid, elements2, etype)
 
             #alt_grid.Allocate(nfree_edges, 1000)

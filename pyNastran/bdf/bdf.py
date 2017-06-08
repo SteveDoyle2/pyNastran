@@ -3183,7 +3183,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         """
         #self.log.info('transform_xycp_to_xyz_cid; cid=%s' % cid)
         coord2 = self.coords[cid]
-        beta2 = coord2.beta()
 
         #assert in_place is False, 'in_place=%s' % in_place
         if in_place:

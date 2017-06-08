@@ -2,10 +2,10 @@ from __future__ import print_function, unicode_literals
 import copy
 from struct import Struct, unpack
 from six import string_types, b
-from six.moves import range, zip
+from six.moves import range
 
 import numpy as np
-from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
+from numpy import radians, sin, cos, fromstring, ones, dtype as npdtype
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
@@ -665,8 +665,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         return n
 
     def _read_scalar_table_vectorized(self, data, ndata, result_name, storage_obj,
-                               real_vector, complex_vector,
-                               node_elem, random_code=None, is_cid=False):
+                                      real_vector, complex_vector,
+                                      node_elem, random_code=None, is_cid=False):
 
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj

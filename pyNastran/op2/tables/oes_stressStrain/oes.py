@@ -45,7 +45,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpr
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
-    HyperelasticQuad, HyperelasticQuadArray) # vectorize
+    HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
 
 
@@ -1451,7 +1451,6 @@ class OES(OP2Common):
                 return ndata
             self._results._found_result(result_name)
             slot = getattr(self, result_name)
-            slot_vector = slot
 
             if self.format_code == 1 and self.num_wide == 16:  # real
                 if self.is_stress():
@@ -2163,7 +2162,7 @@ class OES(OP2Common):
                     if itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, 17)
                         eids = ints[:, 0] // 10
-                        ilayers = ints[:, 1]
+                        #ilayers = ints[:, 1]
                         ints2 = ints[:, 1:].reshape(nlayers, 8)
                         assert eids.min() > 0, eids
                         obj._times[obj.itime] = dt
@@ -2973,7 +2972,7 @@ class OES(OP2Common):
                             n += 32
             elif self.format_code in [2, 3] and self.num_wide == 37: # imag
                 # TODO: vectorize object
-                return ndata
+                #return ndata
                 obj_vector_complex = None
                 if self.is_stress():
                     raise NotImplementedError('ComplexTriaxStressArray')
@@ -3828,9 +3827,7 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return ndata
             if self.format_code == -4 and self.num_wide == 30:
-                # TODO: vectorize
                 if self.is_stress():
-                    #self.create_transient_object(self.hyperelastic_cquad4_strain, HyperelasticQuad)
                     self.create_transient_object(self.hyperelastic_cquad4_strain, HyperelasticQuadArray)
                     result_name = 'hyperelastic_cquad4_strain'
                 else:

@@ -134,9 +134,9 @@ class TestAtm(unittest.TestCase):
         self.assertAlmostEqual(alt_a, 12144.30, delta=1.5)  # TODO: should be 0.01
         self.assertAlmostEqual(alt_b, 22058.47, delta=2.5)  # TODO: should be 0.01
 
-    def test_re(self):
-        re = atm_unit_reynolds_number(55000., 2.4)
-        self.assertEqual(atm_unit_reynolds_number(55000., 2.4), 2244166.3810534105)
+    def test_reynolds(self):
+        reynolds = atm_unit_reynolds_number(55000., 2.4)
+        self.assertEqual(reynolds, 2244166.3810534105)
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

@@ -162,7 +162,7 @@ class OpenFoamIO(object):
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
 
         nid = 0
         #print("nnodes=%s" % nnodes)
