@@ -1,6 +1,6 @@
 #import os
 #import struct
-from pyNastran.xdb.enums import SolutionType
+from pyNastran.dev.xdb.enums import SolutionType
 
 
 

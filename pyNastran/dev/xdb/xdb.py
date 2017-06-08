@@ -6,8 +6,8 @@ import os
 import struct
 
 from pyNastran.op2.fortran_format import FortranFormat
-from pyNastran.xdb.xdb_object import XDB_obj
-from pyNastran.xdb.debug_output import debug_output
+from pyNastran.dev.xdb.xdb_object import XDB_obj
+from pyNastran.dev.xdb.debug_output import debug_output
 
 
 def read_xdb(xdb_filename, etype, nsubcases=1, npload4s=1, debug=False, log=None):
