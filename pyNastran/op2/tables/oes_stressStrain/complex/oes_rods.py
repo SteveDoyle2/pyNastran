@@ -1,12 +1,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import integer_types
 from six.moves import range
 import numpy as np
-from numpy import zeros, array_equal, allclose
+from numpy import zeros, allclose
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_imag_floats_13e, get_key0, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header # get_key0,
 try:
     import pandas as pd
 except ImportError:
@@ -16,7 +16,6 @@ except ImportError:
 class ComplexRodArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.nelements = 0  # result specific
@@ -150,11 +149,11 @@ class ComplexRodArray(OES_Object):
         return msg
 
     def get_element_index(self, eids):
-        itot = searchsorted(eids, self.element)
+        itot = np.searchsorted(eids, self.element)
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = searchsorted(eids, self.element)
+        ind = np.searchsorted(eids, self.element)
         return ind
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
@@ -253,6 +252,6 @@ class ComplexRodStrainArray(ComplexRodArray, StrainObject):
             ' \n',
             '                 ELEMENT                             AXIAL                                         TORQUE\n',
             '                   ID.                               FORCE\n',
-           #'                       1                 -2.459512E+05 /  3.377728E+04                  0.0          /  0.0\n',
+            #'                       1                 -2.459512E+05 /  3.377728E+04                  0.0          /  0.0\n',
         ]
         return words

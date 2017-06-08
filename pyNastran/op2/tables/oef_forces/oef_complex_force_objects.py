@@ -1385,7 +1385,6 @@ class ComplexCBarForceArray(ScalarObject):
         #ForceObject.__init__(self, data_code, isubcase)
         ScalarObject.__init__(self, data_code, isubcase)
 
-        #self.eType = {}
         self.result_flag = 0
         #self.code = [self.format_code, self.sort_code, self.s_code]
 

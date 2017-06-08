@@ -14,9 +14,7 @@ except ImportError:
 class ComplexCBushArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
-
         self.nelements = 0  # result specific
 
     def is_real(self):
@@ -250,6 +248,6 @@ class ComplexCBushStrainArray(ComplexCBushArray, StrainObject):
             ' \n',
             '                 ELEMENT                             AXIAL                                         TORQUE\n',
             '                   ID.                               FORCE\n',
-           #'                       1                 -2.459512E+05 /  3.377728E+04                  0.0          /  0.0\n',
+            #'                       1                 -2.459512E+05 /  3.377728E+04                  0.0          /  0.0\n',
         ]
         return words

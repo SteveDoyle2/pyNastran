@@ -473,7 +473,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
                 raise NotImplementedError('method=%r is not supported' % method)
             return mass_per_area
 
-    def _is_same_card(self, prop, debug=False):
+    def _is_same_card(self, prop):
         if self.type != prop.type:
             return False
         fields2 = [prop.nsm, prop.sb, prop.ft, prop.tref, prop.ge, prop.lam]
@@ -483,9 +483,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             fields1 += ply
         for ply in prop.plies:
             fields2 += ply
-
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
 
         for (field1, field2) in zip(fields1, fields2):
             if not is_same(field1, field2):
@@ -1452,13 +1449,11 @@ class PSHEAR(ShellProperty):
         assert isinstance(mid, integer_types), data
         return PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
 
-    def _is_same_card(self, prop, debug=False):
+    def _is_same_card(self, prop):
         if self.type != prop.type:
             return False
         fields1 = self.raw_fields()
         fields2 = prop.raw_fields()
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):

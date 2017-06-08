@@ -102,13 +102,13 @@ def make_mass_matrix(model, reference_point):
 
                 i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
                 j1, j2, j3 = components[(n2, 1)], components[(n2, 2)], components[(n2, 3)]
+                mpl = elem.MassPerLength()
                 massi = mpl * length / 2.
 
                 inid1 = inids[n1]
                 inid2 = inids[n2]
                 v1 = xyz[inid2, :] - xyz[inid1, :]
                 length = norm(v1)
-                mpl = elem.MassPerLength()
                 Lambda = _lambda_1d(v1)
                 mass_mat2 = dot(dot(transpose(Lambda), mass_mat * massi), Lambda)
                 assert mass_mat2.shape == (6, 6), mass_mat2

@@ -1,7 +1,7 @@
 from six.moves import zip
-from numpy import array, zeros
+from numpy import zeros
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
+from pyNastran.f06.f06_formatting import write_floats_13e#, write_imag_floats_13e
 
 
 class AppliedLoadsVectorArray(ScalarObject):
@@ -30,10 +30,11 @@ class AppliedLoadsVectorArray(ScalarObject):
 
     def get_stats(self, short=False):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
         #ngrids = len(self.gridTypes)
         msg = []
 
@@ -41,7 +42,7 @@ class AppliedLoadsVectorArray(ScalarObject):
         #len(self.node_gridtype)
         #nnodes, two = self.node_gridtype.shape
         nelements = 0
-        ntimes, ntotal, six = self.data.shape
+        ntimes = self.data.shape[0]
         if self.nonlinear_factor is not None:  # transient
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -72,13 +73,14 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = ['                      APPLIED LOADS VECTOR\n',
                  '\n',
                  '      EID SOURCE FX FY FZ MX MY MZ\n']
-        ntimes, ntotal, size = self.data.shape
+        #ntimes, ntotal = self.data.shape[:2]
         for itime, dt in enumerate(self._times):
             if self.nonlinear_factor is not None:
                 if isinstance(dt, float):
@@ -99,7 +101,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        node_id, eid, source, dx, dy, dz, rx, ry, rz))
+                    node_id, eid, source, dx, dy, dz, rx, ry, rz))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num-1
@@ -112,20 +114,21 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = ['                      APPLIED LOADS VECTOR\n',
                  '\n',
                  '      EID SOURCE FX FY FZ MX MY MZ\n']
-        ntimes, ntotal, size = self.data.shape
+        #ntimes, ntotal, size = self.data.shape
         for itime, dt in enumerate(self._times):
             if self.nonlinear_factor is not None:
                 if isinstance(dt, float):
                     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:
                     header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            f.write(''.join(header + words))
+            f06.write(''.join(header + words))
 
             f1 = self.data[itime, :, 0]
             f2 = self.data[itime, :, 1]
@@ -138,10 +141,10 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        '%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        node_id, eid, source, dxr, dyr, dzr, rxr, ryr, rzr,
-                        '', '', '', '',       dxi, dyi, dzi, rxi, ryi, rzi))
-            f.write(page_stamp % page_num)
+                f06.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                          '%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                              node_id, eid, source, dxr, dyr, dzr, rxr, ryr, rzr,
+                              '', '', '', '',       dxi, dyi, dzi, rxi, ryi, rzi))
+            f06.write(page_stamp % page_num)
             page_num += 1
         return page_num-1
