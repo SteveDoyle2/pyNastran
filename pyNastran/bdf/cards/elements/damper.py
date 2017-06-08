@@ -159,7 +159,7 @@ class CDAMP1(LineDamper):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid()] + self.node_ids + [self.c1, self.c2]

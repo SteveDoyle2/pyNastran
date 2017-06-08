@@ -216,7 +216,7 @@ class RealBarArray(OES_Object):
         if header is None:
             header = []
         msg = self._get_msgs()
-        (ntimes, ntotal) = self.data.shape[:2]
+        ntimes = self.data.shape[0]
         eids = self.element
         #print('CBAR ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):

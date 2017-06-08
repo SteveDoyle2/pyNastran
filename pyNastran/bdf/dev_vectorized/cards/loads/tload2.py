@@ -1,14 +1,13 @@
 from six.moves import zip
 
-import numpy as np
 from numpy import zeros, unique
 
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, integer_string_or_blank,
-    integer_double_or_blank, double)
+    integer, double_or_blank, integer_string_or_blank,
+    integer_double_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.loads.vectorized_load import VectorizedLoad
 

@@ -497,8 +497,6 @@ class Element(BaseCard):
             nodes = self.node_ids
         except AttributeError:
             return None
-        node_ids = nodes
-        nnodes = len(nodes)
         if self.type.startswith('CQUAD'): # CQUADx
             # both sides
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]  # CQUAD8/9?

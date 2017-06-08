@@ -81,7 +81,6 @@ def cmd_line_plot_flutter():  # pragma: no cover
 
 def cmd_line():  # pragma: no cover
     import sys
-    dev = True
     msg = 'Usage:\n'
     msg += '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylim DAMP]\n'
     msg += '\n'
