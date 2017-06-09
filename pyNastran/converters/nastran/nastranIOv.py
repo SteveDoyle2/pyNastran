@@ -1431,9 +1431,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _add_nastran_spoints_to_grid(self, model, nid_to_pid_map=None):
         """used to create SPOINTs"""
-        if model.spoints is None:
+        if not model.spoints:
             return
-        spoint_ids = list(model.spoints.points) # set -> list
+        if model.new_spoints:
+            spoint_ids = list(model.spoints.keys())
+        else:
+            spoint_ids = list(model.spoints.points) # set -> list
         assert isinstance(spoint_ids, list), type(spoint_ids)
 
         nspoints = len(spoint_ids)

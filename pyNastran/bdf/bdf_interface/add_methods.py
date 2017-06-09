@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
+from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 
 
 class AddMethods(BDFAttributes):
@@ -97,17 +98,39 @@ class AddMethods(BDFAttributes):
 
     def _add_spoint_object(self, spoints):
         """adds an SPOINT card"""
-        if self.spoints is None:
-            self.spoints = spoints
+        if self.new_spoints:
+            comment = spoints.comment
+            for nid in spoints.points:
+                if nid in self.spoints:
+                    continue
+                    #raise RuntimeError('nid=%s\nold_spoint=\n%snew_spoint=\n%s' % (
+                        #nid, self.spoints[nid], spoints))
+                spoint = SPOINT(nid, comment=comment)
+                comment = ''
+                self.spoints[nid] = spoint
         else:
-            self.spoints.add_points(spoints.points)
+            if self.spoints is None:
+                self.spoints = spoints
+            else:
+                self.spoints.add_points(spoints.points)
 
     def _add_epoint_object(self, epoints):
         """adds an EPOINT card"""
-        if self.epoints is None:
-            self.epoints = epoints
+        if self.new_spoints:
+            comment = epoints.comment
+            for nid in epoints.points:
+                if nid in self.epoints:
+                    continue
+                    #raise RuntimeError('nid=%s\nold_epoint=\n%snew_epoint=\n%s' % (
+                        #nid, self.epoints[nid], epoints))
+                epoint = EPOINT(nid, comment=comment)
+                comment = ''
+                self.epoints[nid] = epoint
         else:
-            self.epoints.add_points(epoints.points)
+            if self.epoints is None:
+                self.epoints = epoints
+            else:
+                self.epoints.add_points(epoints.points)
 
     def _add_plotel_object(self, elem, allow_overwrites=False):
         """adds an PLOTEL object"""

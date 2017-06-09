@@ -13,7 +13,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
-
+from pyNastran.bdf.cards.nodes import write_xpoints
 
 class WriteMeshes(WriteMesh):
     """
@@ -102,16 +102,28 @@ class WriteMeshes(WriteMesh):
                       it could, but you'd need 20 new coordinate systems
         .. warning:: doesn't mirror SPOINTs, EPOINTs
         """
-        if self.spoints:
-            msg = []
-            msg.append('$SPOINTS\n')
-            msg.append(self.spoints.write_card(size, is_double))
-            bdf_file.write(''.join(msg))
-        if self.epoints:
-            msg = []
-            msg.append('$EPOINTS\n')
-            msg.append(self.epoints.write_card(size, is_double))
-            bdf_file.write(''.join(msg))
+        if self.new_spoints:
+            if self.spoints:
+                msg = []
+                msg.append('$SPOINTS\n')
+                msg.append(write_xpoints('SPOINT', self.spoints.keys()))
+                bdf_file.write(''.join(msg))
+            if self.epoints:
+                msg = []
+                msg.append('$EPOINTS\n')
+                msg.append(write_xpoints('EPOINT', self.epoints.keys()))
+                bdf_file.write(''.join(msg))
+        else:
+            if self.spoints:
+                msg = []
+                msg.append('$SPOINTS\n')
+                msg.append(self.spoints.write_card(size, is_double))
+                bdf_file.write(''.join(msg))
+            if self.epoints:
+                msg = []
+                msg.append('$EPOINTS\n')
+                msg.append(self.epoints.write_card(size, is_double))
+                bdf_file.write(''.join(msg))
 
         plane = plane.strip().lower()
         if plane == 'xz':

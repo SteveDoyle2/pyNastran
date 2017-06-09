@@ -5,6 +5,7 @@ defines:
 """
 from __future__ import print_function
 from math import ceil
+from itertools import chain
 
 from six import iteritems, string_types
 import numpy as np
@@ -321,17 +322,20 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     else:
         model = bdf_filename
 
-    if model.spoints is None:
-        spoints = []
+    if model.new_spoints:
+        spoints = list(model.spoints.keys())
+        epoints = list(model.epoints.keys())
     else:
-        spoints = list(model.spoints.points)
-    if model.epoints is None:
-        epoints = []
-    else:
-        epoints = list(model.epoints.points)
+        if model.spoints is None:
+            spoints = []
+        else:
+            spoints = list(model.spoints.points)
+        if model.epoints is None:
+            epoints = []
+        else:
+            epoints = list(model.epoints.points)
 
     nids = model.nodes.keys()
-    from itertools import chain
 
     nids_spoints_epoints = sorted(chain(nids, spoints, epoints))
     #spoints_nids.sort()

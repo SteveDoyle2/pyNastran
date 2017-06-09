@@ -2673,14 +2673,24 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         nepoints = 0
         nids = list(self.node_ids)
         all_nodes = list(self.node_ids)
-        if self.spoints is not None:
-            spoints = list(self.spoints.points)
-            nspoints = len(spoints)
-            all_nodes += spoints
-        if self.epoints is not None:
-            epoints = list(self.epoints.points)
-            all_nodes += epoints
-            nepoints = len(epoints)
+        if self.new_spoints:
+            if self.spoints:
+                spoints = list(self.spoints)
+                nspoints = len(spoints)
+                all_nodes += spoints
+            if self.epoints:
+                epoints = list(self.epoints)
+                nepoints = len(epoints)
+                all_nodes += epoints
+        else:
+            if self.spoints is not None:
+                spoints = list(self.spoints.points)
+                nspoints = len(spoints)
+                all_nodes += spoints
+            if self.epoints is not None:
+                epoints = list(self.epoints.points)
+                all_nodes += epoints
+                nepoints = len(epoints)
         #self.log.debug('all_nodes = %s' % all_nodes)
 
         npoints = nnodes + nspoints + nepoints
@@ -3100,12 +3110,22 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         nepoints = 0
         spoints = None
         epoints = None
-        if self.spoints:
-            spoints = np.unique(list(self.spoints.points))
-            nspoints = len(spoints)
-        if self.epoints is not None:
-            epoints = np.unique(list(self.epoints.points))
-            nepoints = len(epoints)
+        if self.new_spoints:
+            if self.spoints:
+                spoints = list(self.spoints)
+                nspoints = len(spoints)
+                all_nodes += spoints
+            if self.epoints:
+                epoints = list(self.epoints)
+                nepoints = len(epoints)
+                all_nodes += epoints
+        else:
+            if self.spoints:
+                spoints = np.unique(list(self.spoints.points))
+                nspoints = len(spoints)
+            if self.epoints is not None:
+                epoints = np.unique(list(self.epoints.points))
+                nepoints = len(epoints)
 
         if nnodes + nspoints + nepoints == 0:
             msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)

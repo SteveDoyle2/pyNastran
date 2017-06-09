@@ -15,6 +15,7 @@ from pyNastran.bdf.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
+from pyNastran.bdf.cards.nodes import write_xpoints
 
 
 class WriteMesh(BDFAttributes):
@@ -731,16 +732,28 @@ class WriteMesh(BDFAttributes):
         """
         Writes the NODE-type cards
         """
-        if self.spoints:
-            msg = []
-            msg.append('$SPOINTS\n')
-            msg.append(self.spoints.write_card(size, is_double))
-            bdf_file.write(''.join(msg))
-        if self.epoints:
-            msg = []
-            msg.append('$EPOINTS\n')
-            msg.append(self.epoints.write_card(size, is_double))
-            bdf_file.write(''.join(msg))
+        if self.new_spoints:
+            if self.spoints:
+                msg = []
+                msg.append('$SPOINTS\n')
+                msg.append(write_xpoints('SPOINT', self.spoints.keys()))
+                bdf_file.write(''.join(msg))
+            if self.epoints:
+                msg = []
+                msg.append('$EPOINTS\n')
+                msg.append(write_xpoints('EPOINT', self.epoints.keys()))
+                bdf_file.write(''.join(msg))
+        else:
+            if self.spoints:
+                msg = []
+                msg.append('$SPOINTS\n')
+                msg.append(self.spoints.write_card(size, is_double))
+                bdf_file.write(''.join(msg))
+            if self.epoints:
+                msg = []
+                msg.append('$EPOINTS\n')
+                msg.append(self.epoints.write_card(size, is_double))
+                bdf_file.write(''.join(msg))
         if self.points:
             msg = []
             msg.append('$POINTS\n')
