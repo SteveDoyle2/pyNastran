@@ -461,7 +461,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nspoints = 0
         spoints = None
         if model.spoints:
-            spoints = model.spoints.points
+            spoints = sorted([spoint.nid for spoint in itervalues(model.spoints)])
             nspoints = len(spoints)
 
         if nnodes + nspoints == 0:
@@ -1509,7 +1509,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 model.log.warning('spointi=%s does not exist' % spointi)
                 continue
 
-            if spointi not in model.spoints.points:
+            if spointi not in model.spoints:
                 model.log.warning('spointi=%s doesnt exist' % spointi)
                 continue
             # point = self.grid.GetPoint(i)
