@@ -2715,13 +2715,24 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         nepoints = 0
         spoints = None
         epoints = None
-        if self.spoints:
-            spoints = self.spoints.points
-            nspoints = len(spoints)
-        if self.epoints is not None:
-            epoints = self.epoints.points
-            nepoints = len(epoints)
-            #raise NotImplementedError('EPOINTs')
+        if 0 and self.new_spoints:
+            if self.new_spoints:
+                if self.spoints:
+                    spoints = list(self.spoints)
+                    nspoints = len(spoints)
+                    all_nodes += spoints
+                if self.epoints:
+                    epoints = list(self.epoints)
+                    nepoints = len(epoints)
+                    all_nodes += epoints
+        else:
+            if self.spoints:
+                spoints = self.spoints.points
+                nspoints = len(spoints)
+            if self.epoints is not None:
+                epoints = self.epoints.points
+                nepoints = len(epoints)
+                #raise NotImplementedError('EPOINTs')
 
         if nnodes + nspoints + nepoints == 0:
             msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
