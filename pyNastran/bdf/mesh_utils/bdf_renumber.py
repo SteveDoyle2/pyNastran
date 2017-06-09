@@ -179,6 +179,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'spc_id' : 1,
         'mpc_id' : 1,
         'load_id' : 1,
+        'set_id' : 1,
         'dload_id' : 1,
 
         'method_id' : 1,
@@ -190,6 +191,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'freq_id' : 1,
         'tstep_id' : 1,
         'tstepnl_id' : 1,
+        'spline_id' : 1,
         'suport_id' : 1,
         'suport1_id' : 1,
         'tf_id' : 1,
@@ -245,6 +247,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                 cid = None
             else:
                 cid = int(value)
+        elif key == 'set_id':
+            if value is None:
+                set_id = None
+            else:
+                set_id = int(value)
         elif key == 'eid':
             eid = int(value)
         elif key == 'pid':
@@ -294,9 +301,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             raise NotImplementedError('key=%r' % key)
 
     # build the maps
+    mass_id_map = {}
     nid_map = {}
+    properties_map = {}
+    properties_mass_map = {}
     reverse_nid_map = {}
     eid_map = {}
+    rigid_elements_map = {}
     nsm_map = {}
     mid_map = {}
     cid_map = {}
@@ -416,10 +427,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         # properties
         for pidi, prop in sorted(iteritems(model.properties)):
             prop.pid = pid
+            properties_map[pidi] = pid
             pid += 1
         for pidi, prop in sorted(iteritems(model.properties_mass)):
             # PMASS
             prop.pid = pid
+            properties_mass_map[pidi] = pid
             pid += 1
         for pidi, prop in sorted(iteritems(model.convection_properties)):
             # PCONV
@@ -440,11 +453,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             # CONM1, CONM2, CMASSx
             element.eid = eid
             eid_map[eidi] = eid
+            mass_id_map[eidi] = eid
             eid += 1
         for eidi, elem in sorted(iteritems(model.rigid_elements)):
             # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
             elem.eid = eid
             eid_map[eidi] = eid
+            rigid_elements_map[eidi] = eid
             eid += 1
         #for eidi, elem in iteritems(model.caeros):
             #pass
@@ -498,6 +513,21 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             for freq in freqs:
                 freq.sid = freqi
             freq_id += 1
+    set_map = {}
+    if 'set_id' in starting_id_dict and set_id is not None:
+        # sets
+        for sidi, set_ in sorted(iteritems(model.sets)):
+            set_.sid = set_id
+            set_map[sidi] = set_id
+            set_id += 1
+
+    spline_id_map = {}
+    if 'spline_id' in starting_id_dict and spline_id is not None:
+        # sets
+        for sidi, spline in sorted(iteritems(model.splines)):
+            spline.eid = spline_id
+            spline_id_map[sidi] = spline_id
+            spline_id += 1
 
     nlparm_map = {}
     nlpci_map = {}
@@ -517,7 +547,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         (model.flutters, 'sid', flutter_map),
         (model.tsteps, 'sid', tstep_map),
         (model.tstepnls, 'sid', tstepnl_map),
-        (model.splines, 'eid', None),
         (model.suport1, 'conid', suport1_map),
         (model.nlparms, 'nlparm_id', nlparm_map),
         (model.nlpcis, 'nlpci_id', nlpci_map),
@@ -534,7 +563,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         (model.aelists, 'sid', None),
         (model.paeros, 'pid', None),
 
-        (model.sets, 'sid', None),
         #(model.asets, 'sid', None),
         (model.dareas, 'sid', None),
         (model.transfer_functions, 'sid', tranfer_function_map)
@@ -622,16 +650,23 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     temp_map = load_map # wrong???
     mapper = {
         'elements' : eid_map,
+        'masses' : mass_id_map,
+        'rigid_elements' : rigid_elements_map,
         'nodes' : nid_map,
         'coords' : cid_map,
         'materials' : mid_map,
+        'properties' : properties_map,
+        'properties_mass' : properties_mass_map,
         'SPC' : spc_map,
-        'MPC' : mpc_map,
+        'MPC' : mpc_map, #TODO: come up with unified system that uses the same key for bdf_merge and _update_case_control
+        'mpcs' : mpc_map,
         'METHOD' : method_map,
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,
         'FMETHOD' : flutter_map,
         'FREQUENCY' : freq_map,
+        'sets' : set_map,
+        'splines' : spline_id_map,
 
         'DLOAD' : dload_map,
         'LOAD' : load_map,
@@ -665,8 +700,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
                         interspersed=False)
-    return model
-
+    return model, mapper
 
 def _update_case_control(model, mapper):
     """
