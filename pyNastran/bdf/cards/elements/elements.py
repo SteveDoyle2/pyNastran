@@ -410,7 +410,7 @@ class CrackElement(Element):
             the BDF object
         """
         msg = ' which is required by %s eid=%s' % (self. type, self.eid)
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid

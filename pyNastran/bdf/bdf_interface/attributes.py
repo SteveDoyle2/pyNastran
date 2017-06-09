@@ -526,7 +526,7 @@ class BDFAttributes(object):
             'grdset' : ['GRDSET'],
             'seqgp' : ['SEQGP'],
             'ao_element_flags' : ['CBARAO'],
-            #'POINT', 'POINTAX', 'RINGAX',
+            #'POINTAX', 'RINGAX',
 
             # CMASS4 lies in the QRG
             'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
@@ -795,6 +795,16 @@ class BDFAttributes(object):
     @rejects.setter
     def rejects(self, rejects):
         self.reject_lines = rejects
+
+    #@property
+    #def grids(self):
+        #"""might be renaming self.nodes to self.grids"""
+        #return self.nodes
+
+    #@property.setter
+    #def grids(self, grids):
+        #"""might be renaming self.nodes to self.grids"""
+        #self.nodes = grids
 
     @property
     def nnodes(self):

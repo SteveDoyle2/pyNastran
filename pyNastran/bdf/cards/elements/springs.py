@@ -180,7 +180,7 @@ class CELAS1(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS1 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
@@ -320,7 +320,7 @@ class CELAS2(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS2 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
 
     def uncross_reference(self):
@@ -616,7 +616,7 @@ class CELAS4(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS4 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
 
     def uncross_reference(self):

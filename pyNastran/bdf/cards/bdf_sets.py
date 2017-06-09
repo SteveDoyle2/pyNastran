@@ -152,7 +152,7 @@ class ABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
         self.ids_ref = self.ids
 
     def uncross_reference(self):
@@ -226,7 +226,7 @@ class SuperABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
         self.ids_ref = self.ids
 
     def uncross_reference(self):
@@ -393,7 +393,7 @@ class ABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
         self.ids_ref = self.ids
 
     def uncross_reference(self):
@@ -487,7 +487,7 @@ class SuperABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
         self.ids_ref = self.ids
 
     def uncross_reference(self):
@@ -598,7 +598,7 @@ class CSET1(Set):
             the BDF object
         """
         msg = ' which is required by CSET1'
-        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
         self.ids_ref = self.ids
 
     def uncross_reference(self):
@@ -1266,7 +1266,7 @@ class USET(Set):
             the BDF object
         """
         msg = ' which is required by USET name=%s' % (self.name)
-        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
         self.ids_ref = self.ids
 
     def uncross_reference(self):
@@ -1352,7 +1352,7 @@ class USET1(ABQSet1):
             the BDF object
         """
         msg = ' which is required by USET1 name=%s' % (self.name)
-        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
         self.ids_ref = self.ids
 
     def uncross_reference(self):

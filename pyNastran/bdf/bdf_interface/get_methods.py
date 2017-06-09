@@ -12,45 +12,21 @@ class GetMethods(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
-    #def _Node(nid, msg=''):
-        #if self.new_spoints:
-            #if nid in self.nodes:
-                #return self.nodes[nid]
-            #elif nid in self.spoints:
-                #return self.spoints[nid]
-            #elif nid in self.epoints:
-                #return self.epoints[nid]
-            #else:
-                #assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-                #nid_list = np.unique(list(self.nodes.keys()))
-                #msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
-                #msg += 'nids=%s\n' % nid_list
-                #if self.spoints:
-                    #msg += 'spoints=%s\n' % np.unique(list(self.spoints.keys()))
-                #if self.epoints:
-                    #msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
-                #raise KeyError(msg)
-        #else:
-            #if nid in self.nodes:
-                #return self.nodes[nid]
-            #elif self.spoints and nid in self.spoints.points:
-                #return SPOINT(nid)
-            #elif self.epoints and nid in self.epoints.points:
-                #return EPOINT(nid)
-            #else:
-                #assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-                #nid_list = np.unique(list(self.nodes.keys()))
-                #msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
-                #msg += 'nids=%s\n' % nid_list
-                #if self.spoints:
-                    #msg += 'spoints=%s\n' % list(self.spoints.points)
-                #if self.epoints:
-                    #msg += 'epoints=%s\n' % list(self.epoints.points)
-                #raise KeyError(msg)
+    def EmptyNode(self, nid, msg=''):
+        """
+        Gets a GRID/SPOINT/EPOINT object, but allows for empty nodes
+        (i.e., the CTETRA10 supports empty nodes, but the CTETRA4 does not).
 
-    def Node(self, nid, allow_empty_nodes=False, msg=''):  # EmptyNode
+        Parameters
+        ----------
+        nid : int / None
+            the node id
+            0, None : indicate blank
+        msg : str; default=''
+            a debugging message
+        """
         if self.new_spoints:
-            if (nid == 0 or nid is None) and allow_empty_nodes:
+            if nid == 0 or nid is None:
                 return None
             elif nid in self.nodes:
                 return self.nodes[nid]
@@ -64,12 +40,12 @@ class GetMethods(BDFAttributes):
                 msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
                 msg += 'nids=%s\n' % nid_list
                 if self.spoints:
-                    msg += 'spoints=%s\n' % list(self.spoints.keys())
+                    msg += 'spoints=%s\n' % np.unique(list(self.spoints.keys()))
                 if self.epoints:
-                    msg += 'epoints=%s\n' % list(self.epoints.keys())
+                    msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
                 raise KeyError(msg)
         else:
-            if (nid == 0 or nid is None) and allow_empty_nodes:
+            if nid == 0 or nid is None:
                 return None
             elif nid in self.nodes:
                 return self.nodes[nid]
@@ -88,22 +64,69 @@ class GetMethods(BDFAttributes):
                     msg += 'epoints=%s\n' % list(self.epoints.points)
                 raise KeyError(msg)
 
-    #def EmptyNodes(self, nids, msg=''):
-        #"""
-        #Returns a series of node objects given a list of IDs
-        #"""
-        #nodes = []
-        #for nid in nids:
-            #nodes.append(self.EmptyNode(nid, msg=msg))
-        #return nodes
-    
-    def Nodes(self, nids, allow_empty_nodes=False, msg=''):
+    def Node(self, nid, msg=''):
+        """
+        Gets a GRID/SPOINT/EPOINT object.  This method does not allow for empty nodes
+        (i.e., the CTETRA10 supports empty nodes, but the CTETRA4 does not).
+
+        Parameters
+        ----------
+        nid : int
+            the node id
+        msg : str; default=''
+            a debugging message
+        """
+        if self.new_spoints:
+            if nid in self.nodes:
+                return self.nodes[nid]
+            elif nid in self.spoints:
+                return self.spoints[nid]
+            elif nid in self.epoints:
+                return self.epoints[nid]
+            else:
+                assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
+                nid_list = np.unique(list(self.nodes.keys()))
+                msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
+                msg += 'nids=%s\n' % nid_list
+                if self.spoints:
+                    msg += 'spoints=%s\n' % np.unique(list(self.spoints.keys()))
+                if self.epoints:
+                    msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
+                raise KeyError(msg)
+        else:
+            if nid in self.nodes:
+                return self.nodes[nid]
+            elif self.spoints and nid in self.spoints.points:
+                return SPOINT(nid)
+            elif self.epoints and nid in self.epoints.points:
+                return EPOINT(nid)
+            else:
+                assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
+                nid_list = np.unique(list(self.nodes.keys()))
+                msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
+                msg += 'nids=%s\n' % nid_list
+                if self.spoints:
+                    msg += 'spoints=%s\n' % list(self.spoints.points)
+                if self.epoints:
+                    msg += 'epoints=%s\n' % list(self.epoints.points)
+                raise KeyError(msg)
+
+    def EmptyNodes(self, nids, msg=''):
         """
         Returns a series of node objects given a list of IDs
         """
         nodes = []
         for nid in nids:
-            nodes.append(self.Node(nid, allow_empty_nodes=allow_empty_nodes, msg=msg))
+            nodes.append(self.EmptyNode(nid, msg=msg))
+        return nodes
+
+    def Nodes(self, nids, msg=''):
+        """
+        Returns a series of node objects given a list of IDs
+        """
+        nodes = []
+        for nid in nids:
+            nodes.append(self.Node(nid, msg=msg))
         return nodes
 
     def Point(self, nid, msg=''):
@@ -186,7 +209,7 @@ class GetMethods(BDFAttributes):
             return self.properties_mass[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Mass Pids=%s'
-                           % (pid, msg, np.unique(list(self.mass_property.keys()))))
+                           % (pid, msg, np.unique(list(self.properties_mass.keys()))))
 
     def Phbdy(self, pid, msg=''):
         """gets a PHBDY"""
@@ -605,6 +628,7 @@ class GetMethods(BDFAttributes):
                            % (tid, msg, tablem_keys, table_keys, tabled_keys))
 
     def RandomTable(self, tid, msg=''):
+        """gets a TABRND1 / TABRNDG"""
         try:
             return self.random_tables[tid]
         except KeyError:
