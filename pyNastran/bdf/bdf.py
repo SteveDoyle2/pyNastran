@@ -3114,11 +3114,11 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             if self.spoints:
                 spoints = list(self.spoints)
                 nspoints = len(spoints)
-                all_nodes += spoints
+                #all_nodes += spoints
             if self.epoints:
                 epoints = list(self.epoints)
                 nepoints = len(epoints)
-                all_nodes += epoints
+                #all_nodes += epoints
         else:
             if self.spoints:
                 spoints = np.unique(list(self.spoints.points))
