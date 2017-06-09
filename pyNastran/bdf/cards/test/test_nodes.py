@@ -141,7 +141,7 @@ class TestNodes(unittest.TestCase):
                 pass
             if s.type == 'GRID':
                 pass
-        dt1 = time.time() - t0
+        dt_type = time.time() - t0
 
         t1 = time.time()
         for i in six.moves.range(5000000):
@@ -149,11 +149,11 @@ class TestNodes(unittest.TestCase):
                 pass
             if isinstance(s, GRID):
                 pass
-        dt2 = time.time() - t1
-        print('dt1=%.4f dt2=%.4f' % (dt1, dt2))
-        if dt1 < dt2:
+        dt_instance = time.time() - t1
+        #print('dt_type=%.4f dt_instance=%.4f' % (dt_type, dt_instance))
+        if dt_instance < dt_type:
             msg = ("flip the way you do type checking; card.type == 'GRID' "
-                   "is faster than isinstance(card, GRID); dt1=%s dt2=%s" % (dt1, dt2))
+                   "is faster than isinstance(card, GRID); dt_instance=%s dt_type=%s" % (dt_instance, dt_type))
             raise ValueError(msg)
 
 if __name__ == '__main__':  # pragma: no cover
