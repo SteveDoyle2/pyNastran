@@ -48,7 +48,7 @@ from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
 
-
+ComplexTriaxStressArray = None
 class OES(OP2Common):
     """
     Defines  the OES class that is used to read stress/strain data
