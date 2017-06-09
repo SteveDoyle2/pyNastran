@@ -631,8 +631,8 @@ class OES(OP2Common):
 
             (53, 1, 33, b'OES1X1') : ('ctriax_stress', RealTriaxStressArray),
             (53, 1, 33, b'OES1X') : ('ctriax_stress', RealTriaxStressArray),
-            (53, 2, 37, b'OES1X') : ('ctriax_stress', 'ComplexTriaxStress'),
-            (53, 3, 37) : ('ctriax_stress', 'ComplexTriaxStress'),
+            (53, 2, 37, b'OES1X') : ('ctriax_stress', ComplexTriaxStressArray),
+            #(53, 3, 37) : ('ctriax_stress', ComplexTriaxStressArray),
 
             (102, 1, 7, b'OES1X1') : ('cbush_stress', RealBushStressArray),
             (102, 1, 7, b'OES1X') : ('cbush_stress', RealBushStressArray),
@@ -1374,7 +1374,8 @@ class OES(OP2Common):
                         (eid_device, ox) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (eid, i, eid_device, ox))
+                            self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (
+                                eid, i, eid_device, ox))
                         obj.add_new_eid(dt, eid, ox)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
@@ -1775,7 +1776,8 @@ class OES(OP2Common):
                             b_cos = [b1, b2, b3]
                             c_cos = [c1, c2, c3]
                             if inode == 0:
-                                #element_name = self.element_name + str(nnodes) #  this is correct, but fails
+                                #  this is correct, but fails
+                                #element_name = self.element_name + str(nnodes)
                                 obj.add_eid(element_name, cid, dt, eid, grid,
                                             sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                             a_cos, b_cos, c_cos, pressure, svm)
@@ -1843,7 +1845,8 @@ class OES(OP2Common):
                         (eid_device, cid, ctype, nodef) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
 
                         #element_name = self.element_name + str(nodef)  # this is correct, but has problems...
                         obj.add_eid_sort1(self.element_type, element_name, dt, eid, cid, ctype, nodef)
@@ -1873,7 +1876,8 @@ class OES(OP2Common):
                                 etzx = complex(etzxr, etzxi)
 
                             if self.is_debug_file:
-                                self.binary_debug.write('       node%s=[%s]\n' % (grid, ', '.join(['%r' % di for di in out])))
+                                self.binary_debug.write('       node%s=[%s]\n' % (
+                                    grid, ', '.join(['%r' % di for di in out])))
                             obj.add_node_sort1(dt, eid, grid, inode,
                                                ex, ey, ez, etxy, etyz, etzx)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
@@ -1999,7 +2003,8 @@ class OES(OP2Common):
 
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
 
                         obj._add_new_eid(dt, eid, cen, fd1, sx1, sy1,
                                          txy1, angle1, major1, minor1, max_shear1)
@@ -2188,7 +2193,8 @@ class OES(OP2Common):
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
 
                         obj._add_new_eid(dt, eid, cen, fd1, sx1, sy1,
                                          txy1, angle1, major1, minor1, vm1)
@@ -2249,7 +2255,8 @@ class OES(OP2Common):
                         eid = eid_device // 10
 
                         if self.is_debug_file:
-                            self.binary_debug.write('  OESC CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  OESC CTRIA3-74 - eid=%i; C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
 
                         if is_magnitude_phase:
                             sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -2416,14 +2423,15 @@ class OES(OP2Common):
                     ns = Struct(node_format)
 
                     if self.is_debug_file:
-                        self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                        self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                        self.binary_debug.write('  #elementi = [centeri, node1i, node2i, node3i, node4i]\n')
-                        self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                        self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                        self.binary_debug.write('  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                        self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                        self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
+                        self.binary_debug.write(
+                            '  [cap, element1, element2, ..., cap]\n'
+                            '  cap = %i  # assume 1 cap when there could have been multiple\n'
+                            '  #elementi = [centeri, node1i, node2i, node3i, node4i]\n'
+                            '  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n'
+                            '  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n'
+                            '  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n'
+                            '  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n'
+                            '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
 
                     grid_center = 0
                     for i in range(nelements):
@@ -2850,9 +2858,11 @@ class OES(OP2Common):
 
                         if eid != eid_old:
                             # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                            obj.add_new_eid_sort1(etype, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                            obj.add_new_eid_sort1(etype, dt, eid, layer, o1, o2,
+                                                  t12, t1z, t2z, angle, major, minor, ovm)
                         else:
-                            obj.add_sort1(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                            obj.add_sort1(dt, eid, layer, o1, o2,
+                                          t12, t1z, t2z, angle, major, minor, ovm)
                         eid_old = eid
                         n += 44
                     self.eid_old = eid_old
