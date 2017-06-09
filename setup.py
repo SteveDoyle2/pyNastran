@@ -82,13 +82,14 @@ if sys.version_info <= (3,) or not is_travis:
 py_packages = []
 
 try:
-    import numpy as np
-    ver = np.lib.NumpyVersion(np.__version__)
-    if ver < '1.11.0':
-        print("np.__version__ = %r < '1.11.0'" % np.__version__)
-        py_packages.append('numpy >= 1.11.0')
+    #import numpy as np
+    #ver = np.lib.NumpyVersion(np.__version__)
+    #if ver < '1.11.0':
+        #print("np.__version__ = %r < '1.11.0'" % np.__version__)
+        #py_packages.append('numpy >= 1.11.0')
+    py_packages.append('numpy >= 1.11.0,<1.13.0')
 except ImportError:
-    py_packages.append('numpy >= 1.11.0')
+    py_packages.append('numpy >= 1.11.0,<1.13.0')
 
 try:
     import scipy
