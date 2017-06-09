@@ -87,24 +87,25 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     data_members = [
         'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
-        'materials', 'sets'
+        'materials', 'sets', 'rigid_elements', 'mpcs',
     ]
     mappers = []
     for bdf_filename in bdf_filenames[1:]:
         #model.log.info('model.masses = %s' % model.masses)
         starting_id_dict = {
             'cid' : max(model.coords.keys()) + 1,
-            'nid' : max(model.nodes.keys()) + 1,
-            'eid' : max([
-                max(model.elements.keys()),
-                0 if len(model.masses) == 0 else max(model.masses.keys()),
-            ]) + 1,
+            'nid' : max(model.point_ids) + 1,
+            'eid' : max([max(model.elements.keys()),
+                         max(model.masses.keys()) if model.masses else 0,
+                         max(model.rigid_elements.keys()) if model.rigid_elements else 0,
+                        ]) + 1,
             'pid' : max([
                 max(model.properties.keys()),
                 0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
             ]) + 1,
             'mid' : max(model.material_ids) + 1,
-            'set_id' : max(model.sets.keys()) + 1
+            'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
+            'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
         }
         #for param, val in sorted(iteritems(starting_id_dict)):
             #print('  %-3s %s' % (param, val))
@@ -135,7 +136,9 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
                     if data_member in 'coords' and key == 0:
                         continue
                     if isinstance(value, list):
-                        raise NotImplementedError(type(value))
+                        assert key not in data1, key
+                        data1[key] = value
+
                     else:
                         assert key not in data1, key
                         data1[key] = value
@@ -145,6 +148,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     #if bdf_filenames_out:
         #model.write_bdf(bdf_filenames_out, size=size)
 
+    mapper_renumber = None
     if renumber:
         model.log.info('final renumber...')
 
@@ -166,7 +170,6 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         os.remove(bdf_filename_temp)
 
     elif bdf_filename_out:
-        mapper_renumber = None
         model.write_bdf(out_filename=bdf_filename_out, encoding=None,
                         size=size, is_double=is_double,
                         interspersed=True,

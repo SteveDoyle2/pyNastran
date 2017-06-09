@@ -34,5 +34,5 @@ def cmd_line():
     MainWindow(inputs)
     sys.exit(app.exec_())
 
-if '__name__' == '__main__' and 'jupyter not' in sys.argv[0]:
+if __name__ == '__main__' and 'jupyter' not in sys.argv[0]:
     cmd_line()

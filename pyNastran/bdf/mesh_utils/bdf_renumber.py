@@ -190,6 +190,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'freq_id' : 1,
         'tstep_id' : 1,
         'tstepnl_id' : 1,
+        'spline_id' : 1,
         'suport_id' : 1,
         'suport1_id' : 1,
         'tf_id' : 1,
@@ -305,6 +306,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     properties_mass_map = {}
     reverse_nid_map = {}
     eid_map = {}
+    rigid_elements_map = {}
     nsm_map = {}
     mid_map = {}
     cid_map = {}
@@ -453,6 +455,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
             elem.eid = eid
             eid_map[eidi] = eid
+            rigid_elements_map[eidi] = eid
             eid += 1
         #for eidi, elem in iteritems(model.caeros):
             #pass
@@ -507,6 +510,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             set_map[sidi] = set_id
             set_id += 1
 
+    spline_id_map = {}
+    if 'spline_id' in starting_id_dict and spline_id is not None:
+        # sets
+        for sidi, spline in sorted(iteritems(model.splines)):
+            spline.eid = spline_id
+            spline_id_map[sidi] = spline_id
+            spline_id += 1
+
     nlparm_map = {}
     nlpci_map = {}
     table_sdamping_map = {}
@@ -526,7 +537,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         (model.frequencies, 'sid', freq_map),
         (model.tsteps, 'sid', tstep_map),
         (model.tstepnls, 'sid', tstepnl_map),
-        (model.splines, 'eid', None),
         (model.suport1, 'conid', suport1_map),
         (model.nlparms, 'nlparm_id', nlparm_map),
         (model.nlpcis, 'nlpci_id', nlpci_map),
@@ -631,6 +641,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     mapper = {
         'elements' : eid_map,
         'masses' : mass_id_map,
+        'rigid_elements' : rigid_elements_map,
         'nodes' : nid_map,
         'coords' : cid_map,
         'materials' : mid_map,
@@ -644,6 +655,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'FMETHOD' : flutter_map,
         'FREQUENCY' : freq_map,
         'sets' : set_map,
+        'splines' : spline_id_map,
 
         'DLOAD' : dload_map,
         'LOAD' : load_map,
@@ -678,7 +690,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
                         interspersed=False)
     return model, mapper
-
 
 def _update_case_control(model, mapper):
     """
