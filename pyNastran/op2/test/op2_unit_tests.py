@@ -123,7 +123,7 @@ class TestOP2(Tester):
         os.remove(f06_filename)
 
     def test_beam_modes(self):
-        """tests the Eigenvalue table reading"""
+        """tests the eigenvalue table reading"""
         f06_filename = os.path.abspath(os.path.join(
             model_path, 'beam_modes', 'model1_sim1-solution_1.test_op2.f06'))
         op2_filename_m1 = os.path.abspath(os.path.join(
@@ -133,6 +133,48 @@ class TestOP2(Tester):
         op2_1 = read_op2(op2_filename_m1, debug=False)
         op2_2 = read_op2_geom(op2_filename_m2, debug=False)
         op2_1.write_f06(f06_filename)
+        os.remove(f06_filename)
+
+    def test_bdf_op2_elements_01(self):
+        """tests a large number of elements and results in SOL 101"""
+        bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
+        f06_filename = os.path.join(model_path, 'elements', 'static_elements.test_op2.f06')
+        op2_filename = os.path.join(model_path, 'elements', 'static_elements.op2')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        op2 = read_op2_geom(op2_filename, debug=False)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
+
+    def test_bdf_op2_elements_02(self):
+        """tests a large number of elements and results in SOL 103-modes"""
+        bdf_filename = os.path.join(model_path, 'elements', 'modes_elements.bdf')
+        f06_filename = os.path.join(model_path, 'elements', 'modes_elements.test_op2.f06')
+        op2_filename = os.path.join(model_path, 'elements', 'modes_elements.op2')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        op2 = read_op2_geom(op2_filename, debug=False)
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
+
+    def test_bdf_op2_elements_03(self):
+        """tests a large number of elements and results in SOL 108-freq"""
+        bdf_filename = os.path.join(model_path, 'elements', 'freq_elements.bdf')
+        f06_filename = os.path.join(model_path, 'elements', 'freq_elements.test_op2.f06')
+        op2_filename = os.path.join(model_path, 'elements', 'freq_elements.op2')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        op2 = read_op2_geom(op2_filename, debug=False)
+        op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
     def test_set_results(self):

@@ -3333,12 +3333,12 @@ class CQUAD(QuadShell):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
         theta_mcid = self.theta_mcid
-        if theta_mcid == 0.:
-            stheta = ''
-        elif isinstance(theta_mcid, integer_types):
-            stheta = '%s' % theta_mcid
-        else:
-            stheta = '%s' % theta_mcid
+        #if theta_mcid == 0.:
+            #stheta = ''
+        #elif isinstance(theta_mcid, integer_types):
+            #stheta = '%s' % theta_mcid
+        #else:
+            #stheta = '%s' % theta_mcid
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2 + [theta_mcid]
         msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
                '        %8s%8s%8s%8s\n' % tuple(data))

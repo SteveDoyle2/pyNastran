@@ -1385,7 +1385,6 @@ class ComplexCBarForceArray(ScalarObject):
         #ForceObject.__init__(self, data_code, isubcase)
         ScalarObject.__init__(self, data_code, isubcase)
 
-        #self.eType = {}
         self.result_flag = 0
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -2027,8 +2026,8 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
         """unvectorized method for adding SORT1 transient data"""
-        bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
-        bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
+        #bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
+        #bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
 
         self._times[self.itime] = dt
         self.element_node[self.ielement] = [eid, nid_a, nid_b]
@@ -3063,11 +3062,11 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             self.shearXZ[dt][eid][nid] = shearXZ
 
 
-'                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'
-'                                                          (REAL/IMAGINARY)'
-' '
-'    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -'
-'      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY'
-'0       100    CEN/8  0.0           0.0           0.0           0.0           0.0           0.0          -3.492460E-10 -1.368206E-09'
-'                      0.0           0.0           0.0           0.0           0.0           0.0           2.910383E-11  5.088840E-10'
-''
+#'                  C O M P L E X   F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'
+#'                                                          (REAL/IMAGINARY)'
+#' '
+#'    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -'
+#'      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY'
+#'0       100    CEN/8  0.0           0.0           0.0           0.0           0.0           0.0          -3.492460E-10 -1.368206E-09'
+#'                      0.0           0.0           0.0           0.0           0.0           0.0           2.910383E-11  5.088840E-10'
+#''

@@ -4,6 +4,7 @@ from itertools import count
 from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, ravel
+ints = (int, np.int32)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -146,7 +147,7 @@ class RealBarArray(OES_Object):
                           s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                           s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
 
-        assert isinstance(eid, int)
+        assert isinstance(eid, ints)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
@@ -161,17 +162,18 @@ class RealBarArray(OES_Object):
         ##print(msg)
         #if isinstance(nodeID, string_types):
             #nodeID = 0
-        ##assert isinstance(nodeID, int), nodeID
+        ##assert isinstance(nodeID, ints), nodeID
         #self.element_node[self.itotal, :] = [eid, nodeID]
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
         #self.itotal += 1
 
     def get_stats(self, short=False):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.ntotal
         ntimes = self.ntimes
@@ -214,7 +216,7 @@ class RealBarArray(OES_Object):
         if header is None:
             header = []
         msg = self._get_msgs()
-        (ntimes, ntotal) = self.data.shape[:2]
+        ntimes = self.data.shape[0]
         eids = self.element
         #print('CBAR ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):

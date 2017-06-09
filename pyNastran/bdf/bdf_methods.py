@@ -19,7 +19,6 @@ from copy import deepcopy
 from codecs import open
 
 from six import iteritems, PY2
-from six.moves import zip
 
 from numpy import array
 

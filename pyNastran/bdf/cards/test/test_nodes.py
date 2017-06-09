@@ -1,7 +1,8 @@
 from __future__ import print_function, unicode_literals
 import unittest
 
-from pyNastran.bdf.bdf import GRID, SPOINTs as SPOINT, BDFCard
+from pyNastran.bdf.bdf import BDFCard
+from pyNastran.bdf.cards.nodes import GRID, SPOINTs as SPOINT
 
 class TestNodes(unittest.TestCase):
     def test_grid_01(self):
@@ -140,7 +141,7 @@ class TestNodes(unittest.TestCase):
                 pass
             if s.type == 'GRID':
                 pass
-        dt1 = time.time() - t0
+        dt_type = time.time() - t0
 
         t1 = time.time()
         for i in six.moves.range(5000000):
@@ -148,9 +149,12 @@ class TestNodes(unittest.TestCase):
                 pass
             if isinstance(s, GRID):
                 pass
-        dt2 = time.time() - t1
-        print('dt1=%.4f dt2=%.4f' % (dt1, dt2))
-        assert dt2 > dt1, 'flip the way you do type checking'
+        dt_instance = time.time() - t1
+        #print('dt_type=%.4f dt_instance=%.4f' % (dt_type, dt_instance))
+        if dt_instance < dt_type:
+            msg = ("flip the way you do type checking; card.type == 'GRID' "
+                   "is faster than isinstance(card, GRID); dt_instance=%s dt_type=%s" % (dt_instance, dt_type))
+            raise ValueError(msg)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

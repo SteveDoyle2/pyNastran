@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six import  iteritems
 #from math import pi, degrees
-from pyNastran.bdf.dev_vectorized.bdf import BDF, to_fields, BDFCard
+from pyNastran.dev.bdf_vectorized.bdf import BDF, to_fields, BDFCard
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 #from pyNastran.applications.hyper
 from cards import FLOW, HYPER

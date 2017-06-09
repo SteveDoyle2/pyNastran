@@ -1,7 +1,7 @@
 from six import iteritems
 from numpy import hstack, repeat, sqrt, triu, arange
 
-from pyNastran.bdf.dev_vectorized.bdf import BDF
+from pyNastran.dev.bdf_vectorized.bdf import BDF
 
 
 def main():

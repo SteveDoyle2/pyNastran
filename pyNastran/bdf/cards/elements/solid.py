@@ -164,7 +164,7 @@ class SolidElement(Element):
     def get_face_area_centroid_normal(self, nid_opposite, nid=None):
         return self.get_face_area_centroid_normal(nid_opposite, nid)
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid()] + self.nodes

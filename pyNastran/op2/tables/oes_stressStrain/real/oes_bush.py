@@ -1,9 +1,9 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#from itertools import count
 from six import integer_types
 import numpy as np
-from numpy import zeros #, array_equal
+from numpy import zeros
+ints = (int, np.int32)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -16,7 +16,6 @@ except ImportError:
 class RealBushArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
@@ -121,7 +120,7 @@ class RealBushArray(OES_Object):
 
     def add_sort1(self, dt, eid, tx, ty, tz, rx, ry, rz):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int)
+        assert isinstance(eid, ints)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [tx, ty, tz, rx, ry, rz]

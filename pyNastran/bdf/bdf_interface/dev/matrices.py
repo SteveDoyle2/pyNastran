@@ -79,19 +79,22 @@ def make_mass_matrix(model, reference_point):
         eids2 = eids[all_eids[ieids] == eids]
         return eids2
 
-    etypes_skipped = set([])
+    #etypes_skipped = set([])
     for etype, eids in iteritems(self._type_to_id_map):
         if etype in ['CROD', 'CONROD']:
             eids2 = get_sub_eids(all_eids, eids)
 
             # lumped
-            mass_mat = np.ones((4, 4))
+            mass_mat = np.ones((2, 2))
+            mass_mat[0, 0] = mass_mat[2, 2] = 1.
             #mass_mat[2, 2] = mass_mat[5, 5] = 0.
 
             #
             #mi = (rho * A * L + nsm) / 6.
             #m = array([[2., 1.],
-                       #[1., 2.]])  # 1D rod
+                       #[1., 2.]])  # 1D rod consistent
+            #m = array([[1., 0.],
+                       #[0., 1.]])  # 1D rod lumped
 
             for eid in eids2:
                 elem = self.elements[eid]
@@ -99,17 +102,15 @@ def make_mass_matrix(model, reference_point):
 
                 i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
                 j1, j2, j3 = components[(n2, 1)], components[(n2, 2)], components[(n2, 3)]
+                mpl = elem.MassPerLength()
                 massi = mpl * length / 2.
-                mass[0, 0] = mass[1, 1] = massi
-                mass[2, 2] = mass[3, 3] = massi
 
                 inid1 = inids[n1]
                 inid2 = inids[n2]
                 v1 = xyz[inid2, :] - xyz[inid1, :]
                 length = norm(v1)
-                mpl = elem.MassPerLength()
                 Lambda = _lambda_1d(v1)
-                mass_mat2 = dot(dot(transpose(Lambda), mass_mat), Lambda)
+                mass_mat2 = dot(dot(transpose(Lambda), mass_mat * massi), Lambda)
                 assert mass_mat2.shape == (6, 6), mass_mat2
                 mass[i1, i1] = mass_mat2[0, 0]
                 mass[i2, i2] = mass_mat2[1, 1]

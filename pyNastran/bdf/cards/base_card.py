@@ -191,7 +191,24 @@ class BaseCard(object):
                 return False
         return True
 
+    def __eq__(self, card):
+        """
+        Enables functions like:
+
+        .. code-block:: python
+
+          >>> GRID(nid=1, ...) === GRID(nid=1, ...)
+          True
+          >>> GRID(nid=1, ...) === GRID(nid=2, ...)
+          False
+          >>> GRID(nid=1, ...) === CQUAD4(eid=1, ...)
+          False
+        """
+        return self._is_same_card(card)
+
     def _is_same_card(self, card):
+        if not isinstance(card, self.__class__):
+            return False
         if self.type != card.type:
             return False
         fields1 = self.raw_fields()
@@ -480,8 +497,6 @@ class Element(BaseCard):
             nodes = self.node_ids
         except AttributeError:
             return None
-        node_ids = nodes
-        nnodes = len(nodes)
         if self.type.startswith('CQUAD'): # CQUADx
             # both sides
             faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]  # CQUAD8/9?

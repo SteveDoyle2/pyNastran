@@ -367,8 +367,18 @@ class EPOINT(XPoint):
         """
         XPoint.__init__(self, nid, comment)
 
+def write_xpoints(cardtype, points, comment=''):
+    msg = comment
+    lists_fields = compress_xpoints(cardtype, points)
+    for list_fields in lists_fields:
+        if 'THRU' not in list_fields:
+            msg += print_int_card(list_fields)
+        else:
+            msg += print_card_8(list_fields)
+    return msg
 
-def _get_compressed_xpoints(Type, xpoints):
+
+def compress_xpoints(Type, xpoints):
     """
     Gets the spoints in sorted, short form.
 
@@ -384,7 +394,7 @@ def _get_compressed_xpoints(Type, xpoints):
 
     Type = 'SPOINT'
     spoints = [1, 2, 3, 4, 5]
-    fields = _get_compressed_xpoints(Type, spoints)
+    fields = compressed_xpoints(Type, spoints)
     >>> fields
     ['SPOINT', 1, 'THRU', 5]
     """
@@ -502,10 +512,14 @@ class XPoints(BaseCard):
         """
         The writer method used by BDF.write_card
 
-        :param size:   unused
-        :param is_double: unused
+        Parameters
+        ----------
+        size : int; default=8
+            unused
+        is_double : bool; default=False
+            unused
         """
-        lists_fields = _get_compressed_xpoints(self.type, self.points)
+        lists_fields = compress_xpoints(self.type, self.points)
         msg = self.comment
         for list_fields in lists_fields:
             if 'THRU' not in list_fields:

@@ -1323,7 +1323,7 @@ class PBMSECT(LineProperty):
             line0 = line0.expandtabs()
 
         bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
-        line0_eq = line0[16:]
+        #line0_eq = line0[16:]
         lines_joined = ''.join(card[1:]).replace(' ', '')
 
         if lines_joined:

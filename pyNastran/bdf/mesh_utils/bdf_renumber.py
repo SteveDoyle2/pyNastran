@@ -5,6 +5,7 @@ defines:
 """
 from __future__ import print_function
 from math import ceil
+from itertools import chain
 
 from six import iteritems, string_types
 import numpy as np
@@ -332,17 +333,20 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     else:
         model = bdf_filename
 
-    if model.spoints is None:
-        spoints = []
+    if model.new_spoints:
+        spoints = list(model.spoints.keys())
+        epoints = list(model.epoints.keys())
     else:
-        spoints = list(model.spoints.points)
-    if model.epoints is None:
-        epoints = []
-    else:
-        epoints = list(model.epoints.points)
+        if model.spoints is None:
+            spoints = []
+        else:
+            spoints = list(model.spoints.points)
+        if model.epoints is None:
+            epoints = []
+        else:
+            epoints = list(model.epoints.points)
 
     nids = model.nodes.keys()
-    from itertools import chain
 
     nids_spoints_epoints = sorted(chain(nids, spoints, epoints))
     #spoints_nids.sort()
@@ -502,6 +506,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             cid_map[cidi] = cid
             cid += 1
 
+    if 'freq_id' in starting_id_dict and freq_id is not None:
+        # frequencies
+        for freqi, freqs in sorted(iteritems(model.frequencies)):
+            freq_map[freqi] = freq_id
+            for freq in freqs:
+                freq.sid = freqi
+            freq_id += 1
     set_map = {}
     if 'set_id' in starting_id_dict and set_id is not None:
         # sets
@@ -534,7 +545,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         (model.cMethods, 'sid', cmethod_map),
         (model.flfacts, 'sid', flfact_map),
         (model.flutters, 'sid', flutter_map),
-        (model.frequencies, 'sid', freq_map),
         (model.tsteps, 'sid', tstep_map),
         (model.tstepnls, 'sid', tstepnl_map),
         (model.suport1, 'conid', suport1_map),

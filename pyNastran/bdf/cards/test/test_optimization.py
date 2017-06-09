@@ -6,15 +6,13 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import iteritems, StringIO
+from six import StringIO
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.op2.op2 import OP2, read_op2
-from pyNastran.f06.test.f06_unit_tests import run_model
+from pyNastran.bdf.bdf import BDF
+from pyNastran.op2.op2 import read_op2
+#from pyNastran.f06.test.f06_unit_tests import run_model
 
-root_path = pyNastran.__path__[0]
-#test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 
 
@@ -23,8 +21,8 @@ class TestOpt(unittest.TestCase):
     The cards tested are:
      * DEQATN
     """
-    #@unittest.expectedFailure
     def test_opt_1(self):
+        """tests SOL 200"""
         #bdf_filename = os.path.join(model_path, 'sol200', 'model_200.bdf')
         #model = read_bdf(bdf_filename, xref=True)
         op2_filename = os.path.join(model_path, 'sol200', 'model_200.op2')
@@ -97,7 +95,8 @@ class TestOpt(unittest.TestCase):
 
         model2 = BDF(debug=False)
         model2.add_card(lines, 'DLINK', is_list=False)
-        model.dlinks[10]
+        dlink = model.dlinks[10]
+        dlink.write_card()
 
     def test_dvprel1(self):
         """tests a DESVAR, DVPREL1, DRESP1, DCONSTR"""
@@ -125,9 +124,9 @@ class TestOpt(unittest.TestCase):
         model.add_grid(1, xyz=[0., 0., 0.])
         model.add_grid(2, xyz=[1., 0., 0.])
         model.add_grid(3, xyz=[1., 1., 0.])
-        ctria3 = model.add_ctria3(eid, pid, nids, comment='ctria3')
-        pshell = model.add_pshell(pid, mid1=30, t=0.1, comment='pshell')
-        mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
+        model.add_ctria3(eid, pid, nids, comment='ctria3')
+        model.add_pshell(pid, mid1=30, t=0.1, comment='pshell')
+        model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
         desvar = model.add_desvar(desvar_id, label, xinit, xlb, xub, comment='desvar')
         dvprel1 = model.add_dvprel1(oid, Type, pid, pname_fid,
                                     desvar_ids, coeffs, p_min=None, p_max=1e20, c0=0.0,
@@ -141,7 +140,7 @@ class TestOpt(unittest.TestCase):
                                     validate=True, comment='')
         equation_id = 100
         eqs = ['fstress(x) = x + 10.']
-        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
+        model.add_deqatn(equation_id, eqs, comment='deqatn')
         #print(deqatn.object_attributes())
         #print(deqatn.func_str)
         #print(deqatn)
@@ -158,8 +157,7 @@ class TestOpt(unittest.TestCase):
                                   property_type, region,
                                   atta, attb, atti, validate=True, comment='dresp1')
         dconstr = model.add_dconstr(oid, dresp1_id, lid=-1.e20, uid=1.e20,
-                                   lowfq=0., highfq=1.e20, comment='dconstr')
-
+                                    lowfq=0., highfq=1.e20, comment='dconstr')
 
         params = {
             (0, 'DRESP1') : [42],
@@ -186,6 +184,10 @@ class TestOpt(unittest.TestCase):
         dresp2.write_card(size=16)
         dresp2.write_card(size=16, is_double=True)
 
+        dvprel2.write_card(size=8)
+        dvprel2.write_card(size=16)
+        dvprel2.write_card(size=16, is_double=True)
+
         model.validate()
         #model._verify_bdf(xref=False)
         model.cross_reference()
@@ -205,6 +207,9 @@ class TestOpt(unittest.TestCase):
         dresp2.write_card(size=8)
         dresp2.write_card(size=16)
         dresp2.write_card(size=16, is_double=True)
+        dvprel2.write_card(size=8)
+        dvprel2.write_card(size=16)
+        dvprel2.write_card(size=16, is_double=True)
 
         stringio = StringIO()
         model.write_bdf(stringio, close=False)
@@ -250,7 +255,7 @@ class TestOpt(unittest.TestCase):
         G = None
         nu = 0.3
         #nids = [1, 2, 3]
-        mat1 = model.add_mat1(mid1, E, G, nu, rho=0.1, comment='mat1')
+        model.add_mat1(mid1, E, G, nu, rho=0.1, comment='mat1')
 
         e11 = 3e7
         e22 = 0.2 * e11
@@ -264,7 +269,7 @@ class TestOpt(unittest.TestCase):
 
         equation_id = 42
         eqs = ['fstress(x) = x + 10.']
-        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
+        model.add_deqatn(equation_id, eqs, comment='deqatn')
 
 
         dvmrel1_1.raw_fields()
@@ -323,8 +328,8 @@ class TestOpt(unittest.TestCase):
         mass = 1.
         nid1 = 100
         nid2 = 101
-        conm2 = model.add_conm2(eid, nid1, mass, cid=0, X=None, I=None,
-                                comment='conm2')
+        model.add_conm2(eid, nid1, mass, cid=0, X=None, I=None,
+                        comment='conm2')
         model.add_grid(100, xyz=[1., 2., 3.])
         model.add_grid(101, xyz=[2., 2., 4.])
 
@@ -348,7 +353,7 @@ class TestOpt(unittest.TestCase):
         E = 30.e7
         G = None
         nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
+        model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
 
         eqs = ['fx2(x) = x + 10.']
         deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
@@ -376,6 +381,7 @@ class TestOpt(unittest.TestCase):
         dvcrel2.write_card(size=16)
         dvcrel2.write_card(size=8)
 
+        deqatn.write_card()
         assert cbar.Mass() > 0, cbar.Mass()
 
         #-------------------------------------------

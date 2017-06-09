@@ -1,12 +1,13 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
 from itertools import count
+from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, ravel
+ints = (int, np.int32)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 try:
     import pandas as pd
 except ImportError:
@@ -16,7 +17,6 @@ except ImportError:
 class RealTriaxArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
@@ -38,7 +38,7 @@ class RealTriaxArray(OES_Object):
 
     def get_headers(self):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
-        return headers
+        #return headers
 
     def build(self):
         if self.is_built:
@@ -105,17 +105,17 @@ class RealTriaxArray(OES_Object):
             i = 0
             if self.is_sort1():
                 for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
-                        (force1, stress1) = t1
-                        (force2, stress2) = t2
-                        if not allclose(t1, t2):
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (radial1, azimuthal1, axial1, shear1, omax1, oms1, ovm1) = t1
+                        (radial2, azimuthal2, axial2, shear2, omax2, oms2, ovm2) = t2
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
-                                force1, stress1,
-                                force2, stress2)
+                                radial1, azimuthal1, axial1, shear1, omax1, oms1, ovm1,
+                                radial2, azimuthal2, axial2, shear2, omax2, oms2, ovm2)
                             i += 1
                         if i > 10:
                             print(msg)
@@ -129,7 +129,7 @@ class RealTriaxArray(OES_Object):
 
     def add_sort1(self, dt, eid, nid, radial, azimuthal, axial, shear, omax, oms, ovm):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, int)
+        assert isinstance(eid, ints)
         self._times[self.itime] = dt
         self.element_node[self.itotal, :] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [radial, azimuthal, axial, shear, omax, oms, ovm]
@@ -138,10 +138,11 @@ class RealTriaxArray(OES_Object):
 
     def get_stats(self, short=False):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.ntotal
         ntimes = self.ntimes
@@ -206,7 +207,7 @@ class RealTriaxArray(OES_Object):
                 vals2 = write_floats_13e(vals)
                 [radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi] = vals2
                 f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
-                    % (eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi))
+                        % (eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi))
             f.write(page_stamp % page_num)
             page_num += 1
         if self.nonlinear_factor is None:
@@ -229,11 +230,12 @@ class RealTriaxStressArray(RealTriaxArray, StressObject):
         else:
             raise NotImplementedError(self.element_type)
 
-        msg = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
-               '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
-               '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',
-              #'      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-              #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
+        msg = [
+            '                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
+            '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
+            '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',
+            #'      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
+            #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
         ]
         return msg
 
@@ -252,10 +254,11 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
         else:
             raise NotImplementedError(self.element_type)
 
-        msg = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
-               '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
-               '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',
-              #'      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-              #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
+        msg = [
+            '                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
+            '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
+            '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',
+            #'      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
+            #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
         ]
         return msg

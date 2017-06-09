@@ -1,6 +1,6 @@
 import h5py
-from numpy import linspace, zeros, sin
-import matplotlib.pyplot as plt
+from numpy import linspace, sin
+#import matplotlib.pyplot as plt
 
 class Displacement(object):
     def __init__(self, f=None):

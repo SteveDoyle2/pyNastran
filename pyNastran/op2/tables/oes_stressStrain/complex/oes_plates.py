@@ -120,17 +120,19 @@ class ComplexPlateArray(OES_Object):
                         (oxx2, oyy2, txy2) = t2
                         #d = t1 - t2
                         if not np.allclose(
-                            [oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag, ], # atol=0.0001
-                            [oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag, ], atol=0.075):
+                                [oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag, ], # atol=0.0001
+                                [oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag, ], atol=0.075):
                             ni = len(str(eid)) + len(str(nid))
                         #if not np.array_equal(t1, t2):
                             msg += ('(%s %s)  (%s, %sj, %s, %sj, %s, %sj)\n'
                                     '%s     (%s, %sj, %s, %sj, %s, %sj)\n' % (
-                                eid, nid,
-                                oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag,
-                                ' ' * ni,
-                                oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag,
-                                ))
+                                        eid, nid,
+                                        oxx1.real, oxx1.imag, oyy1.real, oyy1.imag,
+                                        txy1.real, txy1.imag,
+                                        ' ' * ni,
+                                        oxx2.real, oxx2.imag, oyy2.real, oyy2.imag,
+                                        txy2.real, txy2.imag,
+                                    ))
                             msg += ('%s     (%s, %sj, %s, %sj, %s, %sj)\n'
                                     % (
                                         ' ' * ni,
@@ -288,10 +290,10 @@ class ComplexPlateArray(OES_Object):
             ilayer0 = not ilayer0
 
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
-    if self.is_von_mises():
-        von_mises = 'VON MISES'
-    else:
-        von_mises = 'MAX SHEAR'
+    #if self.is_von_mises():
+        #von_mises = 'VON MISES'
+    #else:
+        #von_mises = 'MAX SHEAR'
 
     if self.is_stress():
         if self.is_fiber_distance():

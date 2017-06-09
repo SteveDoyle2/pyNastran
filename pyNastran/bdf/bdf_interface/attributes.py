@@ -245,8 +245,13 @@ class BDFAttributes(object):
         #: stores POINT cards
         self.points = {}
         #self.grids = {}
-        self.spoints = None
-        self.epoints = None
+        self.new_spoints = True
+        if self.new_spoints:
+            self.spoints = {}
+            self.epoints = {}
+        else:
+            self.spoints = None
+            self.epoints = None
 
         #: stores GRIDSET card
         self.grdset = None
@@ -804,13 +809,16 @@ class BDFAttributes(object):
     @property
     def point_ids(self):
         """gets the GRID, SPOINT, EPOINT ids"""
-        if self.spoints is not None and self.epoints is not None:
-            return set(self.node_ids) | self.spoints.points | self.epoints.points
-        elif self.spoints is not None:
-            return set(self.node_ids) | self.spoints.points
-        elif self.epoints is not None:
-            return set(self.node_ids) | self.epoints.points
-        return set(self.node_ids)
+        if self.new_spoints:
+            return set(self.node_ids) | set(list(self.spoints.keys())) | set(list(self.epoints.keys()))
+        else:
+            if self.spoints is not None and self.epoints is not None:
+                return set(self.node_ids) | self.spoints.points | self.epoints.points
+            elif self.spoints is not None:
+                return set(self.node_ids) | self.spoints.points
+            elif self.epoints is not None:
+                return set(self.node_ids) | self.epoints.points
+            return set(self.node_ids)
 
     #--------------------
     # Elements CARDS

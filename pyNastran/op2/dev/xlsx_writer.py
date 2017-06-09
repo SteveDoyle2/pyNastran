@@ -292,7 +292,7 @@ class XlsxWriter(OP2_F06_Common):
             ('OGP', ogp),
             ('other', other)
         ]
-        res_outs = {}
+        #res_outs = {}
 
         # TODO: add a summary sheet
 

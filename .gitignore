@@ -11,6 +11,8 @@ htmlcov
 
 # Other
 *.pyc
+*.pyd
+*.dll
 *.log
 *.rar
 *.out

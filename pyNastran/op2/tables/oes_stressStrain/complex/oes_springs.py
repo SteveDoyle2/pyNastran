@@ -1,8 +1,8 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import integer_types
 import numpy as np
-from numpy import zeros, array_equal
+from numpy import zeros
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
@@ -15,11 +15,7 @@ except ImportError:
 class ComplexSpringDamperArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        #self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        self.nelements = 0  # result specific
-
 
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
@@ -184,7 +180,7 @@ class ComplexSpringDamperArray(OES_Object):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
+        #is_odd = False
         nwrite = len(eids)
         if len(eids) % 2 == 1:
             nwrite -= 1
@@ -199,7 +195,6 @@ class ComplexSpringDamperArray(OES_Object):
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             spring_force = self.data[itime, :, 0]
 
-            out = []
             for eid, spring_forcei in zip(eids, spring_force):
                 [rspring, ispring] = write_imag_floats_13e([spring_forcei], is_mag_phase)
                 #ELEMENT                             AXIAL                                       TORSIONAL

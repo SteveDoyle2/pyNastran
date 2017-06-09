@@ -330,7 +330,6 @@ class RealSpringDamperForceArray(RealForceObject):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
         nwrite = len(eids)
         nrows = nwrite // 4
         nleftover = nwrite - nrows * 4
@@ -1773,7 +1772,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
-        cen_word = 'CEN/%i' % nnodes
+        #cen_word = 'CEN/%i' % nnodes
         if self.element_type  in [64, 82, 144]: # CQUAD8, CQUADR, CQUAD4
             cyc = cycle([0, 1, 2, 3, 4])
         elif self.element_type  in [70, 75]: # CTRIAR, CTRIA6
@@ -2918,7 +2917,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -2926,7 +2925,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         #(ntimes, ntotal, two) = self.data.shape
 
         if self.is_sort1():
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f)
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06)
         else:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
         return page_num

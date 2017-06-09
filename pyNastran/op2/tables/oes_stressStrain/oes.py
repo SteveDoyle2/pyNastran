@@ -45,10 +45,10 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpr
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
-    HyperelasticQuad, HyperelasticQuadArray) # vectorize
+    HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
 
-
+ComplexTriaxStressArray = None
 class OES(OP2Common):
     """
     Defines  the OES class that is used to read stress/strain data
@@ -395,15 +395,15 @@ class OES(OP2Common):
                 raise
             except:
                 raise
-                print("----------")
-                print(self.obj)
-                print(self.data_code)
-                if self.obj is not None:
-                    #from pyNastran.utils import object_attributes
-                    #print object_attributes(self.obj)
-                    print(self.obj.data_code)
-                print("----------")
-                raise
+                #print("----------")
+                #print(self.obj)
+                #print(self.data_code)
+                #if self.obj is not None:
+                    ##from pyNastran.utils import object_attributes
+                    ##print object_attributes(self.obj)
+                    #print(self.obj.data_code)
+                #print("----------")
+                #raise
             return n
         return new_func
 
@@ -466,15 +466,18 @@ class OES(OP2Common):
             (1, 1, 5, b'OES1X1') : ('crod_stress', RealRodStressArray), # real
             (1, 2, 5, b'OES1X') : ('crod_stress', ComplexRodStressArray), # real/imag
             (1, 3, 5, b'OES1X') : ('crod_stress', ComplexRodStressArray), # mag/phase
+            (1, 2, 5, b'OESVM1') : ('crod_stress', ComplexRodStressArray), # real/imag
 
             (3, 1, 5, b'OES1X1') : ('ctube_stress', RealRodStressArray),
             (3, 1, 5, b'OES1X') : ('ctube_stress', RealRodStressArray),
             (3, 2, 5, b'OES1X') : ('ctube_stress', ComplexRodStressArray),
+            (3, 2, 5, b'OESVM1') : ('ctube_stress', ComplexRodStressArray),  # freq nx
             #(3, 3, 5) : ('ctube_stress', ComplexRodStressArray),
 
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X1') : ('conrod_stress', RealRodStressArray),
+            (10, 2, 5, b'OESVM1') : ('conrod_stress', ComplexRodStressArray),
             #(10, 2, 5) : ('conrod_stress', ComplexRodStressArray),
             #(10, 3, 5) : ('conrod_stress', ComplexRodStressArray),
 
@@ -486,19 +489,22 @@ class OES(OP2Common):
             (2, 3, 111, b'OES1X') : ('cbeam_stress', 'ComplexBeamStressArray'),
 
             (4, 1, 4, b'OES1X1') : ('cshear_stress', RealShearStressArray),
-            (4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
-            (4, 3, 5) : ('cshear_stress', ComplexShearStressArray),
+            #(4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
+            #(4, 3, 5) : ('cshear_stress', ComplexShearStressArray),
+            (4, 2, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 3) : ('cshear_stress', RandomShearStressArray),
 
             (11, 1, 2, b'OES1X1') : ('celas1_stress', RealSpringStressArray), # real
             (11, 2, 3, b'OES1X') : ('celas1_stress', ComplexSpringStressArray), # real/imag
             (11, 3, 3, b'OES1X') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
+            (11, 2, 3, b'OESVM1') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
 
             (12, 1, 2, b'OES1X1') : ('celas2_stress', RealSpringStressArray),
             (12, 1, 2, b'OES1X') : ('celas2_stress', RealSpringStressArray),
             (12, 1, 2, b'OES1') : ('celas2_stress', RealSpringStressArray),
             (12, 2, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
             (12, 3, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
+            (12, 2, 3, b'OESVM1') : ('celas2_stress', ComplexSpringStressArray),
 
             (13, 1, 2, b'OES1X1') : ('celas3_stress', RealSpringStressArray),
             #(13, 2, 3) : ('celas3_stress', ComplexSpringStressArray),
@@ -532,6 +538,7 @@ class OES(OP2Common):
             (68, 1, 151, b'OES1') : ('cpenta_stress', RealSolidStressArray),
 
             (39, 2, 69, b'OES1X') : ('ctetra_stress', ComplexSolidStressArray), # real/imag
+            (39, 2, 74, b'OESVM1') : ('ctetra_stress', 'NA'), # real/imag
             #(39, 3, 69) : ('ctetra_stress', ComplexSolidStressArray), # mag/phase
 
             (67, 2, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
@@ -552,6 +559,7 @@ class OES(OP2Common):
             (74, 1, 17, b'OES1') : ('ctria3_stress', RealPlateStrainArray),
             (74, 2, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
             (74, 3, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 2, 17, b'OESVM1') :  ('cquad4_stress', 'NA'),
             #(74, 1, 9) : ('ctria3_stress', RandomPlateStressArray),
 
             (82, 1, 87, b'OES1X1') : ('cquadr_stress', RealPlateStressArray),
@@ -623,8 +631,8 @@ class OES(OP2Common):
 
             (53, 1, 33, b'OES1X1') : ('ctriax_stress', RealTriaxStressArray),
             (53, 1, 33, b'OES1X') : ('ctriax_stress', RealTriaxStressArray),
-            (53, 2, 37, b'OES1X') : ('ctriax_stress', 'ComplexTriaxStress'),
-            (53, 3, 37) : ('ctriax_stress', 'ComplexTriaxStress'),
+            (53, 2, 37, b'OES1X') : ('ctriax_stress', ComplexTriaxStressArray),
+            #(53, 3, 37) : ('ctriax_stress', ComplexTriaxStressArray),
 
             (102, 1, 7, b'OES1X1') : ('cbush_stress', RealBushStressArray),
             (102, 1, 7, b'OES1X') : ('cbush_stress', RealBushStressArray),
@@ -789,9 +797,11 @@ class OES(OP2Common):
             # 232-QUADRLC
             (232, 1, 11, b'OES1C') : ('cquadr', 'NA'),
             (232, 1, 11, b'OESCP') : ('cquadr', 'NA'),
+            (232, 2, 13, b'OESVM1C') : ('cquadr', 'NA'),  # freq nx
             #(234, 1, 11) : ('cquadr', 'NA'), # bad?
             # 233-TRIARLC
             (233, 1, 11, b'OES1C') : ('ctriar', 'NA'),
+            (233, 2, 13, b'OESVM1C') : ('ctriar', 'NA'),  # freq nx
             # 235-CQUADR
             (235, 1, 17, b'OES1X1') : ('NA', 'NA'),
             (235, 2, 15, b'OES1X') : ('NA', 'NA'),
@@ -1065,8 +1075,8 @@ class OES(OP2Common):
                     #n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
                 raise RuntimeError(self.code_information())
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
 
@@ -1364,7 +1374,8 @@ class OES(OP2Common):
                         (eid_device, ox) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (eid, i, eid_device, ox))
+                            self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (
+                                eid, i, eid_device, ox))
                         obj.add_new_eid(dt, eid, ox)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
@@ -1441,7 +1452,6 @@ class OES(OP2Common):
                 return ndata
             self._results._found_result(result_name)
             slot = getattr(self, result_name)
-            slot_vector = slot
 
             if self.format_code == 1 and self.num_wide == 16:  # real
                 if self.is_stress():
@@ -1632,7 +1642,7 @@ class OES(OP2Common):
                 else:
                     raise RuntimeError(self.code_information())
                     #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                    return self._not_implemented_or_skip(data, ndata, msg)
+                    #return self._not_implemented_or_skip(data, ndata, msg)
 
             if self._results.is_not_saved(result_name):
                 return ndata
@@ -1766,7 +1776,8 @@ class OES(OP2Common):
                             b_cos = [b1, b2, b3]
                             c_cos = [c1, c2, c3]
                             if inode == 0:
-                                #element_name = self.element_name + str(nnodes) #  this is correct, but fails
+                                #  this is correct, but fails
+                                #element_name = self.element_name + str(nnodes)
                                 obj.add_eid(element_name, cid, dt, eid, grid,
                                             sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                             a_cos, b_cos, c_cos, pressure, svm)
@@ -1834,7 +1845,8 @@ class OES(OP2Common):
                         (eid_device, cid, ctype, nodef) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
 
                         #element_name = self.element_name + str(nodef)  # this is correct, but has problems...
                         obj.add_eid_sort1(self.element_type, element_name, dt, eid, cid, ctype, nodef)
@@ -1864,7 +1876,8 @@ class OES(OP2Common):
                                 etzx = complex(etzxr, etzxi)
 
                             if self.is_debug_file:
-                                self.binary_debug.write('       node%s=[%s]\n' % (grid, ', '.join(['%r' % di for di in out])))
+                                self.binary_debug.write('       node%s=[%s]\n' % (
+                                    grid, ', '.join(['%r' % di for di in out])))
                             obj.add_node_sort1(dt, eid, grid, inode,
                                                ex, ey, ez, etxy, etyz, etzx)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
@@ -1990,7 +2003,8 @@ class OES(OP2Common):
 
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
 
                         obj._add_new_eid(dt, eid, cen, fd1, sx1, sy1,
                                          txy1, angle1, major1, minor1, max_shear1)
@@ -2153,7 +2167,7 @@ class OES(OP2Common):
                     if itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, 17)
                         eids = ints[:, 0] // 10
-                        ilayers = ints[:, 1]
+                        #ilayers = ints[:, 1]
                         ints2 = ints[:, 1:].reshape(nlayers, 8)
                         assert eids.min() > 0, eids
                         obj._times[obj.itime] = dt
@@ -2179,7 +2193,8 @@ class OES(OP2Common):
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
-                            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
 
                         obj._add_new_eid(dt, eid, cen, fd1, sx1, sy1,
                                          txy1, angle1, major1, minor1, vm1)
@@ -2240,7 +2255,8 @@ class OES(OP2Common):
                         eid = eid_device // 10
 
                         if self.is_debug_file:
-                            self.binary_debug.write('  OESC CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                            self.binary_debug.write('  OESC CTRIA3-74 - eid=%i; C=[%s]\n' % (
+                                eid, ', '.join(['%r' % di for di in out])))
 
                         if is_magnitude_phase:
                             sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -2407,14 +2423,15 @@ class OES(OP2Common):
                     ns = Struct(node_format)
 
                     if self.is_debug_file:
-                        self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                        self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                        self.binary_debug.write('  #elementi = [centeri, node1i, node2i, node3i, node4i]\n')
-                        self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                        self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                        self.binary_debug.write('  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                        self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                        self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
+                        self.binary_debug.write(
+                            '  [cap, element1, element2, ..., cap]\n'
+                            '  cap = %i  # assume 1 cap when there could have been multiple\n'
+                            '  #elementi = [centeri, node1i, node2i, node3i, node4i]\n'
+                            '  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n'
+                            '  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n'
+                            '  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n'
+                            '  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n'
+                            '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
 
                     grid_center = 0
                     for i in range(nelements):
@@ -2652,18 +2669,17 @@ class OES(OP2Common):
                     n += ntotal
             elif self.format_code == 1 and self.num_wide == 25 and self.element_type in [88, 90]:
                 # TODO: vectorize
-                """
-                    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP
-                       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN
-                0       721  -7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00  -2.014457E-14   4.557830E+02   5.240113E-02   0.0
-                                             4.775555E-02  -2.775558E-17  -4.625990E-02  -7.197441E-18
-                              7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   1.308169E-14   4.557830E+02   5.240113E-02   0.0
-                                             4.775555E-02  -1.387779E-17  -4.625990E-02   4.673947E-18
-                0       722  -7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.402297E-13   4.557830E+02   5.240113E-02   0.0
-                                             4.775555E-02  -2.081668E-17  -4.625990E-02   8.583152E-17
-                              7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.665485E-14   4.557830E+02   5.240113E-02   0.0
-                                             4.775555E-02  -2.081668E-17  -4.625990E-02   9.523495E-18
-                """
+                #     ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP
+                #        ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN
+                # 0       721  -7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00  -2.014457E-14   4.557830E+02   5.240113E-02   0.0
+                #                              4.775555E-02  -2.775558E-17  -4.625990E-02  -7.197441E-18
+                #               7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   1.308169E-14   4.557830E+02   5.240113E-02   0.0
+                #                              4.775555E-02  -1.387779E-17  -4.625990E-02   4.673947E-18
+                # 0       722  -7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.402297E-13   4.557830E+02   5.240113E-02   0.0
+                #                              4.775555E-02  -2.081668E-17  -4.625990E-02   8.583152E-17
+                #               7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.665485E-14   4.557830E+02   5.240113E-02   0.0
+                #                              4.775555E-02  -2.081668E-17  -4.625990E-02   9.523495E-18
+                #
                 ntotal = 100  # 4*25
                 nelements = ndata // ntotal
                 obj_vector_real = RealNonlinearPlateArray
@@ -2842,9 +2858,11 @@ class OES(OP2Common):
 
                         if eid != eid_old:
                             # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                            obj.add_new_eid_sort1(etype, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                            obj.add_new_eid_sort1(etype, dt, eid, layer, o1, o2,
+                                                  t12, t1z, t2z, angle, major, minor, ovm)
                         else:
-                            obj.add_sort1(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                            obj.add_sort1(dt, eid, layer, o1, o2,
+                                          t12, t1z, t2z, angle, major, minor, ovm)
                         eid_old = eid
                         n += 44
                     self.eid_old = eid_old
@@ -2963,7 +2981,7 @@ class OES(OP2Common):
                             n += 32
             elif self.format_code in [2, 3] and self.num_wide == 37: # imag
                 # TODO: vectorize object
-                return ndata
+                #return ndata
                 obj_vector_complex = None
                 if self.is_stress():
                     raise NotImplementedError('ComplexTriaxStressArray')
@@ -3818,9 +3836,7 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return ndata
             if self.format_code == -4 and self.num_wide == 30:
-                # TODO: vectorize
                 if self.is_stress():
-                    #self.create_transient_object(self.hyperelastic_cquad4_strain, HyperelasticQuad)
                     self.create_transient_object(self.hyperelastic_cquad4_strain, HyperelasticQuadArray)
                     result_name = 'hyperelastic_cquad4_strain'
                 else:

@@ -1,12 +1,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import integer_types
 from six.moves import zip, range
 import numpy as np
-from numpy import zeros, searchsorted, array_equal, allclose
+from numpy import zeros, searchsorted, allclose
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, get_key0
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 try:
     import pandas as pd
 except ImportError:
@@ -17,13 +17,11 @@ except ImportError:
 class RealRodArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.nelements = 0  # result specific
 
         if is_sort1:
-            #sort1
             self.add_new_eid = self.add_new_eid_sort1
         else:
             raise NotImplementedError('SORT2')
@@ -100,16 +98,16 @@ class RealRodArray(OES_Object):
             i = 0
             if self.is_sort1():
                 for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
-                        (axial, torsion, sma, smt) = t1
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (axial1, torsion1, sma1, smt1) = t1
                         (axial2, torsion2, sma2, smt2) = t2
                         if not allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s)\n  (%s, %s, %s, %s)\n' % (
                                 eid,
-                                axial, torsion, sma, smt,
+                                axial1, torsion1, sma1, smt1,
                                 axial2, torsion2, sma2, smt2)
                             i += 1
                         if i > 10:
@@ -193,7 +191,7 @@ class RealRodArray(OES_Object):
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06, msg_temp):
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -206,7 +204,7 @@ class RealRodArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
@@ -221,11 +219,11 @@ class RealRodArray(OES_Object):
 
             for i in range(0, nwrite, 2):
                 out_line = '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (tuple(out[i] + out[i + 1]))
-                f.write(out_line)
+                f06.write(out_line)
             if is_odd:
                 out_line = '      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1]))
-                f.write(out_line)
-            f.write(page_stamp % page_num)
+                f06.write(out_line)
+            f06.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -241,17 +239,17 @@ class RealBushStressArray(RealRodArray, StressObject):
 
     def _get_msgs(self):
         raise NotImplementedError()
-        base_msg = ['       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
-                    '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
-        crod_msg   = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
-        conrod_msg = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
-        ctube_msg  = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
-        #cbush_msg  = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C B U S H )\n', ]
-        crod_msg += base_msg
-        conrod_msg += base_msg
-        ctube_msg += base_msg
-        #cbush_msg += base_msg
-        return crod_msg, conrod_msg, ctube_msg
+        #base_msg = ['       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
+                    #'         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
+        #crod_msg   = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
+        #conrod_msg = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
+        #ctube_msg  = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
+        ##cbush_msg  = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C B U S H )\n', ]
+        #crod_msg += base_msg
+        #conrod_msg += base_msg
+        #ctube_msg += base_msg
+        ##cbush_msg += base_msg
+        #return crod_msg, conrod_msg, ctube_msg
 
 
 class RealRodStressArray(RealRodArray, StressObject):
@@ -266,9 +264,9 @@ class RealRodStressArray(RealRodArray, StressObject):
     def _get_msgs(self):
         base_msg = ['       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                     '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
-        crod_msg   = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
+        crod_msg = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
         conrod_msg = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
-        ctube_msg  = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
+        ctube_msg = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
         crod_msg += base_msg
         conrod_msg += base_msg
         ctube_msg += base_msg
@@ -286,9 +284,9 @@ class RealRodStrainArray(RealRodArray, StrainObject):
     def _get_msgs(self):
         base_msg = ['       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                     '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
-        crod_msg   = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
+        crod_msg = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
         conrod_msg = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
-        ctube_msg  = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
+        ctube_msg = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
         crod_msg += base_msg
         conrod_msg += base_msg
         ctube_msg += base_msg

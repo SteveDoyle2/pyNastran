@@ -1,9 +1,9 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import itervalues, integer_types
 from math import isnan
 from collections import OrderedDict
-from numpy import zeros, empty, array_equal
+from six import itervalues, integer_types
+from numpy import zeros, empty
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject

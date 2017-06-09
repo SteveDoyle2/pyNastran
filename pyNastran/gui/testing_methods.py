@@ -435,7 +435,11 @@ class GuiAttributes(object):
 
     @property
     def eid_map(self):
-        return self.eid_maps[self.name]
+        try:
+            return self.eid_maps[self.name]
+        except:
+            msg = 'KeyError: key=%r; keys=%s' % (self.name, list(self.eid_maps.keys()))
+            raise KeyError(msg)
 
     @eid_map.setter
     def eid_map(self, eid_map):
@@ -495,6 +499,8 @@ class GuiAttributes(object):
         if self.dev:
             return skip_reading
 
+        self.eid_map = {}
+        self.nid_map = {}
         params_to_delete = (
             'case_keys', 'icase', 'iSubcaseNameMap',
             'result_cases', 'eid_map', 'nid_map',

@@ -4,7 +4,7 @@ defines readers for BDF objects in the OP2 MPT/MPTS table
 #pylint: disable=C0111,C0103,C0301,W0612,W0613,R0914,R0201
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from struct import unpack, Struct
+from struct import Struct
 from six import b
 from six.moves import range
 

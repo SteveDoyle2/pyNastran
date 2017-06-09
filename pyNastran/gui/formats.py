@@ -107,7 +107,6 @@ try:
     from pyNastran.converters.dev.avus.avus_io import AvusIO
     is_avus = True
 except ImportError:
-    #raise
     class AvusIO(object):
         """dummy avus gui class"""
         def __init__(self):

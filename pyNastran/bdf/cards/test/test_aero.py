@@ -402,8 +402,6 @@ class TestAero(unittest.TestCase):
         cref = 1.0
         bref = 2.0
         sref = 100.
-        acsid = 0
-        rcsid = 0
         aeros = model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0,
                        sym_xy=0, comment='aeros')
         aeros.validate()

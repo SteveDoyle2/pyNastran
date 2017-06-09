@@ -14,21 +14,21 @@ if qt_version == 4:
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
-        QLabel, QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
+        QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
         QButtonGroup,
     )
 elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
-        QLabel, QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
+        QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
         QButtonGroup,
     )
 elif qt_version == 'pyside':
     from PySide import QtCore, QtGui
     from PySide.QtGui import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
-        QLabel, QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
+        QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
         QButtonGroup,
     )
 else:
@@ -123,7 +123,7 @@ class Model(QtCore.QAbstractTableModel):
         else:
             self.removeRows(int)
             for i, item in enumerate(items):
-                self.setItem(i,j,QtGui.QStandardItem(item))
+                self.setItem(i, j, QtGui.QStandardItem(item))
 
         #self.dataChanged.emit(self.createIndex(0, 0),
                               #self.createIndex(self.rowCount(0),
@@ -363,14 +363,14 @@ class EditGeometryProperties(PyDialog):
     def on_update_geometry_properties_window(self, data):
         """Not Implemented"""
         return
-        new_keys = sorted(data.keys())
-        if self.active_key in new_keys:
-            i = new_keys.index(self.active_key)
-        else:
-            i = 0
-        self.table.update_data(new_keys)
-        self.out_data = data
-        self.update_active_key(i)
+        #new_keys = sorted(data.keys())
+        #if self.active_key in new_keys:
+            #i = new_keys.index(self.active_key)
+        #else:
+            #i = 0
+        #self.table.update_data(new_keys)
+        #self.out_data = data
+        #self.update_active_key(i)
 
     def update_active_key(self, index):
         """
@@ -701,7 +701,7 @@ class EditGeometryProperties(PyDialog):
 
     def on_line_width_slider(self):
         self.is_line_width_edit_slider_active = True
-        name = self.active_key
+        #name = self.active_key
         line_width = self.line_width_slider_edit.value()
         if not self.is_line_width_edit_active:
             self.line_width_edit.setValue(line_width)
@@ -786,12 +786,12 @@ class EditGeometryProperties(PyDialog):
         is_checked = self.check_apply.isChecked()
         self.apply_button.setDisabled(is_checked)
 
-    def _on_float(self, field):
-        try:
-            eval_float_from_string(field.text())
-            field.setStyleSheet("QLineEdit{background: white;}")
-        except ValueError:
-            field.setStyleSheet("QLineEdit{background: red;}")
+    #def _on_float(self, field):
+        #try:
+            #eval_float_from_string(field.text())
+            #field.setStyleSheet("QLineEdit{background: white;}")
+        #except ValueError:
+            #field.setStyleSheet("QLineEdit{background: red;}")
 
     #def on_default_name(self):
         #self.name_edit.setText(str(self._default_name))

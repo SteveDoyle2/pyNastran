@@ -288,7 +288,7 @@ class Sidebar(QWidget):
         else:
             return
              # pragma: no cover
-            datai = self.result_data_window.data[0]
+            #datai = self.result_data_window.data[0]
 
     def get_form(self):
         return self.result_case_window.data
@@ -400,11 +400,11 @@ class ResultsWindow(QWidget):
         try:
             self.addItems(self.model, data)
         except:
-            adf
-            if isinstance(data, string_types):
-                self.addItems(self.model, data)
-            else:
-                self.addItems(self.model, *tuple(data))
+            raise RuntimeError('cannot add data=\n%s' % data)
+            #if isinstance(data, string_types):
+                #self.addItems(self.model, data)
+            #else:
+                #self.addItems(self.model, *tuple(data))
         self.treeView.data = data
         #layout = QVBoxLayout()
         #layout.addWidget(self.treeView)

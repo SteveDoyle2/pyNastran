@@ -398,7 +398,6 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
 class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.parent = {}
 
         self.grad = {}
@@ -960,7 +959,6 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
 class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.parent = {}
         self.coord = {}
         self.icord = {}

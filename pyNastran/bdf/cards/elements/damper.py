@@ -159,7 +159,7 @@ class CDAMP1(LineDamper):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid()] + self.node_ids + [self.c1, self.c2]
@@ -587,6 +587,10 @@ class CDAMP4(LineDamper):
 
 
 class CDAMP5(LineDamper):
+    """
+    Defines a damping element that refers to a material property entry and connection to
+    grid or scalar points.
+    """
     type = 'CDAMP5'
     _field_map = {
         1: 'eid', 2:'pid',
@@ -600,6 +604,20 @@ class CDAMP5(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CDAMP5 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PDAMP5)
+        nids : List[int, int]
+            GRID/SPOINT ids
+        comment : str; default=''
+            a comment for the card
+        """
         LineDamper.__init__(self)
         if comment:
             self.comment = comment
@@ -711,6 +729,20 @@ class CVISC(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        Creates a CVISC card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PVISC)
+        nids : List[int, int]
+            GRID ids
+        comment : str; default=''
+            a comment for the card
+        """
         LineDamper.__init__(self)
         if comment:
             self.comment = comment

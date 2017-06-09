@@ -1,11 +1,11 @@
 from __future__ import print_function
+from math import log10
+from itertools import count
+from collections import defaultdict
 from six import iteritems
 from six.moves import zip
-from math import sqrt, log10
 
-from collections import defaultdict
 import numpy as np
-from numpy import array
 from numpy.linalg import norm
 
 from pyNastran.op2.op2 import OP2
@@ -266,7 +266,8 @@ class MarginChecker(object):
             tyz = data[:, 4]
             txz = data[:, 5]
 
-            ovmi = np.sqrt((oxx - oyy) ** 2 + (oyy - ozz) ** 2 + (oxx - ozz) ** 2 + 6 * (txy ** 2 + tyz ** 2 + txz ** 2))  # 3d stress
+            ovmi = np.sqrt((oxx - oyy) ** 2 + (oyy - ozz) ** 2 + (oxx - ozz) ** 2
+                           + 6 * (txy ** 2 + tyz ** 2 + txz ** 2))  # 3d stress
             ovm.append(ovmi)
 
         if len(ovm) == 1:

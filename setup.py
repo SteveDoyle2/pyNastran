@@ -28,7 +28,9 @@ py2_packages = []
 py3_gui_scripts = []
 py3_packages = []
 
-if sys.version_info <= (3,):
+
+is_travis = 'TRAVIS' in os.environ
+if sys.version_info <= (3,) or not is_travis:
     try:
         import vtk
         vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
@@ -80,13 +82,14 @@ if sys.version_info <= (3,):
 py_packages = []
 
 try:
-    import numpy as np
-    ver = np.lib.NumpyVersion(np.__version__)
-    if ver < '1.11.0':
-        print("np.__version__ = %r < '1.11.0'" % np.__version__)
-        py_packages.append('numpy >= 1.11.0')
+    #import numpy as np
+    #ver = np.lib.NumpyVersion(np.__version__)
+    #if ver < '1.11.0':
+        #print("np.__version__ = %r < '1.11.0'" % np.__version__)
+        #py_packages.append('numpy >= 1.11.0')
+    py_packages.append('numpy >= 1.11.0,<1.13.0')
 except ImportError:
-    py_packages.append('numpy >= 1.11.0')
+    py_packages.append('numpy >= 1.11.0,<1.13.0')
 
 try:
     import scipy
@@ -113,7 +116,7 @@ try:
         print("matplotlib.__version__ = %r < '1.5.1'" % six.__version__)
         py_packages.append('matplotlib >= 1.5.1, <2')
 except ImportError:
-    py_packages.append('matplotlib >= 1.5.1, <2')
+    py_packages.append('matplotlib >= 1.5.1')
 
 try:
     import docopt

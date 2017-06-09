@@ -6,7 +6,7 @@ from numpy import vstack, amax, amin, arange, ones, zeros, where
 
 #VTK_TRIANGLE = 5
 import vtk
-from vtk import vtkTriangle, vtkQuad
+#from vtk import vtkTriangle, vtkQuad
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.aflr.surf.surf_reader import SurfReader, TagReader

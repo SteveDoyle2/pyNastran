@@ -281,15 +281,31 @@ class XrefMesh(BDFAttributes):
         Links the nodes to coordinate systems
         """
         grdset = self.grdset
-        for n in itervalues(self.nodes):
+        for node in itervalues(self.nodes):
             try:
-                n.cross_reference(self, grdset)
+                node.cross_reference(self, grdset)
             except:
-                self.log.error("Couldn't cross reference GRID.\n%s" % (str(n)))
+                self.log.error("Couldn't cross reference GRID.\n%s" % (str(node)))
                 raise
 
-        if self.spoints:
-            self.spointi = self.spoints.create_spointi()
+        if self.new_spoints:
+            pass
+            #for spoint in itervalues(self.spoints):
+                #pas
+                #try:
+                    #spoint.cross_reference(self)
+                #except:
+                    #self.log.error("Couldn't cross reference SPOINT.\n%s" % (str(spoint)))
+                    #raise
+            #for epoint in itervalues(self.epoints):
+                #try:
+                    #epoint.cross_reference(self, grdset)
+                #except:
+                    #self.log.error("Couldn't cross reference EPOINT.\n%s" % (str(epoint)))
+                    #raise
+        else:
+            if self.spoints:
+                self.spointi = self.spoints.create_spointi()
 
         # GRDPNT for mass calculations
         #if model.has_key()
@@ -335,7 +351,7 @@ class XrefMesh(BDFAttributes):
         """
         Links the nodes to all connected elements
         """
-        nodes = defaultdict(set)
+        nodes = defaultdict(list)
         for element in itervalues(self.elements):
             #if element.type in ['CONM2']:
             #    pass
@@ -344,7 +360,7 @@ class XrefMesh(BDFAttributes):
                     for nid in element.node_ids:
                         if nid is None:
                             continue
-                        nodes[nid].add(element)
+                        nodes[nid].append(element)
                         #except AttributeError:
                             #print(element)
                             #print('node = %s' % str(node))

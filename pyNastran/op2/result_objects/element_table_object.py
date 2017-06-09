@@ -20,8 +20,6 @@ class ElementTableArray(ScalarObject):  # displacement style table
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
         self.is_sort1()
         #self.dt = dt
-
-        #self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
