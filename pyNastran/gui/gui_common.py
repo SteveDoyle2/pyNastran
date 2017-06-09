@@ -3816,6 +3816,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.rend.AddActor(follower)
         follower.SetPickable(False)
         self.label_actors[icase].append(follower)
+        #print('added label actor %r; icase=%s' % (text, icase))
+        #print(self.label_actors)
 
         #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
         #camera.GetPosition()
@@ -4750,7 +4752,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.ncases = 0
         self.set_form(form)
 
-    def _finish_results_io2(self, form, cases):
+    def _finish_results_io2(self, form, cases, reset_labels=True):
         """
         Adds results to the Sidebar
 
@@ -4772,6 +4774,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 the case id
             result : GuiResult
                 the class that stores the result
+        reset_labels : bool; default=True
+            should the label actors be reset
 
         form = [
             'Model', None, [
@@ -4813,7 +4817,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print("cases =", cases)
         #print("case_keys =", self.case_keys)
 
-        self.reset_labels()
+        self.reset_labels(reset_minus1=reset_labels)
         self.cycle_results_explicit()  # start at nCase=0
         if self.ncases:
             self.scalarBar.VisibilityOn()
@@ -5070,15 +5074,22 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.res_widget.update_methods(data2)
 
 
-    def reset_labels(self):
+    def reset_labels(self, reset_minus1=True):
         """
         Wipe all labels and regenerate the key slots based on the case keys.
         This is used when changing the model.
         """
         self._remove_labels()
-
+        
+        reset_minus1 = True
         # new geometry
-        self.label_actors = {}
+        if reset_minus1:
+            self.label_actors = {-1 : []}
+        else:
+            for idi in self.label_actors:
+                if idi == -1:
+                    continue
+                self.label_actors[idi] = []
         self.label_ids = {}
 
         #self.case_keys = [
@@ -5089,6 +5100,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #result_name = self.get_result_name(icase)
             self.label_actors[icase] = []
             self.label_ids[icase] = set([])
+        #print(self.label_actors)
+        #print(self.label_ids)
 
     def _remove_labels(self):
         """
@@ -5101,6 +5114,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # existing geometry
         for icase, actors in iteritems(self.label_actors):
+            if icase == -1:
+                continue
             for actor in actors:
                 self.rend.RemoveActor(actor)
                 del actor
@@ -5146,7 +5161,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 actor.VisibilityOff()
                 count += 1
         if count and show_msg:
-            self.log_command('hide_labels(%s' % names)
+            self.log_command('resize_labels(%s)' % names)
 
     def hide_labels(self, case_keys=None, show_msg=True):
         if case_keys is None:
@@ -5164,7 +5179,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #prop = actor.GetProperty()
                 count += 1
         if count and show_msg:
-            self.log_command('hide_labels(%s' % names)
+            self.log_command('hide_labels(%s)' % names)
 
     def show_labels(self, case_keys=None, show_msg=True):
         if case_keys is None:
@@ -5188,7 +5203,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 count += 1
         if count and show_msg:
             # yes the ) is intentionally left off because it's already been added
-            self.log_command('show_labels(%s' % names)
+            self.log_command('show_labels(%s)' % names)
 
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
                           data_format,

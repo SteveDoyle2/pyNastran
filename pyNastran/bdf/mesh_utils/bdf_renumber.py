@@ -333,18 +333,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     else:
         model = bdf_filename
 
-    if model.new_spoints:
-        spoints = list(model.spoints.keys())
-        epoints = list(model.epoints.keys())
-    else:
-        if model.spoints is None:
-            spoints = []
-        else:
-            spoints = list(model.spoints.points)
-        if model.epoints is None:
-            epoints = []
-        else:
-            epoints = list(model.epoints.points)
+    spoints = list(model.spoints.keys())
+    epoints = list(model.epoints.keys())
 
     nids = model.nodes.keys()
 

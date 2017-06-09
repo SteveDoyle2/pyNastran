@@ -449,6 +449,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if skip_reading:
             return
 
+        reset_labels = True
         if plot:
             self.scalarBar.VisibilityOff()
             self.scalarBar.Modified()
@@ -564,9 +565,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.set_caero_grid(ncaeros_points, model, j=0)
             self.set_caero_subpanel_grid(ncaero_sub_points, model, j=0)
             if has_control_surface:
+                cs_name = 'caero_control_surfaces'
                 self.set_caero_control_surface_grid(
-                    'caero_control_surfaces', cs_box_ids,
+                    cs_name, cs_box_ids[cs_name],
                     box_id_to_caero_element_map, caero_points)
+
+                for aid, aesurf in iteritems(model.aesurf):
+                    reset_labels = False
+                    cs_name = '%s_control_surface' % aesurf.label
+                    self.set_caero_control_surface_grid(
+                        cs_name, cs_box_ids[cs_name],
+                        box_id_to_caero_element_map, caero_points, label=aesurf.label)
+
         if nconm2 > 0:
             self.set_conm_grid(nconm2, dim_max, model)
 
@@ -579,7 +589,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         assert icase is not None
 
         #------------------------------------------------------------
-
         #print('dependent_nodes =', self.dependents_nodes)
         form0 = form[2]
         assert icase is not None
@@ -609,16 +618,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     print(sout)
 
             assert icase is not None
-            if self.plot_applied_loads:
-                try:
-                    icase = self._plot_applied_loads(
-                        model, cases, formii, icase, subcase_id, xref_loads=xref_loads)
-                except KeyError:
-                    s = StringIO()
-                    traceback.print_exc(file=s)
-                    sout = s.getvalue()
-                    self.log_error(sout)
-                    print(sout)
+            icase = self._plot_applied_loads(
+                model, cases, formii, icase, subcase_id, xref_loads=xref_loads)
 
             if len(formii):
                 form0.append(formi)
@@ -637,7 +638,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         if plot:
             #self.log.info(cases.keys())
-            self._finish_results_io2([form], cases)
+            self._finish_results_io2([form], cases, reset_labels=reset_labels)
         else:
             self._set_results([form], cases)
 
@@ -658,6 +659,30 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
 
     def make_caeros(self, model):
+        """
+        Creates the CAERO panel inputs
+        
+        Returns
+        -------
+        caero_points : ???
+            ???
+        ncaeros : int
+            ???
+        ncaeros_sub : int
+            ???
+        ncaeros_cs : int
+            ???
+        ncaeros_points : int
+            ???
+        ncaero_sub_points : int
+            ???
+        has_control_surface : bool
+            is there a control surface
+        box_id_to_caero_element_map : ???
+            ???
+        cs_box_ids : dict[control_surface_name] : List[panel ids]
+            list of panels used by each aero panel
+        """
         ncaeros = 0
         ncaeros_sub = 0
         ncaeros_cs = 0
@@ -665,7 +690,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         ncaero_sub_points = 0
         has_control_surface = False
         box_id_to_caero_element_map = {}
-        cs_box_ids = []
+        cs_box_ids = defaultdict(list)
 
         # when caeros is empty, SPLINEx/AESURF cannot be defined
         if len(model.caeros) == 0:
@@ -732,12 +757,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             for aid, aesurf in iteritems(model.aesurf):
                 aelist = aesurf.alid1
                 ncaeros_cs += len(aelist.elements)
-                cs_box_ids.extend(aelist.elements)
+                
+                cs_name = '%s_control_surface' % aesurf.label
+                if cs_name not in self.alt_grids:
+                    self.create_alternate_vtk_grid(
+                        cs_name, color=PINK, line_width=5, opacity=1.0,
+                        representation='surface')
 
+                cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
+                cs_box_ids[cs_name].extend(aelist.elements)
                 if aesurf.alid2 is not None:
                     aelist = aesurf.alid2
                     ncaeros_cs += len(aelist.elements)
                     cs_box_ids.extend(aelist.elements)
+                    cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
         out = (
             caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
             ncaeros_points, ncaero_sub_points,
@@ -746,6 +779,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return out
 
     def _set_caero_representation(self, has_control_surface):
+        """
+        Parameters
+        ----------
+        has_control_surface : bool
+            is there a control surface
+        """
         if 'caero_control_surfaces' in self.geometry_actors:
             self.geometry_properties['caero_control_surfaces'].opacity = 0.5
 
@@ -957,7 +996,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def set_caero_control_surface_grid(self, name, cs_box_ids,
                                        box_id_to_caero_element_map,
-                                       caero_points,
+                                       caero_points, label=None,
                                        zfighting_offset=0.001, j=0):
         """
         Creates a single CAERO control surface?
@@ -975,6 +1014,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 ???
         caero_points : (ncaero_points, 3)
             the xyz coordinates used by the CAEROx actor
+        label : str / None
+            None : no label will be used
+            str : the name of the control surface card will be placed 
+            at the centroid of the panel
         zfighting_offset : float
             z-fighting is when two elements "fight" for who is in front
             leading.  The standard way to fix this is to bump the
@@ -1002,12 +1045,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         points_list = np.array(points_list)
         ncaero_sub_points = len(np.unique(points_list.ravel()))
-
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(ncaero_sub_points)
 
+        areas = []
+        centroids = []
         vtk_type = vtkQuad().GetCellType()
-        #print('cs_box_ids =', cs_box_ids)
         for box_id in cs_box_ids:
             try:
                 elementi = box_id_to_caero_element_map[box_id]
@@ -1015,6 +1058,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 print('cant find box_id=%i' % box_id)
                 continue
             pointsi = caero_points[elementi]
+            centroid = (pointsi[0] + pointsi[1] + pointsi[2] + pointsi[3]) / 4.
             area = np.linalg.norm(np.cross(pointsi[2] - pointsi[0], pointsi[3] - pointsi[1])) / 2.
             if area == 0.0:
                 print('box_id=%i has 0 area' % box_id)
@@ -1032,11 +1076,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elem.GetPointIds().SetId(2, j + 2)
             elem.GetPointIds().SetId(3, j + 3)
             self.alt_grids[name].InsertNextCell(vtk_type, elem.GetPointIds())
+            centroids.append(centroid)
+            areas.append(area)
             j += ipoint + 1
 
         #if missing_boxes:
             #msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
             #self.log_error(msg)
+        if label:
+            # points_list (15, 4, 3) = (elements, nodes, 3)
+            x, y, z = np.average(centroids, weights=areas, axis=0)
+            self._create_annotation(str(label), -1, x, y, z)
+
         self.alt_grids[name].SetPoints(points)
         return j
 
@@ -1433,10 +1484,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """used to create SPOINTs"""
         if not model.spoints:
             return
-        if model.new_spoints:
-            spoint_ids = list(model.spoints.keys())
-        else:
-            spoint_ids = list(model.spoints.points) # set -> list
+        spoint_ids = list(model.spoints.keys())
         assert isinstance(spoint_ids, list), type(spoint_ids)
 
         nspoints = len(spoint_ids)
@@ -3564,104 +3612,114 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          - Temperature(LOAD)
          - Temperature(BOTH)
         """
+        if not self.plot_applied_loads:
+            return icase
+
         if not xref_loads:
             print('returning from plot_applied_loads_early')
             return icase
 
-        form = []
-        out = model.get_load_arrays(
-            subcase_id, nid_map=self.nid_map,
-            eid_map=self.eid_map, node_ids=self.node_ids,
-            normals=self.normals)
-        is_loads, is_temperatures, temperature_data, load_data = out
-
-        if is_loads:
-            centroidal_pressures, forces, spcd = load_data
-            if np.abs(centroidal_pressures).max():
-                pressure_res = GuiResult(subcase_id, header='Pressure', title='Pressure',
-                                         location='centroid', scalar=centroidal_pressures)
-                cases[icase] = (pressure_res, (0, 'Pressure'))
-                form0.append(('Pressure', icase, []))
-                icase += 1
-
-            if np.abs(forces.max() - forces.min()) > 0.0:
-                fxyz = forces[:, :3]
-                mxyz = forces[:, 3:]
-                fscalar = np.linalg.norm(fxyz, axis=1)
-                mscalar = np.linalg.norm(mxyz, axis=1)
-                if fscalar.max() > 0:
-                    titles = ['Force XYZ']
-                    headers = titles
-                    assert fxyz.shape[1] == 3, fxyz.shape
-                    assert fxyz.shape[0] == len(fscalar)
-                    scales = [1.0]
-
-                    force_xyz_res = ForceTableResults(
-                        subcase_id, titles, headers, fxyz, fscalar,
-                        scales, data_formats=None,
-                        nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                        set_max_min=False, uname='NastranGeometry')
-                    force_xyz_res.save_defaults()
-
-                    cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
-                    form0.append(('Force XYZ', icase, []))
+        try:
+            form = []
+            out = model.get_load_arrays(
+                subcase_id, nid_map=self.nid_map,
+                eid_map=self.eid_map, node_ids=self.node_ids,
+                normals=self.normals)
+            is_loads, is_temperatures, temperature_data, load_data = out
+    
+            if is_loads:
+                centroidal_pressures, forces, spcd = load_data
+                if np.abs(centroidal_pressures).max():
+                    pressure_res = GuiResult(subcase_id, header='Pressure', title='Pressure',
+                                             location='centroid', scalar=centroidal_pressures)
+                    cases[icase] = (pressure_res, (0, 'Pressure'))
+                    form0.append(('Pressure', icase, []))
                     icase += 1
-
-                if mscalar.max() > 0:
-                    titles = ['Moment XYZ']
-                    headers = titles
-                    assert mxyz.shape[1] == 3, mxyz.shape
-                    assert mxyz.shape[0] == len(mscalar)
-                    scales = [1.0]
-
-                    moment_xyz_res = ForceTableResults(
-                        subcase_id, titles, headers, mxyz, mscalar,
-                        scales, data_formats=None,
-                        nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                        set_max_min=False, uname='NastranGeometry')
-                    moment_xyz_res.save_defaults()
-
-                    cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
-                    form0.append(('Moment XYZ', icase, []))
+    
+                if np.abs(forces.max() - forces.min()) > 0.0:
+                    fxyz = forces[:, :3]
+                    mxyz = forces[:, 3:]
+                    fscalar = np.linalg.norm(fxyz, axis=1)
+                    mscalar = np.linalg.norm(mxyz, axis=1)
+                    if fscalar.max() > 0:
+                        titles = ['Force XYZ']
+                        headers = titles
+                        assert fxyz.shape[1] == 3, fxyz.shape
+                        assert fxyz.shape[0] == len(fscalar)
+                        scales = [1.0]
+    
+                        force_xyz_res = ForceTableResults(
+                            subcase_id, titles, headers, fxyz, fscalar,
+                            scales, data_formats=None,
+                            nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                            set_max_min=False, uname='NastranGeometry')
+                        force_xyz_res.save_defaults()
+    
+                        cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
+                        form0.append(('Force XYZ', icase, []))
+                        icase += 1
+    
+                    if mscalar.max() > 0:
+                        titles = ['Moment XYZ']
+                        headers = titles
+                        assert mxyz.shape[1] == 3, mxyz.shape
+                        assert mxyz.shape[0] == len(mscalar)
+                        scales = [1.0]
+    
+                        moment_xyz_res = ForceTableResults(
+                            subcase_id, titles, headers, mxyz, mscalar,
+                            scales, data_formats=None,
+                            nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                            set_max_min=False, uname='NastranGeometry')
+                        moment_xyz_res.save_defaults()
+    
+                        cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
+                        form0.append(('Moment XYZ', icase, []))
+                        icase += 1
+    
+                if np.abs(spcd.max() - spcd.min()) > 0.0:
+                    t123 = spcd[:, :3]
+                    tnorm = norm(t123, axis=1)
+                    assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
+    
+                    spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
+                                           location='node', scalar=forces[:, 0])
+                    spcd_y_res = GuiResult(subcase_id, header='SPCDy', title='SPCDy',
+                                           location='node', scalar=forces[:, 1])
+                    spcd_z_res = GuiResult(subcase_id, header='SPCDz', title='SPCDz',
+                                           location='node', scalar=forces[:, 2])
+                    spcd_xyz_res = GuiResult(subcase_id, header='SPCD XYZ', title='SPCD XYZ',
+                                             location='node', scalar=tnorm)
+    
+                    cases[icase] = (spcd_x_res, (0, 'SPCDx'))
+                    form0.append(('SPCDx', icase, []))
                     icase += 1
-
-            if np.abs(spcd.max() - spcd.min()) > 0.0:
-                t123 = spcd[:, :3]
-                tnorm = norm(t123, axis=1)
-                assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
-
-                spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
-                                       location='node', scalar=forces[:, 0])
-                spcd_y_res = GuiResult(subcase_id, header='SPCDy', title='SPCDy',
-                                       location='node', scalar=forces[:, 1])
-                spcd_z_res = GuiResult(subcase_id, header='SPCDz', title='SPCDz',
-                                       location='node', scalar=forces[:, 2])
-                spcd_xyz_res = GuiResult(subcase_id, header='SPCD XYZ', title='SPCD XYZ',
-                                         location='node', scalar=tnorm)
-
-                cases[icase] = (spcd_x_res, (0, 'SPCDx'))
-                form0.append(('SPCDx', icase, []))
+    
+                    cases[icase] = (spcd_y_res, (0, 'SPCDy'))
+                    form0.append(('SPCDy', icase, []))
+                    icase += 1
+    
+                    cases[icase] = (spcd_z_res, (0, 'SPCDz'))
+                    form0.append(('SPCDz', icase, []))
+                    icase += 1
+    
+                    cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
+                    form0.append(('SPCD XYZ', icase, []))
+                    icase += 1
+    
+            if is_temperatures:
+                temperature_key, temperatures = temperature_data
+                temperature_res = GuiResult(subcase_id, header=temperature_key, title=temperature_key,
+                                            location='node', scalar=temperatures)
+                cases[icase] = (temperature_res, (0, temperature_key))
+                form.append((temperature_key, icase, []))
                 icase += 1
-
-                cases[icase] = (spcd_y_res, (0, 'SPCDy'))
-                form0.append(('SPCDy', icase, []))
-                icase += 1
-
-                cases[icase] = (spcd_z_res, (0, 'SPCDz'))
-                form0.append(('SPCDz', icase, []))
-                icase += 1
-
-                cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
-                form0.append(('SPCD XYZ', icase, []))
-                icase += 1
-
-        if is_temperatures:
-            temperature_key, temperatures = temperature_data
-            temperature_res = GuiResult(subcase_id, header=temperature_key, title=temperature_key,
-                                        location='node', scalar=temperatures)
-            cases[icase] = (temperature_res, (0, temperature_key))
-            form.append((temperature_key, icase, []))
-            icase += 1
+        except KeyError:
+            s = StringIO()
+            traceback.print_exc(file=s)
+            sout = s.getvalue()
+            self.log_error(sout)
+            print(sout)
         return icase
 
     def load_nastran_results(self, op2_filename, dirname):

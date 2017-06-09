@@ -771,13 +771,13 @@ class CPLSTN3(TriShell):
         return self._nodeIDs(allow_empty_nodes=False)
 
     def raw_fields(self):
-        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
+        list_fields = (['CPLSTN3', self.eid, self.Pid()] + self.node_ids +
                        [self.theta])
         return list_fields
 
     def repr_fields(self):
         theta = set_blank_if_default(self.theta, 0.0)
-        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
+        list_fields = (['CPLSTN3', self.eid, self.Pid()] + self.node_ids +
                        [theta])
         return list_fields
 
@@ -2177,7 +2177,7 @@ class CQUAD4(QuadShell):
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=False)
 
-    def writeAs_ctria3(self, newID):
+    def write_as_ctria3(self, new_eid):
         """
         triangle - 012
         triangle - 023
@@ -2187,7 +2187,7 @@ class CQUAD4(QuadShell):
         nodes2 = [self.nodes[0], self.nodes[2], self.nodes[3]]
         fields1 = ['CTRIA3', self.eid, self.Pid()] + nodes1 + [
             self.theta_mcid, zoffset]
-        fields2 = ['CTRIA3', newID, self.Pid()] + nodes2 + [
+        fields2 = ['CTRIA3', new_eid, self.Pid()] + nodes2 + [
             self.theta_mcid, zoffset]
         return self.print_card(fields1) + self.print_card(fields2)
 
@@ -2229,15 +2229,6 @@ class CQUAD4(QuadShell):
                    '                %8s%8s%8s%8s%8s\n' % tuple(data))
             return self.comment + msg.rstrip() + '\n'
 
-    #def write_card(self, size=8, is_double=False):
-        #card = wipe_empty_fields(self.repr_fields())
-        #if size == 8 or len(card) == 7: # to last node
-            #msg = self.comment + print_card_8(card)
-        #else:
-            #msg = self.comment + print_card_16(card)
-        #msg2 = self.write_card(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
-        #return msg
 
 class CPLSTN4(QuadShell):
     """
@@ -3169,19 +3160,17 @@ class CPLSTS3(TriShell):
 
     def repr_fields(self):
         (theta, tflag, T1, T2, T3) = self._get_repr_defaults()
-        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
+        list_fields = (['CPLSTS3', self.eid, self.Pid()] + self.node_ids +
                        [theta, None, None] + [None, tflag, T1, T2, T3])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        #theta = set_blank_if_default(self.theta, 0.0)
         (theta, tflag, T1, T2, T3) = self._get_repr_defaults()
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
 
-        #return self.write_card(size, double)
         nodes = self.node_ids
         row2_data = [theta, '', tflag, T1, T2, T3]
         row2 = [print_field_8(field) for field in row2_data]
@@ -3333,23 +3322,11 @@ class CQUAD(QuadShell):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
         theta_mcid = self.theta_mcid
-        #if theta_mcid == 0.:
-            #stheta = ''
-        #elif isinstance(theta_mcid, integer_types):
-            #stheta = '%s' % theta_mcid
-        #else:
-            #stheta = '%s' % theta_mcid
+
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2 + [theta_mcid]
         msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
                '        %8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
-
-    #def write_card(self, size=8, is_double=False):
-        #card = self.repr_fields()
-        #msg = self.comment + print_card_8(card)
-        #msg2 = self.write_card(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
-        #return msg
 
 
 class CQUAD8(QuadShell):
