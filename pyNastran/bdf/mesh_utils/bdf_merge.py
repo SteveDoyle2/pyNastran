@@ -181,7 +181,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
 def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
     """
-    Assemble final mappings from all original nids to the nids in the merged and possibly
+    Assemble final mappings from all original ids to the ids in the merged and possibly
     renumbered model.
     """
     if mapper_renumber is not None:
