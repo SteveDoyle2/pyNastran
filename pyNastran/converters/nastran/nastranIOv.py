@@ -722,14 +722,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             caero_points = np.empty((0, 3))
 
         # check for any control surfcaes
-        if model.aesurfs:
+        if model.aesurf:
             has_control_surface = True
             #ncaero_cs_points = 0
             if 'caero_control_surfaces' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
                     'caero_control_surfaces', color=PINK, line_width=5, opacity=1.0,
                     representation='surface')
-            for aid, aesurf in iteritems(model.aesurfs):
+            for aid, aesurf in iteritems(model.aesurf):
                 aelist = aesurf.alid1
                 ncaeros_cs += len(aelist.elements)
                 cs_box_ids.extend(aelist.elements)
