@@ -156,7 +156,7 @@ class NonlinearGapStressArray(OES_Object):
 
         nelements = self.ntotal
         ntimes = self.ntimes
-        ntotal = self.ntotal
+        #ntotal = self.ntotal
         nelements = self.ntotal
 
         msg = []

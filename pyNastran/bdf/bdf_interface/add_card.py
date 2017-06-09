@@ -1729,7 +1729,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        elem = CQUAD(eid, pid, nids, comment=comment)
+        elem = CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
         self._add_element_object(elem)
         return elem
 

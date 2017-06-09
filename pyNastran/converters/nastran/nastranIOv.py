@@ -8,7 +8,7 @@ import os
 from collections import defaultdict, OrderedDict
 import traceback
 from six import iteritems, itervalues, StringIO
-from six.moves import zip, range
+from six.moves import range
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22

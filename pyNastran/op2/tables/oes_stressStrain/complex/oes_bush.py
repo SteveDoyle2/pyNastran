@@ -1,10 +1,11 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import integer_types
 import numpy as np
-from numpy import zeros, array_equal, searchsorted, allclose
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, _eigenvalue_header
+from numpy import zeros, searchsorted, allclose
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 try:
     import pandas as pd
 except ImportError:
@@ -59,7 +60,8 @@ class ComplexCBushArray(OES_Object):
     def build_dataframe(self):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame = pd.Panel(self.data, items=column_values,
+                                   major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -151,19 +153,20 @@ class ComplexCBushArray(OES_Object):
         msg_temp = self.get_f06_header(is_mag_phase)
 
         if self.is_sort1():
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp, is_mag_phase)
+            page_num = self._write_sort1_as_sort1(
+                header, page_stamp, page_num, f, msg_temp, is_mag_phase)
         else:
             raise NotImplementedError()
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp, is_mag_phase):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06, msg_temp, is_mag_phase):
         ntimes = self.data.shape[0]
 
         eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06.write(''.join(header + msg_temp))
 
             tx = self.data[itime, :, 0]
             ty = self.data[itime, :, 1]
@@ -176,12 +179,12 @@ class ComplexCBushArray(OES_Object):
                  txi, tyi, tzi, rxi, ryi, rzi] = write_imag_floats_13e([itx, ity, itz, irx, iry, irz], is_mag_phase)
                 #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'
                 #'                                    0.0         179.9942        0.0           0.0           0.0           0.0'
-                f.write('                %8i    %-13s %-13s %-13s %-13s %-13s %s\n'
-                        '                %8s    %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                            eid, txr, tyr, tzr, rxr, ryr, rzr,
-                            '', txi, tyi, tzi, rxi, ryi, rzi))
+                f06.write('                %8i    %-13s %-13s %-13s %-13s %-13s %s\n'
+                          '                %8s    %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                              eid, txr, tyr, tzr, rxr, ryr, rzr,
+                              '', txi, tyi, tzi, rxi, ryi, rzi))
 
-            f.write(page_stamp % page_num)
+            f06.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -204,7 +207,7 @@ class ComplexCBushStressArray(ComplexCBushArray, StressObject):
 
         if self.element_type == 102:
             element_header = '                         C O M P L E X   S T R E S S E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
-            ''
+            #''
             #' '
             #
             #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'

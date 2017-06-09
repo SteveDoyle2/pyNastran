@@ -1,6 +1,6 @@
 from six.moves import range
 import os
-from numpy import array_equal, allclose
+from numpy import allclose
 import unittest
 
 import pyNastran
@@ -60,7 +60,4 @@ if __name__ == '__main__':  # pragma: no cover
     import time
     t0 = time.time()
     unittest.main()
-    #test_1()
-    #test_2()
-    #test_3()
     print("dt = %s" % (time.time() - t0))

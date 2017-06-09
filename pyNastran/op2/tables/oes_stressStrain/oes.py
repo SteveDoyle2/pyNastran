@@ -1075,8 +1075,8 @@ class OES(OP2Common):
                     #n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
                 raise RuntimeError(self.code_information())
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
 
@@ -1641,7 +1641,7 @@ class OES(OP2Common):
                 else:
                     raise RuntimeError(self.code_information())
                     #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                    return self._not_implemented_or_skip(data, ndata, msg)
+                    #return self._not_implemented_or_skip(data, ndata, msg)
 
             if self._results.is_not_saved(result_name):
                 return ndata
@@ -2661,18 +2661,17 @@ class OES(OP2Common):
                     n += ntotal
             elif self.format_code == 1 and self.num_wide == 25 and self.element_type in [88, 90]:
                 # TODO: vectorize
-                """
-                    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP
-                       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN
-                0       721  -7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00  -2.014457E-14   4.557830E+02   5.240113E-02   0.0
-                                             4.775555E-02  -2.775558E-17  -4.625990E-02  -7.197441E-18
-                              7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   1.308169E-14   4.557830E+02   5.240113E-02   0.0
-                                             4.775555E-02  -1.387779E-17  -4.625990E-02   4.673947E-18
-                0       722  -7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.402297E-13   4.557830E+02   5.240113E-02   0.0
-                                             4.775555E-02  -2.081668E-17  -4.625990E-02   8.583152E-17
-                              7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.665485E-14   4.557830E+02   5.240113E-02   0.0
-                                             4.775555E-02  -2.081668E-17  -4.625990E-02   9.523495E-18
-                """
+                #     ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP
+                #        ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN
+                # 0       721  -7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00  -2.014457E-14   4.557830E+02   5.240113E-02   0.0
+                #                              4.775555E-02  -2.775558E-17  -4.625990E-02  -7.197441E-18
+                #               7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   1.308169E-14   4.557830E+02   5.240113E-02   0.0
+                #                              4.775555E-02  -1.387779E-17  -4.625990E-02   4.673947E-18
+                # 0       722  -7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.402297E-13   4.557830E+02   5.240113E-02   0.0
+                #                              4.775555E-02  -2.081668E-17  -4.625990E-02   8.583152E-17
+                #               7.500000E+00   5.262707E+02   2.589492E+02   0.000000E+00   2.665485E-14   4.557830E+02   5.240113E-02   0.0
+                #                              4.775555E-02  -2.081668E-17  -4.625990E-02   9.523495E-18
+                #
                 ntotal = 100  # 4*25
                 nelements = ndata // ntotal
                 obj_vector_real = RealNonlinearPlateArray

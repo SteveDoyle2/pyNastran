@@ -416,7 +416,7 @@ class Cart3dIO(object):
 
     def show(self, n, types='ifs', endian=None):
         assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
-        nints = n // 4
+        #nints = n // 4
         data = self.infile.read(4 * n)
         strings, ints, floats = self.show_data(data, types=types, endian=endian)
         self.infile.seek(self.n)
@@ -522,70 +522,70 @@ class Cart3D(Cart3dIO):
             the tolerance for the centerline points
         """
         raise NotImplementedError()
-        self.log.info('---starting make_mirror_model---')
-        assert tol >= 0, 'tol=%r' % tol #  prevents hacks to the axis
+        #self.log.info('---starting make_mirror_model---')
+        #assert tol >= 0, 'tol=%r' % tol #  prevents hacks to the axis
 
-        nnodes = nodes.shape[0]
-        assert nnodes > 0, 'nnodes=%s' % nnodes
+        #nnodes = nodes.shape[0]
+        #assert nnodes > 0, 'nnodes=%s' % nnodes
 
-        nelements = elements.shape[0]
-        assert nelements > 0, 'nelements=%s' % nelements
+        #nelements = elements.shape[0]
+        #assert nelements > 0, 'nelements=%s' % nelements
 
-        ax = self._get_ax(axis)
-        if ax in [0, 1, 2]:  # positive x, y, z values; mirror to -side
-            iy0 = np.where(nodes[:, ax] > tol)[0]
-            ax2 = ax
-        elif ax in [3, 4, 5]:  # negative x, y, z values; mirror to +side
-            iy0 = np.where(nodes[:, ax-3] < -tol)[0]
-            ax2 = ax - 3 # we create ax2 in order to generalize the data updating
-        else:
-            raise NotImplementedError(axis)
+        #ax = self._get_ax(axis)
+        #if ax in [0, 1, 2]:  # positive x, y, z values; mirror to -side
+            #iy0 = np.where(nodes[:, ax] > tol)[0]
+            #ax2 = ax
+        #elif ax in [3, 4, 5]:  # negative x, y, z values; mirror to +side
+            #iy0 = np.where(nodes[:, ax-3] < -tol)[0]
+            #ax2 = ax - 3 # we create ax2 in order to generalize the data updating
+        #else:
+            #raise NotImplementedError(axis)
 
-        # the nodes to be duplicated are the nodes that aren't below the tolerance
-        nodes_upper = nodes[iy0]
-        nodes_upper[:, ax2] *= -1.0  # flip the nodes about the axis
+        ## the nodes to be duplicated are the nodes that aren't below the tolerance
+        #nodes_upper = nodes[iy0]
+        #nodes_upper[:, ax2] *= -1.0  # flip the nodes about the axis
 
-        nodes2 = np.vstack([nodes, nodes_upper])
-        nnodes2 = nodes2.shape[0]
-        assert nnodes2 > nnodes, 'nnodes2=%s nnodes=%s' % (nnodes2, nnodes)
+        #nodes2 = np.vstack([nodes, nodes_upper])
+        #nnodes2 = nodes2.shape[0]
+        #assert nnodes2 > nnodes, 'nnodes2=%s nnodes=%s' % (nnodes2, nnodes)
 
-        nnodes_upper = nodes_upper.shape[0]
-        elements_upper = elements.copy()
-        nelements = elements.shape[0]
+        #nnodes_upper = nodes_upper.shape[0]
+        #elements_upper = elements.copy()
+        #nelements = elements.shape[0]
 
-        # remap the mirrored nodes with the new node ids
-        for eid in range(nelements):
-            element = elements_upper[eid, :]
-            for i, eidi in enumerate(element):
-                if eidi in iy0:
-                    elements_upper[eid][i] = nnodes_upper + eidi
+        ## remap the mirrored nodes with the new node ids
+        #for eid in range(nelements):
+            #element = elements_upper[eid, :]
+            #for i, eidi in enumerate(element):
+                #if eidi in iy0:
+                    #elements_upper[eid][i] = nnodes_upper + eidi
 
-                # we need to reverse the element in order to get
-                # the proper normal vector
-                elements_upper[eid] = elements_upper[eid, ::-1]
+                ## we need to reverse the element in order to get
+                ## the proper normal vector
+                #elements_upper[eid] = elements_upper[eid, ::-1]
 
-        elements2 = np.vstack([elements, elements_upper])
-        nelements2 = elements2.shape[0]
-        assert nelements2 > nelements, 'nelements2=%s nelements=%s' % (nelements2, nelements)
+        #elements2 = np.vstack([elements, elements_upper])
+        #nelements2 = elements2.shape[0]
+        #assert nelements2 > nelements, 'nelements2=%s nelements=%s' % (nelements2, nelements)
 
-        nregions = len(np.unique(regions))
-        regions_upper = regions.copy() + nregions
-        regions2 = np.hstack([regions, regions_upper])
+        #nregions = len(np.unique(regions))
+        #regions_upper = regions.copy() + nregions
+        #regions2 = np.hstack([regions, regions_upper])
 
-        loads2 = {}
-        for key, data in iteritems(loads):
+        #loads2 = {}
+        #for key, data in iteritems(loads):
 
-            # flip the sign on the flipping axis terms
-            if((key in ['U', 'rhoU'] and ax2 == 0) or
-               (key in ['V', 'rhoV'] and ax2 == 1) or
-               (key in ['W', 'rhoW'] and ax2 == 2)):
-                data_upper = -data[iy0]
-            else:
-                data_upper = data[iy0]
-            loads2[key] = np.hstack([data, data_upper])
+            ## flip the sign on the flipping axis terms
+            #if((key in ['U', 'rhoU'] and ax2 == 0) or
+               #(key in ['V', 'rhoV'] and ax2 == 1) or
+               #(key in ['W', 'rhoW'] and ax2 == 2)):
+                #data_upper = -data[iy0]
+            #else:
+                #data_upper = data[iy0]
+            #loads2[key] = np.hstack([data, data_upper])
 
-        self.log.info('---finished make_mirror_model---')
-        return (nodes2, elements2, regions2, loads2)
+        #self.log.info('---finished make_mirror_model---')
+        #return (nodes2, elements2, regions2, loads2)
 
     def _get_ax(self, axis):
         """helper method to convert an axis_string into an integer"""

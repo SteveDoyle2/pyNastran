@@ -231,7 +231,7 @@ class TestShells(unittest.TestCase):
         t = rho = nsm = E = G = nu = 0.1
         mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
 
-        mass = A * (t * rho + nsm)
+        #mass = A * (t * rho + nsm)
         cards = [
             ['grid', n1, 0, 0., 0., 0.],
             ['grid', n2, 0, 2., 0., 0.],
@@ -772,11 +772,11 @@ class TestShells(unittest.TestCase):
         cquadr.flipNormal()
 
         mid = 42
-        pshell = model.add_pshell(pid, mid1=mid, t=0.2)
+        model.add_pshell(pid, mid1=mid, t=0.2)
         e11 = 1e7
         e22 = 1e6
         nu12 = 0.3
-        mat8 = model.add_mat8(mid, e11, e22, nu12)
+        model.add_mat8(mid, e11, e22, nu12)
         model.validate()
         model._verify_bdf(xref=False)
         model.cross_reference()
@@ -806,7 +806,7 @@ class TestShells(unittest.TestCase):
         E = 1e7
         G = None
         nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu)
+        model.add_mat1(mid, E, G, nu)
 
         cplstn3.raw_fields()
         cplstn4.raw_fields()

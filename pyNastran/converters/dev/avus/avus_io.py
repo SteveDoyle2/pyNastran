@@ -3,7 +3,6 @@ from six.moves import range
 
 from numpy import arange, mean, amax, amin, array
 
-import vtk
 from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid

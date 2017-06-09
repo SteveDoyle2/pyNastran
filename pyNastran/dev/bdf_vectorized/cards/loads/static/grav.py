@@ -1,12 +1,12 @@
 from six.moves import zip
 
 import numpy as np
-from numpy import zeros, unique
+from numpy import zeros
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.dev.bdf_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
 
@@ -39,25 +39,25 @@ class GRAV(VectorizedLoad):
     def __getitem__(self, i):
         #unique_lid = unique(self.load_id)
         if len(i):
-            f = GRAV(self.model)
-            f.load_id = self.load_id[i]
-            f.coord_id = self.coord_id[i]
-            f.scale = self.scale[i]
-            f.N = self.N[i]
-            f.mb = self.mb[i]
-            f.n = len(i)
-            return f
+            obj = GRAV(self.model)
+            obj.load_id = self.load_id[i]
+            obj.coord_id = self.coord_id[i]
+            obj.scale = self.scale[i]
+            obj.N = self.N[i]
+            obj.mb = self.mb[i]
+            obj.n = len(i)
+            return obj
         raise RuntimeError('len(i) = 0')
 
     def __mul__(self, value):
-        f = GRAV(self.model)
-        f.load_id = self.load_id
-        f.coord_id = self.coord_id
-        f.scale = self.scale * value
-        f.N = self.N
-        f.mb = self.mb
-        f.n = self.n
-        return f
+        obj = GRAV(self.model)
+        obj.load_id = self.load_id
+        obj.coord_id = self.coord_id
+        obj.scale = self.scale * value
+        obj.N = self.N
+        obj.mb = self.mb
+        obj.n = self.n
+        return obj
 
     def __rmul__(self, value):
         return self.__mul__(value)

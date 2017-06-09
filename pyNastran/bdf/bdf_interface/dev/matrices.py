@@ -79,7 +79,7 @@ def make_mass_matrix(model, reference_point):
         eids2 = eids[all_eids[ieids] == eids]
         return eids2
 
-    etypes_skipped = set([])
+    #etypes_skipped = set([])
     for etype, eids in iteritems(self._type_to_id_map):
         if etype in ['CROD', 'CONROD']:
             eids2 = get_sub_eids(all_eids, eids)
