@@ -209,7 +209,7 @@ def _get_mapper_0(model):
     """
     isinstance(model, BDF)
     # build the maps
-    eids_all = model.elements.keys() + model.masses.keys() + model.rigid_elements.keys()
+    eids_all = list(model.elements.keys()) + list(model.masses.keys()) + list(model.rigid_elements.keys())
     eid_map = {eid : eid for eid in eids_all}
     nid_map = {nid : nid for nid in model.point_ids}
     cid_map = {cid : cid for cid in model.coord_ids}
