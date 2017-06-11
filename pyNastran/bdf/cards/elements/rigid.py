@@ -56,8 +56,6 @@ class RROD(RigidElement):
             element id
         nids : List[int, int]
             node ids; connected grid points at ends A and B
-        #cna / cnb : str
-            #independent DOFs
         cma / cmb : str; default=None
             dependent DOF
             must be in [None, '1', '2', '3']

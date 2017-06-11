@@ -4415,6 +4415,30 @@ class GUST(BaseCard):
     }
 
     def __init__(self, sid, dload, wg, x0, V=None, comment=''):
+        """
+        Creates a GUST card, which defines a stationary vertical gust
+        for use in aeroelastic response analysis.
+
+        Parameters
+        ----------
+        sid : int
+            gust load id
+        dload : int
+            TLOADx or RLOADx entry that defines the time/frequency
+            dependence
+        wg : float
+            Scale factor (gust velocity/forward velocity) for gust
+            velocity
+        x0 : float
+            Streamwise location in the aerodynamic coordinate system of
+            the gust reference point.
+        V : float; default=None
+            float : velocity of the vehicle (must be the same as the
+                    velocity on the AERO card)
+            None : ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -6007,6 +6031,20 @@ class SPLINE3(Spline):
     """
     Defines a constraint equation for aeroelastic problems.
     Useful for control surface constraints.
+
+    +---------+------+-------+-------+------+----+----+-----+-------+
+    |    1    |  2   |   3   |   4   |  5   |  6 |  7 |  8  |   9   |
+    +=========+======+=======+=======+======+====+====+=====+=======+
+    | SPLINE3 | EID  | CAERO | BOXID | COMP | G1 | C1 | A1  | USAGE |
+    +---------+------+-------+-------+------+----+----+-----+-------+
+    |         |  G2  |  C2   |  A2   | ---- | G3 | C3 | A2  |  ---  |
+    +---------+------+-------+-------+------+----+----+-----+-------+
+    |         |  G4  |  C4   |  A4   | etc. |    |    |     |       |
+    +---------+------+-------+-------+------+----+----+-----+-------+
+    | SPLINE3 | 7000 |  107  |  109  |  6   | 5  | 3  | 1.0 | BOTH  |
+    +---------+------+-------+-------+------+----+----+-----+-------+
+    |         |  43  |   5   | -1.0  |      |    |    |     |       |
+    +---------+------+-------+-------+------+----+----+-----+-------+
     """
     type = 'SPLINE3'
     _field_map = {
@@ -6019,14 +6057,66 @@ class SPLINE3(Spline):
     def __init__(self, eid, caero, box_id, components,
                  nids, displacement_components, coeffs,
                  usage='BOTH', comment=''):
+        """
+        Creates a SPLINE3 card, which is useful for control surface
+        constraints.
+
+        Parameters
+        ----------
+        eid : int
+            spline id
+        caero : int
+            CAEROx id that defines the plane of the spline
+        box_id : int
+           Identification number of the aerodynamic box number.
+        components : int
+           The component of motion to be interpolated.
+           3, 5          (CAERO1)
+           2, 3, 5, 6    (CAERO2)
+           3             (CAERO3)
+           3, 5, 6       (CAERO4)
+           3, 5, 6       (CAERO5)
+           1, 2, 3, 5, 6 (3D Geometry)
+           2-lateral displacement
+           3-transverse displacement
+           5-pitch angle
+           6-relative control angle for CAERO4/5; yaw angle for CAERO2
+
+        nids :  : List[int]
+           Grid point identification number of the independent grid point.
+        displacement_components :  : List[int]
+           Component numbers in the displacement coordinate system.
+           1-6 (GRIDs)
+           0 (SPOINTs)
+        coeffs :  : List[float]
+           Coefficient of the constraint relationship.
+        usage : str; default=BOTH
+            Spline usage flag to determine whether this spline applies
+            to the force transformation, displacement transformation, or
+            both
+            valid_usage = {FORCE, DISP, BOTH}
+        comment : str; default=''
+            a comment for the card
+        """
         Spline.__init__(self)
         if comment:
             self.comment = comment
+
+        if isinstance(nids, integer_types):
+            nids = [nids]
+        if isinstance(displacement_components, integer_types):
+            displacement_components = [displacement_components]
+        if isinstance(coeffs, float):
+            coeffs = [coeffs]
+
         self.eid = eid
         self.caero = caero
         self.box_id = box_id
+        #if isinstance(components, integer_types):
+            #components = str(components)
         self.components = components
         self.usage = usage
+
         self.nids = nids
         self.displacement_components = displacement_components
         self.coeffs = coeffs
@@ -6035,7 +6125,7 @@ class SPLINE3(Spline):
         is_failed = False
         msg = ''
         if self.components not in [0, 1, 2, 3, 4, 5, 6]:
-            msg += 'components=%s must be [0, 1, 2, 3, 4, 5, 6]\n' % (
+            msg += 'components=%r must be [0, 1, 2, 3, 4, 5, 6]\n' % (
                 self.components)
             is_failed = True
 
@@ -6108,39 +6198,27 @@ class SPLINE3(Spline):
             return self.caero
         return self.caero_ref.eid
 
-    def Set(self):
-        if isinstance(self.setg, integer_types):
-            return self.setg
-        return self.setg_ref.sid
-
     def cross_reference(self, model):
         msg = ' which is required by SPLINE3 eid=%s' % self.eid
         self.caero = model.CAero(self.CAero(), msg=msg)
         self.caero_ref = self.caero
-        self.setg = model.Set(self.Set(), msg=msg)
-        self.setg.cross_reference(model, 'Node')
-        self.setg_ref = self.setg
-
-        nnodes = len(self.setg_ref.ids)
-        if nnodes < 3:
-            msg = 'SPLINE3 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
-            msg += str(self)
-            msg += str(self.setg_ref)
-            raise RuntimeError(msg)
 
     def uncross_reference(self):
         self.caero = self.CAero()
-        self.setg = self.Set()
-        del self.caero_ref, self.setg_ref
+        del self.caero_ref
 
     def raw_fields(self):
         list_fields = [
-            'SPLINE3', self.eid, self.caero, self.box_id,
+            'SPLINE3', self.eid, self.CAero(), self.box_id,
             self.nids[0], self.displacement_components[0], self.coeffs[0], self.usage]
         for nid, disp_c, coeff in zip(self.nids[1:], self.displacement_components[1:],
                                       self.coeffs[1:]):
             list_fields += [nid, disp_c, coeff, None]
         return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 
 class SPLINE4(Spline):
@@ -6275,7 +6353,7 @@ class SPLINE4(Spline):
         self.caero = self.CAero()
         self.setg = self.Set()
         self.aelist = self.AEList()
-        del  self.caero_ref, self.setg_ref, self.aelist_ref
+        del self.caero_ref, self.setg_ref, self.aelist_ref
 
     def raw_fields(self):
         """

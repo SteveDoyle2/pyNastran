@@ -74,7 +74,7 @@ def extract_bodies(bdf_filename, mpc_id=0):
         if debug:  # pragma: no cover
             print(print_card_16(elem.repr_fields()))
         eid += rigid_offset
-        assert eid not in model.rigid_elements, 'eid=%s cannot be used twice' % eid
+        assert eid not in model.elements, 'eid=%s cannot be used twice' % eid
         #node_ids = elem.node_ids
         node_ids = elem.independent_nodes + elem.dependent_nodes
         eid_to_nid_map[eid] = node_ids
@@ -157,20 +157,20 @@ def extract_bodies(bdf_filename, mpc_id=0):
             #except KeyError:
                 #break
             #continue
-            msg = 'cannot find a new body...nbodies=%s\nElements:' % ibody
-            for nid, eids in sorted(iteritems(nid_to_eid_map)):
-                msg += '  nid=%r eids=%s\n' % (nid, eids)
-                for eid in eids:
-                    try:
-                        elem = model.elements[eid]
-                    except KeyError:
-                        elem = model.rigid_elements[eid - rigid_offset]
-                    msg += print_card_16(elem.repr_fields())
+            #msg = 'cannot find a new body...nbodies=%s\nelements:' % ibody
+            #for nid, eids in sorted(iteritems(nid_to_eid_map)):
+                #msg += '  nid=%r eids=%s\n' % (nid, eids)
+                #for eid in eids:
+                    #try:
+                        #elem = model.elements[eid]
+                    #except KeyError:
+                        #elem = model.rigid_elements[eid - rigid_offset]
+                    #msg += print_card_16(elem.repr_fields())
 
-                    msg += 'eid=%s used=%s\n\n' % (eid, eid in eids_used)
-                msg += '----------------\n'
-            msg += ''
-            raise RuntimeError(msg + model.get_bdf_stats())
+                    #msg += 'eid=%s used=%s\n\n' % (eid, eid in eids_used)
+                #msg += '----------------\n'
+            #msg += ''
+            #raise RuntimeError(msg + model.get_bdf_stats())
         ibody += 1
         if ibody > nbodies_max:
             raise RuntimeError('Too many bodies...\n' + model.get_bdf_stats())
@@ -193,7 +193,7 @@ def extract_bodies(bdf_filename, mpc_id=0):
     #print('body_eids = %s' % body_eids2)
     nbodies = len(body_eids2)
     if nbodies > 1:
-        print('nbodies = %s' % nbodies)
+        print('nbodies = %i' % nbodies)
     return body_eids2
 
 

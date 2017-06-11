@@ -3401,6 +3401,47 @@ class AddCards(AddMethods):
     def add_spline3(self, eid, caero, box_id, components, nids,
                     displacement_components,
                     coeffs, usage='BOTH', comment=''):
+        """
+        Creates a SPLINE3 card, which is useful for control surface
+        constraints.
+
+        Parameters
+        ----------
+        eid : int
+            spline id
+        caero : int
+            CAEROx id that defines the plane of the spline
+        box_id : int
+           Identification number of the aerodynamic box number.
+        components : int
+           The component of motion to be interpolated.
+           3, 5          (CAERO1)
+           2, 3, 5, 6    (CAERO2)
+           3             (CAERO3)
+           3, 5, 6       (CAERO4)
+           3, 5, 6       (CAERO5)
+           1, 2, 3, 5, 6 (3D Geometry)
+           2-lateral displacement
+           3-transverse displacement
+           5-pitch angle
+           6-relative control angle for CAERO4/5; yaw angle for CAERO2
+
+        nids :  : List[int]
+           Grid point identification number of the independent grid point.
+        displacement_components :  : List[int]
+           Component numbers in the displacement coordinate system.
+           1-6 (GRIDs)
+           0 (SPOINTs)
+        coeffs :  : List[float]
+           Coefficient of the constraint relationship.
+        usage : str; default=BOTH
+            Spline usage flag to determine whether this spline applies
+            to the force transformation, displacement transformation, or
+            both
+            valid_usage = {FORCE, DISP, BOTH}
+        comment : str; default=''
+            a comment for the card
+        """
         spline = SPLINE3(eid, caero, box_id, components, nids,
                          displacement_components,
                          coeffs, usage=usage,
@@ -3485,6 +3526,30 @@ class AddCards(AddMethods):
         return mkaero
 
     def add_gust(self, sid, dload, wg, x0, V=None, comment=''):
+        """
+        Creates a GUST card, which defines a stationary vertical gust
+        for use in aeroelastic response analysis.
+
+        Parameters
+        ----------
+        sid : int
+            gust load id
+        dload : int
+            TLOADx or RLOADx entry that defines the time/frequency
+            dependence
+        wg : float
+            Scale factor (gust velocity/forward velocity) for gust
+            velocity
+        x0 : float
+            Streamwise location in the aerodynamic coordinate system of
+            the gust reference point.
+        V : float; default=None
+            float : velocity of the vehicle (must be the same as the
+                    velocity on the AERO card)
+            None : ???
+        comment : str; default=''
+            a comment for the card
+        """
         gust = GUST(sid, dload, wg, x0, V=V, comment=comment)
         self._add_gust_object(gust)
         return gust
@@ -3598,6 +3663,22 @@ class AddCards(AddMethods):
         return method
 
     def add_set1(self, sid, ids, is_skin=False, comment=''):
+        """
+        Creates a SET1 card, which defines a list of structural grid
+        points or element identification numbers.
+
+        Parameters
+        ----------
+        sid : int
+            set id
+        ids : List[int, str]
+            AECOMP, SPLINEx, PANEL : all grid points must exist
+            XYOUTPUT : missing grid points are ignored
+            The only valid string is THRU
+            ``ids = [1, 3, 5, THRU, 10]``
+        is_skin : bool; default=False
+            if is_skin is used; ids must be empty
+        """
         set_obj = SET1(sid, ids, is_skin=is_skin, comment=comment)
         self._add_set_object(set_obj)
         return set_obj
@@ -4204,8 +4285,6 @@ class AddCards(AddMethods):
             element id
         nids : List[int, int]
             node ids; connected grid points at ends A and B
-        #cna / cnb : str
-            #independent DOFs
         cma / cmb : str; default=''
             dependent DOFs
         alpha : float; default=0.0

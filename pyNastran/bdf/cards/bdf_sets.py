@@ -655,6 +655,22 @@ class SET1(Set):
     type = 'SET1'
 
     def __init__(self, sid, ids, is_skin=False, comment=''):
+        """
+        Creates a SET1 card, which defines a list of structural grid
+        points or element identification numbers.
+
+        Parameters
+        ----------
+        sid : int
+            set id
+        ids : List[int, str]
+            AECOMP, SPLINEx, PANEL : all grid points must exist
+            XYOUTPUT : missing grid points are ignored
+            The only valid string is THRU
+            ``ids = [1, 3, 5, THRU, 10]``
+        is_skin : bool; default=False
+            if is_skin is used; ids must be empty
+        """
         Set.__init__(self)
         if comment:
             self.comment = comment

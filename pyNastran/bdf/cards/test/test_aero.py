@@ -11,6 +11,7 @@ import numpy as np
 import pyNastran
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID, read_bdf
+from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero import (
     FLFACT, AEFACT, AEPARM, AERO, AEROS, AESTAT,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -21,6 +22,7 @@ from pyNastran.bdf.cards.aero import (
 )
 
 ROOTPATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
 #test_path = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
 
 COMMENT_BAD = 'this is a bad comment'
@@ -512,11 +514,13 @@ class TestAero(unittest.TestCase):
 
     def test_spline2(self):
         """checks the SPLINE2 card"""
+        #+---------+------+-------+-------+-------+------+----+------+-----+
         #| SPLINE2 | EID  | CAERO |  ID1  |  ID2  | SETG | DZ | DTOR | CID |
         #|         | DTHX | DTHY  | None  | USAGE |      |    |      |     |
         #+---------+------+-------+-------+-------+------+----+------+-----+
         #| SPLINE2 |   5  |   8   |  12   | 24    | 60   | 0. | 1.0  |  3  |
         #|         |  1.  |       |       |       |      |    |      |     |
+        #+---------+------+-------+-------+-------+------+----+------+-----+
 
         cid = 3
         origin = [0., 0., 0.]
@@ -582,7 +586,6 @@ class TestAero(unittest.TestCase):
         #model.cross_reference()
         #model.uncross_reference()
         #model.safe_cross_reference()
-
 
     def test_caero2_1(self):
         """checks the CAERO2/PAERO2/AERO/AEFACT card"""
@@ -980,7 +983,42 @@ class TestAero(unittest.TestCase):
 
    # def test_spline1_1(self):
    # def test_spline2_1(self):
-   # def test_spline3_1(self):
+    def test_spline3(self):
+        """checks the SPLINE3 card"""
+        model = BDF()
+        eid = 1
+        pid = 10
+        igid = 1
+        p1 = [0., 0., 0.]
+        x12 = x43 = 3.
+        p4 = [1., 11., 1.]
+        caero = eid
+        box_id = 42
+        components = 3
+        nids = 5
+        displacement_components = [3]
+        coeffs = [1.0]
+        model.add_caero1(eid, pid, igid, p1, x12, p4, x43,
+                         cp=0,
+                         nspan=5, lspan=0,
+                         nchord=5, lchord=0, comment='')
+        model.add_paero1(pid, Bi=None, comment='')
+        #model.add_spline1(eid, caero, box1, box2, setg, dz=0., method='IPS',
+                         #usage='BOTH', nelements=10,
+                         #melements=10, comment='')
+        spline3 = model.add_spline3(
+            eid, caero, box_id, components, nids,
+            displacement_components, coeffs, usage='BOTH', comment='spline3')
+
+        spline3.validate()
+        spline3.write_card()
+        spline3.raw_fields()
+
+        spline3.cross_reference(model)
+        spline3.write_card()
+        spline3.raw_fields()
+
+
    # def test_spline4_1(self):
    # def test_spline5_1(self):
 
@@ -1483,6 +1521,20 @@ class TestAero(unittest.TestCase):
         model.write_bdf(bdf_filename, close=False)
         bdf_filename.seek(0)
         model2 = read_bdf(bdf_filename, punch=True, debug=False)
+
+    def test_bah_plane_bdf(self):
+        """tests the bah_plane"""
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
+        folder = ''
+        run_bdf(folder, bdf_filename, debug=False, xref=True, check=True,
+               punch=False, cid=None, mesh_form='combined',
+               is_folder=False, print_stats=False,
+               encoding=None, sum_load=True, size=8,
+               is_double=False, stop=False, nastran='',
+               post=-1, dynamic_vars=None, quiet=True,
+               dumplines=False, dictsort=False,
+               run_extract_bodies=True, nerrors=0, dev=True,
+               crash_cards=None, pickle_obj=True)
 
 
 if __name__ == '__main__':  # pragma: no cover
