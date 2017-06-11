@@ -632,7 +632,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         #del self.case_control_deck
         #self.uncross_reference()
         #import types
-        with open(obj_filename, "r") as obj_file:
+        with open(obj_filename, 'rb') as obj_file:
             obj = load(obj_file)
 
         keys_to_skip = [
