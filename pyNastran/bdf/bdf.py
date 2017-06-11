@@ -617,7 +617,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
         if unxref:
             self.uncross_reference()
-        with open(obj_filename, 'w') as obj_file:
+        with open(obj_filename, 'wb') as obj_file:
             dump(self, obj_file)
 
     def load(self, obj_filename='model.obj'):

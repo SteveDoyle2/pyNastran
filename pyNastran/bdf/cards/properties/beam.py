@@ -1342,18 +1342,18 @@ class PBMSECT(LineProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        pid = data[0]
-        mid = data[1]
-        group = data[2].strip()
-        Type = data[3].strip()
-        dim = list(data[4:-1])
-        nsm = data[-1]
-        #print("group = %r" % self.group)
-        #print("Type  = %r" % self.Type)
-        #print("dim = ",self.dim)
+        #pid = data[0]
+        #mid = data[1]
+        #group = data[2].strip()
+        #Type = data[3].strip()
+        #dim = list(data[4:-1])
+        #nsm = data[-1]
+        #print("group = %r" % group)
+        #print("Type  = %r" % Type)
+        #print("dim = ",dim)
         #print(str(self))
         #print("*PBARL = ",data)
-        raise NotImplementedError('not finished...')
+        raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
         #return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
 
     def _validate_input(self):
