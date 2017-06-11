@@ -181,7 +181,7 @@ class CDAMP1(LineDamper):
             the BDF object
         """
         msg = ' which is required by CDAMP1 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
 
         pid = self.pid
@@ -328,7 +328,7 @@ class CDAMP2(LineDamper):
             the BDF object
         """
         msg = ' which is required by CDAMP2 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
 
     def uncross_reference(self):
@@ -455,7 +455,7 @@ class CDAMP3(LineDamper):
             the BDF object
         """
         msg = ', which is required by CDAMP3 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
@@ -574,7 +574,7 @@ class CDAMP4(LineDamper):
             the BDF object
         """
         msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
 
     def raw_fields(self):
@@ -688,7 +688,7 @@ class CDAMP5(LineDamper):
             the BDF object
         """
         msg = ', which is required by CDAMP5 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid

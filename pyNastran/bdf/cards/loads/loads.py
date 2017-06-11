@@ -550,7 +550,7 @@ class DAREA(BaseCard):
             the BDF object
         """
         msg = ', which is required by DAREA=%s' % (self.sid)
-        self.nodes_ref = model.Nodes(self.node_ids, allow_empty_nodes=False, msg=msg)
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -679,12 +679,12 @@ class SPCD(Load):
             the BDF object
         """
         msg = ', which is required by SPCD=%s' % (self.sid)
-        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids = model.EmptyNodes(self.gids, msg=msg)
         self.gids_ref = self.gids
 
     def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by SPCD=%s' % (self.sid)
-        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids = model.EmptyNodes(self.gids, msg=msg)
         self.gids_ref = self.gids
 
     def uncross_reference(self):

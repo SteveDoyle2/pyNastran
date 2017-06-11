@@ -732,28 +732,16 @@ class WriteMesh(BDFAttributes):
         """
         Writes the NODE-type cards
         """
-        if self.new_spoints:
-            if self.spoints:
-                msg = []
-                msg.append('$SPOINTS\n')
-                msg.append(write_xpoints('SPOINT', self.spoints.keys()))
-                bdf_file.write(''.join(msg))
-            if self.epoints:
-                msg = []
-                msg.append('$EPOINTS\n')
-                msg.append(write_xpoints('EPOINT', self.epoints.keys()))
-                bdf_file.write(''.join(msg))
-        else:
-            if self.spoints:
-                msg = []
-                msg.append('$SPOINTS\n')
-                msg.append(self.spoints.write_card(size, is_double))
-                bdf_file.write(''.join(msg))
-            if self.epoints:
-                msg = []
-                msg.append('$EPOINTS\n')
-                msg.append(self.epoints.write_card(size, is_double))
-                bdf_file.write(''.join(msg))
+        if self.spoints:
+            msg = []
+            msg.append('$SPOINTS\n')
+            msg.append(write_xpoints('SPOINT', self.spoints.keys()))
+            bdf_file.write(''.join(msg))
+        if self.epoints:
+            msg = []
+            msg.append('$EPOINTS\n')
+            msg.append(write_xpoints('EPOINT', self.epoints.keys()))
+            bdf_file.write(''.join(msg))
         if self.points:
             msg = []
             msg.append('$POINTS\n')

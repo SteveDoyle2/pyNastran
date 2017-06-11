@@ -1600,15 +1600,10 @@ class GetCard(GetMethods):
         for nid in self.nodes:  # initalize the mapper
             nid_to_elements_map[nid] = []
 
-        if self.new_spoints:
-            for nid in self.spoints:
-                nid_to_elements_map[nid] = []
-            for nid in self.epoints:
-                nid_to_elements_map[nid] = []
-        else:
-            if self.spoints:  # SPOINTs
-                for nid in sorted(self.spoints.spoints):
-                    nid_to_elements_map[nid] = []
+        for nid in self.spoints:
+            nid_to_elements_map[nid] = []
+        for nid in self.epoints:
+            nid_to_elements_map[nid] = []
 
         for (eid, element) in iteritems(self.elements):  # load the mapper
             try:

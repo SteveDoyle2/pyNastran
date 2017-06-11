@@ -96,7 +96,7 @@ for icon_file in icon_files:
         icon_files2.append(os.path.join(icon_path, icon_file))
 
 exclude_words = [
-    'pyNastran.bdf.dev_vectorized', 'pyNastran.bdf.dev_vectorized.cards',
+    'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
     'pyNastran.f06.dev',
     'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
     'pyNastran.converters.dev', 'pyNastran.xdb',]
@@ -155,8 +155,8 @@ setup(
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 
-            'pyNastranv = pyNastran.bdf.dev_vectorized.solver.solver:main',
-            'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
+            'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
+            'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
         ]# + py2_gui_scripts
     },

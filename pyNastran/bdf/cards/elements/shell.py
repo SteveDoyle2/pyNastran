@@ -113,6 +113,11 @@ class ShellElement(Element):
     def Area(self):
         raise NotImplementedError('Area undefined for %s' % self.type)
 
+    def Theta_mcid(self):
+        if hasattr(self, 'theta_mcid_ref'):
+            return self.theta_mcid_ref.cid
+        return self.theta_mcid
+
     def Thickness(self):
         """
         Returns the thickness
@@ -586,7 +591,7 @@ class CTRIA3(TriShell):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
+        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -612,7 +617,7 @@ class CTRIA3(TriShell):
     def write_card(self, size=8, is_double=False):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
+        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -766,13 +771,13 @@ class CPLSTN3(TriShell):
         return self._nodeIDs(allow_empty_nodes=False)
 
     def raw_fields(self):
-        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
+        list_fields = (['CPLSTN3', self.eid, self.Pid()] + self.node_ids +
                        [self.theta])
         return list_fields
 
     def repr_fields(self):
         theta = set_blank_if_default(self.theta, 0.0)
-        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
+        list_fields = (['CPLSTN3', self.eid, self.Pid()] + self.node_ids +
                        [theta])
         return list_fields
 
@@ -923,7 +928,7 @@ class CTRIA6(TriShell):
             the BDF object
         """
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
@@ -1026,7 +1031,7 @@ class CTRIA6(TriShell):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         assert isinstance(self.tflag, integer_types), self.tflag
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
+        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1196,7 +1201,7 @@ class CTRIAR(TriShell):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
+        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1392,7 +1397,7 @@ class QuadShell(ShellElement):
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
+        theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
@@ -1554,7 +1559,7 @@ class CSHEAR(QuadShell):
             the BDF object
         """
         msg = ' which is required by CSHEAR eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
@@ -2172,7 +2177,7 @@ class CQUAD4(QuadShell):
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=False)
 
-    def writeAs_ctria3(self, newID):
+    def write_as_ctria3(self, new_eid):
         """
         triangle - 012
         triangle - 023
@@ -2182,7 +2187,7 @@ class CQUAD4(QuadShell):
         nodes2 = [self.nodes[0], self.nodes[2], self.nodes[3]]
         fields1 = ['CTRIA3', self.eid, self.Pid()] + nodes1 + [
             self.theta_mcid, zoffset]
-        fields2 = ['CTRIA3', newID, self.Pid()] + nodes2 + [
+        fields2 = ['CTRIA3', new_eid, self.Pid()] + nodes2 + [
             self.theta_mcid, zoffset]
         return self.print_card(fields1) + self.print_card(fields2)
 
@@ -2208,7 +2213,7 @@ class CQUAD4(QuadShell):
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
             return self.comment + msg
         else:
-            theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
+            theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
             zoffset = set_blank_if_default(self.zoffset, 0.0)
             tflag = set_blank_if_default(self.tflag, 0)
             T1 = set_blank_if_default(self.T1, 1.0)
@@ -2224,15 +2229,6 @@ class CQUAD4(QuadShell):
                    '                %8s%8s%8s%8s%8s\n' % tuple(data))
             return self.comment + msg.rstrip() + '\n'
 
-    #def write_card(self, size=8, is_double=False):
-        #card = wipe_empty_fields(self.repr_fields())
-        #if size == 8 or len(card) == 7: # to last node
-            #msg = self.comment + print_card_8(card)
-        #else:
-            #msg = self.comment + print_card_16(card)
-        #msg2 = self.write_card(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
-        #return msg
 
 class CPLSTN4(QuadShell):
     """
@@ -2445,7 +2441,7 @@ class CPLSTN6(TriShell):
             the BDF object
         """
         msg = ' which is required by CPLSTN6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
@@ -2644,7 +2640,7 @@ class CPLSTN8(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
@@ -2899,7 +2895,7 @@ class CQUADR(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUADR eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
@@ -3164,19 +3160,17 @@ class CPLSTS3(TriShell):
 
     def repr_fields(self):
         (theta, tflag, T1, T2, T3) = self._get_repr_defaults()
-        list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
+        list_fields = (['CPLSTS3', self.eid, self.Pid()] + self.node_ids +
                        [theta, None, None] + [None, tflag, T1, T2, T3])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        #theta = set_blank_if_default(self.theta, 0.0)
         (theta, tflag, T1, T2, T3) = self._get_repr_defaults()
 
         T1 = set_blank_if_default(self.T1, 1.0)
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
 
-        #return self.write_card(size, double)
         nodes = self.node_ids
         row2_data = [theta, '', tflag, T1, T2, T3]
         row2 = [print_field_8(field) for field in row2_data]
@@ -3269,7 +3263,7 @@ class CQUAD(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUAD eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
@@ -3328,23 +3322,11 @@ class CQUAD(QuadShell):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
         theta_mcid = self.theta_mcid
-        #if theta_mcid == 0.:
-            #stheta = ''
-        #elif isinstance(theta_mcid, integer_types):
-            #stheta = '%s' % theta_mcid
-        #else:
-            #stheta = '%s' % theta_mcid
+
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2 + [theta_mcid]
         msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
                '        %8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
-
-    #def write_card(self, size=8, is_double=False):
-        #card = self.repr_fields()
-        #msg = self.comment + print_card_8(card)
-        #msg2 = self.write_card(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
-        #return msg
 
 
 class CQUAD8(QuadShell):
@@ -3493,7 +3475,7 @@ class CQUAD8(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid

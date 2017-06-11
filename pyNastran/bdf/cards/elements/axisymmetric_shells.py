@@ -176,7 +176,7 @@ class CTRAX3(AxisymmetricTri):
             the BDF object
         """
         msg = ' which is required by CTRIAX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
@@ -318,7 +318,7 @@ class CTRAX6(AxisymmetricTri):
             the BDF object
         """
         msg = ' which is required by CTRAX6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
@@ -465,7 +465,7 @@ class CTRIAX(TriShell):
             the BDF object
         """
         msg = ' which is required by CTRIAX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
         self.pid_ref = self.pid
@@ -577,7 +577,7 @@ class CTRIAX6(TriShell):
             the BDF object
         """
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.mid = model.Material(self.mid)
         self.nodes_ref = self.nodes
         self.mid_ref = self.mid
@@ -777,7 +777,7 @@ class CQUADX(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUADX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
@@ -901,7 +901,7 @@ class CQUADX4(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUADX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
@@ -1018,7 +1018,7 @@ class CQUADX8(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUADX8 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid

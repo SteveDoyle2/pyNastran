@@ -404,12 +404,12 @@ class CHBDYG(ThermalElement):
             the BDF object
         """
         msg = ' which is required by CHBDYG eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CHBDYG eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.nodes_ref = self.nodes
 
     def uncross_reference(self):
@@ -663,14 +663,14 @@ class CHBDYP(ThermalElement):
         """
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = self.pid
         self.nodes_ref = self.nodes
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = self.pid
         self.nodes_ref = self.nodes
 

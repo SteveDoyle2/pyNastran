@@ -141,7 +141,7 @@ class SUPORT1(Constraint):
             the BDF object
         """
         msg = ', which is required by SUPORT1'
-        self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
+        self.IDs = model.EmptyNodes(self.IDs, msg=msg)
         self.IDs_ref = self.IDs
 
     def safe_cross_reference(self, model, debug=True):
@@ -265,7 +265,7 @@ class SUPORT(Constraint):
             the BDF object
         """
         msg = ', which is required by SUPORT'
-        self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
+        self.IDs = model.EmptyNodes(self.IDs, msg=msg)
         self.IDs_ref = self.IDs
 
     def safe_cross_reference(self, model, debug=True):
@@ -427,7 +427,7 @@ class MPC(Constraint):
             the BDF object
         """
         msg = ', which is required by MPC=%s' % self.conid
-        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids = model.EmptyNodes(self.gids, msg=msg)
         self.gids_ref = self.gids
 
     def safe_cross_reference(self, model, debug=True):
@@ -622,7 +622,7 @@ class SPC(Constraint):
             the BDF object
         """
         msg = ', which is required by SPC=%s' % (self.conid)
-        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids = model.EmptyNodes(self.gids, msg=msg)
         self.gids_ref = self.gids
 
     def safe_cross_reference(self, model, debug=True):
@@ -886,7 +886,7 @@ class SPC1(Constraint):
             the BDF object
         """
         msg = ', which is required by SPC1; conid=%s' % self.conid
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
 
     def safe_cross_reference(self, model, debug=True):
@@ -1019,7 +1019,7 @@ class SPCOFF(Constraint):
             the BDF object
         """
         msg = ', which is required by SPCOFF=%s' % (self.conid)
-        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
+        self.gids = model.EmptyNodes(self.gids, msg=msg)
         self.gids_ref = self.gids
 
     def safe_cross_reference(self, model, debug=True):
@@ -1128,7 +1128,7 @@ class SPCOFF1(Constraint):
             the BDF object
         """
         msg = ', which is required by SPCOFF1; conid=%s' % (self.conid)
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
 
     def safe_cross_reference(self, model, debug=True):

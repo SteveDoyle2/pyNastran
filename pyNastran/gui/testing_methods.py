@@ -119,7 +119,7 @@ class GuiAttributes(object):
         self.itext = 0
 
         self.pick_state = 'node/centroid'
-        self.label_actors = {}
+        self.label_actors = {-1 : []}
         self.label_ids = {}
         self.cameras = {}
         self.label_scale = 1.0 # in percent
@@ -650,7 +650,7 @@ class FakeGUIMethods(GuiAttributes):
         level = 'debug' if self.debug else 'info'
         self.log = get_logger(log=None, level=level)
 
-    def _finish_results_io2(self, form, cases):
+    def _finish_results_io2(self, form, cases, reset_labels=True):
         """
         This is not quite the same as the main one.
         It's more or less just _set_results
@@ -726,6 +726,9 @@ class FakeGUIMethods(GuiAttributes):
             self.ncases = 0
 
     def cycle_results(self):
+        pass
+
+    def _create_annotation(self, label, icase, x, y, z):
         pass
 
     def  turn_text_on(self):
