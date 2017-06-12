@@ -46,7 +46,7 @@ from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
 from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND#, CBAROR
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
-from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
@@ -1463,6 +1463,15 @@ class AddCards(AddMethods):
 
     def add_pbrsect(self, pid, mid, form, options, comment=''):
         prop = PBRSECT(pid, mid, form, options, comment=comment)
+        self._add_property_object(prop)
+        return prop
+
+    def add_pbeam3(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
+                   cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., 
+                   comment=''):
+        prop = PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=0.,
+                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz, 
+                      comment=comment)
         self._add_property_object(prop)
         return prop
 
@@ -4302,7 +4311,7 @@ class AddCards(AddMethods):
             set id referenced by case control FREQUENCY
         f1 : float
             first frequency
-        f1 : float
+        f2 : float
             last frequency
         nf : int; default=1
             number of logorithmic intervals
@@ -4313,7 +4322,23 @@ class AddCards(AddMethods):
         self._add_freq_object(freq)
         return freq
 
-    def add_freq4(self, sid, f1, f2, fspread=0.1, nfm=3, comment=''):
+    def add_freq4(self, sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment=''):
+        """
+        Creates a FREQ4 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float; default=0.0
+            Lower bound of frequency range in cycles per unit time.
+        f2 : float; default=1E20
+            Upper bound of frequency range in cycles per unit time.
+        nfm : int; default=3
+            Number of evenly spaced frequencies per 'spread' mode.
+        comment : str; default=''
+            a comment for the card
+        """
         freq = FREQ4(sid, f1, f2, fspread, nfm, comment=comment)
         self._add_freq_object(freq)
         return freq

@@ -228,6 +228,8 @@ class GetMethods(BDFAttributes):
         return mat
 
     def Materials(self, mids, msg=''):
+        if isinstance(mids, integer_types):
+            mids = [mids]
         materials = []
         for mid in mids:
             materials.append(self.Material(mid, msg))

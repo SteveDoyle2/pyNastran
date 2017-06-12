@@ -5080,7 +5080,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         This is used when changing the model.
         """
         self._remove_labels()
-        
+
         reset_minus1 = True
         # new geometry
         if reset_minus1:

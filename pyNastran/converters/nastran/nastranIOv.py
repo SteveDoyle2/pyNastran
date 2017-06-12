@@ -661,7 +661,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def make_caeros(self, model):
         """
         Creates the CAERO panel inputs
-        
+
         Returns
         -------
         caero_points : ???
@@ -757,7 +757,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             for aid, aesurf in iteritems(model.aesurf):
                 aelist = aesurf.alid1
                 ncaeros_cs += len(aelist.elements)
-                
+
                 cs_name = '%s_control_surface' % aesurf.label
                 if cs_name not in self.alt_grids:
                     self.create_alternate_vtk_grid(
@@ -3626,7 +3626,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eid_map=self.eid_map, node_ids=self.node_ids,
                 normals=self.normals)
             is_loads, is_temperatures, temperature_data, load_data = out
-    
+
             if is_loads:
                 centroidal_pressures, forces, spcd = load_data
                 if np.abs(centroidal_pressures).max():
@@ -3635,7 +3635,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     cases[icase] = (pressure_res, (0, 'Pressure'))
                     form0.append(('Pressure', icase, []))
                     icase += 1
-    
+
                 if np.abs(forces.max() - forces.min()) > 0.0:
                     fxyz = forces[:, :3]
                     mxyz = forces[:, 3:]
@@ -3647,41 +3647,41 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         assert fxyz.shape[1] == 3, fxyz.shape
                         assert fxyz.shape[0] == len(fscalar)
                         scales = [1.0]
-    
+
                         force_xyz_res = ForceTableResults(
                             subcase_id, titles, headers, fxyz, fscalar,
                             scales, data_formats=None,
                             nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                             set_max_min=False, uname='NastranGeometry')
                         force_xyz_res.save_defaults()
-    
+
                         cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
                         form0.append(('Force XYZ', icase, []))
                         icase += 1
-    
+
                     if mscalar.max() > 0:
                         titles = ['Moment XYZ']
                         headers = titles
                         assert mxyz.shape[1] == 3, mxyz.shape
                         assert mxyz.shape[0] == len(mscalar)
                         scales = [1.0]
-    
+
                         moment_xyz_res = ForceTableResults(
                             subcase_id, titles, headers, mxyz, mscalar,
                             scales, data_formats=None,
                             nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                             set_max_min=False, uname='NastranGeometry')
                         moment_xyz_res.save_defaults()
-    
+
                         cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
                         form0.append(('Moment XYZ', icase, []))
                         icase += 1
-    
+
                 if np.abs(spcd.max() - spcd.min()) > 0.0:
                     t123 = spcd[:, :3]
                     tnorm = norm(t123, axis=1)
                     assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
-    
+
                     spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
                                            location='node', scalar=forces[:, 0])
                     spcd_y_res = GuiResult(subcase_id, header='SPCDy', title='SPCDy',
@@ -3690,23 +3690,23 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                            location='node', scalar=forces[:, 2])
                     spcd_xyz_res = GuiResult(subcase_id, header='SPCD XYZ', title='SPCD XYZ',
                                              location='node', scalar=tnorm)
-    
+
                     cases[icase] = (spcd_x_res, (0, 'SPCDx'))
                     form0.append(('SPCDx', icase, []))
                     icase += 1
-    
+
                     cases[icase] = (spcd_y_res, (0, 'SPCDy'))
                     form0.append(('SPCDy', icase, []))
                     icase += 1
-    
+
                     cases[icase] = (spcd_z_res, (0, 'SPCDz'))
                     form0.append(('SPCDz', icase, []))
                     icase += 1
-    
+
                     cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
                     form0.append(('SPCD XYZ', icase, []))
                     icase += 1
-    
+
             if is_temperatures:
                 temperature_key, temperatures = temperature_data
                 temperature_res = GuiResult(subcase_id, header=temperature_key, title=temperature_key,

@@ -359,6 +359,8 @@ class FREQ(BaseCard):
         if comment:
             self.comment = comment
         self.sid = sid
+        if isinstance(freqs, float):
+            freqs = [freqs]
         self.freqs = np.unique(freqs)
 
     @classmethod
@@ -455,7 +457,7 @@ class FREQ1(FREQ):
         self.ndf = ndf
 
         freqs = []
-        for i in range(ndf):
+        for i in range(ndf + 1):
             freqs.append(f1 + i * df)
         self.freqs = unique(freqs)
 
@@ -511,7 +513,7 @@ class FREQ2(FREQ):
             set id referenced by case control FREQUENCY
         f1 : float
             first frequency
-        f1 : float
+        f2 : float
             last frequency
         nf : int; default=1
             number of logorithmic intervals
@@ -526,8 +528,8 @@ class FREQ2(FREQ):
         self.nf = nf
 
         d = 1. / nf * log(f2 / f1)
-        freqs = []
-        for i in range(nf):
+        freqs = [f1]
+        for i in range(1, nf + 1):
             freqs.append(f1 * exp(i * d))  # 0 based index
         self.freqs = np.unique(freqs)
 
@@ -585,7 +587,23 @@ class FREQ4(FREQ):
     """
     type = 'FREQ4'
 
-    def __init__(self, sid, f1, f2, fspread=0.1, nfm=3, comment=''):
+    def __init__(self, sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment=''):
+        """
+        Creates a FREQ4 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float; default=0.0
+            Lower bound of frequency range in cycles per unit time.
+        f2 : float; default=1E20
+            Upper bound of frequency range in cycles per unit time.
+        nfm : int; default=3
+            Number of evenly spaced frequencies per 'spread' mode.
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -612,7 +630,7 @@ class FREQ4(FREQ):
         fspread = double_or_blank(card, 4, 'fspd', 0.1)
         nfm = integer_or_blank(card, 5, 'nfm', 3)
         assert len(card) <= 6, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
-        return FREQ4(sid, f1, f2, fspread, nfm, comment=comment)
+        return FREQ4(sid, f1=f1, f2=f2, fspread=fspread, nfm=nfm, comment=comment)
 
     def raw_fields(self):
         list_fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspread,
@@ -1434,6 +1452,14 @@ class TSTEP(BaseCard):
         """
         if comment:
             self.comment = comment
+
+        if isinstance(N, integer_types):
+            N = [N]
+        if isinstance(DT, float):
+            DT = [DT]
+        if isinstance(NO, integer_types):
+            NO = [NO]
+
         self.sid = sid
         #: Number of time steps of value DTi. (Integer > 1)
         self.N = N

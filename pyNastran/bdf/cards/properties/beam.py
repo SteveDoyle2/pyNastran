@@ -1258,6 +1258,7 @@ class PBMSECT(LineProperty):
         self.mid = mid
         self.form = form
 
+        assert form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (pid, form)
 
         # integer
         self.outp = None
@@ -1271,6 +1272,7 @@ class PBMSECT(LineProperty):
 
         # int : floats
         self.ts = {}
+        assert 'OUTP' in options, 'options=%s' % str(options)
         for key, value in options.items():
             key = key.upper()
             if key == 'NSM':
@@ -1336,7 +1338,6 @@ class PBMSECT(LineProperty):
         pid = integer(bdf_card, 1, 'pid')
         mid = integer(bdf_card, 2, 'mid')
         form = string_or_blank(bdf_card, 3, 'form')
-        assert form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (pid, form)
 
         return PBMSECT(pid, mid, form, options, comment=comment)
 
@@ -1352,7 +1353,7 @@ class PBMSECT(LineProperty):
         #print("Type  = %r" % Type)
         #print("dim = ",dim)
         #print(str(self))
-        #print("*PBARL = ",data)
+        print("*PBMSECT = ", data)
         raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
         #return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
 

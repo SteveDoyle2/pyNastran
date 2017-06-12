@@ -1942,8 +1942,16 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
     def repr_fields(self):
         """.. todo:: not done"""
-        list_fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
+        list_fields = [
+            'PBEAM3', self.pid, self.Mid(), self.A, self.iz, self.iy, self.iyz, self.j, self.nsm,
+            self.cy, self.cz, self.dy, self.dz, self.ey, self.ez, self.fy, self.fz]
         return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class PBEND(LineProperty):

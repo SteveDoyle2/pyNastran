@@ -696,6 +696,54 @@ class TestBeams(unittest.TestCase):
             cg = array([0.5, 0., 0.], dtype='float32')
             print('cg =', op2_cg)
 
+    def test_pbmsect(self):
+        """tests a PBMSECT"""
+        model = BDF(debug=False)
+        pid = 10
+        mid = 11
+        form = 'GS'
+        options = {'OUTP' : 2}
+        #pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
+        pbrsect = model.add_pbmsect(pid, mid, form, options, comment='pbmsect')
+
+        pbrsect.validate()
+        pbrsect.raw_fields()
+        pbrsect.write_card()
+        pbrsect.write_card(size=16)
+
+    def test_pbeam3(self):
+        """tests a PBEAM3"""
+        model = BDF(debug=False)
+        pid = 10
+        mid = 11
+        A = 1.0
+        iz = 2.0
+        iy = 3.0
+        iyz = 0.4
+        j = 5.0
+        #form = 'GS'
+        #options = {'OUTP' : 2}
+        #pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
+        pbeam3 = model.add_pbeam3(pid, mid, A, iz, iy, iyz, j, nsm=0., 
+                                  cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., 
+                                  comment='pbeam3')
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+
+        pbeam3.validate()
+        #pbeam3.raw_fields()
+        pbeam3.write_card()
+        pbeam3.write_card(size=16)
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        pbeam3.write_card()
+        pbeam3.write_card(size=16)
+
+        model.uncross_reference()
+        pbeam3.write_card()
+        pbeam3.write_card(size=16)
+
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

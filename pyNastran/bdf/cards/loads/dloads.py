@@ -347,6 +347,40 @@ class RLOAD1(TabularLoad):
     type = 'RLOAD1'
 
     def __init__(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0, Type='LOAD', comment=''):
+        """
+        Creates a RLOAD1 card, which defienes a frequency-dependent load
+        based on TABLEDs.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        dphase : int/float; default=None
+            the dphase; if it's 0/blank there is no phase lag
+            float : delay in units of time
+            int : delay id
+        tc : int/float; default=0
+            TABLEDi id that defines C(f) for all degrees of freedom in
+            EXCITEID entry
+        td : int/float; default=0
+            TABLEDi id that defines D(f) for all degrees of freedom in
+            EXCITEID entry
+        Type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        comment : str; default=''
+            a comment for the card
+        """
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
@@ -499,6 +533,11 @@ class RLOAD1(TabularLoad):
 
     def get_load_at_freq(self, freq, scale=1.):
         # A = 1. # points to DAREA or SPCD
+        if isinstance(freq, float):
+            freq = np.array([freq])
+        else:
+            freq = np.asarray(freq)
+
         if isinstance(self.tc, float):
             c = float(self.tc)
         elif self.tc == 0:
@@ -573,7 +612,48 @@ class RLOAD2(TabularLoad):
     """
     type = 'RLOAD2'
 
+    # P(f) = {A} * B(f) * e^(i*phi(f), + theta - 2*pi*f*tau)
     def __init__(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0, Type='LOAD', comment=''):
+        """
+        Creates a RLOAD2 card, which defienes a frequency-dependent load
+        based on TABLEDs.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        dphase : int/float; default=None
+            the dphase; if it's 0/blank there is no phase lag
+            float : delay in units of time
+            int : delay id
+        tb : int/float; default=0
+            TABLEDi id that defines B(f) for all degrees of freedom in
+            EXCITEID entry
+        tc : int/float; default=0
+            TABLEDi id that defines C(f) for all degrees of freedom in
+            EXCITEID entry
+        td : int/float; default=0
+            TABLEDi id that defines D(f) for all degrees of freedom in
+            EXCITEID entry
+        tp : int/float; default=0
+            TABLEDi id that defines phi(f) for all degrees of freedom in
+            EXCITEID entry
+        Type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        comment : str; default=''
+            a comment for the card
+        """
         TabularLoad.__init__(self)
         if comment:
             self.comment = comment
@@ -724,7 +804,7 @@ class RLOAD2(TabularLoad):
             del self.tb_ref
         if self.tp > 0:
             del self.tp_ref
-        if self.delay > 0:
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             del self.delay_ref
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             del self.dphase_ref
@@ -821,7 +901,8 @@ class TLOAD1(TabularLoad):
     def __init__(self, sid, excite_id, tid, delay=0, Type='LOAD',
                  us0=0.0, vs0=0.0, comment=''):
         """
-        Creates a TLOAD1 card, which defienes a load based on a table
+        Creates a TLOAD1 card, which defienes a time-dependent load
+        based on a DTABLE.
 
         Parameters
         ----------
@@ -966,7 +1047,7 @@ class TLOAD1(TabularLoad):
         self.delay = self.delay_id
         if self.tid > 0:
             del self.tid_ref
-        if self.delay > 0:
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             del self.delay_ref
 
     def Tid(self):
@@ -1066,7 +1147,8 @@ class TLOAD2(TabularLoad):
     def __init__(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
                  frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment=''):
         """
-        Creates a TLOAD2 card, which defines a exponential time load
+        Creates a TLOAD2 card, which defines a exponential time dependent
+        load based on constants.
 
         Parameters
         ----------

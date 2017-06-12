@@ -119,5 +119,43 @@ class TestMaterials(unittest.TestCase):
             msg += 'expected =  %r' % expected
             self.assertEqual(actual, expected, msg)
 
+    def test_multiple_materials(self):
+        """tests multiple materials"""
+        model = BDF(debug=False)
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(1, E, G, nu)
+        e11 = e22 = 3.0e7
+        nu12 = 0.3
+        model.add_mat8(8, e11, e22, nu12)
+
+        model.add_mat4(4, 10.0)
+        model.add_mat5(5)
+
+        bulk = 0.3
+        rho = 0.2
+        c = None
+        model.add_mat10(10, bulk, rho, c)
+
+        structural_material_ids = model.get_structural_material_ids()
+        assert len(structural_material_ids) == 3, structural_material_ids
+
+        thermal_material_ids = model.get_thermal_material_ids()
+        assert len(thermal_material_ids) == 2, thermal_material_ids
+
+        mats = model.Materials(1)
+        assert len(mats) == 1, mats
+        mats = model.Materials([1, 4, 5])
+        assert len(mats) == 3, mats
+
+        with self.assertRaises(KeyError):
+            model.Material(-1)
+        with self.assertRaises(KeyError):
+            model.StructuralMaterial(-1)
+        with self.assertRaises(KeyError):
+            model.ThermalMaterial(-1)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

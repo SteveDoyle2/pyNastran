@@ -971,6 +971,9 @@ class CBEND(LineElement):
         self.pid = pid
         self.ga = nids[0]
         self.gb = nids[1]
+
+        if g0 is None:
+            assert x is not None, 'g0=%s x=%s; one must not be None' % (g0, x)
         self.g0 = g0
         self.x = x
         self.geom = geom
