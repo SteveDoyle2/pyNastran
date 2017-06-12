@@ -724,8 +724,8 @@ class TestBeams(unittest.TestCase):
         #form = 'GS'
         #options = {'OUTP' : 2}
         #pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
-        pbeam3 = model.add_pbeam3(pid, mid, A, iz, iy, iyz, j, nsm=0., 
-                                  cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., 
+        pbeam3 = model.add_pbeam3(pid, mid, A, iz, iy, iyz, j, nsm=0.,
+                                  cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
                                   comment='pbeam3')
         model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
 

@@ -70,7 +70,7 @@ class TestDynamic(unittest.TestCase):
         node2, c2, t2 = 101, 4, 0.4
         sid = 42
         card_lines = ['DELAY', sid, node1, c1, t1, node2, c2, t2]
-        model.add_card(card_lines, card_lines[0], comment='', is_list=True, 
+        model.add_card(card_lines, card_lines[0], comment='', is_list=True,
                        has_none=True)
         model.add_grid(100)
         model.add_grid(101)
@@ -85,7 +85,7 @@ class TestDynamic(unittest.TestCase):
         node2, c2, t2 = 101, 4, 0.4
         sid = 42
         card_lines = ['DPHASE', sid, node1, c1, t1, node2, c2, t2]
-        model.add_card(card_lines, card_lines[0], comment='', is_list=True, 
+        model.add_card(card_lines, card_lines[0], comment='', is_list=True,
                        has_none=True)
         model.add_grid(100)
         model.add_grid(101)
@@ -267,24 +267,24 @@ class TestDynamic(unittest.TestCase):
         excite_id = 20
         delay = 0
         tid = 42
-        rload1 = model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=0, 
+        rload1 = model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=0,
                                  td=0, Type='LOAD', comment='rload1')
-        rload1 = model.add_rload1(sid, excite_id, delay=1., dphase=0, tc=0, 
+        rload1 = model.add_rload1(sid, excite_id, delay=1., dphase=0, tc=0,
                                   td=0, Type='DISP', comment='rload1')
-        rload1 = model.add_rload1(sid, excite_id, delay=2, dphase=0, tc=0, 
+        rload1 = model.add_rload1(sid, excite_id, delay=2, dphase=0, tc=0,
                                   td=0, Type='VELO', comment='rload1')
-        rload1 = model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=0, 
+        rload1 = model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=0,
                                   td=0, Type='ACC', comment='rload1')
 
         sid = 3
         excite_id = 30
-        rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0, 
+        rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0,
                                  tp=0, Type='LOAD', comment='rload2')
-        rload2 = model.add_rload2(sid, excite_id, delay=1., dphase=0, tb=0, 
+        rload2 = model.add_rload2(sid, excite_id, delay=1., dphase=0, tb=0,
                                   tp=0, Type='D', comment='rload2')
-        rload2 = model.add_rload2(sid, excite_id, delay=2, dphase=0, tb=0, 
+        rload2 = model.add_rload2(sid, excite_id, delay=2, dphase=0, tb=0,
                                   tp=0, Type='V', comment='rload2')
-        rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0, 
+        rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0,
                                   tp=0, Type='A', comment='rload2')
 
         delay_id = 2

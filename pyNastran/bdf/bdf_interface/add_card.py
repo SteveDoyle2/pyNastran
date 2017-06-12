@@ -1467,10 +1467,10 @@ class AddCards(AddMethods):
         return prop
 
     def add_pbeam3(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
-                   cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., 
+                   cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
                    comment=''):
         prop = PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=0.,
-                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz, 
+                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
                       comment=comment)
         self._add_property_object(prop)
         return prop

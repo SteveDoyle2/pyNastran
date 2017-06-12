@@ -377,9 +377,9 @@ class TestBars(unittest.TestCase):
         model.add_grid(2)
         model.add_grid(3)
         model.add_grid(5)
-        #pbend = model.add_pbend(pid, mid, beam_type, A, i1, i2, j, 
-                                #c1, c2, d1, d2, e1, e2, f1, f2, 
-                                #k1, k2, nsm, rc, zc, delta_n, fsi, 
+        #pbend = model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
+                                #c1, c2, d1, d2, e1, e2, f1, f2,
+                                #k1, k2, nsm, rc, zc, delta_n, fsi,
                                 #rm, t, p, rb, theta_b, comment='')
 
         cbend.validate()
