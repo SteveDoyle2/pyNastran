@@ -290,6 +290,22 @@ class DLOAD(LoadCombination):
         self.load_ids = load_ids2
         self.load_ids_ref = self.load_ids
 
+    def safe_cross_reference(self, model, debug=True):
+        load_ids2 = []
+        msg = ' which is required by DLOAD=%s' % (self.sid)
+        for load_id in self.load_ids:
+            try:
+                load_id2 = model.get_dload_entries(load_id, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (
+                        load_id, self.type, self.sid)
+                    print(msg)
+                continue
+            load_ids2.append(load_id2)
+        self.load_ids = load_ids2
+        self.load_ids_ref = self.load_ids
+
     def uncross_reference(self):
         self.load_ids = [self.LoadID(load) for load in self.load_ids]
         del self.load_ids_ref
@@ -802,10 +818,10 @@ class TLOAD1(TabularLoad):
     """
     type = 'TLOAD1'
 
-    def __init__(self, sid, excite_id, tid, delay=None, Type='LOAD',
+    def __init__(self, sid, excite_id, tid, delay=0, Type='LOAD',
                  us0=0.0, vs0=0.0, comment=''):
         """
-        Creates a TLOAD1 card
+        Creates a TLOAD1 card, which defienes a load based on a table
 
         Parameters
         ----------
@@ -927,6 +943,9 @@ class TLOAD1(TabularLoad):
         if self.tid:
             self.tid = model.TableD(self.tid, msg=msg)
             self.tid_ref = self.tid
+        else:
+            print('self.tid = ', self.tid)
+            asdf
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay, msg=msg)
             self.delay_ref = self.delay
@@ -1047,7 +1066,7 @@ class TLOAD2(TabularLoad):
     def __init__(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
                  frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment=''):
         """
-        Creates a TLOAD1 card
+        Creates a TLOAD2 card, which defines a exponential time load
 
         Parameters
         ----------
@@ -1067,17 +1086,19 @@ class TLOAD2(TabularLoad):
             3/ACCE
             4, 5, 6, 7, 12, 13 - MSC only
         T1 : float; default=0.
-            ???
+            time constant (t1 > 0.0)
+            times below this are ignored
         T2 : float; default=None
-            ???
+            time constant (t2 > t1)
+            times above this are ignored
         frequency : float; default=0.
-            ???
+            Frequency in cycles per unit time.
         phase : float; default=0.
-            ???
+            Phase angle in degrees.
         c : float; default=0.
-            ???
+            Exponential coefficient.
         b : float; default=0.
-            ???
+            Growth coefficient.
         us0 : float; default=0.
             Factor for initial displacements of the enforced degrees-of-freedom
             MSC only
@@ -1159,7 +1180,7 @@ class TLOAD2(TabularLoad):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_or_blank(card, 3, 'delay', 0)
+        delay = integer_double_or_blank(card, 3, 'delay', 0)
         Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
 
         T1 = double_or_blank(card, 5, 'T1', 0.0)
@@ -1248,7 +1269,7 @@ class TLOAD2(TabularLoad):
     def delay_id(self):
         if self.delay == 0:
             return 0
-        elif isinstance(self.delay, integer_types):
+        elif isinstance(self.delay, integer_float_types):
             return self.delay
         return self.delay_ref.sid
 

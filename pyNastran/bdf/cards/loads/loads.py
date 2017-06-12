@@ -91,6 +91,18 @@ class LoadCombination(Load):  # LOAD, DLOAD
         self.load_ids = load_ids
         assert 0 not in load_ids, self
 
+    def validate(self):
+        assert isinstance(self.scale, float), self.scale
+        assert isinstance(self.scale_factors, list), self.scale_factors
+        assert isinstance(self.load_ids, list), self.load_ids
+        msg = ''
+        if len(self.scale_factors) != len(self.load_ids):
+            msg += 'scale_factors=%s load_ids=%s\n' % (self.scale_factors, self.load_ids)
+        if msg:
+            raise RuntimeError(msg)
+        for scalei, load_id in zip(self.scale_factors, self.load_ids):
+            assert isinstance(scalei, float), scalei
+
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
@@ -116,41 +128,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
         load_ids = data[3]
         assert len(data) == 4, '%s data=%s' % (cls.type, data)
         return cls(sid, scale, scale_factors, load_ids, comment=comment)
-
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        load_ids2 = []
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for load_id in self.load_ids:
-            assert load_id != self.sid, 'Type=%s sid=%s load_id=%s creates a recursion error' % (self.type, self.sid, load_id)
-            load_id2 = model.Load(load_id, msg=msg)
-            assert isinstance(load_id2, list), load_id2
-            load_ids2.append(load_id2)
-        self.load_ids = load_ids2
-        self.load_ids_ref = self.load_ids
-
-    def safe_cross_reference(self, model, debug=True):
-        load_ids2 = []
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for load_id in self.load_ids:
-            try:
-                load_id2 = model.Load(load_id, msg=msg)
-            except KeyError:
-                if debug:
-                    msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (
-                        load_id, self.type, self.sid)
-                    print(msg)
-                continue
-            load_ids2.append(load_id2)
-        self.load_ids = load_ids2
-        self.load_ids_ref = self.load_ids
 
     def LoadID(self, lid):
         if isinstance(lid, integer_types):

@@ -278,12 +278,23 @@ class TABLED1(Table):
             y = np.exp(lny)
         else:
             raise NotImplementedError('xaxis=%r yaxis=%r' % (self.xaxis, self.yaxis))
-
         return y
 
 class TABLED2(Table):
+    """Dynamic Load Table, Type 2"""
     type = 'TABLED2'
     def __init__(self, tid, x1, x, y, comment=''):
+        """
+        Parameters
+        tid : int
+            table id
+        x1 : float
+            y = yT(x - x1)
+        x : List[float]
+            the x values
+        y : List[float]
+            the y values
+        """
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -335,6 +346,35 @@ class TABLED2(Table):
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED2(tid, x1, x, y, comment=comment)
+
+    def interpolate(self, x):
+        if isinstance(x, float):
+            x = [x]
+        x = np.asarray(x)
+        #nx = x.size
+        #ny = self.y.size
+
+        # xj follow xi
+        i = np.searchsorted(self.x, x, side='left') - 1
+        j = i + 1
+        #k = np.where(j == ny)[0]
+
+        # TODO: handle out of range errors
+        xi = self.x[i]
+        yi = self.y[i]
+        try:
+            xj = self.x[j]
+            yj = self.y[j]
+        except IndexError:
+            #print('table.x = %s' % self.x)
+            #print('table.y = %s' % self.y)
+            #print('x = %s' % x)
+            #print('yi = %s' % yi)
+            return yi
+
+        dx = xj - xi
+        y = (xj - x) / dx * yi + (x - xi) / dx * yj
+        return y
 
     def raw_fields(self):
         xy = []

@@ -2549,10 +2549,10 @@ class AddCards(AddMethods):
         darea = DAREA(sid, p, c, scale, comment=comment)
         self._add_darea_object(darea)
 
-    def add_tload1(self, sid, excite_id, delay, tid, Type='LOAD', us0=0.0, vs0=0.0,
+    def add_tload1(self, sid, excite_id, tid, delay=0, Type='LOAD', us0=0.0, vs0=0.0,
                    comment=''):
         """
-        Creates a TLOAD1 card
+        Creates a TLOAD1 card, which defienes a load based on a table
 
         Parameters
         ----------
@@ -2564,7 +2564,7 @@ class AddCards(AddMethods):
             TABLEDi id that defines F(t) for all degrees of freedom in
             EXCITEID entry
             float : MSC not supported
-        delay : int/float; default=None
+        delay : int/float; default=0
             the delay; if it's 0/blank there is no delay
             float : delay in units of time
             int : delay id
@@ -2592,6 +2592,49 @@ class AddCards(AddMethods):
     def add_tload2(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
                    frequency=0., phase=0., c=0., b=0.,
                    us0=0., vs0=0., comment=''):
+        """
+        Creates a TLOAD2 card, which defines a exponential time load
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        Type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        T1 : float; default=0.
+            time constant (t1 > 0.0)
+            times below this are ignored
+        T2 : float; default=None
+            time constant (t2 > t1)
+            times above this are ignored
+        frequency : float; default=0.
+            Frequency in cycles per unit time.
+        phase : float; default=0.
+            Phase angle in degrees.
+        c : float; default=0.
+            Exponential coefficient.
+        b : float; default=0.
+            Growth coefficient.
+        us0 : float; default=0.
+            Factor for initial displacements of the enforced degrees-of-freedom
+            MSC only
+        vs0 : float; default=0.
+            Factor for initial velocities of the enforced degrees-of-freedom
+            MSC only
+        comment : str; default=''
+            a comment for the card
+        """
         load = TLOAD2(sid, excite_id, delay=delay, Type=Type, T1=T1, T2=T2,
                       frequency=frequency, phase=phase, c=c, b=b,
                       us0=us0, vs0=vs0, comment=comment)

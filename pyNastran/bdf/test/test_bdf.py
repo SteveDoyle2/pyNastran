@@ -1085,37 +1085,10 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         #  - no LOADSET -> SPCD
         #  -    LOADSET -> SPCDs as specified by LSEQ
         dload_id = subcase.get_parameter('DLOAD')[0]
-        if dload_id in fem2.dloads:
-            dload = fem2.dloads[dload_id]
-        else:
-            dload = fem2.dload_entries[dload_id]
-
-        scale_factors2 = []
-        loads2 = []
-        for load in dload:
-            if isinstance(load, DLOAD):
-                scale = load.scale
-                scale_factors = []
-                loads = []
-                # scale_factors, loads = load.get_reduced_loads()
-                for load, scale_factor in zip(load.load_ids, load.scale_factors):
-                    if isinstance(load, list):
-                        for loadi in load:
-                            assert not isinstance(loadi, list), loadi
-                            scale_factors.append(scale * scale_factor)
-                            loads.append(loadi)
-                    else:
-                        scale_factors.append(scale * scale_factor)
-                        assert not isinstance(load, list), load
-                        loads.append(load)
-                scale_factors2 += scale_factors
-                loads2 += loads
-            else:
-                scale_factors2.append(1.)
-                loads2.append(load)
+        scale_factors, loads = resolve_dloads(fem2, dload_id)
 
         if sol in [108, 111]:  # direct frequency, modal frequency
-            for load2, scale_factor in zip(loads2, scale_factors2):
+            for load2, scale_factor in zip(loads, scale_factors):
                 freq_id = subcase.get_parameter('FREQ')[0]
                 freqs = fem2.frequencies[freq_id]
                 for freq in freqs:
@@ -1123,12 +1096,44 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
                         fmax = freq.freqs[-1]
                         force = load2.get_load_at_freq(fmax) * scale_factor
         elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
-            for load2, scale_factor in zip(loads2, scale_factors2):
+            for load2, scale_factor in zip(loads, scale_factors):
                 force = load2.get_load_at_time(0.) * scale_factor
         else:
             fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
 
         # print(loads)
+
+def resolve_dloads(fem, dload_id):
+    """sums the dloads"""
+    if dload_id in fem2.dloads:
+        dload = fem.dloads[dload_id]
+    else:
+        dload = fem.dload_entries[dload_id]
+
+    scale_factors2 = []
+    loads2 = []
+    for load in dload:
+        if isinstance(load, DLOAD):
+            scale = load.scale
+            scale_factors = []
+            loads = []
+            # scale_factors, loads = load.get_reduced_loads()
+            for load, scale_factor in zip(load.load_ids, load.scale_factors):
+                if isinstance(load, list):
+                    for loadi in load:
+                        assert not isinstance(loadi, list), loadi
+                        scale_factors.append(scale * scale_factor)
+                        loads.append(loadi)
+                else:
+                    scale_factors.append(scale * scale_factor)
+                    assert not isinstance(load, list), load
+                    loads.append(load)
+            scale_factors2 += scale_factors
+            loads2 += loads
+        else:
+            scale_factors2.append(1.)
+            loads2.append(load)
+    return scale_factors2, loads2
 
 def divide(value1, value2):
     """

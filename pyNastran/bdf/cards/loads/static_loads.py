@@ -165,6 +165,41 @@ class LOAD(LoadCombination):
                     raise NotImplementedError(msg)
         return (scale_factors, loads)
 
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        load_ids2 = []
+        msg = ' which is required by LOAD=%s' % (self.sid)
+        for load_id in self.load_ids:
+            assert load_id != self.sid, 'Type=%s sid=%s load_id=%s creates a recursion error' % (self.type, self.sid, load_id)
+            load_id2 = model.Load(load_id, msg=msg)
+            assert isinstance(load_id2, list), load_id2
+            load_ids2.append(load_id2)
+        self.load_ids = load_ids2
+        self.load_ids_ref = self.load_ids
+
+    def safe_cross_reference(self, model, debug=True):
+        load_ids2 = []
+        msg = ' which is required by LOAD=%s' % (self.sid)
+        for load_id in self.load_ids:
+            try:
+                load_id2 = model.Load(load_id, msg=msg)
+            except KeyError:
+                if debug:
+                    msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (
+                        load_id, self.type, self.sid)
+                    print(msg)
+                continue
+            load_ids2.append(load_id2)
+        self.load_ids = load_ids2
+        self.load_ids_ref = self.load_ids
+
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
         for (scale_factor, load_id) in zip(self.scale_factors, self.load_ids):
