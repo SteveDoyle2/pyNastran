@@ -36,7 +36,6 @@ class AvusGrid(object):
         x2 y2 z2
         ...
         """
-        #assert npoints > 0, npoints
         npoints_total = sum(npoints)
         points = zeros((npoints_total, 3), dtype='float32')
         for i in range(npoints_total):
@@ -136,13 +135,11 @@ class AvusGrid(object):
 
             # TODO: what are mxppfs, mxfpcs???
             (zones, npoints, nfaces, ncells, mxppfs, mxfpcs) = self._read_header(infile)
-            #assert npoints > 0, npoints
             points = self._read_points(infile, zones, npoints)
             faces = self._read_faces(infile, nfaces)
 
         self.nodes = points
         self.tri_elements = np.asarray(faces, dtype='int32') - 1
-        #print(self.nodes)
 
     def write_avus(self, avus_filename):
         with open(avus_filename, 'w') as avus_file:

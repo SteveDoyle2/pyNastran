@@ -558,7 +558,7 @@ class Usm3d(object):
                 nvars = 5
                 rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
                 sline2 = flo_file.readline().strip().split()
-                ei = parse_float(sline2[1])
+                ei = parse_floats(sline2, 1)[0]
 
             # set the i=0 values
             if not is_sparse:
@@ -606,7 +606,7 @@ class Usm3d(object):
                         assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
                         sline2 = flo_file.readline().strip().split()
-                        ei = parse_float(sline2[1])
+                        ei = parse_floats(sline2, 1)[0]
 
                         node_id[i] = sline1[0]
                         rho[i] = rhoi
@@ -717,15 +717,13 @@ class Usm3d(object):
             loads['W'] = rhoW / rho
         return node_id, loads
 
-
-
-def parse_float(svalue):
-    """floats a value"""
-    try:
-        val = float(sval)
-    except:
-        val = 0.0
-    return val
+#def parse_float(svalue):
+    #"""floats a value"""
+    #try:
+        #val = float(sval)
+    #except:
+        #val = 0.0
+    #return val
 
 def parse_floats(sline, n):
     """floats a series of values"""
