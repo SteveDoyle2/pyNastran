@@ -11,6 +11,7 @@ def cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=None, debug=False):
         model = read_cart3d(cart3d_filename, log=log, debug=debug)
 
     tecplot = Tecplot()
+    tecplot.log = model.log
     tecplot.xyz = model.points
     tecplot.tri_elements = model.elements + 1
     tecplot.write_tecplot(tecplot_filename, adjust_nids=False)

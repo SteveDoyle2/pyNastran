@@ -31,6 +31,7 @@ from pyNastran.converters.tecplot.tecplot_io import TecplotIO
 from pyNastran.converters.tetgen.tetgen_io import TetgenIO
 from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
 from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
+from pyNastran.converters.dev.avus.avus_io import AvusIO
 
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 from pyNastran.converters.aflr.ugrid.surf_io import SurfIO
@@ -57,6 +58,7 @@ FORMAT_TO_EXTENSION = {
     'bedge' : ['.bedge'],
     'su2' : ['.su2'],
     'tetgen' : ['.smesh', '.ele'],
+    'avus' : ['.grd'],
 
     # no duplicates are allowed
     #'panair' : ['.inp'],
@@ -76,7 +78,8 @@ EXTENSION_TO_OUPUT_FORMATS = {
 class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
               PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
               #Plot3d_io, ADB_IO, DegenGeomIO,
-              # AbaqusIO, AvusIO,
+              # AbaqusIO,
+              AvusIO,
               TecplotIO, FastIO, SurfIO, UGRID_IO, BEdge_IO, SU2_IO):
     """spoofs the gui for testing"""
 

@@ -19,7 +19,7 @@ from pyNastran.applications.cart3d_nastran_fsi.aero_model import AeroModel
 from pyNastran.applications.cart3d_nastran_fsi.kdtree import KdTree
 
 from pyNastran.converters.cart3d.cart3d import Cart3D
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.utils.log import get_logger2
 
 debug = True
@@ -385,8 +385,8 @@ class LoadMapping(object):
         log.info("---start piercing---")
         if debug:
             log.info("nAeroElements = %s" % naero_elements)
-        tEst = 1.
-        tLeft = 1.
+        time_est = 1.
+        time_left = 1.
         percent_done = 0.
         use_multiprocessing = False
 
@@ -404,7 +404,7 @@ class LoadMapping(object):
 
                 for j, return_values in enumerate(result):
                     aero_eid, distribution = return_values
-                    #self.mappingMatrix[aero_eid] = distribution
+                    #self.mapping_matrix[aero_eid] = distribution
                     map_file.write('%s %s\n' % (aero_eid, distribution))
                 pool.close()
                 pool.join()
@@ -412,8 +412,8 @@ class LoadMapping(object):
                 for (i, aero_eid) in enumerate(aero_element_ids):
                     if i % 1000 == 0 and debug or 1:
                         #log.debug('  piercing %sth element' % i)
-                        log.debug("tEst=%g minutes; tLeft=%g minutes; %.3f%% done" % (
-                            tEst, tLeft, percent_done))
+                        log.debug("time_est=%g minutes; time_left=%g minutes; %.3f%% done" % (
+                            time_est, time_left, percent_done))
                         sys.stdout.flush()
 
                     aero_element = aero_model.Element(aero_eid)
@@ -434,10 +434,10 @@ class LoadMapping(object):
                     map_file.write('%s %s\n' % (aero_eid, distribution))
 
                     dt = (time() - t0) / 60.
-                    tEst = dt * naero_elements / (i + 1.)  # dtPerElement*nElements
-                    tLeft = tEst - dt
-                    if tEst != 0.0:
-                        percent_done = dt / tEst * 100.
+                    time_est = dt * naero_elements / (i + 1.)  # dtPerElement*nElements
+                    time_left = time_est - dt
+                    if time_est != 0.0:
+                        percent_done = dt / time_est * 100.
 
         log.info("---finish piercing---")
         self.run_map_test(self.mapping_matrix)
@@ -451,20 +451,20 @@ class LoadMapping(object):
         #distributes load without piercing elements
         #based on distance
         #"""
-        #(sElements, sDists) = self.centroid_tree.get_close_element_ids(aero_centroid)
+        #(selements, sdists) = self.centroid_tree.get_close_element_ids(aero_centroid)
         #log.debug("aCentroid = %s" % aero_centroid)
-        #log.debug("sElements = %s" % sElements)
-        #log.debug("sDists    = %s" % list_print(sDists))
+        #log.debug("sElements = %s" % selements)
+        #log.debug("sDists    = %s" % list_print(sdists))
 
         #setNodes = set([])
         #structural_model = self.structural_model
-        #for structural_eid in sElements:
-            #sNodes = structural_model.get_element_nodes(structural_eid)
-            #setNodes.union(set(sNodes))
+        #for structural_eid in selements:
+            #snodes = structural_model.get_element_nodes(structural_eid)
+            #setNodes.union(set(snodes))
 
         #nIDs = list(setNodes)
-        #sNodes = structural_model.getNodeIDLocations(nIDs)
-        #weights = self.get_weights(close_point, sNodes)
+        #snodes = structural_model.getNodeIDLocations(nIDs)
+        #weights = self.get_weights(close_point, snodes)
         #distribution = self.create_distribution(nIDs, weights)
         #return distribution
 
@@ -496,18 +496,18 @@ class LoadMapping(object):
             struc = self.structural_model.get_element_properties(structural_eid)
             structural_area, structural_normal, structural_centroid = struc
 
-            sNodes = self.structural_model.get_element_nodes(structural_eid)
-            nnodes = len(sNodes)
+            snodes = self.structural_model.get_element_nodes(structural_eid)
+            nnodes = len(snodes)
 
             pEnd = pSource + normal * 10.
             #pEnd2 = pSource - normal * 10.
             if nnodes == 3:  # TODO:  is this enough of a breakdown?
-                sA, sB, sC = sNodes
+                sA, sB, sC = snodes
                 #pEnd = pSource+normal*10.
                 tuv = pierce_plane_vector(sA, sB, sC, pSource, pEnd, pierced_elements)
                 #tuv2 = pierce_plane_vector(sA, sB, sC, pSource, pEnd2, pierced_elements)
             elif nnodes == 4:
-                sA, sB, sC, sD = sNodes
+                sA, sB, sC, sD = snodes
                 tuv = pierce_plane_vector(sA, sB, sC, pSource, pEnd, pierced_elements)
                 #tuv2 = pierce_plane_vector(sA, sB, sC, pSource, pEnd2, pierced_elements)
                 #self.pierceTriangle(sA, sB, sC, sCentroid, sNormal, pierced_elements)
@@ -523,7 +523,7 @@ class LoadMapping(object):
             if is_inside(u1, v1):
                 is_inside_bool = True
                 #pIntersect = pSource + (pEnd - pSource) * t1
-                pIntersect = pEnd * t1 +pSource * (1 - t1)
+                pIntersect = pEnd * t1 + pSource * (1 - t1)
                 #P = A + (B - A) * t
                 tuv = pierce_plane_vector(sA, sB, sC, pSource, pIntersect, pierced_elements)
                 #print("t,u,v=", tuv)
@@ -814,8 +814,7 @@ def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
         fem = bdf_model
     else:
         assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
-        fem = BDF(debug=True, log=log)
-        fem.read_bdf(bdf_model)
+        fem = read_bdf(bdf_model, log=log, debug=True)
         sys.stdout.flush()
     structural_model = StructuralModel(fem, property_regions)
 

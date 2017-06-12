@@ -6,7 +6,7 @@ This is the main panel buckling file.  Defines:
 """
 from __future__ import print_function
 import os
-import glob
+#import glob
 from six import iteritems
 
 from pyNastran.applications.aero_panel_buckling.find_surface_panels import (
@@ -153,21 +153,21 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     regions_to_pid_map, regions_to_eids_map = load_regions(regions_filename)
 
     # hardcoded...
-    if 0:
-        offset = 74305
-        min_region_eid = {}
-        sym_regions_map = {}
-        min_region_eid_sym = {}
-        for region_id, eids in iteritems(regions_to_eids_map):
-            eid_min = min(eids)
-            if eid_min < offset:
-                min_region_eid[region_id] = eid_min
-            else:
-                min_region_eid_sym[eid_min] = region_id
+    sym_regions_map = {}
+    #if 0:
+        #offset = 74305
+        #min_region_eid = {}
+        #min_region_eid_sym = {}
+        #for region_id, eids in iteritems(regions_to_eids_map):
+            #eid_min = min(eids)
+            #if eid_min < offset:
+                #min_region_eid[region_id] = eid_min
+            #else:
+                #min_region_eid_sym[eid_min] = region_id
 
-        for region_id, eid_min in iteritems(min_region_eid):
-            sym_region_id = min_region_eid_sym[eid_min + offset]
-            sym_regions_map[region_id] = sym_region_id
+        #for region_id, eid_min in iteritems(min_region_eid):
+            #sym_region_id = min_region_eid_sym[eid_min + offset]
+            #sym_regions_map[region_id] = sym_region_id
 
     write_maps = False
     if write_maps:

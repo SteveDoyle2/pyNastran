@@ -19,6 +19,9 @@ from pyNastran.utils.log import get_logger2
 
 
 class Usm3d(object):
+    """
+    Usm3d interface class
+    """
     bcmap_to_bc_name = {
         0 : 'Supersonic Inflow',
         1 : 'Reflection plane',
@@ -118,7 +121,7 @@ class Usm3d(object):
         ----------
         basename : str
             the root path to the *.cogsg, *.bc, *.mapbc, *.face, *.front files
-        dimension_flag : int
+        dimension_flag : int; unused
             ???
             2?/3
         read_loads : bool; default=True
@@ -160,32 +163,28 @@ class Usm3d(object):
         mapbc_filename = basename + '.mapbc'
         flo_filename = None
 
-        if 1:
-            # pick the highest N value or use "basename.flo"
-            dirname = os.path.dirname(basename)
-            if dirname == '':
-                dirname = os.getcwd()
-            flo_filenames = os.listdir(dirname)
+        # pick the highest N value or use "basename.flo"
+        dirname = os.path.dirname(basename)
+        if dirname == '':
+            dirname = os.getcwd()
+        flo_filenames = os.listdir(dirname)
 
-            # get the max N value
-            nmax = -1
-            for flo_filename in flo_filenames:
-                base, ext = os.path.splitext(flo_filename)
-                if ext == '.flo':
-                    n = base.split('_')[-1]
-                    try: # get the incrementation index
-                        n = int(n)
-                        nmax = max(n, nmax)
-                    except ValueError: # don't bother incrementing
-                        pass
-            # determine .flo file name
-            if nmax > 0:
-                flo_filename = basename + '_%s.flo' % (nmax)
-            else:
-                flo_filename = basename + '.flo'
+        # get the max N value
+        nmax = -1
+        for flo_filename in flo_filenames:
+            base, ext = os.path.splitext(flo_filename)
+            if ext == '.flo':
+                n = base.split('_')[-1]
+                try: # get the incrementation index
+                    n = int(n)
+                    nmax = max(n, nmax)
+                except ValueError: # don't bother incrementing
+                    pass
+        # determine .flo file name
+        if nmax > 0:
+            flo_filename = basename + '_%s.flo' % (nmax)
         else:
-            # hardcoded flo file
-            flo_filename = basename + '_160.flo'
+            flo_filename = basename + '.flo'
 
         nodes, elements = self.read_cogsg(cogsg_filename)
         try:
@@ -221,6 +220,9 @@ class Usm3d(object):
 
 
     def write_usm3d(self, basename):
+        """
+        writes a *.cogsg, *.front, *.face file
+        """
         write_usm3d_volume(self, basename)
 
     def read_bc(self, bc_filename, stop_after_header=False, get_lbouf=False):
@@ -281,21 +283,21 @@ class Usm3d(object):
 
             # file header
             if self.precision == 'single':
-                Format = '>6if'
+                sformat = '>6if'
                 nbytes = 6 * 4 + 4
             elif self.precision == 'double':
-                Format = '>6id'
+                sformat = '>6id'
                 nbytes = 6 * 4 + 8
             else:
                 raise RuntimeError('invalid precision format')
             data = cogsg_file.read(nbytes)
 
-            (inew, ne, np, nb, npv, nev, tc) = unpack(Format, data)
+            (inew, ne, npoints, nb, npv, nev, tc) = unpack(sformat, data)
             self.header = {
                 'dummy'    : dummy_int,
                 'inew'     : inew, # dummy int
                 'nElements': ne,  # nc;  number of tets
-                'nPoints'  : np,  # npo; number of grid points including nbn
+                'nPoints'  : npoints,  # npo; number of grid points including nbn
                 'nBoundPts': nb,  # nbn; number of boundary points including nbc
                 'nViscPts' : npv, # npv; number of viscous points (=0 for Euler)
                 'nViscElem': nev, # ncv; number of viscous cells (=0 for Euler)
@@ -322,10 +324,10 @@ class Usm3d(object):
 
             if nfaces > 0:
                 data_length = nnodes_per_face * nfaces
-                Format = '>' + 'i' * data_length
+                str_format = '>' + 'i' * data_length
                 data = cogsg_file.read(4 * data_length)
 
-                faces = unpack(Format, data)
+                faces = unpack(str_format, data)
                 faces = array(faces)
                 faces = faces.reshape((nfaces, 3))
             else:
@@ -350,21 +352,21 @@ class Usm3d(object):
                 nodes = None
             else:
                 if self.precision == 'double':
-                    Format = '>%sd' % nnodes
+                    str_format = '>%sd' % nnodes
                     node_array_format = 'float64'
                 elif self.precision == 'single':
-                    Format = '>%sd' % nnodes
+                    str_format = '>%sd' % nnodes
                     node_array_format = 'float32'
                 else:
                     raise RuntimeError('precision = %r' % self.precision)
 
                 if 0:
                     data = cogsg_file.read(data_length)
-                    X = unpack(Format, data)
+                    X = unpack(str_format, data)
                     data = cogsg_file.read(data_length)
-                    Y = unpack(Format, data)
+                    Y = unpack(str_format, data)
                     data = cogsg_file.read(data_length)
-                    Z = unpack(Format, data)
+                    Z = unpack(str_format, data)
                     nodes = np.array([X, Y, Z])
 
                     nodes = np.zeros((nnodes, 3), node_array_format)
@@ -389,10 +391,10 @@ class Usm3d(object):
 
             if ntets:
                 data_length = nnodes_per_tet * ntets
-                Format = '>' + 'i' * data_length
+                str_format = '>' + 'i' * data_length
                 data = cogsg_file.read(4 * data_length)
 
-                tets = unpack(Format, data)
+                tets = unpack(str_format, data)
                 tets = np.array(tets)
                 tets = tets.reshape((tets, 4))
 
@@ -400,10 +402,10 @@ class Usm3d(object):
             # volume points
             nnodes = npv
 
-            Format = '>%si' % nnodes
+            str_format = '>%si' % nnodes
             data = cogsg_file.read(4 * nnodes)
 
-        nodes_vol = unpack(Format, data)
+        nodes_vol = unpack(str_format, data)
         nodes_vol = np.array(nodes_vol)
         nodes_vol = nodes_vol.reshape((tets, 3))
 
@@ -412,7 +414,7 @@ class Usm3d(object):
         self.log.debug('tell volume = %s' % cogsg_file.tell())
         # surface + volume cells ???
         nelements = self.header['nElements']
-        Format = '>%si' % nelements
+        str_format = '>%si' % nelements
 
 
         self.log.debug("fv.tell = %s" % cogsg_file.tell())
@@ -428,7 +430,7 @@ class Usm3d(object):
             elements = np.zeros((nelements, 4), 'int32')
             for i in range(4): #  tets
                 data = cogsg_file.read(4 * nelements)
-                elements[:, i] = unpack(Format, data)
+                elements[:, i] = unpack(str_format, data)
             elements -= 1
 
         assert elements.shape == (nelements, 4), elements.shape
@@ -443,7 +445,7 @@ class Usm3d(object):
         #-----------------------------------
         # nodes
         nnodes = self.header['nPoints']
-        Format = '>%sd' % nnodes
+        str_format = '>%sd' % nnodes
 
         dummy3 = cogsg_file.read(4)  # nnodes * 3 * 8
         dummy3_int, = unpack('>i', dummy3)
@@ -464,7 +466,7 @@ class Usm3d(object):
             for i in range(3): #  x, y, z
                 data = cogsg_file.read(8 * nnodes)
                 assert len(data) == (8 * nnodes)
-                nodes[:, i] = unpack(Format, data)
+                nodes[:, i] = unpack(str_format, data)
 
 
         dummy4 = cogsg_file.read(4) # nnodes * 3 * 8
@@ -551,12 +553,12 @@ class Usm3d(object):
             nvars = None
             if len(sline1) == 6:
                 nvars = 6
-                rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+                rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
             else:
                 nvars = 5
-                rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
+                rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
                 sline2 = flo_file.readline().strip().split()
-                ei = Float(sline2, 1)[0]
+                ei = parse_float(sline2[1])
 
             # set the i=0 values
             if not is_sparse:
@@ -589,7 +591,7 @@ class Usm3d(object):
                 if nvars == 6:  # sequential nvars=6
                     for i in range(1, n):
                         sline1 = flo_file.readline().strip().split()
-                        rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+                        rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
                         node_id[i] = sline1[0]
                         rho[i] = rhoi
                         rhoU[i] = rhoui
@@ -600,11 +602,11 @@ class Usm3d(object):
                 else:  # sequential nvars=5
                     for i in range(1, n):
                         sline1 = flo_file.readline().strip().split()
-                        rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
+                        rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
                         assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
                         sline2 = flo_file.readline().strip().split()
-                        ei = Float(sline2, 1)[0]
+                        ei = parse_float(sline2[1])
 
                         node_id[i] = sline1[0]
                         rho[i] = rhoi
@@ -619,7 +621,7 @@ class Usm3d(object):
                     for i in range(1, nmax):
                         if i in node_ids_minus_1:
                             sline1 = flo_file.readline().strip().split()
-                            rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+                            rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
 
                             node_id[ni] = sline1[0]
                             rho[ni] = rhoi
@@ -635,11 +637,11 @@ class Usm3d(object):
                     for i in range(1, nmax):
                         if i in node_ids_minus_1:
                             sline1 = flo_file.readline().strip().split()
-                            rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
+                            rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
                             assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
                             sline2 = flo_file.readline().strip().split()
-                            ei = Float(sline2, 1)[0]
+                            ei = parse_float(sline2[1])
 
                             node_id[ni] = sline1[0]
                             rho[ni] = rhoi
@@ -717,9 +719,16 @@ class Usm3d(object):
 
 
 
-
-def Float(sline, n):
+def parse_float(svalue):
     """floats a value"""
+    try:
+        val = float(sval)
+    except:
+        val = 0.0
+    return val
+
+def parse_floats(sline, n):
+    """floats a series of values"""
     vals = []
     for val in sline:
         try:
@@ -773,9 +782,9 @@ def write_cogsg_volume(model, cogsg_file):
             header['tc'], # d
             ]
         #n = 36
-        Format = '>6id'
-        model.log.debug("Format = %r" % Format)
-        data = pack(Format, *values_header)
+        str_format = '>6id'
+        model.log.debug("str_format = %r" % str_format)
+        data = pack(str_format, *values_header)
         outfile.write(data)
         #print("outfile.tell = %s" % outfile.tell())
         #outfile.write(block_size)
@@ -788,16 +797,16 @@ def write_cogsg_volume(model, cogsg_file):
         #outfile.write(block_size)
 
         # tets
-        Format = '>%si' % ntets
+        str_format = '>%si' % ntets
         n0 = tets[:, 0] + 1
         n1 = tets[:, 1] + 1
         n2 = tets[:, 2] + 1
         n3 = tets[:, 3] + 1
         #print("n0 = %s" % n0)
-        outfile.write(pack(Format, *n0))
-        outfile.write(pack(Format, *n1))
-        outfile.write(pack(Format, *n2))
-        outfile.write(pack(Format, *n3))
+        outfile.write(pack(str_format, *n0))
+        outfile.write(pack(str_format, *n1))
+        outfile.write(pack(str_format, *n2))
+        outfile.write(pack(str_format, *n3))
         #n += 4 * 8 * ntets
         #print("outfile.tell 2 = ", outfile.tell(), n)
 
@@ -812,14 +821,14 @@ def write_cogsg_volume(model, cogsg_file):
 
         # nodes
         #npoints = header['nPoints']
-        Format = '>%sd' % nnodes
+        str_format = '>%sd' % nnodes
         nodes = self.nodes
         n0 = nodes[:, 0]
         n1 = nodes[:, 1]
         n2 = nodes[:, 2]
-        outfile.write(pack(Format, *n0))
-        outfile.write(pack(Format, *n1))
-        outfile.write(pack(Format, *n2))
+        outfile.write(pack(str_format, *n0))
+        outfile.write(pack(str_format, *n1))
+        outfile.write(pack(str_format, *n2))
 
         # nodes footer
         outfile.write(block_size)

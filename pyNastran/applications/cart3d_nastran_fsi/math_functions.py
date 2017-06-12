@@ -80,7 +80,7 @@ def pierce_plane_vector(p0, p1, p2, pA, pB, pierced_elements):
     #xa0 = array([[xa-x0],
     #             [ya-y0],
     #             [za-z0]])
-    xa0 = pA-p0  # numpy array
+    xa0 = pA - p0  # numpy array
     tuv = solve(mat, xa0)
     return tuv
 
@@ -127,8 +127,8 @@ def shepard_weight(n, nodes):
         weightI = (1/distanceI)  / sum(1/distanceI) - correct
     http://www.ems-i.com/smshelp/Data_Module/Interpolation/Inverse_Distance_Weighted.htm
     """
-    invDists = []
-    invDistSum = 0.
+    inv_dists = []
+    inv_dist_sum = 0.
     d = 0.
     for nodei in nodes:
         hi = distance(n, nodei)
@@ -136,12 +136,12 @@ def shepard_weight(n, nodes):
         if allclose(hi, 0.):
             hi = 0.000001  # make this the dominating node
 
-        invDist = 1.0 / hi
-        invDists.append(invDist)
-        invDistSum += invDist
+        inv_dist = 1.0 / hi
+        inv_dists.append(inv_dist)
+        inv_dist_sum += inv_dist
 
-    invDists = array(invDists)
-    weights = invDists / invDistSum
+    inv_dists = array(inv_dists)
+    weights = inv_dists / inv_dist_sum
     return weights
 
 
@@ -228,23 +228,3 @@ def Centroid(A, B, C):
     """returns the centroid of a triangle"""
     centroid = (A + B + C) / 3.
     return centroid
-
-
-def main(): # pragma: no cover
-    n1 = array([0., 0., 0.])
-    n2 = array([1., 1., 1.])
-    n3 = array([1., 0., 0.])
-    n4 = array([5., 3., 0.])
-    n5 = array([2., 0., 4.])
-
-    n2 = array([0., 1., 0.])
-    c1 = Centroid(n1, n2, n3)
-    n = Normal(n5, n2)
-    print("norm = ", n, norm(n))
-
-    area, centroid, normal = triangle_area_centroid_normal([n1, n2, n3])
-    print("area=%s centroid=%s normal=%s" % (area, centroid, normal))
-
-
-if __name__ == '__main__': # pragma: no cover
-    main()

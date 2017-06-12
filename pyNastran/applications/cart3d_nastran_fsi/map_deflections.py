@@ -12,7 +12,6 @@ from numpy.linalg import norm
 #from pyNastran.applications.cart3d_nastran_fsi.delauney.premorph import runPremorph
 from pyNastran.applications.cart3d_nastran_fsi.delauney_reader import Tet4, DelauneyReader
 from pyNastran.applications.cart3d_nastran_fsi.math_functions import list_print
-#from f06Reader import f06Reader
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.converters.cart3d.cart3d import Cart3D
@@ -61,15 +60,14 @@ class DeflectionMapper(object):
         #self.structural_outfile = structural_outfile
 
     #def set_aero_infile(self, infile='cart3d.i.tri'):
-    #    self.aero_infile = infile
+       #self.aero_infile = infile
 
     #def set_structural_outfile(self, outfile='fem.f06'):
-    #    self.structural_outfile = outfile
+       #self.structural_outfile = outfile
 
-    def build_tetrahedralization(self):
-        """runs regtet"""
-        pass
-
+    #def build_tetrahedralization(self):
+        #"""runs regtet"""
+        #pass
 
     def find_closest_tet(self, m, closest_tet=None):
         """
@@ -165,12 +163,12 @@ class DeflectionMapper(object):
             found_internal_node, local_vol = tet.is_internal_node(m)
             local_vols.append(local_vol)
             counter.append(i)
-            #print("tet[%4s].internal=%s" % (i, foundInternalNode))
+            #print("tet[%4s].internal=%s" % (i, found_internal_node))
             if found_internal_node:
                 found_id = tet.ID
                 log.info("*found_id = %s" % (found_id))
-                #print(self.findCloserTet(m, tets[excluded[-1]], tets))
-                #print(self.findCloserTet(m, tets[found_id], tets))
+                #print(self.find_closer_tet(m, tets[excluded[-1]], tets))
+                #print(self.find_closer_tet(m, tets[found_id], tets))
 
                 return tet, found_id
                 #raise Exception('unhandled success!')
@@ -325,28 +323,6 @@ def write_proper_tets(workpath, proper_tets):
             msg += "%5s  %5s\n" % (key, value)
         with open(outfilename, 'wb') as outfile:
             outfile.write(msg)
-
-def test_tet():
-    b = [10., 0., 0.]
-    a = [0., 10., 0.]
-    c = [0., 0., 10.]
-    d = [0., 0., 0.]
-    m1 = [1., 1., 1.]
-    m2 = [2., 2., 2.]
-    tet = Tet4(a, b, c, d)
-    #print("volume = ", tet.volume())
-    log.info("isInternal = \n%s\n" % (tet.is_internal_node(m1)))
-    log.info("isInternal = \n%s"   % (tet.is_internal_node(m2)))
-
-def test_deflections():
-    infilename = os.path.join('op2reader', 'solid_shell_bar.op2')
-    deflections = {}
-    op2 = DeflectionReader(infilename)
-    #op2.print_displacement()
-    displacements = op2.convert_displacements()
-
-    #for gridID, disp in sorted(displacements.items()):
-       #print("gridID=%s disp=%s" % (gridID, disp))
 
 #------------------------------------------------------------------
 

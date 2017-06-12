@@ -4,10 +4,11 @@ from six.moves import range
 import vtk
 from vtk import vtkQuad
 
-from numpy import zeros, array, cross, dot
-from numpy.linalg import det, norm
+from numpy import zeros, array, cross
+from numpy.linalg import norm
 
 from pyNastran.converters.dev.plot3d.plot3d import Plot3d
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 raise NotImplementedError()
 
@@ -142,7 +143,12 @@ class Plot3d_io(object):  # pragma: no cover
                                       #'rhoU', 'rhoV', 'rhoW', 'rhoE']
         #nelements, three = elements.shape
         #print regions
-        cases[(ID, icase, 'Region', 1, 'centroid', '%i', '')] = regions
+        icase = 0
+        itime = 0
+
+        region_res = GuiResult(ID, header='Region', title='Region',
+                               location='centroid', scalar=regions)
+        cases[icase] =region_res(nid_res, (itime, 'Region'))
         icase += 1
 
         # centroidal

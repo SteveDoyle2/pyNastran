@@ -216,5 +216,5 @@ class AeroModel(Model):
         Returns area, centroid, normal
         """
         nodes = self.get_element_nodes(eid)
-        (area, centroid, normal) = triangle_area_centroid_normal(nodes)
-        return (area, centroid, normal)
+        area, centroid, normal = triangle_area_centroid_normal(nodes)
+        return area, centroid, normal

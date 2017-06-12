@@ -1196,6 +1196,7 @@ class GRID(BaseCard):
         xyz = self.xyz
         ps = self.Ps()
         seid = self.SEid()
+        assert isinstance(xyz, np.ndarray), 'xyz=%r' % xyz
         assert isinstance(nid, integer_types), 'nid=%r' % nid
         assert isinstance(cp, integer_types), 'cp=%r' % cp
         assert isinstance(cd, integer_types), 'cd=%r' % cd
@@ -1203,6 +1204,7 @@ class GRID(BaseCard):
         assert isinstance(seid, integer_types), 'seid=%r' % seid
         if xref:
             pos_xyz = self.get_position()
+            assert isinstance(pos_xyz, np.ndarray), 'pos_xyz=%r' % pos_xyz
 
     def get_ndof(self):
         """
