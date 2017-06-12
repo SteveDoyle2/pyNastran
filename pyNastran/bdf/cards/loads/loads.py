@@ -23,6 +23,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.utils import float_types
 
 
 class Load(BaseCard):
@@ -92,16 +93,17 @@ class LoadCombination(Load):  # LOAD, DLOAD
         assert 0 not in load_ids, self
 
     def validate(self):
-        assert isinstance(self.scale, float), self.scale
+        msg = ''
+        if not isinstance(self.scale, float_types):
+            msg += 'scale=%s must be a float; type=%s\n' % (self.scale, type(self.scale))
         assert isinstance(self.scale_factors, list), self.scale_factors
         assert isinstance(self.load_ids, list), self.load_ids
-        msg = ''
         if len(self.scale_factors) != len(self.load_ids):
             msg += 'scale_factors=%s load_ids=%s\n' % (self.scale_factors, self.load_ids)
         if msg:
             raise RuntimeError(msg)
         for scalei, load_id in zip(self.scale_factors, self.load_ids):
-            assert isinstance(scalei, float), scalei
+            assert isinstance(scalei, float_types), scalei
 
     @classmethod
     def add_card(cls, card, comment=''):

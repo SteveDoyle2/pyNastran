@@ -17,6 +17,7 @@ if PY2:
 else:
     integer_types = (int, np.int32, np.int64)
     integer_float_types = (int, np.int32, np.int64, float)
+float_types = (float, np.float32)
 
 
 def ipython_info():
