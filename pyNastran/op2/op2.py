@@ -443,11 +443,11 @@ class OP2(OP2_Scalar):
          - RealPlateStressArray (???)
          - RealPlateStrainArray (???)
          - RealCompositePlateStrainArray (???)
-
-        C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
-            returning scalar but in the future this will be an error
-        sorter = uniques.argsort()
         """
+        # TODO: sorter = uniques.argsort()
+        #C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
+            #returning scalar but in the future this will be an error
+
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
         result_types = self.get_table_types()
         i = 0

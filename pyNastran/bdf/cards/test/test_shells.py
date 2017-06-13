@@ -1,7 +1,9 @@
+"""defines various shell element tests"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import unittest
-from six.moves import range
+from six.moves import range, StringIO
+import numpy as np
 from numpy import array
 
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
@@ -708,7 +710,7 @@ class TestShells(unittest.TestCase):
 
         plsolid = model.add_plsolid(pid, mid1, stress_strain='GRID', ge=0.,
                                     comment='plsolid')
-
+        mathp = model.add_mathp(mid1)
         #assert pcomp.Thickness() == sum(thicknesses), thicknesses
 
         #pcomp.lam = 'SYM'
@@ -746,6 +748,7 @@ class TestShells(unittest.TestCase):
         #pcomp.write_card(size=8)
         #pcomp.write_card(size=16)
         #pcomp.write_card(size=16, is_double=True)
+        save_load_deck(model)
 
     def test_ctriar_cquadr(self):
         """tests a CTRIAR/PSHELL/MAT8"""
@@ -824,6 +827,7 @@ class TestShells(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
+        save_load_deck(model)
 
     def test_cplstn68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
@@ -868,6 +872,91 @@ class TestShells(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
+        save_load_deck(model)
+
+    def test_ctrishell68(self):
+        """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(5, xyz=[.5, 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(6, xyz=[1., .5, 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(7, xyz=[.5, 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(8, xyz=[0., .5, 0.])
+        pid = 4
+        eid = 3
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        cquad8 = model.add_cquad8(eid, pid, nids, comment='cquad8')
+
+        eid = 5
+        nids = [1, 2, 3, 4, 5, 6]
+        mid = 10
+        ctria6 = model.add_ctria6(eid, pid, nids, comment='ctria6')
+        pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
+                                  formulation_option=0, comment='pplane')
+        E = 1e7
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        ctria6.raw_fields()
+        cquad8.raw_fields()
+        pplane.raw_fields()
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        ctria6.write_card(size=8)
+        cquad8.write_card(size=8)
+        pplane.write_card(size=8)
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(model)
+        #model.mass_properties()
+
+    def test_shear(self):
+        """tests a CSHEAR, PSHEAR"""
+        pid = 10
+        mid = 100
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_cquad4(10, pid, [1, 2, 3, 4])
+
+        model.add_cshear(14, pid, [1, 2, 3, 4],
+                         comment='cshear')
+        model.add_pshear(pid, mid, t=1., comment='pshear')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0)
+        model.validate()
+
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        mass = model.mass_properties(element_ids=10)[0]
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file)
+        model.uncross_reference()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        assert np.allclose(mass, 1.0), mass
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model.uncross_reference()
+        #bdf_file = model.write_bdf(bdf_file)
+
+        save_load_deck(model)
 
 
 if __name__ == '__main__':  # pragma: no cover

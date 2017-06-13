@@ -666,7 +666,8 @@ class TestMeshUtils(unittest.TestCase):
 
         mass = model.mass_properties(element_ids=14)[0]
         bdf_file = StringIO()
-        model.write_bdf(bdf_file)
+        model.write_bdf(bdf_file, close=False)
+        bdf_file.seek(0)
         assert np.allclose(mass, 2.0), mass
 
         csv_filename = 'mcids.csv'
@@ -682,7 +683,14 @@ class TestMeshUtils(unittest.TestCase):
         export_mcids(model, csv_filename=csv_filename, eids=[14, 15],
                      export_xaxis=True, export_yaxis=True,
                      iply=0)
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model.uncross_reference()
         os.remove(csv_filename)
+        #bdf_file = model.write_bdf(bdf_file)
+
+        model2 = BDF(debug=False)
+        model2.read_bdf(bdf_file, punch=True)
         #with open(csv_filename, 'r') as csv_file:
             #lines = csv_file.readlines()
             #assert len(lines) > 0, 'lines=%s' % lines
