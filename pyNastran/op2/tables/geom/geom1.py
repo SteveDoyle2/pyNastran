@@ -18,11 +18,6 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class GEOM1(GeomCommon):
     """defines methods for reading op2 nodes/coords"""
-    #def _is_same_fields(self, fields1, fields2):
-        #for (field1, field2) in zip(fields1, fields2):
-            #if not is_same(field1, field2):
-                #return False
-        #return True
 
     def _add_node_object(self, node, allow_overwrites=False):
         """GRDSET creates duplicate nodes...what about duplicate nodes?"""
