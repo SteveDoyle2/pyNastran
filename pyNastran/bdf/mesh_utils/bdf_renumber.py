@@ -323,7 +323,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     freq_map = {}
     tstep_map = {}
     tstepnl_map = {}
-    suport_map = {}
+    #suport_map = {}
     suport1_map = {}
 
     if isinstance(bdf_filename, string_types):

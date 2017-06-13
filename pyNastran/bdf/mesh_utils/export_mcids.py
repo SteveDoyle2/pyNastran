@@ -93,7 +93,8 @@ def export_mcids(bdf_filename, csv_filename=None,
         if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
             pid_ref = elem.pid_ref
             if pid_ref.type == 'PSHELL':
-                mids = [mid.type for mid in pid_ref.materials() if mid > 0]
+                mids = [mat.type for mat in pid_ref.materials()
+                        if mat is not None and mat.mid > 0]
                 if 'MAT8' not in mids:
                     continue
             elif pid_ref.type in ['PCOMP', 'PCOMPG']:
@@ -129,7 +130,8 @@ def export_mcids(bdf_filename, csv_filename=None,
         elif elem.type in ['CTRIA3', 'CTRIA6']:
             pid_ref = elem.pid_ref
             if pid_ref.type == 'PSHELL':
-                mids = [mid.type for mid in pid_ref.materials() if mid > 0]
+                mids = [mat.type for mat in pid_ref.materials()
+                        if mat is not None and mat.mid > 0]
                 if 'MAT8' not in mids:
                     continue
             elif pid_ref.type in ['PCOMP', 'PCOMPG']:
