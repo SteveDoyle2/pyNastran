@@ -8,6 +8,7 @@ from six import string_types, iteritems
 from numpy import array, cross, dot
 from numpy.linalg import norm
 import numpy as np
+from pyNastran.utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 
 
@@ -64,6 +65,11 @@ def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
 def _mass_properties_elements_init(model, element_ids, mass_ids):
     """helper method"""
     # if neither element_id nor mass_ids are specified, use everything
+    if isinstance(element_ids, integer_types):
+        element_ids = [element_ids]
+    if isinstance(mass_ids, integer_types):
+        mass_ids = [mass_ids]
+
     if element_ids is None and mass_ids is None:
         elements = model.elements.values()
         masses = model.masses.values()
@@ -74,10 +80,12 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
         if element_ids is None:
             elements = []
         else:
+            assert len(model.elements) > 0
             elements = [element for eid, element in model.elements.items() if eid in element_ids]
         if mass_ids is None:
             masses = []
         else:
+            assert len(model.mass_ids) > 0
             masses = [mass for eid, mass in model.masses.items() if eid in mass_ids]
     return elements, masses
 

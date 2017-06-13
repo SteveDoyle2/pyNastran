@@ -1336,7 +1336,7 @@ class GRID(BaseCard):
                    have not been set
         """
         if grdset:
-            # update using a gridset object
+            # update using a grdset object
             if not self.cp:
                 self.cp = grdset.cp
                 self.cp_ref = self.cp

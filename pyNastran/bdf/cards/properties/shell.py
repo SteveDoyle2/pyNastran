@@ -561,8 +561,9 @@ class PCOMP(CompositeShellProperty):
         CompositeShellProperty.__init__(self)
         if comment:
             self.comment = comment
+
+        nplies = len(mids)
         if thetas is None:
-            nplies = len(mids)
             thetas = [0.] * nplies
         if souts is None:
             souts = ['NO'] * nplies

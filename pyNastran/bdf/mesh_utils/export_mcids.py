@@ -28,7 +28,7 @@ def export_mcids(bdf_filename, csv_filename=None,
     export_yaxis : bool; default=True
         export the x-axis
     iply : int; default=0
-        TDOO: not validated
+        TODO: not validated
         the ply to consider
 
         PSHELL
@@ -55,6 +55,9 @@ def export_mcids(bdf_filename, csv_filename=None,
         the nodes
     bars : (nbars, 2) int list
     """
+    if isinstance(eids, integer_types):
+        eids = [eids]
+
     if isinstance(bdf_filename, string_types):
         model = read_bdf(bdf_filename, xref=False)
         #print(model.get_bdf_stats())
@@ -90,13 +93,9 @@ def export_mcids(bdf_filename, csv_filename=None,
         if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
             pid_ref = elem.pid_ref
             if pid_ref.type == 'PSHELL':
-                mid = pid_ref.mid1_ref
-                if mid.type in ['MAT1']:
+                mids = [mid.type for mid in pid_ref.materials() if mid > 0]
+                if 'MAT8' not in mids:
                     continue
-                elif mid.type in ['MAT8']:
-                    pass
-                else:
-                    raise NotImplementedError(pid_ref)
             elif pid_ref.type in ['PCOMP', 'PCOMPG']:
                 pass
             else:
@@ -127,16 +126,12 @@ def export_mcids(bdf_filename, csv_filename=None,
                                      centroid, iaxis, jaxis,
                                      export_both_axes, export_xaxis)
 
-        elif elem.type in ['CTRIA3']:
+        elif elem.type in ['CTRIA3', 'CTRIA6']:
             pid_ref = elem.pid_ref
             if pid_ref.type == 'PSHELL':
-                mid = pid_ref.mid1_ref
-                if mid.type in ['MAT1']:
+                mids = [mid.type for mid in pid_ref.materials() if mid > 0]
+                if 'MAT8' not in mids:
                     continue
-                elif mid.type in ['MAT8']:
-                    pass
-                else:
-                    raise NotImplementedError(pid_ref)
             elif pid_ref.type in ['PCOMP', 'PCOMPG']:
                 pass
             else:
@@ -171,10 +166,11 @@ def export_mcids(bdf_filename, csv_filename=None,
             msg = 'element type=%r is not supported\n%s' % (elem.type, elem)
             raise NotImplementedError(msg)
 
-    if len(nodes) == 0:
+    if len(nodes) == 0 and pids_failed:
         msg = 'No material coordinate systems could be found\n'
         pids_failed_list = list(pids_failed)
         pids_failed_list.sort()
+        model.log.warning('pids_failed_list = %s' % str(pids_failed_list))
         pid_str = [str(pid) for pid in pids_failed_list]
         msg += 'iPly=%r; Property IDs failed: [%s]\n' % (iply, ', '.join(pid_str))
 
@@ -212,7 +208,7 @@ def _rotate_mcid(elem, pid_ref, iply, imat, jmat, normal,
             msg = 'property type=%r is not supported\n%s%s' % (
                 elem.pid_ref.type, elem, elem.pid_ref)
             raise NotImplementedError(msg)
-        if thetad == 0.0:  # catches on mcid=0 as well
+        if isinstance(thetad, float) and thetad == 0.0:
             return imat, jmat
 
         theta = np.radians(thetad)

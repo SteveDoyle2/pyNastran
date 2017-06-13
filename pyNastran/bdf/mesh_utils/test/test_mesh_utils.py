@@ -600,5 +600,87 @@ class TestMeshUtils(unittest.TestCase):
         model.write_bdf(f, close=False)
         #print(f.getvalue())
 
+    def test_shells_add(self):
+        pid = 10
+        mid1 = 100
+        model = BDF(debug=False)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_cquad4(10, pid, [1, 2, 3, 4])
+        model.add_ctria3(11, pid, [1, 2, 3])
+
+        mids = [100, 100, 100]
+        thicknesses = [0.1, 0.1, 0.1]
+        model.add_pcomp(pid, mids, thicknesses, thetas=[0., 45., 90.], souts=None,
+                       nsm=0., sb=0., ft=None,
+                       tref=0., ge=0., lam=None,
+                       z0=None, comment='')
+
+        pid = 11
+        model.add_ctria3(12, pid, [1, 2, 3], theta_mcid=45., zoffset=0.,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         comment='')
+        model.add_ctria3(13, pid, [1, 2, 3], theta_mcid=1, zoffset=0.,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         comment='')
+
+        model.add_cquad4(14, pid, [1, 2, 3, 4], theta_mcid=45., zoffset=0.,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         comment='')
+        model.add_cquad4(15, pid, [1, 2, 3, 4], theta_mcid=1, zoffset=0.,
+                         tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         comment='')
+        model.add_cord2r(1, rid=0,
+                         origin=[0., 0., 0.],
+                         zaxis=[0., 0., 1.],
+                         xzplane=[1., 0., 0.])
+        model.add_pshell(pid, mid1=mid1, t=2.)
+
+        e11 = 1.0
+        e22 = 2.0
+        nu12 = 0.3
+        model.add_mat8(mid1, e11, e22, nu12, rho=1.0)
+        model.validate()
+
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        mass = model.mass_properties(element_ids=13)[0]
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file)
+        model.uncross_reference()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        assert np.allclose(mass, 1.0), mass  ## TODO: wrong
+
+        mass = model.mass_properties(element_ids=14)[0]
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file)
+        assert np.allclose(mass, 2.0), mass
+
+        csv_filename = 'mcids.csv'
+        export_mcids(model, csv_filename=csv_filename, eids=[12, 13],
+                     export_xaxis=True, export_yaxis=True,
+                     iply=0)
+        #with open(csv_filename, 'r') as csv_file:
+            #lines = csv_file.readlines()
+            #assert len(lines) > 0, 'lines=%s' % lines
+            #for line in lines:
+                #print(line.rstrip())
+        #print('-------------')
+        export_mcids(model, csv_filename=csv_filename, eids=[14, 15],
+                     export_xaxis=True, export_yaxis=True,
+                     iply=0)
+        os.remove(csv_filename)
+        #with open(csv_filename, 'r') as csv_file:
+            #lines = csv_file.readlines()
+            #assert len(lines) > 0, 'lines=%s' % lines
+            #for line in lines:
+                #print(line.rstrip())
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
