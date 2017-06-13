@@ -160,13 +160,6 @@ class CELAS1(SpringElement):
             #for nodeID, node in zip(node_ids, self.nodes):
                 #assert node.node.nid
 
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid] + self.nodes + [self.pid, self.c1, self.c2]
-        fields2 = [elem.eid] + elem.nodes + [elem.pid, elem.c1, elem.c2]
-        return self._is_same_fields(fields1, fields2)
-
     def K(self):
         return self.pid_ref.k
 
@@ -347,13 +340,6 @@ class CELAS2(SpringElement):
             #for node_id, node in zip(node_id, self.nodes):
                 #assert node.node.nid
 
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid] + self.node_ids + [self.k, self.c1, self.c2]
-        fields2 = [elem.eid] + elem.node_ids + [elem.k, elem.c1, elem.c2]
-        return self._is_same_fields(fields1, fields2)
-
     def K(self):
         return self.k
 
@@ -443,13 +429,6 @@ class CELAS3(SpringElement):
         s1 = data[2]
         s2 = data[3]
         return CELAS3(eid, pid, [s1, s2], comment=comment)
-
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid, self.pid] + self.node_ids
-        fields2 = [elem.eid, elem.pid] + self.node_ids
-        return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.pid_ref.k
@@ -587,13 +566,6 @@ class CELAS4(SpringElement):
         s1 = data[2]
         s2 = data[3]
         return CELAS4(eid, k, [s1, s2], comment=comment)
-
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid, self.k] + self.nodes
-        fields2 = [elem.eid, elem.k] + self.nodes
-        return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.k

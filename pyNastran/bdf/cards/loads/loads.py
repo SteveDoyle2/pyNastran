@@ -568,7 +568,7 @@ class DAREA(BaseCard):
         return msg
 
 
-class TabularLoad(BaseCard):
+class DynamicLoad(BaseCard):
     def __init__(self):
         pass
 

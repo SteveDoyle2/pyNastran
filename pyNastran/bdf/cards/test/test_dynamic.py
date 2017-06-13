@@ -4,7 +4,7 @@ from six.moves import StringIO
 import numpy as np
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck
 
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -263,6 +263,7 @@ class TestDynamic(unittest.TestCase):
     def test_rload(self):
         """tests DLOAD, RLOAD1, RLOAD2, TABLED2 cards"""
         model = BDF(debug=False)
+        #model.case_control_deck = CaseControlDeck(['DLOAD=2', 'BEGIN BULK'])
         sid = 2
         excite_id = 20
         delay = 0
@@ -286,6 +287,16 @@ class TestDynamic(unittest.TestCase):
                                   tp=0, Type='V', comment='rload2')
         rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0,
                                   tp=0, Type='A', comment='rload2')
+
+        excite_id = 20
+        nid = 21
+        c = 1
+        scale = 1.0
+        model.add_darea(excite_id, nid, c, scale, comment='darea')
+        model.add_grid(nid)
+
+        excite_id = 30
+        model.add_darea(excite_id, nid, c, scale, comment='darea')
 
         delay_id = 2
         nodes = 100
@@ -335,6 +346,7 @@ class TestDynamic(unittest.TestCase):
         model.validate()
         model.cross_reference()
         model.pop_xref_errors()
+        #print(model.dareas)
 
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
@@ -366,6 +378,127 @@ class TestDynamic(unittest.TestCase):
         #print(out)
         #print(outs)
 
+    def _test_dynamic1(self):
+        """
+        xref test for:
+         - DLOAD -> DAREA -> NID
+
+        DLOAD take priority
+        useful for dynamic nodal forces/disp/vel/acc
+        """
+        msg = """
+SOL 108
+CEND
+SUBCASE 1
+    DLOAD = 33
+    DISP(PLOT) = ALL
+BEGIN BULK
+$DLOAD SID S    S1   L1   S2  L2
+DLOAD, 33, 1.0, 1.0, 35, 1.0, 36
+$RLOAD1 SID EXCITEID DELAY DPHASE TC   TD   TYPE
+RLOAD1, 35, 29,      0.2,  5.0,   40,  0.0, 0
+RLOAD1, 36, 29,      31,   32,    4.0, 41,  0
+$DAREA SID GRID COMP SCALE
+DAREA, 29, 30,  1,   5.2
+$DELAY SID GRID COMP LAG
+DELAY, 31, 30,  1,   0.2
+$DPHASE SID GRID COMP ANGLE
+DPHASE, 32, 30,  1,   5.0
+$TABLED1 TID XAXIS YAXIS
+$ x1 y1 x2 y2 x3 y3 x4 y4
+TABLED1, 40, LINEAR, LINEAR
+,0.0, 4.0, 2.0, 8.0, 6.0, 8.0, ENDT
+TABLED1, 41, LINEAR, LINEAR
+,0.0, 0.5, 0.6, 0.4, 0.8, 0.7, ENDT
+GRID,30
+"""
+        model = BDF(debug=False)
+        bdf_file = StringIO()
+        bdf_file.write(msg)
+        bdf_file.seek(0)
+        model.read_bdf(bdf_file)
+        #In the example:
+        # * The DLOAD case control command selects the loading reference
+        #   by the DLOAD bulk entry having SID = 33 as the dynamic
+        #   loading for the analysis.
+        # * The DLOAD bulk entry combines the dynamic loads defined by
+        #   two RLOAD1 entries having SIDs of 35 and 36. Neither dynamic
+        #   load is scaled using the DLOAD entry.
+        # * Both RLOAD1 entries reference the same DAREA entry. Thus,
+        #   both dynamic loads are applied to the same degree-of-freedom.
+        #   In this example, it is a single degree-of-freedom, Component 1
+        #   of Grid 30. Both dynamic loads are scaled 5.2 times by the
+        #   DAREA entry.
+        # * Because the dynamic loads are applied at only one
+        #   degree-of-freedom, the time delay and phase angle can be
+        #   defined directly on the RLOAD1 entries. This is the case
+        #   for the RLOAD1 entry having SID = 35. However, for
+        #   demonstration purposes, the RLOAD1 entry having SID = 36
+        #   references DELAY and DPHASE bulk entries. Both approaches
+        #   define a delay of 0.2 and a phase angle of 5.0 for the
+        #   corresponding dynamic load.
+        # * C(f) for the RLOAD1 entry having SID = 35 is defined by the
+        #   TABLED1 entry having TID = 40. (See Figure 6-6.) D(f) for
+        #    this same RLOAD1 entry is defined as zero.
+        # * C(f) for the RLOAD1 entry having SID = 36 is a constant
+        #   value of 4.0. D(f) for this same RLOAD entry is defined by
+        #   the TABLED1 entry having TID = 41.
+
+    def _test_dynamic2(self):
+        """
+        xref test for:
+         - LOADSET -> LSEQ   -> FORCE, PLOAD
+         - DLOAD   -> RLOAD1 -> TABLED1
+
+        LOADSET take priority
+        useful for generalized dynamic forces/disp/vel/acc
+        """
+        msg = """
+SOL 108
+CEND
+SUBCASE 1
+    LOADSET = 27
+    DLOAD = 25
+    DISP(PLOT) = ALL
+BEGIN BULK
+$LSEQ   SID EXCITEID LID
+LSEQ,   27, 28,      26
+$RLOAD1 SID EXCITEID DELAY DPHASE TC TD
+RLOAD1, 25, 28,      0.0,  10.0,  29
+$FORCE SID GRID CID F    N1 N2 N3
+FORCE, 26, 425, ,   2.5, 1.0
+$PLOAD SID PRES  GRID1 GRID2 GRID3 GRID4
+PLOAD, 26, 50.0, 63,   64,   88,   91
+$TABLED1 TID XAXIS YAXIS
+$ x1 y1 x2 y2 x3 y3 x4 y4
+TABLED1, 29, LINEAR, LINEAR
+,0.0, 0.5, 0.6, 0.4, 0.8, 0.7, ENDT
+"""
+        model = BDF(debug=False)
+        bdf_file = StringIO()
+        bdf_file.write(msg)
+        bdf_file.seek(0)
+        model.read_bdf(bdf_file)
+        #In the example:
+        # * The LOADSET request in case control selects the LSEQ entry
+        #   having SID = 27.
+        # * The LSEQ entry references the static loads having SID = 26.
+        #   These loads include the FORCE and PLOAD entries. The FORCE
+        #   and PLOAD entries provide the spatial distribution of the
+        #   dynamic loading.
+        # * The DLOAD request in case control selects the RLOAD1 entry
+        #   having SID = 25.
+        # * The RLOAD1 entry references a TABLED1 entry having TID = 29.
+        #   This TABLED1 entry defines C(f) for the RLOAD1 entry. Because
+        #   the TD field on the RLOAD1 entry is undefined, D(f) defaults
+        #   to zero.
+        # * The EXCITEID fields of the LSEQ and RLOAD1 entries are both
+        #   28, thereby linking the temporal and spatial distributions of
+        #   the dynamic loading. Thus, the dynamic load defined by the
+        #   RLOAD1 entry is:
+        #   o Scaled by 2.5 and applied as a force to Component 1 of Grid 425.
+        #   o Scaled by 50.0 and applied as a pressure to the quadrilateral
+        #     element face defined by Grids 63, 64, 88, and 91.
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

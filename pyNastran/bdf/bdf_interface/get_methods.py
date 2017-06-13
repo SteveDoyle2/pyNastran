@@ -266,6 +266,15 @@ class GetMethods(BDFAttributes):
                 sid, msg, np.unique(list(self.dload_entries.keys()))))
         return load
 
+    def DAREA(self, darea_id, msg=''):
+        """gets a DAREA"""
+        assert isinstance(darea_id, integer_types), darea_id
+        try:
+            return self.dareas[darea_id]
+        except KeyError:
+            raise KeyError('darea_id=%s not found%s.  Allowed DAREA=%s'
+                           % (darea_id, msg, list(self.dareas.keys())))
+
     def DELAY(self, delay_id, msg=''):
         """gets a DELAY"""
         assert isinstance(delay_id, integer_types), delay_id

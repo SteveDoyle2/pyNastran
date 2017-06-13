@@ -23,7 +23,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
-from pyNastran.bdf.cards.loads.loads import TabularLoad, LoadCombination, BaseCard
+from pyNastran.bdf.cards.loads.loads import DynamicLoad, LoadCombination, BaseCard
 
 
 class ACSRCE(BaseCard):
@@ -326,7 +326,7 @@ class DLOAD(LoadCombination):
         return self.comment + print_card_8(card)
 
 
-class RLOAD1(TabularLoad):
+class RLOAD1(DynamicLoad):
     r"""
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
@@ -381,7 +381,7 @@ class RLOAD1(TabularLoad):
         comment : str; default=''
             a comment for the card
         """
-        TabularLoad.__init__(self)
+        DynamicLoad.__init__(self)
         if comment:
             self.comment = comment
         Type = update_loadtype(Type)
@@ -440,6 +440,29 @@ class RLOAD1(TabularLoad):
         assert len(card) <= 8, 'len(RLOAD1 card) = %i\ncard=%s' % (len(card), card)
         return RLOAD1(sid, excite_id, delay, dphase, tc, td, Type, comment=comment)
 
+    def _cross_reference_excite_id(self, msg):
+        """not quite done...not sure how to handle the very odd xref"""
+        case_control = model.case_control_deck
+        if case_control is not None:
+            #print('cc = %r' % case_control)
+            #print('asdf')
+            for key, subcase in sorted(iteritems(model.case_control_deck.subcases)):
+                print(subcase, type(subcase))
+                if 'LOADSET' in subcase:
+                    lseq_id = subcase['LOADSET'][0]
+                    lseq = model.Load(lseq_id, msg=msg)[0]
+                    self.excite_id_ref = lseq
+                    #self.dload_id = lseq.
+                elif 'DLOAD' in subcase:
+                    #dload_id = subcase['DLOAD'][0]
+                    self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
+                else:
+                    msg = ('LOADSET and DLOAD are not found in the case control deck\n%s' %
+                           str(model.case_control_deck))
+                    raise RuntimeError(msg)
+        else:
+            self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -465,6 +488,7 @@ class RLOAD1(TabularLoad):
 
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
+        self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc = model.TableD(self.tc, msg=msg)
             self.tc_ref = self.tc
@@ -593,7 +617,7 @@ class RLOAD1(TabularLoad):
         return self.comment + print_card_16(card)
 
 
-class RLOAD2(TabularLoad):
+class RLOAD2(DynamicLoad):
     r"""
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
@@ -654,7 +678,7 @@ class RLOAD2(TabularLoad):
         comment : str; default=''
             a comment for the card
         """
-        TabularLoad.__init__(self)
+        DynamicLoad.__init__(self)
         if comment:
             self.comment = comment
         Type = update_loadtype(Type)
@@ -871,7 +895,7 @@ class RLOAD2(TabularLoad):
         return self.comment + print_card_16(card)
 
 
-class TLOAD1(TabularLoad):
+class TLOAD1(DynamicLoad):
     r"""
     Transient Response Dynamic Excitation, Form 1
 
@@ -934,7 +958,7 @@ class TLOAD1(TabularLoad):
         comment : str; default=''
             a comment for the card
         """
-        TabularLoad.__init__(self)
+        DynamicLoad.__init__(self)
         if delay is None:
             delay = 0
         Type = update_loadtype(Type)
@@ -1110,7 +1134,7 @@ class TLOAD1(TabularLoad):
         return self.comment + print_card_16(card)
 
 
-class TLOAD2(TabularLoad):
+class TLOAD2(DynamicLoad):
     r"""
     Transient Response Dynamic Excitation, Form 1
 
@@ -1190,7 +1214,7 @@ class TLOAD2(TabularLoad):
         comment : str; default=''
             a comment for the card
         """
-        TabularLoad.__init__(self)
+        DynamicLoad.__init__(self)
         if comment:
             self.comment = comment
         if T2 is None:

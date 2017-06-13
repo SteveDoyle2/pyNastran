@@ -535,13 +535,6 @@ class CMASS3(PointMassElement):
     def node_ids(self):
         return [self.s1, self.s2]
 
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid, self.Pid(), self.s1, self.s2]
-        fields2 = [elem.eid, elem.Pid(), elem.s1, elem.s2]
-        return self._is_same_fields(fields1, fields2)
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -650,13 +643,6 @@ class CMASS4(PointMassElement):
     @property
     def node_ids(self):
         return [self.s1, self.s2]
-
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid, self.mass, self.s1, self.s2]
-        fields2 = [elem.eid, elem.mass, elem.s1, elem.s2]
-        return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
         """
