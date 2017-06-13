@@ -15,7 +15,8 @@ from pyNastran.utils import integer_types, object_attributes
 
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_id_dict=None, round_ids=False, cards_to_skip=None):
+                 starting_id_dict=None, round_ids=False, cards_to_skip=None,
+                 log=None, debug=False):
     """
     Renumbers a BDF
 
@@ -191,7 +192,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'freq_id' : 1,
         'tstep_id' : 1,
         'tstepnl_id' : 1,
-        'spline_id' : 1,
         'suport_id' : 1,
         'suport1_id' : 1,
         'tf_id' : 1,
@@ -327,7 +327,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     suport1_map = {}
 
     if isinstance(bdf_filename, string_types):
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=debug)
         model.disable_cards(cards_to_skip)
         model.read_bdf(bdf_filename)
     else:
@@ -648,8 +648,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'properties' : properties_map,
         'properties_mass' : properties_mass_map,
         'SPC' : spc_map,
-        'MPC' : mpc_map, #TODO: come up with unified system that uses the same key for bdf_merge and _update_case_control
-        'mpcs' : mpc_map,
+        'MPC' : mpc_map,   # TODO: come up with unified system that uses the same key
+        'mpcs' : mpc_map,  #       for bdf_merge and _update_case_control
         'METHOD' : method_map,
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,

@@ -1,3 +1,4 @@
+"""various mesh_utils tests"""
 from __future__ import print_function
 import os
 import unittest
@@ -22,6 +23,9 @@ from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
+from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
+from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
+from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells
 from pyNastran.bdf.mesh_utils.utils import *
 
 pkg_path = pyNastran.__path__[0]
@@ -504,8 +508,8 @@ class TestMeshUtils(unittest.TestCase):
         model = BDF(debug=False)
         with self.assertRaises(NotImplementedError):
             model.read_bdf(bdf_filename=lines, validate=True, xref=True,
-                          punch=False, read_includes=True,
-                          encoding=None)
+                           punch=False, read_includes=True,
+                           encoding=None)
 
         model.add_grid(1, xyz=[0., 0., 0.])
         model.add_grid(2, xyz=[1., 0., 0.])
@@ -582,8 +586,8 @@ class TestMeshUtils(unittest.TestCase):
         model.add_cbar(1, pid, nids, x, g0, offt='GGG', pa=456, pb=5,
                        wa=None, wb=None, comment='End A')
         model.add_cbeam(2, 2000, nids, x, g0, offt='GGG', bit=None, pa=456,
-                       pb=5, wa=None, wb=None, sa=0,
-                       sb=0, comment='')
+                        pb=5, wa=None, wb=None, sa=0,
+                        sb=0, comment='')
         A = 42.
         model.add_conrod(3, mid, nids, A)
         model.add_prod(4000, mid, A)
@@ -596,11 +600,15 @@ class TestMeshUtils(unittest.TestCase):
         eids = [1, 2, 3, 4]
         split_line_elements(model, eids, neids=10,
                             eid_start=101, nid_start=101)
-        f = StringIO()
-        model.write_bdf(f, close=False)
-        #print(f.getvalue())
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file, close=False)
+        #print(bdf_file.getvalue())
 
     def test_shells_add(self):
+        """
+        tests differential mass and material coordinate systems
+        on CQUAD4/CTRIA3 elements
+        """
         pid = 10
         mid1 = 100
         model = BDF(debug=False)
@@ -614,9 +622,9 @@ class TestMeshUtils(unittest.TestCase):
         mids = [100, 100, 100]
         thicknesses = [0.1, 0.1, 0.1]
         model.add_pcomp(pid, mids, thicknesses, thetas=[0., 45., 90.], souts=None,
-                       nsm=0., sb=0., ft=None,
-                       tref=0., ge=0., lam=None,
-                       z0=None, comment='')
+                        nsm=0., sb=0., ft=None,
+                        tref=0., ge=0., lam=None,
+                        z0=None, comment='')
 
         pid = 11
         model.add_ctria3(12, pid, [1, 2, 3], theta_mcid=45., zoffset=0.,
