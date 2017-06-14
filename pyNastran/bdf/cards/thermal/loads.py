@@ -659,8 +659,7 @@ class QBDY3(ThermalLoad):
             eidi = self.Eid(element)
             eids.append(eidi)
         return eids
-
-        return self.get_element_ids()
+        #return self.get_element_ids()
 
     def Eids(self):
         eids = []
@@ -956,12 +955,35 @@ class TEMP(ThermalLoad):
 
 
 class TEMPP1(BaseCard):
+    """
+    +--------+------+------+------+--------+------+------+------+
+    |   1    |   2  |   3  |   4  |    5   |   6  |   7  |   8  |
+    +========+======+======+======+========+======+======+======+
+    | TEMPP1 | SID  | EID1 | TBAR | TPRIME |  T1  |  T2  |      |
+    +--------+------+------+------+--------+------+------+------+
+    |        | EID2 | EID3 | EID4 | EID5   | EID6 | EID7 | etc. |
+    +--------+------+------+------+--------+------+------+------+
+
+    +--------+------+------+------+--------+------+------+------+
+    | TEMPP1 |  2   |  24  | 62.0 |  10.0  | 57.0 | 67.0 |      |
+    +--------+------+------+------+--------+------+------+------+
+    |        |  26  |  21  |  19  |   30   |      |      |      |
+    +--------+------+------+------+--------+------+------+------+
+
+    Alternate Form
+    +--------+------+------+------+--------+------+------+------+
+    |        | EID2 | THRU | EIDi |  EIDj  | THRU | EIDk |      |
+    +--------+------+------+------+--------+------+------+------+
+    |        |  1   | THRU |  10  |   30   | THRU |  61  |      |
+    +--------+------+------+------+--------+------+------+------+
+    """
     type = 'TEMPP1'
     def __init__(self, sid, eid, tbar, tprime, t_stress, comment=''):
         self.comment = comment
         self.sid = sid
         self.eid = eid
         self.tbar = tbar
+        self.tprime = tprime
         self.t_stress = t_stress
 
     @classmethod
@@ -977,7 +999,7 @@ class TEMPP1(BaseCard):
             a comment for the card
         """
         sid, eid, t, tprime, ts1, ts2 = data
-        return TEMPP1(sid, eid, t, tprime, [ts1, ts2])
+        return TEMPP1(sid, eid, t, tprime, [ts1, ts2], comment=comment)
 
     def write_card(self, size=8, is_double=False):
         list_fields = ['TEMPP1', self.sid, self.eid, self.tbar] + self.t_stress
@@ -1058,8 +1080,8 @@ class TEMPD(BaseCard):
         return TEMPD(sid, temperature, comment=comment)
 
     def add(self, tempd_obj):
-        for (lid, tempd) in iteritems(tempd_obj.temperatures):
-            self.temperatures[lid] = tempd
+        for (lid, tempd) in iteritems(tempd_obj.temperature):
+            self.temperature[lid] = tempd
 
     def cross_reference(self, model):
         pass

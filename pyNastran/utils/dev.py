@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+from typing import List
 from six import string_types, iteritems
 
 import numpy as np
@@ -8,6 +9,7 @@ from pyNastran.utils import object_attributes
 
 
 def get_files_of_type(dirname, extension='.txt', max_size=100., limit_file='no_dig.txt'):
+    # type: (str, str, float, str) -> List[str]
     """
     Gets the list of all the files with a given extension in the specified directory
 

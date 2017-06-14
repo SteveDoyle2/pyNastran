@@ -21,6 +21,7 @@ float_types = (float, np.float32)
 
 
 def ipython_info():
+    # type: () -> bool
     """determines if iPython/Jupyter notebook is running"""
     ip = False
     if 'ipykernel' in sys.modules:
@@ -58,6 +59,7 @@ def merge_dicts(dict_list, strict=True):
 
 
 def is_binary_file(filename):
+    # type: (str) -> bool
     """
     Return true if the given filename is binary.
 
@@ -88,6 +90,7 @@ def is_binary_file(filename):
 
 
 def print_bad_path(path):
+    # type: (str) -> str
     """
     Prints information about the existence (access possibility) of the parts
     of the given path. Useful for debugging when the path to a given file
@@ -125,6 +128,7 @@ def print_bad_path(path):
         return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
 
 def _filename(filename):
+    # type: (str) -> str
     """
     Prepends some magic data to a filename in order to have long filenames.
 
@@ -166,6 +170,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
 
 
 def object_methods(obj, mode='public', keys_to_skip=None):
+    # type: (obj, str, Optional[List[str]]) -> List[str]
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
@@ -193,6 +198,7 @@ def object_methods(obj, mode='public', keys_to_skip=None):
 
 
 def object_attributes(obj, mode='public', keys_to_skip=None):
+    # type: (obj, str, Optional[List[str]]) -> List[str]
     """
     List the names of attributes of a class as strings. Returns public
     attributes as default.

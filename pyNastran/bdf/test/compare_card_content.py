@@ -53,11 +53,13 @@ def check_length(fem1, fem2, name):
     obj1 = getattr(fem1, name)
     obj2 = getattr(fem2, name)
     if not len(obj2) == len(obj2):
-        assert len(obj2) == len(obj2), 'len(fem1.%s)=%i len(fem2.%s)=%i' % (name, len(obj2), name, len(obj2))
+        msg = 'len(fem1.%s)=%i len(fem2.%s)=%i' % (name, len(obj2), name, len(obj2))
+        raise AssertionError(msg)
 
 def compare_card_content(fem1, fem2):
     check_obj_names = [
-        'params', 'nodes', 'elements', 'rigid_elements', 'nsms',
+        'params', 'nodes', 'spoints', 'epoints', 'points',
+        'elements', 'rigid_elements', 'nsms',
         'properties', 'materials', 'creep_materials',
         'loads', 'coords',
         'spcs', 'spcoffs', 'mpcs', 'dareas', 'dphases',
@@ -300,6 +302,7 @@ def compare_thermal_content(fem1, fem2):
 
 
 def compare_optimization_content(fem1, fem2):
+    """compares optimization cards"""
     assert len(fem1.dconstrs) == len(fem2.dconstrs)
     assert len(fem1.desvars) == len(fem2.desvars)
     assert len(fem1.ddvals) == len(fem2.ddvals)
@@ -346,6 +349,7 @@ def compare_optimization_content(fem1, fem2):
 
 
 def compare_aero_content(fem1, fem2):
+    """compares aero cards"""
     assert len(fem1.caeros) == len(fem2.caeros)
     assert len(fem1.paeros) == len(fem2.paeros)
     assert (fem1.aero is None) == (fem2.aero is None), 'fem1.aero_is_None=%s fem2.aero_is_None=%s' % (fem1.aero is None, fem2.aero is None)

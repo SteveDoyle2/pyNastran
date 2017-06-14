@@ -6,10 +6,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, integer_types
 from six.moves import range
 import sys
+from typing import List, Union, Any
 from numpy import float32, isnan
 
 
 def set_string8_blank_if_default(value, default):
+    # type: (Any, Any) -> str
     """helper method for writing BDFs"""
     val = set_blank_if_default(value, default)
     if val is None:
@@ -18,6 +20,7 @@ def set_string8_blank_if_default(value, default):
 
 
 def is_same(value1, value2):
+    # type: (Any, Any) -> bool
     """
     Checks to see if 2 values are the same
 
@@ -31,6 +34,7 @@ def is_same(value1, value2):
 
 
 def set_blank_if_default(value, default):
+    # type: (Any, Any) -> Union[int, float, str, None]
     """
     Used when setting the output data of a card to clear default values
 
@@ -50,6 +54,7 @@ def set_blank_if_default(value, default):
 
 
 def set_default_if_blank(value, default):
+    # type: (Any, Any) -> Union[int, float, str]
     """
     Used when initializing a card and the default value isn't set
     Used on PBARL
@@ -58,6 +63,7 @@ def set_default_if_blank(value, default):
 
 
 def print_scientific_8(value):
+    # type: (float) -> str
     """
     Prints a value in 8-character scientific notation.
     This is a sub-method and shouldnt typically be called
@@ -91,6 +97,7 @@ def print_scientific_8(value):
 
 
 def print_float_8(value):
+    # type: (float) -> str
     """
     Prints a float in nastran 8-character width syntax using the
     highest precision possbile.
@@ -189,35 +196,38 @@ def print_float_8(value):
     field = field.strip(' 0')
     field = '%8s' % field
 
-    #assert len(field) == 8, ('value=|%s| field=|%s| is not 8 characters '
+    #assert len(field) == 8, ('value=%r field=%r is not 8 characters '
     #                         'long, its %s' % (value, field, len(field)))
     return field
 
 
-def print_float_or_int_8(value):
-    """
-    Prints a 8-character width field
+#def print_float_or_int_8(value):
+    ## type: (Union[int, float]) -> str
+    #"""
+    #Prints a 8-character width field
 
-    Parameters
-    ----------
-    value : int/float
-        the value to print
+    #Parameters
+    #----------
+    #value : int/float
+        #the value to print
 
-    Returns
-    -------
-    field : str
-        an 8-character string
-    """
-    if isinstance(value, (float, float32)):
-        field = print_float_8(value)
-    elif isinstance(value, integer_types):
-        field = "%8i" % value
-    else:
-        msg = 'Invalid Type:  value=%r type=%s' % (value, type(value))
-        raise TypeError(msg)
+    #Returns
+    #-------
+    #field : str
+        #an 8-character string
+    #"""
+    #if isinstance(value, (float, float32)):
+        #field = print_float_8(value)
+    #elif isinstance(value, integer_types):
+        #field = "%8i" % value
+    #else:
+        #msg = 'Invalid Type:  value=%r type=%s' % (value, type(value))
+        #raise TypeError(msg)
+    #return field
 
 
 def print_field_8(value):
+    # type: (Union[int, float, str, None]) -> str
     """
     Prints a 8-character width field
 
@@ -246,6 +256,7 @@ def print_field_8(value):
 
 
 def print_card_8(fields):
+    # type: (List[Union[int, float, str, None]]) -> str
     """
     Prints a nastran-style card with 8-character width fields.
 
@@ -299,6 +310,7 @@ def print_card_8(fields):
 
 
 def print_int_card(fields):
+    # type: (List[Union[int]]) -> str
     """
     Prints a nastran-style card with 8-character width fields.
     All fields (other than the first field) must be integers.
@@ -339,6 +351,7 @@ def print_int_card(fields):
 
 
 def print_int_card_blocks(fields_blocks):
+    # type: (List[Any]) -> str
     """
     Prints a nastran-style card with 8-character width fields.
     All fields other than the card name must be written in "block" format.

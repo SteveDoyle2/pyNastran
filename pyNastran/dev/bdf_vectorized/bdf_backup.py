@@ -3037,24 +3037,6 @@ def _clean_comment(comment, end=-1):
         comment = ''
     return comment
 
-#def print_filename(filename, relpath):
-    #"""
-    #Takes a path such as C:/work/fem.bdf and locates the file using
-    #relative paths.  If it's on another drive, the path is not modified.
-
-    #:param filename: a filename string
-
-    #Returns
-    #-------
-    #filename_string : str
-        #a shortened representation of the filename
-    #"""
-    #driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
-    #if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:
-        #return os.path.relpath(filename)
-    #return filename
-
-
 
 if __name__ == '__main__':  # pragma: no cover
     bdf = BDF()

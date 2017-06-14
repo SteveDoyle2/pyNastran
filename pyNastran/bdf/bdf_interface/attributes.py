@@ -1,6 +1,7 @@
 """defines the BDF attributes"""
 from __future__ import print_function, unicode_literals
 from collections import defaultdict
+from typing import List, Optional
 from numpy import array
 
 from pyNastran.utils import object_attributes, object_methods
@@ -18,7 +19,8 @@ class BDFAttributes(object):
         self._is_cards_dict = False
 
         self.set_as_msc()
-        self.units = []
+
+        self.units = []  # type: List[str]
 
     def set_as_msc(self):
         self._nastran_format = 'msc'
@@ -31,6 +33,7 @@ class BDFAttributes(object):
         self.is_msc = False
 
     def object_attributes(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -70,6 +73,7 @@ class BDFAttributes(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -95,7 +99,7 @@ class BDFAttributes(object):
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []
+        my_keys_to_skip = []  # type: List[str]
 
         my_keys_to_skip = [
             #'case_control_deck',
@@ -112,6 +116,7 @@ class BDFAttributes(object):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def deprecated(self, old_name, new_name, deprecated_version):
+        # type: (str, str, str) -> None
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
