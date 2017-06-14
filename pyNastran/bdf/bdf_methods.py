@@ -319,7 +319,7 @@ class BDFMethods(BDFAttributes):
             mass, cg, I = model.mass_properties(element_ids=eids)
         """
         if reference_point is None:
-            reference_point = array([0., 0., 0.])
+            reference_point = np.array([0., 0., 0.])
         elif isinstance(reference_point, integer_types):
             reference_point = self.nodes[reference_point].get_position()
 
@@ -402,7 +402,7 @@ class BDFMethods(BDFAttributes):
             mass, cg, I = model.mass_properties(element_ids=eids)
         """
         if reference_point is None:
-            reference_point = array([0., 0., 0.])
+            reference_point = np.array([0., 0., 0.])
         elif isinstance(reference_point, integer_types):
             reference_point = self.nodes[reference_point].get_position()
 
@@ -416,11 +416,13 @@ class BDFMethods(BDFAttributes):
         mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
-    def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point=None,
+    def _mass_properties_new(self, model, element_ids=None, mass_ids=None,
+                             reference_point=None,
                              sym_axis=None, scale=None, xyz_cid0=None):  # pragma: no cover
         mass, cg, I = _mass_properties_new(
-            model, element_ids=element_ids, mass_ids=mass_ids, reference_point=reference_point,
-                             sym_axis=sym_axis, scale=scale, xyz_cid0=xyz_cid0)
+            model, element_ids=element_ids, mass_ids=mass_ids,
+            reference_point=reference_point,
+            sym_axis=sym_axis, scale=scale, xyz_cid0=xyz_cid0)
         return (mass, cg, I)
 
     def resolve_grids(self, cid=0):
