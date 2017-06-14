@@ -6,11 +6,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 
 import sys
-from typing import List, Union, Any
-from numpy import float32, isnan
+from typing import List, Union, Optional, Any
+from numpy import float32, isnan  # type: ignore
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 
 def set_string16_blank_if_default(value, default):
@@ -201,7 +201,7 @@ def print_float_16(value):
 
 
 def print_field_16(value):
-    # type: (Union[int, float, str, None]) -> str
+    # type: (Optional[Union[int, float, str]]) -> str
     """
     Prints a 16-character width field
 
@@ -223,7 +223,7 @@ def print_field_16(value):
 
 
 def print_card_16(fields, wipe_fields=True):
-    # type: (List[Union[int, float, str, None]], bool) -> str
+    # type: (List[Optional[Union[int, float, str]]], bool) -> str
     """
     Prints a nastran-style card with 16-character width fields.
 
@@ -258,7 +258,7 @@ def print_card_16(fields, wipe_fields=True):
       *
     """
     if wipe_fields:
-        fields = wipe_empty_fields_typed(fields)
+        fields = wipe_empty_fields(fields)
     nfields_main = len(fields) - 1  # chop off the card name
     nbdf_lines = nfields_main // 8
     if nfields_main % 8 != 0:

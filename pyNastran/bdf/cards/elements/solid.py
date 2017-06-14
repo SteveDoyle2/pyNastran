@@ -15,6 +15,7 @@ All solid elements are SolidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import Any
 from six import integer_types
 from six.moves import range
 import numpy as np
@@ -142,7 +143,7 @@ class SolidElement(Element):
         return 0.
 
     def Mass(self):
-        # type: () -> int
+        # type: () -> float
         """
         Calculates the mass of the solid element
         Mass = Rho * Volume

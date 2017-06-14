@@ -853,11 +853,11 @@ class CaseControlDeck(object):
         cases = {}
         for isubcase, subcase in sorted(iteritems(self.subcases)):
             if isubcase:
-                cases[isubcase] = subcase.getOp2Data(self.sol, subcase.solmap_to_value)
+                cases[isubcase] = subcase.get_op2_data(self.sol, subcase.solmap_to_value)
         return cases
 
     def __repr__(self):
-        # type: () -> None
+        # type: () -> str
         msg = ''
         subcase0 = self.subcases[0]
         for subcase_id, subcase in sorted(iteritems(self.subcases)):

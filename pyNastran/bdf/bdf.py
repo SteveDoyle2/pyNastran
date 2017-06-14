@@ -290,7 +290,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
         # file management parameters
         self.active_filenames = []  # type: List[str]
-        self.active_filename = None
+        self.active_filename = None  # type: Optional[str]
         self.include_dir = ''
         self.dumplines = False
 
@@ -605,6 +605,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         return state
 
     def save(self, obj_filename='model.obj', unxref=True):
+        # type: (str, bool) -> None
         """
         ..warning:: doesn't work right
         """
@@ -624,6 +625,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             dump(self, obj_file)
 
     def load(self, obj_filename='model.obj'):
+        # type: (str) -> None
         """
         ..warning:: doesn't work right
         """
@@ -695,7 +697,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             self.dvgrids[dvid] = dvgrid
 
     def disable_cards(self, cards):
-        # type : (List[str]) -> None
+        # type : (Sequence[str]) -> None
         """
         Method for removing broken cards from the reader
 

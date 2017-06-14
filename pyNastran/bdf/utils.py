@@ -16,8 +16,8 @@ from copy import deepcopy
 from six import iteritems, StringIO, string_types
 from typing import List, Union, Dict, Optional
 
-import numpy as np
-from numpy import unique, cross, dot, array
+import numpy as np  # type: ignore
+from numpy import unique, cross, dot, array  # type: ignore
 
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError

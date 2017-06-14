@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
+from typing import List, Dict, Set, Optional, Any
 from six import string_types, iteritems, iterkeys, itervalues
 
 import numpy as np
@@ -1177,6 +1178,7 @@ class GetCard(GetMethods):
         return out
 
     def get_node_ids_with_elements(self, eids, msg=''):
+        # type: (List[int], str) -> Set[int]
         """
         Get the node IDs associated with a list of element IDs
 
@@ -1213,6 +1215,7 @@ class GetCard(GetMethods):
 
     def get_elements_nodes_by_property_type(self, dtype='int32',
                                             save_element_types=False):
+        # type: (str, bool) -> Any
         """
         Gets a dictionary of (etype, pid) to [eids, node_ids]
 
@@ -1260,6 +1263,7 @@ class GetCard(GetMethods):
             return output, etypes
 
     def get_element_nodes_by_element_type(self, dtype='int32', solids=None):
+        # type: (str, Optional[Dict[str, Any]]) -> Any
         """
         Gets a dictionary of element type to [eids, pids, node_ids]
 

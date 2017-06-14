@@ -8,7 +8,7 @@ from six.moves import range
 import sys
 from typing import List, Union
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 def print_scientific_double(value):
     # type: (float) -> str
@@ -91,7 +91,7 @@ def print_card_double(fields, wipe_fields=True):
       *
     """
     if wipe_fields:
-        fields = wipe_empty_fields_typed(fields)
+        fields = wipe_empty_fields(fields)
     nfields_main = len(fields) - 1  # chop off the card name
     nbdf_lines = nfields_main // 8
     if nfields_main % 8 != 0:
