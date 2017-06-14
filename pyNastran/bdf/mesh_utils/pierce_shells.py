@@ -134,7 +134,7 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
     assert len(eids) > 0, 'eids=%s\n' % eids
     centroids_xy = np.array(centroids, dtype='float64')[:, :2]
 
-    print('centroids:\n%s\n' % str(centroids_xy))
+    #print('centroids:\n%s\n' % str(centroids_xy))
     assert centroids_xy.shape[1] == 2, centroids_xy.shape
 
 

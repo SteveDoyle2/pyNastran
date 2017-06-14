@@ -558,7 +558,7 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_split_line_elements(self):
         """tests split_line_elements"""
-        model = BDF()
+        model = BDF(debug=False)
         model.add_grid(1, xyz=[0., 0., 0.])
         model.add_grid(2, xyz=[1., 0., 0.])
 
@@ -700,10 +700,9 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_pierce_model(self):
         """tests pierce_shell_model"""
-        model = BDF()
         pid = 10
         mid1 = 100
-        model = BDF(debug=False)
+        model = BDF(log=log)
 
         # intersects (min)
         model.add_grid(1, xyz=[0., 0., 0.])
