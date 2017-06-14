@@ -22,6 +22,7 @@ FORMAT_TO_EXTENSION = {
     'bedge' : ['.bedge'],
     'su2' : ['.su2'],
     'tetgen' : ['.smesh', '*.ele'],  # TODO: why does this have a *?
+    #'abaqus' : []
 
     # no duplicates are allowed
     #'panair' : ['.inp'],

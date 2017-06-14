@@ -14,6 +14,7 @@ import sys
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
+from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
 
 # testing these imports are up to date
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
