@@ -1665,6 +1665,15 @@ class MOMENT1(Moment):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1873,6 +1882,15 @@ class MOMENT2(Moment):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1994,6 +2012,15 @@ class GMLOAD(Load):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2098,6 +2125,15 @@ class PLOAD(Load):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2285,6 +2321,15 @@ class PLOAD1(Load):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2423,6 +2468,15 @@ class PLOAD2(Load):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2885,6 +2939,15 @@ class PLOAD4(Load):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3042,6 +3105,15 @@ class PLOADX1(Load):
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)

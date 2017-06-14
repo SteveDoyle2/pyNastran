@@ -14,7 +14,7 @@ if sys.stdout.isatty():
 # You're running in a real terminal
 
 try:
-    from colorama import init as colorinit, Fore #, Style
+    from colorama import init as colorinit, Fore  # type: ignore
     colorinit(autoreset=True)
     IS_COLORAMA = True
     IS_TERMINAL = True

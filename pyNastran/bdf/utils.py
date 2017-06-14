@@ -14,7 +14,7 @@ import inspect
 import warnings
 from copy import deepcopy
 from six import iteritems, StringIO, string_types
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Tuple, Optional
 
 import numpy as np  # type: ignore
 from numpy import unique, cross, dot, array  # type: ignore
@@ -344,7 +344,24 @@ def parse_executive_control_deck(executive_control_lines):
 
 
 def _parse_pynastran_header(line):
+    # type: (str) -> Tuple[Optional[str], Optional[str]]
     """
+    Parameters
+    ----------
+    line : str
+        the line to parse (e.g., '$ pyNastran: version=NX')
+
+    Returns
+    -------
+    key : str / None
+        the key for the parameters
+        str : valid (e.g., 'version')
+        None : invalid
+    value : str / None
+        the key for the parameters
+        str : valid (e.g., 'NX')
+        None : invalid
+
     Search for data of the form:
         ..code-block :: python
             $ pyNastran: version=NX
@@ -418,6 +435,7 @@ def clean_empty_lines(lines):
 
 
 def print_filename(filename, relpath):
+    # type: (str, str) -> str
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
     relative paths.  If it's on another drive, the path is not modified.
@@ -525,6 +543,7 @@ def parse_patran_syntax(node_sets, pound=None):
     return unique(nodes)
 
 def write_patran_syntax_dict(dict_sets):
+    # type: (Dict[str, np.ndarray]) -> str
     """
     writes partran syntax
 
@@ -682,6 +701,7 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
 
 
 def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
+    # type: (str, Dict[str, str], str) -> Dict[str, np.ndarray]
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -731,14 +751,14 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
     .. todo:: doesn't support msg
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
-    update_type_map = {}
+    update_type_map = {}  # type: Dict[str, str]
     for key, value in iteritems(type_map):
         if key in update_type_map:
             assert update_type_map[key] == value
         update_type_map[key.upper()] = value
 
     dict_in = parse_patran_syntax_dict(node_sets.upper(), pound_dict=None)
-    dict_temp = {}
+    dict_temp = {}  # type: Dict[str, np.ndarray]
     for key_in, value in sorted(iteritems(dict_in)):
         key_in2 = key_in.upper()
         if key_in2 in update_type_map:

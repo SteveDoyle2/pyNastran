@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import List, Optional, Any
 from six import string_types, PY2
 from six.moves import zip, range
 
@@ -47,6 +48,7 @@ class BaseCard(object):
         return self.add_card(card)
 
     def get_stats(self):
+        # type: () -> str
         """Prints out an easy to read summary of the card"""
         msg = '---%s---\n' % self.type
         for name in sorted(self.object_attributes()):
@@ -55,6 +57,7 @@ class BaseCard(object):
         return msg
 
     def deprecated(self, old_name, new_name, deprecated_version):
+        # type: (str, str, str) -> None
         """deprecates methods"""
         deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
@@ -83,6 +86,7 @@ class BaseCard(object):
 
     @property
     def comment(self):
+        # type: () -> str
         """accesses the comment"""
         # just for testing
         #self.deprecated('comment()', 'comment2()', '0.7')
@@ -92,6 +96,7 @@ class BaseCard(object):
 
     @comment.setter
     def comment(self, new_comment):
+    # type: (str) -> None
         """sets a comment"""
         #comment = new_comment.rstrip()
         #self._comment = comment + '\n' if comment else ''
@@ -431,15 +436,18 @@ class Element(BaseCard):
         return positions
 
     def _nodeIDs(self, nodes=None, allow_empty_nodes=False, msg=''):
+        # type: (Optional[List[Any]], bool, str) -> List[int]
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes, allow_empty_nodes, msg)
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
+        # type: (List[int], bool) -> None
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = nids
         self.validate_node_ids(allow_empty_nodes)
 
     def validate_node_ids(self, allow_empty_nodes=False):
+        # type: (bool) -> None
         nodes = []
         if allow_empty_nodes:
             nids2 = [nid for nid in self.nodes if nid not in [None, 0]]
@@ -534,6 +542,7 @@ class Element(BaseCard):
         return face
 
 def _format_comment(comment):
+    # type: (str) -> str
     r"""Format a card comment to precede the card using
     nastran-compatible comment character $. The comment
     string can have multiple lines specified as linebreaks.
@@ -601,6 +610,7 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
         raise
 
 def expand_thru(fields, set_fields=True, sort_fields=False):
+    # type: (List[str], bool, bool) -> List[int]
     """
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
@@ -647,6 +657,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
 
 
 def expand_thru_by(fields, set_fields=True, sort_fields=False):
+    # type: (List[str], bool, bool) -> List[int]
     """
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
@@ -707,6 +718,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
 
 
 def expand_thru_exclude(fields):
+    # type: (List[str]) -> List[int]
     """
     Expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
@@ -717,7 +729,7 @@ def expand_thru_exclude(fields):
     fields = [interpret_value(field.upper())
               if isinstance(field, string_types) else field for field in fields]
 
-    fields_out = []
+    fields_out = []  # type: List[int]
     nfields = len(fields)
     for i in range(nfields):
         if fields[i] == 'THRU':

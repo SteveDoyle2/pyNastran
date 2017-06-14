@@ -139,8 +139,9 @@ class RINGAX(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # (int, bool) -> str
         """
-        The writer method used by BDF.write_card
+        The writer method used by BDF.write_card()
 
         Parameters
         -----------

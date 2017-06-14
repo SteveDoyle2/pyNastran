@@ -17,10 +17,10 @@ from collections import defaultdict
 
 from typing import List, Dict, Optional, Union, Set, Any, cast
 from six import string_types, iteritems, itervalues, iterkeys, StringIO
-from six.moves.cPickle import load, dump
+from six.moves.cPickle import load, dump  # type: ignore
 #from pickle import load, dump
 
-import numpy as np
+import numpy as np  # type: ignore
 
 from pyNastran.utils import object_attributes, print_bad_path, _filename
 from pyNastran.utils.log import get_logger2, SimpleLogger
@@ -3108,8 +3108,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         >>> icd_transform[50]
         [2]
         """
-        nids_cd_transform = defaultdict(list)
-        nids_cp_transform = defaultdict(list)
+        nids_cd_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
+        nids_cp_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
 
         nnodes = len(self.nodes)
         nspoints = 0

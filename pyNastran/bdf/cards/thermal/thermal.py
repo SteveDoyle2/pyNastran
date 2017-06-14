@@ -248,6 +248,15 @@ class CHBDYE(ThermalElement):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -437,6 +446,15 @@ class CHBDYG(ThermalElement):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -712,6 +730,15 @@ class CHBDYP(ThermalElement):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -906,6 +933,15 @@ class PCONV(ThermalProperty):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1035,6 +1071,15 @@ class PCONVM(ThermalProperty):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1152,6 +1197,15 @@ class PHBDY(ThermalProperty):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1310,6 +1364,15 @@ class CONV(ThermalBC):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1455,6 +1518,15 @@ class CONVM(ThermalBC):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1533,6 +1605,15 @@ class RADM(ThermalBC):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1630,6 +1711,15 @@ class RADBC(ThermalBC):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

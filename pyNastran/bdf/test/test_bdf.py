@@ -13,6 +13,7 @@ import os
 import sys
 import traceback
 import warnings
+from typing import List, Tuple, Optional
 from six import iteritems
 import numpy as np
 warnings.simplefilter('always')
@@ -38,6 +39,7 @@ class DisabledCardError(RuntimeError):
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
                             punch=False, cid=None, nastran=''):
+    # type: (str, bool, bool, bool, bool, Optional[int], str) -> None
     """runs all the BDFs in a given folder"""
     print("folder = %s" % folder)
     filenames = os.listdir(folder)
@@ -201,7 +203,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 def memory_usage_psutil():
     # return the memory usage in MB
     try:
-        import psutil
+        import psutil  # type: ignore
+
     except ImportError:
         return '???'
     process = psutil.Process(os.getpid())
@@ -1104,8 +1107,9 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         # print(loads)
 
 def resolve_dloads(fem, dload_id):
+    # type: (BDF, int) -> Tuple[List[float], List[int]]
     """sums the dloads"""
-    if dload_id in fem2.dloads:
+    if dload_id in fem.dloads:
         dload = fem.dloads[dload_id]
     else:
         dload = fem.dload_entries[dload_id]
@@ -1136,6 +1140,7 @@ def resolve_dloads(fem, dload_id):
     return scale_factors2, loads2
 
 def divide(value1, value2):
+    # type: (int, int) -> float
     """
     Used to divide the number of cards to check that nothing was lost.
     Handles division by 0 by returning 0, which is the reciprocal.
@@ -1151,6 +1156,7 @@ def divide(value1, value2):
 
 
 def test_get_cards_by_card_types(model):
+    # type: (BDF) -> None
     """
     Verifies the ``model.get_cards_by_card_types`` method works
     """
@@ -1188,6 +1194,7 @@ def test_get_cards_by_card_types(model):
 
 
 def compare_card_count(fem1, fem2, print_stats=False, quiet=False):
+    # type: (BDF, BDF, bool, bool) -> List[str]
     """
     Checks that no cards from fem1 are lost when we write fem2
     """
@@ -1305,6 +1312,7 @@ def compute(cards1, cards2, quiet=False):
 
 
 def get_element_stats(fem1, fem2, quiet=False):
+    # type: (BDF, BDF, bool) -> None
     """verifies that the various element methods work"""
     for (key, loads) in sorted(iteritems(fem1.loads)):
         for load in loads:
@@ -1335,6 +1343,7 @@ def get_element_stats(fem1, fem2, quiet=False):
 
 
 def get_matrix_stats(fem1, fem2):
+    # type: (BDF, BDF) -> None
     """
     Verifies the dmig.get_matrix() method works.
     """

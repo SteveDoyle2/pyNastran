@@ -22,11 +22,12 @@ All quads are QuadShell, ShellElement, and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import List, Tuple, Union, Any
 from six.moves import range
 
 import numpy as np
 from numpy import cross, allclose
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
@@ -47,7 +48,7 @@ def _triangle_area_centroid_normal(nodes, card):
 
     Parameters
     -------------
-    nodes : list
+    nodes : List[np.ndarray]
         List of three triangle vertices.
 
     Returns
@@ -114,11 +115,13 @@ class ShellElement(Element):
         raise NotImplementedError('Area undefined for %s' % self.type)
 
     def Theta_mcid(self):
+        # () -> int
         if hasattr(self, 'theta_mcid_ref'):
             return self.theta_mcid_ref.cid
         return self.theta_mcid
 
     def Thickness(self):
+        # () -> float
         """
         Returns the thickness
         """
@@ -132,6 +135,7 @@ class ShellElement(Element):
 
     @property
     def material_ids(self):
+        # () -> List[int]
         """
         Returns the material
 
@@ -140,6 +144,7 @@ class ShellElement(Element):
         return self.pid_ref.material_ids
 
     def mid(self):
+        # () -> Any
         """
         Returns the material
 
@@ -148,6 +153,7 @@ class ShellElement(Element):
         return self.pid_ref.mid()
 
     def Mid(self):
+        # () -> int
         """
         Returns the material ID
 
@@ -156,18 +162,21 @@ class ShellElement(Element):
         return self.pid_ref.Mid()
 
     def Nsm(self):
+        # () -> float
         """
         Returns the non-structural mass
         """
         return self.pid_ref.Nsm()
 
     def MassPerArea(self):
+        # () -> float
         """
         Returns the mass per area
         """
         return self.pid_ref.MassPerArea()
 
     def Mass(self):
+        # () -> float
         r"""
         .. math:: m = \frac{m}{A} A  \f]
         """
@@ -223,6 +232,7 @@ class TriShell(ShellElement):
         return x, y
 
     def Thickness(self):
+        # () -> float
         """
         Returns the thickness
         """
@@ -246,9 +256,12 @@ class TriShell(ShellElement):
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def get_area(self):
+        """see ``TriShell.Area()``"""
+        # () -> float
         return self.Area()
 
     def Area(self):
+        # () -> float
         r"""
         Get the area, :math:`A`.
 
@@ -260,6 +273,7 @@ class TriShell(ShellElement):
         return area
 
     def Normal(self):
+        # () -> np.ndarray
         r"""
         Get the normal vector, :math:`n`.
 
@@ -280,6 +294,7 @@ class TriShell(ShellElement):
         return n
 
     def Centroid(self):
+        # () -> np.ndarray
         r"""
         Get the centroid.
 
@@ -291,6 +306,7 @@ class TriShell(ShellElement):
         return centroid
 
     def center_of_mass(self):
+        # () -> np.ndarray
         return self.Centroid()
 
     def uncross_reference(self):
@@ -376,6 +392,7 @@ class CTRIA3(TriShell):
         11:'T1', 12:'T2', 13:'T3'}
 
     def _update_field_helper(self, n, value):
+        # (int, Any) -> None
         if n == 3:
             self.nodes[0] = value
         elif n == 4:
@@ -387,6 +404,7 @@ class CTRIA3(TriShell):
 
     def __init__(self, eid, pid, nids, zoffset=0., theta_mcid=0.0,
                  tflag=0, T1=None, T2=None, T3=None, comment=''):
+        # (int, int, List[int], float, Union[int, float], int, Optional[float], Optional[float], Optional[float], str) -> None
         """
         Creates a CTRIA3 card
 
@@ -468,8 +486,9 @@ class CTRIA3(TriShell):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        # type: (Any, str) -> CTRIA3
         """
-        Adds a CTRIAR card from ``BDF.add_card(...)``
+        Adds a CTRIA3 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -535,6 +554,7 @@ class CTRIA3(TriShell):
             del self.theta_mcid_ref
 
     def _verify(self, xref=True):
+        # type: (bool) -> None
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -600,6 +620,7 @@ class CTRIA3(TriShell):
 
     @property
     def node_ids(self):
+        # type: () -> List[int]
         return self._nodeIDs(allow_empty_nodes=False)
 
     def raw_fields(self):
@@ -1574,11 +1595,13 @@ class CSHEAR(QuadShell):
         return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroidNormal(self):
+        # type: () -> Tuple[np.ndarray, np.ndarray, np.ndarray]
         (area, centroid) = self.AreaCentroid()
         normal = self.Normal()
         return (area, centroid, normal)
 
     def AreaCentroid(self):
+        # type: () -> Tuple[np.ndarray, np.ndarray]
         r"""
         ::
           1-----2
@@ -1610,14 +1633,17 @@ class CSHEAR(QuadShell):
         return(area, centroid)
 
     def Centroid(self):
+        # type: () -> np.ndarray
         (n1, n2, n3, n4) = self.get_node_positions()
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
     def center_of_mass(self):
+        # type: () -> np.ndarray
         return self.Centroid()
 
     def _verify(self, xref=True):
+        # type: (bool) -> None
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1642,6 +1668,7 @@ class CSHEAR(QuadShell):
                 assert isinstance(n[i], float)
 
     def Area(self):
+        # type: () -> float
         r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
@@ -1665,6 +1692,7 @@ class CSHEAR(QuadShell):
 
     @property
     def node_ids(self):
+        # type: () -> List[int]
         return self._nodeIDs(allow_empty_nodes=False)
 
     @node_ids.setter
@@ -1672,13 +1700,16 @@ class CSHEAR(QuadShell):
         raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
+        # type: () -> List[Union[str, int]]
         list_fields = ['CSHEAR', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def repr_fields(self):
+        # type: () -> List[Union[str, int]]
         return self.raw_fields()
 
     def write_card(self, size=8, is_double=False):
+        # (int, bool) -> str
         card = self.repr_fields()
         msg = self.comment + print_card_8(card)
         #msg2 = self.write_card(size)
@@ -1686,9 +1717,11 @@ class CSHEAR(QuadShell):
         return msg
 
     def G(self):
+        # type: () -> float
         return self.pid_ref.mid_ref.G()
 
     def Thickness(self):
+        # type: () -> float
         return self.pid_ref.t
 
 

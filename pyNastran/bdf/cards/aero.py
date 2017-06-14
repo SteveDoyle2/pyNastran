@@ -173,6 +173,15 @@ class AECOMP(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -267,6 +276,15 @@ class AEFACT(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -377,6 +395,15 @@ class AELINK(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
