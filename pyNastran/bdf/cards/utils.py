@@ -1,4 +1,5 @@
 from __future__ import unicode_literals, print_function
+from typing import List, Union, Optional
 from six import string_types
 
 def build_table_lines(fields, nstart=1, nend=0):
@@ -123,6 +124,7 @@ def wipe_empty_fields(fields):
     #return untyped
 
 def wipe_empty_fields_typed(card):
+    # type: (List[Optional[str]]) -> List[str]
     """
     Removes any trailing Nones from the card.
     Also converts empty strings to None.

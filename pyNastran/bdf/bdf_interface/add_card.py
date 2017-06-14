@@ -652,7 +652,7 @@ class AddCards(AddMethods):
         return mass_obj
 
     def add_pelas(self, pid, k, ge=0., s=0., comment=''):
-        # type: (int, float, float, float, float, str) -> PELAS
+        # type: (int, float, float, float, str) -> PELAS
         """
         Creates a PELAS card
 
@@ -1037,11 +1037,13 @@ class AddCards(AddMethods):
         return prop
 
     def add_cbush1d(self, eid, pid, nids, cid, comment=''):
+        # type: (int, int, List[int], int, str) -> CBUSH1D
         elem = CBUSH1D(eid, pid, nids, cid, comment=comment)
         self._add_element_object(elem)
         return elem
 
     def add_cbush2d(self, eid, pid, nids, cid, plane, sptid, comment=''):
+        # type: (int, int, List[int], int, str, int, str) -> CBUSH2D
         elem = CBUSH2D(eid, pid, nids, cid, plane, sptid, comment=comment)
         self._add_element_object(elem)
         return elem
@@ -1064,6 +1066,7 @@ class AddCards(AddMethods):
         return prop
 
     def add_pelast(self, pid, tkid=0, tgeid=0, tknid=0, comment=''):
+        # type: (int, int, int, int, str) -> PELAST
         """
         Creates a PELAST card
 
@@ -1085,6 +1088,7 @@ class AddCards(AddMethods):
         return prop
 
     def add_conrod(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+        # type: (int, int, List[int], float, float, float, float, str) -> CONROD
         """
         Creates a CONROD card
 
@@ -1112,6 +1116,7 @@ class AddCards(AddMethods):
         return elem
 
     def add_crod(self, eid, pid, nids, comment=''):
+        # type: (int, int, List[int], str) -> CROD
         """
         Creates a CROD card
 
@@ -1131,6 +1136,7 @@ class AddCards(AddMethods):
         return elem
 
     def add_prod(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
+        # type: (int, int, float, float, float, float, str) -> PROD
         """
         Creates a PROD card
 
@@ -1156,6 +1162,7 @@ class AddCards(AddMethods):
         return prop
 
     def add_ctube(self, eid, pid, nids, comment=''):
+        # type: (int, int, List[int], str) -> CTUBE
         """
         Creates a CTUBE card
 
@@ -1200,6 +1207,7 @@ class AddCards(AddMethods):
         return prop
 
     def add_cbarao(self, eid, scale, x, comment=''):
+        # type: (int, str, List[float], str) -> CBARAO
         """
         Creates a CBARAO card, which defines additional output locations
         for the CBAR card.
@@ -1231,6 +1239,7 @@ class AddCards(AddMethods):
 
     def add_cbar(self, eid, pid, nids, x, g0, offt='GGG', pa=0, pb=0,
                  wa=None, wb=None, comment=''):
+        # type: (int, int, List[int], Any, int, str, int, int, Any, Any, str) -> CBAR
         """
         Adds a CBAR card
 

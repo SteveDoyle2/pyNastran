@@ -21,6 +21,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 import copy
+from typing import List, Dict, Any
 from six import iteritems, itervalues
 
 #from pyNastran.bdf import subcase
@@ -52,6 +53,7 @@ class CaseControlDeck(object):
         return state
 
     def __init__(self, lines, log=None):
+        # (List[str], Optional[object]) -> None
         """
         Parameters
         ----------
@@ -98,7 +100,7 @@ class CaseControlDeck(object):
         #self.debug = True
 
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
-        self.reject_lines = []
+        self.reject_lines = []  # type: List[str]
         self.begin_bulk = ['BEGIN', 'BULK']
 
         # allows BEGIN BULK to be turned off
@@ -106,7 +108,7 @@ class CaseControlDeck(object):
         self._begin_count = 0
 
         self.lines = lines
-        self.subcases = {0: Subcase(id=0)}
+        self.subcases = {0: Subcase(id=0)}  # type: Dict[int, Subcase]
         try:
             self._read(self.lines)
         except:
@@ -169,6 +171,7 @@ class CaseControlDeck(object):
         raise RuntimeError(msg)
 
     def has_subcase(self, isubcase):
+        # type: (int) -> bool
         """
         Checks to see if a subcase exists.
 
@@ -547,9 +550,9 @@ class CaseControlDeck(object):
                 #value = obj
                 #param_type = 'OBJ-type'
             #else:
-            key = value.key
-            options = obj.set_id
-            value = obj.value
+            key = value.key  # type: str
+            options = obj.set_id  # type: List[int]
+            value = obj.value  # type: int
             param_type = 'SET-type'
 
         #elif line_upper.startswith(CHECK_CARD_NAMES):
@@ -774,6 +777,7 @@ class CaseControlDeck(object):
             subcase.finish_subcase()
 
     def convert_to_sol_200(self, model):
+        # type: (object) -> None
         """
         Takes a case control deck and changes it from a SOL xxx to a SOL 200
 
@@ -827,6 +831,7 @@ class CaseControlDeck(object):
         return isubcase
 
     def cross_reference(self, model):
+        # type: (object) -> None
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -839,6 +844,7 @@ class CaseControlDeck(object):
             subcase.cross_reference(model)
 
     def get_op2_data(self):
+        # type: () -> Dict[int, Any]
         """
         Gets the relevant op2 parameters required for a given subcase
 
@@ -851,6 +857,7 @@ class CaseControlDeck(object):
         return cases
 
     def __repr__(self):
+        # type: () -> None
         msg = ''
         subcase0 = self.subcases[0]
         for subcase_id, subcase in sorted(iteritems(self.subcases)):
@@ -866,6 +873,7 @@ class CaseControlDeck(object):
         return msg
 
 def verify_card(key, value, options, line):
+    # type: (int, Any, Any, str) -> None
     """Make sure there are no obvious errors"""
     if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD',
                'CMETHOD', 'CSSCHD', 'DEACTEL', 'DEFORM', 'DESGLB', 'DESSUB',
@@ -981,7 +989,7 @@ def verify_card2(key, value, options, line):
         #assert value in ['NONE','BOTH','UNSORT','SORT', 'NOSORT', 'PUNCH',
                          #''], 'line=%r is invalid; value=%r.' % (line, value)
         pass
-    elif key in ['CSCALE', 'SUBSEQ', 'SYMSEQ', 'DEFORMATION SCALE', '', '']:
+    elif key in ['CSCALE', 'SUBSEQ', 'SYMSEQ', 'DEFORMATION SCALE', '']:
         # floats
         pass
     elif 'SET' in key:
@@ -1002,6 +1010,7 @@ def verify_card2(key, value, options, line):
 
 
 def _clean_lines(lines):
+    # type: (List[str]) -> List[str]
     """
     Removes comment characters defined by a *$*.
 
@@ -1010,7 +1019,7 @@ def _clean_lines(lines):
     lines : List[str, ...]
         the lines to clean.
     """
-    lines2 = []
+    lines2 = []  # type: List[str]
     for line in lines:
         line = line.strip(' \n\r').split('$')[0].rstrip()
         if line:
@@ -1043,7 +1052,7 @@ def _clean_lines(lines):
                 lines_pack = [line]
     return [''.join(pack) for pack in lines3]
 
-def main():
+def main():  # pragma: no cover
     """test case"""
     lines = [
         'SUBCASE 1',

@@ -2,6 +2,7 @@
 Subcase creation/extraction class
 """
 from __future__ import print_function
+from typing import Dict, Any
 from six import string_types, iteritems, PY2, PY3
 from numpy import ndarray
 
@@ -76,6 +77,7 @@ class Subcase(object):
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def get_stress_code(self, key, options, value):
+        # type: (str, Dict[str, Any], Any) -> int
         """
         Method get_stress_code:
 
@@ -296,6 +298,7 @@ class Subcase(object):
             raise RuntimeError(data_code)
 
     def get_format_code(self, options, value):
+        # type: (Any, Any) -> int
         """
         Gets the format code that will be used by the op2 based on
         the options.
@@ -340,6 +343,7 @@ class Subcase(object):
         return sort_code
 
     def get_device_code(self, options, value):
+        # type: (Any, Any) -> int
         """
         Gets the device code of a given set of options and value
 
@@ -616,6 +620,7 @@ class Subcase(object):
         return table_code
 
     def __contains__(self, param_name):
+        # type: (str) -> bool
         """
         Checks to see if a parameter name is in the subcase.
 

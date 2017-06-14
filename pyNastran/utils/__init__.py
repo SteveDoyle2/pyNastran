@@ -7,6 +7,7 @@ import sys
 from codecs import open as codec_open
 from itertools import count
 
+from typing import List, Union, Optional
 from six import PY2, string_types, iteritems, StringIO
 
 import numpy as np
@@ -21,9 +22,9 @@ float_types = (float, np.float32)
 
 
 def ipython_info():
-    # type: () -> bool
+    # type: () -> Optional[str]
     """determines if iPython/Jupyter notebook is running"""
-    ip = False
+    ip = None
     if 'ipykernel' in sys.modules:
         ip = 'notebook'
     elif 'Ipython' in sys.modules:
@@ -170,7 +171,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
 
 
 def object_methods(obj, mode='public', keys_to_skip=None):
-    # type: (obj, str, Optional[List[str]]) -> List[str]
+    # type: (object, str, Optional[List[str]]) -> List[str]
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
@@ -198,7 +199,7 @@ def object_methods(obj, mode='public', keys_to_skip=None):
 
 
 def object_attributes(obj, mode='public', keys_to_skip=None):
-    # type: (obj, str, Optional[List[str]]) -> List[str]
+    # type: (object, str, Optional[List[str]]) -> List[str]
     """
     List the names of attributes of a class as strings. Returns public
     attributes as default.

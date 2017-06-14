@@ -128,6 +128,17 @@ try:
 except ImportError:
     py_packages.append('docopt == 0.6.2')
 
+
+try:
+    import typing
+    sver = [int(val) for val in typing.__version__.split('-')[0].split('.')]
+    if sver < [3, 6, 1]:
+    #if typing.__version__ != '3.6.1':
+        print("typing.__version__ = %r != '3.6.1'" % docopt.__version__)
+        py_packages.append('typing >= 3.6.1')
+except ImportError:
+    py_packages.append('typing >= 3.6.1')
+
 try:
     import imageio
     if imageio.__version__ < '2.1.2':

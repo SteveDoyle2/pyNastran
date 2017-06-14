@@ -67,6 +67,7 @@ _chexa_faces = (
 )
 
 def volume4(n1, n2, n3, n4):
+    # type: (Any, Any, Any, Any) -> float
     r"""
     Gets the volume, :math:`V`, of the tetrahedron.
 
@@ -122,21 +123,26 @@ class SolidElement(Element):
         del self.nodes_ref, self.pid_ref
 
     def E(self):
+        # type: () -> float
         return self.pid_ref.mid_ref.E()
 
     def G(self):
+        # type: () -> float
         return self.pid_ref.mid_ref.G()
 
     def Nu(self):
+        # type: () -> float
         return self.pid_ref.mid_ref.Nu()
 
     def Volume(self):
+        # type: () -> float
         """
         Base volume method that should be overwritten
         """
-        pass
+        return 0.
 
     def Mass(self):
+        # type: () -> int
         """
         Calculates the mass of the solid element
         Mass = Rho * Volume
@@ -145,12 +151,14 @@ class SolidElement(Element):
         return self.Rho() * self.Volume()
 
     def Mid(self):
+        # type: () -> int
         """
         Returns the material ID as an integer
         """
         return self.pid_ref.Mid()
 
     def Rho(self):
+        # type: () -> float
         """
         Returns the density
         """
