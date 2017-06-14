@@ -131,11 +131,6 @@ except ImportError:
 
 try:
     import typing
-    sver = [int(val) for val in typing.__version__.split('-')[0].split('.')]
-    if sver < [3, 6, 1]:
-    #if typing.__version__ != '3.6.1':
-        print("typing.__version__ = %r != '3.6.1'" % docopt.__version__)
-        py_packages.append('typing >= 3.6.1')
 except ImportError:
     py_packages.append('typing >= 3.6.1')
 
@@ -174,7 +169,8 @@ for icon_file in icon_files:
         icon_files2.append(os.path.join(icon_path, icon_file))
 
 exclude_words = [
-    'pyNastran.bdf.dev_vectorized', 'pyNastran.f06.dev',
+    'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
+    'pyNastran.f06.dev',
     'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
     'pyNastran.converters.dev', 'pyNastran.xdb',]
 packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
@@ -232,8 +228,8 @@ setup(
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 
-            'pyNastranv = pyNastran.bdf.dev_vectorized.solver.solver:main',
-            'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
+            'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
+            'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
         ]
     },
