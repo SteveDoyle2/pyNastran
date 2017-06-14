@@ -456,12 +456,12 @@ def expand_dof(dof):
     dof = np.atleast_1d(dof)
     edof = np.zeros((6*len(dof), 1), dtype=np.int64) - 1
     sdof = '123456'
-    for j in range(len(dof)):
+    for j, dofj in enumerate(dof):
         R = j*6
-        if dof[j] == 0:
+        if dofj == 0:
             edof[R] = 0
         else:
-            d = str(dof[j])
+            d = str(dofj)
             for r in range(6):
                 s = d.find(sdof[r])
                 if s != -1:
@@ -602,8 +602,8 @@ def mkusetmask(nasset=None):
     if isinstance(nasset, str):
         sets = nasset.split('+')
         usetmask1 = 0
-        for i in range(len(sets)):
-            usetmask1 = usetmask1 | usetmask[sets[i]]
+        for seti in sets:
+            usetmask1 = usetmask1 | usetmask[seti]
         return usetmask1
     return usetmask
 

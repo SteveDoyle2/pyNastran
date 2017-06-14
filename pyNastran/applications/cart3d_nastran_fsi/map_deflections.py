@@ -427,7 +427,7 @@ def map_old(aero_model, structural_model):
     def_mapper = DeflectionMapper(aero_model, tets, structural_model)
     for i in iteration:
         #def_mapper.set_structural_outfile('fem.f06')
-        aero_file = 'cart3d_%s.tri' % i
+        #aero_file = 'cart3d_%s.tri' % i
         #def_mapper.set_aero_infile(aero_file)
         def_mapper.build_tetrahedralization()
         #def_mapper.buildMappingMatrix()

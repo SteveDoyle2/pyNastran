@@ -68,7 +68,7 @@ class AltGeometry(object):
 
     def __deepcopy__(self, memo):
         keys = ['name', '_color', 'line_width', 'point_size', '_opacity',
-                '_representation', 'is_visible', 'bar_scale']
+                '_representation', 'is_visible', 'bar_scale', 'is_pickable']
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result

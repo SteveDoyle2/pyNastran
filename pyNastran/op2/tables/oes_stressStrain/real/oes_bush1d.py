@@ -219,7 +219,7 @@ class RealBush1DStressArray(OES_Object):
         if header is None:
             header = []
         msg = self._get_msgs()
-        (ntimes, ntotal) = self.data.shape[:2]
+        ntimes = self.data.shape[0]
         eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]

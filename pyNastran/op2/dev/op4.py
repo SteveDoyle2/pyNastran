@@ -279,8 +279,8 @@ class OP4():
         """
         if not (name[0].isalpha() or name[0] == '_'):
             oldname, name = name, '_'+name
-            warnings.warn('Output4 file has matrix name: {}.  '
-                          'Changing to {}.'.format(oldname, name),
+            warnings.warn('Output4 file has matrix name: {0}.  '
+                          'Changing to {1}.'.format(oldname, name),
                           RuntimeWarning)
         return name
 
@@ -717,10 +717,10 @@ class OP4():
         if bigmat:
             if rows < self._rows4bigmat:
                 rows = -rows
-        f.write('{:8}{:8}{:8}{:8}{:8s}1P,{}E{}.{}\n'.
+        f.write('{0:8}{1:8}{2:8}{3:8}{4:8s}1P,{5}E{6}.{7}\n'.
                 format(cols, rows, form, mtype, name.upper(),
                        perline, numlen, digits))
-        numform = '%{}.{}E'.format(numlen, digits)
+        numform = '%{0}.{1}E'.format(numlen, digits)
         return cols, multiplier, perline, numlen, numform
 
     def _write_ascii(self, f, name, matrix, digits):
@@ -750,7 +750,7 @@ class OP4():
                 s = pv[0, 0]
                 e = pv[0, -1]
                 elems = (e - s + 1) * multiplier
-                f.write('{:8}{:8}{:8}\n'.format(c+1, s+1, elems))
+                f.write('{0:8}{1:8}{2:8}\n'.format(c+1, s+1, elems))
                 v = np.asarray(v[s:e+1]).flatten()
                 v.dtype = float
                 neven = ((elems - 1) // perline) * perline
@@ -761,7 +761,7 @@ class OP4():
                 for i in range(neven, elems):
                     f.write(numform % v[i])
                 f.write('\n')
-        f.write('{:8}{:8}{:8}\n'.format(cols+1, 1, 1))
+        f.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
         f.write(numform % 2**.5)
         f.write('\n')
 
@@ -799,12 +799,12 @@ class OP4():
                 v = np.asarray(v).flatten()
                 ind = self._sparse_col_stats(v)
                 nwords = ind.shape[0] + 2*sum(ind[:, 1])*multiplier
-                f.write('{:8}{:8}{:8}\n'.format(c+1, 0, nwords))
+                f.write('{0:8}{1:8}{2:8}\n'.format(c+1, 0, nwords))
                 for row in ind:
                     r = row[0]
                     L = row[1]*2*multiplier
                     IS = (r+1) + ((L+1) << 16)
-                    f.write('{:12}\n'.format(IS))
+                    f.write('{0:12}\n'.format(IS))
                     string = v[r:r+row[1]]
                     string.dtype = float
                     elems = L // 2
@@ -816,7 +816,7 @@ class OP4():
                     for i in range(neven, elems):
                         f.write(numform % string[i])
                     f.write('\n')
-        f.write('{:8}{:8}{:8}\n'.format(cols+1, 1, 1))
+        f.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
         f.write(numform % 2**.5)
         f.write('\n')
 
@@ -846,11 +846,11 @@ class OP4():
                 v = np.asarray(v).flatten()
                 ind = self._sparse_col_stats(v)
                 nwords = 2*ind.shape[0] + 2*sum(ind[:, 1])*multiplier
-                f.write('{:8}{:8}{:8}\n'.format(c+1, 0, nwords))
+                f.write('{0:8}{1:8}{2:8}\n'.format(c+1, 0, nwords))
                 for row in ind:
                     r = row[0]
                     L = row[1]*2*multiplier
-                    f.write('{:8}{:8}\n'.format(L+1, r+1))
+                    f.write('{0:8}{1:8}\n'.format(L+1, r+1))
                     string = v[r:r+row[1]]
                     string.dtype = float
                     elems = L // 2
@@ -862,7 +862,7 @@ class OP4():
                     for i in range(neven, elems):
                         f.write(numform % string[i])
                     f.write('\n')
-        f.write('{:8}{:8}{:8}\n'.format(cols+1, 1, 1))
+        f.write('{0:8}{1:8}{2:8}\n'.format(cols+1, 1, 1))
         f.write(numform % 2**.5)
         f.write('\n')
 
@@ -909,7 +909,7 @@ class OP4():
             multiplier = 1
 
         # write 1st record (24 bytes: 4 4-byte ints, 1 8-byte string)
-        name = ('{:<8}'.format(name.upper())).encode()
+        name = ('{0:<8}'.format(name.upper())).encode()
         if bigmat:
             if rows < self._rows4bigmat:
                 rows = -rows
@@ -1195,7 +1195,7 @@ class OP4():
                 mtypes.append(mtype)
             if verbose:
                 for n, s, f, m in zip(names, sizes, forms, mtypes):
-                    print('{:8}, {:6} x {:<6}, form={}, mtype={}'
+                    print('{0:8}, {1:6} x {2:<6}, form={3}, mtype={4}'
                           .format(n, s[0], s[1], f, m))
         finally:
             self._op4close()

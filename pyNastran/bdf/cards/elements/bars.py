@@ -1038,17 +1038,17 @@ class CBEND(LineElement):
         #bend_radius = prop.rb
         #theta_bend = prop.thetab
         #length_oa = None
-        if self.geom == 1:
+        #if self.geom == 1:
             #The center of curvature lies on the line AO
             #(or its extension) or vector .
-            pass
-        elif self.geom == 2:
+            #pass
+        #elif self.geom == 2:
             # The tangent of centroid arc at end A is
             # parallel to line AO or vector . Point O (or
             # vector) and the arc must be on the
             # same side of the chord .
-            pass
-        elif self.geom == 3:
+            #pass
+        #elif self.geom == 3:
             # The bend radius (RB) is specified on the
             # PBEND entry: Points A, B, and O (or
             # vector ) define a plane parallel or
@@ -1056,18 +1056,18 @@ class CBEND(LineElement):
             # arc. Point O (or vector ) lies on the
             # opposite side of line AB from the center of
             # the curvature.
-            pass
-        elif self.geom == 4:
+            #pass
+        #elif self.geom == 4:
             # THETAB is specified on the PBEND entry.
             # Points A, B, and O (or vector ) define a
             # plane parallel or coincident with the plane
             # of the element arc. Point O (or vector )
             # lies on the opposite side of line AB from the
             # center of curvature.
-            pass
-        else:
-            raise RuntimeError('geom=%r is not supported on the CBEND' % self.geom)
-        return L
+            #pass
+        #else:
+            #raise RuntimeError('geom=%r is not supported on the CBEND' % self.geom)
+        #return L
 
     def _validate_input(self):
         if self.g0 in [self.ga, self.gb]:

@@ -4,7 +4,6 @@ defines:
                  starting_id_dict=None, round_ids=False, cards_to_skip=None)
 """
 from __future__ import print_function
-from math import ceil
 from itertools import chain
 
 from six import iteritems, string_types
@@ -12,6 +11,7 @@ import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import integer_types, object_attributes
+from pyNastran.utils.mathematics import roundup
 
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
@@ -573,7 +573,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     param_id = 9999
     for (dict_obj, param_name, mmap) in data:
         if round_ids:
-            param_id = _roundup(param_id, 1000) + 1
+            param_id = roundup(param_id, 1000) + 1
         else:
             param_id = 1
         for idi, param in sorted(iteritems(dict_obj)):
@@ -873,28 +873,3 @@ def _update_case_control(model, mapper):
                 raise RuntimeError(key)
                     #if value ==
         #print()
-
-def _roundup(value, round_increment=100):
-    """
-    Rounds up to the next N.
-
-    Parameters
-    ----------
-    value : int
-        the value to round up
-    round_increment : int
-        the increment to round by
-
-    .. python
-
-      >>> 100 = _roundup(10)
-      >>> 200 = _roundup(105)
-      >>> 300 = _roundup(200)
-      >>> 1000 = _roundup(200, 1000)
-      >>> 2000 = _roundup(1000, 1000)
-      >>> 2000 = _roundup(1001, 1000)
-
-    .. note :: this function is used to ensure that renumbering is more
-               obvious when testing
-    """
-    return int(ceil(value / float(round_increment))) * round_increment

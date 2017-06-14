@@ -127,7 +127,7 @@ def convert_to_dict(self, lines, debug=True):
                 if debug:
                     self.log.debug('%ssingle - adding active_key=%r' % (step, active_key))
                     self.log.debug('%sactive_keys=%s' % (step, active_keys))
-                assert active_key != None
+                assert active_key is not None
                 assert active_key != '};', active_key
                 assert active_key != ');', active_key
                 assert ';' not in active_key, active_key
@@ -138,7 +138,7 @@ def convert_to_dict(self, lines, debug=True):
                 if line.endswith(';'): # single-value
                     if debug:
                         self.log.debug('*C1 %s' % line)
-                    #assert active_key != None
+                    #assert active_key is not None
                     key, value = sline
                     if active_key is None:
                         active_data[key] = value[:-1]

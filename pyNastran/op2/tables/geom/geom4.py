@@ -296,42 +296,43 @@ class GEOM4(GeomCommon):
         self.log.info('skipping MPC in GEOM4\n')
         return len(data)
         #self.show_data(data)
-        ndata = len(data)
-        nfields = (ndata-n) // 4
-        #print('nfields = %s' % nfields)
-        datan = data[n:]
-        ints = unpack(b(self._endian + '%ii' % nfields), datan)
-        floats = unpack(b(self._endian + '%if' % nfields), datan)
-        i = 0
-        nentries = 0
-        mpc_data = []
-        j = 0
-        #self.show_data(data, 'if')
-        while i < nfields:
-            if ints[i] == -1:
-                # starting a new configuration
-                assert ints[i+1] == -1, ints
-                assert ints[i+2] == -1, ints
-                mpci = MPC.add_op2_data(mpc_data)
-                self._add_constraint_mpc_object(mpci) # extracts [sid, nid, c]
-                #print(mpc_data)
-                nentries += 1
-                if self.is_debug_file:
-                    self.binary_debug.write('  MPC=%s\n' % str(mpc_data))
-                mpc = []
-                j = 0
-                i += 2
-                continue
-            if j == 0:
-                mpc_data = [ints[i], ints[i+1], ints[i+2], floats[i+3]]
-                i += 4
-            i += 1
-            #print(i, nfields)
-            for val in mpc_data:
-                if isinstance(val, integer_types):
-                    assert val != -1, mpc_data
-        mpc = MPC.add_op2_data(mpc_data)
-        return len(data)
+
+        #ndata = len(data)
+        #nfields = (ndata-n) // 4
+        ##print('nfields = %s' % nfields)
+        #datan = data[n:]
+        #ints = unpack(b(self._endian + '%ii' % nfields), datan)
+        #floats = unpack(b(self._endian + '%if' % nfields), datan)
+        #i = 0
+        #nentries = 0
+        #mpc_data = []
+        #j = 0
+        ##self.show_data(data, 'if')
+        #while i < nfields:
+            #if ints[i] == -1:
+                ## starting a new configuration
+                #assert ints[i+1] == -1, ints
+                #assert ints[i+2] == -1, ints
+                #mpci = MPC.add_op2_data(mpc_data)
+                #self._add_constraint_mpc_object(mpci) # extracts [sid, nid, c]
+                ##print(mpc_data)
+                #nentries += 1
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  MPC=%s\n' % str(mpc_data))
+                #mpc = []
+                #j = 0
+                #i += 2
+                #continue
+            #if j == 0:
+                #mpc_data = [ints[i], ints[i+1], ints[i+2], floats[i+3]]
+                #i += 4
+            #i += 1
+            ##print(i, nfields)
+            #for val in mpc_data:
+                #if isinstance(val, integer_types):
+                    #assert val != -1, mpc_data
+        #mpc = MPC.add_op2_data(mpc_data)
+        #return len(data)
 
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
@@ -357,7 +358,6 @@ class GEOM4(GeomCommon):
 
     def _read_rbar_nx(self, data, n):
         """RBAR(6601,66,292) - Record 22 - NX version"""
-        # nx
         s = Struct(b(self._endian + '7i'))
         ntotal = 28
         nelements = (len(data) - n) // ntotal
@@ -463,7 +463,6 @@ class GEOM4(GeomCommon):
     def _read_rrod_nx(self, data, n):
         """RROD(6501,65,291) - Record 30"""
         s = Struct(b(self._endian + '5i'))
-        #self.show_data(data)
         ntotal = 20
         nelements = (len(data) - n) // ntotal
         elements = []
@@ -482,7 +481,6 @@ class GEOM4(GeomCommon):
     def _read_rrod_msc(self, data, n):
         """RROD(6501,65,291) - Record 30"""
         s = Struct(b(self._endian + '5if'))
-        #self.show_data(data)
         ntotal = 24
         nelements = (len(data) - n) // ntotal
         elements = []
@@ -546,8 +544,6 @@ class GEOM4(GeomCommon):
         SEQSET1=[1   0   1 101 112
                  2   0   1 113 124]
         """
-        #self.log.info('skipping SEQSET1 in GEOM4\n')
-        #return len(data)
         return self._read_superxset1(data, n, 'SEQSET1', SEQSET1, self._add_seqset_object,
                                      debug=True)
 

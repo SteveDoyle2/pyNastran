@@ -8,7 +8,7 @@ set_printoptions(suppress=True, precision=3)
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, RROD
-from pyNastran.bdf.errors import DuplicateIDsError
+#from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2
 
 bdf = BDF(debug=False)
