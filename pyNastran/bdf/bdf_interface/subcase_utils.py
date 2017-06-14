@@ -1,5 +1,6 @@
 from __future__ import print_function
 from six import string_types, iteritems
+from typing import List
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
@@ -161,6 +162,7 @@ def write_stress_type(key, options, value, spaces):
 
 
 def write_set(value, options, spaces=''):
+    # type: (List[int], int, str) -> str
     """
     writes
     SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,

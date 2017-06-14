@@ -14,14 +14,14 @@ import inspect
 import warnings
 from copy import deepcopy
 from six import iteritems, StringIO, string_types
+from typing import List, Union, Dict, Optional
 
-import numpy as np
-from numpy import unique, cross, dot, array
+import numpy as np  # type: ignore
+from numpy import unique, cross, dot, array  # type: ignore
 
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
-
 
 is_windows = 'nt' in os.name
 #is_linux = 'posix' in os.name
@@ -48,6 +48,7 @@ EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units']
 
 
 def _to_fields_mntpnt1(card_lines):
+    # type: (List[str]) -> List[str]
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
 
@@ -70,6 +71,7 @@ def _to_fields_mntpnt1(card_lines):
     return fields
 
 def to_fields_long(card_lines, card_name):
+    # type: (List[str], str) -> List[str]
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
@@ -100,7 +102,7 @@ def to_fields_long(card_lines, card_name):
       >>> fields
       ['GRID', '1', '', '1.0', '2.0', '3.0']
     """
-    fields = []
+    fields = []  # type: List[str]
 
     if card_name == 'MONPNT1':
         return _to_fields_mntpnt1(card_lines)
@@ -175,6 +177,7 @@ def to_fields_long(card_lines, card_name):
     return fields #[field.strip() for field in fields]
 
 def to_fields(card_lines, card_name):
+    # type: (List[str], str) -> List[str]
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
@@ -202,7 +205,7 @@ def to_fields(card_lines, card_name):
       >>> fields
       ['GRID', '1', '', '1.0', '2.0', '3.0']
     """
-    fields = []
+    fields = []  # type: List[str]
 
     if card_name == 'MONPNT1':
         return _to_fields_mntpnt1(card_lines)
@@ -278,6 +281,7 @@ def to_fields(card_lines, card_name):
 
 
 def get_include_filename(card_lines, include_dir=''):
+    # type: (List[str], str) -> str
     """
     Parses an INCLUDE file split into multiple lines (as a list).
 
@@ -393,6 +397,7 @@ def _parse_pynastran_header(line):
 
 
 def clean_empty_lines(lines):
+    # type: (List[str]) -> List[str]
     """
     Removes leading and trailing empty lines
     don't remove internally blank lines
@@ -436,6 +441,7 @@ def print_filename(filename, relpath):
 
 
 def parse_patran_syntax(node_sets, pound=None):
+    # type: (str, Optional[int]) -> np.ndarray
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -494,7 +500,7 @@ def parse_patran_syntax(node_sets, pound=None):
         return array([], dtype='int32')
 
     snodes = node_sets.split()
-    nodes = []
+    nodes = []  # type: List[int]
     for snode in snodes:
         if ':' in snode:
             ssnode = snode.split(':')
@@ -551,6 +557,7 @@ def write_patran_syntax_dict(dict_sets):
 
 
 def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
+    # type: (str, Dict[str, Optional[int]], str) -> Dict[str, np.ndarray]
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -602,7 +609,7 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
               Use parse_patran_syntax to skip the identifier.
     .. warning:: case sensitive
     """
-    data = {}
+    data = {}  # type: Dict[str, List[int]]
     try:
         snodes = node_sets.split()
     except AttributeError:
@@ -911,6 +918,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
 
 
 def deprecated(old_name, new_name, deprecated_version, levels=None):
+    # type: (str, str, str, Optional[List[int]]) -> None
     """
     Parameters
     ----------

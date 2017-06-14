@@ -19,8 +19,8 @@ from copy import deepcopy
 from codecs import open
 
 from six import iteritems, PY2
-
-from numpy import array
+from typing import List, Tuple, Any, Union, Dict
+import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -249,7 +249,7 @@ class BDFMethods(BDFAttributes):
     def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
                         sym_axis=None, scale=None):
         """
-        Caclulates mass properties in the global system about the
+        Calculates mass properties in the global system about the
         reference point.
 
         Parameters
@@ -267,7 +267,8 @@ class BDFMethods(BDFAttributes):
             type : int
                 the node id
         sym_axis : str, optional
-            The axis to which the model is symmetric. If AERO cards are used, this can be left blank
+            The axis to which the model is symmetric.
+            If AERO cards are used, this can be left blank.
             allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
         scale : float, optional
             The WTMASS scaling value.
@@ -318,7 +319,7 @@ class BDFMethods(BDFAttributes):
             mass, cg, I = model.mass_properties(element_ids=eids)
         """
         if reference_point is None:
-            reference_point = array([0., 0., 0.])
+            reference_point = np.array([0., 0., 0.])
         elif isinstance(reference_point, integer_types):
             reference_point = self.nodes[reference_point].get_position()
 
@@ -401,7 +402,7 @@ class BDFMethods(BDFAttributes):
             mass, cg, I = model.mass_properties(element_ids=eids)
         """
         if reference_point is None:
-            reference_point = array([0., 0., 0.])
+            reference_point = np.array([0., 0., 0.])
         elif isinstance(reference_point, integer_types):
             reference_point = self.nodes[reference_point].get_position()
 
@@ -415,11 +416,13 @@ class BDFMethods(BDFAttributes):
         mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
-    def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point=None,
+    def _mass_properties_new(self, element_ids=None, mass_ids=None,
+                             reference_point=None,
                              sym_axis=None, scale=None, xyz_cid0=None):  # pragma: no cover
         mass, cg, I = _mass_properties_new(
-            model, element_ids=element_ids, mass_ids=mass_ids, reference_point=reference_point,
-                             sym_axis=sym_axis, scale=scale, xyz_cid0=xyz_cid0)
+            self, element_ids=element_ids, mass_ids=mass_ids,
+            reference_point=reference_point,
+            sym_axis=sym_axis, scale=scale, xyz_cid0=xyz_cid0)
         return (mass, cg, I)
 
     def resolve_grids(self, cid=0):
@@ -459,6 +462,7 @@ class BDFMethods(BDFAttributes):
 
     def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
                                     include_grav=False, xyz_cid0=None):
+        # type: (int, int, List[int], List[int], bool, Union[None, Dict[int, np.ndarray]]) -> Tuple[np.ndarray, np.ndarray]
         """
         Sum the forces/moments based on a list of nodes and elements.
 
@@ -532,6 +536,7 @@ class BDFMethods(BDFAttributes):
         return forces, moments
 
     def sum_forces_moments(self, p0, loadcase_id, include_grav=False, xyz_cid0=None):
+        # type: (int, int, bool, Union[None, Dict[int, np.ndarray]]) -> Tuple[np.ndarray, np.ndarray]
         """
         Sums applied forces & moments about a reference point p0 for all
         load cases.

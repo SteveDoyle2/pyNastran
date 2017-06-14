@@ -7,6 +7,9 @@ from datetime import date
 from collections import defaultdict
 from six import iteritems
 
+from xlwings import Workbook, Sheet  # type: ignore
+from pywintypes import com_error  # type: ignore
+
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
@@ -62,8 +65,6 @@ class XlsxWriter(OP2_F06_Common):
         :param delete_objects: should objects be deleted after they're written
                          to reduce memory (default=True)
         """
-        from xlwings import Workbook, Sheet#, Range, Chart
-        from pywintypes import com_error
         print('writing %s' % xlsx_filename)
         if isinstance(xlsx_filename, str):
             workbook = Workbook()  # Creates a connection with a new workbook

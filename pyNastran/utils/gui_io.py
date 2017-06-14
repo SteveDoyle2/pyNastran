@@ -1,4 +1,5 @@
 import os
+import typing
 
 try:
     import wx
@@ -53,7 +54,8 @@ def radio_pullown_dialog(Title, button_dict, nwide=3):  # pragma: no cover
     """
     pass
 
-def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
+def save_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
+    # type: (str, str, str, str) -> str
     """
     creates a save file dialog in wx or PyQt4/PySide
     """
@@ -64,7 +66,7 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     if _gui_mode == 0: # wx
         app = wx.App(redirect=False)
         app.MainLoop()
-        dlg = wx.FileDialog(None, Title, dirname, "",
+        dlg = wx.FileDialog(None, title, dirname, "",
                             wx_wildcard, wx.SAVE)
         app.MainLoop()
 
@@ -81,7 +83,7 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         form = QtDialog()
         form.show()
 
-        fname = QFileDialog.getSaveFileName(form, Title,
+        fname = QFileDialog.getSaveFileName(form, title,
                                             dirname, qt_wildcard)
         app.exit()
         #print("fname =", fname)
@@ -92,7 +94,8 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     return fname
 
 
-def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
+def load_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
+    # type: (str, str, str, str) -> (str, str)
     """
     creates a load file dialog in wx or PyQt4/PySide
     """
@@ -104,7 +107,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     if _gui_mode == 0: # wx
         app = wx.App(redirect=False)
         app.MainLoop()
-        dlg = wx.FileDialog(None, Title, dirname, "",
+        dlg = wx.FileDialog(None, title, dirname, "",
                             wx_wildcard, wx.OPEN)
         app.MainLoop()
 
@@ -121,7 +124,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         form = QtDialog()
         form.show()
 
-        output = QFileDialog.getOpenFileName(form, Title,
+        output = QFileDialog.getOpenFileName(form, title,
             dirname, qt_wildcard)
         if len(output) == 1:
             fname, wildcard_level = output

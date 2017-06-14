@@ -1,7 +1,8 @@
 """defines the BDF attributes"""
 from __future__ import print_function, unicode_literals
 from collections import defaultdict
-from numpy import array
+from typing import List, Dict, Optional, Any
+from numpy import array  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.utils import deprecated
@@ -18,7 +19,8 @@ class BDFAttributes(object):
         self._is_cards_dict = False
 
         self.set_as_msc()
-        self.units = []
+
+        self.units = []  # type: List[str]
 
     def set_as_msc(self):
         self._nastran_format = 'msc'
@@ -31,6 +33,7 @@ class BDFAttributes(object):
         self.is_msc = False
 
     def object_attributes(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -70,6 +73,7 @@ class BDFAttributes(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -95,7 +99,7 @@ class BDFAttributes(object):
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []
+        my_keys_to_skip = []  # type: List[str]
 
         my_keys_to_skip = [
             #'case_control_deck',
@@ -112,14 +116,17 @@ class BDFAttributes(object):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def deprecated(self, old_name, new_name, deprecated_version):
+        # type: (str, str, str) -> None
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def clear_attributes(self):
+        # type: () -> None
         """removes the attributes from the model"""
         self.__init_attributes()
 
     def __init_attributes(self):
+        # type: () -> None
         """
         Creates storage objects for the BDF object.
         This would be in the init but doing it this way allows for better
@@ -133,13 +140,13 @@ class BDFAttributes(object):
         self._encoding = None
 
         #: list of Nastran SYSTEM commands
-        self.system_command_lines = []
+        self.system_command_lines = []  # type: List[str]
 
         #: list of execive control deck lines
-        self.executive_control_lines = []
+        self.executive_control_lines = []  # type: List[str]
 
         #: list of case control deck lines
-        self.case_control_lines = []
+        self.case_control_lines = []  # type: List[str]
 
         self._auto_reject = False
         self._solmap_to_value = {
@@ -220,16 +227,16 @@ class BDFAttributes(object):
         self._nparse_errors = 0
         self._stop_on_parsing_error = True
         self._stop_on_duplicate_error = True
-        self._stored_parse_errors = []
+        self._stored_parse_errors = []  # type: List[str]
 
-        self._duplicate_nodes = []
-        self._duplicate_elements = []
-        self._duplicate_properties = []
-        self._duplicate_materials = []
-        self._duplicate_masses = []
-        self._duplicate_thermal_materials = []
-        self._duplicate_coords = []
-        self.values_to_skip = {}
+        self._duplicate_nodes = []  # type: List[str]
+        self._duplicate_elements = []  # type: List[str]
+        self._duplicate_properties = []  # type: List[str]
+        self._duplicate_materials = []  # type: List[str]
+        self._duplicate_masses = []  # type: List[str]
+        self._duplicate_thermal_materials = []  # type: List[str]
+        self._duplicate_coords = []  # type: List[str]
+        self.values_to_skip = {}  # type: Dict[str, List[int]]
 
         # ------------------------ structural defaults -----------------------
         #: the analysis type
@@ -237,90 +244,90 @@ class BDFAttributes(object):
         #: used in solution 600, method
         self.sol_method = None
         #: the line with SOL on it, marks ???
-        self.sol_iline = None
-        self.case_control_deck = None
+        self.sol_iline = None  # type : Optional[int]
+        self.case_control_deck = None  # type: Optional[Any]
 
         #: store the PARAM cards
-        self.params = {}
+        self.params = {}  # type: Dict[str, Any]
         # ------------------------------- nodes -------------------------------
         # main structural block
         #: stores SPOINT, GRID cards
-        self.nodes = {}
+        self.nodes = {}  # type: Dict[int, Any]
         #: stores POINT cards
-        self.points = {}
+        self.points = {}  # type: Dict[int, Any]
         #self.grids = {}
 
-        self.spoints = {}
-        self.epoints = {}
+        self.spoints = {}  # type: Dict[int, Any]
+        self.epoints = {}  # type: Dict[int, Any]
 
         #: stores GRIDSET card
-        self.grdset = None
+        self.grdset = None  # type: Optional[Any]
 
         #: stores SEQGP cards
-        self.seqgp = None
+        self.seqgp = None  # type: Optional[Any]
 
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
-        self.elements = {}
+        self.elements = {}  # type: Dict[int, Any]
 
         #: stores CBARAO, CBEAMAO
-        self.ao_element_flags = {}
+        self.ao_element_flags = {}  # type: Dict[int, Any]
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
-        self.rigid_elements = {}
+        self.rigid_elements = {}  # type: Dict[int, Any]
         #: stores PLOTELs
-        self.plotels = {}
+        self.plotels = {}  # type: Optional[Any]
 
         #: stores CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
-        self.masses = {}
+        self.masses = {}  # type: Dict[int, Any]
         #: stores PMASS
-        self.properties_mass = {}
+        self.properties_mass = {}  # type: Dict[int, Any]
         #: stores NSM, NSM1
-        self.nsms = {}
+        self.nsms = {}  # type: Dict[int, List[Any]]
 
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
-        self.properties = {}
+        self.properties = {}  # type: Dict[int, Any]
 
         #: stores MAT1, MAT2, MAT3, MAT8, MAT10, MAT11
-        self.materials = {}
+        self.materials = {}  # type: Dict[int, Any]
 
         #: defines the MAT4, MAT5
-        self.thermal_materials = {}
+        self.thermal_materials = {}  # type: Dict[int, Any]
 
         #: defines the MATHE, MATHP
-        self.hyperelastic_materials = {}
+        self.hyperelastic_materials = {}  # type: Dict[int, Any]
 
         #: stores MATSx
-        self.MATS1 = {}
-        self.MATS3 = {}
-        self.MATS8 = {}
+        self.MATS1 = {}  # type: Dict[int, Any]
+        self.MATS3 = {}  # type: Dict[int, Any]
+        self.MATS8 = {}  # type: Dict[int, Any]
 
         #: stores MATTx
-        self.MATT1 = {}
-        self.MATT2 = {}
-        self.MATT3 = {}
-        self.MATT4 = {}
-        self.MATT5 = {}
-        self.MATT8 = {}
-        self.MATT9 = {}
+        self.MATT1 = {}  # type: Dict[int, Any]
+        self.MATT2 = {}  # type: Dict[int, Any]
+        self.MATT3 = {}  # type: Dict[int, Any]
+        self.MATT4 = {}  # type: Dict[int, Any]
+        self.MATT5 = {}  # type: Dict[int, Any]
+        self.MATT8 = {}  # type: Dict[int, Any]
+        self.MATT9 = {}  # type: Dict[int, Any]
 
         #: stores the CREEP card
-        self.creep_materials = {}
+        self.creep_materials = {}  # type: Dict[int, Any]
 
         # loads
         #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
         #: PLOAD, PLOAD2, PLOAD4, SLOAD
         #: GMLOAD, SPCD,
         #: QVOL
-        self.loads = {}
-        self.tics = {}
+        self.loads = {}  # type: Dict[int, List[Any]]
+        self.tics = {}  # type: Optional[Any]
 
         # stores DLOAD entries.
-        self.dloads = {}
+        self.dloads = {}    # type: Dict[int, Any]
         # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE,
         #        and QVECT entries.
-        self.dload_entries = {}
+        self.dload_entries = {}    # type: Dict[int, Any]
 
         #self.gusts = {}  # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
@@ -330,195 +337,199 @@ class BDFAttributes(object):
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
-        self.coords = {0 : coord}
+        self.coords = {0 : coord}    # type: Dict[int, Any]
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
         #self.constraints = {} # suport1, anything else???
-        self.suport = []
-        self.suport1 = {}
-        self.se_suport = []
+        self.suport = []  # type: List[Any]
+        self.suport1 = {}  # type: Dict[int, Any]
+        self.se_suport = []  # type: List[Any]
 
         #: stores SPCADD, SPC, SPC1, SPCAX, GMSPC
-        #self.spcObject = ConstraintObject()
-        #: stores MPCADD,MPC
-        #self.mpcObject = ConstraintObject()
+        self.spcs = {}  # type: Dict[int, List[Any]]
 
-        self.spcs = {}
-        self.spcoffs = {}
-
-        self.mpcs = {}
+        self.spcoffs = {}  # type: Dict[int, List[Any]]
+        self.mpcs = {}  # type: Dict[int, List[Any]]
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
-        self.dareas = {}
-        self.dphases = {}
+        self.dareas = {}   # type: Dict[int, Any]
+        self.dphases = {}  # type: Dict[int, Any]
 
-        self.pbusht = {}
-        self.pdampt = {}
-        self.pelast = {}
+        self.pbusht = {}  # type: Dict[int, Any]
+        self.pdampt = {}  # type: Dict[int, Any]
+        self.pelast = {}  # type: Dict[int, Any]
 
         #: frequencies
-        self.frequencies = {}
+        self.frequencies = {}  # type: Dict[int, List[Any]]
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
-        self.dmis = {}
-        self.dmigs = {}
-        self.dmijs = {}
-        self.dmijis = {}
-        self.dmiks = {}
-        self.dti = {}
-        self._dmig_temp = defaultdict(list)
+        self.dmis = {}  # type: Dict[str, Any]
+        self.dmigs = {}  # type: Dict[str, Any]
+        self.dmijs = {}  # type: Dict[str, Any]
+        self.dmijis = {}  # type: Dict[str, Any]
+        self.dmiks = {}  # type: Dict[str, Any]
+        self.dti = {}  # type: Dict[str, Any]
+        self._dmig_temp = defaultdict(list)  # type: Dict[str, List[str]]
 
         # ----------------------------------------------------------------
         #: SETy
-        self.sets = {}
-        self.asets = []
-        self.bsets = []
-        self.csets = []
-        self.qsets = []
-        self.usets = {}
+        self.sets = {}  # type: Dict[int, Any]
+        self.asets = []  # type: List[Any]
+        self.bsets = []  # type: List[Any]
+        self.csets = []  # type: List[Any]
+        self.qsets = []  # type: List[Any]
+        self.usets = {}  # type: Dict[str, Any]
 
         #: SExSETy
-        self.se_bsets = []
-        self.se_csets = []
-        self.se_qsets = []
-        self.se_usets = {}
-        self.se_sets = {}
+        self.se_bsets = []  # type: List[Any]
+        self.se_csets = []  # type: List[Any]
+        self.se_qsets = []  # type: List[Any]
+        self.se_usets = {}  # type: Dict[str, Any]
+        self.se_sets = {}  # type: Dict[str, Any]
 
         # ----------------------------------------------------------------
         #: tables
-        self.tables = {} # TABLES1, ...
-        self.tables_d = {}  # TABLEDx
-        self.tables_m = {}  # TABLEMx
+        # TABLES1, ...
+        self.tables = {}  # type: Dict[int, Any]
+
+        # TABLEDx
+        self.tables_d = {}  # type: Dict[int, Any]
+
+        # TABLEMx
+        self.tables_m = {}  # type: Dict[int, Any]
 
         #: random_tables
-        self.random_tables = {}
+        self.random_tables = {}  # type: Dict[int, Any]
         #: TABDMP1
-        self.tables_sdamping = {}
+        self.tables_sdamping = {}  # type: Dict[int, Any]
 
         # ----------------------------------------------------------------
         #: EIGB, EIGR, EIGRL methods
-        self.methods = {}
+        self.methods = {}  # type: Dict[int, Any]
         # EIGC, EIGP methods
-        self.cMethods = {}
+        self.cMethods = {}  # type: Dict[int, Any]
 
         # ---------------------------- optimization --------------------------
         # optimization
-        self.dconadds = {}
-        self.dconstrs = {}
-        self.desvars = {}
-        self.ddvals = {}
-        self.dlinks = {}
-        self.dresps = {}
+        self.dconadds = {}  # type: Dict[int, Any]
+        self.dconstrs = {}  # type: Dict[int, Any]
+        self.desvars = {}  # type: Dict[int, Any]
+        self.ddvals = {}  # type: Dict[int, Any]
+        self.dlinks = {}  # type: Dict[int, Any]
+        self.dresps = {}  # type: Dict[int, Any]
 
-        self.dtable = None
-        self.dequations = {}
+        self.dtable = None  # type: Optional[Any]
+        self.dequations = {}  # type: Dict[int, Any]
 
         #: stores DVPREL1, DVPREL2...might change to DVxRel
-        self.dvprels = {}
-        self.dvmrels = {}
-        self.dvcrels = {}
-        self.dvgrids = {}
-        self.doptprm = None
-        self.dscreen = {}
+        self.dvprels = {}  # type: Dict[int, Any]
+        self.dvmrels = {}  # type: Dict[int, Any]
+        self.dvcrels = {}  # type: Dict[int, Any]
+        self.dvgrids = {}  # type: Dict[int, Any]
+        self.doptprm = None  # type: Optional[Any]
+        self.dscreen = {}  # type: Dict[int, Any]
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
-        self.nlpcis = {}
+        self.nlpcis = {}  # type: Dict[int, Any]
         #: stores NLPARM
-        self.nlparms = {}
+        self.nlparms = {}  # type: Dict[int, Any]
         #: stores TSTEPs, TSTEP1s
-        self.tsteps = {}
+        self.tsteps = {}  # type: Dict[int, Any]
         #: stores TSTEPNL
-        self.tstepnls = {}
+        self.tstepnls = {}  # type: Dict[int, Any]
         #: stores TF
-        self.transfer_functions = {}
+        self.transfer_functions = {}  # type: Dict[int, Any]
         #: stores DELAY
-        self.delays = {}
+        self.delays = {}  # type: Dict[int, Any]
 
         #: stores ROTORG
-        self.rotors = {}
+        self.rotors = {}  # type: Dict[int, Any]
 
         # --------------------------- aero defaults --------------------------
         # aero cards
         #: stores CAEROx
-        self.caeros = {}
+        self.caeros = {}  # type: Dict[int, Any]
         #: stores PAEROx
-        self.paeros = {}
+        self.paeros = {}  # type: Dict[int, Any]
         # stores MONPNT1
-        self.monitor_points = []
+        self.monitor_points = []  # type: List[Any]
 
         #: stores AECOMP
-        self.aecomps = {}
+        self.aecomps = {}  # type: Dict[int, Any]
         #: stores AEFACT
-        self.aefacts = {}
+        self.aefacts = {}  # type: Dict[int, Any]
         #: stores AELINK
-        self.aelinks = {}
+        self.aelinks = {}  # type: Dict[int, List[Any]]
         #: stores AELIST
-        self.aelists = {}
+        self.aelists = {}  # type: Dict[int, Any]
         #: stores AEPARAM
-        self.aeparams = {}
+        self.aeparams = {}  # type: Dict[int, Any]
         #: stores AESURF
-        self.aesurf = {}
+        self.aesurf = {}  # type: Dict[int, Any]
         #: stores AESURFS
-        self.aesurfs = {}
+        self.aesurfs = {}  # type: Dict[int, Any]
         #: stores AESTAT
-        self.aestats = {}
+        self.aestats = {}  # type: Dict[int, Any]
         #: stores CSSCHD
-        self.csschds = {}
+        self.csschds = {}  # type: Dict[int, Any]
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
-        self.splines = {}
+        self.splines = {}  # type: Dict[int, Any]
 
         # ------ SOL 144 ------
         #: stores AEROS
-        self.aeros = None
+        self.aeros = None  # type: Optional[Any]
 
         #: stores TRIM
-        self.trims = {}
+        self.trims = {}  # type: Dict[int, Any]
 
         #: stores DIVERG
-        self.divergs = {}
+        self.divergs = {}  # type: Dict[int, Any]
 
         # ------ SOL 145 ------
         #: stores AERO
-        self.aero = None
+        self.aero = None  # type: Optional[Any]
 
         #: stores FLFACT
-        self.flfacts = {}  #: .. todo:: can this be simplified ???
+        #: .. todo:: can this be simplified ???
+        self.flfacts = {}  # type: Dict[int, Any]
+
         #: stores FLUTTER
-        self.flutters = {}
+        self.flutters = {} # type: Dict[int, Any]
+
         #: mkaeros
-        self.mkaeros = []
+        self.mkaeros = []  # type: List[Any]
 
         # ------ SOL 146 ------
         #: stores GUST cards
-        self.gusts = {}
+        self.gusts = {}  # type: Dict[int, Any]
 
         # ------------------------- thermal defaults -------------------------
         # BCs
         #: stores thermal boundary conditions - CONV,RADBC
-        self.bcs = {}  # e.g. RADBC
+        self.bcs = {}  # type: Dict[int, Any]
 
         #: stores PHBDY
-        self.phbdys = {}
+        self.phbdys = {}  # type: Dict[int, Any]
         #: stores convection properties - PCONV, PCONVM ???
-        self.convection_properties = {}
+        self.convection_properties = {}  # type: Dict[int, Any]
         #: stores TEMPD
-        self.tempds = {}
+        self.tempds = {}  # type: Dict[int, Any]
 
         # -------------------------contact cards-------------------------------
-        self.bcrparas = {}
-        self.bctadds = {}
-        self.bctparas = {}
-        self.bctsets = {}
-        self.bsurf = {}
-        self.bsurfs = {}
+        self.bcrparas = {}  # type: Dict[int, Any]
+        self.bctadds = {}  # type: Dict[int, Any]
+        self.bctparas = {}  # type: Dict[int, Any]
+        self.bctsets = {}  # type: Dict[int, Any]
+        self.bsurf = {}  # type: Dict[int, Any]
+        self.bsurfs = {}  # type: Dict[int, Any]
 
         # ---------------------------------------------------------------------
-        self._type_to_id_map = defaultdict(list)
+        self._type_to_id_map = defaultdict(list)  # type: Dict[int, List[Any]]
         self._slot_to_type_map = {
             'params' : ['PARAM'],
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
@@ -746,7 +757,7 @@ class BDFAttributes(object):
             ## other
             #'INCLUDE',  # '='
             #'ENDDATA',
-        }
+        }  # type: Dict[str, List[str]]
         self._type_to_slot_map = self.get_rslot_map()
 
     @property
@@ -762,17 +773,20 @@ class BDFAttributes(object):
 
     @property
     def is_long_ids(self):
+        # type: () -> bool
         if self._nastran_format == 'nx':
             return True
         return False
 
     @property
     def sol(self):
+        # type: () -> int
         """gets the solution (e.g. 101, 103)"""
         return self._sol
 
     @sol.setter
     def sol(self, sol):
+        # type: (int) -> int
         """sets the solution (e.g. 101, 103)"""
         self._sol = sol
         if len(self.executive_control_lines) == 0:
@@ -782,6 +796,7 @@ class BDFAttributes(object):
 
     @property
     def subcases(self):
+        # type: () -> Dict[int, Optional[Any]]
         """gets the subcases"""
         if self.case_control_deck is None:
             return {}
@@ -808,6 +823,7 @@ class BDFAttributes(object):
 
     @property
     def nnodes(self):
+        # type: () -> int
         """gets the number of GRIDs"""
         return len(self.nodes)
 
@@ -826,6 +842,7 @@ class BDFAttributes(object):
 
     @property
     def nelements(self):
+        # type: () -> int
         """gets the number of element"""
         return len(self.elements)
 
@@ -839,6 +856,7 @@ class BDFAttributes(object):
 
     @property
     def nproperties(self):
+    # type: () -> int
         """gets the number of properties"""
         return len(self.properties)
 
@@ -852,6 +870,7 @@ class BDFAttributes(object):
 
     @property
     def nmaterials(self):
+        # type: () -> int
         """gets the number of materials"""
         return len(self.materials)
 
@@ -865,6 +884,7 @@ class BDFAttributes(object):
 
     @property
     def ncoords(self):
+        # type: () -> int
         """gets the number of coordinate systems"""
         return len(self.coords)
 
@@ -877,6 +897,7 @@ class BDFAttributes(object):
 
     @property
     def ncaeros(self):
+        # type: () -> int
         """gets the number of CAEROx panels"""
         return len(self.caeros)
 

@@ -6,13 +6,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 
 import sys
-from numpy import float32, isnan
+from typing import List, Union, Optional, Any
+from numpy import float32, isnan  # type: ignore
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 
 def set_string16_blank_if_default(value, default):
+    # type: (Any, Any) -> str
     """helper method for writing BDFs"""
     val = set_blank_if_default(value, default)
     if val is None:
@@ -20,6 +22,7 @@ def set_string16_blank_if_default(value, default):
     return '%16s' % val
 
 def print_scientific_16(value):
+    # type: (float) -> str
     """
     Prints a value in 16-character scientific notation.
     This is a sub-method and shouldnt typically be called
@@ -58,6 +61,7 @@ def print_scientific_16(value):
 
 
 def print_float_16(value):
+    # type: (float) -> str
     """
     Prints a float in nastran 16-character width syntax
     using the highest precision possbile.
@@ -197,6 +201,7 @@ def print_float_16(value):
 
 
 def print_field_16(value):
+    # type: (Optional[Union[int, float, str]]) -> str
     """
     Prints a 16-character width field
 
@@ -218,6 +223,7 @@ def print_field_16(value):
 
 
 def print_card_16(fields, wipe_fields=True):
+    # type: (List[Optional[Union[int, float, str]]], bool) -> str
     """
     Prints a nastran-style card with 16-character width fields.
 
@@ -228,6 +234,11 @@ def print_card_16(fields, wipe_fields=True):
     wipe_fields : bool; default=True
         some cards (e.g. PBEAM) have ending fields
         that need to be there, others cannot have them.
+
+    Returns
+    -------
+    card : str
+        string representation of the card in small field format
 
     .. note:: An internal field value of None or '' will be treated as
               a blank field
@@ -247,12 +258,12 @@ def print_card_16(fields, wipe_fields=True):
       *
     """
     if wipe_fields:
-        fields = wipe_empty_fields_typed(fields)
+        fields = wipe_empty_fields(fields)
     nfields_main = len(fields) - 1  # chop off the card name
     nbdf_lines = nfields_main // 8
     if nfields_main % 8 != 0:
         nbdf_lines += 1
-        nextra_fields = 8 * nbdf_lines -  nfields_main
+        nextra_fields = 8 * nbdf_lines - nfields_main
         fields += [None] * nextra_fields
 
     try:

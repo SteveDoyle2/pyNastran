@@ -1,12 +1,13 @@
+from __future__ import print_function
+from math import pi, degrees, acos #, asin
 from six import  iteritems
-from math import pi, degrees
+from numpy import array, cross, vstack, dot
+from numpy.linalg import norm
+
 from pyNastran.bdf.bdf import BDF, to_fields, BDFCard
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 #from pyNastran.applications.hyper
-from cards import FLOW, HYPER
-from numpy import array, cross, vstack, dot
-from math import acos, asin
-from numpy.linalg import norm
+from pyNastran.applications.hyper.cards import FLOW, HYPER
 
 
 class Hypersonic(BDF):
@@ -53,9 +54,9 @@ class Hypersonic(BDF):
 
     def _write_common(self, f, size, card_writer):
         msg = ''
-        for fid,flow in sorted(iteritems(self.flow)):
+        for fid, flow in sorted(iteritems(self.flow)):
             msg += str(flow)
-        for fid,hyper in sorted(iteritems(self.hyper)):
+        for fid, hyper in sorted(iteritems(self.hyper)):
             msg += str(hyper)
         msg += BDF._write_common(self, size, card_writer)
         f.write(msg)
@@ -139,10 +140,10 @@ class Hypersonic(BDF):
             #t1*dk - xyz_avg
             zeta = (t1[0] * (x_prime - xyz_avg[0]) +
                     t1[1] * (y_prime - xyz_avg[1]) +
-                    t1[2] * (z_prime - xyz_avg[2]) )
-            eta  = (t2[0] * (x_prime - xyz_avg[0]) +
-                    t2[1] * (y_prime - xyz_avg[1]) +
-                    t2[2] * (z_prime - xyz_avg[2]) )
+                    t1[2] * (z_prime - xyz_avg[2]))
+            eta = (t2[0] * (x_prime - xyz_avg[0]) +
+                   t2[1] * (y_prime - xyz_avg[1]) +
+                   t2[2] * (z_prime - xyz_avg[2]))
             #print('  zeta=%s' % (zeta))
             #print('  eta=%s' % (eta))
 
