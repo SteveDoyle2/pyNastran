@@ -1,11 +1,13 @@
+from __future__ import print_function
 from six import  iteritems
+from math import acos, asin
 from math import pi, degrees
+from numpy import array, cross, vstack, dot, arctan, zeros
+#from numpy.linalg import norm
+
 from pyNastran.dev.bdf_vectorized.bdf import BDF, to_fields, BDFCard
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from cards import FLOW, SUBSONIC
-from numpy import array, cross, vstack, dot, arctan, zeros
-from math import acos, asin
-from numpy.linalg import norm
+from pyNastran.applications.hyper.cards import FLOW, SUBSONIC
 
 class Subsonic(BDF):
     def __init__(self, log=None, debug=False):
@@ -14,8 +16,9 @@ class Subsonic(BDF):
         self.flow = {}
         self.cards_to_read.add('SUBSONIC')
         self.cards_to_read.add('FLOW')
+        self.add_card
 
-    def add_card(self, card_lines, card_name, comment='', is_list=True):
+    def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         card_name = card_name.upper()
         self._increase_card_count(card_name)
         if card_name in ['DEQATN']:
@@ -49,14 +52,14 @@ class Subsonic(BDF):
             return
         BDF.add_card(self, card, card_name, comment=comment, is_list=True)
 
-    def _write_common(self, size, card_writer):
+    def _write_common(self, bdf_file, size=8, is_double=False):
         msg = ''
         for fid,flow in sorted(iteritems(self.flow)):
             msg += str(flow)
         for fid,subsonic in sorted(iteritems(self.subsonic)):
             msg += str(subsonic)
-        msg += BDF._write_common(self, size, card_writer)
-        return msg
+        bdf_file.write(msg)
+        BDF._write_common(self, bdf_file, size=size, is_double=is_double)
 
     def get_pressure(self, isubcase=1):
         """
@@ -71,8 +74,8 @@ class Subsonic(BDF):
 
             a = 1.0
             V, Vn = flow.get_V()
-            mach = V / a
-            mn = Vn / a
+            #mach = V / a
+            #mn = Vn / a
             q = 1.
             pinf = 0.
 

@@ -416,11 +416,11 @@ class BDFMethods(BDFAttributes):
         mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
-    def _mass_properties_new(self, model, element_ids=None, mass_ids=None,
+    def _mass_properties_new(self, element_ids=None, mass_ids=None,
                              reference_point=None,
                              sym_axis=None, scale=None, xyz_cid0=None):  # pragma: no cover
         mass, cg, I = _mass_properties_new(
-            model, element_ids=element_ids, mass_ids=mass_ids,
+            self, element_ids=element_ids, mass_ids=mass_ids,
             reference_point=reference_point,
             sym_axis=sym_axis, scale=scale, xyz_cid0=xyz_cid0)
         return (mass, cg, I)
