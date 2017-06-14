@@ -20,13 +20,13 @@ from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
+from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells
-from pyNastran.bdf.mesh_utils.utils import *
 
 pkg_path = pyNastran.__path__[0]
 
@@ -696,6 +696,72 @@ class TestMeshUtils(unittest.TestCase):
             #assert len(lines) > 0, 'lines=%s' % lines
             #for line in lines:
                 #print(line.rstrip())
+
+
+    def test_pierce_model(self):
+        """tests pierce_shell_model"""
+        model = BDF()
+        pid = 10
+        mid1 = 100
+        model = BDF(debug=False)
+
+        # intersects (min)
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_cquad4(1, pid, [1, 2, 3, 4])
+
+        # intersects (max)
+        model.add_grid(5, xyz=[0., 0., 1.])
+        model.add_grid(6, xyz=[1., 0., 1.])
+        model.add_grid(7, xyz=[1., 1., 1.])
+        model.add_grid(8, xyz=[0., 1., 1.])
+        model.add_cquad4(2, pid, [5, 6, 7, 8])
+
+        # intersects (mid)
+        model.add_grid(9, xyz=[0., 0., 0.5])
+        model.add_grid(10, xyz=[1., 0., 0.5])
+        model.add_grid(11, xyz=[1., 1., 0.5])
+        model.add_grid(12, xyz=[0., 1., 0.5])
+        model.add_cquad4(3, pid, [9, 10, 11, 12])
+
+        # doesn't intersect
+        model.add_grid(13, xyz=[10., 0., 0.])
+        model.add_grid(14, xyz=[11., 0., 0.])
+        model.add_grid(15, xyz=[11., 1., 0.])
+        model.add_grid(16, xyz=[10., 1., 0.])
+        model.add_cquad4(4, pid, [13, 14, 15, 16])
+
+        model.add_pshell(pid, mid1=mid1, t=2.)
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        model.add_mat1(mid1, E, G, nu, rho=1.0)
+        model.validate()
+
+        model.cross_reference()
+
+        xyz_points = [
+            [0.4, 0.6, 0.],
+            [-1., -1, 0.],
+        ]
+        pierce_shell_model(model, xyz_points)
+
+    #def test_intersect(self):
+        #p0 = np.array([0,0,0], 'd')
+        #p1 = np.array([1,0,0], 'd')
+        #p2 = np.array([0,1,0], 'd')
+        #p3 = np.array([1,1,0], 'd')
+
+        #v = np.array([0,0,-1], 'd')
+        #for i in range(10):
+            #for j in range(10):
+                #p = np.array([i*.2-.5, j*.2-.5, 1.], 'd')
+                #print(i, j, p,
+                      #triangle_intersection(p, v, p0, p1, p2),
+                      #quad_intersection(p, v, p0, p1, p3, p2))
 
 
 if __name__ == '__main__':  # pragma: no cover

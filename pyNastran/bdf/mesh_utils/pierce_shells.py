@@ -6,12 +6,6 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
 
-def cross(a,b):
-    return np.array([a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]], 'd')
-
-def dot(a,b):
-    return a.dot(b)
-
 def quad_intersection(orig, direction, v0, v1, v2, v3):
     """
     Pierces a quad
@@ -58,36 +52,24 @@ def triangle_intersection(orig, direction, v0, v1, v2):
     e1 = v1 - v0
     e2 = v2 - v0
     # Calculate planes normal vector
-    pvec = cross(direction, e2);
-    det = dot(e1, pvec);
+    pvec = np.cross(direction, e2)
+    det = e1.dot(pvec)
+
     # Ray is parallel to plane
     if abs(det) < 1e-8:
         return None
 
     inv_det = 1 / det
     tvec = orig - v0
-    u = dot(tvec, pvec) * inv_det;
+    u = tvec.dot(pvec) * inv_det
     if (u < 0 or u > 1):
         return None
-    qvec = cross(tvec, e1)
-    v = dot(direction, qvec) * inv_det
+    qvec = np.cross(tvec, e1)
+    v = direction.dot(qvec) * inv_det
     if v < 0 or u + v > 1:
         return None
-    return orig + direction*(dot(e2, qvec) * inv_det)
+    return orig + direction * (e2.dot(qvec) * inv_det)
 
-def test_intersect():
-    p0 = np.array([0,0,0], 'd')
-    p1 = np.array([1,0,0], 'd')
-    p2 = np.array([0,1,0], 'd')
-    p3 = np.array([1,1,0], 'd')
-
-    v = np.array([0,0,-1], 'd')
-    for i in range(10):
-        for j in range(10):
-            p = np.array([i*.2-.5, j*.2-.5, 1.], 'd')
-            print(i, j, p,
-                  triangle_intersection(p, v, p0, p1, p2),
-                  quad_intersection(p, v, p0, p1, p3, p2))
 
 def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
     """
@@ -107,9 +89,16 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
     Returns
     -------
     eids_pierce : List[int]
-        The element ids that were pierced.
-        If multiple elements are pierced, the one with the largest
-        pierced z value will be returned.
+        int : The element ids that were pierced.
+              If multiple elements are pierced, the one with the largest
+              pierced z value will be returned.
+        None : invalid pierce
+    xyz_pierces_max : List[float ndarray, None]
+        ndarray : pierce location
+        None : invalid pierce
+    node_ids : List[int ndarray, None]
+        ndarray : pierced element's nodes
+        None : invalid pierce
     """
     xyz_points = np.asarray(xyz_points)
     assert xyz_points.shape[1] == 3, xyz_points.shape
@@ -124,8 +113,11 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
     eids = []
     centroids = []
     etypes_to_skip = [
-        'CHEXA', 'CPENTA', 'CTETRA',
-        'CBUSH', 'CBEAM'
+        'CHEXA', 'CPENTA', 'CTETRA', 'CPYRAM',
+        'CBUSH', 'CBUSH1D', 'CBUSH2D',
+        'CBEAM', 'CROD', 'CONROD',
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     ]
     for eid, elem in iteritems(model.elements):
         if elem.type in ['CQUAD4', 'CTRIA3']:
@@ -199,7 +191,6 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
             eids_newi.append(eid)
             piercesi.append(xyz_pierce)
             zpiercesi.append(zpierce)
-        #zpiercesi = []
 
         if len(zpiercesi) == 0:
             ipoints.append(i)
@@ -209,7 +200,7 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
             model.log.warning('skipping %s because no pierces found (tol=%s)' % (xyz_point, tol))
             continue
 
-        print('zpiercesi = %s' % zpiercesi)
+        #print('zpiercesi = %s' % zpiercesi)
         zpiercesi_max = max(zpiercesi)
         ipierce_max = zpiercesi.index(zpiercesi_max)
         eid_max = eids_newi[ipierce_max]
@@ -225,82 +216,9 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
         node_ids.append(model.elements[eid_max].node_ids)
 
     xyz_pierces_max = np.array(xyz_pierces_max)
-    model.log.info('ipoints=%s' % ipoints)
+    model.log.debug('ipoints=%s' % ipoints)
     model.log.info('eids_pierce=%s' % eids_pierce)
     model.log.info('xyz_pierces_max:\n%s' % xyz_pierces_max)
     model.log.info('node_ids=%s' % node_ids)
 
     return eids_pierce, xyz_pierces_max, node_ids
-
-def test_pierce_model():
-    model = BDF()
-    pid = 10
-    mid1 = 100
-    model = BDF(debug=False)
-
-    # intersects (min)
-    model.add_grid(1, xyz=[0., 0., 0.])
-    model.add_grid(2, xyz=[1., 0., 0.])
-    model.add_grid(3, xyz=[1., 1., 0.])
-    model.add_grid(4, xyz=[0., 1., 0.])
-    model.add_cquad4(1, pid, [1, 2, 3, 4])
-
-    # intersects (max)
-    model.add_grid(5, xyz=[0., 0., 1.])
-    model.add_grid(6, xyz=[1., 0., 1.])
-    model.add_grid(7, xyz=[1., 1., 1.])
-    model.add_grid(8, xyz=[0., 1., 1.])
-    model.add_cquad4(2, pid, [5, 6, 7, 8])
-
-    # intersects (mid)
-    model.add_grid(9, xyz=[0., 0., 0.5])
-    model.add_grid(10, xyz=[1., 0., 0.5])
-    model.add_grid(11, xyz=[1., 1., 0.5])
-    model.add_grid(12, xyz=[0., 1., 0.5])
-    model.add_cquad4(3, pid, [9, 10, 11, 12])
-
-    # doesn't intersect
-    model.add_grid(13, xyz=[10., 0., 0.])
-    model.add_grid(14, xyz=[11., 0., 0.])
-    model.add_grid(15, xyz=[11., 1., 0.])
-    model.add_grid(16, xyz=[10., 1., 0.])
-    model.add_cquad4(4, pid, [13, 14, 15, 16])
-
-    model.add_pshell(pid, mid1=mid1, t=2.)
-
-    E = 1.0
-    G = None
-    nu = 0.3
-    model.add_mat1(mid1, E, G, nu, rho=1.0)
-    model.validate()
-
-    model.cross_reference()
-
-    xyz_points = [
-        [0.4, 0.6, 0.],
-        [-1., -1, 0.],
-    ]
-    pierce_shell_model(model, xyz_points)
-
-
-def test_pierce_model2(bdf_filename, points_filename):
-    xyz_points = np.loadtxt(points_filename)
-    model = read_bdf(bdf_filename, xref=False)
-    model.cross_reference(xref=True, xref_nodes=True, xref_elements=True,
-                         xref_nodes_with_elements=True,
-                         xref_properties=True,
-                         xref_masses=True,
-                         xref_materials=True,
-                         xref_loads=True,
-                         xref_constraints=False,
-                         xref_aero=True,
-                         xref_sets=True,
-                         xref_optimization=True)
-    pierce_shell_model(model, xyz_points)
-
-
-if __name__ == '__main__':
-    #test_pierce_model()
-    test_pierce_model2(
-        r'C:\NASA\Baseline_05_24_17\BDF\Wing.bdf',
-        r'C:\NASA\Baseline_05_24_17\BDF\pierce_xy.txt')
