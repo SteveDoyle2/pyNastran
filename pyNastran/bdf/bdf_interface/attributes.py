@@ -120,6 +120,10 @@ class BDFAttributes(object):
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
+    def clear_attributes(self):
+        """removes the attributes from the model"""
+        self.__init_attributes()
+
     def __init_attributes(self):
         """
         Creates storage objects for the BDF object.

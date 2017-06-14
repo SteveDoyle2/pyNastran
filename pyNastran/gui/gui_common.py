@@ -3518,10 +3518,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             sline = os.path.basename(csv_filename).rsplit('.', 1)
             name = sline[0]
 
-        self._add_user_points_from_csv(csv_filename, name, color)
-        self.num_user_points += 1
-        self.log_command('on_load_csv_points(%r, %r, %s)' % (
-            csv_filename, name, str(color)))
+        is_failed = self._add_user_points_from_csv(csv_filename, name, color)
+        if not is_failed:
+            self.num_user_points += 1
+            self.log_command('on_load_csv_points(%r, %r, %s)' % (
+                csv_filename, name, str(color)))
+        return is_failed
 
     def create_cell_picker(self):
         """creates the vtk picker objects"""
@@ -3730,7 +3732,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return return_flag, None, None, None
         msg = "%s = %s" % (result_name, result_value)
         if self.result_name in ['Node_ID', 'Node ID', 'NodeID']:
-            msg += '; xyz=(%s, %s, %s)' % tuple(xyz)
+            x1, y1, z1 = xyz
+            x2, y2, z2 = world_position
+            msg += '; xyz=(%s, %s, %s); pierce_xyz=(%s, %s, %s)' % (x1, y1, z1,
+                                                                    x2, y2, z2)
         self.log_info(msg)
         return return_flag, duplicate_key, result_value, result_name, xyz
 
@@ -5999,15 +6004,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
         point_size : int; default=4
             the nominal point size
         """
-        assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
-        # read input file
+        is_failed = True
         try:
-            user_points = np.loadtxt(csv_points_filename, delimiter=',')
-        except ValueError:
-            user_points = loadtxt_nice(csv_points_filename, delimiter=',')
-            # can't handle leading spaces?
-            #raise
+            assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
+            # read input file
+            try:
+                user_points = np.loadtxt(csv_points_filename, delimiter=',')
+            except ValueError:
+                user_points = loadtxt_nice(csv_points_filename, delimiter=',')
+                # can't handle leading spaces?
+                #raise
+        except ValueError as e:
+            #self.log_error(traceback.print_stack(f))
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
+            return is_failed
+
         self._add_user_points(user_points, name, color, csv_points_filename, point_size=point_size)
+        is_failed = False
+        return False
+
 
     def _add_user_points(self, user_points, name, color, csv_points_filename='', point_size=4):
         """

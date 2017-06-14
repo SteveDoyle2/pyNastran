@@ -2,6 +2,7 @@ from __future__ import print_function
 from pyNastran.gui.menus.manage_actors import CustomQTableView
 from six import iteritems
 from PyQt4 import QtCore, QtGui
+from QtGui import QColorDialog
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
 
@@ -259,7 +260,7 @@ class EditBoundaryConditions(QtGui.QDialog):
         rgb_color_ints = obj.color
 
         msg = name
-        col = QtGui.QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self, "Choose a %s color" % msg)
+        col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self, "Choose a %s color" % msg)
         if col.isValid():
             color = col.getRgbF()[:3]
             obj.color = color
