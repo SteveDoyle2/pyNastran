@@ -1,6 +1,6 @@
 #from six import iteritems
 import numpy as np
-from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique, array
+from numpy import  zeros, where, searchsorted, argsort, full, nan, unique, array
 
 
 class ElementsSolid(object):

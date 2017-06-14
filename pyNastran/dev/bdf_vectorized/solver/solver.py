@@ -19,7 +19,7 @@ import numpy as np
 from numpy import (array, zeros, ones, dot, arange,
                    eye, searchsorted, array_equal, diag, fill_diagonal,
                    nan, nan_to_num)
-from numpy.linalg import solve, norm, eigh, eig
+from numpy.linalg import solve, eigh, eig
 
 from scipy.sparse import dok_matrix #, coo_matrix
 
