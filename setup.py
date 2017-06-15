@@ -29,8 +29,12 @@ py3_gui_scripts = []
 py3_packages = []
 
 
-is_travis = 'TRAVIS' in os.environ
-if sys.version_info <= (3,) or not is_travis:
+is_dev = (
+    'TRAVIS' in os.environ or
+    'APPVEYOR' in os.environ or
+    'READTHEDOCS' in os.environ
+)
+if sys.version_info <= (3,) or not is_dev:
     try:
         import vtk
         vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
