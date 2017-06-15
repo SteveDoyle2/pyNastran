@@ -7,7 +7,7 @@ from time import time
 from six import iteritems
 
 from numpy import argsort
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 #from pyNastran.applications.cart3d_nastran_fsi.delauney.premorph import runPremorph
 from pyNastran.applications.cart3d_nastran_fsi.delauney_reader import Tet4, DelauneyReader

@@ -8,11 +8,11 @@ from six.moves import range
 from numpy import (float32, float64, complex64, complex128, array, cross,
                    allclose, zeros, matrix, insert, diag, eye, argmax, argmin, arange)
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
-from scipy.linalg import solve_banded
-from scipy.interpolate import splrep, splev
-from scipy.integrate import quad
+from scipy.linalg import solve_banded  # type: ignore
+from scipy.interpolate import splrep, splev  # type: ignore
+from scipy.integrate import quad  # type: ignore
 
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2

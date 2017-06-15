@@ -7,7 +7,7 @@ import copy
 
 import numpy as np
 from numpy import cos, sin, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 

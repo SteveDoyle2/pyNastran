@@ -6,7 +6,7 @@ from six.moves import zip, range
 
 import numpy as np
 from numpy import array, zeros, arange, searchsorted, unique, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.dev.bdf_vectorized.cards.elements.shell.shell_element import ShellElement
 

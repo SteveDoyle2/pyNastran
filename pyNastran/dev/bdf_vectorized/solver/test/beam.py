@@ -1,5 +1,5 @@
 from numpy import matrix, cos, sin, zeros, array
-from numpy.linalg import solve, norm
+from numpy.linalg import solve, norm  # type: ignore
 
 
 def T(alphaR):

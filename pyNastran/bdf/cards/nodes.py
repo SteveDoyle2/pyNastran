@@ -26,7 +26,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six import string_types, PY2
-from typing import List, Union, Any
+from typing import List, Union, Optional, Any
 import numpy as np
 
 from pyNastran.utils import integer_types
@@ -38,7 +38,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
-    integer_or_double)
+    integer_or_double, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
@@ -1054,6 +1054,7 @@ class GRID(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        # type: (List[Union[int, float]], str) -> GRID
         """
         Adds a GRID card from the OP2
 
@@ -1076,6 +1077,7 @@ class GRID(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
+        # type: (Any, str) -> GRID
         """
         Adds a GRID card from ``BDF.add_card(...)``
 
@@ -1104,7 +1106,8 @@ class GRID(BaseCard):
             cd = integer_or_blank(card, 6, 'cd', 0)
 
             #: SPC constraint
-            ps = u(integer_or_blank(card, 7, 'ps', ''))
+            ps = components_or_blank(card, 7, 'ps', '')
+            #u(integer_or_blank(card, 7, 'ps', ''))
 
             #: Superelement ID
             seid = integer_or_blank(card, 8, 'seid', 0)
@@ -1339,6 +1342,7 @@ class GRID(BaseCard):
         return xyz
 
     def cross_reference(self, model, grdset=None):
+        # type: (Any, Optional[Any]) -> None
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1374,6 +1378,7 @@ class GRID(BaseCard):
             self.cd_ref = self.cd
 
     def uncross_reference(self):
+        # type: () -> None
         self.cp = self.Cp()
         self.cd = self.Cd()
         if self.cd != -1:
@@ -1525,6 +1530,7 @@ class POINT(BaseCard):
     _field_map = {1: 'nid', 2:'cp'}
 
     def _get_field_helper(self, n):
+        # type: (int) -> float
         """
         Gets complicated parameters on the POINT card
 
@@ -1549,6 +1555,7 @@ class POINT(BaseCard):
         return value
 
     def _update_field_helper(self, n, value):
+        # type: (int, float) -> None
         """
         Updates complicated parameters on the POINT card
 
@@ -1569,6 +1576,7 @@ class POINT(BaseCard):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, nid, cp, xyz, comment=''):
+        # type: (int, int, Optional[Union[List[float], np.ndarray]], str) -> None
         """
         Creates the POINT card
 
@@ -1600,12 +1608,14 @@ class POINT(BaseCard):
         assert self.xyz.size == 3, self.xyz.shape
 
     def validate(self):
+        # type: () -> None
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
         assert len(self.xyz) == 3
 
     @classmethod
     def add_card(cls, card, comment=''):
+        # type: (Any, str) -> POINT
         """
         Adds a POINT card from ``BDF.add_card(...)``
 
@@ -1629,6 +1639,7 @@ class POINT(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        # type: (List[Union[int, float]], str) -> POINT
         """
         Adds a POINT card from the OP2
 
@@ -1645,6 +1656,7 @@ class POINT(BaseCard):
         return POINT(nid, cp, xyz, comment=comment)
 
     def set_position(self, model, xyz, cid=0):
+        # type: (Any, np.ndarray, int) -> None
         """
         Updates the POINT location
 
@@ -1660,6 +1672,7 @@ class POINT(BaseCard):
         self.cp = model.Coord(cid, msg=msg)
 
     def get_position(self):
+        # type: () -> np.ndarray
         """
         Gets the point in the global XYZ coordinate system.
 
@@ -1672,6 +1685,7 @@ class POINT(BaseCard):
         return p
 
     def get_position_wrt(self, model, cid):
+        # type: (Any, int) -> np.ndarray
         """
         Gets the location of the POINT which started in some arbitrary
         system and returns it in the desired coordinate system
@@ -1701,6 +1715,7 @@ class POINT(BaseCard):
         return xyz
 
     def Cp(self):
+        # type: () -> int
         """
         Gets the analysis coordinate system
 
@@ -1715,6 +1730,7 @@ class POINT(BaseCard):
             return self.cp_ref.cid
 
     def cross_reference(self, model):
+        # type: (Any) -> None
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1727,10 +1743,12 @@ class POINT(BaseCard):
         self.cp_ref = self.cp
 
     def uncross_reference(self):
+        # type: () -> None
         self.cp = self.Cp()
         del self.cp_ref
 
     def raw_fields(self):
+        # type: () -> List[Union[str, int, float]]
         """
         Gets the fields in their unmodified form
 
@@ -1743,19 +1761,21 @@ class POINT(BaseCard):
         return list_fields
 
     def repr_fields(self):
+        # type: () -> List[Union[str, int, float]]
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """
         The writer method used by BDF.write_card
 

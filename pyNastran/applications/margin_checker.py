@@ -6,7 +6,7 @@ from six import iteritems
 from six.moves import zip
 
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.op2.op2 import OP2
 

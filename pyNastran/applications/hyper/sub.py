@@ -16,6 +16,29 @@ class Subsonic(BDF):
         self.cards_to_read.add('FLOW')
 
     def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
+        """
+        Adds a card object to the BDF object.
+
+        Parameters
+        ----------
+        card_lines: list[str]
+            the list of the card fields
+        card_name : str
+            the card_name -> 'GRID'
+        comment : str
+            an optional the comment for the card
+        is_list : bool, optional
+            False : input is a list of card fields -> ['GRID', 1, None, 3.0, 4.0, 5.0]
+            True :  input is list of card_lines -> ['GRID, 1,, 3.0, 4.0, 5.0']
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID', 1, 2, 3.0, 4.0, 5.0, None])
+            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
+
+        Returns
+        -------
+        card_object : BDFCard()
+            the card object representation of card
+        """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
         if card_name in ['DEQATN']:

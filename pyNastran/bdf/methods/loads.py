@@ -10,7 +10,7 @@ from six import iteritems
 from pyNastran.utils import integer_types
 import numpy as np
 from numpy import array, cross, allclose, mean
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 from pyNastran.bdf.cards.loads.static_loads import LOAD
 
 

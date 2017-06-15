@@ -551,9 +551,11 @@ class CheckCard(CaseControlCard):
     """
     type = 'CheckCard'
     allowed_keys = []
-    allowed_values = {}  # key:(type, allowed_values)
-    allowed_strings = []
-    duplicate_names = {}
+
+    # key:(type, allowed_values)
+    allowed_values = {}  # type: Dict[str, Union[float, str]]
+    allowed_strings = [] # type: List[str]
+    duplicate_names = {} # type: Dict[Any, Any]
     allow_ints = False
     def __init__(self, key, value, options):
         """

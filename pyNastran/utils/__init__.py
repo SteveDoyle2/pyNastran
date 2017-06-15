@@ -33,13 +33,12 @@ def ipython_info():
 
 def is_file_obj(filename):
     """does this object behave like a file object?"""
-    #if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or
-    #        isinstance(out_filename, file) or isinstance(out_filename, StringIO):
     return ((hasattr(filename, 'read') and hasattr(filename, 'write'))
             or isinstance(filename, file)
             or isinstance(filename, StringIO))
 
 def b(string):
+    # type: (str) -> bytes
     """reimplementation of six.b(...) to work in Python 2"""
     return string.encode('latin-1')
 

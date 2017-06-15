@@ -2,7 +2,7 @@ from __future__ import print_function
 from math import pi, degrees, acos #, asin
 from six import  iteritems
 from numpy import array, cross, vstack, dot
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.bdf import BDF, to_fields, BDFCard
 from pyNastran.bdf.cards.utils import wipe_empty_fields

@@ -2,7 +2,7 @@
 from __future__ import print_function
 from six import string_types
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.elements.bars import CBAR, LineElement

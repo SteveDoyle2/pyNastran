@@ -3,10 +3,6 @@ from six import iteritems, integer_types
 from six.moves import zip
 
 import numpy as np
-#from numpy import (array, zeros, searchsorted, unique, argsort,
-                   #hstack, where, vstack, ones, intersect1d, setdiff1d,
-                   #nan, full, ravel, ndarray)
-#from numpy.linalg import norm
 from pyNastran.utils.mathematics import unique2d
 from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
 from pyNastran.dev.bdf_vectorized.cards.elements.solid.ctetra4 import volume4

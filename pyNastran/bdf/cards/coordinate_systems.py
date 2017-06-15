@@ -16,7 +16,7 @@ from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from six.moves import zip, range
 
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default

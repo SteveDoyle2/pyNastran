@@ -67,7 +67,7 @@ class WriteMesh(object):
             assert size in [8, 16], size
 
         assert isinstance(interspersed, bool)
-        fname = print_filename(out_filename, self._relpath)
+        fname = print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
         return out_filename
 

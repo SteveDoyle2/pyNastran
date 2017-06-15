@@ -4,7 +4,7 @@ from six import iteritems
 from six.moves import zip
 
 from numpy import array, zeros, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 from pyNastran.bdf.bdf import BDF, LOAD   # PBAR, PBARL, PBEAM, PBEAML,
 from pyNastran.bdf.cards.loads.static_loads import Force, Moment
 

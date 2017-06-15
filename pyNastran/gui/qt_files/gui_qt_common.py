@@ -6,7 +6,7 @@ from six import iteritems, itervalues, iterkeys, string_types
 
 import numpy as np
 from numpy import full, issubdtype
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 

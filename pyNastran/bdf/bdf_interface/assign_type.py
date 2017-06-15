@@ -82,6 +82,11 @@ def components_or_blank(card, ifield, fieldname, default=None):
         name of field
     default : str, None
         the default value for the field (default=None)
+
+    Returns
+    -------
+    components : str
+        a string of the dofs '0' or '123456' (not all are required)
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
@@ -139,6 +144,11 @@ def field(card, ifield, fieldname):
         field number
     fieldname : str
         name of field
+
+    Returns
+    -------
+    value : int, float, str, None
+        the field value
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
@@ -158,6 +168,11 @@ def integer_double_string_or_blank(card, ifield, fieldname, default=None):
         name of field
     default : int, float, str, None (default=None)
         the default value for the field
+
+    Returns
+    -------
+    value : int, float, str, None
+        the field value
     """
     #assert isinstance(card, BDFCard), type(card)
     #assert isinstance(ifield, int), type(ifield)
@@ -228,7 +243,7 @@ def fields(f, card, fieldname, i, j=None):
 def modal_components(card, ifield, fieldname):
     # type: (BDFCard, int, str) -> int
     """
-    Used by TIC
+    Gets the modal components (allows a -1 value); used by TIC
 
     Parameters
     ----------
@@ -942,6 +957,7 @@ def string_or_blank(card, ifield, fieldname, default=None):
 
 
 def interpret_value(value_raw, card=''):
+    # type: (Optional[str], str) -> Union[int, float, str, None]
     """
     Converts a value from nastran format into python format.
 
@@ -949,7 +965,7 @@ def interpret_value(value_raw, card=''):
     ----------
     raw_value : str
         a string representation of a value
-    card : ???
+    card : str
         ???
 
     Returns

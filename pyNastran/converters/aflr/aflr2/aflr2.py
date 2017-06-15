@@ -8,7 +8,7 @@ from six.moves import range
 import numpy as np
 from numpy import (zeros, array, vstack, hstack, where,
                    arctan2, arccos, sign, isnan, radians, unique)
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.log import get_logger2
 from pyNastran.utils import print_bad_path

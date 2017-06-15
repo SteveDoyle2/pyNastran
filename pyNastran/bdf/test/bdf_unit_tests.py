@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import unittest
 from numpy import allclose, array
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods

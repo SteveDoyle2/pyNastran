@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 

@@ -1,6 +1,6 @@
 """Defines the Matrix class"""
 from __future__ import print_function
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix  # type: ignore
 import numpy as np
 
 #from pyNastran.utils import object_attributes

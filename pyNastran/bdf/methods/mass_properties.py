@@ -6,7 +6,7 @@ Defines:
 from __future__ import print_function
 from six import string_types, iteritems
 from numpy import array, cross, dot
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 import numpy as np
 from pyNastran.utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line

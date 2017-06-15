@@ -1,6 +1,6 @@
 from six.moves import range
 from numpy import arange, array, where
-from numpy.linalg import norm # acos
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.bdf import BDF
 

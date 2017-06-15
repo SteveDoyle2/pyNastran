@@ -2,7 +2,7 @@ from __future__ import print_function
 import sys
 from six import string_types
 from numpy import array, cross, allclose
-from numpy.linalg import norm, solve
+from numpy.linalg import norm, solve  # type: ignore
 
 def is_list_ranged(a, List, b):
     """

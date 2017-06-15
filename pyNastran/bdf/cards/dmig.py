@@ -7,7 +7,7 @@ from six.moves import zip, range
 
 import numpy as np
 from numpy import array, zeros
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard

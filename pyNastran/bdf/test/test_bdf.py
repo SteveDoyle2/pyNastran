@@ -20,7 +20,6 @@ warnings.simplefilter('always')
 
 np.seterr(all='raise')
 
-from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import (
     CrossReferenceError, CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
@@ -436,6 +435,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
     is no list, a test is necessary.
     """
     if nastran:
+        from pyNastran.op2.op2 import OP2
         dirname = os.path.dirname(bdf_model)
         basename = os.path.basename(bdf_model).split('.')[0]
 
@@ -459,8 +459,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
             #os.remove(bdf_model2)
 
         # make sure we're writing an OP2
-        bdf = BDF(debug=False)
-        bdf.read_bdf(bdf_model)
+        bdf = read_bdf(bdf_model, debug=False)
         if 'POST' in bdf.params:
             param_post = bdf.params['POST']
             #print('post = %s' % post)
@@ -1439,12 +1438,13 @@ def get_test_bdf_data():
     encoding = sys.getdefaultencoding()
 
     from pyNastran.utils.docopt_types import docopt_types
+    options = '[-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] '
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L]      [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-d] [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-l] [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p]                [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s]           [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-x] [-p] [-c] [-L]      %sBDF_FILENAME\n" % options
+    msg += "  test_bdf [-x] [-p] [-c] [-L] [-d] %sBDF_FILENAME\n" % options
+    msg += "  test_bdf [-x] [-p] [-c] [-L] [-l] %sBDF_FILENAME\n" % options
+    msg += "  test_bdf      [-p]                %sBDF_FILENAME\n" % options
+    msg += "  test_bdf [-x] [-p] [-s]           %sBDF_FILENAME\n" % options
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -1484,7 +1484,7 @@ def get_test_bdf_data():
     msg += "Info:\n"
     msg += '  -h, --help     show this help message and exit\n'
     msg += "  -v, --version  show program's version number and exit\n"
-
+    print(msg)
     if len(sys.argv) == 1:
         sys.exit(msg)
 

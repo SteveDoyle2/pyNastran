@@ -26,7 +26,7 @@ from six.moves import range
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 #: makes vtk work on certain builds of vtk
 #: we have to call this before vtk; you can't just try-except it
@@ -1016,7 +1016,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             the xyz coordinates used by the CAEROx actor
         label : str / None
             None : no label will be used
-            str : the name of the control surface card will be placed 
+            str : the name of the control surface card will be placed
             at the centroid of the panel
         zfighting_offset : float
             z-fighting is when two elements "fight" for who is in front

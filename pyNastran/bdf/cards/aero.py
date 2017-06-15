@@ -28,6 +28,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 import math
+from typing import List, Any
 from six.moves import zip, range
 from six import string_types
 
@@ -73,6 +74,7 @@ class AECOMP(BaseCard):
     allowed_list_types = ['SET1', 'AELIST', 'CAERO']
 
     def __init__(self, name, list_type, lists, comment=''):
+        # type: (str, List[str], List[int], str) -> None
         """
         Creates an AECOMP card
 
@@ -99,12 +101,14 @@ class AECOMP(BaseCard):
         self.lists = lists
 
     def validate(self):
+        # type: () -> None
         if not self.list_type in ['SET1', 'AELIST', 'CAERO', 'CMPID']:
             msg = 'list_type=%r not in [SET1, AELIST, CAERO, CMPID]' % self.list_type
             raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
+        # type: (Any, str) -> AECOMP
         """
         Adds an AECOMP card from ``BDF.add_card(...)``
 
@@ -429,7 +433,7 @@ class AELIST(BaseCard):
 
     Remarks
     -------
-    1. These entries are referenced by the AESURF entry.
+   1. These entries are referenced by the AESURF entry.
     2. When the THRU option is used, all intermediate grid points must exist.
        The word THRU may not appear in field 3 or 9 (2 or 9 for continuations).
     3. Intervening blank fields are not allowed.

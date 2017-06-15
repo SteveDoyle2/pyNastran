@@ -8,7 +8,7 @@ from pyNastran.f06.f06_formatting import get_key0, write_float_13e, write_floats
 from pyNastran.op2.result_objects.element_table_object import RealElementTableArray
 import numpy as np
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 

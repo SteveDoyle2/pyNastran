@@ -434,7 +434,7 @@ def clean_empty_lines(lines):
     return lines2
 
 
-def print_filename(filename, relpath):
+def print_filename(filename, relpath=True):
     # type: (str, str) -> str
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
@@ -771,7 +771,7 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
         else:
             print('skipping key=%r while parsing %s' % (key_in, msg))
 
-    dict_out = {}
+    dict_out = {}  # type: Dict[str, np.ndarray]
     for key, value_list in iteritems(dict_temp):
         if len(value_list) == 1:
             value = value_list[0]

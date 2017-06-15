@@ -5,7 +5,7 @@ import sys
 from six import iteritems
 from numpy import pi, zeros, matrix, searchsorted
 from numpy import log as natural_log
-from numpy.linalg import inv
+from numpy.linalg import inv  # type: ignore
 
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.op2.op2 import OP2

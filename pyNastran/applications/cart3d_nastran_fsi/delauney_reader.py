@@ -3,7 +3,7 @@ import os
 
 from six.moves import zip
 from numpy import array, cross, dot, abs as npabs
-from numpy.linalg import norm, solve #, cond
+from numpy.linalg import norm, solve  # type: ignore
 
 from pyNastran.applications.cart3d_nastran_fsi.math_functions import (
     is_list_ranged, list_print, shepard_weight)

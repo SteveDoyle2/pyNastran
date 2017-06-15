@@ -8,7 +8,7 @@ import os
 #import sys
 from struct import unpack, Struct
 from collections import Counter
-
+from typing import List
 from six import string_types, iteritems, PY2, PY3, b
 from six.moves import range
 
@@ -407,12 +407,12 @@ MSC_MATRIX_TABLES = [
 
     # not sure - per BAH_Plane_cont_gust.f06 (MONITOR point deck)
     b'PMRF', b'PERF', b'PFRF', b'PGRF', b'AFRF', b'AGRF', b'MP3F',
-]
+] # type: List[bytes]
 AUTODESK_MATRIX_TABLES = [
     #b'BELM',
     #b'KELM',
     #b'MELM',
-]
+] # type: List[bytes]
 # this will be split later
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
 MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + [b'MEFF',]

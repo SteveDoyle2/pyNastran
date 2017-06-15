@@ -4,7 +4,7 @@ from six import iteritems, string_types, PY2
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 import scipy
 
 from pyNastran.utils import integer_types

@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 from numpy import zeros, arange, amax, amin, where, unique, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 import vtk
 #VTK_TRIANGLE = 5

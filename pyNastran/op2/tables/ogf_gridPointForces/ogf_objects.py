@@ -8,7 +8,7 @@ from pyNastran.op2.vector_utils import transform_force_moment, transform_force_m
 from pyNastran.utils import integer_types
 
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
