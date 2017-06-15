@@ -1,7 +1,7 @@
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import double, double_or_blank, string, integer
 from numpy import array, cross, sin, cos, dot, radians
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 
 class FLOW(BaseCard):

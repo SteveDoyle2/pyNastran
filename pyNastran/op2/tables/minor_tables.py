@@ -29,7 +29,7 @@ from __future__ import print_function
 from struct import unpack
 from six import b
 import numpy as np
-import scipy
+import scipy  # type: ignore
 from pyNastran.op2.tables.matrix import Matrix
 from pyNastran.op2.tables.design_response import WeightResponse, FlutterResponse, Convergence
 from pyNastran.op2.op2_interface.op2_common import OP2Common

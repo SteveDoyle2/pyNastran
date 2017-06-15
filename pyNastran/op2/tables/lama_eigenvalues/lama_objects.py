@@ -7,7 +7,7 @@ import numpy as np
 from pyNastran.op2.result_objects.op2_objects import BaseScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 

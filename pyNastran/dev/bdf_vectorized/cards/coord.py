@@ -5,7 +5,7 @@ from numpy import (array, searchsorted, zeros, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
                    cos, sin, arccos, hstack, eye, ndarray, arange, sqrt, unique,
                    transpose, asarray, isnan, array_equal)
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,

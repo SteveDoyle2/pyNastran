@@ -2,7 +2,7 @@ from __future__ import print_function
 from six.moves import zip, range
 
 from numpy import arange, zeros, unique, dot, array, transpose
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

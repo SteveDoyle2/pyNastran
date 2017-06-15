@@ -224,9 +224,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #self._card_streams = {}
         self._break_comment = None
 
-        self._relpath = True
-        if sys.version_info < (2, 6):
-            self._relpath = False
         self.log = get_logger2(log, debug=debug)
 
         #: list of all read in cards - useful in determining if entire BDF

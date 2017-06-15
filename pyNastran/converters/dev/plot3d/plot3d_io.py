@@ -5,7 +5,7 @@ import vtk
 from vtk import vtkQuad
 
 from numpy import zeros, array, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.converters.dev.plot3d.plot3d import Plot3d
 from pyNastran.gui.gui_objects.gui_result import GuiResult

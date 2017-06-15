@@ -1,6 +1,6 @@
 import os
 from numpy import zeros, cross, vstack, array
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 
 def combine_surfs(surf_filenames, surf_out_filename=None):

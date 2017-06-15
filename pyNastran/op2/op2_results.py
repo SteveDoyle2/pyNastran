@@ -1,7 +1,7 @@
 from six import iteritems
 from collections import defaultdict
 from numpy import amax, amin, mean, array, sqrt  #, sum
-from numpy.linalg import eigvalsh
+from numpy.linalg import eigvalsh  # type: ignore
 
 def vonMises3D(o1, o2, o3):
     ovm = sqrt(0.5 * (o1-o2)**2 + (o2-o3)**2 + (o1-o3)**2)

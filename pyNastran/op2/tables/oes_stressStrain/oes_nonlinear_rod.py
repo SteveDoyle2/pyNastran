@@ -8,7 +8,7 @@ from numpy import zeros
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 

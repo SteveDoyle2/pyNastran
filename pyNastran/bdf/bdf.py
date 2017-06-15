@@ -302,10 +302,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         # (multiple BDF passes among other things)
         self._fast_add = True
 
-        self._relpath = True
-        if sys.version_info < (2, 6):
-            self._relpath = False
-
         self.log = get_logger2(log, debug)
 
         # list of all read in cards - useful in determining if entire BDF

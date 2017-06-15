@@ -2,29 +2,29 @@ import os
 import typing
 
 try:
-    import wx
-    _gui_mode = 0
+    import wx  # type: ignore
+    _gui_mode = 'wx'
 except ImportError:
     try:
-        from PySide import QtCore, QtGui
-        from PySide.QtGui import QWidget, QApplication, QFileDialog
-        _gui_mode = 1
+        from PySide import QtCore, QtGui  # type: ignore
+        from PySide.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+        _gui_mode = 'pyside'
     except ImportError:
         try:
-            from PyQt4 import QtCore, QtGui
-            from PyQt4.QtGui import QWidget, QApplication, QFileDialog
-            _gui_mode = 2
+            from PyQt4 import QtCore, QtGui  # type: ignore
+            from PyQt4.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+            _gui_mode = 'pyqt'
         except ImportError:
             try:
-                from PyQt5 import QtCore, QtGui
-                from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog
-                _gui_mode = 2
+                from PyQt5 import QtCore, QtGui  # type: ignore
+                from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog  # type: ignore
+                _gui_mode = 'pyqt'
             except ImportError:
                 _gui_mode = None
 
-if _gui_mode == 0:
+if _gui_mode == 'wx':
     pass
-elif _gui_mode in [1, 2]:
+elif _gui_mode in ['pyqt', 'pyside']:
     class QtDialog(QWidget):
         """Dummy GUI Object"""
         def __init__(self):

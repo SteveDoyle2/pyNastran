@@ -18,9 +18,6 @@ from six import string_types, iteritems, itervalues, PY2, PY3
 from six.moves import range
 
 import numpy as np
-#from numpy import arange
-#from numpy import eye, array, zeros, loadtxt
-#from numpy.linalg import norm
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:

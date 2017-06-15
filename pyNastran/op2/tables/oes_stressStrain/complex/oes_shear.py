@@ -6,7 +6,7 @@ from pyNastran.f06.f06_formatting import get_key0, write_imag_floats_13e
 import numpy as np
 ints = (int, np.int32)
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 

@@ -1,6 +1,5 @@
 from six.moves import zip
 from numpy import zeros, arange, dot, cross, searchsorted, array
-#from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank

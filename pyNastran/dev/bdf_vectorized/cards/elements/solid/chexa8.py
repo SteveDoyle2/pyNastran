@@ -8,7 +8,7 @@ This file defines:
 from __future__ import print_function
 from six.moves import zip, range
 from numpy import arange, cross, abs, searchsorted, array, ones, eye
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import integer

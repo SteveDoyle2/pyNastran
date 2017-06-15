@@ -17,7 +17,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 
 from numpy import cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import (

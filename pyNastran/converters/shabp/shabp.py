@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six.moves import range
 from numpy import array, zeros, arange, ones, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.converters.shabp.shabp_results import ShabpOut
 #from pyNastran.converters.shabp.parse_trailer import parse_trailer

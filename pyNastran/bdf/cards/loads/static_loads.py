@@ -22,7 +22,7 @@ from six.moves import zip
 
 import numpy as np
 from numpy import array, cross, allclose, unique
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.utils import integer_types

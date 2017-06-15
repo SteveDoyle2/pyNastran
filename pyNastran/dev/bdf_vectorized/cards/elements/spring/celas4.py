@@ -1,7 +1,7 @@
 from six.moves import zip, range
 
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.dev.bdf_vectorized.cards.elements.spring.spring_element import SpringElement
 

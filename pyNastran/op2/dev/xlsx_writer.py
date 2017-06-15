@@ -100,18 +100,18 @@ class XlsxWriter(OP2_F06_Common):
             #self.read_markers([-1, 0])
         #elif markers == [2,]:  # PARAM, POST, -2
         isheet = 1
-        if 0:
-        #_write_markers(op2, op2_ascii, [3, 0, 7])
-            #tape_code = b'NASTRAN FORT TAPE ID CODE - '
-            Sheet(isheet).name = sheet_name
-            sheet = Sheet(isheet)
-            sheet['A1'].value = 'NASTRAN FORT TAPE ID CODE'
-            sheet['B1'].value = tape_code
+        #if 0:
+        ##_write_markers(op2, op2_ascii, [3, 0, 7])
+            ##tape_code = b'NASTRAN FORT TAPE ID CODE - '
+            #Sheet(isheet).name = sheet_name
+            #sheet = Sheet(isheet)
+            #sheet['A1'].value = 'NASTRAN FORT TAPE ID CODE'
+            #sheet['B1'].value = tape_code
 
-            nastran_version = b'NX8.5   ' if self.is_nx else b'XXXXXXXX'
-            sheet['A2'].value = 'nastran_version'
-            sheet['B2'].value = nastran_version
-            isheet =+ 1
+            #nastran_version = b'NX8.5   ' if self.is_nx else b'XXXXXXXX'
+            #sheet['A2'].value = 'nastran_version'
+            #sheet['B2'].value = nastran_version
+            #isheet =+ 1
 
         if self.grid_point_weight.reference_point is not None and 0:
             if has_attr(result, 'write_xlsx'):
@@ -274,7 +274,7 @@ class XlsxWriter(OP2_F06_Common):
 
         oug = [
             self.accelerations,
-            self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
+            self.displacements, self.displacements_PSD, self.displacements_ATO, self.displacements_RMS,
             #self.scaled_displacements,  # ???
             self.temperatures,
             self.velocities, self.eigenvectors,

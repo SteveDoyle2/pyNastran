@@ -11,7 +11,6 @@ from typing import List, Dict, Any, Union, Optional, Tuple, Any, cast
 from codecs import open
 from six import string_types, iteritems, itervalues, PY2, StringIO
 
-#from pyNastran.utils import is_file_obj
 from pyNastran.bdf.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -62,7 +61,6 @@ class WriteMesh(BDFAttributes):
             assert out_filename is not None, out_filename
 
         if PY2:
-            #if not is_file_obj(out_filename):
             if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
                    ) or isinstance(out_filename, (file, StringIO)):
                 return out_filename
@@ -87,7 +85,7 @@ class WriteMesh(BDFAttributes):
             assert size in [8, 16], size
 
         assert isinstance(interspersed, bool)
-        fname = print_filename(out_filename, self._relpath)
+        fname = print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
         return out_filename
 

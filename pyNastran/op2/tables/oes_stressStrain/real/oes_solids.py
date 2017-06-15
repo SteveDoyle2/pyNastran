@@ -8,10 +8,10 @@ from six.moves import zip, range
 
 import numpy as np
 from numpy import zeros, where, searchsorted
-from numpy.linalg import eigh
+from numpy.linalg import eigh  # type: ignore
 
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 

@@ -21,7 +21,7 @@ from six.moves import zip
 
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, array
 from numpy import nan as NaN
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,

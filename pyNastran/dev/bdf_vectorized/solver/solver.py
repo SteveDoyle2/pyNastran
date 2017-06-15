@@ -19,9 +19,9 @@ import numpy as np
 from numpy import (array, zeros, ones, dot, arange,
                    eye, searchsorted, array_equal, diag, fill_diagonal,
                    nan, nan_to_num)
-from numpy.linalg import solve, eigh, eig
+from numpy.linalg import solve, eigh, eig  # type: ignore
 
-from scipy.sparse import dok_matrix #, coo_matrix
+from scipy.sparse import dok_matrix  # type: ignore
 
 # pyNastran
 from pyNastran.bdf.bdf_interface.dev.matrices import make_gpwg

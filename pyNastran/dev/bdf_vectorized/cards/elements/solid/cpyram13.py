@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six.moves import zip
 from numpy import arange, searchsorted, array
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank

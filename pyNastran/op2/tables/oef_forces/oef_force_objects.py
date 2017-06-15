@@ -8,7 +8,7 @@ import numpy as np
 from numpy import zeros, searchsorted, allclose
 
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 

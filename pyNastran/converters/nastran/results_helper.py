@@ -5,7 +5,7 @@ import traceback
 
 from six import iteritems
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.nastran.geometry_helper import NastranGuiAttributes

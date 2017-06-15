@@ -18,7 +18,7 @@ from numpy import arcsinh as asinh, arccosh as acosh, arctanh as atanh
 # atan2h
 from numpy import mean, exp, sqrt, square, sum
 from numpy import mod, abs
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 def pi(num):
     """weird way to multiply p by a number"""
@@ -139,17 +139,17 @@ class DEQATN(BaseCard):  # needs work...
         comment : str; default=''
             a comment for the card
 
-        DEQATN  41      F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R)
+        DEQATN  41      F1(A,B,C,D,R) = A+B *Cï¿½(D**3 + 10.0) + sin(PI(1) * R)
                         + A**2 / (B - C); F = A + B - F1 * D
 
         def F1(A, B, C, D, R):
-            F1 = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B – C)
+            F1 = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B ï¿½ C)
             F = A + B - F1 * D
             return F
 
         eqs = [
-            'F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B – C)',
-            'F = A + B – F1 * D',
+            'F1(A,B,C,D,R) = A+B *Cï¿½(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B ï¿½ C)',
+            'F = A + B ï¿½ F1 * D',
         ]
         >>> deqatn = DEQATN(41, eq, comment='')
         """

@@ -19,7 +19,7 @@ from six.moves import zip, range
 import numpy as np
 from numpy import (array, where, hstack, searchsorted, float32, arccos, dot, degrees)
 
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.nodes import GRID

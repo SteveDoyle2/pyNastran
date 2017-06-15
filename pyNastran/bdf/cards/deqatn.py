@@ -15,7 +15,7 @@ from numpy import (
     arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2,
     arcsinh as asinh, arccosh as acosh, arctanh as atanh)
 # atan2h
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.base_card import BaseCard
 

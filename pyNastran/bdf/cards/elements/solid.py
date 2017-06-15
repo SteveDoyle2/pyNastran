@@ -20,7 +20,7 @@ from six import integer_types
 from six.moves import range
 import numpy as np
 from numpy import dot, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area

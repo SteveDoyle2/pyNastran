@@ -4,7 +4,7 @@ from six import iteritems
 import numpy as np
 from numpy import concatenate, zeros
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
