@@ -3700,7 +3700,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _get_closest_node_xyz(self, cell_id, world_position):
         duplicate_key = None
-        return_flag = False
         (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
             world_position, cell_id)
         assert self.icase in self.label_actors, result_name
@@ -5898,6 +5897,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         bar_scale2 = group.bar_scale
         # bar_scale2 = max(0.0, bar_scale2)
 
+        print('name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
         if color1 != color2:
             #print('color_2662[%s] = %s' % (name, str(color1)))
             assert isinstance(color1[0], float), color1
