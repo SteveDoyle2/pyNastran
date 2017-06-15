@@ -1434,12 +1434,10 @@ def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
     #print(coord)
     #print coord.Stats()
 
-
-def main():
-    """
-    The main function for the command line ``test_bdf`` script.
-    """
+def get_test_bdf_data():
+    """defines the docopt interface"""
     encoding = sys.getdefaultencoding()
+
     from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
     msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L]      [-k] [-f] [--encoding ENCODE] BDF_FILENAME\n"
@@ -1501,6 +1499,13 @@ def main():
     if not data['--encoding']:
         data['--encoding'] = None
 
+    return data
+
+def main():
+    """
+    The main function for the command line ``test_bdf`` script.
+    """
+    data = get_test_bdf_data()
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
@@ -1519,7 +1524,6 @@ def main():
     crash_cards = []
     if data['--crash']:
         crash_cards = data['--crash'].split(',')
-
 
     #print(data)
     debug = True

@@ -5,18 +5,17 @@ import sys
 import copy
 from datetime import date
 from collections import defaultdict
+from typing import Any
 from six import iteritems
-
-from xlwings import Workbook, Sheet  # type: ignore
-from pywintypes import com_error  # type: ignore
 
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
 
-def make_stamp(Title, today=None):
-    if 'Title' is None:
-        Title = ''
+def make_stamp(title, today=None):
+    # (str, Any) -> str
+    if title is None:
+        title = ''
 
     #lenghts = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
     months = [' January', 'February', 'March', 'April', 'May', 'June',
@@ -34,9 +33,9 @@ def make_stamp(Title, today=None):
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    if Title is None:
-        Title = ''
-    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (Title.strip(), str_today, build)
+    if title is None:
+        title = ''
+    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (title.strip(), str_today, build)
     return out
 
 
@@ -49,24 +48,35 @@ class XlsxWriter(OP2_F06_Common):
         """If this class is inherited, the F06 Header may be overwritten"""
         return make_f06_header()
 
-    def make_stamp(self, Title, today):
+    def make_stamp(self, title, today):
+        # (str, Any) -> str
         """If this class is inherited, the PAGE stamp may be overwritten"""
-        return make_stamp(Title, today)
+        return make_stamp(title, today)
 
     def write_xlsx(self, xlsx_filename, is_mag_phase=False,
                   delete_objects=True):
+        # type: (str, bool, bool) -> None
         """
-        Writes an OP2 file based on the data we have stored in the object
+        Writes an XLSX file based on the data we have stored in the object
 
-        :param xlsx_filename:  the name of the XLSX file to write
-        :param is_mag_phase: should complex data be written using Magnitude/Phase
-                         instead of Real/Imaginary (default=False; Real/Imag)
-                         Real objects don't use this parameter.
-        :param delete_objects: should objects be deleted after they're written
-                         to reduce memory (default=True)
+        Parameters
+        ----------
+        xlsx_filename:  str
+            the name of the XLSX file to write
+        is_mag_phase : bool;  default=False
+            True : write complex using Magnitude/Phase
+            False : write complex using Real/Imaginary
+            Real objects don't use this parameter.
+        delete_objects : bool; default=True
+            should objects be deleted after they're written to reduce
+            memory
         """
         print('writing %s' % xlsx_filename)
+
         if isinstance(xlsx_filename, str):
+            from xlwings import Workbook, Sheet  # type: ignore
+            from pywintypes import com_error  # type: ignore
+
             workbook = Workbook()  # Creates a connection with a new workbook
             try:
                 workbook.save(xlsx_filename)

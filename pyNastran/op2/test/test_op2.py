@@ -488,9 +488,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
     return op2, is_passed
 
-
-def main():
-    """the interface for test_op2"""
+def get_test_op2_data():
+    """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
@@ -557,14 +556,18 @@ def main():
         data['--write_bdf'] = False
     data['--is_sort2'] = bool(data['--is_sort2'])
     #print("data", data)
+    return data
 
+def main():
+    """the interface for test_op2"""
+    data = get_test_op2_data()
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
 
-    t0 = time.time()
+    time0 = time.time()
 
     if data['--profile']:
         import pstats
@@ -596,24 +599,25 @@ def main():
         stats.strip_dirs()
         stats.print_stats(40)
     else:
-        run_op2(data['OP2_FILENAME'],
-                make_geom=data['--geometry'],
-                write_bdf=data['--write_bdf'],
-                write_f06=data['--write_f06'],
-                write_op2=data['--write_op2'],
-                write_xlsx=data['--write_xlsx'],
-                is_mag_phase=data['--is_mag_phase'],
-                subcases=data['--subcase'],
-                exclude=data['--exclude'],
-                short_stats=data['--short_stats'],
-                debug=not data['--quiet'],
-                binary_debug=data['--binarydebug'],
-                is_sort2=data['--is_sort2'],
-                compare=not data['--disablecompare'],
-                quiet=data['--quiet'],
-                is_nx=data['--nx'],
-                )
-    print("dt = %f" % (time.time() - t0))
+        run_op2(
+            data['OP2_FILENAME'],
+            make_geom=data['--geometry'],
+            write_bdf=data['--write_bdf'],
+            write_f06=data['--write_f06'],
+            write_op2=data['--write_op2'],
+            write_xlsx=data['--write_xlsx'],
+            is_mag_phase=data['--is_mag_phase'],
+            subcases=data['--subcase'],
+            exclude=data['--exclude'],
+            short_stats=data['--short_stats'],
+            debug=not data['--quiet'],
+            binary_debug=data['--binarydebug'],
+            is_sort2=data['--is_sort2'],
+            compare=not data['--disablecompare'],
+            quiet=data['--quiet'],
+            is_nx=data['--nx'],
+        )
+    print("dt = %f" % (time.time() - time0))
 
 if __name__ == '__main__':  # op2
     main()
