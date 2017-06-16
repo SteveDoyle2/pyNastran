@@ -1,3 +1,10 @@
+"""
+defines:
+ - Panel()
+ - read_lawgs(wgs_filename, log=None, debug=False)
+ - LaWGS(self, log=None, debug=False)
+
+"""
 from __future__ import print_function
 
 import copy
@@ -23,7 +30,7 @@ class Panel(object):
     def __init__(self, key, header, lines, log):
         #print("key=%s \nheader=|%s|" % (key, header))   # ,iSymG
         (ID, nline, npnt, isyml, rx, ry, rz, tx, ty, tz, xscale,
-         yscale, zscale, iSymG) = header.strip().split()
+         yscale, zscale, isymg) = header.strip().split()
         self.log = log
         log.debug("ID=%s name=%s imax=%s jmax=%s" % (ID, key, nline, npnt))
         log.debug("Rotate    = <%s,%s,%s>" % (rx, ry, rz))
@@ -170,17 +177,21 @@ class Panel(object):
         p3d_file.write(msg + '\n')
 
 def read_lawgs(wgs_filename, log=None, debug=False):
+    """reads an lawgs file"""
     model = LaWGS(log=log, debug=debug)
     model.read_lawgs(wgs_filename)
     return model
 
 class LaWGS(object):
+    """defines a reader for the LaWGS legacy file format"""
     model_type = 'LaWGS'
 
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log=log, debug=debug)
+        self.panels = {}
 
     def read_lawgs(self, wgs_filename):
+        """reads an lawgs file"""
         with open(wgs_filename, 'r') as lawgs_file:
             lines = lawgs_file.readlines()
 
@@ -211,7 +222,6 @@ class LaWGS(object):
         groups[name] = [header, group]
 
         del groups['']
-        self.panels = {}
         for key, header_group in sorted(iteritems(groups)):
             header, group = header_group
             #if key=='BODY':
@@ -249,14 +259,7 @@ class LaWGS(object):
         with open(p3dname, 'wb') as p3d_file:
             p3d_file.write('%s\n' % (len(self.panels)))
             for (name, panel) in sorted(iteritems(self.panels)):
-                p3d_file.write('%s %s 1\n' % (panel.nRows, panel.nCols))
+                p3d_file.write('%s %s 1\n' % (panel.nrows, panel.ncols))
 
             for (name, panel) in sorted(iteritems(self.panels)):
                 panel.write_as_plot3d(p3d_file)
-
-def main():  # pragma: no cover
-    lawgs = read_lawgs('tmx1242.wgs')
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main()
