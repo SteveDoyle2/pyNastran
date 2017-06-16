@@ -25,9 +25,9 @@ pyNastran/converters
 :mod:`LaWGS` Module
 -----------------------
 
-.. inheritance-diagram:: pyNastran.converters.LaWGS
+.. inheritance-diagram:: pyNastran.converters.lawgs
 
-.. automodule:: pyNastran.converters.LaWGS
+.. automodule:: pyNastran.converters.lawgs
     :members:
     :undoc-members:
     :show-inheritance:
@@ -152,7 +152,7 @@ Subpackages
    pyNastran.converters.aflr2
    pyNastran.converters.cart3d
    pyNastran.converters.fast
-   pyNastran.converters.LaWGS
+   pyNastran.converters.lawgs
    pyNastran.converters.nastran
    pyNastran.converters.openfoam
    pyNastran.converters.panair
