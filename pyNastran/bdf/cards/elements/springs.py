@@ -82,7 +82,8 @@ class CELAS1(SpringElement):
         self.c1 = c1
         self.c2 = c2
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        self._validate_input()
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -125,7 +126,7 @@ class CELAS1(SpringElement):
         c2 = data[5]
         return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
-    def _validate_input(self):
+    def validate(self):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
@@ -173,15 +174,14 @@ class CELAS1(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS1 eid=%s' % (self.eid)
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -242,8 +242,8 @@ class CELAS2(SpringElement):
         self.ge = ge
         #: stress coefficient
         self.s = s
+        self.nodes_ref = None
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        self._validate_input()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -289,7 +289,7 @@ class CELAS2(SpringElement):
         s = data[7]
         return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
-    def _validate_input(self):
+    def validate(self):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
@@ -313,12 +313,11 @@ class CELAS2(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS2 eid=%s' % (self.eid)
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def _verify(self, xref=True):
         eid = self.eid
@@ -391,6 +390,8 @@ class CELAS3(SpringElement):
         self.pid = pid
         #: Scalar point identification numbers
         self.nodes = nodes
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -443,15 +444,14 @@ class CELAS3(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @property
     def node_ids(self):
@@ -526,6 +526,7 @@ class CELAS4(SpringElement):
         self.k = k
         #: Scalar point identification numbers
         self.nodes = nodes
+        self.nodes_ref = None
 
     def validate(self):
         assert self.nodes[0] > 0 or self.nodes[1] > 0, 's1=%s s2=%s' % (self.nodes[0], self.nodes[1])
@@ -588,12 +589,11 @@ class CELAS4(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS4 eid=%s' % (self.eid)
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def raw_fields(self):
         list_fields = ['CELAS4', self.eid, self.k] + self.node_ids

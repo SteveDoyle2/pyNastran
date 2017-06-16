@@ -21,6 +21,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 class SolidProperty(Property):
     def __init__(self):
         Property.__init__(self)
+        self.mid_ref = None
 
     def Rho(self):
         return self.mid_ref.rho

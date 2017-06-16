@@ -1,10 +1,11 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from typing import List, Optional, Any
+from typing import List, Dict, Union, Optional, Any
 from six import string_types, PY2
 from six.moves import zip, range
 
-from numpy import nan, empty, unique
+import numpy as np
+#from numpy import nan, empty, unique
 
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils import object_attributes, object_methods, integer_types
@@ -127,7 +128,7 @@ class BaseCard(object):
                 return
 
     def update_field(self, n, value):
-        # type: (n, Optional[Union[int, float, str]]) -> None
+        # type: (int, Optional[Union[int, float, str]]) -> None
         """
         Updates a field based on it's field number.
 
@@ -362,7 +363,7 @@ class Property(BaseCard):
         return self.write_card()
 
     def write_card_16(self, is_double=False):
-        # type: () -> str
+        # type: (bool) -> str
         return self.write_card()
 
 
@@ -425,7 +426,7 @@ class Element(BaseCard):
             if non_required_node_ids:
                 raise NotImplementedError('only required nodes implemented')
             else:
-                urnids = unique(required_node_ids)
+                urnids = np.unique(required_node_ids)
                 n_unique_node_ids = len(urnids)
                 n_node_ids = len(required_node_ids)
                 if n_unique_node_ids != n_node_ids:
@@ -456,9 +457,10 @@ class Element(BaseCard):
             nodes = self.nodes_ref
 
         nnodes = len(nodes)
-        positions = empty((nnodes, 3), dtype='float64')
-        positions.fill(nan)
+        positions = np.empty((nnodes, 3), dtype='float64')
+        positions.fill(np.nan)
         for i, node in enumerate(nodes):
+            assert not isinstance(node, int), self.type
             if node is not None:
                 positions[i, :] = node.get_position()
         return positions
@@ -470,8 +472,8 @@ class Element(BaseCard):
             nodes = self.nodes
 
         nnodes = len(nodes)
-        positions = empty((nnodes, 3), dtype='float64')
-        positions.fill(nan)
+        positions = np.empty((nnodes, 3), dtype='float64')
+        positions.fill(np.nan)
         for i, nid in enumerate(nodes):
             if nid is not None:
                 node = model.Node(nid)
@@ -481,6 +483,8 @@ class Element(BaseCard):
     def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
         # type: (Optional[List[Any]], bool, str) -> List[int]
         """returns nodeIDs for repr functions"""
+        if self.nodes_ref is None:
+            return self.nodes
         return _node_ids(self, nodes, allow_empty_nodes, msg)
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
@@ -524,6 +528,7 @@ class Element(BaseCard):
 
     @property
     def faces(self):
+        # () -> Dict[int, List[int]]
         """
         Gets the faces of the element
 

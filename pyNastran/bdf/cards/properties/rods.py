@@ -53,6 +53,7 @@ class PROD(Property):
         self.j = j
         self.c = c
         self.nsm = nsm
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -199,6 +200,7 @@ class PTUBE(Property):
         self.OD2 = OD2
         self.t = t
         self.nsm = nsm
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

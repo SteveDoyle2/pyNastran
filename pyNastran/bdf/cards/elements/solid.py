@@ -108,6 +108,8 @@ class SolidElement(Element):
 
     def __init__(self):
         Element.__init__(self)
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def _update_field_helper(self, n, value):
         if n - 3 < len(self.nodes):
@@ -283,10 +285,8 @@ class CHEXA8(SolidElement):
             the BDF object
         """
         msg = ' which is required by CHEXA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -561,10 +561,8 @@ class CHEXA20(SolidElement):
             the BDF object
         """
         msg = ' which is required by CHEXA eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -839,10 +837,8 @@ class CPENTA6(SolidElement):
             the BDF object
         """
         msg = ' which is required by CPENTA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -1239,10 +1235,8 @@ class CPENTA15(SolidElement):
             the BDF object
         """
         msg = ' which is required by CPENTA eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -1430,10 +1424,8 @@ class CPYRAM5(SolidElement):
             the BDF object
         """
         msg = ' which is required by CPYRAM eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -1625,10 +1617,8 @@ class CPYRAM13(SolidElement):
             the BDF object
         """
         msg = ' which is required by CPYRAM eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -1871,10 +1861,8 @@ class CTETRA4(SolidElement):
             the BDF object
         """
         msg = ' which is required by CTETRA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def _verify(self, xref=False):
         eid = self.eid
@@ -2095,10 +2083,8 @@ class CTETRA10(SolidElement):
             the BDF object
         """
         msg = ' which is required by CTETRA eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):

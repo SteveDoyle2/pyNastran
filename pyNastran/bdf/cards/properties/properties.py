@@ -541,6 +541,7 @@ class PCONEAX(Property):
         self.z1 = z1
         self.z2 = z2
         self.phi = phi
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

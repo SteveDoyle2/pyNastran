@@ -132,6 +132,7 @@ class LineProperty(Property):
         self.j = None
         self.nsm = None
         Property.__init__(self)
+        self.mid_ref = None
 
     #def D_bending(self):
         #pass

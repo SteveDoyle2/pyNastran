@@ -1591,6 +1591,11 @@ class PSHELL(ShellProperty):
         if self.t is not None:
             assert self.t >= 0.0, 'PSHELL pid=%s Thickness=%s must be >= 0' % (self.pid, self.t)
 
+        self.mid1_ref = None
+        self.mid2_ref = None
+        self.mid3_ref = None
+        self.mid4_ref = None
+
     @classmethod
     def add_card(cls, card, comment=''):
         """

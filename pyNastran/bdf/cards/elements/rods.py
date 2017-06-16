@@ -105,6 +105,8 @@ class CROD(RodElement):
         self.pid = pid
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -275,6 +277,8 @@ class CTUBE(RodElement):
         self.pid = pid
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -439,6 +443,8 @@ class CONROD(RodElement):
         self.nsm = nsm
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

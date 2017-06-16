@@ -356,7 +356,7 @@ class XrefMesh(BDFAttributes):
                             #print('node = %s' % str(node))
                             #raise
         for node in itervalues(self.nodes):
-            node.elements = nodes[node.nid]
+            node.elements_ref = nodes[node.nid]
 
     def _cross_reference_masses(self):
         # type: () -> None
