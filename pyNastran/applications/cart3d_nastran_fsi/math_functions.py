@@ -228,3 +228,4 @@ def Centroid(A, B, C):
     """returns the centroid of a triangle"""
     centroid = (A + B + C) / 3.
     return centroid
+
