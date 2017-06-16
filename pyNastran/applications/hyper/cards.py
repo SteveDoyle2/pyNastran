@@ -66,15 +66,6 @@ class FLOW(BaseCard):
         return cards
 
 
-class SUBSONIC(BaseCard):
-    type = 'SUBSONIC'
-
-    def raw_fields(self):
-        return ['$SUBSONIC', self.pid]
-
-    def __init__(self, card, comment=''):
-        self.pid = integer(card, 1, 'property_id')
-
 class HYPER(BaseCard):
     type = 'HYPER'
 
