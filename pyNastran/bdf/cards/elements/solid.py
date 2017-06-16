@@ -123,7 +123,8 @@ class SolidElement(Element):
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def E(self):
         # type: () -> float
@@ -403,7 +404,7 @@ class CHEXA8(SolidElement):
             G3 - the grid point diagonally opposite of G1
         """
         nids = self.node_ids[:8]
-        return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:8])
+        return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:8])
 
     def get_edge_ids(self):
         """
@@ -899,7 +900,7 @@ class CPENTA6(SolidElement):
 
     def get_face_area_centroid_normal(self, nid, nid_opposite=None):
         nids = self.node_ids[:6]
-        return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:6])
+        return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:6])
 
     def getFaceNodesAndArea(self, nid, nid_opposite):
         nids = self.node_ids[:6]
@@ -1275,7 +1276,7 @@ class CPENTA15(SolidElement):
 
     def get_face_area_centroid_normal(self, nid, nid_opposite=None):
         nids = self.node_ids[:6]
-        return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:6])
+        return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:6])
 
     def get_edge_ids(self):
         """
@@ -1917,7 +1918,7 @@ class CTETRA4(SolidElement):
 
     def get_face_area_centroid_normal(self, nid, nid_opposite):
         return ctetra_face_area_centroid_normal(nid, nid_opposite,
-                                                self.node_ids, self.nodes)
+                                                self.node_ids, self.nodes_ref)
 
     @property
     def node_ids(self):
@@ -2000,7 +2001,7 @@ class CTETRA10(SolidElement):
 
     def get_face_area_centroid_normal(self, nid_opposite, nid=None):
         return ctetra_face_area_centroid_normal(nid_opposite, nid,
-                                                self.node_ids[:4], self.nodes[:4])
+                                                self.node_ids[:4], self.nodes_ref[:4])
 
     def __init__(self, eid, pid, nids, comment=''):
         """

@@ -85,7 +85,7 @@ class AxisymmetricQuad(Element):
         ]
 
     def Mass(self):
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodesref[:4])
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         return 0.
 
 class CTRAX3(AxisymmetricTri):
@@ -206,6 +206,8 @@ class CTRAX3(AxisymmetricTri):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         return self._node_ids(allow_empty_nodes=False)
 
     def raw_fields(self):
@@ -348,6 +350,8 @@ class CTRAX6(AxisymmetricTri):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         return self._node_ids(allow_empty_nodes=True)
 
     def raw_fields(self):
@@ -383,7 +387,7 @@ class CTRIAX(AxisymmetricTri):
     """
     type = 'CTRIAX'
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
-        TriShell.__init__(self)
+        AxisymmetricTri.__init__(self)
         if comment:
             self.comment = comment
         #: Element ID
@@ -459,7 +463,7 @@ class CTRIAX(AxisymmetricTri):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -467,7 +471,7 @@ class CTRIAX(AxisymmetricTri):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert"""
-        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes_ref[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -494,6 +498,8 @@ class CTRIAX(AxisymmetricTri):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         return self._node_ids(allow_empty_nodes=True)
 
     def raw_fields(self):
@@ -692,6 +698,8 @@ class CTRIAX6(TriShell):
          /       \
         1----2----3
         """
+        if self.nodes_ref is None:
+            return self.nodes
         return self._node_ids(allow_empty_nodes=True)
 
     def get_edge_ids(self):
@@ -823,6 +831,8 @@ class CQUADX(AxisymmetricQuad):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         return self._node_ids(allow_empty_nodes=True)
 
     def _verify(self, xref):

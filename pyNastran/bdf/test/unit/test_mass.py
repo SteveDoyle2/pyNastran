@@ -41,24 +41,24 @@ class TestMass(unittest.TestCase):
         self.assertTrue(all(element.Centroid() == centroid), msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
         if rho:
             self.assertAlmostEqual(element.Rho(), rho, msg='rho=%s expected=%s' % (element.Rho(), rho))
-            self.assertAlmostEqual(element.pid.Rho(), rho, msg='rho=%s expected=%s' % (element.pid.Rho(), rho))
-            self.assertEqual(element.pid.mid.type, 'MAT1', msg='mass=%s expected=%s' % (element.pid.mid.type, 'MAT1'))
-            self.assertAlmostEqual(element.pid.mid.Rho(), rho, msg='rho=%s expected=%s' % (element.pid.mid.Rho(), rho))
+            self.assertAlmostEqual(element.pid_ref.Rho(), rho, msg='rho=%s expected=%s' % (element.pid_ref.Rho(), rho))
+            self.assertEqual(element.pid_ref.mid_ref.type, 'MAT1', msg='mass=%s expected=%s' % (element.pid_ref.mid_ref.type, 'MAT1'))
+            self.assertAlmostEqual(element.pid_ref.mid_ref.Rho(), rho, msg='rho=%s expected=%s' % (element.pid_ref.mid_ref.Rho(), rho))
 
         self.assertAlmostEqual(element.Mass(), mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
 
         if E:
             self.assertAlmostEqual(element.E(), E, msg='E=%s expected=%s' % (element.E(), E))
-            self.assertAlmostEqual(element.pid.E(), E, msg='E=%s expected=%s' % (element.pid.E(), E))
-            self.assertAlmostEqual(element.pid.mid.E(), E, msg='E=%s expected=%s' % (element.pid.mid.E(), E))
+            self.assertAlmostEqual(element.pid_ref.E(), E, msg='E=%s expected=%s' % (element.pid_ref.E(), E))
+            self.assertAlmostEqual(element.pid_ref.mid_ref.E(), E, msg='E=%s expected=%s' % (element.pid_ref.mid_ref.E(), E))
         if G:
             self.assertAlmostEqual(element.G(), G, msg='G=%s expected=%s' % (element.G(), G))
-            self.assertAlmostEqual(element.pid.G(), G, msg='G=%s expected=%s' % (element.pid.G(), G))
-            self.assertAlmostEqual(element.pid.mid.G(), G, msg='G=%s expected=%s' % (element.pid.mid.G(), G))
+            self.assertAlmostEqual(element.pid_ref.G(), G, msg='G=%s expected=%s' % (element.pid_ref.G(), G))
+            self.assertAlmostEqual(element.pid_ref.mid_ref.G(), G, msg='G=%s expected=%s' % (element.pid.mid_ref.G(), G))
         if nu:
             self.assertAlmostEqual(element.Nu(), nu, msg='nu=%s expected=%s' % (element.Nu(), nu))
-            self.assertAlmostEqual(element.pid.Nu(), nu, msg='nu=%s expected=%s' % (element.pid.Nu(), nu))
-            self.assertAlmostEqual(element.pid.mid.Nu(), nu, msg='nu=%s expected=%s' % (element.pid.mid.Nu(), nu))
+            self.assertAlmostEqual(element.pid_ref.Nu(), nu, msg='nu=%s expected=%s' % (element.pid_ref.Nu(), nu))
+            self.assertAlmostEqual(element.pid_ref.mid_ref.Nu(), nu, msg='nu=%s expected=%s' % (element.pid_ref.mid_ref.Nu(), nu))
 
         with self.assertRaises(AttributeError):
             element.Area()

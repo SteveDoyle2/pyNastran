@@ -116,6 +116,7 @@ class ABCQSet(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = ids
         self.components = components
+        self.ids_ref = None
 
     def validate(self):
         assert isinstance(self.ids, list), type(self.ids)
@@ -152,15 +153,16 @@ class ABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
+        if self.ids_ref is None:
+            return self.ids
         msg = ' which is required by %s' % self.type
         return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
@@ -200,6 +202,7 @@ class SuperABCQSet(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = ids
         self.components = components
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -226,17 +229,18 @@ class SuperABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        if self.ids_ref is None:
+            return self.ids
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -353,7 +357,7 @@ class ABQSet1(Set):
 
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
-
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -393,12 +397,11 @@ class ABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     #@property
     #def node_ids(self):
@@ -407,7 +410,9 @@ class ABQSet1(Set):
     @property
     def node_ids(self):
         msg = ' which is required by %s' % self.type
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        if self.ids_ref is None:
+            return self.ids
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -451,6 +456,7 @@ class SuperABQSet1(Set):
         self.ids = expand_thru(ids)
         #print('ids =', self.ids)
         assert None not in self.ids
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -487,17 +493,18 @@ class SuperABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        if self.ids_ref is None:
+            return self.ids
+        return _node_ids(self, self.nids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -598,17 +605,18 @@ class CSET1(Set):
             the BDF object
         """
         msg = ' which is required by CSET1'
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
         msg = ' which is required by CSET1'
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        if self.ids_ref is None:
+            return self.ids
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -1223,6 +1231,7 @@ class USET(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.components = components
         self.ids = ids
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1282,17 +1291,18 @@ class USET(Set):
             the BDF object
         """
         msg = ' which is required by USET name=%s' % (self.name)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
+        if self.ids_ref is None:
+            return self.ids
         msg = ' which is required by USET name=%s' % (self.name)
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """
@@ -1368,15 +1378,16 @@ class USET1(ABQSet1):
             the BDF object
         """
         msg = ' which is required by USET1 name=%s' % (self.name)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
+        if self.ids_ref is None:
+            return self.ids
         msg = ' which is required by USET1 name=%s' % (self.name)
         return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 

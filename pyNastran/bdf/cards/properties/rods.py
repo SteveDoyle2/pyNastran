@@ -123,12 +123,18 @@ class PROD(Property):
         return self.nsm
 
     def E(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.E()
 
     def G(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.G()
 
     def Rho(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.Rho()
 
     def cross_reference(self, model):
@@ -270,8 +276,7 @@ class PTUBE(Property):
             the BDF object
         """
         msg = ' which is required by PTUBE mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def Rho(self):
         """
@@ -288,9 +293,13 @@ class PTUBE(Property):
         return self.Area() * self.Rho() + self.nsm
 
     def E(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.E()
 
     def G(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.G()
 
     def J(self):

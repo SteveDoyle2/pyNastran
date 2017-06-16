@@ -338,25 +338,20 @@ class Property(BaseCard):
         mid : int
             the Material ID
         """
-        if isinstance(self.mid, integer_types):
+        if self.mid_ref is None:
             return self.mid
         return self.mid_ref.mid
 
-    def cross_reference(self, model):
-        # type: (Any) -> None
-        """dummy cross reference method for a Property"""
-        msg = ' which is required by %s pid=%s' % (self.type, self.pid)
-        self.mid = model.Material(self.mid, msg)
-        self.mid_ref = self.mid
+    #def cross_reference(self, model):
+        ## type: (Any) -> None
+        #"""dummy cross reference method for a Property"""
+        #msg = ' which is required by %s pid=%s' % (self.type, self.pid)
+        #self.mid_ref = model.Material(self.mid, msg)
 
-    def uncross_reference(self):
-        # type: () -> None
-        self.mid = self.Mid()
-        try:
-            del self.mid_ref
-        except AttributeError:
-            print('mid =', self.mid)
-            raise
+    #def uncross_reference(self):
+        ## type: () -> None
+        #self.mid = self.Mid()
+        #self.mid_ref = None
 
     def write_card_8(self):
         # type: () -> str
@@ -445,10 +440,9 @@ class Element(BaseCard):
         pid : int
             the Property ID
         """
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             return self.pid
-        else:
-            return self.pid_ref.pid
+        return self.pid_ref.pid
 
     def get_node_positions(self, nodes=None):
         # type: (Any) -> np.ndarray
@@ -483,8 +477,6 @@ class Element(BaseCard):
     def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
         # type: (Optional[List[Any]], bool, str) -> List[int]
         """returns nodeIDs for repr functions"""
-        if self.nodes_ref is None:
-            return self.nodes
         return _node_ids(self, nodes, allow_empty_nodes, msg)
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):

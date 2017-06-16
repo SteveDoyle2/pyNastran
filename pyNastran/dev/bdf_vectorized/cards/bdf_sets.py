@@ -116,6 +116,7 @@ class ABCQSet(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = ids
         self.components = components
+        self.ids_ref = None
 
     def validate(self):
         assert isinstance(self.ids, list), type(self.ids)
@@ -152,12 +153,11 @@ class ABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
@@ -341,7 +341,7 @@ class ABQSet1(Set):
 
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
-
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -381,16 +381,11 @@ class ABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
-
-    #@property
-    #def node_ids(self):
-        #return self.get_ids()
+        self.ids_ref = None
 
     @property
     def node_ids(self):
@@ -1116,6 +1111,7 @@ class USET(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.components = components
         self.ids = ids
+    self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

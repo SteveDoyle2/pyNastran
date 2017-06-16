@@ -780,7 +780,6 @@ class RBE2(RigidElement):
         if isinstance(Gmi, integer_types):
             Gmi = [Gmi]
         self.Gmi = Gmi
-        self._validate_input()
         #self.nodes_ref = None
         self.Gmi_ref = None
         self.gn_ref = None
@@ -853,7 +852,7 @@ class RBE2(RigidElement):
         self.gn = gn2
         self.Gmi = gm2
 
-    def _validate_input(self):
+    def validate(self):
         assert self.gn is not None, 'gn=%s' % self.gn
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
@@ -956,6 +955,7 @@ class RBE2(RigidElement):
     def Gmi_node_ids(self):
         if self.Gmi_ref is None or len(self.Gmi) == 0:
             return self.Gmi
+        assert self.Gmi_ref is not None, self.Gmi
         return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
@@ -979,7 +979,6 @@ class RBE2(RigidElement):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        print('Gmi = ', self.Gmi)
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
