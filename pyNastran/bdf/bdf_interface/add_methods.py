@@ -59,7 +59,7 @@ class AddMethods(BDFAttributes):
         """adds a PARAM object"""
         key = param.key
         if key in self.params and not allow_overwrites:
-            if not param._is_same_card(self.params[key]):
+            if not param == self.params[key]:
                 #if param.key in self.params:
                     #msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
                     #raise KeyError(msg)
@@ -75,7 +75,7 @@ class AddMethods(BDFAttributes):
         """adds a GRID card"""
         key = node.nid
         if key in self.nodes and not allow_overwrites:
-            if not node._is_same_card(self.nodes[key]):
+            if not node == self.nodes[key]:
                 assert node.nid not in self.nodes, 'nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, self.nodes[key], node)
             else:
                 #print('GRID was duplicated...nid=%s; node=\n%s' % (key, node))
@@ -98,7 +98,7 @@ class AddMethods(BDFAttributes):
         """adds a POINT card"""
         key = point.nid
         if key in self.points and not allow_overwrites:
-            if not point._is_same_card(self.points[key]):
+            if not point == self.points[key]:
                 assert point.nid not in self.points, 'nid=%s\nold_point=\n%snew_point=\n%s' % (point.nid, self.points[key], point)
             else:
                 #print('POINT was duplicated...nid=%s; point=\n%s' % (key, point))
@@ -141,12 +141,12 @@ class AddMethods(BDFAttributes):
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         if not allow_overwrites:
             if key in self.elements:
-                if elem._is_same_card(self.elements[key]):
+                if elem == self.elements[key]:
                     self._duplicate_elements.append(elem)
                     if self._stop_on_duplicate_error:
                         self.pop_parse_errors()
             elif key in self.plotels:
-                if not elem._is_same_card(self.plotels[key]):
+                if not elem == self.plotels[key]:
                     assert elem.eid not in self.plotels, 'eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, self.plotels[elem.eid], elem)
         self.plotels[key] = elem
         self._type_to_id_map[elem.type].append(key)
@@ -159,7 +159,7 @@ class AddMethods(BDFAttributes):
         key = elem.eid
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         if key in self.elements and not allow_overwrites:
-            if not elem._is_same_card(self.elements[key]):
+            if not elem == self.elements[key]:
                 self._duplicate_elements.append(elem)
                 if self._stop_on_duplicate_error:
                     self.pop_parse_errors()
@@ -172,7 +172,7 @@ class AddMethods(BDFAttributes):
         key = elem_flag.eid
         assert key > 0, 'eid=%s must be positive; elem_flag=\n%s' % (key, elem_flag)
         if key in self.ao_element_flags and not allow_overwrites:
-            if not elem_flag._is_same_card(self.ao_element_flags[key]):
+            if not elem_flag == self.ao_element_flags[key]:
                 #self._duplicate_elements.append(elem_flag)
                 #if self._stop_on_duplicate_error:
                     #self.pop_parse_errors()
@@ -200,7 +200,7 @@ class AddMethods(BDFAttributes):
         key = mass.eid
         assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
         if key in self.masses and not allow_overwrites:
-            if not mass._is_same_card(self.masses[key]):
+            if not mass == self.masses[key]:
                 self._duplicate_masses.append(mass)
         else:
             self.masses[key] = mass
@@ -248,7 +248,7 @@ class AddMethods(BDFAttributes):
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         if key in self.properties and not allow_overwrites:
-            if not prop._is_same_card(self.properties[key]):
+            if not prop == self.properties[key]:
                 self._duplicate_properties.append(prop)
                 if self._stop_on_duplicate_error:
                     self.pop_parse_errors()
@@ -260,7 +260,7 @@ class AddMethods(BDFAttributes):
         """adds an PMASS object"""
         key = prop.pid
         if key in self.properties_mass and not allow_overwrites:
-            if not prop._is_same_card(self.properties_mass[key]):
+            if not prop ==self.properties_mass[key]:
                 #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties_mass[key],prop))
                 assert key not in self.properties_mass, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.properties_mass[key], prop)
         else:
@@ -271,7 +271,7 @@ class AddMethods(BDFAttributes):
     def _add_dtable_object(self, dtable, allow_overwrites=False):
         """adds an DTABLE object"""
         if self.dtable is not None:
-            if not dtable._is_same_card(self.dtable):
+            if not dtable == self.dtable:
                 raise RuntimeError('DTABLE cannot be overwritten\nold:\n%s\nnew:\n%s',
                                    self.dtable, dtable)
         else:
@@ -318,7 +318,7 @@ class AddMethods(BDFAttributes):
         """adds an TEMPD object"""
         key = tempd.sid
         if key in self.tempds and not allow_overwrites:
-            if not tempd._is_same_card(self.tempds[key]):
+            if not tempd == self.tempds[key]:
                 assert key not in self.tempds, 'TEMPD.sid=%s old=\n%snew=\n%s' % (
                     key, self.tempds[key], tempd)
         else:
@@ -330,7 +330,7 @@ class AddMethods(BDFAttributes):
         """adds an PBUSHT object"""
         key = prop.pid
         if key in self.pbusht and not allow_overwrites:
-            if not prop._is_same_card(self.pbusht[key]):
+            if not prop == self.pbusht[key]:
                 assert key not in self.pbusht, 'PBUSHT.pid=%s old=\n%snew=\n%s' % (
                     key, self.pbusht[key], prop)
         else:
@@ -342,7 +342,7 @@ class AddMethods(BDFAttributes):
         """adds an PDAMPT object"""
         key = prop.pid
         if key in self.pdampt and not allow_overwrites:
-            if not prop._is_same_card(self.pdampt[key]):
+            if not prop == self.pdampt[key]:
                 assert key not in self.pdampt, 'PDAMPT.pid=%s old=\n%snew=\n%s' % (
                     key, self.pdampt[key], prop)
         else:
@@ -355,7 +355,7 @@ class AddMethods(BDFAttributes):
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         if key in self.pelast and not allow_overwrites:
-            if not prop._is_same_card(self.pelast[key]):
+            if not prop == self.pelast[key]:
                 #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key],prop))
                 assert key not in self.pelast, 'PELAST.pid=%s old=\n%snew=\n%s' % (
                     key, self.pelast[key], prop)
@@ -379,7 +379,7 @@ class AddMethods(BDFAttributes):
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.materials and not allow_overwrites:
-            if not material._is_same_card(self.materials[key]):
+            if not material == self.materials[key]:
                 self._duplicate_materials.append(material)
         else:
             self.materials[key] = material
@@ -391,7 +391,7 @@ class AddMethods(BDFAttributes):
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.thermal_materials and not allow_overwrites:
-            if not material._is_same_card(self.thermal_materials[key]):
+            if not material == self.thermal_materials[key]:
                 self._duplicate_thermal_materials.append(material)
         else:
             self.thermal_materials[key] = material
@@ -403,7 +403,7 @@ class AddMethods(BDFAttributes):
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.hyperelastic_materials and not allow_overwrites:
-            if not material._is_same_card(self.hyperelastic_materials[key]):
+            if not material == self.hyperelastic_materials[key]:
                 assert key not in self.hyperelastic_materials, 'mid=%s\nold=\n%snew=\n%s' % (key, self.hyperelastic_materials[key], material)
         else:
             self.hyperelastic_materials[key] = material
@@ -434,7 +434,7 @@ class AddMethods(BDFAttributes):
         }
         slot = mapper[Type]
         if key in slot and not allow_overwrites:
-            if not material._is_same_card(slot[key]):
+            if not material == slot[key]:
                 assert key not in slot, 'dMATx.mid=%s Type=%r\nold=\n%snew=\n%s' % (key, Type, slot[key], material)
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
@@ -451,7 +451,7 @@ class AddMethods(BDFAttributes):
         """
         key = material.mid
         if key in self.thermal_materials and not allow_overwrites:
-            if not material._is_same_card(self.creep_materials[key]):
+            if not material == self.creep_materials[key]:
                 assert key not in self.creep_materials, 'Material.mid=%s\nold=\n%snew=\n%s' % (key, self.creep_materials[key], material)
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
@@ -469,7 +469,7 @@ class AddMethods(BDFAttributes):
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
         if key in self.coords:
             #if not allow_overwrites:
-            if not coord._is_same_card(self.coords[key]):
+            if not coord == self.coords[key]:
                 self._duplicate_coords.append(coord)
         else:
             self.coords[key] = coord
@@ -528,7 +528,7 @@ class AddMethods(BDFAttributes):
     def _add_phbdy_object(self, prop):
         key = prop.pid
         if key in self.phbdys:
-            if not prop._is_same_card(self.phbdys[key]):
+            if not prop == self.phbdys[key]:
                 assert key not in self.phbdys, 'PHBDY.pid=%s\nold=\n%snew=\n%s' % (
                     key, self.phbdys[key], prop)
         else:
@@ -671,7 +671,7 @@ class AddMethods(BDFAttributes):
         """adds an AEFACT object"""
         key = aefact.sid
         if key in self.aefacts and not allow_overwrites:
-            if not aefact._is_same_card(self.aefacts[key]):
+            if not aefact == self.aefacts[key]:
                 assert key not in self.aefacts, 'AEFACT.sid=%s\nold=\n%snew=\n%s' % (key, self.aefacts[key], aefact)
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
@@ -854,7 +854,7 @@ class AddMethods(BDFAttributes):
     #def add_DCONADD(self, dconadd, allow_overwrites=False):
         #key = dconadd.oid
         #if key in self.dconstrs and not allow_overwrites:
-            #if not dconadd._is_same_card(self.dconstrs[key]):
+            #if not dconadd == self.dconstrs[key]:
                 #assert key not in self.dconstrs, 'DCONADD=%s old=\n%snew=\n%s' % (
                     #key, self.dconstrs[key], dconadd)
         #else:
@@ -967,7 +967,7 @@ class AddMethods(BDFAttributes):
         """adds a TSTEP object"""
         key = tstep.sid
         if key in self.tsteps and not allow_overwrites:
-            if not tstep._is_same_card(self.tsteps[key]):
+            if not tstep == self.tsteps[key]:
                 assert key not in self.tsteps, 'TSTEP=%s\nold=\n%snew=\n%s' % (key, self.tsteps[key], tstep)
         else:
             assert key > 0, 'sid=%s tstep=\n%s' % (key, tstep)
@@ -978,7 +978,7 @@ class AddMethods(BDFAttributes):
         """adds a TSTEPNL object"""
         key = tstepnl.sid
         if key in self.tstepnls and not allow_overwrites:
-            if not tstepnl._is_same_card(self.tstepnls[key]):
+            if not tstepnl == self.tstepnls[key]:
                 assert key not in self.tstepnls, 'TSTEPNL=%s\nold=\n%snew=\n%s' % (key, self.tstepnls[key], tstepnl)
         else:
             assert key > 0, 'sid=%s tstepnl=\n%s' % (key, tstepnl)
@@ -1111,7 +1111,7 @@ class AddMethods(BDFAttributes):
         """adds a EIGR/EIGRL object"""
         key = method.sid
         if key in self.methods and not allow_overwrites:
-            if not method._is_same_card(self.methods[key]):
+            if not method == self.methods[key]:
                 assert key not in self.methods, 'sid=%s\nold_method=\n%snew_method=\n%s' % (key, self.methods[key], method)
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, method)
@@ -1122,7 +1122,7 @@ class AddMethods(BDFAttributes):
         """adds a EIGB/EIGC object"""
         key = method.sid
         if key in self.cMethods and not allow_overwrites:
-            if not method._is_same_card(self.cMethods[key]):
+            if not method == self.cMethods[key]:
                 assert key not in self.cMethods, 'sid=%s\nold_cmethod=\n%snew_cmethod=\n%s' % (key, self.cMethods[key], method)
         else:
             assert key > 0, 'sid=%s cMethod=\n%s' % (key, method)

@@ -37,12 +37,12 @@ class Load(BaseCard):
     @property
     def node_ids(self):
         try:
-            return self._nodeIDs()
+            return self._node_ids()
         except:
             #raise
             raise RuntimeError('error processing nodes for \n%s' % str(self))
 
-    def _nodeIDs(self, nodes=None):
+    def _node_ids(self, nodes=None):
         """returns nodeIDs for repr functions"""
         if not nodes:
             nodes = self.nodes

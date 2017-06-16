@@ -38,6 +38,20 @@ else:
 
 
 class BaseCard(object):
+    """
+    Defines a series of base methods for every card class
+    (e.g., GRID, CTRIA3) including:
+
+     - deepcopy()
+     - get_stats()
+     - validate()
+     - object_attributes(mode='public', keys_to_skip=None)
+     - object_methods(self, mode='public', keys_to_skip=None)
+     - comment
+     - update_field(self, n, value)
+
+
+    """
     def __init__(self):
         pass
 
@@ -113,6 +127,7 @@ class BaseCard(object):
                 return
 
     def update_field(self, n, value):
+        # type: (n, Optional[Union[int, float, str]]) -> None
         """
         Updates a field based on it's field number.
 
@@ -150,6 +165,7 @@ class BaseCard(object):
         raise IndexError(msg)
 
     def get_field(self, n):
+        # type: (int) -> Optional[Union[int, float, str]]
         """
         Gets a field based on it's field number
 
@@ -179,6 +195,7 @@ class BaseCard(object):
         return value
 
     def _verify(self, xref):
+        # type: (bool) -> None
         """
         Verifies all methods for this object work
 
@@ -191,6 +208,7 @@ class BaseCard(object):
               'not implemented' % self.type)
 
     def __eq__(self, card):
+        # type: (Any) -> bool
         """
         Enables functions like:
 
@@ -203,9 +221,6 @@ class BaseCard(object):
           >>> GRID(nid=1, ...) === CQUAD4(eid=1, ...)
           False
         """
-        return self._is_same_card(card)
-
-    def _is_same_card(self, card):
         if not isinstance(card, self.__class__):
             return False
         if self.type != card.type:
@@ -215,17 +230,20 @@ class BaseCard(object):
         return self._is_same_fields(fields1, fields2)
 
     def _is_same_fields(self, fields1, fields2):
+        # type: (List[Optional[Union[int, float, str]]], List[Optional[Union[int, float, str]]]) -> bool
         for (field1, field2) in zip(fields1, fields2):
             if not is_same(field1, field2):
                 return False
         return True
 
     def print_raw_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def repr_fields(self):
+    # type: () -> List[Optional[Union[int, float, str]]]
         """
         Gets the fields in their simplified form
 
@@ -237,16 +255,19 @@ class BaseCard(object):
         return self.raw_fields()
 
     def print_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def print_repr_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def __repr__(self):
+        # type: () -> str
         """
         Prints a card in the simplest way possible
         (default values are left blank).
@@ -264,9 +285,11 @@ class BaseCard(object):
                 raise
 
     def rstrip(self):
+        # type: () -> str
         return str(self).rstrip()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """
         Writes the card with the specified width and precision
 
@@ -288,10 +311,12 @@ class BaseCard(object):
 class Property(BaseCard):
     """Base Property Class"""
     def __init__(self):
+        # type: () -> None
         """dummy init"""
         pass
 
     def Pid(self):
+        # type: () -> int
         """
         returns the property ID of an property
 
@@ -303,6 +328,7 @@ class Property(BaseCard):
         return self.pid
 
     def Mid(self):
+        # type: () -> int
         """
         returns the material ID of an element
 
@@ -316,12 +342,14 @@ class Property(BaseCard):
         return self.mid_ref.mid
 
     def cross_reference(self, model):
+        # type: (Any) -> None
         """dummy cross reference method for a Property"""
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
         self.mid_ref = self.mid
 
     def uncross_reference(self):
+        # type: () -> None
         self.mid = self.Mid()
         try:
             del self.mid_ref
@@ -330,30 +358,42 @@ class Property(BaseCard):
             raise
 
     def write_card_8(self):
+        # type: () -> str
         return self.write_card()
 
     def write_card_16(self, is_double=False):
+        # type: () -> str
         return self.write_card()
 
 
 class Material(BaseCard):
     """Base Material Class"""
     def __init__(self):
+        # type: () -> None
         """dummy init"""
         BaseCard.__init__(self)
 
     @property
     def TRef(self):
+        # type: () -> float
+        if not hasattr(self, 'tref'):
+            raise AttributeError('%r object has no attribute tref' % self.type)
         return self.tref
     @TRef.setter
     def TRef(self, tref):
+        # type: (float) -> None
+        """sets the self.Tref attributes"""
+        if not hasattr(self, 'tref'):
+            raise AttributeError('%r object has no attribute tref' % self.type)
         self.tref = tref
 
     def cross_reference(self, model):
+        # type: (Any) -> None
         """dummy cross reference method for a Material"""
         pass
 
     def Mid(self):
+        # type: () -> Any
         """
         returns the material ID of an element
 
@@ -395,6 +435,7 @@ class Element(BaseCard):
             raise NotImplementedError('only required nodes implemented')
 
     def Pid(self):
+        # type: () -> int
         """
         Gets the Property ID of an element
 
@@ -409,6 +450,7 @@ class Element(BaseCard):
             return self.pid_ref.pid
 
     def get_node_positions(self, nodes=None):
+        # type: (Any) -> np.ndarray
         """returns the positions of multiple node objects"""
         if nodes is None:
             nodes = self.nodes_ref
@@ -422,6 +464,7 @@ class Element(BaseCard):
         return positions
 
     def get_node_positions_no_xref(self, model, nodes=None):
+        # type: (Any, Any) -> np.ndarray
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
@@ -435,7 +478,7 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position_no_xref(model)
         return positions
 
-    def _nodeIDs(self, nodes=None, allow_empty_nodes=False, msg=''):
+    def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
         # type: (Optional[List[Any]], bool, str) -> List[int]
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes, allow_empty_nodes, msg)

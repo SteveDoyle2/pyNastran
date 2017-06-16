@@ -387,7 +387,7 @@ class CHEXA8(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     def get_face(self, nid_opposite, nid):
         nids = self.node_ids[:8]
@@ -679,7 +679,7 @@ class CHEXA20(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
 
 class CIHEX1(CHEXA8):
@@ -990,12 +990,12 @@ class CPENTA6(SolidElement):
         return abs(volume)
 
     def raw_fields(self):
-        list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allow_empty_nodes=False)
+        list_fields = ['CPENTA', self.eid, self.Pid()] + self._node_ids(allow_empty_nodes=False)
         return list_fields
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
 def cpenta_face(nid, nid_opposite, nids):
     assert len(nids) == 6, nids
@@ -1345,7 +1345,7 @@ class CPENTA15(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
 
 class CPYRAM5(SolidElement):
@@ -1520,7 +1520,7 @@ class CPYRAM5(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
 
 class CPYRAM13(SolidElement):
@@ -1720,7 +1720,7 @@ class CPYRAM13(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
 
 class CTETRA4(SolidElement):
@@ -1933,7 +1933,7 @@ class CTETRA4(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
 def ctetra_face(nid, nid_opposite, nids):
     assert len(nids) == 4, nids
@@ -2201,5 +2201,5 @@ class CTETRA10(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 

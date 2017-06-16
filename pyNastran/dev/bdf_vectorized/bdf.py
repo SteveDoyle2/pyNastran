@@ -3461,7 +3461,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             ##def add_darea(self, darea, allow_overwrites=False):
                 ##key = (darea.sid, darea.p, darea.c)
                 ##if key in self.dareas and not allow_overwrites:
-                    ##if not darea._is_same_card(self.dareas[key]):
+                    ##if not darea == self.dareas[key]:
                         ##assert key not in self.dareas, '\ndarea=\n%s oldDArea=\n%s' % (darea, self.dareas[key])
                 ##else:
                     ##assert darea.sid > 0

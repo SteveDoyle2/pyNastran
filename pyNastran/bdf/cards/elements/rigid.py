@@ -661,13 +661,13 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     def Gni_node_ids(self):
         if len(self.Gni) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gni, allow_empty_nodes=True)
+        return self._node_ids(nodes=self.Gni, allow_empty_nodes=True)
 
     @property
     def Gmi_node_ids(self):
         if len(self.Gmi) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+        return self._node_ids(nodes=self.Gmi, allow_empty_nodes=True)
 
     @property
     def independent_nodes(self):
@@ -949,7 +949,7 @@ class RBE2(RigidElement):
     def Gmi_node_ids(self):
         if len(self.Gmi) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+        return self._node_ids(nodes=self.Gmi, allow_empty_nodes=True)
 
     @property
     def independent_nodes(self):
@@ -1227,7 +1227,7 @@ class RBE3(RigidElement):
     def Gmi_node_ids(self):
         if len(self.Gmi) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+        return self._node_ids(nodes=self.Gmi, allow_empty_nodes=True)
 
     def cross_reference(self, model):
         """
@@ -1257,7 +1257,7 @@ class RBE3(RigidElement):
 
         Gij = []
         for gij in self.Gijs:
-            gij = self._nodeIDs(nodes=gij, allow_empty_nodes=True)
+            gij = self._node_ids(nodes=gij, allow_empty_nodes=True)
             Gij.append(gij)
         self.Gijs = Gij
         del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref
@@ -1284,7 +1284,7 @@ class RBE3(RigidElement):
         """
         nodes = []
         for Gij in self.Gijs:
-            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
+            Giji = self._node_ids(nodes=Gij, allow_empty_nodes=True)
             nodes += Giji
         return nodes
 
@@ -1301,7 +1301,7 @@ class RBE3(RigidElement):
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]
         for (wt, ci, Gij) in zip(self.weights, self.comps, self.Gijs):
-            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
+            Giji = self._node_ids(nodes=Gij, allow_empty_nodes=True)
             list_fields += [wt, ci] + Giji
         nspaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
 
@@ -1433,13 +1433,13 @@ class RSPLINE(RigidElement):
     #def Gni_node_ids(self):
         #if len(self.Gni) == 0:
             #return []
-        #return self._nodeIDs(nodes=self.Gni, allow_empty_nodes=True)
+        #return self._node_ids(nodes=self.Gni, allow_empty_nodes=True)
 
     #@property
     #def Gmi_node_ids(self):
         #if len(self.Gmi) == 0:
             #return []
-        #return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+        #return self._node_ids(nodes=self.Gmi, allow_empty_nodes=True)
 
     @property
     def independent_nodes(self):

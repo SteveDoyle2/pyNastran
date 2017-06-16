@@ -651,9 +651,9 @@ class ACCEL1(BaseCard):
     def node_ids(self):
         #msg = ' which is required by ACCEL1 sid=%s' % self.sid
         #_node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
-        return self._nodeIDs()
+        return self._node_ids()
 
-    def _nodeIDs(self, nodes=None):  # this function comes from BaseCard.py
+    def _node_ids(self, nodes=None):  # this function comes from BaseCard.py
         """returns node_ids for repr functions"""
         if not nodes:
             nodes = self.nodes
@@ -1331,7 +1331,7 @@ class FORCE2(Force):
         return [self.node_id, self.G1(), self.G2(), self.G3(), self.G4()]
 
     def raw_fields(self):
-        (node, g1, g2, g3, g4) = self._nodeIDs([self.node, self.g1, self.g2, self.g3, self.g4])
+        (node, g1, g2, g3, g4) = self._node_ids([self.node, self.g1, self.g2, self.g3, self.g4])
         list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 

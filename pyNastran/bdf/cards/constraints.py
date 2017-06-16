@@ -39,7 +39,7 @@ class Constraint(BaseCard):
         fields = [self.type, self.conid]
         return fields
 
-    def _nodeIDs(self, nodes=None, allow_empty_nodes=False, msg=''):
+    def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes, allow_empty_nodes, msg)
 
@@ -129,7 +129,7 @@ class SUPORT1(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SUPORT1'
-        return self._nodeIDs(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -253,7 +253,7 @@ class SUPORT(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SUPORT'
-        return self._nodeIDs(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -415,7 +415,7 @@ class MPC(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by MPC=%s' % self.conid
-        return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -610,7 +610,7 @@ class SPC(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SPC=%s' % (self.conid)
-        return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -874,7 +874,7 @@ class SPC1(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SPC1; conid=%s' % self.conid
-        return self._nodeIDs(self.nodes, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -1007,7 +1007,7 @@ class SPCOFF(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SPCOFF'
-        return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -1116,7 +1116,7 @@ class SPCOFF1(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SPCOFF1'
-        return self._nodeIDs(self.nodes, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """

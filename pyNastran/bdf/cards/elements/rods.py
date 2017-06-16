@@ -33,7 +33,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]

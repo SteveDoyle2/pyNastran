@@ -2277,7 +2277,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         aefact = AEFACT.add_card(card_obj, comment=comment)
         key = aefact.sid
         if key in self.aefacts and not allow_overwrites:
-            if not aefact._is_same_card(self.aefacts[key]):
+            if not aefact == self.aefacts[key]:
                 assert key not in self.aefacts, 'sid=%s\noldAEFACT=\n%snewAEFACT=\n%s' % (key, self.aefacts[key], aefact)
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, aefact)

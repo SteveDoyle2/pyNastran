@@ -621,7 +621,7 @@ class CTRIA3(TriShell):
     @property
     def node_ids(self):
         # type: () -> List[int]
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
@@ -789,7 +789,7 @@ class CPLSTN3(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = (['CPLSTN3', self.eid, self.Pid()] + self.node_ids +
@@ -1061,7 +1061,7 @@ class CTRIA6(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
@@ -1256,7 +1256,7 @@ class CTRIAR(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = (['CTRIAR', self.eid, self.Pid()] + self.node_ids +
@@ -1693,7 +1693,7 @@ class CSHEAR(QuadShell):
     @property
     def node_ids(self):
         # type: () -> List[int]
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     @node_ids.setter
     def node_ids(self, value):
@@ -2208,7 +2208,7 @@ class CQUAD4(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     def write_as_ctria3(self, new_eid):
         """
@@ -2381,7 +2381,7 @@ class CPLSTN4(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = (['CPLSTN4', self.eid, self.Pid()] + self.node_ids +
@@ -2572,7 +2572,7 @@ class CPLSTN6(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = (['CPLSTN6', self.eid, self.Pid()] + self.node_ids +
@@ -2773,7 +2773,7 @@ class CPLSTN8(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CPLSTN8', self.eid, self.Pid()] + self.node_ids + [
@@ -2980,7 +2980,7 @@ class CQUADR(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     @node_ids.setter
     def node_ids(self, value):
@@ -3183,7 +3183,7 @@ class CPLSTS3(TriShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = (['CPLSTS3', self.eid, self.Pid()] + self.node_ids +
@@ -3338,7 +3338,7 @@ class CQUAD(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def _verify(self, xref=True):
         pass
@@ -3608,7 +3608,7 @@ class CQUAD8(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CQUAD8', self.eid, self.Pid()] + self.node_ids + [

@@ -154,7 +154,7 @@ class CDAMP1(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -298,10 +298,10 @@ class CDAMP2(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def get_edge_ids(self):
-        node_ids = self._nodeIDs(allow_empty_nodes=True)
+        node_ids = self._node_ids(allow_empty_nodes=True)
         if isinstance(node_ids[0], integer_types) and isinstance(node_ids[1], integer_types):
             return [tuple(sorted(node_ids))]
         return []
@@ -459,7 +459,7 @@ class CDAMP3(LineDamper):
     @property
     def node_ids(self):
         msg = ', which is required by CDAMP3 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         list_fields = ['CDAMP3', self.eid, self.Pid()] + self.node_ids
@@ -550,7 +550,7 @@ class CDAMP4(LineDamper):
     @property
     def node_ids(self):
         msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(allow_empty_nodes=True, msg=msg)
 
     def B(self):
         return self.b
@@ -694,7 +694,7 @@ class CDAMP5(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -800,7 +800,7 @@ class CVISC(LineDamper):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.node_ids

@@ -134,7 +134,7 @@ class CELAS1(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by CELAS1 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -298,7 +298,7 @@ class CELAS2(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by CELAS2 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -456,7 +456,7 @@ class CELAS3(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return []
@@ -573,7 +573,7 @@ class CELAS4(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by CELAS4 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return []
