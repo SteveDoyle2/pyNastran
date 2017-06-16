@@ -6,7 +6,7 @@ from six import iteritems
 import vtk
 from vtk import vtkQuad
 from numpy import array, arange, cross
-from pyNastran.converters.LaWGS.wgs_reader import read_lawgs
+from pyNastran.converters.lawgs.wgs_reader import read_lawgs
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 

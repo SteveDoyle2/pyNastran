@@ -27,7 +27,7 @@ is_nastran = True
 
 
 #try:
-from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
+from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
 is_lawgs = True
 #except ImportError:
     #raise
