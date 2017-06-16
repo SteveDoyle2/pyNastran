@@ -181,10 +181,10 @@ def _eq_nodes_setup(bdf_filename, tol,
         all_nids = nids
 
     if needs_get_position:
-        nodes_xyz = array([model.nodes[nid].get_position()
+        nodes_xyz = array([model.nodes_ref[nid].get_position()
                            for nid in nids], dtype='float32')
     else:
-        nodes_xyz = array([model.nodes[nid].xyz
+        nodes_xyz = array([model.nodes_ref[nid].xyz
                            for nid in nids], dtype='float32')
 
     if node_set is not None:
@@ -269,7 +269,7 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         node2 = model.nodes[nid2]
 
         # TODO: doesn't use get position...
-        distance = norm(node1.xyz - node2.xyz)
+        distance = norm(node1.get_position() - node2.get_position())
 
         #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
         if distance > tol:

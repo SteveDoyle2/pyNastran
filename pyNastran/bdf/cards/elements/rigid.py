@@ -783,6 +783,7 @@ class RBE2(RigidElement):
         self._validate_input()
         #self.nodes_ref = None
         self.Gmi_ref = None
+        self.gn_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -937,27 +938,24 @@ class RBE2(RigidElement):
             the BDF object
         """
         msg = ' which is required by RBE2 eid=%s' % (self.eid)
-        self.Gmi = model.EmptyNodes(self.Gmi_node_ids, msg=msg)
-        self.gn = model.Node(self.Gn(), msg=msg)
-        self.Gmi_ref = self.Gmi
-        self.gn_ref = self.gn
+        self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
+        self.gn_ref = model.Node(self.Gn(), msg=msg)
 
     def uncross_reference(self):
         self.Gmi = self.Gmi_node_ids
         self.gn = self.Gn()
-        del self.Gmi_ref, self.gn_ref
+        self.Gmi_ref = None
+        self.gn_ref = None
 
     def Gn(self):
-        if isinstance(self.gn, integer_types) or self.gn is None:
+        if self.gn_ref is None or self.gn is None:
             return self.gn
         return self.gn_ref.nid
 
     @property
     def Gmi_node_ids(self):
-        if self.Gmi_ref is None:
+        if self.Gmi_ref is None or len(self.Gmi) == 0:
             return self.Gmi
-        if len(self.Gmi_ref) == 0:
-            return []
         return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
@@ -981,6 +979,7 @@ class RBE2(RigidElement):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        print('Gmi = ', self.Gmi)
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1233,13 +1232,17 @@ class RBE3(RigidElement):
 
     @property
     def ref_grid_id(self):
-        if isinstance(self.refgrid, integer_types) or self.refgrid is None:
+        if self.refgrid_ref is None:
+            return self.refgrid
+        if self.refgrid is None:
             return self.refgrid
         return self.refgrid.nid
 
     @property
     def Gmi_node_ids(self):
-        if len(self.Gmi) == 0:
+        if self.Gmi_ref is None:
+            return self.Gmi
+        if len(self.Gmi_ref) == 0:
             return []
         return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
