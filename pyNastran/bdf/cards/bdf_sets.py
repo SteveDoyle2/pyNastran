@@ -37,6 +37,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
 from six.moves import zip, range
+import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import (
@@ -163,6 +164,43 @@ class ABCQSet(Set):
     def node_ids(self):
         msg = ' which is required by %s' % self.type
         return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+
+    def get_dof_matrix(self):
+        # type: () -> np.ndarray
+        """
+        Gets the (grid-components) for the ASET, BSET, CSET, QSET
+
+        Returns
+        -------
+        dof_array : (n, 2) int ndarray
+            the degree of freedom map
+
+        nids = [10, 20, 25]
+        comps = [1, 2, 3]
+
+        dof_array = [
+            [10, 1],
+            [20, 2],
+            [25, 3],
+        ]
+        """
+        comp_ints = []
+        for compi in self.components:
+            if compi == '0':
+                comp_ints.append(0)
+            else:
+                comp_int = int(compi) - 1
+                comp_ints.append(comp_int)
+
+        nids = np.array(self.ids, dtype='int32')
+        comp_ints = np.array(self.comp_ints, dtype='int32')
+
+        dof_array = np.hstack([nids, cids]).reshape(2, 3).T
+        nnids = len(nids)
+        ncomps = len(comp_ints)
+        assert nnids == ncomps
+        dof_array = np.hstack([nids, ncomps]).reshape(2, nnids).T
+        return dof_array
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -354,6 +392,51 @@ class ABQSet1(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
 
+    def get_dof_matrix(self):
+        # type: () -> np.ndarray
+        """
+        Gets the (grid-components) for the ASET1, BSET1, QSET1
+
+        Returns
+        -------
+        dof_array : (n, 2) int ndarray
+            the degree of freedom map
+
+        nids = [10, 20, 25, 30]
+        comps = [1, 2, 3]
+
+        dof_array = [
+            [10, 1]
+            [10, 2]
+            [10, 3]
+            [20, 1]
+            [20, 2]
+            [25, 3]
+            [25, 1]
+            [25, 2]
+            [25, 3]
+            [30, 1]
+            [30, 2]
+            [30, 3]
+        ]
+        """
+        if components == '0':
+            comp_ints = [0]
+        else:
+            comp_ints = []
+            for compi in self.components:
+                comp_int = int(compi) - 1
+                comp_ints.append(comp_int)
+        nids = np.array(self.ids, dtype='int32') # [10, 20, 25, 30]
+        comp_ints = np.array(self.comp_ints, dtype='int32')  # [1, 2, 3]
+
+        nnids = len(nids)
+        ncomps = len(comp_ints)
+        dof_array = np.hstack([
+            np.repeat(nids, ncomps),
+            np.repeat(comp_ints, nnids)
+            ]).reshape(2, nnids*ncomps).T
+        return dof_array
 
     @classmethod
     def add_card(cls, card, comment=''):
