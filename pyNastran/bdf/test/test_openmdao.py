@@ -45,7 +45,7 @@ class TestOpenMDAO(unittest.TestCase):
 
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
 
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename)
 
         for iupdate in updates:
@@ -62,7 +62,7 @@ class TestOpenMDAO(unittest.TestCase):
         ]
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
 
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename)
 
         for iupdate in updates:
@@ -77,7 +77,7 @@ class TestOpenMDAO(unittest.TestCase):
         ]
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
 
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename)
 
         for iupdate in updates:

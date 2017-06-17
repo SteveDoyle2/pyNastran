@@ -31,13 +31,3 @@ tetgen Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`to_usm3d` Module
-----------------------
-
-.. inheritance-diagram:: pyNastran.converters.tetgen.to_usm3d
-
-.. automodule:: pyNastran.converters.tetgen.to_usm3d
-    :members:
-    :undoc-members:
-    :show-inheritance:
-

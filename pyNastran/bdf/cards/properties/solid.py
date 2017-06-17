@@ -137,7 +137,7 @@ class PLSOLID(SolidProperty):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def Rho(self):
         """

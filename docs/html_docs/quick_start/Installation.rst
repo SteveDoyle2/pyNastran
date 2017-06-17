@@ -39,12 +39,6 @@ shouldn't matter too much as long as your packages versions (e.g. numpy/scipy)
 are consistent.  **With either distribution, both Python and all 3rd party
 packages will be installed.  With base Python, you need to do that yourself.**
 
-**Note that Python 2.7.8+ is recommended** because:
-
- * pyNastran is mainly tested against 2.7
- * not everything in the OP2 has been switched over to unicode from bytes
- * the GUI saves your state
-
 Additional packages
 ===================
 The following packages are required.

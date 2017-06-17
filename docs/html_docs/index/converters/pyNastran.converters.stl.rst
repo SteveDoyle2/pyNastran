@@ -1,16 +1,6 @@
 stl Package
 ===========
 
-:mod:`convert_to_binary` Module
--------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.stl.convert_to_binary
-
-.. automodule:: pyNastran.converters.stl.convert_to_binary
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`stl` Module
 -----------------
 
@@ -34,9 +24,9 @@ stl Package
 :mod:`stl_mesh` Module
 ----------------------
 
-.. inheritance-diagram:: pyNastran.converters.stl.stl_mesh
+.. inheritance-diagram:: pyNastran.converters.stl.dev.stl_mesh
 
-.. automodule:: pyNastran.converters.stl.stl_mesh
+.. automodule:: pyNastran.converters.stl.dev.stl_mesh
     :members:
     :undoc-members:
     :show-inheritance:

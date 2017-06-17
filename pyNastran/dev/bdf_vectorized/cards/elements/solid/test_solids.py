@@ -3,8 +3,12 @@ from six.moves import StringIO
 import unittest
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF, BDFCard
-from pyNastran.dev.bdf_vectorized.cards.elements.solid.elements_solid import (
-    CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20)
+from pyNastran.dev.bdf_vectorized.cards.elements.solid.ctetra4 import CTETRA4
+from pyNastran.dev.bdf_vectorized.cards.elements.solid.ctetra10 import CTETRA10
+from pyNastran.dev.bdf_vectorized.cards.elements.solid.cpenta6 import CPENTA6
+from pyNastran.dev.bdf_vectorized.cards.elements.solid.cpenta15 import CPENTA15
+from pyNastran.dev.bdf_vectorized.cards.elements.solid.chexa8 import CHEXA8
+from pyNastran.dev.bdf_vectorized.cards.elements.solid.chexa20 import CHEXA20
 
 class TestSolids(unittest.TestCase):
 

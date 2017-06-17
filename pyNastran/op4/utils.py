@@ -7,7 +7,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_double import print_card_double
 
 
-def write_DMIG(f, name, matrix, form,
+def write_dmig(f, name, matrix, form,
                row_index_to_component_id, col_index_to_component_id,
                precision='default'):
     """

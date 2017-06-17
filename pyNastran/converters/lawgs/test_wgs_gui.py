@@ -2,11 +2,11 @@ import os
 import unittest
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
+from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'LaWGS')
+model_path = os.path.join(pkg_path, 'converters', 'lawgs')
 
 
 class LaWGS_GUI(LaWGS_IO, FakeGUIMethods):
