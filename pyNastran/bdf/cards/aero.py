@@ -99,6 +99,7 @@ class AECOMP(BaseCard):
         self.name = name
         self.list_type = list_type
         self.lists = lists
+        self.lists_ref = None
 
     def validate(self):
         # type: () -> None
@@ -141,11 +142,11 @@ class AECOMP(BaseCard):
         msg = ', which is required by AECOMP name=%r' % self.name
         #return
         if self.list_type == 'SET1':
-            self.lists = [model.SET1(key, msg) for key in self.lists]
+            self.lists_ref = [model.SET1(key, msg) for key in self.lists]
         elif self.list_type == 'AELIST':
-            self.lists = [model.AELIST(key, msg) for key in self.lists]
+            self.lists_ref = [model.AELIST(key, msg) for key in self.lists]
         elif self.list_type == 'CAERO':
-            self.lists = [model.CAero(key, msg) for key in self.lists]
+            self.lists_ref = [model.CAero(key, msg) for key in self.lists]
         #elif self.list_type == 'CMPID':
             # AEQUAD4,/AETRIA3
         else:
@@ -154,18 +155,20 @@ class AECOMP(BaseCard):
 
     def uncross_reference(self):
         self.lists = self.get_lists()
-        del self.lists_ref
+        self.lists_ref = None
 
     def get_lists(self):
+        if self.lists_ref is None:
+            return self.lists
         if self.list_type == 'SET1':
             lists = [set1 if isinstance(set1, integer_types)
-                     else set1.sid for set1 in self.lists]
+                     else set1.sid for set1 in self.lists_ref]
         elif self.list_type == 'AELIST':
             lists = [aelist if isinstance(aelist, integer_types)
-                     else aelist.sid for aelist in self.lists]
+                     else aelist.sid for aelist in self.lists_ref]
         elif self.list_type == 'CAERO':
             lists = [caero if isinstance(caero, integer_types)
-                     else caero.eid for caero in self.lists]
+                     else caero.eid for caero in self.lists_ref]
         #elif self.list_type == 'CMPID':
             # AEQUAD4,/AETRIA3
         else:
@@ -801,6 +804,10 @@ class AESURF(BaseCard):
         #: function of the dynamic pressure. (Integer>0, Default = no limit)
         self.tqllim = tqllim
         self.tqulim = tqulim
+        self.cid1_ref = None
+        self.cid2_ref = None
+        self.alid1_ref = None
+        self.alid2_ref = None
         self.tqllim_ref = None
         self.tqulim_ref = None
 
@@ -843,24 +850,24 @@ class AESURF(BaseCard):
                       tqllim, tqulim, comment=comment)
 
     def Cid1(self):
-        if isinstance(self.cid1, integer_types):
-            return self.cid1
-        return self.cid1_ref.cid
+        if self.cid1_ref is not None:
+            return self.cid1_ref.cid
+        return self.cid1
 
     def Cid2(self):
-        if isinstance(self.cid2, integer_types) or self.cid2 is None:
-            return self.cid2
-        return self.cid2_ref.cid
+        if self.cid2_ref is not None:
+            return self.cid2_ref.cid
+        return self.cid2
 
     def AELIST_id1(self):
-        if isinstance(self.alid1, integer_types):
-            return self.alid1
-        return self.alid1_ref.sid
+        if self.alid1_ref is not None:
+            return self.alid1_ref.sid
+        return self.alid1
 
     def AELIST_id2(self):
-        if isinstance(self.alid2, integer_types) or self.alid2 is None:
-            return self.alid2
-        return self.alid2_ref.sid
+        if self.alid2_ref is not None:
+            return self.alid2_ref.sid
+        return self.alid2
 
     def cross_reference(self, model):
         """
@@ -871,16 +878,12 @@ class AESURF(BaseCard):
         model : BDF()
             the BDF object
         """
-        self.cid1 = model.Coord(self.Cid1())
-        self.cid1_ref = self.cid1
+        self.cid1_ref = model.Coord(self.cid1)
         if self.cid2 is not None:
-            self.cid2 = model.Coord(self.Cid2())
-            self.cid2_ref = self.cid2
-        self.alid1 = model.AELIST(self.AELIST_id1())
-        self.alid1_ref = self.alid1
+            self.cid2_ref = model.Coord(self.cid2)
+        self.alid1_ref = model.AELIST(self.alid1)
         if self.alid2:
-            self.alid2 = model.AELIST(self.AELIST_id2())
-            self.alid2_ref = self.alid2
+            self.alid2_ref = model.AELIST(self.alid2)
         if self.tqllim is not None:
             self.tqllim_ref = model.TableD(self.tqllim)
         if self.tqulim is not None:
@@ -888,25 +891,21 @@ class AESURF(BaseCard):
 
     def safe_cross_reference(self, model):
         try:
-            self.cid1 = model.Coord(self.Cid1())
-            self.cid1_ref = self.cid1
+            self.cid1_ref = model.Coord(self.cid1)
         except KeyError:
             pass
         if self.cid2 is not None:
             try:
-                self.cid2 = model.Coord(self.Cid2())
-                self.cid2_ref = self.cid2
+                self.cid2_ref = model.Coord(self.cid2)
             except KeyError:
                 pass
         try:
-            self.alid1 = model.AELIST(self.AELIST_id1())
-            self.alid1_ref = self.alid1
+            self.alid1_ref = model.AELIST(self.alid1)
         except KeyError:
             pass
         if self.alid2:
             try:
-                self.alid2 = model.AELIST(self.AELIST_id2())
-                self.alid2_ref = self.alid2
+                self.alid2_ref = model.AELIST(self.alid2)
             except KeyError:
                 pass
         if self.tqllim is not None:
@@ -923,16 +922,17 @@ class AESURF(BaseCard):
     def uncross_reference(self):
         self.cid1 = self.Cid1()
         self.cid2 = self.Cid2()
-        del self.cid1_ref
-        if self.cid2:
-            del self.cid2_ref
+        self.cid1_ref = None
+        self.cid2_ref = None
 
         self.alid1 = self.AELIST_id1()
-        del self.alid1_ref
-
         self.alid2 = self.AELIST_id2()
-        if self.alid2:
-            del self.alid2_ref
+        self.alid1_ref = None
+        self.alid2_ref = None
+        #self.tqulim
+        #self.tqllim
+        self.tqllim_ref = None
+        self.tqulim_ref = None
 
     def raw_fields(self):
         """
@@ -1570,6 +1570,10 @@ class CSSCHD(Aero):
         self.lalpha = lalpha
         self.lmach = lmach
         self.lschd = lschd
+        self.aesid_ref = None
+        self.lalpha_ref = None
+        self.lmach_ref = None
+        self.lschd_ref = None
 
     def validate(self):
         if not(self.lalpha is None or isinstance(self.lalpha, integer_types)):
@@ -1622,38 +1626,30 @@ class CSSCHD(Aero):
             the BDF object
         """
         msg = ' which is required by CSSCHD sid=%s' % self.sid
-        self.aesid = model.AESurf(self.aesid, msg=msg)
-        self.aesid_ref = self.aesid
-        self.lalpha = model.AEFact(self.lalpha, msg=msg)
-        self.lalpha_ref = self.lalpha
-        self.lmach = model.AEFact(self.lmach, msg=msg)
-        self.lmach_ref = self.lmach
-        self.lschd = model.AEFact(self.lschd, msg=msg)
-        self.lschd_ref = self.lschd
+        self.aesid_ref = model.AESurf(self.aesid, msg=msg)
+        self.lalpha_ref = model.AEFact(self.lalpha, msg=msg)
+        self.lmach_ref = model.AEFact(self.lmach, msg=msg)
+        self.lschd_ref = model.AEFact(self.lschd, msg=msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CSSCHD sid=%s' % self.sid
         try:
-            self.aesid = model.AESurf(self.aesid, msg=msg)
-            self.aesid_ref = self.aesid
+            self.aesid_ref = model.AESurf(self.aesid, msg=msg)
         except KeyError:
             pass
 
         try:
-            self.lalpha = model.AEFact(self.lalpha, msg=msg)
-            self.lalpha_ref = self.lalpha
+            self.lalpha_ref = model.AEFact(self.lalpha, msg=msg)
         except KeyError:
             pass
 
         try:
-            self.lmach = model.AEFact(self.lmach, msg=msg)
-            self.lmach_ref = self.lmach
+            self.lmach_ref = model.AEFact(self.lmach, msg=msg)
         except KeyError:
             pass
 
         try:
-            self.lschd = model.AEFact(self.lschd, msg=msg)
-            self.lschd_ref = self.lschd
+            self.lschd_ref = model.AEFact(self.lschd, msg=msg)
         except KeyError:
             pass
 
@@ -1662,30 +1658,30 @@ class CSSCHD(Aero):
         self.lalpha = self.LAlpha()
         self.lmach = self.LMach()
         self.lschd = self.LSchd()
-        del self.aesid_ref
-        del self.lalpha_ref
-        del self.lmach_ref
-        del self.lschd_ref
+        self.aesid_ref = None
+        self.lalpha_ref = None
+        self.lmach_ref = None
+        self.lschd_ref = None
 
     def AESid(self):
-        if isinstance(self.aesid, integer_types):
-            return self.aesid
-        return self.aesid_ref.aesid
+        if self.aesid_ref is not None:
+            return self.aesid_ref.aesid
+        return self.aesid
 
     def LAlpha(self):
-        if self.lalpha is None or isinstance(self.lalpha, integer_types):
-            return self.lalpha
-        return self.lalpha_ref.sid
+        if self.lalpha_ref is not None:
+            return self.lalpha_ref.sid
+        return self.lalpha
 
     def LMach(self):
-        if self.lmach is None or isinstance(self.lmach, integer_types):
-            return self.lmach
-        return self.lmach_ref.sid
+        if self.lmach_ref is not None:
+            return self.lmach_ref.sid
+        return self.lmach
 
     def LSchd(self):
-        if self.lschd is None or isinstance(self.lschd, integer_types):
-            return self.lschd
-        return self.lschd_ref.sid
+        if self.lschd_ref is not None:
+            return self.lschd_ref.sid
+        return self.lschd
 
     def raw_fields(self):
         """
@@ -1900,6 +1896,10 @@ class CAERO1(BaseCard):
         self.x12 = x12
         self.p4 = p4
         self.x43 = x43
+        self.pid_ref = None
+        self.cp_ref = None
+        self.lchord_ref = None
+        self.lspan_ref = None
 
     def validate(self):
         msg = ''
@@ -2052,14 +2052,14 @@ class CAERO1(BaseCard):
             self._init_ids(dtype='int64')
 
     def Cp(self):
-        if isinstance(self.cp, integer_types):
-            return self.cp
-        return self.cp_ref.cid
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        return self.pid_ref.pid
+        if self.pid_ref is not None:
+            return self.pid_ref.pid
+        return self.pid
 
     def cross_reference(self, model):
         """
@@ -2071,21 +2071,16 @@ class CAERO1(BaseCard):
             the BDF object
         """
         msg = ' which is required by CAERO1 eid=%s' % self.eid
-        self.pid = model.PAero(self.pid, msg=msg)
-        self.pid_ref = self.pid
-        self.cp = model.Coord(self.cp, msg=msg)
-        self.cp_ref = self.cp
-
+        self.pid_ref = model.PAero(self.pid, msg=msg)
+        self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
         if self.nchord == 0:
             assert isinstance(self.lchord, integer_types), self.lchord
-            self.lchord = model.AEFact(self.lchord, msg)
-            self.lchord_ref = self.lchord
+            self.lchord_ref = model.AEFact(self.lchord, msg)
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
-            self.lspan = model.AEFact(self.lspan, msg)
-            self.lspan_ref = self.lspan
+            self.lspan_ref = model.AEFact(self.lspan, msg)
         self._init_ids()
 
     def safe_cross_reference(self, model):
@@ -2099,14 +2094,12 @@ class CAERO1(BaseCard):
         """
         msg = ' which is required by CAERO1 eid=%s' % self.eid
         try:
-            self.pid = model.PAero(self.pid, msg=msg)
-            self.pid_ref = self.pid
+            self.pid_ref = model.PAero(self.pid, msg=msg)
         except KeyError:
             pass
 
         try:
-            self.cp = model.Coord(self.cp, msg=msg)
-            self.cp_ref = self.cp
+            self.cp_ref = model.Coord(self.cp, msg=msg)
         except KeyError:
             pass
 
@@ -2118,32 +2111,28 @@ class CAERO1(BaseCard):
         if self.nchord == 0:
             assert isinstance(self.lchord, integer_types), self.lchord
             try:
-                self.lchord = model.AEFact(self.lchord, msg)
-                self.lchord_ref = self.lchord
+                self.lchord_ref = model.AEFact(self.lchord, msg)
             except KeyError:
                 pass
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
             try:
-                self.lspan = model.AEFact(self.lspan, msg)
-                self.lspan_ref = self.lspan
+                self.lspan_ref = model.AEFact(self.lspan, msg)
             except KeyError:
                 pass
 
         self._init_ids()
-
-    #def uncross_reference(self):
-        #self.pid = self.Pid()
-        #self.cp = self.Cp()
-        #del self.pid_ref
-        #del self.pid_ref, self.cp_ref
 
     def uncross_reference(self):
         self.pid = self.Pid()
         self.cp = self.Cp()
         self.lchord = self.get_LChord()
         self.lspan = self.get_LSpan()
+        self.pid_ref = None
+        self.cp_ref = None
+        self.lchord_ref = None
+        self.lspan_ref = None
 
     @property
     def min_max_eid(self):
@@ -2282,14 +2271,14 @@ class CAERO1(BaseCard):
         return list_fields
 
     def get_LChord(self):
-        if isinstance(self.lchord, integer_types):
-            return self.lchord
-        return self.lchord_ref.sid
+        if self.lchord_ref is not None:
+            return self.lchord_ref.sid
+        return self.lchord
 
     def get_LSpan(self):
-        if isinstance(self.lspan, integer_types):
-            return self.lspan
-        return self.lspan_ref.sid
+        if self.lspan_ref is not None:
+            return self.lspan_ref.sid
+        return self.lspan
 
     def repr_fields(self):
         """
@@ -2460,6 +2449,11 @@ class CAERO2(BaseCard):
         #: system.  (Real > 0)
         self.x12 = x12
 
+        self.pid_ref = None
+        self.cp_ref = None
+        self.lint_ref = None
+        self.lsb_ref = None
+
     def validate(self):
         #print('nsb=%s lsb=%s' % (self.nsb, self.lsb))
         #print('nint=%s lint=%s' % (self.nint, self.lint))
@@ -2507,24 +2501,24 @@ class CAERO2(BaseCard):
                       comment=comment)
 
     def Cp(self):
-        if isinstance(self.cp, integer_types):
-            return self.cp
-        return self.cp_ref.cid
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        return self.pid_ref.pid
+        if self.pid_ref is not None:
+            return self.pid_ref.pid
+        return self.pid
 
     def Lsb(self):  # AEFACT
-        if self.lsb is None or isinstance(self.lsb, integer_types):
-            return self.lsb
-        return self.lsb_ref.sid
+        if self.lsb_ref is not None:
+            return self.lsb_ref.sid
+        return self.lsb
 
     def Lint(self):  # AEFACT
-        if self.lint is None or isinstance(self.lint, integer_types):
-            return self.lint
-        return self.lint_ref.sid
+        if self.lint_ref is not None:
+            return self.lint_ref.sid
+        return self.lint
 
     def cross_reference(self, model):
         """
@@ -2536,42 +2530,34 @@ class CAERO2(BaseCard):
             the BDF object
         """
         msg = ' which is required by CAERO2 eid=%s' % self.eid
-        self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO2
-        self.pid_ref = self.pid
-        self.cp = model.Coord(self.cp, msg=msg)
-        self.cp_ref = self.cp
+        self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
+        self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.nsb == 0:
-            self.lsb = model.AEFact(self.lsb, msg=msg)
-            self.lsb_ref = self.lsb
+            self.lsb_ref = model.AEFact(self.lsb, msg=msg)
         if self.nint == 0:
-            self.lint = model.AEFact(self.lint, msg=msg)
-            self.lint_ref = self.lint
+            self.lint_ref = model.AEFact(self.lint, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
     def safe_cross_reference(self, model, debug=False):
         msg = ' which is required by CAERO2 eid=%s' % self.eid
         try:
-            self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO2
-            self.pid_ref = self.pid
+            self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
         except KeyError:
             pass
 
         try:
-            self.cp = model.Coord(self.cp, msg=msg)
-            self.cp_ref = self.cp
+            self.cp_ref = model.Coord(self.cp, msg=msg)
         except KeyError:
             pass
 
         if self.nsb == 0:
             try:
-                self.lsb = model.AEFact(self.lsb, msg=msg)
-                self.lsb_ref = self.lsb
+                self.lsb_ref = model.AEFact(self.lsb, msg=msg)
             except KeyError:
                 pass
         if self.nint == 0:
             try:
-                self.lint = model.AEFact(self.lint, msg=msg)
-                self.lint_ref = self.lint
+                self.lint_ref = model.AEFact(self.lint, msg=msg)
             except KeyError:
                 pass
         try:
@@ -2584,11 +2570,12 @@ class CAERO2(BaseCard):
         self.cp = self.Cp()
         if self.nsb == 0:
             self.lsb = self.Lsb()
-            del self.lsb_ref
         if self.nint == 0:
             self.lint = self.Lint()
-            del self.lint_ref
-        del self.pid_ref, self.cp_ref
+        self.pid_ref = None
+        self.cp_ref = None
+        self.lint_ref = None
+        self.lsb_ref = None
 
     def get_points(self):
         """
@@ -2846,6 +2833,11 @@ class CAERO3(BaseCard):
         self.x12 = x12
         self.p4 = p4
         self.x43 = x43
+        self.pid_ref = None
+        self.cp_ref = None
+        self.list_w_ef = None
+        self.list_c1_ref = None
+        self.list_c2_ref = None
 
     def validate(self):
         assert len(self.p1) == 3, 'p1=%s' % self.p1
@@ -2895,47 +2887,43 @@ class CAERO3(BaseCard):
             the BDF object
         """
         msg = ' which is required by CAERO3 eid=%s' % self.eid
-        self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
-        self.pid_ref = self.pid
-        self.cp = model.Coord(self.cp, msg=msg)
-        self.cp_ref = self.cp
+        self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO3
+        self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.list_w is not None:
-            self.list_w = model.AEFact(self.list_w, msg=msg)
-        if self.list_c1 is not None:
-            self.list_c1 = model.AEFact(self.list_c1, msg=msg)
+            self.list_w_ef = model.AEFact(self.list_w, msg=msg)
+        if self.list_c1_ref is not None:
+            self.list_c1_ref = model.AEFact(self.list_c1, msg=msg)
         if self.list_c2 is not None:
-            self.list_c2 = model.AEFact(self.list_c2, msg=msg)
+            self.list_c2_ref = model.AEFact(self.list_c2, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
 
     def safe_cross_reference(self, model):
         msg = ', which is required by CAERO3 eid=%s' % self.eid
         try:
-            self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
-            self.pid_ref = self.pid
+            self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO3
         except KeyError:
             model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
 
         try:
-            self.cp = model.Coord(self.cp, msg=msg)
-            self.cp_ref = self.cp
+            self.cp_ref = model.Coord(self.cp, msg=msg)
         except KeyError:
             model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
 
         if self.list_w is not None:
             try:
-                self.list_w = model.AEFact(self.list_w, msg=msg)
+                self.list_w_ref = model.AEFact(self.list_w, msg=msg)
             except KeyError:
                 model.log.warning('cannot find an AEFACT pid=%s%s' % (self.list_w, msg))
 
         if self.list_c1 is not None:
             try:
-                self.list_c1 = model.AEFact(self.list_c1, msg=msg)
+                self.list_c1_ref = model.AEFact(self.list_c1, msg=msg)
             except KeyError:
                 model.log.warning('cannot find an AEFACT pid=%s%s' % (self.list_c1, msg))
 
         if self.list_c2 is not None:
             try:
-                self.list_c2 = model.AEFact(self.list_c2, msg=msg)
+                self.list_c2_ref = model.AEFact(self.list_c2, msg=msg)
             except KeyError:
                 model.log.warning('cannot find an AEFACT list_c2=%s%s' % (self.list_c2, msg))
         try:
@@ -2952,7 +2940,13 @@ class CAERO3(BaseCard):
             self.list_c1 = self.List_c1()
         if self.list_c2 != self.List_c2():
             self.list_c2 = self.List_c2()
-        del self.pid_ref, self.cp_ref, self.ascid_ref
+        self.pid_ref = None
+        self.cp_ref = None
+        self.ascid_ref = None
+
+        self.list_w_ef = None
+        self.list_c1_ref = None
+        self.list_c2_ref = None
 
     def get_points(self):
         """
@@ -3037,14 +3031,14 @@ class CAERO3(BaseCard):
         #paero2 = self.pid_ref
 
     def Cp(self):
-        if isinstance(self.cp, integer_types):
-            return self.cp
-        return self.cp_ref.cid
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        return self.pid_ref.pid
+        if self.pid_ref is not None:
+            return self.pid_ref.pid
+        return self.pid
 
     def List_w(self):
         if self.list_w is None or isinstance(self.list_w, integer_types):
@@ -3159,6 +3153,9 @@ class CAERO4(BaseCard):
         self.x12 = x12
         self.p4 = p4
         self.x43 = x43
+        self.pid_ref = None
+        self.cp_ref = None
+        self.lspan_ref = None
 
     def validate(self):
         if self.nspan == 0 and self.lspan == 0:
@@ -3220,38 +3217,30 @@ class CAERO4(BaseCard):
             the BDF object
         """
         msg = ' which is required by CAERO4 eid=%s' % self.eid
-
-        self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
-        self.cp = model.Coord(self.cp, msg=msg)
-
-        self.cp_ref = self.cp
-        self.pid_ref = self.pid
+        self.cp_ref = model.Coord(self.cp, msg=msg)
+        self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
-            self.lspan = model.AEFact(self.lspan, msg)
-            self.lspan_ref = self.lspan
+            self.lspan_ref = model.AEFact(self.lspan, msg)
         self._init_ids()
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CAERO4 eid=%s' % self.eid
         try:
-            self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
-            self.pid_ref = self.pid
+            self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
         except KeyError:
             self.model.warning('cannot find PAERO4=%r' % self.pid)
 
         try:
-            self.cp = model.Coord(self.cp, msg=msg)
-            self.cp_ref = self.cp
+            self.cp_ref = model.Coord(self.cp, msg=msg)
         except KeyError:
             self.model.warning('cannot find CORDx=%r' % self.cp)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
             try:
-                self.lspan = model.AEFact(self.lspan, msg)
-                self.lspan_ref = self.lspan
+                self.lspan_ref = model.AEFact(self.lspan, msg)
             except KeyError:
                 pass
         self._init_ids()
@@ -3261,18 +3250,19 @@ class CAERO4(BaseCard):
         self.cp = self.Cp()
         if self.nspan == 0:
             self.lspan = self.get_LSpan()
-            del self.lspan_ref
-        del self.pid_ref, self.cp_ref
+        self.pid_ref = None
+        self.cp_ref = None
+        self.lspan_ref = None
 
     def Cp(self):
-        if isinstance(self.cp, integer_types):
-            return self.cp
-        return self.cp_ref.cid
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        return self.pid_ref.pid
+        if self.pid_ref is not None:
+            return self.pid_ref.pid
+        return self.pid
 
     def _init_ids(self, dtype='int32'):
         """

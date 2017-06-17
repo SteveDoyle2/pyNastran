@@ -139,7 +139,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]
-            pid = elem.pid
+            pid = elem.pid_ref
             assert not isinstance(pid, integer_types), elem
             if pid.type in ['PBAR', 'PBEAM']:
                 bar_type = 'bar'

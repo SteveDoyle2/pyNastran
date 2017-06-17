@@ -65,6 +65,7 @@ class SUPORT1(Constraint):
         self.Cs = Cs
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
+        self.IDs_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -129,7 +130,9 @@ class SUPORT1(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SUPORT1'
-        return self._node_ids(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
+        if self.IDs_ref is None:
+            return self.IDs
+        return self._node_ids(nodes=self.IDs_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -141,8 +144,7 @@ class SUPORT1(Constraint):
             the BDF object
         """
         msg = ', which is required by SUPORT1'
-        self.IDs = model.EmptyNodes(self.IDs, msg=msg)
-        self.IDs_ref = self.IDs
+        self.IDs_ref = model.EmptyNodes(self.IDs, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -157,12 +159,11 @@ class SUPORT1(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.IDs = nids2
-        self.IDs_ref = self.IDs
+        self.IDs_ref = nids2
 
     def uncross_reference(self):
         self.IDs = self.node_ids
-        del self.IDs_ref
+        self.IDs_ref = None
 
     def raw_fields(self):
         fields = ['SUPORT1', self.conid]
@@ -195,6 +196,7 @@ class SUPORT(Constraint):
             if isinstance(ci, integer_types):
                 ci = str(ci)
             self.Cs.append(ci)
+        self.IDs_ref = None
 
     def validate(self):
         assert len(self.IDs) > 0
@@ -253,7 +255,9 @@ class SUPORT(Constraint):
     @property
     def node_ids(self):
         msg = ', which is required by SUPORT'
-        return self._node_ids(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
+        if self.IDs_ref is None:
+            return self.IDs
+        return self._node_ids(nodes=self.IDs_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -265,8 +269,7 @@ class SUPORT(Constraint):
             the BDF object
         """
         msg = ', which is required by SUPORT'
-        self.IDs = model.EmptyNodes(self.IDs, msg=msg)
-        self.IDs_ref = self.IDs
+        self.IDs_ref = model.EmptyNodes(self.IDs, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -280,12 +283,11 @@ class SUPORT(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.IDs = nids2
-        self.IDs_ref = self.IDs
+        self.IDs_ref = nids2
 
     def uncross_reference(self):
         self.IDs = self.node_ids
-        del self.IDs_ref
+        self.IDs_ref = None
 
     def raw_fields(self):
         fields = [self.type]
@@ -323,13 +325,18 @@ class MPC(Constraint):
             self.comment = comment
         #: Set identification number. (Integer > 0)
         self.conid = conid
+
         #: Identification number of grid or scalar point. (Integer > 0)
         self.gids = gids
+
         #: Component number. (Any one of the Integers 1 through 6 for grid
         #: points; blank or zero for scalar points.)
         self.components = components
+
         #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
         self.enforced = enforced
+
+        self.gids_ref = None
 
     def validate(self):
         assert isinstance(self.gids, list), type(self.gids)
@@ -414,8 +421,10 @@ class MPC(Constraint):
 
     @property
     def node_ids(self):
+        if self.gids_ref is None:
+            return self.gids
         msg = ', which is required by MPC=%s' % self.conid
-        return self._node_ids(nodes=self.gids, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.gids_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -427,8 +436,7 @@ class MPC(Constraint):
             the BDF object
         """
         msg = ', which is required by MPC=%s' % self.conid
-        self.gids = model.EmptyNodes(self.gids, msg=msg)
-        self.gids_ref = self.gids
+        self.gids_ref = model.EmptyNodes(self.gids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -443,12 +451,11 @@ class MPC(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.gids = nids2
-        self.gids_ref = self.gids
+        self.gids_ref = nids2
 
     def uncross_reference(self):
         self.gids = self.node_ids
-        del self.gids_ref
+        self.gids_ref = None
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
@@ -527,6 +534,7 @@ class SPC(Constraint):
         self.gids = gids
         self.components = components
         self.enforced = enforced
+        self.gids_ref = None
 
     def validate(self):
         assert isinstance(self.gids, list), self.gids
@@ -609,8 +617,10 @@ class SPC(Constraint):
 
     @property
     def node_ids(self):
+        if self.gids_ref is None:
+            return self.gids
         msg = ', which is required by SPC=%s' % (self.conid)
-        return self._node_ids(nodes=self.gids, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.gids_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -622,8 +632,7 @@ class SPC(Constraint):
             the BDF object
         """
         msg = ', which is required by SPC=%s' % (self.conid)
-        self.gids = model.EmptyNodes(self.gids, msg=msg)
-        self.gids_ref = self.gids
+        self.gids_ref = model.EmptyNodes(self.gids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -638,12 +647,11 @@ class SPC(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.gids = nids2
-        self.gids_ref = self.gids
+        self.gids_ref = nids2
 
     def uncross_reference(self):
         self.gids = self.node_ids
-        del self.gids_ref
+        self.gids_ref = None
 
     def raw_fields(self):
         fields = ['SPC', self.conid]
@@ -819,6 +827,7 @@ class SPC1(Constraint):
         self.components = components
         self.nodes = expand_thru(nodes)
         self.nodes.sort()
+        self.nodes_ref = None
 
     def validate(self):
         assert isinstance(self.nodes, list), 'nodes=%s\n%s' % (self.nodes, str(self))
@@ -873,8 +882,10 @@ class SPC1(Constraint):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         msg = ', which is required by SPC1; conid=%s' % self.conid
-        return self._node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -886,8 +897,7 @@ class SPC1(Constraint):
             the BDF object
         """
         msg = ', which is required by SPC1; conid=%s' % self.conid
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -902,11 +912,11 @@ class SPC1(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.nodes = nids2
+        self.nodes_ref = nids2
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def raw_fields(self):
         fields = ['SPC1', self.conid, self.components] + self.node_ids
@@ -926,6 +936,7 @@ class SPCOFF(Constraint):
         self.gids = gids
         self.components = components
         self.enforced = enforced
+        self.gids_ref = None
 
     def validate(self):
         assert isinstance(self.gids, list), self.gids
@@ -1006,8 +1017,10 @@ class SPCOFF(Constraint):
 
     @property
     def node_ids(self):
+        if self.gids_ref is None:
+            return self.gids
         msg = ', which is required by SPCOFF'
-        return self._node_ids(nodes=self.gids, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.gids_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -1019,8 +1032,7 @@ class SPCOFF(Constraint):
             the BDF object
         """
         msg = ', which is required by SPCOFF=%s' % (self.conid)
-        self.gids = model.EmptyNodes(self.gids, msg=msg)
-        self.gids_ref = self.gids
+        self.gids_ref = model.EmptyNodes(self.gids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -1035,12 +1047,11 @@ class SPCOFF(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.gids = nids2
-        self.gids_ref = self.gids
+        self.gids_ref = nids2
 
     def uncross_reference(self):
         self.gids = self.node_ids
-        del self.gids_ref
+        self.gids_ref = None
 
     def raw_fields(self):
         fields = ['SPCOFF']
@@ -1064,6 +1075,7 @@ class SPCOFF1(Constraint):
         self.components = components
         self.nodes = expand_thru(nodes)
         self.nodes.sort()
+        self.nodes_ref = None
 
     def validate(self):
         assert isinstance(self.nodes, list), 'nodes=%s\n%s' % (self.nodes, str(self))
@@ -1115,8 +1127,10 @@ class SPCOFF1(Constraint):
 
     @property
     def node_ids(self):
+        if self.gids_ref is None:
+            return self.gids
         msg = ', which is required by SPCOFF1'
-        return self._node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -1128,8 +1142,7 @@ class SPCOFF1(Constraint):
             the BDF object
         """
         msg = ', which is required by SPCOFF1; conid=%s' % (self.conid)
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -1144,11 +1157,11 @@ class SPCOFF1(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.nodes = nids2
+        self.nodes_ref = nids2
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def raw_fields(self):
         fields = ['SPCOFF1', self.components] + self.node_ids
@@ -1159,12 +1172,14 @@ class SPCOFF1(Constraint):
         return self.comment + print_card_8(card)
 
 
-class ConstraintADD(Constraint):
+class ConstraintAdd(Constraint):
+    """common class for SPCADD, MPCADD"""
     def __init__(self):
         Constraint.__init__(self)
+        self.sets_ref = None
 
 
-class SPCADD(ConstraintADD):
+class SPCADD(ConstraintAdd):
     """
     Defines a single-point constraint set as a union of single-point constraint
     sets defined on SPC or SPC1 entries.
@@ -1178,7 +1193,7 @@ class SPCADD(ConstraintADD):
     type = 'SPCADD'
 
     def __init__(self, conid, sets, comment=''):
-        ConstraintADD.__init__(self)
+        ConstraintAdd.__init__(self)
         if comment:
             self.comment = comment
         self.conid = conid
@@ -1229,8 +1244,10 @@ class SPCADD(ConstraintADD):
 
     @property
     def spc_ids(self):
+        if self.sets_ref is None:
+            return self.sets
         spc_ids = []
-        for spc in self.sets:
+        for spc in self.sets_ref:
             if isinstance(spc, integer_types):
                 spc_ids.append(spc)
             elif isinstance(spc, list):
@@ -1253,12 +1270,12 @@ class SPCADD(ConstraintADD):
             the BDF object
         """
         msg = ', which is required by SPCADD=%s' % self.conid
-        for i, spc in enumerate(self.sets):
-            self.sets[i] = model.SPC(spc, msg=msg)
-        self.sets_ref = self.sets
+        self.sets_ref = []
+        for spc_id in self.sets:
+            self.sets_ref.append(model.SPC(spc_id, msg=msg))
 
     def safe_cross_reference(self, model, debug=True):
-        spcs = []
+        self.sets_ref = []
         msg = ' which is required by SPCADD=%s' % self.conid
         for spc_id in self.sets:
             try:
@@ -1269,13 +1286,11 @@ class SPCADD(ConstraintADD):
                         spc_id, self.conid)
                     print(msg)
                 continue
-            spcs.append(spc)
-        self.sets = spcs
-        self.sets_ref = self.sets
+            self.sets_ref.append(spc)
 
     def uncross_reference(self):
         self.sets = self.spc_ids
-        del self.sets_ref
+        self.sets_ref = []
 
     def raw_fields(self):
         fields = ['SPCADD', self.conid] + self.spc_ids
@@ -1290,7 +1305,7 @@ class SPCADD(ConstraintADD):
         return self.comment + print_card_16(card)
 
 
-class MPCADD(ConstraintADD):
+class MPCADD(ConstraintAdd):
     r"""
     Defines a multipoint constraint equation of the form
     :math:`\Sigma_j A_j u_j =0` where :math:`u_j` represents
@@ -1305,7 +1320,7 @@ class MPCADD(ConstraintADD):
     type = 'MPCADD'
 
     def __init__(self, conid, sets, comment=''):
-        ConstraintADD.__init__(self)
+        ConstraintAdd.__init__(self)
         if comment:
             self.comment = comment
         self.conid = conid
@@ -1336,8 +1351,10 @@ class MPCADD(ConstraintADD):
 
     @property
     def mpc_ids(self):
+        if self.sets_ref is None:
+            return self.sets
         mpc_ids = []
-        for mpc in self.sets:
+        for mpc in self.sets_ref:
             if isinstance(mpc, integer_types):
                 mpc_ids.append(mpc)
             else:
@@ -1354,22 +1371,27 @@ class MPCADD(ConstraintADD):
             the BDF object
         """
         msg = ', which is required by MPCADD=%s' % self.conid
-        for i, mpc in enumerate(self.sets):
-            self.sets[i] = model.MPC(mpc, msg=msg)
-        self.sets_ref = self.sets
+        self.sets_ref = []
+        for mpc_id in self.sets:
+            self.sets_ref.append(model.MPC(mpc_id, msg=msg))
 
-    def safe_cross_reference(self, model, debug=False):
-        msg = ', which is required by MPCADD=%s' % self.conid
-        for i, mpc in enumerate(self.sets):
+    def safe_cross_reference(self, model, debug=True):
+        self.sets_ref = []
+        msg = ' which is required by MPCADD=%s' % self.conid
+        for mpc_id in self.sets:
             try:
-                self.sets[i] = model.MPC(mpc, msg=msg)
+                mpc = model.MPC(mpc_id, msg=msg)
             except KeyError:
-                pass
-        self.sets_ref = self.sets
+                if debug:
+                    msg = 'Couldnt find MPC=%i, which is required by MPCADD=%s' % (
+                        spc_id, self.conid)
+                    print(msg)
+                continue
+            self.sets_ref.append(mpc)
 
     def uncross_reference(self):
         self.sets = self.mpc_ids
-        del self.sets_ref
+        self.sets_ref = []
 
     @property
     def ids(self):

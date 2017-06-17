@@ -181,10 +181,10 @@ def _eq_nodes_setup(bdf_filename, tol,
         all_nids = nids
 
     if needs_get_position:
-        nodes_xyz = array([model.nodes_ref[nid].get_position()
+        nodes_xyz = array([model.nodes[nid].get_position()
                            for nid in nids], dtype='float32')
     else:
-        nodes_xyz = array([model.nodes_ref[nid].xyz
+        nodes_xyz = array([model.nodes[nid].xyz
                            for nid in nids], dtype='float32')
 
     if node_set is not None:
@@ -210,14 +210,7 @@ def _eq_nodes_setup(bdf_filename, tol,
         for eid, element in sorted(iteritems(model.masses)):
             spoint_epoint_nid_set.update(element.node_ids)
 
-        if model.spoints and model.epoints:
-            nids_new = spoint_epoint_nid_set - model.spoints.points - model.epoints.points
-        elif model.spoints:
-            nids_new = spoint_epoint_nid_set - model.spoints.points
-        elif model.epoints:
-            nids_new = spoint_epoint_nid_set - model.epoints.points
-        else:
-            nids_new = spoint_epoint_nid_set
+        nids_new = spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
 
         if None in nids_new:
             nids_new.remove(None)

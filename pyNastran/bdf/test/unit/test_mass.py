@@ -54,7 +54,7 @@ class TestMass(unittest.TestCase):
         if G:
             self.assertAlmostEqual(element.G(), G, msg='G=%s expected=%s' % (element.G(), G))
             self.assertAlmostEqual(element.pid_ref.G(), G, msg='G=%s expected=%s' % (element.pid_ref.G(), G))
-            self.assertAlmostEqual(element.pid_ref.mid_ref.G(), G, msg='G=%s expected=%s' % (element.pid.mid_ref.G(), G))
+            self.assertAlmostEqual(element.pid_ref.mid_ref.G(), G, msg='G=%s expected=%s' % (element.pid_ref.mid_ref.G(), G))
         if nu:
             self.assertAlmostEqual(element.Nu(), nu, msg='nu=%s expected=%s' % (element.Nu(), nu))
             self.assertAlmostEqual(element.pid_ref.Nu(), nu, msg='nu=%s expected=%s' % (element.pid_ref.Nu(), nu))

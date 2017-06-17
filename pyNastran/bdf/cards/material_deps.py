@@ -924,8 +924,6 @@ class MATT5(MaterialDependence):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-#MATT8
-#MATT9
 
 class MATT8(MaterialDependence):
     """
@@ -1012,3 +1010,4 @@ class MATT8(MaterialDependence):
                      comment=comment)
 
 
+#MATT9

@@ -21,7 +21,7 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=False)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -459,7 +459,7 @@ class CONROD(RodElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+    def __init__(self, eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment=''):
         """
         Creates a CONROD card
 
@@ -512,7 +512,7 @@ class CONROD(RodElement):
         nids = [integer(card, 2, 'n1'),
                 integer(card, 3, 'n2')]
         mid = integer(card, 4, 'mid')
-        A = double(card, 5, 'A')
+        A = double_or_blank(card, 5, 'A', 0.0)
         j = double_or_blank(card, 6, 'j', 0.0)
         c = double_or_blank(card, 7, 'c', 0.0)
         nsm = double_or_blank(card, 8, 'nsm', 0.0)

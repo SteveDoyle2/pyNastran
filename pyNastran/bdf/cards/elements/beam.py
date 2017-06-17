@@ -520,6 +520,16 @@ class CBEAM(CBAR):
         is_failed = False
         return is_failed, wa, wb, ihat, yhat, zhat
 
+    @property
+    def nodes_ref(self):
+        return [self.ga_ref, self.gb_ref]
+
+    @nodes_ref.setter
+    def nodes_ref(self, values):
+        assert values is not None, values
+        self.ga_ref = values[0]
+        self.gb_ref = values[1]
+
     def Mid(self):
         if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '

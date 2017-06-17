@@ -198,6 +198,7 @@ class SuperABCQSet(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = ids
         self.components = components
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -224,12 +225,11 @@ class SuperABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
@@ -432,6 +432,7 @@ class SuperABQSet1(Set):
         self.ids = expand_thru(ids)
         #print('ids =', self.ids)
         assert None not in self.ids
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -468,12 +469,11 @@ class SuperABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):

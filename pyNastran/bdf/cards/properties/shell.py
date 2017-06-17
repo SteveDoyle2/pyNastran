@@ -1326,7 +1326,7 @@ class PPLANE(ShellProperty):
         mid = self.Mid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
-            assert self.mid.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5', 'MAT8'], 'PPLANE: mid.type=%s' % self.mid.type
+            assert self.mid_ref.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5', 'MAT8'], 'PPLANE: mid.type=%s' % self.mid.type
 
     #def Pid(self):
         #return self.pid

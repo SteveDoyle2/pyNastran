@@ -208,7 +208,7 @@ class CTRAX3(AxisymmetricTri):
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes
-        return self._node_ids(allow_empty_nodes=False)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = ['CTRAX3', self.eid, self.Pid()] + self.node_ids + [self.theta]
@@ -346,13 +346,14 @@ class CTRAX6(AxisymmetricTri):
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @property
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CTRAX6', self.eid, self.Pid()] + self.node_ids + [self.theta]
@@ -500,7 +501,7 @@ class CTRIAX(AxisymmetricTri):
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CTRIAX', self.eid, self.Pid()] + self.node_ids + [self.theta_mcid]
@@ -700,7 +701,7 @@ class CTRIAX6(TriShell):
         """
         if self.nodes_ref is None:
             return self.nodes
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def get_edge_ids(self):
         """
@@ -833,7 +834,7 @@ class CQUADX(AxisymmetricQuad):
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def _verify(self, xref):
         """
@@ -950,7 +951,7 @@ class CQUADX4(AxisymmetricQuad):
 
     @property
     def node_ids(self):
-        return self._node_idss(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def _verify(self, xref):
         """
@@ -1070,7 +1071,7 @@ class CQUADX8(AxisymmetricQuad):
 
     @property
     def node_ids(self):
-        return self_nodeIDss(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def _verify(self, xref):
         """

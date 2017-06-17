@@ -298,6 +298,7 @@ class PBEAM(IntegratedLineProperty):
                     msg += '  cwa=%s cwb=%s\n' % (self.cwa, self.cwb)
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxb, self.j, i, j)
                     raise ValueError(msg)
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -728,15 +729,14 @@ class PBEAM(IntegratedLineProperty):
             the BDF object
         """
         msg = ' which is required by PBEAM mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
         #if model.sol != 600:
             #assert max(self.j) == 0.0, self.j
             #assert min(self.j) == 0.0, self.j
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -984,6 +984,7 @@ class PBEAML(IntegratedLineProperty):
         self.xxb = xxb
         self.so = so
         self.nsm = nsm
+        self.mid_ref = None
         A = self.Area()
 
     @classmethod
@@ -1170,12 +1171,11 @@ class PBEAML(IntegratedLineProperty):
         .. todo:: What happens when there are 2 subcases?
         """
         msg = ' which is required by PBEAML mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def verify(self, model, isubcase):
         if model.is_thermal_solution(isubcase):
@@ -1370,8 +1370,7 @@ class PBMSECT(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBMSECT mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
         self.outp = model.Set(self.outp)
         self.outp_ref = self.outp
@@ -1672,8 +1671,7 @@ class PBCOMP(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBCOMP mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def Mids(self):
         return self.mids

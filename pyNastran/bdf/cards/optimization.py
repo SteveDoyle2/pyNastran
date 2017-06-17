@@ -137,7 +137,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
         elif prop_type == 'PBEAM':
             assert pname_fid in ['I1', 'I2', 'A', 'J',
                                  'I1(B)', 'I2(B)',
-                                 '-8', '-9', '-10', '-14', '-15', '-16', '-17', '-18', '-19', '-20', '-21'], msg
+                                 '-8', '-9', '-10', '-14', '-15', '-16', '-17', '-18', '-19', '-20', '-21',
+                                 '-168'], msg
         elif prop_type == 'PBEAML':
             assert pname_fid in ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6',
                                  'DIM1(A)',
@@ -2721,7 +2722,7 @@ class DVCREL2(OptConstraint):
         return self.comment + print_card_16(card)
 
 
-class DVMREL1(OptConstraint):  # similar to DVPREL1
+class DVMREL1(OptConstraint):
     type = 'DVMREL1'
 
     def __init__(self, oid, mat_type, mid, mp_name, dvids, coeffs,
@@ -3114,7 +3115,7 @@ def break_word_by_trailing_integer(pname_fid):
         return word, num
 
 
-class DVPREL1(OptConstraint):  # similar to DVMREL1
+class DVPREL1(OptConstraint):
     """
     +---------+--------+--------+--------+-----------+-------+--------+-----+---+
     |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  | 9 |

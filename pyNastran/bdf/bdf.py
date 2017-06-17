@@ -94,7 +94,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
                                            MATG, MATHE, MATHP, CREEP, EQUIV)
 # TODO: add MATT3, MATT8, MATT9
-from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
+from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATT8, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
@@ -407,7 +407,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'MATG', 'MATHE', 'MATHP',
 
             ## Material dependence - MATT1/MATT2/etc.
-            'MATT1', 'MATT2', 'MATT4', 'MATT5',  #'MATT3', 'MATT8', 'MATT9',
+            'MATT1', 'MATT2', 'MATT4', 'MATT5', 'MATT8', #'MATT3', 'MATT9',
             'MATS1', #'MATS3', 'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
@@ -1964,7 +1964,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             #'MATT3' : (MATT3, self._add_material_dependence_object),
             'MATT4' : (MATT4, self._add_material_dependence_object),
             'MATT5' : (MATT5, self._add_material_dependence_object),
-            #'MATT8' : (MATT8, self._add_material_dependence_object),
+            'MATT8' : (MATT8, self._add_material_dependence_object),
             #'MATT9' : (MATT9, self._add_material_dependence_object),
 
             ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID

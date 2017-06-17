@@ -149,6 +149,11 @@ class PROD(Property):
         msg = ' which is required by PROD mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
+    def uncross_reference(self):
+        # type: () -> None
+        self.mid = self.Mid()
+        self.mid_ref = None
+
     def raw_fields(self):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
                        self.nsm]

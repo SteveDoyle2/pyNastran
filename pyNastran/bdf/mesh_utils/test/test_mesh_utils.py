@@ -400,7 +400,7 @@ class TestMeshUtils(unittest.TestCase):
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero3.out'))
         model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
                              is_double=False, starting_id_dict=None,
-                             round_ids=False, cards_to_skip=None)
+                             round_ids=False, cards_to_skip=None, debug=False)
 
         model = read_bdf(bdf_filename, log=log)
         bdf_renumber(model, bdf_filename_out2, size=16, is_double=False,
@@ -458,21 +458,21 @@ class TestMeshUtils(unittest.TestCase):
             pkg_path, '..', 'models', 'bwb', 'mcids.csv'))
         export_mcids(bdf_filename, csv_filename,
                      export_xaxis=True, export_yaxis=True,
-                     iply=9)
+                     iply=9, log=log, debug=False)
 
-        model = read_bdf(bdf_filename, xref=False)
+        model = read_bdf(bdf_filename, xref=False, debug=False)
         model.safe_cross_reference()
 
         eids = [1204, 1211]
         export_mcids(model, csv_filename=None, eids=eids,
                      export_xaxis=True, export_yaxis=True,
-                     iply=9)
+                     iply=9, log=log, debug=False)
         export_mcids(model, csv_filename=None, eids=eids,
                      export_xaxis=True, export_yaxis=False,
-                     iply=9)
+                     iply=9, log=log, debug=False)
         export_mcids(model, csv_filename=None, eids=eids,
                      export_xaxis=False, export_yaxis=True,
-                     iply=9)
+                     iply=9, log=log, debug=False)
         with self.assertRaises(AssertionError):
             export_mcids(model, csv_filename=None, eids=eids,
                          export_xaxis=False, export_yaxis=False,

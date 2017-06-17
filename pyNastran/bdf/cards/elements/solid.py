@@ -388,7 +388,8 @@ class CHEXA8(SolidElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=False)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
 
     def get_face(self, nid_opposite, nid):
         nids = self.node_ids[:8]
@@ -637,7 +638,7 @@ class CHEXA20(SolidElement):
             G3 - the grid point diagonally opposite of G1
         """
         nids = self.node_ids[:8]
-        return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:8])
+        return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:8])
 
     def _verify(self, xref=False):
         eid = self.eid
@@ -678,7 +679,8 @@ class CHEXA20(SolidElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+        return nids
 
 
 class CIHEX1(CHEXA8):
@@ -902,7 +904,7 @@ class CPENTA6(SolidElement):
         nids = self.node_ids[:6]
         return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:6])
 
-    def getFaceNodesAndArea(self, nid, nid_opposite):
+    def get_face_nodes_and_area(self, nid, nid_opposite):
         nids = self.node_ids[:6]
         indx1 = nids.index(nid)
         indx2 = nids.index(nid_opposite)
@@ -987,12 +989,13 @@ class CPENTA6(SolidElement):
         return abs(volume)
 
     def raw_fields(self):
-        list_fields = ['CPENTA', self.eid, self.Pid()] + self._node_ids(allow_empty_nodes=False)
+        list_fields = ['CPENTA', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=False)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
 
 def cpenta_face(nid, nid_opposite, nids):
     assert len(nids) == 6, nids
@@ -1091,6 +1094,8 @@ def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
         G1 - a grid point on the corner of a face
     nid_opposite : int
         G3 - the grid point diagonally opposite of G1
+    nodes_ref : List[GRID]
+        the GRID objects
 
     # top   (7-6-5-4)
     # btm   (0-1-2-3)
@@ -1340,7 +1345,8 @@ class CPENTA15(SolidElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+        return nids
 
 
 class CPYRAM5(SolidElement):
@@ -1513,7 +1519,8 @@ class CPYRAM5(SolidElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=False)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
 
 
 class CPYRAM13(SolidElement):
@@ -1711,7 +1718,8 @@ class CPYRAM13(SolidElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+        return nids
 
 
 class CTETRA4(SolidElement):
@@ -1905,7 +1913,7 @@ class CTETRA4(SolidElement):
         (n1, n2, n3, n4) = self.get_node_positions()
         return (n1 + n2 + n3 + n4) / 4.
 
-    def getFaceNodes(self, nid_opposite, nid=None):
+    def get_face_nodes(self, nid_opposite, nid=None):
         assert nid is None, nid
         nids = self.node_ids[:4]
         indx = nids.index(nid_opposite)
@@ -1922,7 +1930,9 @@ class CTETRA4(SolidElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=False)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
+
 
 def ctetra_face(nid, nid_opposite, nids):
     assert len(nids) == 4, nids
@@ -2180,7 +2190,7 @@ class CTETRA10(SolidElement):
         (n1, n2, n3, n4) = self.get_node_positions()[:4]
         return (n1 + n2 + n3 + n4) / 4.
 
-    def getFaceNodes(self, nid_opposite, nid=None):
+    def get_face_nodes(self, nid_opposite, nid=None):
         nids = self.node_ids[:4]
         indx = nids.index(nid_opposite)
         nids.pop(indx)
@@ -2188,5 +2198,5 @@ class CTETRA10(SolidElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
-
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+        return nids

@@ -504,7 +504,7 @@ class SuperABQSet1(Set):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         if self.ids_ref is None:
             return self.ids
-        return _node_ids(self, self.nids_ref, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -693,6 +693,7 @@ class SET1(Set):
 
         self.is_skin = is_skin
         self.xref_type = None
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -707,9 +708,7 @@ class SET1(Set):
             a comment for the card
         """
         sid = integer(card, 1, 'sid')
-
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
-
         is_skin = False
         i = 0
         if len(ids) > 0:
@@ -770,9 +769,9 @@ class SET1(Set):
         """
         msg = ' which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
-            self.ids = model.Nodes(self.get_ids(), msg=msg)
+            self.ids_ref = model.Nodes(self.get_ids(), msg=msg)
         elif xref_type == 'Point':
-            self.ids = model.Points(self.get_ids(), msg=msg)
+            self.ids_ref = model.Points(self.get_ids(), msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type
@@ -780,17 +779,20 @@ class SET1(Set):
     def uncross_reference(self):
         if self.xref_type in ['Node', 'Point']:
             self.ids = self.get_ids()
-            del self.ids_ref
             self.xref_type = None
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
+        self.ids_ref = None
 
     def get_ids(self):
+        if self.ids_ref is None:
+            return self.ids
+
         if self.xref_type is None:
             ids = self.ids
         elif self.xref_type in ['Node', 'Point']:
             ids = [node if isinstance(node, integer_types) else node.nid
-                   for node in self.ids]
+                   for node in self.ids_ref]
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
         return ids
@@ -1330,7 +1332,7 @@ class USET1(ABQSet1):
     type = 'USET1'
 
     def __init__(self, name, components, ids, comment=''):
-        Set.__init__(self)
+        ABQSet1.__init__(self)
         if comment:
             self.comment = comment
         self.name = name
@@ -1342,6 +1344,7 @@ class USET1(ABQSet1):
 
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1389,7 +1392,7 @@ class USET1(ABQSet1):
         if self.ids_ref is None:
             return self.ids
         msg = ' which is required by USET1 name=%s' % (self.name)
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""

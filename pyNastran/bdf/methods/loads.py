@@ -117,7 +117,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             #continue
         if load.type == 'FORCE':
             if load.Cid() != 0:
-                cp = load.cid
+                cp = load.cid_ref
                 #from pyNastran.bdf.bdf import CORD2R
                 #cp = CORD2R()
                 f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
@@ -145,7 +145,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             M += m
         elif load.type == 'MOMENT':
             if load.Cid() != 0:
-                cp = load.cid
+                cp = load.cid_ref
                 #from pyNastran.bdf.bdf import CORD2R
                 #cp = CORD2R()
                 m = load.mag * cp.transform_vector_to_global(load.xyz) * scale
@@ -193,7 +193,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             M += m
 
         elif load.type == 'PLOAD1':
-            elem = load.eid
+            elem = load.eid_ref
 
             p1 = load.p1 * scale
             p2 = load.p2 * scale
@@ -395,7 +395,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             #assert load.surf_or_line == 'SURF', 'surf_or_line = %r' % (load.surf_or_line)
             assert load.line_load_dir == 'NORM', 'line_load_dir = %s' % (load.line_load_dir)
 
-            for elem in load.eids:
+            for elem in load.eids_ref:
                 eid = elem.eid
                 etype = elem.type
                 if etype in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
@@ -437,25 +437,25 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                     nface = 4
                 elif etype == 'CTETRA':
                     #face1 = elem.get_face(load.g1.nid, load.g34.nid)
-                    face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
+                    face_acn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
                     face, area, centroid, normal = face_acn
                     #assert face == face1
                     nface = 3
                 elif etype == 'CHEXA':
                     #face1 = elem.get_face(load.g34.nid, load.g1.nid)
-                    face_acn = elem.get_face_area_centroid_normal(load.g34.nid, load.g1.nid)
+                    face_acn = elem.get_face_area_centroid_normal(load.g34_ref.nid, load.g1_ref.nid)
                     face, area, centroid, normal = face_acn
                     #assert face == face1
                     nface = 4
                 elif etype == 'CPENTA':
-                    g1 = load.g1.nid
+                    g1 = load.g1_ref.nid
                     if load.g34 is None:
                         #face1 = elem.get_face(g1)
                         face_acn = elem.get_face_area_centroid_normal(g1)
                         nface = 3
                     else:
                         #face1 = elem.get_face(g1, load.g34.nid)
-                        face_acn = elem.get_face_area_centroid_normal(g1, load.g34.nid)
+                        face_acn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
                         nface = 4
                     face, area, centroid, normal = face_acn
                     #assert face == face1
@@ -488,7 +488,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
 
                 r = centroid - p
                 f = pressure * area * normal * scale
-                #load.cid.transformToGlobal()
+                #load.cid_ref.transform_to_global()
                 m = cross(r, f)
                 F += f
                 M += m
@@ -640,7 +640,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
             if load.node_id not in nids:
                 continue
             if load.Cid() != 0:
-                cp = load.cid
+                cp = load.cid_ref
                 #from pyNastran.bdf.bdf import CORD2R
                 #cp = CORD2R()
                 f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
@@ -923,7 +923,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
         elif load.type == 'PLOAD4':
             assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
             assert load.line_load_dir == 'NORM', 'line_load_dir = %s' % (load.line_load_dir)
-            for elem in load.eids:
+            for elem in load.eids_ref:
                 eid = elem.eid
                 if eid not in eids:
                     continue
@@ -966,26 +966,26 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     nface = 4
 
                 elif etype == 'CTETRA':
-                    #face = elem.get_face(load.g1.nid, load.g34.nid)
-                    face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
+                    #face = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
+                    face_acn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
                     face, area, centroid, normal = face_acn
                     nface = 3
 
                 elif etype == 'CHEXA':
-                    #face = elem.get_face(load.g1.nid, load.g34.nid)
-                    face_acn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
+                    #face = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
+                    face_acn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
                     face, area, centroid, normal = face_acn
                     nface = 4
 
                 elif etype == 'CPENTA':
-                    g1 = load.g1.nid
+                    g1 = load.g1_ref.nid
                     if load.g34 is None:
                         #face = elem.get_face(g1)
                         face_acn = elem.get_face_area_centroid_normal(g1)
                         nface = 3
                     else:
                         #face = elem.get_face(load.g1.nid, load.g34.nid)
-                        face_acn = elem.get_face_area_centroid_normal(g1, load.g34.nid)
+                        face_acn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
                         nface = 4
                     face, area, centroid, normal = face_acn
                 else:

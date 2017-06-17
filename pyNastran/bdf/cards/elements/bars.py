@@ -702,7 +702,7 @@ class CBAR(LineElement):
     def nodes_ref(self):
         return [self.ga_ref, self.gb_ref]
 
-    @nodes.setter
+    @nodes_ref.setter
     def nodes_ref(self, values):
         assert values is not None, values
         self.ga_ref = values[0]

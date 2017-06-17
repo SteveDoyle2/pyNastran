@@ -2355,6 +2355,8 @@ class CAERO3(BaseCard):
         self.x12 = x12
         self.p4 = p4
         self.x43 = x43
+        self.pid_ref = None
+        self.cp_ref = None
 
     def validate(self):
         assert len(self.p1) == 3, 'p1=%s' % self.p1
@@ -2415,17 +2417,18 @@ class CAERO3(BaseCard):
     def uncross_reference(self):
         self.pid = self.Pid()
         self.cp = self.Cp()
-        del self.pid_ref, self.cp_ref
+        self.pid_ref = None
+        self.cp_ref = None
 
     def Cp(self):
-        if isinstance(self.cp, integer_types):
-            return self.cp
-        return self.cp_ref.cid
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        return self.pid_ref.pid
+        if self.pid_ref is not None:
+            return self.pid_ref.pid
+        return self.pid
 
     def raw_fields(self):
         """
@@ -2482,6 +2485,8 @@ class CAERO4(BaseCard):
         self.x12 = x12
         self.p4 = p4
         self.x43 = x43
+        self.pid_ref = None
+        self.cp_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3362,12 +3367,9 @@ class FLUTTER(BaseCard):
             the BDF object
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
-        self.density = model.FLFACT(self.density, msg=msg)
-        self.density_ref = self.density
-        self.mach = model.FLFACT(self.mach, msg=msg)
-        self.mach_ref = self.mach
-        self.reduced_freq_velocity = model.FLFACT(self.reduced_freq_velocity, msg=msg)
-        self.reduced_freq_velocity_ref = self.reduced_freq_velocity
+        self.density_ref = model.FLFACT(self.density, msg=msg)
+        self.mach_ref = model.FLFACT(self.mach, msg=msg)
+        self.reduced_freq_velocity_ref = model.FLFACT(self.reduced_freq_velocity, msg=msg)
 
     def update(self, maps):
         raise NotImplementedError()

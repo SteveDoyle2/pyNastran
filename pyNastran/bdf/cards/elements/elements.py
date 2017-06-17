@@ -499,7 +499,7 @@ class CRAC2D(CrackElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CRAC2D', self.eid, self.Pid()] + self.node_ids
@@ -576,7 +576,7 @@ class CRAC3D(CrackElement):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.node_ids

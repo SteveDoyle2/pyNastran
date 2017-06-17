@@ -29,24 +29,6 @@ class LineDamper(DamperElement):
     def __init__(self):
         DamperElement.__init__(self)
 
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
-        self.pid_ref = model.Property(self.pid, msg=msg)
-
-    def uncross_reference(self):
-        self.nodes = self.node_ids
-        self.pid = self.Pid()
-        self.nodes_ref = None
-        self.pid_ref = None
 
 class CDAMP1(LineDamper):
     type = 'CDAMP1'
@@ -154,7 +136,7 @@ class CDAMP1(LineDamper):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -250,6 +232,8 @@ class CDAMP2(LineDamper):
         # CDAMP2 do not have to be unique
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         self.nodes_ref = None
+        self.pid = 0
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -299,10 +283,10 @@ class CDAMP2(LineDamper):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def get_edge_ids(self):
-        node_ids = self._node_ids(allow_empty_nodes=True)
+        node_ids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
         if isinstance(node_ids[0], integer_types) and isinstance(node_ids[1], integer_types):
             return [tuple(sorted(node_ids))]
         return []
@@ -460,7 +444,7 @@ class CDAMP3(LineDamper):
     @property
     def node_ids(self):
         msg = ', which is required by CDAMP3 eid=%s' % (self.eid)
-        return self._node_ids(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         list_fields = ['CDAMP3', self.eid, self.Pid()] + self.node_ids
@@ -551,7 +535,7 @@ class CDAMP4(LineDamper):
     @property
     def node_ids(self):
         msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
-        return self._node_ids(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def B(self):
         return self.b
@@ -567,6 +551,10 @@ class CDAMP4(LineDamper):
         """
         msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def raw_fields(self):
         list_fields = ['CDAMP4', self.eid, self.b] + self.node_ids
@@ -695,7 +683,7 @@ class CDAMP5(LineDamper):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -781,6 +769,25 @@ class CVISC(LineDamper):
         nids = data[2:4]
         return CVISC(eid, pid, nids, comment=comment)
 
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by CVISC eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        self.nodes_ref = None
+        self.pid_ref = None
+
     def _verify(self, xref=True):
         eid = self.eid
         pid = self.Pid()
@@ -803,7 +810,7 @@ class CVISC(LineDamper):
 
     @property
     def node_ids(self):
-        return self._node_ids(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.node_ids
