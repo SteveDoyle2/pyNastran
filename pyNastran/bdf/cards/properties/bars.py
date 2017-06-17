@@ -975,6 +975,7 @@ class PBAR(LineProperty):
         self.k1 = k1
         #: default=infinite; assume 1e8
         self.k2 = k2
+        self.mid_ref = None
 
     def validate(self):
         if self.i1 < 0.:
@@ -1097,12 +1098,11 @@ class PBAR(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBAR mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def Area(self):
         """
@@ -1259,6 +1259,7 @@ class PBARL(LineProperty):
         #self.validate()
         #area = self.Area()
         #assert area > 0, 'Type=%s dim=%s A=%s\n%s' % (self.Type, self.dim, area, str(self))
+        self.mid_ref = None
 
     def validate(self):
         if self.Type not in self.valid_types:
@@ -1336,12 +1337,11 @@ class PBARL(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBARL mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _verify(self, xref=False):
         pid = self.pid
@@ -1885,6 +1885,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         self.ez = ez
         self.fy = fy
         self.fz = fz
+        self.mid_ref = None
 
     def add_card(self, card, comment=''):
         pid = integer(card, 1, 'pid')
@@ -1934,12 +1935,11 @@ class PBEAM3(LineProperty):  # not done, cleanup
             the BDF object
         """
         msg = ' which is required by PBEAM3 mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def repr_fields(self):
         """.. todo:: not done"""

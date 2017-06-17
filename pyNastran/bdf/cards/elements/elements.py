@@ -46,6 +46,10 @@ class CFAST(Element):
         self.xs = xs
         self.ys = ys
         self.zs = zs
+        self.pid_ref = None
+        self.gs_ref = None
+        self.ga_ref = None
+        self.gb_ref = None
 
     def validate(self):
         if self.Type not in ['PROP', 'ELEM']:
@@ -98,28 +102,23 @@ class CFAST(Element):
             the BDF object
         """
         msg = ' which is required by CFAST eid=%s' % self.eid
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.pid_ref = self.pid
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
         if self.gs:
-            self.gs = model.Node(self.Gs(), msg=msg)
-            self.gs_ref = self.gs
+            self.gs_ref = model.Node(self.Gs(), msg=msg)
         if self.ga:
-            self.ga = model.Node(self.Ga(), msg=msg)
-            self.ga_ref = self.ga
+            self.ga_ref = model.Node(self.Ga(), msg=msg)
         if self.gb:
-            self.gb = model.Node(self.Gb(), msg=msg)
-            self.gb_ref = self.gb
+            self.gb_ref = model.Node(self.Gb(), msg=msg)
 
     def uncross_reference(self):
+        self.pid = self.Pid()
         self.gs = self.Gs()
         self.ga = self.Ga()
         self.gb = self.Gb()
-        if self.gs:
-            del self.gs_ref
-        if self.ga:
-            del self.ga_ref
-        if self.gb:
-            del self.gb_ref
+        self.pid_ref = None
+        self.gs_ref = None
+        self.ga_ref = None
+        self.gb_ref = None
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
@@ -234,6 +233,10 @@ class CGAP(Element):
         self.x = x
         self.g0 = g0
         self.cid = cid
+        self.ga_ref = None
+        self.gb_ref = None
+        self.cid_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -326,28 +329,24 @@ class CGAP(Element):
             the BDF object
         """
         msg = ' which is required by CGAP eid=%s' % self.eid
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
-        self.ga_ref = self.ga
-        self.gb_ref = self.gb
+        self.ga_ref = model.Node(self.Ga(), msg=msg)
+        self.gb_ref = model.Node(self.Gb(), msg=msg)
         if self.g0:
-            self.g0 = model.Node(self.g0, msg=msg)
-            self.x = self.g0.get_position()
-            self.g0_ref = self.g0
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.pid_ref = self.pid
+            self.g0_ref = model.Node(self.g0, msg=msg)
+            self.x = self.g0_ref.get_position()
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
         if self.cid:
-            self.cid = model.Coord(self.Cid(), msg=msg)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(self.Cid(), msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.cid = self.Cid()
         self.pid = self.Pid()
-        if self.cid:
-            del self.cid_ref
-        del self.ga_ref, self.gb_ref, self.pid_ref
+        self.ga_ref = None
+        self.gb_ref = None
+        self.cid_ref = None
+        self.pid_ref = None
 
     @property
     def nodes(self):
@@ -361,17 +360,17 @@ class CGAP(Element):
         return [self.Ga(), self.Gb()]
 
     def Cid(self):
-        if isinstance(self.cid, integer_types) or self.cid is None:
+        if self.cid_ref is None:
             return self.cid
         return self.cid_ref.cid
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
+        if self.ga_ref is None:
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, integer_types):
+        if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
 
@@ -399,6 +398,8 @@ class CrackElement(Element):
 
     def __init__(self):
         self.eid = 0
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def cross_reference(self, model):
         """
@@ -410,15 +411,14 @@ class CrackElement(Element):
             the BDF object
         """
         msg = ' which is required by %s eid=%s' % (self. type, self.eid)
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
 
 class CRAC2D(CrackElement):
@@ -624,6 +624,7 @@ class PLOTEL(BaseCard):
             self.comment = comment
         self.eid = eid
         self.nodes = nodes
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -675,15 +676,14 @@ class PLOTEL(BaseCard):
         """
         msg = ' which is required by PLOTEL eid=%s' % self.eid
         node_ids = self.node_ids
-        self.nodes = [
+        self.nodes_ref = [
             model.Node(node_ids[0], msg=msg),
             model.Node(node_ids[1], msg=msg),
         ]
-        self.nodes_ref = self.nodes
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     @property
     def node_ids(self):

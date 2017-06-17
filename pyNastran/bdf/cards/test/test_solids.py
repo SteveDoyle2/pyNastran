@@ -426,7 +426,7 @@ class TestSolids(unittest.TestCase):
         self.assertEqual(element.eid, eid)
         self.assertEqual(element.pid_ref.type, ptype)
         self.assertEqual(element.Pid(), pid)
-        self.assertEqual(element.pid_ref.mid.type, mtype)
+        self.assertEqual(element.pid_ref.mid_ref.type, mtype)
         self.assertEqual(element.Mid(), mid)
         self.assertEqual(element.Volume(), V)
         self.assertEqual(element.Mass(), mass)

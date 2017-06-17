@@ -124,6 +124,11 @@ class CBUSH(BushElement):
         self.s = s
         self.ocid = ocid
         self.si = si
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
+        self.cid_ref = None
+        self.ocid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -215,28 +220,24 @@ class CBUSH(BushElement):
         assert isinstance(ocid, integer_types), 'ocid=%r' % ocid
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
+        if self.gb_ref is None:
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, integer_types) or self.gb is None:
+        if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
 
     def OCid(self):
-        if self.ocid is None:
-            return None
-        elif isinstance(self.ocid, integer_types):
-            return self.ocid
-        return self.ocid_ref.cid
+        if self.ocid_ref is not None:
+            return self.ocid_ref.cid
+        return self.ocid
 
     def Cid(self):
-        if self.cid is None:
-            return None
-        elif isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def cross_reference(self, model):
         """
@@ -248,27 +249,25 @@ class CBUSH(BushElement):
             the BDF object
         """
         msg = ' which is required by CBUSH eid=%s' % self.eid
-        self.ga = model.Node(self.ga, msg=msg)
-        self.ga_ref = self.ga
+        self.ga_ref = model.Node(self.ga, msg=msg)
         if self.gb is not None:
-            self.gb = model.Node(self.gb, msg=msg)
-            self.gb_ref = self.gb
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+            self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
         if self.cid is not None:
-            self.cid = model.Coord(self.cid, msg=msg)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(self.cid, msg=msg)
+        if self.ocid is not None:
+            self.ocid_ref = model.Coord(self.ocid, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.pid = self.Pid()
         self.cid = self.Cid()
         self.gb = self.Gb()
-        if self.cid is not None:
-            del self.cid_ref
-        if self.gb is not None:
-            del self.gb_ref
-        del self.ga_ref, self.pid_ref
+        self.cid_ref = None
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
+        self.ocid_ref = None
 
     def raw_fields(self):
         if self.g0 is not None:

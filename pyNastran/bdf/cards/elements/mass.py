@@ -284,6 +284,8 @@ class CMASS2(PointMassElement):
         self.c1 = c1
         self.g2 = g2
         self.c2 = c2
+        self.g1_ref = None
+        self.g2_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -478,6 +480,9 @@ class CMASS3(PointMassElement):
         self.s1 = s1
         self.s2 = s2
         assert self.s1 != self.s2
+        self.s1_ref = None
+        self.s2_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -533,12 +538,14 @@ class CMASS3(PointMassElement):
             the BDF object
         """
         msg = ' which is required by CMASS3 eid=%s' % self.eid
-        #self.s1 = model.Node(self.s1, msg=msg)
-        #self.s2 = model.Node(self.s2, msg=msg)
+        self.s1_ref = model.Node(self.s1, msg=msg)
+        self.s2_ref = model.Node(self.s2, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.pid = self.Pid()
+        self.s1_ref = None
+        self.s2_ref = None
         self.pid_ref = None
 
     def raw_fields(self):
@@ -595,6 +602,8 @@ class CMASS4(PointMassElement):
         self.s1 = s1
         self.s2 = s2
         assert self.s1 != self.s2
+        self.s1_ref = None
+        self.s2_ref = None
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
@@ -671,7 +680,7 @@ class CONM1(PointMassElement):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     |    1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
     +========+=====+=====+=====+=====+=====+=====+=====+=====+
-    |  CONM1 | EID | G   | CID | M11 | M21 | M22 | M31 | M32 |
+    |  CONM1 | EID |  G  | CID | M11 | M21 | M22 | M31 | M32 |
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     |        | M33 | M41 | M42 | M43 | M44 | M51 | M52 | M53 |
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -762,6 +771,8 @@ class CONM1(PointMassElement):
         self.eid = eid
         self.nid = nid
         self.cid = cid
+        self.nid_ref = None
+        self.cid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1017,6 +1028,8 @@ class CONM2(PointMassElement):
         #: coordinate system is implied. (Real)
         #: I11, I21, I22, I31, I32, I33 = I
         self.I = np.asarray(I)
+        self.nid_ref = None
+        self.cid_ref = None
 
     def validate(self):
         assert isinstance(self.cid, integer_types), self.cid
